@@ -1,0 +1,43 @@
+{
+ "module": "academics",
+ "cleanup": [
+  {
+   "event": "hr.staff.deleted",
+   "table": "academics.class_section",
+   "column": "class_teacher_staff_id",
+   "action": "null the column",
+   "ownerId": "57013b48-cedb-531c-b5b6-254801a2ff6d",
+   "rowId": "7a6d56ab-3773-56b3-a935-b9ee9309fdb7",
+   "otherRowId": "085e199b-a03d-59cb-8576-b2ae46d74ee0",
+   "fixtures": [
+    "INSERT INTO academics.grade_level (tenant_id, institution_id, name, slug, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-cb1a20dc', 't-slug-98ea05e5', 1, '7559edb7-f83f-5dff-8755-f19a49a08887') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.section (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-c8c39972', 1, 'C449487F0', '1fd3de96-50bd-5fe7-af73-5e4d63f161be') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO academics.class_section (tenant_id, institution_id, academic_year_id, grade_level_id, section_id, row_version, class_teacher_staff_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '8ad334f2-3ddc-5ade-a8a0-6622c505d3e3', '7559edb7-f83f-5dff-8755-f19a49a08887', '1fd3de96-50bd-5fe7-af73-5e4d63f161be', 1, '57013b48-cedb-531c-b5b6-254801a2ff6d', '7a6d56ab-3773-56b3-a935-b9ee9309fdb7')",
+   "otherFixtures": [
+    "INSERT INTO academics.grade_level (tenant_id, institution_id, name, slug, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-name-cb1a20dc', 't-slug-98ea05e5', 1, 'e9383366-b6f7-588e-93ac-5249ec9f62d0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.section (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-name-c8c39972', 1, 'C449487F0', '4796749c-06d4-5776-a734-dc2915904cc5') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO academics.class_section (tenant_id, institution_id, academic_year_id, grade_level_id, section_id, row_version, class_teacher_staff_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'cd1b6b28-039f-50d9-a155-dd33fd4ba8ed', 'e9383366-b6f7-588e-93ac-5249ec9f62d0', '4796749c-06d4-5776-a734-dc2915904cc5', 1, '57013b48-cedb-531c-b5b6-254801a2ff6d', '085e199b-a03d-59cb-8576-b2ae46d74ee0')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "academics.program",
+   "column": "image_file_id",
+   "action": "null the column",
+   "ownerId": "3eacddab-8501-5a18-bc6e-a695496674d9",
+   "rowId": "78659512-0f2d-5e23-bed6-fa7508fcd210",
+   "otherRowId": "7f8986d5-2170-5583-adc9-1e9a17877c6b",
+   "fixtures": [
+    "INSERT INTO academics.program_level (tenant_id, name, row_version, code, id) VALUES (:tenant, 't-name-1eec8dd1', 1, 'C95AB62AB', '339a61f2-d37f-566a-9eca-117a1cdb3870') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO academics.program (tenant_id, institution_id, program_level_id, code, name, row_version, image_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '339a61f2-d37f-566a-9eca-117a1cdb3870', 'CC9877974', 't-name-3d8aec5d', 1, '3eacddab-8501-5a18-bc6e-a695496674d9', '78659512-0f2d-5e23-bed6-fa7508fcd210')",
+   "otherFixtures": [
+    "INSERT INTO academics.program_level (tenant_id, name, row_version, code, id) VALUES (:tenant, 't-name-1eec8dd1', 1, 'C95AB62AB', '79eb9933-eb2a-5f4c-b2e5-00c18b076e0f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO academics.program (tenant_id, institution_id, program_level_id, code, name, row_version, image_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', '79eb9933-eb2a-5f4c-b2e5-00c18b076e0f', 'CA0482B5C', 't-name-21e8b5c4', 1, '3eacddab-8501-5a18-bc6e-a695496674d9', '7f8986d5-2170-5583-adc9-1e9a17877c6b')",
+   "softDeletable": true
+  }
+ ]
+}

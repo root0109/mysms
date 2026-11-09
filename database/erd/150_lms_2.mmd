@@ -1,0 +1,308 @@
+erDiagram
+    lms__chapter["lms.chapter"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        varchar(200) title "NN"
+        integer sort_order "NN"
+        boolean is_scorm_package "NN"
+        uuid scorm_package_file_id FK "→ platform.file_object (logical)"
+        text scorm_package_path
+        text scorm_manifest_file
+        text scorm_launch_file
+        uuid cohort_id FK
+        uuid parent_chapter_id FK
+        text description
+        integer chapter_number
+        integer start_day
+        time start_time
+        integer due_day
+        time due_time
+        timestamptz starts_at
+        timestamptz ends_at
+        boolean allow_delete "NN"
+        boolean allow_edit_details "NN"
+        boolean allow_edit_dates "NN"
+        uuid copied_from_id FK
+        boolean is_original "NN"
+    }
+    lms__lesson["lms.lesson"] {
+        uuid id PK
+        uuid chapter_id FK "NN"
+        varchar(200) title "NN"
+        integer sort_order "NN"
+        boolean include_in_preview "NN"
+        text body
+        jsonb content
+        text teacher_notes
+        jsonb teacher_content
+        varchar(60) youtube_video_id
+        text embedded_question
+        varchar(30) file_type
+        boolean is_scorm_package "NN"
+        integer version "NN"
+        uuid superseded_by_id FK
+        timestamptz published_at
+    }
+    lms__lesson_activity["lms.lesson_activity"] {
+        uuid id PK
+        uuid lesson_id FK "NN"
+        uuid quiz_id FK
+        uuid assignment_id FK
+        uuid exercise_id FK
+        boolean teacher_only "NN"
+        integer sort_order "NN"
+    }
+    lms__content_item["lms.content_item"] {
+        uuid id PK
+        uuid chapter_id FK
+        uuid course_id FK
+        uuid cohort_id FK
+        varchar(30) item_kind "NN"
+        uuid lesson_id FK
+        uuid file_id FK "→ platform.file_object (logical)"
+        uuid assignment_id FK
+        uuid quiz_id FK
+        uuid discussion_prompt_id FK
+        uuid participation_activity_id FK
+        uuid web_resource_id FK
+        uuid ebook_id FK
+        uuid external_tool_resource_id FK
+        uuid live_class_id FK
+        varchar(1000) link_url
+        varchar(255) title
+        integer sort_order "NN"
+        boolean is_active "NN"
+        boolean is_always_visible "NN"
+        timestamptz visible_from
+        timestamptz visible_until
+        boolean visible_until_cohort_end "NN"
+        timestamptz attempt_from
+        timestamptz due_at
+        boolean attempt_until_cohort_end "NN"
+        integer visible_start_day
+        time visible_start_time
+        integer visible_end_day
+        time visible_end_time
+        integer attempt_start_day
+        time attempt_start_time
+        integer attempt_end_day
+        time attempt_end_time
+        boolean late_submission_allowed "NN"
+        integer late_submission_days
+        boolean is_graded "NN"
+        numeric points "8,2"
+        numeric weight_percent "5,2"
+        uuid grading_category_id FK
+        uuid rubric_id FK
+        boolean plagiarism_check_required "NN"
+        boolean show_in_calendar "NN"
+        boolean allow_delete "NN"
+        boolean allow_edit_details "NN"
+        boolean allow_edit_dates "NN"
+        boolean allow_edit_grading "NN"
+        uuid copied_from_id FK
+        boolean is_original "NN"
+        bigint view_count "NN"
+        bigint like_count "NN"
+        numeric rating_total "12,2 · NN"
+        integer rating_count "NN"
+        uuid exercise_id FK
+    }
+    lms__content_item_rating["lms.content_item_rating"] {
+        uuid id PK
+        uuid content_item_id FK "NN"
+        uuid cohort_id FK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        boolean is_like
+        integer rating
+    }
+    lms__content_view_session["lms.content_view_session"] {
+        uuid id PK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid content_item_id FK
+        uuid file_id FK "→ platform.file_object (logical)"
+        uuid cohort_id FK
+        timestamptz started_at PK
+        timestamptz ended_at
+        text location
+        varchar(128) session_ref
+    }
+    lms__video_watch["lms.video_watch"] {
+        uuid id PK
+        uuid lesson_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        varchar(500) video_source "NN"
+        numeric watch_seconds "12,2 · NN"
+    }
+    lms__lesson_progress["lms.lesson_progress"] {
+        uuid id PK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid course_id FK "NN"
+        uuid chapter_id FK "NN"
+        uuid lesson_id FK
+        varchar(30) status "NN"
+        boolean is_scorm_chapter "NN"
+        text scorm_suspend_data
+        varchar(1000) scorm_location
+        numeric scorm_score "6,2"
+        integer scorm_total_time_seconds
+    }
+    lms__enrollment["lms.enrollment"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        varchar(30) member_type "NN"
+        varchar(30) member_role "NN"
+        numeric progress_percent "5,2 · NN"
+        uuid current_lesson_id FK
+        uuid source_cohort_id FK
+        uuid payment_id FK "→ finance.payment (logical)"
+        boolean purchased_certificate "NN"
+        uuid certificate_id FK
+    }
+    lms__bookmark["lms.bookmark"] {
+        uuid id PK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        varchar(255) title "NN"
+        varchar(1000) url "NN"
+        varchar(60) module_code
+        uuid cohort_id FK
+        timestamptz saved_at "NN"
+    }
+    lms__annotation["lms.annotation"] {
+        uuid id PK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid content_item_id FK
+        uuid cohort_id FK
+        uuid ebook_id FK
+        uuid file_id FK "→ platform.file_object (logical)"
+        varchar(30) annotation_type "NN"
+        varchar(40) annotation_subtype
+        varchar(20) page_number
+        varchar(40) start_char_pos
+        varchar(40) char_count
+        text location
+        text annotated_text
+        varchar(255) title
+        text description
+        text embed_code
+        varchar(1000) url
+        uuid media_file_id FK "→ platform.file_object (logical)"
+        varchar(30) visibility "NN"
+        uuid forum_topic_id FK
+        uuid lesson_id FK
+    }
+    lms__annotation_share["lms.annotation_share"] {
+        uuid id PK
+        uuid annotation_id FK "NN"
+        uuid shared_with_user_id FK "NN · → iam.user_account (logical)"
+        timestamptz shared_at "NN"
+    }
+    lms__access_log["lms.access_log"] {
+        uuid id PK
+        uuid user_id FK "→ iam.user_account (logical)"
+        timestamptz accessed_at PK
+        varchar(120) operation
+        varchar(1000) url
+        text params
+        boolean is_async "NN"
+        varchar(128) session_ref
+        uuid cohort_id FK
+        varchar(100) role_name
+        varchar(20) course_week
+        varchar(100) analytics_link_ref
+        varchar(500) user_agent
+        varchar(1000) referer
+        inet ip_address
+    }
+    lms__assignment["lms.assignment"] {
+        uuid id PK "drawn on: Assignments, exercises & plagiarism checks"
+    }
+    lms__certificate["lms.certificate"] {
+        uuid id PK "drawn on: Evaluation, certificates, badges & programs"
+    }
+    lms__cohort["lms.cohort"] {
+        uuid id PK "drawn on: Cohorts, schedules & live classes"
+    }
+    lms__course["lms.course"] {
+        uuid id PK "drawn on: Courses, versions & catalogue"
+    }
+    lms__discussion_prompt["lms.discussion_prompt"] {
+        uuid id PK "drawn on: Repository resources & external tools"
+    }
+    lms__ebook["lms.ebook"] {
+        uuid id PK "drawn on: Repository resources & external tools"
+    }
+    lms__external_tool_resource["lms.external_tool_resource"] {
+        uuid id PK "drawn on: Repository resources & external tools"
+    }
+    lms__forum_topic["lms.forum_topic"] {
+        uuid id PK "drawn on: Discussions"
+    }
+    lms__grading_category["lms.grading_category"] {
+        uuid id PK "drawn on: Gradebook, rubrics & conditional release"
+    }
+    lms__live_class["lms.live_class"] {
+        uuid id PK "drawn on: Cohorts, schedules & live classes"
+    }
+    lms__participation_activity["lms.participation_activity"] {
+        uuid id PK "drawn on: Repository resources & external tools"
+    }
+    lms__programming_exercise["lms.programming_exercise"] {
+        uuid id PK "drawn on: Assignments, exercises & plagiarism checks"
+    }
+    lms__quiz["lms.quiz"] {
+        uuid id PK "drawn on: Quizzes & question bank"
+    }
+    lms__rubric["lms.rubric"] {
+        uuid id PK "drawn on: Gradebook, rubrics & conditional release"
+    }
+    lms__web_resource["lms.web_resource"] {
+        uuid id PK "drawn on: Repository resources & external tools"
+    }
+    lms__course ||--o{ lms__chapter : "course_id"
+    lms__cohort |o--o{ lms__chapter : "cohort_id"
+    lms__chapter |o--o{ lms__chapter : "parent_chapter_id"
+    lms__chapter |o--o{ lms__chapter : "copied_from_id"
+    lms__chapter ||--o{ lms__lesson : "chapter_id"
+    lms__lesson ||--o{ lms__lesson_activity : "lesson_id"
+    lms__quiz |o--o{ lms__lesson_activity : "quiz_id"
+    lms__assignment |o--o{ lms__lesson_activity : "assignment_id"
+    lms__programming_exercise |o--o{ lms__lesson_activity : "exercise_id"
+    lms__course ||--o{ lms__enrollment : "course_id"
+    lms__lesson |o--o{ lms__enrollment : "current_lesson_id"
+    lms__cohort |o--o{ lms__enrollment : "source_cohort_id"
+    lms__certificate |o--o{ lms__enrollment : "certificate_id"
+    lms__course ||--o{ lms__lesson_progress : "course_id"
+    lms__chapter ||--o{ lms__lesson_progress : "chapter_id"
+    lms__lesson |o--o{ lms__lesson_progress : "lesson_id"
+    lms__lesson ||--o{ lms__video_watch : "lesson_id"
+    lms__chapter |o--o{ lms__content_item : "chapter_id"
+    lms__course |o--o{ lms__content_item : "course_id"
+    lms__cohort |o--o{ lms__content_item : "cohort_id"
+    lms__lesson |o--o{ lms__content_item : "lesson_id"
+    lms__assignment |o--o{ lms__content_item : "assignment_id"
+    lms__quiz |o--o{ lms__content_item : "quiz_id"
+    lms__discussion_prompt |o--o{ lms__content_item : "discussion_prompt_id"
+    lms__participation_activity |o--o{ lms__content_item : "participation_activity_id"
+    lms__web_resource |o--o{ lms__content_item : "web_resource_id"
+    lms__ebook |o--o{ lms__content_item : "ebook_id"
+    lms__external_tool_resource |o--o{ lms__content_item : "external_tool_resource_id"
+    lms__live_class |o--o{ lms__content_item : "live_class_id"
+    lms__grading_category |o--o{ lms__content_item : "grading_category_id"
+    lms__rubric |o--o{ lms__content_item : "rubric_id"
+    lms__content_item |o--o{ lms__content_item : "copied_from_id"
+    lms__content_item ||--o{ lms__content_item_rating : "content_item_id"
+    lms__cohort |o--o{ lms__content_item_rating : "cohort_id"
+    lms__content_item |o--o{ lms__annotation : "content_item_id"
+    lms__cohort |o--o{ lms__annotation : "cohort_id"
+    lms__ebook |o--o{ lms__annotation : "ebook_id"
+    lms__forum_topic |o--o{ lms__annotation : "forum_topic_id"
+    lms__annotation ||--o{ lms__annotation_share : "annotation_id"
+    lms__content_item |o--o{ lms__content_view_session : "content_item_id"
+    lms__cohort |o--o{ lms__content_view_session : "cohort_id"
+    lms__cohort |o--o{ lms__bookmark : "cohort_id"
+    lms__cohort |o--o{ lms__access_log : "cohort_id"
+    lms__programming_exercise |o--o{ lms__content_item : "exercise_id"
+    lms__lesson |o--o{ lms__annotation : "lesson_id"
+    lms__lesson |o--o{ lms__lesson : "superseded_by_id"

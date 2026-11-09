@@ -1,0 +1,244 @@
+{
+ "assessment.assignment": {
+  "fixture": {
+   "class_section_id": "'0196f000-0000-7000-8000-0000000c5e01'"
+  },
+  "api": {
+   "class_section_id": "0196f000-0000-7000-8000-0000000c5e01"
+  }
+ },
+ "assessment.exam_session": {
+  "fixture": {
+   "grade_level_id": "'0196f000-0000-7000-8000-0000000c1e01'"
+  },
+  "api": {
+   "grade_level_id": "0196f000-0000-7000-8000-0000000c1e01"
+  }
+ },
+ "comms.task_assignee": {
+  "api": {
+   "user_id": "0196f000-0000-7000-8000-0000000a5e01"
+  }
+ },
+ "finance.coupon": {
+  "fixture": {
+   "discount_type": "'percentage'",
+   "percentage_discount": "10"
+  },
+  "api": {
+   "discount_type": "percentage",
+   "percentage_discount": "10"
+  }
+ },
+ "finance.invoice": {
+  "fixture": {
+   "student_id": "'0196f000-0000-7000-8000-0000000575d1'"
+  },
+  "api": {
+   "student_id": "0196f000-0000-7000-8000-0000000575d1"
+  }
+ },
+ "library.library_card": {
+  "fixture": {
+   "holder_type": "'student'",
+   "student_id": "'0196f000-0000-7000-8000-0000000575d1'"
+  },
+  "api": {
+   "holder_type": "student",
+   "student_id": "0196f000-0000-7000-8000-0000000575d1"
+  }
+ },
+ "lms.content_item": {
+  "fixture": {
+   "item_kind": "'lesson'",
+   "lesson_id": "@fk:lms.lesson",
+   "chapter_id": "@fk:lms.chapter",
+   "course_id": "@fk:lms.course"
+  },
+  "api": {
+   "item_kind": "lesson",
+   "lesson_id": "@fk:lms.lesson",
+   "chapter_id": "@fk:lms.chapter",
+   "course_id": "@fk:lms.course"
+  }
+ },
+ "lms.certificate": {
+  "fixture": {
+   "course_id": "@fk:lms.course"
+  },
+  "api": {
+   "course_id": "@fk:lms.course"
+  }
+ },
+ "lms.content_author": {
+  "api": {
+   "quiz_id": "@fk:lms.quiz"
+  }
+ },
+ "lms.drive_item": {
+  "fixture": {
+   "link_url": "'https://example.org/drive'"
+  },
+  "api": {
+   "link_url": "https://example.org/drive"
+  }
+ },
+ "lms.learning_objective": {
+  "api": {
+   "course_id": "@fk:lms.course"
+  }
+ },
+ "lms.lesson_activity": {
+  "api": {
+   "quiz_id": "@fk:lms.quiz"
+  }
+ },
+ "lms.related_course": {
+  "api": {
+   "related_course_id": "@fkalt:lms.course"
+  }
+ },
+ "lms.timetable_legend": {
+  "api": {
+   "cohort_id": "@fk:lms.cohort"
+  }
+ },
+ "people.emergency_contact": {
+  "api": {
+   "contact_name": "Ravi Kumar",
+   "phone": "+919800000001"
+  }
+ },
+ "platform.storage_quota": {
+  "api": {
+   "institution_id": "0196f000-0000-7000-8000-00000000a001"
+  },
+  "cleanup": {
+   "user_id": {
+    "institution_id": "NULL"
+   }
+  }
+ },
+ "timetable.session": {
+  "fixture": {
+   "class_section_id": "'0196f000-0000-7000-8000-0000000c5e01'"
+  },
+  "api": {
+   "class_section_id": "0196f000-0000-7000-8000-0000000c5e01"
+  }
+ },
+ "finance.coupon_scope": {
+  "api": {
+   "lms_course_id": "0196f000-0000-7000-8000-0000000c0c01"
+  }
+ },
+ "library.loan": {
+  "api": {
+   "issued_on": "2026-01-10",
+   "media_unit_id": "@fk:library.media_unit",
+   "media_id": "@fk:library.media"
+  }
+ },
+ "lms.gradebook_entry": {
+  "fixture": {
+   "user_id": "'0196f000-0000-7000-8000-0000000a5e01'"
+  },
+  "api": {
+   "user_id": "0196f000-0000-7000-8000-0000000a5e02"
+  }
+ },
+ "lms.item_override": {
+  "fixture": {
+   "user_id": "'0196f000-0000-7000-8000-0000000a5e01'"
+  },
+  "api": {
+   "user_id": "0196f000-0000-7000-8000-0000000a5e02"
+  }
+ },
+ "lms.reassignment_log": {
+  "fixture": {
+   "user_id": "'0196f000-0000-7000-8000-0000000a5e01'"
+  },
+  "api": {
+   "user_id": "0196f000-0000-7000-8000-0000000a5e02"
+  }
+ },
+ "lms.rubric_assessment": {
+  "fixture": {
+   "user_id": "'0196f000-0000-7000-8000-0000000a5e01'"
+  },
+  "api": {
+   "user_id": "0196f000-0000-7000-8000-0000000a5e02"
+  }
+ },
+ "lms.release_rule": {
+  "fixture": {
+   "course_id": "@fk:lms.course"
+  },
+  "api": {
+   "course_id": "@fk:lms.course"
+  }
+ },
+ "lms.release_rule_target": {
+  "api": {
+   "chapter_id": "@fk:lms.chapter"
+  }
+ },
+ "iam.user_account": {
+  "fixture": {
+   "username": "'fixture-user'"
+  },
+  "api": {
+   "username": "api-user"
+  }
+ },
+ "lms.timetable_entry": {
+  "api": {
+   "cohort_id": "@fk:lms.cohort",
+   "lesson_id": "@fk:lms.lesson"
+  }
+ },
+ "attendance.attendance_sheet": {
+  "fixture": {
+   "attendance_date": "'2026-01-12'"
+  },
+  "cleanup": {
+   "timetable_session_id": {
+    "day_part": "'afternoon'"
+   }
+  }
+ },
+ "comms.event": {
+  "cleanup": {
+   "owner_user_id": {
+    "audience": "'personal'"
+   },
+   "cohort_id": {
+    "audience": "'cohort'"
+   }
+  }
+ },
+ "finance.payment": {
+  "cleanup": {
+   "*": {
+    "purpose": "'invoice'",
+    "invoice_id": "@fk:finance.invoice",
+    "payer_name": "'Cleanup payer'"
+   }
+  }
+ },
+ "attendance.attendance_record": {
+  "cleanup": {
+   "*": {
+    "attendance_date": "'2026-01-12'"
+   }
+  }
+ },
+ "comms.notice": {
+  "cleanup": {
+   "cohort_id": {
+    "audience": "'cohort'"
+   }
+  }
+ }
+}

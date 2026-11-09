@@ -1,0 +1,116 @@
+erDiagram
+    attendance__attendance_type["attendance.attendance_type"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(60) name "NN"
+        boolean counts_present "NN"
+        boolean counts_absent "NN"
+        boolean counts_excused "NN"
+        boolean counts_late "NN"
+        boolean is_active "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+    }
+    attendance__absence_reason["attendance.absence_reason"] {
+        uuid id PK
+        varchar(150) title "NN"
+        boolean is_active "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+    }
+    attendance__attendance_register["attendance.attendance_register"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(30) code "NN"
+        varchar(150) name "NN"
+        varchar(30) register_scope "NN"
+        uuid class_section_id FK "→ academics.class_section (logical)"
+        uuid course_id FK "→ academics.course (logical)"
+        uuid batch_id FK "→ academics.batch (logical)"
+        uuid subject_id FK "→ academics.subject (logical)"
+        boolean is_active "NN"
+    }
+    attendance__attendance_sheet["attendance.attendance_sheet"] {
+        uuid id PK
+        uuid register_id FK "NN"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        date attendance_date "NN"
+        uuid timetable_session_id FK "→ timetable.session (logical)"
+        varchar(30) day_part "NN"
+        varchar(60) reference
+        uuid taken_by_staff_id FK "→ hr.staff (logical)"
+        varchar(30) status "NN"
+    }
+    attendance__attendance_record["attendance.attendance_record"] {
+        uuid id PK
+        uuid sheet_id FK "NN"
+        uuid student_id FK "NN · → sis.student (logical)"
+        varchar(30) status "NN"
+        uuid attendance_type_id FK
+        uuid absence_reason_id FK
+        varchar(255) remark
+        uuid recorded_by_user_id FK "→ iam.user_account (logical)"
+        date attendance_date PK
+        uuid leave_request_id FK "→ sis.student_leave_request (logical)"
+    }
+    attendance__staff_attendance["attendance.staff_attendance"] {
+        uuid id PK
+        uuid staff_id FK "NN · → hr.staff (logical)"
+        date attendance_date PK
+        varchar(20) status "NN"
+        timestamptz check_in_at
+        timestamptz check_out_at
+        varchar(20) source "NN"
+        uuid leave_application_id FK "→ hr.leave_application (logical)"
+        uuid recorded_by_user_id FK "→ iam.user_account (logical)"
+        varchar(300) remark
+    }
+    attendance__outbox_event["attendance.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    attendance__inbox_event["attendance.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    attendance__idempotency_key["attendance.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    attendance__operation["attendance.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    attendance__attendance_register ||--o{ attendance__attendance_sheet : "register_id"
+    attendance__attendance_sheet ||--o{ attendance__attendance_record : "sheet_id"
+    attendance__attendance_type |o--o{ attendance__attendance_record : "attendance_type_id"
+    attendance__absence_reason |o--o{ attendance__attendance_record : "absence_reason_id"
+    attendance__attendance_sheet ||--o{ attendance__attendance_record : "sheet_id"

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+.turbo/
+*.tsbuildinfo
+.expo/
+# generated from api/openapi and ui/02 by `pnpm generate` — never edited by hand, never committed
+packages/sdk/src/generated/
+packages/core/src/generated/

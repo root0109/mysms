@@ -1,0 +1,95 @@
+{
+ "module": "platform",
+ "cleanup": [
+  {
+   "event": "iam.role.deleted",
+   "table": "platform.upload_policy",
+   "column": "role_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "c49bcef3-bd6e-5f10-8445-7e1141506aa7",
+   "rowId": "076f94b0-929c-51ce-8cf4-ce992885eded",
+   "otherRowId": "a7f79ff0-44fb-5877-86b3-bda6b7c46dff",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO platform.upload_policy (tenant_id, module_code, row_version, role_id, id) VALUES (:tenant, 'C295B544F', 1, 'c49bcef3-bd6e-5f10-8445-7e1141506aa7', '076f94b0-929c-51ce-8cf4-ce992885eded')",
+   "otherFixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO platform.upload_policy (tenant_id, module_code, row_version, role_id, id) VALUES (:tenant, 'C520AC7E7', 1, 'c49bcef3-bd6e-5f10-8445-7e1141506aa7', 'a7f79ff0-44fb-5877-86b3-bda6b7c46dff')",
+   "softDeletable": true
+  },
+  {
+   "event": "lms.cohort.deleted",
+   "table": "platform.deletion_log",
+   "column": "cohort_id",
+   "action": "null the column",
+   "ownerId": "2e43bcd1-3dbe-5ac2-93ce-df908e5da251",
+   "rowId": "9573f94d-3c40-5c06-8d65-c7b7b174e015",
+   "otherRowId": "d912ac79-cad6-5688-9f24-c99f4e9d9772",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO platform.deletion_log (tenant_id, entity_type, entity_id, row_version, cohort_id, id) VALUES (:tenant, 't-entity-type-2c09d8c0', '4e082129-0b2e-5bc7-9662-4125cb3f59c4', 1, '2e43bcd1-3dbe-5ac2-93ce-df908e5da251', '9573f94d-3c40-5c06-8d65-c7b7b174e015')",
+   "otherFixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO platform.deletion_log (tenant_id, entity_type, entity_id, row_version, cohort_id, id) VALUES (:tenant, 't-entity-type-27b30b10', 'eae2a21e-748c-5f78-987a-2fb64deb6b88', 1, '2e43bcd1-3dbe-5ac2-93ce-df908e5da251', 'd912ac79-cad6-5688-9f24-c99f4e9d9772')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "platform.storage_quota",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "ab96d894-ab89-5d1a-ac9e-6a70e97bf5a0",
+   "rowId": "d4ceae9a-9b34-5075-95bc-8fd0d11f9be7",
+   "otherRowId": "6d38ee81-0738-5b12-91be-73266fa493da",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO platform.storage_quota (tenant_id, institution_id, quota_bytes, row_version, user_id, id) VALUES (:tenant, NULL, 1, 1, 'ab96d894-ab89-5d1a-ac9e-6a70e97bf5a0', 'd4ceae9a-9b34-5075-95bc-8fd0d11f9be7')",
+   "otherFixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO platform.storage_quota (tenant_id, institution_id, quota_bytes, row_version, user_id, id) VALUES (:tenant, NULL, 1, 1, 'ab96d894-ab89-5d1a-ac9e-6a70e97bf5a0', '6d38ee81-0738-5b12-91be-73266fa493da')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.institution.deleted",
+   "table": "platform.storage_quota",
+   "column": "institution_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "d71230f3-f540-5f4e-a498-5aac64138242",
+   "rowId": "529c757e-f68f-5198-878c-515c1aa31ab8",
+   "otherRowId": "6e5f970f-cc56-5468-991f-d3029ad407d0",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO platform.storage_quota (tenant_id, quota_bytes, row_version, institution_id, id) VALUES (:tenant, 1, 1, 'd71230f3-f540-5f4e-a498-5aac64138242', '529c757e-f68f-5198-878c-515c1aa31ab8')",
+   "otherFixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO platform.storage_quota (tenant_id, quota_bytes, row_version, institution_id, id) VALUES (:tenant, 1, 1, 'd71230f3-f540-5f4e-a498-5aac64138242', '6e5f970f-cc56-5468-991f-d3029ad407d0')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "platform.file_object",
+   "column": "uploaded_by_user_id",
+   "action": "null the column",
+   "ownerId": "dde98cda-e58d-55b2-b748-31b067b1920f",
+   "rowId": "5ea0a035-c3de-52de-8a44-33af6b7db227",
+   "otherRowId": "bc622629-9b34-5b55-9c55-9ab4defceb1c",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO platform.file_object (tenant_id, storage_disk, storage_key, file_name, size_bytes, row_version, uploaded_by_user_id, id) VALUES (:tenant, 't-storage-disk-09cde7c2', 't-storage-key-32f54c53', 't-file-name-0dca8920', 1, 1, 'dde98cda-e58d-55b2-b748-31b067b1920f', '5ea0a035-c3de-52de-8a44-33af6b7db227')",
+   "otherFixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO platform.file_object (tenant_id, storage_disk, storage_key, file_name, size_bytes, row_version, uploaded_by_user_id, id) VALUES (:tenant, 't-storage-disk-180cf303', 't-storage-key-40e47f8a', 't-file-name-07c3b406', 1, 1, 'dde98cda-e58d-55b2-b748-31b067b1920f', 'bc622629-9b34-5b55-9c55-9ab4defceb1c')",
+   "softDeletable": true
+  }
+ ]
+}

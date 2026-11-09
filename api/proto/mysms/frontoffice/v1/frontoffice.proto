@@ -1,0 +1,495 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.frontoffice.v1;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "FrontofficeProto";
+option java_package = "com.mysms.frontoffice.v1";
+
+// VisitorLogService: operations on the VisitorLog aggregate.
+service VisitorLogService {
+  // List VisitorLogs.
+  rpc ListVisitorLogs(ListVisitorLogsRequest) returns (ListVisitorLogsResponse);
+  // Get VisitorLog.
+  rpc GetVisitorLog(GetVisitorLogRequest) returns (GetVisitorLogResponse);
+  // Create VisitorLog.
+  rpc CreateVisitorLog(CreateVisitorLogRequest) returns (CreateVisitorLogResponse);
+  // Update VisitorLog.
+  rpc UpdateVisitorLog(UpdateVisitorLogRequest) returns (UpdateVisitorLogResponse);
+  // Soft-delete VisitorLog.
+  rpc DeleteVisitorLog(DeleteVisitorLogRequest) returns (DeleteVisitorLogResponse);
+  // Record exit time.
+  rpc CheckOutVisitor(CheckOutVisitorRequest) returns (CheckOutVisitorResponse);
+}
+
+// CallLogService: operations on the CallLog aggregate.
+service CallLogService {
+  // List CallLogs.
+  rpc ListCallLogs(ListCallLogsRequest) returns (ListCallLogsResponse);
+  // Get CallLog.
+  rpc GetCallLog(GetCallLogRequest) returns (GetCallLogResponse);
+  // Create CallLog.
+  rpc CreateCallLog(CreateCallLogRequest) returns (CreateCallLogResponse);
+  // Update CallLog.
+  rpc UpdateCallLog(UpdateCallLogRequest) returns (UpdateCallLogResponse);
+  // Soft-delete CallLog.
+  rpc DeleteCallLog(DeleteCallLogRequest) returns (DeleteCallLogResponse);
+}
+
+// PostalRecordService: operations on the PostalRecord aggregate.
+service PostalRecordService {
+  // List PostalRecords.
+  rpc ListPostalRecords(ListPostalRecordsRequest) returns (ListPostalRecordsResponse);
+  // Get PostalRecord.
+  rpc GetPostalRecord(GetPostalRecordRequest) returns (GetPostalRecordResponse);
+  // Create PostalRecord.
+  rpc CreatePostalRecord(CreatePostalRecordRequest) returns (CreatePostalRecordResponse);
+  // Update PostalRecord.
+  rpc UpdatePostalRecord(UpdatePostalRecordRequest) returns (UpdatePostalRecordResponse);
+  // Soft-delete PostalRecord.
+  rpc DeletePostalRecord(DeletePostalRecordRequest) returns (DeletePostalRecordResponse);
+}
+
+// DirectoryContactService: operations on the DirectoryContact aggregate.
+service DirectoryContactService {
+  // List DirectoryContacts.
+  rpc ListDirectoryContacts(ListDirectoryContactsRequest) returns (ListDirectoryContactsResponse);
+  // Get DirectoryContact.
+  rpc GetDirectoryContact(GetDirectoryContactRequest) returns (GetDirectoryContactResponse);
+  // Create DirectoryContact.
+  rpc CreateDirectoryContact(CreateDirectoryContactRequest) returns (CreateDirectoryContactResponse);
+  // Update DirectoryContact.
+  rpc UpdateDirectoryContact(UpdateDirectoryContactRequest) returns (UpdateDirectoryContactResponse);
+  // Soft-delete DirectoryContact.
+  rpc DeleteDirectoryContact(DeleteDirectoryContactRequest) returns (DeleteDirectoryContactResponse);
+}
+
+message ListVisitorLogsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListVisitorLogsResponse {
+  repeated VisitorLog items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetVisitorLogRequest {
+  // VisitorLog id (UUID).
+  string id = 1;
+}
+message GetVisitorLogResponse {
+  VisitorLog visitor_log = 1;
+}
+
+message CreateVisitorLogRequest {
+  VisitorLog visitor_log = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateVisitorLogResponse {
+  VisitorLog visitor_log = 1;
+}
+
+message UpdateVisitorLogRequest {
+  // Resource with id and etag set.
+  VisitorLog visitor_log = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateVisitorLogResponse {
+  VisitorLog visitor_log = 1;
+}
+
+message DeleteVisitorLogRequest {
+  // VisitorLog id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteVisitorLogResponse {
+}
+
+message ListCallLogsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListCallLogsResponse {
+  repeated CallLog items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetCallLogRequest {
+  // CallLog id (UUID).
+  string id = 1;
+}
+message GetCallLogResponse {
+  CallLog call_log = 1;
+}
+
+message CreateCallLogRequest {
+  CallLog call_log = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateCallLogResponse {
+  CallLog call_log = 1;
+}
+
+message UpdateCallLogRequest {
+  // Resource with id and etag set.
+  CallLog call_log = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateCallLogResponse {
+  CallLog call_log = 1;
+}
+
+message DeleteCallLogRequest {
+  // CallLog id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteCallLogResponse {
+}
+
+message ListPostalRecordsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListPostalRecordsResponse {
+  repeated PostalRecord items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetPostalRecordRequest {
+  // PostalRecord id (UUID).
+  string id = 1;
+}
+message GetPostalRecordResponse {
+  PostalRecord postal_record = 1;
+}
+
+message CreatePostalRecordRequest {
+  PostalRecord postal_record = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreatePostalRecordResponse {
+  PostalRecord postal_record = 1;
+}
+
+message UpdatePostalRecordRequest {
+  // Resource with id and etag set.
+  PostalRecord postal_record = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdatePostalRecordResponse {
+  PostalRecord postal_record = 1;
+}
+
+message DeletePostalRecordRequest {
+  // PostalRecord id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeletePostalRecordResponse {
+}
+
+message ListDirectoryContactsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListDirectoryContactsResponse {
+  repeated DirectoryContact items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetDirectoryContactRequest {
+  // DirectoryContact id (UUID).
+  string id = 1;
+}
+message GetDirectoryContactResponse {
+  DirectoryContact directory_contact = 1;
+}
+
+message CreateDirectoryContactRequest {
+  DirectoryContact directory_contact = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateDirectoryContactResponse {
+  DirectoryContact directory_contact = 1;
+}
+
+message UpdateDirectoryContactRequest {
+  // Resource with id and etag set.
+  DirectoryContact directory_contact = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateDirectoryContactResponse {
+  DirectoryContact directory_contact = 1;
+}
+
+message DeleteDirectoryContactRequest {
+  // DirectoryContact id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteDirectoryContactResponse {
+}
+
+message CheckOutVisitorRequest {
+  // Path parameter visitorLogId.
+  string visitor_log_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Exit time. Required.
+  string exit_time = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CheckOutVisitorResponse {
+  VisitorLog visitor_log = 1;
+}
+
+// Visitor entry at the front desk.
+message VisitorLog {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  optional string academic_year_id = 3;
+  // Visitor.
+  string visitor_name = 4;
+  // Visitor's relation to the school (parent, vendor, official...).
+  string visitor_type = 5;
+  // E-mail.
+  optional string email = 6;
+  // Phone.
+  optional string phone = 7;
+  // Company.
+  optional string company_name = 8;
+  // Address.
+  optional string address = 9;
+  // Student visited. [UUID]
+  optional string student_id = 10;
+  // Relation to that student.
+  optional string relation_to_student = 11;
+  // Name of the related person.
+  optional string related_person_name = 12;
+  // Number of visitors.
+  int32 visitor_count = 13;
+  // Purpose.
+  string purpose = 14;
+  // Staff member met. [UUID]
+  optional string host_staff_id = 15;
+  // Date. [ISO-8601 date (YYYY-MM-DD)]
+  string visit_date = 16;
+  // Entry time. [Time of day (HH:MM[:SS])]
+  optional string entry_time = 17;
+  // Exit time. [Time of day (HH:MM[:SS])]
+  optional string exit_time = 18;
+  // Remarks.
+  optional string remarks = 19;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 20;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 21;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 22;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 23;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 24;
+}
+
+// Incoming / outgoing phone call record.
+message CallLog {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  optional string academic_year_id = 3;
+  // Direction.
+  Direction direction = 4;
+  // Purpose.
+  optional string purpose = 5;
+  // Caller / callee name.
+  string caller_name = 6;
+  // Incoming number.
+  optional string incoming_number = 7;
+  // Outgoing number.
+  optional string outgoing_number = 8;
+  // Date. [ISO-8601 date (YYYY-MM-DD)]
+  string call_date = 9;
+  // Start. [Time of day (HH:MM[:SS])]
+  optional string start_time = 10;
+  // End. [Time of day (HH:MM[:SS])]
+  optional string end_time = 11;
+  // Duration.
+  google.protobuf.Duration duration_seconds = 12;
+  // Notes.
+  optional string description = 13;
+  // Staff who logged it. [UUID]
+  optional string logged_by_user_id = 14;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 15;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 16;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 17;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 18;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 19;
+  // Allowed values of direction; REST/JSON uses the lowercase value shown in each comment.
+  enum Direction {
+    DIRECTION_UNSPECIFIED = 0;
+    // "incoming"
+    DIRECTION_INCOMING = 1;
+    // "outgoing"
+    DIRECTION_OUTGOING = 2;
+  }
+}
+
+// Postal dispatch / receipt register.
+message PostalRecord {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  optional string academic_year_id = 3;
+  // Dispatch or receipt.
+  Direction direction = 4;
+  // Post type (courier, registered, speed post...).
+  string post_type = 5;
+  // Tracking / reference number.
+  optional string reference_number = 6;
+  // Confidential.
+  bool is_confidential = 7;
+  // Sender.
+  optional string sender_name = 8;
+  // Sender address.
+  optional string sender_address = 9;
+  // Receiver.
+  optional string receiver_name = 10;
+  // Receiver address.
+  optional string receiver_address = 11;
+  // Date. [ISO-8601 date (YYYY-MM-DD)]
+  string postal_date = 12;
+  // Contents / description.
+  string description = 13;
+  // Scan. [UUID]
+  optional string attachment_file_id = 14;
+  // Staff who logged it. [UUID]
+  optional string logged_by_user_id = 15;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 16;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 17;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 18;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 19;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 20;
+  // Allowed values of direction; REST/JSON uses the lowercase value shown in each comment.
+  enum Direction {
+    DIRECTION_UNSPECIFIED = 0;
+    // "dispatch"
+    DIRECTION_DISPATCH = 1;
+    // "receive"
+    DIRECTION_RECEIVE = 2;
+  }
+}
+
+// Telephone directory entry.
+message DirectoryContact {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Name.
+  string name = 3;
+  // Designation.
+  string designation = 4;
+  // Phone.
+  string phone = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+}
+

@@ -1,0 +1,1265 @@
+{
+ "module": "comms",
+ "resources": [
+  {
+   "name": "AudienceGroup",
+   "table": "comms.audience_group",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/audience-groups",
+   "item": "/v1/comms/audience-groups/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-e0f0699c"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "AudienceGroupMember",
+   "table": "comms.audience_group_member",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/audience-groups/a9ede448-81f4-58b3-add7-1f815de6c327/members",
+   "item": "/v1/comms/audience-groups/a9ede448-81f4-58b3-add7-1f815de6c327/members/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO comms.audience_group (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-170df656', 1, 'a9ede448-81f4-58b3-add7-1f815de6c327') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "groupId": "a9ede448-81f4-58b3-add7-1f815de6c327",
+    "userId": "bd301134-dbae-5d12-ba4a-3d7b46997e59"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "CalendarExport",
+   "table": "comms.calendar_export",
+   "ops": [
+    "Delete",
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/comms/calendar-exports",
+   "item": "/v1/comms/calendar-exports/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "userId": "50b43749-1118-51c4-b9dd-b40f20108997",
+    "provider": "google",
+    "entityType": "t-entity-type-a03b7f5a",
+    "entityId": "a8255f7c-0a69-5024-8210-8ac97c8c3a1c"
+   },
+   "update": {},
+   "duplicateConflicts": false,
+   "seedId": "03e6d29c-fccf-50e7-bf22-3bd6f01b1769",
+   "seed": [
+    "INSERT INTO comms.calendar_export (user_id, provider, entity_type, entity_id, tenant_id, row_version, id) VALUES ('50b43749-1118-51c4-b9dd-b40f20108997', 'google', 't-entity-type-a03b7f5a', 'a8255f7c-0a69-5024-8210-8ac97c8c3a1c', :tenant, 1, '03e6d29c-fccf-50e7-bf22-3bd6f01b1769')"
+   ]
+  },
+  {
+   "name": "ClassPage",
+   "table": "comms.class_page",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/class-pages",
+   "item": "/v1/comms/class-pages/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO comms.page_category (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-c0c0500c', 1, 'C58D20914', 'e87a992d-54ba-5d40-b729-9bbe23a762a4') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "pageCategoryId": "e87a992d-54ba-5d40-b729-9bbe23a762a4",
+    "name": "t-name-7e312639",
+    "description": "t-description-5b5125d0"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "ClassPageAttachment",
+   "table": "comms.class_page_attachment",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/class-pages/523919f1-350d-5c9d-ba6c-4c7ce2716a69/attachments",
+   "item": "/v1/comms/class-pages/523919f1-350d-5c9d-ba6c-4c7ce2716a69/attachments/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO comms.page_category (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-c0c0500c', 1, 'C58D20914', 'e87a992d-54ba-5d40-b729-9bbe23a762a4') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO comms.class_page (tenant_id, institution_id, page_category_id, name, description, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'e87a992d-54ba-5d40-b729-9bbe23a762a4', 't-name-79fa4982', 't-description-aeffd2b9', 1, '523919f1-350d-5c9d-ba6c-4c7ce2716a69') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "classPageId": "523919f1-350d-5c9d-ba6c-4c7ce2716a69",
+    "fileId": "7196499d-30e3-529e-afa0-3cc35fdd7138"
+   },
+   "update": {
+    "isActive": true
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "ClassPageMember",
+   "table": "comms.class_page_member",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/class-pages/523919f1-350d-5c9d-ba6c-4c7ce2716a69/members",
+   "item": "/v1/comms/class-pages/523919f1-350d-5c9d-ba6c-4c7ce2716a69/members/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO comms.page_category (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-c0c0500c', 1, 'C58D20914', 'e87a992d-54ba-5d40-b729-9bbe23a762a4') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO comms.class_page (tenant_id, institution_id, page_category_id, name, description, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'e87a992d-54ba-5d40-b729-9bbe23a762a4', 't-name-79fa4982', 't-description-aeffd2b9', 1, '523919f1-350d-5c9d-ba6c-4c7ce2716a69') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "classPageId": "523919f1-350d-5c9d-ba6c-4c7ce2716a69",
+    "userId": "26ba2fbd-047e-510b-b4e6-140b745d5dbc"
+   },
+   "update": {
+    "isFollowing": true
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "ContentView",
+   "table": "comms.content_view",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/content-views",
+   "item": "/v1/comms/content-views/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "studentId": "42b70641-fb22-5736-9974-92c956b8fd9c",
+    "contentType": "image",
+    "contentId": "77be7951-d101-58f2-b2a1-db954bbe64a8"
+   },
+   "update": {},
+   "duplicateConflicts": false
+  },
+  {
+   "name": "Conversation",
+   "table": "comms.conversation",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/conversations",
+   "item": "/v1/comms/conversations/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "conversationType": "direct"
+   },
+   "update": {
+    "title": "Updated title"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "ConversationMessage",
+   "table": "comms.conversation_message",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/conversations/0189ad16-e46c-5f10-b14e-2b4d28e5aedf/messages",
+   "item": "/v1/comms/conversations/0189ad16-e46c-5f10-b14e-2b4d28e5aedf/messages/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO comms.conversation (tenant_id, institution_id, conversation_type, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'direct', 1, '0189ad16-e46c-5f10-b14e-2b4d28e5aedf') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "conversationId": "0189ad16-e46c-5f10-b14e-2b4d28e5aedf",
+    "senderUserId": "28960f87-6d7a-53fb-bd47-ce02c2a39173",
+    "body": "t-body-2c62893c"
+   },
+   "update": {
+    "body": "Updated body"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "ConversationParticipant",
+   "table": "comms.conversation_participant",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/conversations/0189ad16-e46c-5f10-b14e-2b4d28e5aedf/participants",
+   "item": "/v1/comms/conversations/0189ad16-e46c-5f10-b14e-2b4d28e5aedf/participants/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO comms.conversation (tenant_id, institution_id, conversation_type, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'direct', 1, '0189ad16-e46c-5f10-b14e-2b4d28e5aedf') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "conversationId": "0189ad16-e46c-5f10-b14e-2b4d28e5aedf",
+    "userId": "2692608e-9d99-5d84-b602-a85b4b4ec72e"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Event",
+   "table": "comms.event",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/events",
+   "item": "/v1/comms/events/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "title": "t-title-0dd15d92"
+   },
+   "update": {
+    "audienceLabel": "Updated audience_label"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "comms.ActivateEvent",
+     "path": "/v1/comms/events/{id}:activate",
+     "permission": "comms.event.activate_event",
+     "guard": {
+      "status": [
+       "inactive"
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.event SET status = 'inactive' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "active"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "comms.DeactivateEvent",
+     "path": "/v1/comms/events/{id}:deactivate",
+     "permission": "comms.event.deactivate_event",
+     "guard": {
+      "status": [
+       "active"
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.event SET status = 'active' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "inactive"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "EventAttendee",
+   "table": "comms.event_attendee",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/events/ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7/attendees",
+   "item": "/v1/comms/events/ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7/attendees/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-b9a17eab', 1, 'ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "eventId": "ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7",
+    "userId": "f07b701f-6b7b-565a-b55d-1329ebc3a8c2"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "EventGalleryItem",
+   "table": "comms.event_gallery_item",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/events/ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7/gallery-items",
+   "item": "/v1/comms/events/ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7/gallery-items/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-b9a17eab', 1, 'ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "eventId": "ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7",
+    "fileId": "a8c02f5e-2c99-58d7-9e2e-720c8e611b63"
+   },
+   "update": {},
+   "duplicateConflicts": false
+  },
+  {
+   "name": "EventInstitution",
+   "table": "comms.event_institution",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/events/ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7/institutions",
+   "item": "/v1/comms/events/ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7/institutions/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-b9a17eab', 1, 'ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "eventId": "ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7",
+    "institutionId": "0196f000-0000-7000-8000-00000000a001"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "EventOccurrence",
+   "table": "comms.event_occurrence",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/events/ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7/occurrences",
+   "item": "/v1/comms/events/ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7/occurrences/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-b9a17eab', 1, 'ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "eventId": "ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7",
+    "startAt": "2026-01-10T09:00:00Z"
+   },
+   "update": {
+    "title": "Updated title"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "comms.CancelEventOccurrence",
+     "path": "/v1/comms/events/ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7/occurrences/{id}:cancel",
+     "permission": "comms.event_occurrence.cancel_event_occurrence",
+     "guard": {
+      "isCancelled": [
+       false
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.event_occurrence SET is_cancelled = false WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "isCancelled": true
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "FeedbackMessage",
+   "table": "comms.feedback_message",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/feedback-threads/e1e7ab19-88d0-5cc5-91ab-03ef6779e2fa/messages",
+   "item": "/v1/comms/feedback-threads/e1e7ab19-88d0-5cc5-91ab-03ef6779e2fa/messages/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO comms.feedback_thread (tenant_id, institution_id, guardian_id, student_id, assigned_to_user_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '86719043-51da-538d-8c92-63b3551f45d1', 'f64db0bf-f2bd-5444-a2ec-a024c6561f55', '03a57fe9-7c91-5293-b496-1a7facd3e897', 1, 'e1e7ab19-88d0-5cc5-91ab-03ef6779e2fa') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "threadId": "e1e7ab19-88d0-5cc5-91ab-03ef6779e2fa",
+    "senderUserId": "b0cf9600-de88-5683-a86c-de80b1e9a9a7",
+    "category": "app_feedback_or_bug",
+    "message": "t-message-e93f6626"
+   },
+   "update": {
+    "message": "Updated message"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "FeedbackThread",
+   "table": "comms.feedback_thread",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/feedback-threads",
+   "item": "/v1/comms/feedback-threads/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "guardianId": "0a273714-b281-5774-bd4a-1567e50f8258",
+    "studentId": "86c5ebfe-1aec-5267-9491-d322134d0b96",
+    "assignedToUserId": "f2cbd8eb-2933-5c95-b3c2-ce0b33d2c582"
+   },
+   "update": {},
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "comms.CloseFeedbackThread",
+     "path": "/v1/comms/feedback-threads/{id}:close",
+     "permission": "comms.feedback_thread.close_feedback_thread",
+     "guard": {
+      "status": [
+       "open"
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.feedback_thread SET status = 'open' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "closed"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "comms.ReopenFeedbackThread",
+     "path": "/v1/comms/feedback-threads/{id}:reopen",
+     "permission": "comms.feedback_thread.reopen_feedback_thread",
+     "guard": {
+      "status": [
+       "closed"
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.feedback_thread SET status = 'closed' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "open"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "Magazine",
+   "table": "comms.magazine",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/magazines",
+   "item": "/v1/comms/magazines/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "academicYearId": "3615bb70-070f-51af-8939-d1d4467bbd5d"
+   },
+   "update": {
+    "title": "Updated title"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "MailboxMessage",
+   "table": "comms.mailbox_message",
+   "ops": [
+    "Delete",
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/comms/mailbox-messages",
+   "item": "/v1/comms/mailbox-messages/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "folder": "outbox"
+   },
+   "update": {},
+   "duplicateConflicts": false,
+   "seedId": "baf44ec8-884c-5b49-b265-8ca4e50bdcb6",
+   "seed": [
+    "INSERT INTO comms.mailbox_message (institution_id, folder, tenant_id, row_version, id) VALUES ('0196f000-0000-7000-8000-00000000a001', 'outbox', :tenant, 1, 'baf44ec8-884c-5b49-b265-8ca4e50bdcb6')"
+   ]
+  },
+  {
+   "name": "MessageTemplate",
+   "table": "comms.message_template",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/message-templates",
+   "item": "/v1/comms/message-templates/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "channel": "email",
+    "name": "t-name-b6717b81"
+   },
+   "update": {
+    "code": "Updated code"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "Notice",
+   "table": "comms.notice",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/notices",
+   "item": "/v1/comms/notices/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "audience": "school",
+    "title": "t-title-6b67534b",
+    "body": "t-body-e2bd1090"
+   },
+   "update": {
+    "title": "Updated title"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "comms.PublishNotice",
+     "path": "/v1/comms/notices/{id}:publish",
+     "permission": "comms.notice.publish_notice",
+     "guard": {
+      "isPublished": [
+       false
+      ],
+      "isClosed": [
+       false
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.notice SET is_published = false, is_closed = false WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "isPublished": true
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "comms.UnpublishNotice",
+     "path": "/v1/comms/notices/{id}:unpublish",
+     "permission": "comms.notice.unpublish_notice",
+     "guard": {
+      "isPublished": [
+       true
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.notice SET is_published = true WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "isPublished": false
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "comms.DeactivateNotice",
+     "path": "/v1/comms/notices/{id}:deactivate",
+     "permission": "comms.notice.deactivate_notice",
+     "guard": {
+      "isClosed": [
+       false
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.notice SET is_closed = false WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "isClosed": true
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "comms.ReactivateNotice",
+     "path": "/v1/comms/notices/{id}:reactivate",
+     "permission": "comms.notice.reactivate_notice",
+     "guard": {
+      "isClosed": [
+       true
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.notice SET is_closed = true WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "isClosed": false
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "NoticeAudience",
+   "table": "comms.notice_audience",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/notices/e29a6e57-7418-58c5-894e-774a6ed6e415/audiences",
+   "item": "/v1/comms/notices/e29a6e57-7418-58c5-894e-774a6ed6e415/audiences/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'school', 't-title-ddd19229', 't-body-7dbec4cb', 1, 'e29a6e57-7418-58c5-894e-774a6ed6e415') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "noticeId": "e29a6e57-7418-58c5-894e-774a6ed6e415",
+    "institutionId": "0196f000-0000-7000-8000-00000000a001"
+   },
+   "update": {},
+   "duplicateConflicts": false
+  },
+  {
+   "name": "NoticeBackground",
+   "table": "comms.notice_background",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/notice-backgrounds",
+   "item": "/v1/comms/notice-backgrounds/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "usage": "event"
+   },
+   "update": {},
+   "duplicateConflicts": false
+  },
+  {
+   "name": "NoticeVersion",
+   "table": "comms.notice_version",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/comms/notices/e29a6e57-7418-58c5-894e-774a6ed6e415/versions",
+   "item": "/v1/comms/notices/e29a6e57-7418-58c5-894e-774a6ed6e415/versions/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'school', 't-title-ddd19229', 't-body-7dbec4cb', 1, 'e29a6e57-7418-58c5-894e-774a6ed6e415') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "noticeId": "e29a6e57-7418-58c5-894e-774a6ed6e415",
+    "versionedAt": "2026-01-10T09:00:00Z"
+   },
+   "update": {},
+   "duplicateConflicts": false,
+   "seedId": "e6782561-26c5-565f-a6c2-9455d5a0319a",
+   "seed": [
+    "INSERT INTO comms.notice_version (notice_id, versioned_at, tenant_id, row_version, id) VALUES ('e29a6e57-7418-58c5-894e-774a6ed6e415', '2026-01-10T09:00:00Z', :tenant, 1, 'e6782561-26c5-565f-a6c2-9455d5a0319a')"
+   ]
+  },
+  {
+   "name": "NotificationChannel",
+   "table": "comms.notification_channel",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/notification-channels",
+   "item": "/v1/comms/notification-channels/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C17277F31"
+   },
+   "update": {
+    "code": "Updated code"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "NotificationChannelProperty",
+   "table": "comms.notification_channel_property",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/notification-channels/c3751f9b-043e-5ef3-a55e-0203aceb74b1/properties",
+   "item": "/v1/comms/notification-channels/c3751f9b-043e-5ef3-a55e-0203aceb74b1/properties/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO comms.notification_channel (tenant_id, code, row_version, id) VALUES (:tenant, 'CBB5DCCAC', 1, 'c3751f9b-043e-5ef3-a55e-0203aceb74b1') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "notificationChannelId": "c3751f9b-043e-5ef3-a55e-0203aceb74b1",
+    "propertyKey": "t-property-key-5c9bdc8b",
+    "secretValue": "Secret-c31109-00001234"
+   },
+   "update": {
+    "propertyValue": "Updated property_value"
+   },
+   "duplicateConflicts": true,
+   "secrets": [
+    {
+     "field": "secretValue",
+     "masked": "secretValueMasked",
+     "mask": "\u2022\u2022\u2022\u20221234",
+     "rotated": "Rotated-secret-5678",
+     "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM comms.notification_channel_property WHERE id = '{id}' AND (secret_value_enc IS NULL OR secret_value_enc NOT LIKE 'v1.%' OR strpos(secret_value_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
+    }
+   ]
+  },
+  {
+   "name": "NotificationCohortSetting",
+   "table": "comms.notification_cohort_setting",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/notification-types/9b1be3b7-b123-54e2-8585-950fafa34dc5/cohort-settings",
+   "item": "/v1/comms/notification-types/9b1be3b7-b123-54e2-8585-950fafa34dc5/cohort-settings/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO comms.notification_type (code, description, module_code, row_version, id) VALUES ('C5B3C0C4E', 't-description-6741012d', 'CE814680D', 1, '9b1be3b7-b123-54e2-8585-950fafa34dc5') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "cohortId": "4feac4cd-123b-5047-8b6a-ba90730f13a5",
+    "notificationTypeId": "9b1be3b7-b123-54e2-8585-950fafa34dc5"
+   },
+   "update": {
+    "popupEnabled": true
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "NotificationPreference",
+   "table": "comms.notification_preference",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/notification-preference-sets/1c533015-32bf-5762-8f62-ed6aa81eccbc/preferences",
+   "item": "/v1/comms/notification-preference-sets/1c533015-32bf-5762-8f62-ed6aa81eccbc/preferences/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO comms.notification_preference_set (tenant_id, user_id, row_version, id) VALUES (:tenant, '3799f59b-5005-534f-a987-aaf4cd6bd866', 1, '1c533015-32bf-5762-8f62-ed6aa81eccbc') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "preferenceSetId": "1c533015-32bf-5762-8f62-ed6aa81eccbc",
+    "propertyName": "t-property-name-7bbbca37"
+   },
+   "update": {
+    "propertyName": "Updated property_name"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "NotificationPreferenceSet",
+   "table": "comms.notification_preference_set",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/notification-preference-sets",
+   "item": "/v1/comms/notification-preference-sets/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "userId": "472efc0e-5ae9-59fb-b98f-4b1553388edc"
+   },
+   "update": {},
+   "duplicateConflicts": false
+  },
+  {
+   "name": "NotificationRule",
+   "table": "comms.notification_rule",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/notification-types/9b1be3b7-b123-54e2-8585-950fafa34dc5/rules",
+   "item": "/v1/comms/notification-types/9b1be3b7-b123-54e2-8585-950fafa34dc5/rules/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO comms.notification_type (code, description, module_code, row_version, id) VALUES ('C5B3C0C4E', 't-description-6741012d', 'CE814680D', 1, '9b1be3b7-b123-54e2-8585-950fafa34dc5') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "roleId": "0f8e5dfe-0773-5b3a-8253-05b9b5813992",
+    "notificationTypeId": "9b1be3b7-b123-54e2-8585-950fafa34dc5"
+   },
+   "update": {
+    "emailSubjectTemplate": "Updated email_subject_template"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "NotificationType",
+   "table": "comms.notification_type",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/notification-types",
+   "item": "/v1/comms/notification-types/{id}",
+   "scope": "global",
+   "fixtures": [],
+   "create": {
+    "code": "CEF947246",
+    "description": "t-description-7544a00d",
+    "moduleCode": "C1EB038A0"
+   },
+   "update": {
+    "description": "Updated description"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "NotificationTypeProperty",
+   "table": "comms.notification_type_property",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/notification-types/9b1be3b7-b123-54e2-8585-950fafa34dc5/properties",
+   "item": "/v1/comms/notification-types/9b1be3b7-b123-54e2-8585-950fafa34dc5/properties/{id}",
+   "scope": "global",
+   "fixtures": [
+    "INSERT INTO comms.notification_type (code, description, module_code, row_version, id) VALUES ('C5B3C0C4E', 't-description-6741012d', 'CE814680D', 1, '9b1be3b7-b123-54e2-8585-950fafa34dc5') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "notificationTypeId": "9b1be3b7-b123-54e2-8585-950fafa34dc5",
+    "propertyValue": "t-property-value-fbc3ab65"
+   },
+   "update": {
+    "moduleCode": "Updated module_code"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "OutboundMessage",
+   "table": "comms.outbound_message",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/comms/outbound-messages",
+   "item": "/v1/comms/outbound-messages/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "messageKind": "notification",
+    "channel": "sms",
+    "sender": "t-sender-3c347932",
+    "recipient": "t-recipient-ef07a84b",
+    "body": "t-body-cd1c1f1d"
+   },
+   "update": {},
+   "duplicateConflicts": false,
+   "partition": "createTime",
+   "seedId": "b1447646-6d2f-5869-95d7-bd0f56b37e9e",
+   "seed": [
+    "INSERT INTO comms.outbound_message (institution_id, message_kind, channel, sender, recipient, body, tenant_id, row_version, id) VALUES ('0196f000-0000-7000-8000-00000000a001', 'notification', 'sms', 't-sender-3c347932', 't-recipient-ef07a84b', 't-body-cd1c1f1d', :tenant, 1, 'b1447646-6d2f-5869-95d7-bd0f56b37e9e')"
+   ]
+  },
+  {
+   "name": "PageCategory",
+   "table": "comms.page_category",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/page-categories",
+   "item": "/v1/comms/page-categories/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "code": "C2F1F9ED8",
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-600c80d2"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Post",
+   "table": "comms.post",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/posts",
+   "item": "/v1/comms/posts/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "academicYearId": "98a22e43-ff01-522b-a020-0a1bfa28e41a",
+    "authorUserId": "737d2f6f-ada9-562b-9632-000077355329",
+    "body": "t-body-aa201e68"
+   },
+   "update": {
+    "body": "Updated body"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "comms.ApprovePost",
+     "path": "/v1/comms/posts/{id}:approve",
+     "permission": "comms.post.approve_post",
+     "guard": {
+      "status": [
+       "pending"
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.post SET status = 'pending' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "posted"
+     },
+     "stamps": [
+      "postedAt"
+     ],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "comms.CancelPost",
+     "path": "/v1/comms/posts/{id}:cancel",
+     "permission": "comms.post.cancel_post",
+     "guard": {
+      "status": [
+       "draft",
+       "pending",
+       "posted"
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.post SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "cancelled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "PostAudienceClass",
+   "table": "comms.post_audience_class",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/posts/7881eb3d-f824-5883-b284-e2c7b34c9b29/audience-classes",
+   "item": "/v1/comms/posts/7881eb3d-f824-5883-b284-e2c7b34c9b29/audience-classes/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO comms.post (tenant_id, institution_id, academic_year_id, author_user_id, body, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '0508a346-b33a-5f98-a9f6-01438fc815d7', 'f71482ff-076a-53ef-8369-4eee9d8763f6', 't-body-d0d53282', 1, '7881eb3d-f824-5883-b284-e2c7b34c9b29') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "postId": "7881eb3d-f824-5883-b284-e2c7b34c9b29",
+    "classSectionId": "d168404f-61fb-5cb1-9b61-94052d665953"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "PostComment",
+   "table": "comms.post_comment",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/posts/7881eb3d-f824-5883-b284-e2c7b34c9b29/comments",
+   "item": "/v1/comms/posts/7881eb3d-f824-5883-b284-e2c7b34c9b29/comments/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO comms.post (tenant_id, institution_id, academic_year_id, author_user_id, body, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '0508a346-b33a-5f98-a9f6-01438fc815d7', 'f71482ff-076a-53ef-8369-4eee9d8763f6', 't-body-d0d53282', 1, '7881eb3d-f824-5883-b284-e2c7b34c9b29') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "postId": "7881eb3d-f824-5883-b284-e2c7b34c9b29",
+    "authorUserId": "1fd3b296-d374-5c8e-8e5c-58b9b5020d68"
+   },
+   "update": {
+    "body": "Updated body"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "Task",
+   "table": "comms.task",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/tasks",
+   "item": "/v1/comms/tasks/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "ownerUserId": "dc37cc3c-9cf0-5a23-8131-559a55f83bae",
+    "title": "t-title-2ae4d8c1",
+    "taskCategory": "self",
+    "dueAt": "2026-01-10T10:00:00Z",
+    "reminderOption": "one_hour_before",
+    "checklist": "t-checklist-a341e410"
+   },
+   "update": {
+    "title": "Updated title"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "comms.CompleteTask",
+     "path": "/v1/comms/tasks/{id}:complete",
+     "permission": "comms.task.complete_task",
+     "guard": {
+      "isCompleted": [
+       false
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.task SET is_completed = false WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "isCompleted": true
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "comms.ReopenTask",
+     "path": "/v1/comms/tasks/{id}:reopen",
+     "permission": "comms.task.reopen_task",
+     "guard": {
+      "isCompleted": [
+       true
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.task SET is_completed = true WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "isCompleted": false
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "comms.SnoozeTask",
+     "path": "/v1/comms/tasks/{id}:snooze",
+     "permission": "comms.task.snooze_task",
+     "guard": {
+      "isCompleted": [
+       false
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.task SET is_completed = false WHERE id = '{id}'"
+     ],
+     "body": {
+      "until": "2026-02-01T09:00:00Z"
+     },
+     "sets": {
+      "isSnoozed": true
+     },
+     "stamps": [
+      "reminderAt"
+     ],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "TaskAssignee",
+   "table": "comms.task_assignee",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/comms/tasks/31dac2d4-c41f-5343-a5c9-fd25cf73f100/assignees",
+   "item": "/v1/comms/tasks/31dac2d4-c41f-5343-a5c9-fd25cf73f100/assignees/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO comms.task (tenant_id, institution_id, owner_user_id, title, task_category, due_at, reminder_option, checklist, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '58c55212-8078-50a3-aa1f-a9f494c5371f', 't-title-c4d0f04c', 'self', '2026-01-10T10:00:00Z', 'one_hour_before', 't-checklist-f0b9e0fa', 1, '31dac2d4-c41f-5343-a5c9-fd25cf73f100') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "taskId": "31dac2d4-c41f-5343-a5c9-fd25cf73f100",
+    "userId": "0196f000-0000-7000-8000-0000000a5e01"
+   },
+   "update": {},
+   "duplicateConflicts": false
+  }
+ ]
+}

@@ -1,0 +1,41 @@
+{
+  "name": "@mysms/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "W \u2014 the React web app for school staff, students and parents (ui/01, ui/02).",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/check-budget.mjs",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint --max-warnings 0 src scripts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mysms/core": "workspace:*",
+    "@mysms/i18n": "workspace:*",
+    "@mysms/tokens": "workspace:*",
+    "@mysms/ui-web": "workspace:*",
+    "@mysms/web-kit": "workspace:*",
+    "@tanstack/react-query": "5.106.1",
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "react-router": "7.18.5"
+  },
+  "devDependencies": {
+    "@mysms/config": "workspace:*",
+    "@mysms/fixtures": "workspace:*",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/jest-dom": "6.10.0",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
+    "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
+    "@vitejs/plugin-react": "5.2.0",
+    "jsdom": "26.1.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.7",
+    "vitest": "3.2.7"
+  }
+}

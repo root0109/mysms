@@ -1,0 +1,1856 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.people.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "PeopleProto";
+option java_package = "com.mysms.people.v1";
+
+// HonorificService: operations on the Honorific aggregate.
+service HonorificService {
+  // List Honorifics.
+  rpc ListHonorifics(ListHonorificsRequest) returns (ListHonorificsResponse);
+  // Get Honorific.
+  rpc GetHonorific(GetHonorificRequest) returns (GetHonorificResponse);
+  // Create Honorific.
+  rpc CreateHonorific(CreateHonorificRequest) returns (CreateHonorificResponse);
+  // Update Honorific.
+  rpc UpdateHonorific(UpdateHonorificRequest) returns (UpdateHonorificResponse);
+  // Soft-delete Honorific.
+  rpc DeleteHonorific(DeleteHonorificRequest) returns (DeleteHonorificResponse);
+}
+
+// PersonService: operations on the Person aggregate.
+service PersonService {
+  // The caller's own person record.
+  rpc GetMyPerson(GetMyPersonRequest) returns (GetMyPersonResponse);
+  // Update the caller's own person record.
+  rpc UpdateMyPerson(UpdateMyPersonRequest) returns (UpdateMyPersonResponse);
+  // List Persons.
+  rpc ListPersons(ListPersonsRequest) returns (ListPersonsResponse);
+  // Get Person.
+  rpc GetPerson(GetPersonRequest) returns (GetPersonResponse);
+  // Create Person.
+  rpc CreatePerson(CreatePersonRequest) returns (CreatePersonResponse);
+  // Update Person.
+  rpc UpdatePerson(UpdatePersonRequest) returns (UpdatePersonResponse);
+  // Soft-delete Person.
+  rpc DeletePerson(DeletePersonRequest) returns (DeletePersonResponse);
+  // List PersonAddresses.
+  rpc ListPersonAddresses(ListPersonAddressesRequest) returns (ListPersonAddressesResponse);
+  // Get PersonAddress.
+  rpc GetPersonAddress(GetPersonAddressRequest) returns (GetPersonAddressResponse);
+  // Create PersonAddress.
+  rpc CreatePersonAddress(CreatePersonAddressRequest) returns (CreatePersonAddressResponse);
+  // Update PersonAddress.
+  rpc UpdatePersonAddress(UpdatePersonAddressRequest) returns (UpdatePersonAddressResponse);
+  // Soft-delete PersonAddress.
+  rpc DeletePersonAddress(DeletePersonAddressRequest) returns (DeletePersonAddressResponse);
+  // List EmergencyContacts.
+  rpc ListEmergencyContacts(ListEmergencyContactsRequest) returns (ListEmergencyContactsResponse);
+  // Get EmergencyContact.
+  rpc GetEmergencyContact(GetEmergencyContactRequest) returns (GetEmergencyContactResponse);
+  // Create EmergencyContact.
+  rpc CreateEmergencyContact(CreateEmergencyContactRequest) returns (CreateEmergencyContactResponse);
+  // Update EmergencyContact.
+  rpc UpdateEmergencyContact(UpdateEmergencyContactRequest) returns (UpdateEmergencyContactResponse);
+  // Soft-delete EmergencyContact.
+  rpc DeleteEmergencyContact(DeleteEmergencyContactRequest) returns (DeleteEmergencyContactResponse);
+  // List EducationHistory.
+  rpc ListEducationHistory(ListEducationHistoryRequest) returns (ListEducationHistoryResponse);
+  // Get EducationHistory.
+  rpc GetEducationHistory(GetEducationHistoryRequest) returns (GetEducationHistoryResponse);
+  // Create EducationHistory.
+  rpc CreateEducationHistory(CreateEducationHistoryRequest) returns (CreateEducationHistoryResponse);
+  // Update EducationHistory.
+  rpc UpdateEducationHistory(UpdateEducationHistoryRequest) returns (UpdateEducationHistoryResponse);
+  // Soft-delete EducationHistory.
+  rpc DeleteEducationHistory(DeleteEducationHistoryRequest) returns (DeleteEducationHistoryResponse);
+  // List WorkExperiences.
+  rpc ListWorkExperiences(ListWorkExperiencesRequest) returns (ListWorkExperiencesResponse);
+  // Get WorkExperience.
+  rpc GetWorkExperience(GetWorkExperienceRequest) returns (GetWorkExperienceResponse);
+  // Create WorkExperience.
+  rpc CreateWorkExperience(CreateWorkExperienceRequest) returns (CreateWorkExperienceResponse);
+  // Update WorkExperience.
+  rpc UpdateWorkExperience(UpdateWorkExperienceRequest) returns (UpdateWorkExperienceResponse);
+  // Soft-delete WorkExperience.
+  rpc DeleteWorkExperience(DeleteWorkExperienceRequest) returns (DeleteWorkExperienceResponse);
+  // List Certifications.
+  rpc ListCertifications(ListCertificationsRequest) returns (ListCertificationsResponse);
+  // Get Certification.
+  rpc GetCertification(GetCertificationRequest) returns (GetCertificationResponse);
+  // Create Certification.
+  rpc CreateCertification(CreateCertificationRequest) returns (CreateCertificationResponse);
+  // Update Certification.
+  rpc UpdateCertification(UpdateCertificationRequest) returns (UpdateCertificationResponse);
+  // Soft-delete Certification.
+  rpc DeleteCertification(DeleteCertificationRequest) returns (DeleteCertificationResponse);
+  // List PersonSkills.
+  rpc ListPersonSkills(ListPersonSkillsRequest) returns (ListPersonSkillsResponse);
+  // Get PersonSkill.
+  rpc GetPersonSkill(GetPersonSkillRequest) returns (GetPersonSkillResponse);
+  // Create PersonSkill.
+  rpc CreatePersonSkill(CreatePersonSkillRequest) returns (CreatePersonSkillResponse);
+  // Update PersonSkill.
+  rpc UpdatePersonSkill(UpdatePersonSkillRequest) returns (UpdatePersonSkillResponse);
+  // Soft-delete PersonSkill.
+  rpc DeletePersonSkill(DeletePersonSkillRequest) returns (DeletePersonSkillResponse);
+  // List PersonDocuments.
+  rpc ListPersonDocuments(ListPersonDocumentsRequest) returns (ListPersonDocumentsResponse);
+  // Get PersonDocument.
+  rpc GetPersonDocument(GetPersonDocumentRequest) returns (GetPersonDocumentResponse);
+  // Create PersonDocument.
+  rpc CreatePersonDocument(CreatePersonDocumentRequest) returns (CreatePersonDocumentResponse);
+  // Update PersonDocument.
+  rpc UpdatePersonDocument(UpdatePersonDocumentRequest) returns (UpdatePersonDocumentResponse);
+  // Soft-delete PersonDocument.
+  rpc DeletePersonDocument(DeletePersonDocumentRequest) returns (DeletePersonDocumentResponse);
+  // Get PublicProfile.
+  rpc GetPublicProfile(GetPublicProfileRequest) returns (GetPublicProfileResponse);
+  // Create PublicProfile.
+  rpc CreatePublicProfile(CreatePublicProfileRequest) returns (CreatePublicProfileResponse);
+  // Update PublicProfile.
+  rpc UpdatePublicProfile(UpdatePublicProfileRequest) returns (UpdatePublicProfileResponse);
+  // Soft-delete PublicProfile.
+  rpc DeletePublicProfile(DeletePublicProfileRequest) returns (DeletePublicProfileResponse);
+  // List PersonSocialLinks.
+  rpc ListPersonSocialLinks(ListPersonSocialLinksRequest) returns (ListPersonSocialLinksResponse);
+  // Get PersonSocialLink.
+  rpc GetPersonSocialLink(GetPersonSocialLinkRequest) returns (GetPersonSocialLinkResponse);
+  // Create PersonSocialLink.
+  rpc CreatePersonSocialLink(CreatePersonSocialLinkRequest) returns (CreatePersonSocialLinkResponse);
+  // Update PersonSocialLink.
+  rpc UpdatePersonSocialLink(UpdatePersonSocialLinkRequest) returns (UpdatePersonSocialLinkResponse);
+  // Soft-delete PersonSocialLink.
+  rpc DeletePersonSocialLink(DeletePersonSocialLinkRequest) returns (DeletePersonSocialLinkResponse);
+  // List ConsentRecords.
+  rpc ListConsentRecords(ListConsentRecordsRequest) returns (ListConsentRecordsResponse);
+  // Get ConsentRecord.
+  rpc GetConsentRecord(GetConsentRecordRequest) returns (GetConsentRecordResponse);
+  // Create ConsentRecord.
+  rpc CreateConsentRecord(CreateConsentRecordRequest) returns (CreateConsentRecordResponse);
+  // Birthdays and work anniversaries in a date window.
+  rpc ListBirthdays(ListBirthdaysRequest) returns (ListBirthdaysResponse);
+  // Send birthday / anniversary greetings.
+  rpc SendGreetings(SendGreetingsRequest) returns (SendGreetingsResponse);
+  // Withdraw a consent (sets withdrawnAt). Publishing that depends on it stops immediately, and already published media for that purpose is unpublished by a background job.
+  rpc WithdrawConsent(WithdrawConsentRequest) returns (WithdrawConsentResponse);
+  // Consents currently in force for a person, one per purpose (latest record with withdrawnAt empty).
+  rpc GetConsentStatus(GetConsentStatusRequest) returns (GetConsentStatusResponse);
+}
+
+// QualificationService: operations on the Qualification aggregate.
+service QualificationService {
+  // List Qualifications.
+  rpc ListQualifications(ListQualificationsRequest) returns (ListQualificationsResponse);
+  // Get Qualification.
+  rpc GetQualification(GetQualificationRequest) returns (GetQualificationResponse);
+  // Create Qualification.
+  rpc CreateQualification(CreateQualificationRequest) returns (CreateQualificationResponse);
+  // Update Qualification.
+  rpc UpdateQualification(UpdateQualificationRequest) returns (UpdateQualificationResponse);
+  // Soft-delete Qualification.
+  rpc DeleteQualification(DeleteQualificationRequest) returns (DeleteQualificationResponse);
+}
+
+// SkillService: operations on the Skill aggregate.
+service SkillService {
+  // List Skills.
+  rpc ListSkills(ListSkillsRequest) returns (ListSkillsResponse);
+  // Get Skill.
+  rpc GetSkill(GetSkillRequest) returns (GetSkillResponse);
+  // Create Skill.
+  rpc CreateSkill(CreateSkillRequest) returns (CreateSkillResponse);
+  // Update Skill.
+  rpc UpdateSkill(UpdateSkillRequest) returns (UpdateSkillResponse);
+  // Soft-delete Skill.
+  rpc DeleteSkill(DeleteSkillRequest) returns (DeleteSkillResponse);
+}
+
+message ListHonorificsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListHonorificsResponse {
+  repeated Honorific items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetHonorificRequest {
+  // Honorific id (UUID).
+  string id = 1;
+}
+message GetHonorificResponse {
+  Honorific honorific = 1;
+}
+
+message CreateHonorificRequest {
+  Honorific honorific = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateHonorificResponse {
+  Honorific honorific = 1;
+}
+
+message UpdateHonorificRequest {
+  // Resource with id and etag set.
+  Honorific honorific = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateHonorificResponse {
+  Honorific honorific = 1;
+}
+
+message DeleteHonorificRequest {
+  // Honorific id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteHonorificResponse {
+}
+
+message ListPersonsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListPersonsResponse {
+  repeated Person items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetPersonRequest {
+  // Person id (UUID).
+  string id = 1;
+}
+message GetPersonResponse {
+  Person person = 1;
+}
+
+message CreatePersonRequest {
+  Person person = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreatePersonResponse {
+  Person person = 1;
+}
+
+message UpdatePersonRequest {
+  // Resource with id and etag set.
+  Person person = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdatePersonResponse {
+  Person person = 1;
+}
+
+message DeletePersonRequest {
+  // Person id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeletePersonResponse {
+}
+
+message ListPersonAddressesRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListPersonAddressesResponse {
+  repeated PersonAddress items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetPersonAddressRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // PersonAddress id (UUID).
+  string id = 2;
+}
+message GetPersonAddressResponse {
+  PersonAddress person_address = 1;
+}
+
+message CreatePersonAddressRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  PersonAddress person_address = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreatePersonAddressResponse {
+  PersonAddress person_address = 1;
+}
+
+message UpdatePersonAddressRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Resource with id and etag set.
+  PersonAddress person_address = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdatePersonAddressResponse {
+  PersonAddress person_address = 1;
+}
+
+message DeletePersonAddressRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // PersonAddress id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeletePersonAddressResponse {
+}
+
+message ListEmergencyContactsRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListEmergencyContactsResponse {
+  repeated EmergencyContact items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetEmergencyContactRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // EmergencyContact id (UUID).
+  string id = 2;
+}
+message GetEmergencyContactResponse {
+  EmergencyContact emergency_contact = 1;
+}
+
+message CreateEmergencyContactRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  EmergencyContact emergency_contact = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateEmergencyContactResponse {
+  EmergencyContact emergency_contact = 1;
+}
+
+message UpdateEmergencyContactRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Resource with id and etag set.
+  EmergencyContact emergency_contact = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateEmergencyContactResponse {
+  EmergencyContact emergency_contact = 1;
+}
+
+message DeleteEmergencyContactRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // EmergencyContact id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteEmergencyContactResponse {
+}
+
+message ListQualificationsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListQualificationsResponse {
+  repeated Qualification items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetQualificationRequest {
+  // Qualification id (UUID).
+  string id = 1;
+}
+message GetQualificationResponse {
+  Qualification qualification = 1;
+}
+
+message CreateQualificationRequest {
+  Qualification qualification = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateQualificationResponse {
+  Qualification qualification = 1;
+}
+
+message UpdateQualificationRequest {
+  // Resource with id and etag set.
+  Qualification qualification = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateQualificationResponse {
+  Qualification qualification = 1;
+}
+
+message DeleteQualificationRequest {
+  // Qualification id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteQualificationResponse {
+}
+
+message ListEducationHistoryRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListEducationHistoryResponse {
+  repeated EducationHistory items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetEducationHistoryRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // EducationHistory id (UUID).
+  string id = 2;
+}
+message GetEducationHistoryResponse {
+  EducationHistory education_history = 1;
+}
+
+message CreateEducationHistoryRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  EducationHistory education_history = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateEducationHistoryResponse {
+  EducationHistory education_history = 1;
+}
+
+message UpdateEducationHistoryRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Resource with id and etag set.
+  EducationHistory education_history = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateEducationHistoryResponse {
+  EducationHistory education_history = 1;
+}
+
+message DeleteEducationHistoryRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // EducationHistory id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteEducationHistoryResponse {
+}
+
+message ListWorkExperiencesRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListWorkExperiencesResponse {
+  repeated WorkExperience items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetWorkExperienceRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // WorkExperience id (UUID).
+  string id = 2;
+}
+message GetWorkExperienceResponse {
+  WorkExperience work_experience = 1;
+}
+
+message CreateWorkExperienceRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  WorkExperience work_experience = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateWorkExperienceResponse {
+  WorkExperience work_experience = 1;
+}
+
+message UpdateWorkExperienceRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Resource with id and etag set.
+  WorkExperience work_experience = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateWorkExperienceResponse {
+  WorkExperience work_experience = 1;
+}
+
+message DeleteWorkExperienceRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // WorkExperience id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteWorkExperienceResponse {
+}
+
+message ListCertificationsRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListCertificationsResponse {
+  repeated Certification items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetCertificationRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Certification id (UUID).
+  string id = 2;
+}
+message GetCertificationResponse {
+  Certification certification = 1;
+}
+
+message CreateCertificationRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  Certification certification = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateCertificationResponse {
+  Certification certification = 1;
+}
+
+message UpdateCertificationRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Resource with id and etag set.
+  Certification certification = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateCertificationResponse {
+  Certification certification = 1;
+}
+
+message DeleteCertificationRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Certification id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteCertificationResponse {
+}
+
+message ListSkillsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListSkillsResponse {
+  repeated Skill items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetSkillRequest {
+  // Skill id (UUID).
+  string id = 1;
+}
+message GetSkillResponse {
+  Skill skill = 1;
+}
+
+message CreateSkillRequest {
+  Skill skill = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateSkillResponse {
+  Skill skill = 1;
+}
+
+message UpdateSkillRequest {
+  // Resource with id and etag set.
+  Skill skill = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateSkillResponse {
+  Skill skill = 1;
+}
+
+message DeleteSkillRequest {
+  // Skill id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteSkillResponse {
+}
+
+message ListPersonSkillsRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListPersonSkillsResponse {
+  repeated PersonSkill items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetPersonSkillRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // PersonSkill id (UUID).
+  string id = 2;
+}
+message GetPersonSkillResponse {
+  PersonSkill person_skill = 1;
+}
+
+message CreatePersonSkillRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  PersonSkill person_skill = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreatePersonSkillResponse {
+  PersonSkill person_skill = 1;
+}
+
+message UpdatePersonSkillRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Resource with id and etag set.
+  PersonSkill person_skill = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdatePersonSkillResponse {
+  PersonSkill person_skill = 1;
+}
+
+message DeletePersonSkillRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // PersonSkill id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeletePersonSkillResponse {
+}
+
+message ListPersonDocumentsRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListPersonDocumentsResponse {
+  repeated PersonDocument items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetPersonDocumentRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // PersonDocument id (UUID).
+  string id = 2;
+}
+message GetPersonDocumentResponse {
+  PersonDocument person_document = 1;
+}
+
+message CreatePersonDocumentRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  PersonDocument person_document = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreatePersonDocumentResponse {
+  PersonDocument person_document = 1;
+}
+
+message UpdatePersonDocumentRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Resource with id and etag set.
+  PersonDocument person_document = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdatePersonDocumentResponse {
+  PersonDocument person_document = 1;
+}
+
+message DeletePersonDocumentRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // PersonDocument id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeletePersonDocumentResponse {
+}
+
+message GetPublicProfileRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // PublicProfile id (UUID).
+  string id = 2;
+}
+message GetPublicProfileResponse {
+  PublicProfile public_profile = 1;
+}
+
+message CreatePublicProfileRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  PublicProfile public_profile = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreatePublicProfileResponse {
+  PublicProfile public_profile = 1;
+}
+
+message UpdatePublicProfileRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Resource with id and etag set.
+  PublicProfile public_profile = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdatePublicProfileResponse {
+  PublicProfile public_profile = 1;
+}
+
+message DeletePublicProfileRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // PublicProfile id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeletePublicProfileResponse {
+}
+
+message ListPersonSocialLinksRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListPersonSocialLinksResponse {
+  repeated PersonSocialLink items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetPersonSocialLinkRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // PersonSocialLink id (UUID).
+  string id = 2;
+}
+message GetPersonSocialLinkResponse {
+  PersonSocialLink person_social_link = 1;
+}
+
+message CreatePersonSocialLinkRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  PersonSocialLink person_social_link = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreatePersonSocialLinkResponse {
+  PersonSocialLink person_social_link = 1;
+}
+
+message UpdatePersonSocialLinkRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Resource with id and etag set.
+  PersonSocialLink person_social_link = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdatePersonSocialLinkResponse {
+  PersonSocialLink person_social_link = 1;
+}
+
+message DeletePersonSocialLinkRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // PersonSocialLink id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeletePersonSocialLinkResponse {
+}
+
+message ListConsentRecordsRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListConsentRecordsResponse {
+  repeated ConsentRecord items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetConsentRecordRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  // ConsentRecord id (UUID).
+  string id = 2;
+}
+message GetConsentRecordResponse {
+  ConsentRecord consent_record = 1;
+}
+
+message CreateConsentRecordRequest {
+  // Person id (UUID).
+  string person_id = 1;
+  ConsentRecord consent_record = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateConsentRecordResponse {
+  ConsentRecord consent_record = 1;
+}
+
+message ListBirthdaysRequest {
+  // Institution. Required.
+  string institution_id = 1;
+  // From. Required.
+  string from_date = 2;
+  // To. Required.
+  string to_date = 3;
+  // birthday / work_anniversary.
+  repeated string kinds = 4;
+  // student / staff / guardian.
+  repeated string roles = 5;
+  // Maximum items to return (1-500, default 50).
+  optional int32 page_size = 6;
+  // Cursor from next_page_token.
+  optional string page_token = 7;
+}
+message ListBirthdaysResponse {
+  repeated mysms.common.v1.BirthdayEntry items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message SendGreetingsRequest {
+  // People to greet. Required.
+  repeated string person_ids = 1;
+  // Message template. Required.
+  string template_id = 2;
+  // Channel. Required.
+  Channel channel = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+  // Allowed values of channel; REST/JSON uses the lowercase value shown in each comment.
+  enum Channel {
+    CHANNEL_UNSPECIFIED = 0;
+    // "sms"
+    CHANNEL_SMS = 1;
+    // "email"
+    CHANNEL_EMAIL = 2;
+    // "push"
+    CHANNEL_PUSH = 3;
+  }
+}
+message SendGreetingsResponse {
+  mysms.common.v1.SendResult result = 1;
+}
+
+message WithdrawConsentRequest {
+  // Path parameter personId.
+  string person_id = 1;
+  // Path parameter consentRecordId.
+  string consent_record_id = 2;
+  // Reason given by the person or guardian.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message WithdrawConsentResponse {
+  ConsentRecord consent_record = 1;
+}
+
+message GetConsentStatusRequest {
+  // Path parameter personId.
+  string person_id = 1;
+  // Maximum items to return (1-500, default 50).
+  optional int32 page_size = 2;
+  // Cursor from next_page_token.
+  optional string page_token = 3;
+}
+message GetConsentStatusResponse {
+  repeated ConsentRecord items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+// Name prefix such as Mr, Ms, Dr.
+message Honorific {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Full form, e.g. Doctor.
+  string name = 2;
+  // Abbreviation, e.g. Dr.
+  optional string shortcut = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 9;
+  // Display order.
+  optional int32 sort_order = 10;
+  // Whether offered for new picks.
+  optional bool is_active = 11;
+}
+
+// A human being. Shared identity for student, guardian, staff, applicant and student roles.
+message Person {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Name prefix. [UUID]
+  optional string honorific_id = 2;
+  // Given name.
+  optional string first_name = 3;
+  // Middle name.
+  optional string middle_name = 4;
+  // Family name.
+  optional string last_name = 5;
+  // Full name as displayed.
+  string display_name = 6;
+  // Date of birth. [ISO-8601 date (YYYY-MM-DD)]
+  optional string date_of_birth = 7;
+  // Gender.
+  optional Gender gender = 8;
+  // Blood group.
+  optional BloodGroup blood_group = 9;
+  // Marital status.
+  optional MaritalStatus marital_status = 10;
+  // Place of birth.
+  optional string birth_place = 11;
+  // Native place / hometown.
+  optional string native_place = 12;
+  // Nationality. [UUID]
+  optional string nationality_country_id = 13;
+  // Mother tongue.
+  optional string mother_tongue = 14;
+  // Religion (optional, for statutory reporting).
+  optional string religion = 15;
+  // Government social category used for statutory reporting (e.g. GEN, OBC, SC, ST).
+  optional string social_category = 16;
+  // Sub-category.
+  optional string social_sub_category = 17;
+  // Type of national id (e.g. AADHAAR, SSN, PASSPORT).
+  optional string national_id_type = 18;
+  // Plain value, input only: stored encrypted and never returned. National id number, encrypted at rest.
+  optional string national_id = 19;
+  // Masked form for display, e.g. "••••1234". Output only.
+  optional string national_id_masked = 20;
+  // Visa / residence-permit details.
+  optional string visa_info = 21;
+  // Personal e-mail.
+  optional string primary_email = 22;
+  // Personal phone.
+  optional string primary_phone = 23;
+  // Alternate phone.
+  optional string alternate_phone = 24;
+  // Profile photo. [UUID]
+  optional string photo_file_id = 25;
+  // Free-text notes about the person.
+  optional string remarks = 26;
+  // Office / work phone.
+  optional string work_phone = 32;
+  // Personal web page.
+  optional string website_url = 33;
+  // Short self-description shown on the profile.
+  optional string about_me = 34;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 27;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 28;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 29;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 30;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 31;
+  // Allowed values of gender; REST/JSON uses the lowercase value shown in each comment.
+  enum Gender {
+    GENDER_UNSPECIFIED = 0;
+    // "male"
+    GENDER_MALE = 1;
+    // "female"
+    GENDER_FEMALE = 2;
+    // "other"
+    GENDER_OTHER = 3;
+    // "undisclosed"
+    GENDER_UNDISCLOSED = 4;
+  }
+  // Allowed values of blood_group; REST/JSON uses the lowercase value shown in each comment.
+  enum BloodGroup {
+    BLOOD_GROUP_UNSPECIFIED = 0;
+    // "A+"
+    BLOOD_GROUP_A_POSITIVE = 1;
+    // "A-"
+    BLOOD_GROUP_A_NEGATIVE = 2;
+    // "B+"
+    BLOOD_GROUP_B_POSITIVE = 3;
+    // "B-"
+    BLOOD_GROUP_B_NEGATIVE = 4;
+    // "O+"
+    BLOOD_GROUP_O_POSITIVE = 5;
+    // "O-"
+    BLOOD_GROUP_O_NEGATIVE = 6;
+    // "AB+"
+    BLOOD_GROUP_AB_POSITIVE = 7;
+    // "AB-"
+    BLOOD_GROUP_AB_NEGATIVE = 8;
+    // "A1+"
+    BLOOD_GROUP_A1_POSITIVE = 9;
+    // "A1-"
+    BLOOD_GROUP_A1_NEGATIVE = 10;
+    // "B1+"
+    BLOOD_GROUP_B1_POSITIVE = 11;
+    // "B1-"
+    BLOOD_GROUP_B1_NEGATIVE = 12;
+    // "A1B+"
+    BLOOD_GROUP_A1B_POSITIVE = 13;
+    // "A1B-"
+    BLOOD_GROUP_A1B_NEGATIVE = 14;
+  }
+  // Allowed values of marital_status; REST/JSON uses the lowercase value shown in each comment.
+  enum MaritalStatus {
+    MARITAL_STATUS_UNSPECIFIED = 0;
+    // "single"
+    MARITAL_STATUS_SINGLE = 1;
+    // "married"
+    MARITAL_STATUS_MARRIED = 2;
+    // "divorced"
+    MARITAL_STATUS_DIVORCED = 3;
+    // "widowed"
+    MARITAL_STATUS_WIDOWED = 4;
+  }
+}
+
+// Postal address of a person, by purpose.
+message PersonAddress {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person. [UUID] Set from the parent path on create.
+  string person_id = 2;
+  // Purpose of the address.
+  AddressType address_type = 3;
+  // Address line 1.
+  optional string line1 = 4;
+  // Address line 2.
+  optional string line2 = 5;
+  // City (from master). [UUID]
+  optional string city_id = 6;
+  // City as free text when not in the master.
+  optional string city_name = 7;
+  // State / province. [UUID]
+  optional string state_province_id = 8;
+  // Country. [UUID]
+  optional string country_id = 9;
+  // Postal / PIN code.
+  optional string postal_code = 10;
+  // Primary address of its type.
+  bool is_primary = 11;
+  // State / province as free text when not picked from the list.
+  optional string state_name = 17;
+  // Display order.
+  int32 sort_order = 18;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 12;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 13;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 14;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 15;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 16;
+  // Allowed values of address_type; REST/JSON uses the lowercase value shown in each comment.
+  enum AddressType {
+    ADDRESS_TYPE_UNSPECIFIED = 0;
+    // "permanent"
+    ADDRESS_TYPE_PERMANENT = 1;
+    // "communication"
+    ADDRESS_TYPE_COMMUNICATION = 2;
+    // "official"
+    ADDRESS_TYPE_OFFICIAL = 3;
+    // "billing"
+    ADDRESS_TYPE_BILLING = 4;
+    // "other"
+    ADDRESS_TYPE_OTHER = 5;
+  }
+}
+
+// Person to call in an emergency for another person.
+message EmergencyContact {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person the contact is for. [UUID] Set from the parent path on create.
+  string person_id = 2;
+  // Contact, when recorded as a person. [UUID]
+  optional string contact_person_id = 3;
+  // Contact name (when not a person record).
+  optional string contact_name = 4;
+  // Relationship to the person.
+  optional string relationship = 5;
+  // Contact number (may come from the linked person instead).
+  optional string phone = 6;
+  // Call order (1 = first).
+  int32 priority = 7;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 8;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 9;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 10;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 11;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 12;
+}
+
+// Academic / professional qualification catalogue (B.Ed, M.Sc, ...).
+message Qualification {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Qualification name.
+  string name = 2;
+  // Qualification level.
+  Level level = 3;
+  // Whether selectable.
+  bool is_active = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+  // Allowed values of level; REST/JSON uses the lowercase value shown in each comment.
+  enum Level {
+    LEVEL_UNSPECIFIED = 0;
+    // "undergraduate"
+    LEVEL_UNDERGRADUATE = 1;
+    // "postgraduate"
+    LEVEL_POSTGRADUATE = 2;
+    // "teacher_training"
+    LEVEL_TEACHER_TRAINING = 3;
+    // "doctorate"
+    LEVEL_DOCTORATE = 4;
+    // "diploma"
+    LEVEL_DIPLOMA = 5;
+    // "school"
+    LEVEL_SCHOOL = 6;
+    // "other"
+    LEVEL_OTHER = 7;
+  }
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 10;
+  // Display order.
+  optional int32 sort_order = 11;
+}
+
+// A person's education record (degree, school, grades).
+message EducationHistory {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person. [UUID] Set from the parent path on create.
+  string person_id = 2;
+  // Qualification obtained (when in the catalogue). [UUID]
+  optional string qualification_id = 3;
+  // School / college / university.
+  string institution_name = 4;
+  // Location of the institution.
+  optional string location = 5;
+  // Degree / certificate type.
+  optional string degree_type = 6;
+  // Major / specialisation.
+  optional string major = 7;
+  // Grading system of the grade.
+  optional GradeType grade_type = 8;
+  // Grade obtained.
+  optional string grade = 9;
+  // Start date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string start_date = 10;
+  // End date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string end_date = 11;
+  // Certificate / degree title obtained.
+  optional string certification = 17;
+  // Minor subject.
+  optional string minor = 18;
+  // Mode of study.
+  optional StudyMode study_mode = 19;
+  // Display order.
+  int32 sort_order = 20;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 12;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 13;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 14;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 15;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 16;
+  // Allowed values of grade_type; REST/JSON uses the lowercase value shown in each comment.
+  enum GradeType {
+    GRADE_TYPE_UNSPECIFIED = 0;
+    // "percentage"
+    GRADE_TYPE_PERCENTAGE = 1;
+    // "score"
+    GRADE_TYPE_SCORE = 2;
+    // "letter_grade"
+    GRADE_TYPE_LETTER_GRADE = 3;
+    // "uk_class"
+    GRADE_TYPE_UK_CLASS = 4;
+    // "french_mention"
+    GRADE_TYPE_FRENCH_MENTION = 5;
+    // "cgpa_4"
+    GRADE_TYPE_CGPA_4 = 6;
+    // "cgpa_10"
+    GRADE_TYPE_CGPA_10 = 7;
+  }
+  // Allowed values of study_mode; REST/JSON uses the lowercase value shown in each comment.
+  enum StudyMode {
+    STUDY_MODE_UNSPECIFIED = 0;
+    // "full_time"
+    STUDY_MODE_FULL_TIME = 1;
+    // "part_time"
+    STUDY_MODE_PART_TIME = 2;
+    // "correspondence"
+    STUDY_MODE_CORRESPONDENCE = 3;
+    // "online"
+    STUDY_MODE_ONLINE = 4;
+  }
+}
+
+// Job or internship held by a person.
+message WorkExperience {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person. [UUID] Set from the parent path on create.
+  string person_id = 2;
+  // Job or internship.
+  ExperienceType experience_type = 3;
+  // Job title.
+  string title = 4;
+  // Employer.
+  string company = 5;
+  // Location.
+  string location = 6;
+  // Start date. [ISO-8601 date (YYYY-MM-DD)]
+  string from_date = 7;
+  // End date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string to_date = 8;
+  // Currently in this role.
+  bool is_current = 9;
+  // Responsibilities / achievements.
+  optional string description = 10;
+  // Company web site.
+  optional string company_website = 16;
+  // Industry.
+  optional string industry = 17;
+  // Responsibilities.
+  optional string responsibilities = 18;
+  // Display order.
+  int32 sort_order = 19;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 11;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 12;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 14;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 15;
+  // Allowed values of experience_type; REST/JSON uses the lowercase value shown in each comment.
+  enum ExperienceType {
+    EXPERIENCE_TYPE_UNSPECIFIED = 0;
+    // "job"
+    EXPERIENCE_TYPE_JOB = 1;
+    // "internship"
+    EXPERIENCE_TYPE_INTERNSHIP = 2;
+  }
+}
+
+// Professional certification held by a person.
+message Certification {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person. [UUID] Set from the parent path on create.
+  string person_id = 2;
+  // Certification name.
+  string name = 3;
+  // Issuer.
+  string issuing_organization = 4;
+  // Issue date. [ISO-8601 date (YYYY-MM-DD)]
+  string issue_date = 5;
+  // Whether it expires.
+  bool expires = 6;
+  // Expiry date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string expiration_date = 7;
+  // Details.
+  optional string description = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+}
+
+// Skill catalogue.
+message Skill {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Skill name.
+  string name = 2;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 3;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 4;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 5;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 6;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 7;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 8;
+  // Display order.
+  optional int32 sort_order = 9;
+  // Whether offered for new picks.
+  optional bool is_active = 10;
+}
+
+// Skill held by a person.
+message PersonSkill {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person. [UUID] Set from the parent path on create.
+  string person_id = 2;
+  // Skill. [UUID]
+  string skill_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// Document kept on file for a person (certificates, id proofs).
+message PersonDocument {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person. [UUID] Set from the parent path on create.
+  string person_id = 2;
+  // Institution that holds the document. [UUID]
+  optional string institution_id = 3;
+  // Document category.
+  DocumentType document_type = 4;
+  // Document title.
+  string name = 5;
+  // Stored file. [UUID]
+  string file_id = 6;
+  // Version number of this document.
+  int32 document_version = 7;
+  // Whether current.
+  Status status = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+  // Allowed values of document_type; REST/JSON uses the lowercase value shown in each comment.
+  enum DocumentType {
+    DOCUMENT_TYPE_UNSPECIFIED = 0;
+    // "certificate"
+    DOCUMENT_TYPE_CERTIFICATE = 1;
+    // "id_proof"
+    DOCUMENT_TYPE_ID_PROOF = 2;
+    // "other"
+    DOCUMENT_TYPE_OTHER = 3;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "archived"
+    STATUS_ARCHIVED = 2;
+  }
+}
+
+// Public student / alumni profile shown on portfolio and career pages.
+message PublicProfile {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person. [UUID] Set from the parent path on create.
+  string person_id = 2;
+  // One-line headline.
+  optional string headline = 3;
+  // Profession.
+  optional string profession = 4;
+  // Self-identified persona.
+  optional PersonaCategory persona_category = 5;
+  // Profile cover image. [UUID]
+  optional string cover_image_file_id = 6;
+  // City.
+  optional string city = 7;
+  // Country. [UUID]
+  optional string country_id = 8;
+  // College.
+  optional string college = 9;
+  // Branch / stream.
+  optional string branch = 10;
+  // LinkedIn URL.
+  optional string linkedin_url = 11;
+  // GitHub URL.
+  optional string github_url = 12;
+  // X / Twitter URL.
+  optional string twitter_url = 13;
+  // Medium URL.
+  optional string medium_url = 14;
+  // Hide contact details from the public profile.
+  bool hide_private_info = 15;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 16;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 17;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 18;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 19;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 20;
+  // Allowed values of persona_category; REST/JSON uses the lowercase value shown in each comment.
+  enum PersonaCategory {
+    PERSONA_CATEGORY_UNSPECIFIED = 0;
+    // "business_owner"
+    PERSONA_CATEGORY_BUSINESS_OWNER = 1;
+    // "manager"
+    PERSONA_CATEGORY_MANAGER = 2;
+    // "employee"
+    PERSONA_CATEGORY_EMPLOYEE = 3;
+    // "student"
+    PERSONA_CATEGORY_STUDENT = 4;
+    // "freelancer"
+    PERSONA_CATEGORY_FREELANCER = 5;
+    // "other"
+    PERSONA_CATEGORY_OTHER = 6;
+  }
+}
+
+// Social network / messaging handle of a person.
+message PersonSocialLink {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person. [UUID] Set from the parent path on create.
+  string person_id = 2;
+  // Network (from the fixed network catalogue).
+  Network network = 3;
+  // Handle, profile URL or number.
+  string handle = 4;
+  // Display order.
+  int32 sort_order = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+  // Allowed values of network; REST/JSON uses the lowercase value shown in each comment.
+  enum Network {
+    NETWORK_UNSPECIFIED = 0;
+    // "facebook"
+    NETWORK_FACEBOOK = 1;
+    // "twitter"
+    NETWORK_TWITTER = 2;
+    // "linkedin"
+    NETWORK_LINKEDIN = 3;
+    // "instagram"
+    NETWORK_INSTAGRAM = 4;
+    // "youtube"
+    NETWORK_YOUTUBE = 5;
+    // "skype"
+    NETWORK_SKYPE = 6;
+    // "whatsapp"
+    NETWORK_WHATSAPP = 7;
+    // "telegram"
+    NETWORK_TELEGRAM = 8;
+    // "github"
+    NETWORK_GITHUB = 9;
+    // "website"
+    NETWORK_WEBSITE = 10;
+    // "other"
+    NETWORK_OTHER = 11;
+  }
+}
+
+// Consent given (or withdrawn) for processing a person's data for one purpose; for minors the consent is given by a guardian. Current consent = latest row per person and purpose with withdrawn_at NULL.
+message ConsentRecord {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person the data belongs to. [UUID] Set from the parent path on create.
+  string person_id = 2;
+  // Person who gave the consent (the person, or a guardian for a minor). [UUID]
+  string given_by_person_id = 3;
+  // What the consent covers.
+  Purpose purpose = 4;
+  // Version of the privacy notice / consent text shown.
+  string policy_version = 5;
+  // When consent was given.
+  google.protobuf.Timestamp granted_at = 6;
+  // When consent was withdrawn (NULL = in force).
+  google.protobuf.Timestamp withdrawn_at = 7;
+  // How consent was captured.
+  Channel channel = 8;
+  // Staff who recorded a paper / in-person consent. [UUID]
+  optional string recorded_by_user_id = 9;
+  // Signed form or other evidence. [UUID]
+  optional string evidence_file_id = 10;
+  // Client address for online consent.
+  optional string ip_address = 11;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 12;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 13;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 14;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 15;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 16;
+  // Allowed values of purpose; REST/JSON uses the lowercase value shown in each comment.
+  enum Purpose {
+    PURPOSE_UNSPECIFIED = 0;
+    // "data_processing"
+    PURPOSE_DATA_PROCESSING = 1;
+    // "photo_video_publication"
+    PURPOSE_PHOTO_VIDEO_PUBLICATION = 2;
+    // "public_profile"
+    PURPOSE_PUBLIC_PROFILE = 3;
+    // "marketing"
+    PURPOSE_MARKETING = 4;
+    // "third_party_sharing"
+    PURPOSE_THIRD_PARTY_SHARING = 5;
+    // "sms_whatsapp_messages"
+    PURPOSE_SMS_WHATSAPP_MESSAGES = 6;
+    // "biometric_data"
+    PURPOSE_BIOMETRIC_DATA = 7;
+  }
+  // Allowed values of channel; REST/JSON uses the lowercase value shown in each comment.
+  enum Channel {
+    CHANNEL_UNSPECIFIED = 0;
+    // "web"
+    CHANNEL_WEB = 1;
+    // "mobile_app"
+    CHANNEL_MOBILE_APP = 2;
+    // "paper_form"
+    CHANNEL_PAPER_FORM = 3;
+    // "email"
+    CHANNEL_EMAIL = 4;
+    // "in_person"
+    CHANNEL_IN_PERSON = 5;
+  }
+}
+
+message GetMyPersonRequest {
+}
+message GetMyPersonResponse {
+  Person person = 1;
+}
+// Fields of their own Person a user may change themselves.
+message MyPersonUpdate {
+  // Personal e-mail.
+  optional string primary_email = 1;
+  // Personal phone.
+  optional string primary_phone = 2;
+  // Alternate phone.
+  optional string alternate_phone = 3;
+  // Office / work phone.
+  optional string work_phone = 4;
+  // Personal web page.
+  optional string website_url = 5;
+  // Short self-description shown on the profile.
+  optional string about_me = 6;
+  reserved 7;
+  reserved "photo_file_id";
+  // Mother tongue.
+  optional string mother_tongue = 8;
+}
+message UpdateMyPersonRequest {
+  MyPersonUpdate person = 1;
+  // Current ETag of the person (If-Match).
+  string etag = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateMyPersonResponse {
+  Person person = 1;
+}

@@ -1,0 +1,135 @@
+erDiagram
+    hr__designation["hr.designation"] {
+        uuid id PK
+        varchar(60) code "NN"
+        varchar(120) name "NN"
+        varchar(30) staff_category "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    hr__staff["hr.staff"] {
+        uuid id PK
+        uuid person_id FK "NN · → people.person (logical)"
+        uuid user_id FK "→ iam.user_account (logical)"
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(30) employee_code
+        uuid designation_id FK
+        varchar(120) sub_designation
+        varchar(30) employment_type "NN"
+        date joining_date
+        uuid reporting_to_staff_id FK
+        uuid primary_department_id FK "→ org.department (logical)"
+        uuid highest_qualification_id FK "→ people.qualification (logical)"
+        varchar(150) qualification_detail
+        varchar(150) specialization
+        text interests
+        integer max_periods_per_week
+        varchar(30) status "NN"
+    }
+    hr__staff_department["hr.staff_department"] {
+        uuid id PK
+        uuid staff_id FK "NN"
+        uuid department_id FK "NN · → org.department (logical)"
+    }
+    hr__staff_subject["hr.staff_subject"] {
+        uuid id PK
+        uuid staff_id FK "NN"
+        uuid subject_id FK "NN · → academics.subject (logical)"
+    }
+    hr__leave_type["hr.leave_type"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        varchar(100) name "NN"
+        numeric max_days_per_year "5,1 · NN"
+        boolean is_active "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+    }
+    hr__leave_application["hr.leave_application"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "NN · → org.academic_year (logical)"
+        uuid staff_id FK "NN"
+        uuid leave_type_id FK
+        uuid absence_reason_id FK "→ attendance.absence_reason (logical)"
+        uuid class_section_id FK "→ academics.class_section (logical)"
+        timestamptz from_at "NN"
+        timestamptz to_at "NN"
+        varchar(30) day_part "NN"
+        text remarks
+        varchar(30) status "NN"
+        uuid decided_by_user_id FK "→ iam.user_account (logical)"
+        date decided_on
+        text decision_comments
+    }
+    hr__leave_balance["hr.leave_balance"] {
+        uuid id PK
+        uuid staff_id FK "NN"
+        uuid leave_type_id FK "NN"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        numeric entitled_days "5,1 · NN"
+        numeric used_days "5,1 · NN"
+        numeric carried_forward_days "5,1 · NN"
+    }
+    hr__outbox_event["hr.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    hr__inbox_event["hr.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    hr__idempotency_key["hr.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    hr__operation["hr.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    hr__number_sequence["hr.number_sequence"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(40) sequence_code "NN"
+        varchar(20) period_key "NN"
+        varchar(20) prefix
+        smallint padding "NN"
+        bigint next_value "NN"
+    }
+    hr__designation |o--o{ hr__staff : "designation_id"
+    hr__staff ||--o{ hr__staff_department : "staff_id"
+    hr__staff ||--o{ hr__staff_subject : "staff_id"
+    hr__staff ||--o{ hr__leave_application : "staff_id"
+    hr__leave_type |o--o{ hr__leave_application : "leave_type_id"
+    hr__staff ||--o{ hr__leave_balance : "staff_id"
+    hr__leave_type ||--o{ hr__leave_balance : "leave_type_id"
+    hr__staff |o--o{ hr__staff : "reporting_to_staff_id"

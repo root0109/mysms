@@ -1,0 +1,109 @@
+erDiagram
+    careers__function_area["careers.function_area"] {
+        uuid id PK
+        varchar(120) name "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    careers__industry["careers.industry"] {
+        uuid id PK
+        varchar(120) name "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    careers__job_opening["careers.job_opening"] {
+        uuid id PK
+        uuid posted_by_user_id FK "→ iam.user_account (logical)"
+        varchar(200) title "NN"
+        varchar(150) location "NN"
+        uuid country_id FK "NN · → master.country (logical)"
+        varchar(30) employment_type "NN"
+        varchar(30) work_mode
+        varchar(30) status "NN"
+        text description "NN"
+        varchar(200) company_name "NN"
+        varchar(500) company_website "NN"
+        varchar(320) company_email "NN"
+        uuid company_logo_file_id FK "NN · → platform.file_object (logical)"
+    }
+    careers__job_application["careers.job_application"] {
+        uuid id PK
+        uuid job_opening_id FK "NN"
+        uuid applicant_user_id FK "NN · → iam.user_account (logical)"
+        uuid resume_file_id FK "NN · → platform.file_object (logical)"
+        varchar(30) status "NN"
+    }
+    careers__candidate_preference["careers.candidate_preference"] {
+        uuid id PK
+        uuid person_id FK "NN · → people.person (logical)"
+        varchar(30) open_to
+        varchar(150) preferred_location
+        text dream_companies
+        varchar(30) attire
+        varchar(30) collaboration
+        varchar(30) role_clarity
+        varchar(30) location_preference
+        varchar(30) work_hours
+        varchar(30) company_type
+    }
+    careers__candidate_preferred_function["careers.candidate_preferred_function"] {
+        uuid id PK
+        uuid candidate_preference_id FK "NN"
+        uuid function_area_id FK "NN"
+    }
+    careers__candidate_preferred_industry["careers.candidate_preferred_industry"] {
+        uuid id PK
+        uuid candidate_preference_id FK "NN"
+        uuid industry_id FK "NN"
+    }
+    careers__outbox_event["careers.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    careers__inbox_event["careers.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    careers__idempotency_key["careers.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    careers__operation["careers.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    careers__job_opening ||--o{ careers__job_application : "job_opening_id"
+    careers__candidate_preference ||--o{ careers__candidate_preferred_function : "candidate_preference_id"
+    careers__function_area ||--o{ careers__candidate_preferred_function : "function_area_id"
+    careers__candidate_preference ||--o{ careers__candidate_preferred_industry : "candidate_preference_id"
+    careers__industry ||--o{ careers__candidate_preferred_industry : "industry_id"

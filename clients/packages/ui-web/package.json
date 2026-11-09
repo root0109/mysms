@@ -1,0 +1,39 @@
+{
+  "name": "@mysms/ui-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Web components (ui/04 \u00a75). Presentational only: no data access, no literal copy (all text arrives through props).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint --max-warnings 0 src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mysms/tokens": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@mysms/config": "workspace:*",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/jest-dom": "6.10.0",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
+    "@types/node": "22.20.5",
+    "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
+    "axe-core": "4.11.4",
+    "jsdom": "26.1.0",
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

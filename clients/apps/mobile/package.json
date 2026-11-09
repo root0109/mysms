@@ -1,0 +1,30 @@
+{
+  "name": "@mysms/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "S / P / T \u2014 one Expo project, three build targets (student, parent, teacher) selected by APP_VARIANT (ui/05 \u00a71).",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "start:parent": "APP_VARIANT=parent expo start",
+    "start:teacher": "APP_VARIANT=teacher expo start",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint --max-warnings 0 src index.ts app.config.ts"
+  },
+  "dependencies": {
+    "@mysms/core": "workspace:*",
+    "@mysms/native-kit": "workspace:*",
+    "@tanstack/react-query": "5.106.1",
+    "expo": "54.0.38",
+    "expo-constants": "18.0.14",
+    "expo-secure-store": "15.0.8",
+    "expo-status-bar": "3.0.9",
+    "react": "19.1.10",
+    "react-native": "0.81.6"
+  },
+  "devDependencies": {
+    "@mysms/config": "workspace:*",
+    "@types/react": "19.1.17",
+    "typescript": "5.9.3"
+  }
+}

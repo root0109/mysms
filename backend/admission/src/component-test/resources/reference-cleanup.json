@@ -1,0 +1,93 @@
+{
+ "module": "admission",
+ "cleanup": [
+  {
+   "event": "people.person.deleted",
+   "table": "admission.application",
+   "column": "applicant_person_id",
+   "action": "null the column",
+   "ownerId": "c14896ee-2c9d-5c59-aa69-ce5f844d65b2",
+   "rowId": "1efaa20d-789d-5a3d-89f7-657d3633c716",
+   "otherRowId": "e1e825c8-0a1b-557a-a268-9f82d9c1b204",
+   "fixtures": [],
+   "row": "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, applicant_person_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-application-number-cf761ca4', 't-full-name-82b5a0aa', '2026-01-10', 'male', 1, 'c14896ee-2c9d-5c59-aa69-ce5f844d65b2', '1efaa20d-789d-5a3d-89f7-657d3633c716')",
+   "otherFixtures": [],
+   "other": "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, applicant_person_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-application-number-55ef473d', 't-full-name-7a119477', '2026-01-10', 'male', 1, 'c14896ee-2c9d-5c59-aa69-ce5f844d65b2', 'e1e825c8-0a1b-557a-a268-9f82d9c1b204')",
+   "softDeletable": true
+  },
+  {
+   "event": "finance.fee_plan.deleted",
+   "table": "admission.application",
+   "column": "fee_plan_id",
+   "action": "null the column",
+   "ownerId": "f6225977-fd8e-59c8-a0fd-c093a6f7d73d",
+   "rowId": "fb6724f1-e25e-517f-bc22-dffa7f72c3d6",
+   "otherRowId": "cbc38a32-1bd5-54d5-8e23-ac3c76a2e684",
+   "fixtures": [],
+   "row": "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, fee_plan_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-application-number-6b52b9c4', 't-full-name-4de3baaa', '2026-01-10', 'male', 1, 'f6225977-fd8e-59c8-a0fd-c093a6f7d73d', 'fb6724f1-e25e-517f-bc22-dffa7f72c3d6')",
+   "otherFixtures": [],
+   "other": "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, fee_plan_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-application-number-ca2716d7', 't-full-name-fb0e450c', '2026-01-10', 'male', 1, 'f6225977-fd8e-59c8-a0fd-c093a6f7d73d', 'cbc38a32-1bd5-54d5-8e23-ac3c76a2e684')",
+   "softDeletable": true
+  },
+  {
+   "event": "people.honorific.deleted",
+   "table": "admission.application",
+   "column": "honorific_id",
+   "action": "null the column",
+   "ownerId": "7f3235c6-b25e-5a76-a660-ed676f206af9",
+   "rowId": "965b9870-370d-5e76-a98e-e87ee196cbef",
+   "otherRowId": "71a94cb4-cc64-5347-b81d-0f07067aa43c",
+   "fixtures": [],
+   "row": "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, honorific_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-application-number-8ec9e2cc', 't-full-name-79a650c5', '2026-01-10', 'male', 1, '7f3235c6-b25e-5a76-a660-ed676f206af9', '965b9870-370d-5e76-a98e-e87ee196cbef')",
+   "otherFixtures": [],
+   "other": "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, honorific_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-application-number-9f4e9fe5', 't-full-name-768a5c51', '2026-01-10', 'male', 1, '7f3235c6-b25e-5a76-a660-ed676f206af9', '71a94cb4-cc64-5347-b81d-0f07067aa43c')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "admission.application",
+   "column": "photo_file_id",
+   "action": "null the column",
+   "ownerId": "58533ed2-f83c-572a-a14e-4d5db2423ce4",
+   "rowId": "4120fefe-f61a-5723-be6c-b95b123641d3",
+   "otherRowId": "3b20ba30-2585-5504-b05e-e7d5e739572d",
+   "fixtures": [],
+   "row": "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, photo_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-application-number-f184353e', 't-full-name-5b87931a', '2026-01-10', 'male', 1, '58533ed2-f83c-572a-a14e-4d5db2423ce4', '4120fefe-f61a-5723-be6c-b95b123641d3')",
+   "otherFixtures": [],
+   "other": "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, photo_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-application-number-63a04c81', 't-full-name-97ceb91e', '2026-01-10', 'male', 1, '58533ed2-f83c-572a-a14e-4d5db2423ce4', '3b20ba30-2585-5504-b05e-e7d5e739572d')",
+   "softDeletable": true
+  },
+  {
+   "event": "sis.student.deleted",
+   "table": "admission.application",
+   "column": "student_id",
+   "action": "null the column",
+   "ownerId": "24e805d4-14ff-5b64-a1ee-594f0a9fa00f",
+   "rowId": "aa381a1b-975a-545f-99ed-4ed0abcc2eb0",
+   "otherRowId": "1fb9d42d-4f13-5eb4-96a7-625f780667e2",
+   "fixtures": [],
+   "row": "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, student_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-application-number-cf9d1360', 't-full-name-2c59168f', '2026-01-10', 'male', 1, '24e805d4-14ff-5b64-a1ee-594f0a9fa00f', 'aa381a1b-975a-545f-99ed-4ed0abcc2eb0')",
+   "otherFixtures": [],
+   "other": "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, student_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-application-number-23af8e54', 't-full-name-dda0db1d', '2026-01-10', 'male', 1, '24e805d4-14ff-5b64-a1ee-594f0a9fa00f', '1fb9d42d-4f13-5eb4-96a7-625f780667e2')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "admission.application_guardian",
+   "column": "photo_file_id",
+   "action": "null the column",
+   "ownerId": "290b3a32-c1a0-5ae8-8dbc-0ad198e433d8",
+   "rowId": "ac727276-088e-54d1-8c93-f311439e99d4",
+   "otherRowId": "63d56efd-858f-5810-8b81-a3813e9107d3",
+   "fixtures": [
+    "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-application-number-c5d48fa8', 't-full-name-da028343', '2026-01-10', 'male', 1, 'd06be8bf-f15f-59bd-a515-5aebc1807fe7') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO admission.application_guardian (tenant_id, application_id, relationship, name, row_version, photo_file_id, id) VALUES (:tenant, 'd06be8bf-f15f-59bd-a515-5aebc1807fe7', 'father', 't-name-160060fc', 1, '290b3a32-c1a0-5ae8-8dbc-0ad198e433d8', 'ac727276-088e-54d1-8c93-f311439e99d4')",
+   "otherFixtures": [
+    "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-application-number-c5d48fa8', 't-full-name-da028343', '2026-01-10', 'male', 1, 'ae9fccac-6500-5aa5-b766-5f19f3671b15') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO admission.application_guardian (tenant_id, application_id, relationship, name, row_version, photo_file_id, id) VALUES (:tenant, 'ae9fccac-6500-5aa5-b766-5f19f3671b15', 'father', 't-name-ef6e8e0f', 1, '290b3a32-c1a0-5ae8-8dbc-0ad198e433d8', '63d56efd-858f-5810-8b81-a3813e9107d3')",
+   "softDeletable": true
+  }
+ ]
+}

@@ -1,0 +1,55 @@
+{
+ "module": "assessment",
+ "cleanup": [
+  {
+   "event": "platform.file_object.deleted",
+   "table": "assessment.assignment",
+   "column": "attachment_file_id",
+   "action": "null the column",
+   "ownerId": "1e58a31d-71b4-56ac-b590-0ee5bf4349cc",
+   "rowId": "e96accfe-16e9-57fd-b7eb-58b0a638d1eb",
+   "otherRowId": "a7426965-9403-56d7-a496-1cb9645bd97b",
+   "fixtures": [],
+   "row": "INSERT INTO assessment.assignment (tenant_id, institution_id, title, class_section_id, row_version, attachment_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-83f6a1d0', '0196f000-0000-7000-8000-0000000c5e01', 1, '1e58a31d-71b4-56ac-b590-0ee5bf4349cc', 'e96accfe-16e9-57fd-b7eb-58b0a638d1eb')",
+   "otherFixtures": [],
+   "other": "INSERT INTO assessment.assignment (tenant_id, institution_id, title, class_section_id, row_version, attachment_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-e653f828', 'f1bb0404-2e20-5e18-ad1a-cff0fc779b6f', 1, '1e58a31d-71b4-56ac-b590-0ee5bf4349cc', 'a7426965-9403-56d7-a496-1cb9645bd97b')",
+   "softDeletable": true
+  },
+  {
+   "event": "facility.room.deleted",
+   "table": "assessment.exam_result",
+   "column": "room_id",
+   "action": "null the column",
+   "ownerId": "4069582b-a5dc-503f-9702-c52e4054af11",
+   "rowId": "38d3b34b-8e31-549d-b884-9069ebaee279",
+   "otherRowId": "67f7db19-7722-51d1-a4ac-10b39044dd6f",
+   "fixtures": [
+    "INSERT INTO assessment.exam_type (tenant_id, code, name, row_version, id) VALUES (:tenant, 'CAC1141C0', 't-name-54f9e1fa', 1, 'de928278-f096-58b7-a632-d3e504bbb8f0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.exam_session (tenant_id, institution_id, exam_type_id, code, name, grade_level_id, start_date, end_date, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'de928278-f096-58b7-a632-d3e504bbb8f0', 'CF88BCC7B', 't-name-45d28d3e', '0196f000-0000-7000-8000-0000000c1e01', '2026-01-10', '2026-01-20', 1, '59aa17ed-b79f-522e-a243-cd41b3552c71') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.exam (tenant_id, exam_session_id, subject_id, code, name, start_at, end_at, total_marks, pass_marks, row_version, id) VALUES (:tenant, '59aa17ed-b79f-522e-a243-cd41b3552c71', '55d8f9cd-fe6b-529c-9f2f-0901a47b09c3', 'C0B805E98', 't-name-2a629985', '2026-01-10T09:00:00Z', '2026-01-10T10:00:00Z', 2, 1, 1, '7aef1ad3-62f0-5645-b46a-0162758e3dcc') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO assessment.exam_result (tenant_id, exam_id, student_id, row_version, room_id, id) VALUES (:tenant, '7aef1ad3-62f0-5645-b46a-0162758e3dcc', 'c5ad4ed8-0710-5133-a84f-f3ed55c5f8a4', 1, '4069582b-a5dc-503f-9702-c52e4054af11', '38d3b34b-8e31-549d-b884-9069ebaee279')",
+   "otherFixtures": [
+    "INSERT INTO assessment.exam_type (tenant_id, code, name, row_version, id) VALUES (:tenant, 'CAC1141C0', 't-name-54f9e1fa', 1, '86a248d2-cba3-5bdb-ab8b-f9b2c2fcfad9') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.exam_session (tenant_id, institution_id, exam_type_id, code, name, grade_level_id, start_date, end_date, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', '86a248d2-cba3-5bdb-ab8b-f9b2c2fcfad9', 'CF88BCC7B', 't-name-45d28d3e', '187cf03f-d5d5-5444-921f-4722ac4aab02', '2026-01-10', '2026-01-20', 1, 'c3d1e832-7a12-5415-bcfb-410ca29be856') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.exam (tenant_id, exam_session_id, subject_id, code, name, start_at, end_at, total_marks, pass_marks, row_version, id) VALUES (:tenant, 'c3d1e832-7a12-5415-bcfb-410ca29be856', '69ec52cb-bf9a-5880-96f3-a7c595c0fe6f', 'C0B805E98', 't-name-2a629985', '2026-01-10T09:00:00Z', '2026-01-10T10:00:00Z', 2, 1, 1, 'c4116d86-48bc-57eb-9004-a5dbd62cf79e') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO assessment.exam_result (tenant_id, exam_id, student_id, row_version, room_id, id) VALUES (:tenant, 'c4116d86-48bc-57eb-9004-a5dbd62cf79e', '12a6b84d-17df-56d6-be47-f1d5455dd7d8', 1, '4069582b-a5dc-503f-9702-c52e4054af11', '67f7db19-7722-51d1-a4ac-10b39044dd6f')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "assessment.homework",
+   "column": "attachment_file_id",
+   "action": "null the column",
+   "ownerId": "db2b8109-ed82-5fb5-b086-4cbca0eb9130",
+   "rowId": "61f25a7d-6cda-50af-88d8-106d1152d5ef",
+   "otherRowId": "201797c1-d32d-5e62-9332-d097b25faf9b",
+   "fixtures": [],
+   "row": "INSERT INTO assessment.homework (tenant_id, institution_id, academic_year_id, class_section_id, row_version, attachment_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'ef0e32da-0d4a-51e1-a3b5-b24e1245b79e', '52494848-df24-57e9-8398-2c9806476256', 1, 'db2b8109-ed82-5fb5-b086-4cbca0eb9130', '61f25a7d-6cda-50af-88d8-106d1152d5ef')",
+   "otherFixtures": [],
+   "other": "INSERT INTO assessment.homework (tenant_id, institution_id, academic_year_id, class_section_id, row_version, attachment_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'faf5a0a7-880f-5279-8fb0-520f9850a091', 'c2f0c275-6bdf-5433-8fe0-ee28fafcd309', 1, 'db2b8109-ed82-5fb5-b086-4cbca0eb9130', '201797c1-d32d-5e62-9332-d097b25faf9b')",
+   "softDeletable": true
+  }
+ ]
+}

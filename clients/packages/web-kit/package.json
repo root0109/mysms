@@ -1,0 +1,45 @@
+{
+  "name": "@mysms/web-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "What the two web apps (W and the platform console C) share: sign-in, session guard and boot, inventory-driven routing, placeholders. ui/02 \u00a71.2: C is the W shell with a platform band.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./kit.css": "./src/kit.css"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint --max-warnings 0 src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "5.2.2",
+    "@mysms/core": "workspace:*",
+    "@mysms/i18n": "workspace:*",
+    "@mysms/ui-web": "workspace:*",
+    "react-hook-form": "7.91.0",
+    "zod": "4.1.13"
+  },
+  "peerDependencies": {
+    "react": "^19.1.0",
+    "react-router": "^7.18.5"
+  },
+  "devDependencies": {
+    "@mysms/config": "workspace:*",
+    "@mysms/fixtures": "workspace:*",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/jest-dom": "6.10.0",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
+    "@tanstack/react-query": "5.106.1",
+    "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
+    "jsdom": "26.1.0",
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "react-router": "7.18.5",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

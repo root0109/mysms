@@ -1,0 +1,190 @@
+erDiagram
+    comms__message_template["comms.message_template"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(30) channel "NN"
+        varchar(80) code
+        varchar(150) name "NN"
+        text subject
+        text body
+        varchar(80) external_template_id
+        boolean is_active "NN"
+    }
+    comms__outbound_message["comms.outbound_message"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        varchar(30) message_kind "NN"
+        varchar(30) channel "NN"
+        varchar(320) sender "NN"
+        varchar(320) recipient "NN"
+        uuid recipient_user_id FK "→ iam.user_account (logical)"
+        text subject
+        text body "NN"
+        uuid template_id FK
+        varchar(80) related_entity_type
+        uuid related_entity_id
+        varchar(30) status "NN"
+        text provider_response
+        timestamptz scheduled_at
+        timestamptz sent_at
+        varchar(500) template_params
+        varchar(1000) action_url
+    }
+    comms__mailbox_message["comms.mailbox_message"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        uuid owner_user_id FK "→ iam.user_account (logical)"
+        uuid about_student_id FK "→ sis.student (logical)"
+        varchar(30) folder "NN"
+        varchar(320) from_address
+        varchar(200) from_display
+        text to_addresses
+        text subject
+        text body
+        varchar(30) delivery_status
+        varchar(200) provider_message_id
+        boolean is_processed "NN"
+        timestamptz processed_at
+        timestamptz dispatched_at
+        timestamptz read_at
+    }
+    comms__in_app_notification["comms.in_app_notification"] {
+        uuid id PK
+        uuid recipient_user_id FK "NN · → iam.user_account (logical)"
+        timestamptz read_at
+        uuid notification_type_id FK "NN"
+        varchar(255) title
+        text body
+        varchar(480) sms_text
+        varchar(1000) action_url
+        uuid cohort_id FK "→ lms.cohort (logical)"
+        varchar(30) email_status "NN"
+        varchar(30) sms_status "NN"
+        varchar(30) popup_status "NN"
+        varchar(30) digest_status "NN"
+        timestamptz archived_at
+        varchar(60) entity_type
+        uuid entity_id
+    }
+    comms__conversation["comms.conversation"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(30) conversation_type "NN"
+        varchar(150) title
+        timestamptz last_message_at
+        boolean is_active "NN"
+    }
+    comms__conversation_participant["comms.conversation_participant"] {
+        uuid id PK
+        uuid conversation_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        timestamptz last_read_at
+    }
+    comms__conversation_message["comms.conversation_message"] {
+        uuid id PK
+        uuid conversation_id FK "NN"
+        uuid sender_user_id FK "NN · → iam.user_account (logical)"
+        text body "NN"
+        boolean deleted_by_sender "NN"
+    }
+    comms__message_receipt["comms.message_receipt"] {
+        uuid id PK
+        uuid message_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        timestamptz seen_at
+        timestamptz deleted_at_by_recipient
+    }
+    comms__feedback_thread["comms.feedback_thread"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid guardian_id FK "NN · → sis.guardian (logical)"
+        uuid student_id FK "NN · → sis.student (logical)"
+        uuid assigned_to_user_id FK "NN · → iam.user_account (logical)"
+        varchar(30) status "NN"
+    }
+    comms__feedback_message["comms.feedback_message"] {
+        uuid id PK
+        uuid thread_id FK "NN"
+        uuid sender_user_id FK "NN · → iam.user_account (logical)"
+        varchar(30) category "NN"
+        text message "NN"
+        uuid attachment_file_id FK "→ platform.file_object (logical)"
+        varchar(30) review_status "NN"
+        boolean deleted_by_sender "NN"
+        boolean deleted_by_receiver "NN"
+    }
+    comms__notification_type["comms.notification_type"] {
+        uuid id PK
+        varchar(80) code UK "NN"
+        text description "NN"
+        varchar(60) module_code "NN"
+        varchar(80) role_code
+        boolean is_enabled "NN"
+        boolean popup_enabled "NN"
+        boolean teacher_popup_enabled "NN"
+        varchar(500) valid_parameters
+    }
+    comms__notification_type_property["comms.notification_type_property"] {
+        uuid id PK
+        uuid notification_type_id FK "NN"
+        varchar(60) module_code
+        varchar(500) property_value "NN"
+    }
+    comms__notification_rule["comms.notification_rule"] {
+        uuid id PK
+        uuid role_id FK "NN · → iam.role (logical)"
+        uuid notification_type_id FK "NN"
+        uuid permission_id FK "→ iam.permission (logical)"
+        boolean is_enabled "NN"
+        text email_subject_template
+        text email_body_template
+        text sms_template
+    }
+    comms__notification_cohort_setting["comms.notification_cohort_setting"] {
+        uuid id PK
+        uuid cohort_id FK "NN · → lms.cohort (logical)"
+        uuid notification_type_id FK "NN"
+        boolean popup_enabled "NN"
+    }
+    comms__notification_channel["comms.notification_channel"] {
+        uuid id PK
+        varchar(60) code "NN"
+        varchar(200) description
+        boolean is_enabled "NN"
+        integer sort_order "NN"
+    }
+    comms__notification_channel_property["comms.notification_channel_property"] {
+        uuid id PK
+        uuid notification_channel_id FK "NN"
+        varchar(100) property_key "NN"
+        text property_value
+        text secret_value_enc
+        integer sort_order "NN"
+        boolean is_mandatory "NN"
+    }
+    comms__notification_preference_set["comms.notification_preference_set"] {
+        uuid id PK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid role_id FK "→ iam.role (logical)"
+    }
+    comms__notification_preference["comms.notification_preference"] {
+        uuid id PK
+        uuid preference_set_id FK "NN"
+        uuid notification_type_id FK
+        varchar(100) property_name "NN"
+        varchar(200) property_value
+    }
+    comms__message_template |o--o{ comms__outbound_message : "template_id"
+    comms__notification_type ||--o{ comms__in_app_notification : "notification_type_id"
+    comms__conversation ||--o{ comms__conversation_participant : "conversation_id"
+    comms__conversation ||--o{ comms__conversation_message : "conversation_id"
+    comms__conversation_message ||--o{ comms__message_receipt : "message_id"
+    comms__feedback_thread ||--o{ comms__feedback_message : "thread_id"
+    comms__notification_type ||--o{ comms__notification_type_property : "notification_type_id"
+    comms__notification_type ||--o{ comms__notification_rule : "notification_type_id"
+    comms__notification_type ||--o{ comms__notification_cohort_setting : "notification_type_id"
+    comms__notification_channel ||--o{ comms__notification_channel_property : "notification_channel_id"
+    comms__notification_preference_set ||--o{ comms__notification_preference : "preference_set_id"
+    comms__notification_type |o--o{ comms__notification_preference : "notification_type_id"

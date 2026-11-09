@@ -1,0 +1,592 @@
+{
+ "module": "sis",
+ "resources": [
+  {
+   "name": "ActivityType",
+   "table": "sis.activity_type",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/activity-types",
+   "item": "/v1/sis/activity-types/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C5771BE96",
+    "name": "t-name-45dcc16c"
+   },
+   "update": {
+    "isActive": true
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "DisciplineIncident",
+   "table": "sis.discipline_incident",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/discipline-incidents",
+   "item": "/v1/sis/discipline-incidents/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO sis.student (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '515a3747-f8c3-5ba8-aeeb-ca8f86d3e826', '0196f000-0000-7000-8000-00000000a001', 1, '0aecb638-76eb-517e-9a4f-305adff6bb75') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "academicYearId": "8c764d2d-35e1-56ac-9df8-3501dfc7b793",
+    "studentId": "0aecb638-76eb-517e-9a4f-305adff6bb75",
+    "incidentAt": "2026-01-10T09:00:00Z",
+    "reportedByUserId": "9e518801-92ad-5fea-afc7-3b14a275ce70",
+    "details": "t-details-b4af7871"
+   },
+   "update": {
+    "details": "Updated details"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "Guardian",
+   "table": "sis.guardian",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/guardians",
+   "item": "/v1/sis/guardians/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "personId": "5e6b3523-dc4d-5417-835c-f17c7e98cea7"
+   },
+   "update": {
+    "subOccupation": "Updated sub_occupation"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "ProgramEnrollment",
+   "table": "sis.program_enrollment",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/program-enrollments",
+   "item": "/v1/sis/program-enrollments/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO sis.student (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '515a3747-f8c3-5ba8-aeeb-ca8f86d3e826', '0196f000-0000-7000-8000-00000000a001', 1, '0aecb638-76eb-517e-9a4f-305adff6bb75') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "studentId": "0aecb638-76eb-517e-9a4f-305adff6bb75",
+    "courseId": "6b03fe71-8233-51ed-a50b-37402851fc9d"
+   },
+   "update": {
+    "rollNumber": "Updated roll_number"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "ProgramEnrollmentSubject",
+   "table": "sis.program_enrollment_subject",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/program-enrollments/cfbf7553-d4b2-517b-8909-afbe889fef8d/subjects",
+   "item": "/v1/sis/program-enrollments/cfbf7553-d4b2-517b-8909-afbe889fef8d/subjects/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO sis.student (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '515a3747-f8c3-5ba8-aeeb-ca8f86d3e826', '0196f000-0000-7000-8000-00000000a001', 1, '0aecb638-76eb-517e-9a4f-305adff6bb75') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO sis.program_enrollment (tenant_id, student_id, course_id, row_version, id) VALUES (:tenant, '0aecb638-76eb-517e-9a4f-305adff6bb75', '488a8bce-9170-59b4-8b30-318ccb72fc33', 1, 'cfbf7553-d4b2-517b-8909-afbe889fef8d') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "programEnrollmentId": "cfbf7553-d4b2-517b-8909-afbe889fef8d",
+    "subjectId": "5f8052f8-a764-5d11-8311-8fa5cddc397d"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Promotion",
+   "table": "sis.promotion",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/promotions",
+   "item": "/v1/sis/promotions/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO sis.student (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '515a3747-f8c3-5ba8-aeeb-ca8f86d3e826', '0196f000-0000-7000-8000-00000000a001', 1, '0aecb638-76eb-517e-9a4f-305adff6bb75') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "studentId": "0aecb638-76eb-517e-9a4f-305adff6bb75",
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "fromAcademicYearId": "3fba52db-9df3-547a-98ea-96683efedc7b",
+    "fromGradeLevelId": "ceecab49-77c9-5b03-b0c9-45ea24c4542d"
+   },
+   "update": {
+    "remarks": "Updated remarks"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "sis.ApprovePromotion",
+     "path": "/v1/sis/promotions/{id}:approve",
+     "permission": "sis.promotion.approve_promotion",
+     "guard": {
+      "status": [
+       "proposed"
+      ]
+     },
+     "prepare": [
+      "UPDATE sis.promotion SET status = 'proposed' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "approved"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "sis.RejectPromotion",
+     "path": "/v1/sis/promotions/{id}:reject",
+     "permission": "sis.promotion.reject_promotion",
+     "guard": {
+      "status": [
+       "proposed"
+      ]
+     },
+     "prepare": [
+      "UPDATE sis.promotion SET status = 'proposed' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "rejected"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "RelationshipType",
+   "table": "sis.relationship_type",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/relationship-types",
+   "item": "/v1/sis/relationship-types/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C922DDF3E",
+    "name": "t-name-349f1a70"
+   },
+   "update": {
+    "isActive": true
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Student",
+   "table": "sis.student",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/students",
+   "item": "/v1/sis/students/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "personId": "4423f46c-1314-5d94-8179-785a7e3be16b",
+    "institutionId": "0196f000-0000-7000-8000-00000000a001"
+   },
+   "update": {
+    "admissionNumber": "Updated admission_number"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "StudentActivity",
+   "table": "sis.student_activity",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/student-activities",
+   "item": "/v1/sis/student-activities/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO sis.student (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '515a3747-f8c3-5ba8-aeeb-ca8f86d3e826', '0196f000-0000-7000-8000-00000000a001', 1, '0aecb638-76eb-517e-9a4f-305adff6bb75') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "studentId": "0aecb638-76eb-517e-9a4f-305adff6bb75"
+   },
+   "update": {
+    "description": "Updated description"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "StudentCategory",
+   "table": "sis.student_category",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/student-categories",
+   "item": "/v1/sis/student-categories/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "code": "C9F1B3788",
+    "name": "t-name-4fbbd78a"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "StudentEnrollment",
+   "table": "sis.student_enrollment",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/student-enrollments",
+   "item": "/v1/sis/student-enrollments/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO sis.student (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '515a3747-f8c3-5ba8-aeeb-ca8f86d3e826', '0196f000-0000-7000-8000-00000000a001', 1, '0aecb638-76eb-517e-9a4f-305adff6bb75') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "studentId": "0aecb638-76eb-517e-9a4f-305adff6bb75",
+    "academicYearId": "6a84f41a-4685-5f4b-af9c-9de23a3da4e3"
+   },
+   "update": {
+    "rollNumber": "Updated roll_number"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "StudentGuardian",
+   "table": "sis.student_guardian",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/students/0aecb638-76eb-517e-9a4f-305adff6bb75/guardians",
+   "item": "/v1/sis/students/0aecb638-76eb-517e-9a4f-305adff6bb75/guardians/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO sis.student (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '515a3747-f8c3-5ba8-aeeb-ca8f86d3e826', '0196f000-0000-7000-8000-00000000a001', 1, '0aecb638-76eb-517e-9a4f-305adff6bb75') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO sis.guardian (tenant_id, person_id, row_version, id) VALUES (:tenant, '275b52fe-4073-5c91-9912-677103ff770f', 1, '343c7393-96ff-53c8-865a-47398c035918') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "studentId": "0aecb638-76eb-517e-9a4f-305adff6bb75",
+    "guardianId": "343c7393-96ff-53c8-865a-47398c035918"
+   },
+   "update": {
+    "isLegalGuardian": true
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "StudentHealthRecord",
+   "table": "sis.student_health_record",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/student-health-records",
+   "item": "/v1/sis/student-health-records/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO sis.student (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '515a3747-f8c3-5ba8-aeeb-ca8f86d3e826', '0196f000-0000-7000-8000-00000000a001', 1, '0aecb638-76eb-517e-9a4f-305adff6bb75') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "studentId": "0aecb638-76eb-517e-9a4f-305adff6bb75"
+   },
+   "update": {
+    "medicalConditions": "Updated medical_conditions"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "StudentLeaveRequest",
+   "table": "sis.student_leave_request",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/student-leave-requests",
+   "item": "/v1/sis/student-leave-requests/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO sis.student (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '515a3747-f8c3-5ba8-aeeb-ca8f86d3e826', '0196f000-0000-7000-8000-00000000a001', 1, '0aecb638-76eb-517e-9a4f-305adff6bb75') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "studentId": "0aecb638-76eb-517e-9a4f-305adff6bb75",
+    "fromDate": "2026-01-10",
+    "toDate": "2026-01-20"
+   },
+   "update": {
+    "reason": "Updated reason"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "sis.ApproveStudentLeaveRequest",
+     "path": "/v1/sis/student-leave-requests/{id}:approve",
+     "permission": "sis.student_leave_request.approve",
+     "guard": {
+      "status": [
+       "pending"
+      ]
+     },
+     "prepare": [
+      "UPDATE sis.student_leave_request SET status = 'pending' WHERE id = '{id}'"
+     ],
+     "body": {
+      "decisionNote": "Contract test note"
+     },
+     "sets": {
+      "status": "approved"
+     },
+     "stamps": [
+      "decidedByUserId",
+      "decidedAt",
+      "decisionNote"
+     ],
+     "etag": false,
+     "ifMatch": true
+    },
+    {
+     "operation": "sis.RejectStudentLeaveRequest",
+     "path": "/v1/sis/student-leave-requests/{id}:reject",
+     "permission": "sis.student_leave_request.reject",
+     "guard": {
+      "status": [
+       "pending"
+      ]
+     },
+     "prepare": [
+      "UPDATE sis.student_leave_request SET status = 'pending' WHERE id = '{id}'"
+     ],
+     "body": {
+      "decisionNote": "Contract test note"
+     },
+     "sets": {
+      "status": "rejected"
+     },
+     "stamps": [
+      "decidedByUserId",
+      "decidedAt",
+      "decisionNote"
+     ],
+     "etag": false,
+     "ifMatch": true
+    }
+   ]
+  },
+  {
+   "name": "StudentSibling",
+   "table": "sis.student_sibling",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/students/0aecb638-76eb-517e-9a4f-305adff6bb75/siblings",
+   "item": "/v1/sis/students/0aecb638-76eb-517e-9a4f-305adff6bb75/siblings/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO sis.student (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '515a3747-f8c3-5ba8-aeeb-ca8f86d3e826', '0196f000-0000-7000-8000-00000000a001', 1, '0aecb638-76eb-517e-9a4f-305adff6bb75') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "studentId": "0aecb638-76eb-517e-9a4f-305adff6bb75"
+   },
+   "update": {
+    "siblingName": "Updated sibling_name"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "SubjectRegistration",
+   "table": "sis.subject_registration",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/subject-registrations",
+   "item": "/v1/sis/subject-registrations/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO sis.student (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '8f7bb486-c2aa-5266-b15d-4659c74fe2ec', '0196f000-0000-7000-8000-00000000a001', 1, '132f540f-d73c-52a9-84d5-7fe9030180ff') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO sis.program_enrollment (tenant_id, student_id, course_id, row_version, id) VALUES (:tenant, '132f540f-d73c-52a9-84d5-7fe9030180ff', '77338cd8-3e8e-50e6-9ca1-ae8227e3cce4', 1, '4ff64105-8fe6-5984-ba04-1efae6000f94') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO sis.student (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '515a3747-f8c3-5ba8-aeeb-ca8f86d3e826', '0196f000-0000-7000-8000-00000000a001', 1, '0aecb638-76eb-517e-9a4f-305adff6bb75') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "academicYearId": "82198ef7-e393-5906-a820-145708dc2fc4",
+    "programEnrollmentId": "4ff64105-8fe6-5984-ba04-1efae6000f94",
+    "studentId": "0aecb638-76eb-517e-9a4f-305adff6bb75",
+    "courseId": "ce5f1640-516c-5871-83ca-0360452ff4cd"
+   },
+   "update": {
+    "referenceNo": "Updated reference_no"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "sis.SubmitSubjectRegistration",
+     "path": "/v1/sis/subject-registrations/{id}:submit",
+     "permission": "sis.subject_registration.submit_subject_registration",
+     "guard": {
+      "status": [
+       "draft"
+      ]
+     },
+     "prepare": [
+      "UPDATE sis.subject_registration SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "submitted"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "sis.RejectSubjectRegistration",
+     "path": "/v1/sis/subject-registrations/{id}:reject",
+     "permission": "sis.subject_registration.reject_subject_registration",
+     "guard": {
+      "status": [
+       "submitted"
+      ]
+     },
+     "prepare": [
+      "UPDATE sis.subject_registration SET status = 'submitted' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "rejected"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "sis.ResetSubjectRegistration",
+     "path": "/v1/sis/subject-registrations/{id}:resetToDraft",
+     "permission": "sis.subject_registration.reset_subject_registration",
+     "guard": {
+      "status": [
+       "rejected"
+      ]
+     },
+     "prepare": [
+      "UPDATE sis.subject_registration SET status = 'rejected' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "draft"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "SubjectRegistrationLine",
+   "table": "sis.subject_registration_line",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/sis/subject-registrations/2a030ad0-d977-56eb-bb55-35c967d468b6/lines",
+   "item": "/v1/sis/subject-registrations/2a030ad0-d977-56eb-bb55-35c967d468b6/lines/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO sis.student (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '515a3747-f8c3-5ba8-aeeb-ca8f86d3e826', '0196f000-0000-7000-8000-00000000a001', 1, '0aecb638-76eb-517e-9a4f-305adff6bb75') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO sis.program_enrollment (tenant_id, student_id, course_id, row_version, id) VALUES (:tenant, '0aecb638-76eb-517e-9a4f-305adff6bb75', '488a8bce-9170-59b4-8b30-318ccb72fc33', 1, 'cfbf7553-d4b2-517b-8909-afbe889fef8d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO sis.subject_registration (tenant_id, student_id, course_id, row_version, academic_year_id, program_enrollment_id, id) VALUES (:tenant, '0aecb638-76eb-517e-9a4f-305adff6bb75', '404faeb8-2c1a-5983-8789-f2db1fcd1fe4', 1, 'd588fe17-015d-59ba-b247-2c601d7be7b9', 'cfbf7553-d4b2-517b-8909-afbe889fef8d', '2a030ad0-d977-56eb-bb55-35c967d468b6') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "courseSubjectId": "cbb3a1cf-bd76-5b64-97c1-da0deb387f47",
+    "subjectRegistrationId": "2a030ad0-d977-56eb-bb55-35c967d468b6",
+    "subjectId": "0210a0ae-3115-5f4d-8f89-6291315e0268",
+    "selectionType": "compulsory"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  }
+ ]
+}

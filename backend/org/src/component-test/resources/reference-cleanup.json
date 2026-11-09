@@ -1,0 +1,47 @@
+{
+ "module": "org",
+ "cleanup": [
+  {
+   "event": "platform.file_object.deleted",
+   "table": "org.institution",
+   "column": "logo_file_id",
+   "action": "null the column",
+   "ownerId": "d8cf5e5a-a026-53a9-a0ea-2acbfe6ff215",
+   "rowId": "e98fb668-7d55-5fd2-baed-342110ba3c1b",
+   "otherRowId": "b48f0e7f-6259-52b2-8577-450f31fd55df",
+   "fixtures": [],
+   "row": "INSERT INTO org.institution (tenant_id, code, name, row_version, logo_file_id, id) VALUES (:tenant, 'CD7A90245', 't-name-046375c2', 1, 'd8cf5e5a-a026-53a9-a0ea-2acbfe6ff215', 'e98fb668-7d55-5fd2-baed-342110ba3c1b')",
+   "otherFixtures": [],
+   "other": "INSERT INTO org.institution (tenant_id, code, name, row_version, logo_file_id, id) VALUES (:tenant, 'CD80EB974', 't-name-bd05e36e', 1, 'd8cf5e5a-a026-53a9-a0ea-2acbfe6ff215', 'b48f0e7f-6259-52b2-8577-450f31fd55df')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "org.institution",
+   "column": "signature_file_id",
+   "action": "null the column",
+   "ownerId": "c2d2ffaf-28ae-5a8a-8361-dd8805d6d362",
+   "rowId": "26c6a666-db14-5315-bc44-b9efb2dd70d5",
+   "otherRowId": "a7d8cc91-efe4-5822-b9e8-9351896d6119",
+   "fixtures": [],
+   "row": "INSERT INTO org.institution (tenant_id, code, name, row_version, signature_file_id, id) VALUES (:tenant, 'CB6AF2792', 't-name-89651338', 1, 'c2d2ffaf-28ae-5a8a-8361-dd8805d6d362', '26c6a666-db14-5315-bc44-b9efb2dd70d5')",
+   "otherFixtures": [],
+   "other": "INSERT INTO org.institution (tenant_id, code, name, row_version, signature_file_id, id) VALUES (:tenant, 'CFC0EBF90', 't-name-04e3cb06', 1, 'c2d2ffaf-28ae-5a8a-8361-dd8805d6d362', 'a7d8cc91-efe4-5822-b9e8-9351896d6119')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.theme.deleted",
+   "table": "org.institution",
+   "column": "theme_id",
+   "action": "null the column",
+   "ownerId": "6425b54e-82d0-5011-9c56-a5daf6d6e8e7",
+   "rowId": "c8cee411-16cd-5762-843a-88df107baea4",
+   "otherRowId": "6d040758-6421-5f39-a243-b083ada5bdcc",
+   "fixtures": [],
+   "row": "INSERT INTO org.institution (tenant_id, code, name, row_version, theme_id, id) VALUES (:tenant, 'CDB652715', 't-name-cb405f30', 1, '6425b54e-82d0-5011-9c56-a5daf6d6e8e7', 'c8cee411-16cd-5762-843a-88df107baea4')",
+   "otherFixtures": [],
+   "other": "INSERT INTO org.institution (tenant_id, code, name, row_version, theme_id, id) VALUES (:tenant, 'CAB7C0CAE', 't-name-927f43ec', 1, '6425b54e-82d0-5011-9c56-a5daf6d6e8e7', '6d040758-6421-5f39-a243-b083ada5bdcc')",
+   "softDeletable": true
+  }
+ ]
+}

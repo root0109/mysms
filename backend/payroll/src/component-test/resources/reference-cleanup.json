@@ -1,0 +1,53 @@
+{
+ "module": "payroll",
+ "cleanup": [
+  {
+   "event": "platform.file_object.deleted",
+   "table": "payroll.payroll_payment",
+   "column": "attachment_file_id",
+   "action": "null the column",
+   "ownerId": "9b48c40d-1e5e-5082-8899-4438b5bde9e0",
+   "rowId": "d786b973-8ea0-5551-a620-885ee1891d1f",
+   "otherRowId": "d91688ce-0248-5db7-8618-68e24c4e5542",
+   "fixtures": [],
+   "row": "INSERT INTO payroll.payroll_payment (tenant_id, institution_id, transaction_number, staff_id, transaction_date, amount, payment_method, row_version, attachment_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-transaction-number-45e64f86', 'd81215dd-f122-54d3-ab46-b5feeb5336ae', '2026-01-10', 1, 'cash', 1, '9b48c40d-1e5e-5082-8899-4438b5bde9e0', 'd786b973-8ea0-5551-a620-885ee1891d1f')",
+   "otherFixtures": [],
+   "other": "INSERT INTO payroll.payroll_payment (tenant_id, institution_id, transaction_number, staff_id, transaction_date, amount, payment_method, row_version, attachment_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-transaction-number-70ef91c2', 'e6967516-c528-5fc9-80f3-25d2a58e9a13', '2026-01-10', 1, 'cash', 1, '9b48c40d-1e5e-5082-8899-4438b5bde9e0', 'd91688ce-0248-5db7-8618-68e24c4e5542')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "payroll.payslip",
+   "column": "document_file_id",
+   "action": "null the column",
+   "ownerId": "0b31b240-20c5-5739-9bf6-d9c90ae49f4b",
+   "rowId": "7503073b-52ec-5e7f-9bcd-de933a811f32",
+   "otherRowId": "f5574a91-6305-5657-a05b-4f5a58d60a25",
+   "fixtures": [
+    "INSERT INTO payroll.salary_template (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-2781d523', 1, '6aa489f0-2dc5-5423-a7bf-419d21f3c30d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.staff_salary (tenant_id, staff_id, salary_template_id, gross_salary, effective_date, row_version, id) VALUES (:tenant, '8dfc1080-57fc-515a-b12b-066f80493b63', '6aa489f0-2dc5-5423-a7bf-419d21f3c30d', 1, '2026-01-10', 1, 'fb94b1c3-a7a2-53c4-a2fd-70f898ca0bb2') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO payroll.payslip (tenant_id, institution_id, payslip_number, staff_id, staff_salary_id, period_start, period_end, row_version, document_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-payslip-number-e167ee92', 'bfdf4006-0423-55ee-8878-35d14fc4595c', 'fb94b1c3-a7a2-53c4-a2fd-70f898ca0bb2', '2026-01-10', '2026-01-20', 1, '0b31b240-20c5-5739-9bf6-d9c90ae49f4b', '7503073b-52ec-5e7f-9bcd-de933a811f32')",
+   "otherFixtures": [
+    "INSERT INTO payroll.salary_template (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-name-2781d523', 1, '69aabdc5-d08f-53ef-ac00-22ad751d8d79') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.staff_salary (tenant_id, staff_id, salary_template_id, gross_salary, effective_date, row_version, id) VALUES (:tenant, '8dcf17bc-482e-5870-8c50-f6076eb929b5', '69aabdc5-d08f-53ef-ac00-22ad751d8d79', 1, '2026-01-10', 1, '111131e8-fe58-530c-90e8-8b1fbd7b7eed') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO payroll.payslip (tenant_id, institution_id, payslip_number, staff_id, staff_salary_id, period_start, period_end, row_version, document_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-payslip-number-d807d9e7', '64c1f322-9b9b-551f-87c4-a92148e8caf3', '111131e8-fe58-530c-90e8-8b1fbd7b7eed', '2026-01-10', '2026-01-20', 1, '0b31b240-20c5-5739-9bf6-d9c90ae49f4b', 'f5574a91-6305-5657-a05b-4f5a58d60a25')",
+   "softDeletable": true
+  },
+  {
+   "event": "hr.staff.deleted",
+   "table": "payroll.staff_bank_account",
+   "column": "staff_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "339a2522-83af-5aae-85e1-c84cfff5d44f",
+   "rowId": "efe7da95-911a-59e1-9379-e6326079551d",
+   "otherRowId": "c25714b1-cd0a-574c-b240-90de37994a43",
+   "fixtures": [],
+   "row": "INSERT INTO payroll.staff_bank_account (tenant_id, account_holder_name, account_number_enc, row_version, staff_id, id) VALUES (:tenant, 't-account-holder-name-4fa7c225', 't-account-number-enc-3280fb1c', 1, '339a2522-83af-5aae-85e1-c84cfff5d44f', 'efe7da95-911a-59e1-9379-e6326079551d')",
+   "otherFixtures": [],
+   "other": "INSERT INTO payroll.staff_bank_account (tenant_id, account_holder_name, account_number_enc, row_version, staff_id, id) VALUES (:tenant, 't-account-holder-name-7d882bec', 't-account-number-enc-15a85855', 1, '1f6d63ea-544a-51a1-8ea5-8a73f0891e59', 'c25714b1-cd0a-574c-b240-90de37994a43')",
+   "softDeletable": true
+  }
+ ]
+}

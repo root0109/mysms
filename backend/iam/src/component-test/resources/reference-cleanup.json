@@ -1,0 +1,23 @@
+{
+ "module": "iam",
+ "cleanup": [
+  {
+   "event": "org.department.deleted",
+   "table": "iam.user_department_access",
+   "column": "department_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "ae0da601-aaad-543e-8681-1da54731b142",
+   "rowId": "5bcfd549-0740-5e8d-9d6c-4cbcfb52ffb9",
+   "otherRowId": "f4b20cad-c80d-5467-bed7-379366ab516f",
+   "fixtures": [
+    "INSERT INTO iam.user_account (tenant_id, username, row_version, id) VALUES (:tenant, 'fixture-user', 1, '7cd07f75-70f8-5169-b6c2-89f7de75a970') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO iam.user_department_access (tenant_id, user_id, row_version, department_id, id) VALUES (:tenant, '7cd07f75-70f8-5169-b6c2-89f7de75a970', 1, 'ae0da601-aaad-543e-8681-1da54731b142', '5bcfd549-0740-5e8d-9d6c-4cbcfb52ffb9')",
+   "otherFixtures": [
+    "INSERT INTO iam.user_account (tenant_id, username, row_version, id) VALUES (:tenant, 'fixture-user', 1, 'c859255e-5b0b-57e9-9c7e-5a309575386a') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO iam.user_department_access (tenant_id, user_id, row_version, department_id, id) VALUES (:tenant, 'c859255e-5b0b-57e9-9c7e-5a309575386a', 1, '8e8f5d71-97e6-5880-8edc-c1df4eb05bd3', 'f4b20cad-c80d-5467-bed7-379366ab516f')",
+   "softDeletable": true
+  }
+ ]
+}

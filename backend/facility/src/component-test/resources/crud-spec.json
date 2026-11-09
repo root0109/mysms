@@ -1,0 +1,129 @@
+{
+ "module": "facility",
+ "resources": [
+  {
+   "name": "AssetItem",
+   "table": "facility.asset_item",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/facility/asset-items",
+   "item": "/v1/facility/asset-items/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-3b23ef47"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "Facility",
+   "table": "facility.facility",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/facility/facilities",
+   "item": "/v1/facility/facilities/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "code": "C3489673C",
+    "name": "t-name-cc1a6186"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Room",
+   "table": "facility.room",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/facility/rooms",
+   "item": "/v1/facility/rooms/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "code": "C1970D159",
+    "name": "t-name-4d9cb2e6",
+    "capacity": 1
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "RoomAsset",
+   "table": "facility.room_asset",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/facility/rooms/f8b48fd8-ba2b-5f70-b563-5fc4a2ee0d9c/assets",
+   "item": "/v1/facility/rooms/f8b48fd8-ba2b-5f70-b563-5fc4a2ee0d9c/assets/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO facility.room (tenant_id, institution_id, code, name, capacity, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C3C046680', 't-name-0c076ae4', 1, 1, 'f8b48fd8-ba2b-5f70-b563-5fc4a2ee0d9c') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO facility.asset_item (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-e0ee40c4', 1, '9c6d37ac-97c8-52ad-8806-cd107dae4ca3') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "roomId": "f8b48fd8-ba2b-5f70-b563-5fc4a2ee0d9c",
+    "assetItemId": "9c6d37ac-97c8-52ad-8806-cd107dae4ca3",
+    "quantity": "1"
+   },
+   "update": {
+    "tagCode": "Updated tag_code"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "RoomFacility",
+   "table": "facility.room_facility",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/facility/rooms/f8b48fd8-ba2b-5f70-b563-5fc4a2ee0d9c/facilities",
+   "item": "/v1/facility/rooms/f8b48fd8-ba2b-5f70-b563-5fc4a2ee0d9c/facilities/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO facility.room (tenant_id, institution_id, code, name, capacity, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C3C046680', 't-name-0c076ae4', 1, 1, 'f8b48fd8-ba2b-5f70-b563-5fc4a2ee0d9c') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO facility.facility (tenant_id, institution_id, code, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C7F939958', 't-name-1b32ca4f', 1, '18e6dad2-54c2-5e2e-afee-41e5bc8c600d') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "roomId": "f8b48fd8-ba2b-5f70-b563-5fc4a2ee0d9c",
+    "facilityId": "18e6dad2-54c2-5e2e-afee-41e5bc8c600d",
+    "quantity": "1"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  }
+ ]
+}

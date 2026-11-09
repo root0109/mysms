@@ -1,0 +1,84 @@
+{
+ "module": "transport",
+ "resources": [
+  {
+   "name": "Route",
+   "table": "transport.route",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/transport/routes",
+   "item": "/v1/transport/routes/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-cbc74466",
+    "vehicleNumber": "t-vehicle-number-d2048f3d",
+    "startTime": "09:00",
+    "endTime": "10:00"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "RouteStop",
+   "table": "transport.route_stop",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/transport/routes/1d37ebc4-e1c4-55c4-9645-9a90658d8884/stops",
+   "item": "/v1/transport/routes/1d37ebc4-e1c4-55c4-9645-9a90658d8884/stops/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO transport.route (tenant_id, institution_id, name, vehicle_number, start_time, end_time, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-21dd9369', 't-vehicle-number-59e95304', '09:00', '10:00', 1, '1d37ebc4-e1c4-55c4-9645-9a90658d8884') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "routeId": "1d37ebc4-e1c4-55c4-9645-9a90658d8884",
+    "sequence": 3,
+    "stopName": "t-stop-name-911abd8b"
+   },
+   "update": {
+    "stopName": "Updated stop_name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "StudentTransport",
+   "table": "transport.student_transport",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/transport/student-transports",
+   "item": "/v1/transport/student-transports/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO transport.route (tenant_id, institution_id, name, vehicle_number, start_time, end_time, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-21dd9369', 't-vehicle-number-59e95304', '09:00', '10:00', 1, '1d37ebc4-e1c4-55c4-9645-9a90658d8884') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "studentId": "bbb16982-b319-5b16-b8bf-1dee60cd2f98",
+    "academicYearId": "4b4c593d-e96d-5dee-94f8-6cc8d763f268",
+    "transportMode": "auto",
+    "routeId": "1d37ebc4-e1c4-55c4-9645-9a90658d8884"
+   },
+   "update": {
+    "details": "Updated details"
+   },
+   "duplicateConflicts": true
+  }
+ ]
+}

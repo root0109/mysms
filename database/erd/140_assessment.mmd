@@ -1,0 +1,291 @@
+erDiagram
+    assessment__homework["assessment.homework"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "NN · → org.academic_year (logical)"
+        uuid class_section_id FK "NN · → academics.class_section (logical)"
+        uuid subject_id FK "→ academics.subject (logical)"
+        uuid assigned_by_staff_id FK "→ hr.staff (logical)"
+        text description
+        uuid attachment_file_id FK "→ platform.file_object (logical)"
+        timestamptz assigned_on
+        timestamptz due_at
+        varchar(30) status "NN"
+    }
+    assessment__homework_approval["assessment.homework_approval"] {
+        uuid id PK
+        uuid homework_id FK "NN"
+        varchar(30) decision "NN"
+        text comments
+        uuid decided_by_user_id FK "→ iam.user_account (logical)"
+        timestamptz decided_at
+    }
+    assessment__homework_submission["assessment.homework_submission"] {
+        uuid id PK
+        uuid homework_id FK "NN"
+        uuid student_id FK "NN · → sis.student (logical)"
+        date submitted_on
+        varchar(30) status "NN"
+        uuid checked_by_user_id FK "→ iam.user_account (logical)"
+        date checked_on
+        text teacher_comments
+        text student_reply
+    }
+    assessment__assignment_type["assessment.assignment_type"] {
+        uuid id PK
+        varchar(30) code "NN"
+        varchar(120) name "NN"
+        varchar(30) grading_basis "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    assessment__assignment["assessment.assignment"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        varchar(200) title "NN"
+        text description
+        uuid assignment_type_id FK
+        uuid class_section_id FK "→ academics.class_section (logical)"
+        uuid course_id FK "→ academics.course (logical)"
+        uuid batch_id FK "→ academics.batch (logical)"
+        uuid assigned_by_staff_id FK "→ hr.staff (logical)"
+        uuid reviewer_staff_id FK "→ hr.staff (logical)"
+        numeric max_marks "8,2"
+        timestamptz issued_on
+        timestamptz due_at
+        uuid attachment_file_id FK "→ platform.file_object (logical)"
+        varchar(30) status "NN"
+    }
+    assessment__assignment_subject["assessment.assignment_subject"] {
+        uuid id PK
+        uuid assignment_id FK "NN"
+        uuid subject_id FK "NN · → academics.subject (logical)"
+    }
+    assessment__assignment_allocation["assessment.assignment_allocation"] {
+        uuid id PK
+        uuid assignment_id FK "NN"
+        uuid student_id FK "NN · → sis.student (logical)"
+    }
+    assessment__assignment_approval["assessment.assignment_approval"] {
+        uuid id PK
+        uuid assignment_id FK "NN"
+        varchar(30) decision "NN"
+        text comments
+        uuid decided_by_user_id FK "→ iam.user_account (logical)"
+        timestamptz decided_at
+    }
+    assessment__assignment_submission["assessment.assignment_submission"] {
+        uuid id PK
+        uuid assignment_id FK "NN"
+        uuid student_id FK "NN · → sis.student (logical)"
+        text content
+        timestamptz submitted_at "NN"
+        varchar(30) status "NN"
+        numeric marks_obtained "8,2"
+        uuid graded_by_user_id FK "→ iam.user_account (logical)"
+        date graded_on
+        text feedback
+    }
+    assessment__grading_scheme["assessment.grading_scheme"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        varchar(120) name "NN"
+        varchar(30) scheme_type "NN"
+        varchar(30) grading_method "NN"
+        text criteria
+        boolean is_active "NN"
+        boolean is_template "NN"
+    }
+    assessment__grading_band["assessment.grading_band"] {
+        uuid id PK
+        uuid grading_scheme_id FK "NN"
+        numeric min_percent "5,2 · NN"
+        numeric max_percent "5,2 · NN"
+        varchar(30) grade_label "NN"
+        numeric grade_point "4,2"
+        boolean is_pass "NN"
+        text description
+    }
+    assessment__exam_type["assessment.exam_type"] {
+        uuid id PK
+        varchar(30) code "NN"
+        varchar(120) name "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    assessment__exam_session["assessment.exam_session"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        uuid academic_term_id FK "→ org.academic_term (logical)"
+        uuid exam_type_id FK "NN"
+        varchar(30) code "NN"
+        varchar(150) name "NN"
+        uuid grade_level_id FK "→ academics.grade_level (logical)"
+        uuid course_id FK "→ academics.course (logical)"
+        uuid batch_id FK "→ academics.batch (logical)"
+        varchar(30) evaluation_type "NN"
+        date start_date "NN"
+        date end_date "NN"
+        varchar(255) venue
+        varchar(30) status "NN"
+    }
+    assessment__exam["assessment.exam"] {
+        uuid id PK
+        uuid exam_session_id FK "NN"
+        uuid subject_id FK "NN · → academics.subject (logical)"
+        uuid class_section_id FK "→ academics.class_section (logical)"
+        varchar(30) code "NN"
+        varchar(150) name "NN"
+        timestamptz start_at "NN"
+        timestamptz end_at "NN"
+        numeric total_marks "8,2 · NN"
+        numeric pass_marks "8,2 · NN"
+        varchar(30) status "NN"
+        boolean results_entered "NN"
+        text notes
+    }
+    assessment__exam_invigilator["assessment.exam_invigilator"] {
+        uuid id PK
+        uuid exam_id FK "NN"
+        uuid staff_id FK "NN · → hr.staff (logical)"
+    }
+    assessment__result_template["assessment.result_template"] {
+        uuid id PK
+        uuid exam_session_id FK "NN"
+        uuid grading_scheme_id FK
+        varchar(150) name "NN"
+        date result_date "NN"
+        varchar(30) status "NN"
+    }
+    assessment__result_template_band["assessment.result_template_band"] {
+        uuid id PK
+        uuid result_template_id FK "NN"
+        uuid grading_band_id FK "NN"
+    }
+    assessment__marksheet["assessment.marksheet"] {
+        uuid id PK
+        uuid exam_session_id FK "NN"
+        uuid result_template_id FK "NN"
+        varchar(150) name "NN"
+        date generated_on "NN"
+        uuid generated_by_user_id FK "NN · → iam.user_account (logical)"
+        varchar(30) status "NN"
+        integer total_passed
+        integer total_failed
+        timestamptz published_at
+        uuid published_by_user_id FK "→ iam.user_account (logical)"
+        boolean visible_to_guardians "NN"
+    }
+    assessment__marksheet_line["assessment.marksheet_line"] {
+        uuid id PK
+        uuid marksheet_id FK "NN"
+        uuid student_id FK "NN · → sis.student (logical)"
+        numeric total_marks "10,2"
+        numeric percentage "6,2"
+        varchar(30) grade_label
+        varchar(30) result_status
+        date generated_on "NN"
+        numeric credits_attempted "6,2"
+        numeric credits_earned "6,2"
+        numeric grade_points "6,3"
+        numeric sgpa "5,3"
+        numeric cgpa "5,3"
+    }
+    assessment__exam_result["assessment.exam_result"] {
+        uuid id PK
+        uuid exam_id FK "NN"
+        uuid student_id FK "NN · → sis.student (logical)"
+        uuid room_id FK "→ facility.room (logical)"
+        varchar(20) attendance_status "NN"
+        numeric marks "7,2"
+        numeric max_marks "7,2"
+        varchar(20) grade_label
+        numeric grade_point "5,2"
+        numeric credits "5,2"
+        varchar(20) result_status
+        varchar(300) note
+        uuid marksheet_line_id FK
+        uuid evaluated_by_user_id FK "→ iam.user_account (logical)"
+        timestamptz evaluated_at
+    }
+    assessment__result_change_log["assessment.result_change_log"] {
+        uuid id PK
+        uuid exam_result_id FK "NN"
+        uuid changed_by_user_id FK "NN · → iam.user_account (logical)"
+        timestamptz changed_at "NN"
+        numeric old_marks "7,2"
+        numeric new_marks "7,2"
+        varchar(20) old_result_status
+        varchar(20) new_result_status
+        varchar(20) old_grade_label
+        varchar(20) new_grade_label
+        varchar(300) reason "NN"
+    }
+    assessment__outbox_event["assessment.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    assessment__inbox_event["assessment.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    assessment__idempotency_key["assessment.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    assessment__operation["assessment.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    assessment__homework ||--o{ assessment__homework_approval : "homework_id"
+    assessment__homework ||--o{ assessment__homework_submission : "homework_id"
+    assessment__assignment_type |o--o{ assessment__assignment : "assignment_type_id"
+    assessment__assignment ||--o{ assessment__assignment_subject : "assignment_id"
+    assessment__assignment ||--o{ assessment__assignment_allocation : "assignment_id"
+    assessment__assignment ||--o{ assessment__assignment_approval : "assignment_id"
+    assessment__assignment ||--o{ assessment__assignment_submission : "assignment_id"
+    assessment__grading_scheme ||--o{ assessment__grading_band : "grading_scheme_id"
+    assessment__exam_type ||--o{ assessment__exam_session : "exam_type_id"
+    assessment__exam_session ||--o{ assessment__exam : "exam_session_id"
+    assessment__exam ||--o{ assessment__exam_invigilator : "exam_id"
+    assessment__exam_session ||--o{ assessment__result_template : "exam_session_id"
+    assessment__grading_scheme |o--o{ assessment__result_template : "grading_scheme_id"
+    assessment__result_template ||--o{ assessment__result_template_band : "result_template_id"
+    assessment__grading_band ||--o{ assessment__result_template_band : "grading_band_id"
+    assessment__exam_session ||--o{ assessment__marksheet : "exam_session_id"
+    assessment__result_template ||--o{ assessment__marksheet : "result_template_id"
+    assessment__marksheet ||--o{ assessment__marksheet_line : "marksheet_id"
+    assessment__exam ||--o{ assessment__exam_result : "exam_id"
+    assessment__marksheet_line |o--o{ assessment__exam_result : "marksheet_line_id"
+    assessment__exam_result ||--o{ assessment__result_change_log : "exam_result_id"

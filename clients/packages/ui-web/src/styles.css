@@ -1,0 +1,374 @@
+/* @mysms/ui-web component styles. Token variables only (ui/04 §2); logical properties for RTL (ui/04 §7). */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font: var(--sms-font-body);
+  color: var(--sms-color-text);
+  background: var(--sms-color-bg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--sms-color-focus);
+  outline-offset: 2px;
+}
+
+/* ---- Button */
+.sms-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sms-space-3);
+  min-block-size: 40px;
+  padding-inline: var(--sms-space-5);
+  border: 1px solid transparent;
+  border-radius: var(--sms-radius-sm);
+  font: var(--sms-font-body);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--sms-motion-micro) var(--sms-motion-easing);
+}
+.sms-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.sms-button--primary {
+  background: var(--sms-color-primary);
+  color: var(--sms-color-on-primary);
+}
+.sms-button--secondary {
+  background: var(--sms-color-surface);
+  color: var(--sms-color-text);
+  border-color: var(--sms-color-border);
+}
+.sms-button--ghost {
+  background: transparent;
+  color: var(--sms-color-primary);
+}
+.sms-button--danger {
+  background: var(--sms-intent-danger);
+  color: var(--sms-intent-on-danger);
+}
+.sms-button--loading {
+  cursor: progress;
+}
+
+/* ---- Fields */
+.sms-field {
+  display: grid;
+  gap: var(--sms-space-2);
+  margin-block-end: var(--sms-space-5);
+}
+.sms-field__label {
+  font: var(--sms-font-body);
+  font-weight: 600;
+}
+.sms-field__input {
+  min-block-size: 40px;
+  padding-inline: var(--sms-space-4);
+  border: 1px solid var(--sms-color-border);
+  border-radius: var(--sms-radius-sm);
+  background: var(--sms-color-surface);
+  color: var(--sms-color-text);
+  font: var(--sms-font-body);
+}
+.sms-field__select {
+  appearance: auto;
+}
+.sms-field__textarea {
+  padding-block: var(--sms-space-3);
+  resize: vertical;
+}
+.sms-switch-field {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: var(--sms-space-4);
+  row-gap: var(--sms-space-2);
+  margin-block-end: var(--sms-space-5);
+}
+.sms-switch-field__hint {
+  grid-column: 2;
+}
+.sms-switch {
+  position: relative;
+  inline-size: 44px;
+  block-size: 24px;
+  padding: 0;
+  border: 1px solid var(--sms-color-border);
+  border-radius: var(--sms-radius-full);
+  background: var(--sms-color-surface-2);
+  cursor: pointer;
+  transition: background-color var(--sms-motion-micro) var(--sms-motion-easing);
+}
+.sms-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.sms-switch__thumb {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-start: 2px;
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: var(--sms-radius-full);
+  background: var(--sms-color-text-muted);
+  transition: transform var(--sms-motion-micro) var(--sms-motion-easing);
+}
+.sms-switch--on {
+  background: var(--sms-color-primary);
+  border-color: var(--sms-color-primary);
+}
+.sms-switch--on .sms-switch__thumb {
+  background: var(--sms-color-on-primary);
+  transform: translateX(20px);
+}
+[dir='rtl'] .sms-switch--on .sms-switch__thumb {
+  transform: translateX(-20px);
+}
+.sms-field--invalid .sms-field__input {
+  border-color: var(--sms-intent-danger);
+}
+.sms-field__hint {
+  margin: 0;
+  color: var(--sms-color-text-muted);
+  font: var(--sms-font-caption);
+}
+.sms-field__error {
+  margin: 0;
+  color: var(--sms-intent-on-danger-container);
+  font: var(--sms-font-caption);
+}
+
+/* ---- Chips and banners: container pairs only (AA by construction) */
+.sms-chip {
+  display: inline-block;
+  padding-block: var(--sms-space-1);
+  padding-inline: var(--sms-space-3);
+  border-radius: var(--sms-radius-full);
+  font: var(--sms-font-caption);
+  font-weight: 600;
+}
+.sms-banner {
+  display: flex;
+  gap: var(--sms-space-5);
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--sms-space-5);
+  border-radius: var(--sms-radius-md);
+  margin-block-end: var(--sms-space-5);
+}
+.sms-banner__title {
+  margin: 0 0 var(--sms-space-2);
+  font-weight: 600;
+}
+
+/* ---- Card, dialog, skeleton, progress */
+.sms-card {
+  background: var(--sms-color-surface);
+  border: 1px solid var(--sms-color-border);
+  border-radius: var(--sms-radius-md);
+  box-shadow: var(--sms-elevation-1);
+  padding: var(--sms-space-7);
+}
+.sms-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sms-space-5);
+  margin-block-end: var(--sms-space-5);
+}
+.sms-card__title {
+  margin: 0;
+  font: var(--sms-font-h2);
+}
+.sms-dialog__backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(15 23 42 / 0.45);
+}
+.sms-dialog {
+  inline-size: min(560px, calc(100vw - 2 * var(--sms-space-5)));
+  /* long forms scroll inside the dialog; title and actions stay in view */
+  max-block-size: calc(100dvh - 2 * var(--sms-space-5));
+  display: flex;
+  flex-direction: column;
+  background: var(--sms-color-surface);
+  border-radius: var(--sms-radius-lg);
+  box-shadow: var(--sms-elevation-3);
+  padding: var(--sms-space-7);
+}
+.sms-dialog__body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.sms-dialog__title {
+  margin: 0 0 var(--sms-space-5);
+  font: var(--sms-font-h2);
+}
+.sms-dialog__footer {
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sms-space-4);
+  margin-block-start: var(--sms-space-7);
+}
+.sms-skeleton {
+  display: grid;
+  gap: var(--sms-space-4);
+}
+.sms-skeleton__line {
+  display: block;
+  block-size: 14px;
+  border-radius: var(--sms-radius-sm);
+  background: var(--sms-color-surface-2);
+}
+.sms-progress {
+  block-size: 8px;
+  border-radius: var(--sms-radius-full);
+  background: var(--sms-color-surface-2);
+  overflow: hidden;
+}
+.sms-progress__bar {
+  display: block;
+  block-size: 100%;
+  inline-size: 30%;
+  background: var(--sms-color-primary);
+}
+
+/* ---- Table (compact 40 px rows, comfortable 48 px; ui/04 §3). Without an explicit density the row height follows
+   the user's density setting (--sms-row-height, ui/04 §9). */
+.sms-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  background: var(--sms-color-surface);
+}
+.sms-table__caption {
+  text-align: start;
+  font: var(--sms-font-h3);
+  padding-block-end: var(--sms-space-4);
+}
+.sms-table th {
+  text-align: start;
+  background: var(--sms-color-surface-2);
+  font-weight: 600;
+}
+.sms-table th,
+.sms-table td {
+  block-size: var(--sms-row-height);
+  padding-inline: var(--sms-space-4);
+  border-block-end: 1px solid var(--sms-color-border);
+}
+.sms-table--compact td,
+.sms-table--compact th {
+  block-size: 40px;
+}
+.sms-table--comfortable td,
+.sms-table--comfortable th {
+  block-size: 48px;
+}
+.sms-table__cell--end {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.sms-table__row--interactive {
+  cursor: pointer;
+}
+.sms-table__row--interactive:hover {
+  background: var(--sms-color-primary-container);
+}
+.sms-table__empty {
+  padding-block: var(--sms-space-9);
+  text-align: center;
+  color: var(--sms-color-text-muted);
+}
+
+/* ---- Shell (56 px top bar, 264 px nav, 1440 px content; ui/04 §3) */
+.sms-shell__skip {
+  position: absolute;
+  inset-inline-start: var(--sms-space-4);
+  inset-block-start: -100px;
+}
+.sms-shell__skip:focus {
+  inset-block-start: var(--sms-space-4);
+  z-index: 10;
+  background: var(--sms-color-surface);
+  padding: var(--sms-space-3);
+}
+.sms-shell__band {
+  background: var(--sms-intent-danger);
+  color: var(--sms-intent-on-danger);
+  text-align: center;
+  font: var(--sms-font-caption);
+  font-weight: 600;
+  padding-block: var(--sms-space-1);
+}
+.sms-shell__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  block-size: 56px;
+  padding-inline: var(--sms-space-7);
+  background: var(--sms-color-surface);
+  border-block-end: 1px solid var(--sms-color-border);
+}
+.sms-shell__body {
+  display: grid;
+  grid-template-columns: 264px 1fr;
+  min-block-size: calc(100vh - 56px);
+}
+.sms-shell__nav {
+  padding: var(--sms-space-5);
+  background: var(--sms-color-surface);
+  border-inline-end: 1px solid var(--sms-color-border);
+}
+.sms-shell__main {
+  max-inline-size: 1440px;
+  padding: var(--sms-space-8);
+}
+@media (max-width: 960px) {
+  .sms-shell__body {
+    grid-template-columns: 72px 1fr;
+  }
+}
+
+/* ---- Intent variants (container pairs) */
+.sms-chip--success,
+.sms-banner--success {
+  background: var(--sms-intent-success-container);
+  color: var(--sms-intent-on-success-container);
+}
+.sms-chip--warning,
+.sms-banner--warning {
+  background: var(--sms-intent-warning-container);
+  color: var(--sms-intent-on-warning-container);
+}
+.sms-chip--danger,
+.sms-banner--danger {
+  background: var(--sms-intent-danger-container);
+  color: var(--sms-intent-on-danger-container);
+}
+.sms-chip--info,
+.sms-banner--info {
+  background: var(--sms-intent-info-container);
+  color: var(--sms-intent-on-info-container);
+}
+.sms-chip--neutral,
+.sms-banner--neutral {
+  background: var(--sms-intent-neutral-container);
+  color: var(--sms-intent-on-neutral-container);
+}
+.sms-chip--special,
+.sms-banner--special {
+  background: var(--sms-intent-special-container);
+  color: var(--sms-intent-on-special-container);
+}

@@ -1,0 +1,303 @@
+{
+ "module": "platform",
+ "resources": [
+  {
+   "name": "DeletionLog",
+   "table": "platform.deletion_log",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/platform/deletion-logs",
+   "item": "/v1/platform/deletion-logs/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "entityType": "t-entity-type-f27a8d87",
+    "entityId": "97c77cc0-5291-508c-8f9a-3fdfdd3bfea0"
+   },
+   "update": {},
+   "duplicateConflicts": false,
+   "seedId": "0879f3a9-55da-5551-9337-053bb2a77b66",
+   "seed": [
+    "INSERT INTO platform.deletion_log (entity_type, entity_id, tenant_id, row_version, id) VALUES ('t-entity-type-f27a8d87', '97c77cc0-5291-508c-8f9a-3fdfdd3bfea0', :tenant, 1, '0879f3a9-55da-5551-9337-053bb2a77b66')"
+   ]
+  },
+  {
+   "name": "EntityAttachment",
+   "table": "platform.entity_attachment",
+   "ops": [
+    "Create",
+    "Delete",
+    "List"
+   ],
+   "collection": "/v1/platform/attachments",
+   "item": "/v1/platform/attachments/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO platform.file_object (tenant_id, storage_disk, storage_key, file_name, size_bytes, row_version, id) VALUES (:tenant, 't-storage-disk-5ab53957', 't-storage-key-d7a2ffcb', 't-file-name-e202d78e', 1, 1, '8bf9cfab-1a00-5848-a689-fa676fbf83b6') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "entityType": "t-entity-type-654d0d1c",
+    "entityId": "02ab72ca-2c5e-552f-af73-b0bfe6928c83",
+    "fileId": "8bf9cfab-1a00-5848-a689-fa676fbf83b6"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "EntityNote",
+   "table": "platform.entity_note",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/platform/entity-notes",
+   "item": "/v1/platform/entity-notes/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "entityType": "t-entity-type-7a777ddd",
+    "entityId": "f80b9b66-c8e0-5fba-8428-3d0574fd3d11",
+    "noteText": "t-note-text-75f53cbe"
+   },
+   "update": {
+    "entityType": "Updated entity_type"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "ReservedKeyword",
+   "table": "platform.reserved_keyword",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/platform/reserved-keywords",
+   "item": "/v1/platform/reserved-keywords/{id}",
+   "scope": "global",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "keyword": "t-keyword-56d00b2f"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "SaasPlan",
+   "table": "platform.saas_plan",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/platform/saas-plans",
+   "item": "/v1/platform/saas-plans/{id}",
+   "scope": "global",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "code": "C6AAEDF85",
+    "displayName": "t-display-name-218058f6",
+    "billingCycleMonths": 1
+   },
+   "update": {
+    "displayName": "Updated display_name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "SalesEnquiry",
+   "table": "platform.sales_enquiry",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/platform/sales-enquiries",
+   "item": "/v1/platform/sales-enquiries/{id}",
+   "scope": "global",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "contactName": "t-contact-name-49a9ea88",
+    "email": "u57530476@example.org",
+    "phone": "+919858453200",
+    "organisationName": "t-organisation-name-61d7c078",
+    "designation": "t-designation-726fb4a9"
+   },
+   "update": {
+    "contactName": "Updated contact_name"
+   },
+   "duplicateConflicts": false,
+   "publicCreate": true
+  },
+  {
+   "name": "StorageQuota",
+   "table": "platform.storage_quota",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/platform/storage-quotas",
+   "item": "/v1/platform/storage-quotas/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "quotaBytes": "1"
+   },
+   "update": {
+    "isActive": true
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "SystemSetting",
+   "table": "platform.system_setting",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/platform/system-settings",
+   "item": "/v1/platform/system-settings/{id}",
+   "scope": "global",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "settingKey": "t-setting-key-2d2dcd7e",
+    "name": "t-name-e927c379",
+    "inputType": "t-input-type-3a52feb3"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "TagAssignment",
+   "table": "platform.tag_assignment",
+   "ops": [
+    "Create",
+    "Delete",
+    "List"
+   ],
+   "collection": "/v1/platform/tag-assignments",
+   "item": "/v1/platform/tag-assignments/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO platform.tag (tenant_id, name, slug, row_version, id) VALUES (:tenant, 't-name-39e1c5e8', 't-slug-1e5ed98b', 1, '407515bf-eff3-598a-80c0-dc8cfc185ca2') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "tagId": "407515bf-eff3-598a-80c0-dc8cfc185ca2",
+    "entityType": "t-entity-type-8f2983e1",
+    "entityId": "ea9017de-2812-569e-9a13-f15b7a6144fa"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Tenant",
+   "table": "platform.tenant",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/platform/tenants",
+   "item": "/v1/platform/tenants/{id}",
+   "scope": "global",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "code": "C953640A3",
+    "name": "t-name-b5349219"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "TenantSubscription",
+   "table": "platform.tenant_subscription",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/platform/tenant-subscriptions",
+   "item": "/v1/platform/tenant-subscriptions/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "requestedByUserId": "98b868c2-cb2b-5b49-be08-dbe11894b8ef"
+   },
+   "update": {},
+   "duplicateConflicts": false,
+   "seedId": "95da2d53-248f-5146-9e93-80da49d99870",
+   "seed": [
+    "INSERT INTO platform.tenant_subscription (institution_id, requested_by_user_id, tenant_id, row_version, id) VALUES ('0196f000-0000-7000-8000-00000000a001', '98b868c2-cb2b-5b49-be08-dbe11894b8ef', :tenant, 1, '95da2d53-248f-5146-9e93-80da49d99870')"
+   ]
+  },
+  {
+   "name": "UploadPolicy",
+   "table": "platform.upload_policy",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/platform/upload-policies",
+   "item": "/v1/platform/upload-policies/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "moduleCode": "C72B334F4"
+   },
+   "update": {
+    "moduleCode": "Updated module_code"
+   },
+   "duplicateConflicts": false
+  }
+ ]
+}

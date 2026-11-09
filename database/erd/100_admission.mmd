@@ -1,0 +1,176 @@
+erDiagram
+    admission__admission_cycle["admission.admission_cycle"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(150) name "NN"
+        varchar(30) admission_basis "NN"
+        uuid program_id FK "→ academics.program (logical)"
+        uuid course_id FK "→ academics.course (logical)"
+        uuid grade_level_id FK "→ academics.grade_level (logical)"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        uuid academic_term_id FK "→ org.academic_term (logical)"
+        date start_date "NN"
+        date end_date
+        integer min_applications
+        integer max_applications
+        integer minimum_age_years
+        uuid application_fee_head_id FK "→ finance.fee_head (logical)"
+        varchar(30) status "NN"
+    }
+    admission__admission_cycle_fee["admission.admission_cycle_fee"] {
+        uuid id PK
+        uuid admission_cycle_id FK "NN"
+        uuid course_id FK "NN · → academics.course (logical)"
+        uuid fee_head_id FK "→ finance.fee_head (logical)"
+    }
+    admission__application["admission.application"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid admission_cycle_id FK
+        varchar(30) application_number "NN"
+        timestamptz application_date "NN"
+        date admission_date
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        uuid grade_level_id FK "→ academics.grade_level (logical)"
+        uuid section_id FK "→ academics.section (logical)"
+        uuid program_id FK "→ academics.program (logical)"
+        uuid course_id FK "→ academics.course (logical)"
+        uuid batch_id FK "→ academics.batch (logical)"
+        uuid applicant_person_id FK "→ people.person (logical)"
+        uuid student_id FK "→ sis.student (logical)"
+        boolean is_existing_student "NN"
+        uuid honorific_id FK "→ people.honorific (logical)"
+        varchar(255) full_name "NN"
+        varchar(100) first_name
+        varchar(100) middle_name
+        varchar(100) last_name
+        date date_of_birth "NN"
+        varchar(30) gender "NN"
+        varchar(120) birth_place
+        varchar(60) nationality
+        varchar(60) religion
+        varchar(30) social_category
+        varchar(60) mother_tongue
+        varchar(255) identification_marks
+        text national_id_enc
+        varchar(5) blood_group
+        numeric height_cm "5,2"
+        numeric weight_kg "5,2"
+        uuid photo_file_id FK "→ platform.file_object (logical)"
+        varchar(320) email
+        varchar(20) phone
+        varchar(20) mobile
+        varchar(255) address_line1
+        varchar(255) address_line2
+        varchar(120) city_name
+        varchar(12) postal_code
+        uuid state_province_id FK "→ master.state_province (logical)"
+        uuid country_id FK "→ master.country (logical)"
+        text permanent_address
+        text communication_address
+        varchar(255) previous_institution
+        varchar(150) previous_course
+        varchar(255) previous_result
+        varchar(30) previous_board
+        varchar(40) board_registration_number
+        text reason_for_leaving
+        varchar(60) language_choice
+        text stream_choice
+        boolean has_siblings
+        boolean has_medical_history
+        text medical_details
+        boolean has_extracurricular
+        text extracurricular_details
+        varchar(30) transport_mode
+        text transport_details
+        varchar(150) family_business
+        numeric family_income "14,2"
+        numeric application_fee "14,2"
+        numeric discount_percent "5,2"
+        uuid fee_plan_id FK "→ finance.fee_plan (logical)"
+        date fee_start_date
+        date payment_due_date
+        varchar(30) payment_status "NN"
+        varchar(30) status "NN"
+        text remarks
+        varchar(120) payment_status_note
+    }
+    admission__application_guardian["admission.application_guardian"] {
+        uuid id PK
+        uuid application_id FK "NN"
+        varchar(30) relationship "NN"
+        varchar(150) name "NN"
+        uuid qualification_id FK "→ people.qualification (logical)"
+        varchar(120) designation
+        varchar(120) occupation
+        varchar(200) organisation
+        numeric annual_income "14,2"
+        varchar(20) mobile
+        varchar(320) email
+        text national_id_enc
+        uuid photo_file_id FK "→ platform.file_object (logical)"
+    }
+    admission__application_emergency_contact["admission.application_emergency_contact"] {
+        uuid id PK
+        uuid application_id FK "NN"
+        smallint priority "NN"
+        varchar(20) contact_number "NN"
+        varchar(60) relationship "NN"
+    }
+    admission__outbox_event["admission.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    admission__inbox_event["admission.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    admission__idempotency_key["admission.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    admission__operation["admission.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    admission__number_sequence["admission.number_sequence"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(40) sequence_code "NN"
+        varchar(20) period_key "NN"
+        varchar(20) prefix
+        smallint padding "NN"
+        bigint next_value "NN"
+    }
+    admission__admission_cycle ||--o{ admission__admission_cycle_fee : "admission_cycle_id"
+    admission__admission_cycle |o--o{ admission__application : "admission_cycle_id"
+    admission__application ||--o{ admission__application_guardian : "application_id"
+    admission__application ||--o{ admission__application_emergency_contact : "application_id"

@@ -1,0 +1,19 @@
+{
+ "module": "frontoffice",
+ "cleanup": [
+  {
+   "event": "platform.file_object.deleted",
+   "table": "frontoffice.postal_record",
+   "column": "attachment_file_id",
+   "action": "null the column",
+   "ownerId": "3c24513b-3597-54f1-b1a1-830ce05fb802",
+   "rowId": "1662bb39-512c-578c-8df3-c12ab050ceda",
+   "otherRowId": "f42dfce8-d74a-50cc-b0b1-84195a5f7fb7",
+   "fixtures": [],
+   "row": "INSERT INTO frontoffice.postal_record (tenant_id, institution_id, direction, post_type, postal_date, description, row_version, attachment_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'dispatch', 't-post-type-9611591a', '2026-01-10', 't-description-4ad66a93', 1, '3c24513b-3597-54f1-b1a1-830ce05fb802', '1662bb39-512c-578c-8df3-c12ab050ceda')",
+   "otherFixtures": [],
+   "other": "INSERT INTO frontoffice.postal_record (tenant_id, institution_id, direction, post_type, postal_date, description, row_version, attachment_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'dispatch', 't-post-type-907263cc', '2026-01-10', 't-description-a095ac29', 1, '3c24513b-3597-54f1-b1a1-830ce05fb802', 'f42dfce8-d74a-50cc-b0b1-84195a5f7fb7')",
+   "softDeletable": true
+  }
+ ]
+}

@@ -1,0 +1,5823 @@
+openapi: 3.1.0
+info:
+  title: MySMS API — Platform & Tenancy
+  version: 1.0.0
+  description: SaaS tenancy, subscription plans, shared files, tags, notes, audit trail and global settings.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-MySMS
+  contact:
+    name: MySMS API team
+    email: api@mysms.example
+servers:
+- url: https://api.mysms.example
+  description: Production (replace with your domain)
+security:
+- bearerAuth: []
+tags:
+- name: AuditLog
+  description: AuditLog aggregate.
+- name: DeletionLog
+  description: DeletionLog aggregate.
+- name: EntityAttachment
+  description: EntityAttachment aggregate.
+- name: EntityNote
+  description: EntityNote aggregate.
+- name: FileObject
+  description: FileObject aggregate.
+- name: ReservedKeyword
+  description: ReservedKeyword aggregate.
+- name: SaasPlan
+  description: SaasPlan aggregate.
+- name: SalesEnquiry
+  description: SalesEnquiry aggregate.
+- name: StorageQuota
+  description: StorageQuota aggregate.
+- name: SystemSetting
+  description: SystemSetting aggregate.
+- name: Tag
+  description: Tag aggregate.
+- name: TagAssignment
+  description: TagAssignment aggregate.
+- name: Tenant
+  description: Tenant aggregate.
+- name: TenantSubscription
+  description: TenantSubscription aggregate.
+- name: Theme
+  description: Theme aggregate.
+- name: UploadPolicy
+  description: UploadPolicy aggregate.
+- name: Operation
+  description: Long-running operations started in this module (reports, imports, exports, bulk generation); poll until done.
+paths:
+  /v1/platform/tenants:
+    get:
+      operationId: platform.ListTenants
+      summary: List Tenants
+      description: List Tenants visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Tenant
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.tenant.read
+      x-grpc:
+        service: mysms.platform.v1.TenantService
+        method: ListTenants
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: platform.CreateTenant
+      summary: Create Tenant
+      description: Create a Tenant. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Tenant
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.tenant.create
+      x-grpc:
+        service: mysms.platform.v1.TenantService
+        method: CreateTenant
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tenant'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/tenants/{tenantId}:
+    get:
+      operationId: platform.GetTenant
+      summary: Get Tenant
+      description: Get one Tenant by id. The ETag header carries the row version.
+      tags:
+      - Tenant
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.tenant.read
+      x-grpc:
+        service: mysms.platform.v1.TenantService
+        method: GetTenant
+      parameters:
+      - name: tenantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Tenant id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: platform.UpdateTenant
+      summary: Update Tenant
+      description: Partially update a Tenant (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Tenant
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.tenant.update
+      x-grpc:
+        service: mysms.platform.v1.TenantService
+        method: UpdateTenant
+      parameters:
+      - name: tenantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Tenant id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: platform.DeleteTenant
+      summary: Delete Tenant
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Tenant
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.tenant.delete
+      x-grpc:
+        service: mysms.platform.v1.TenantService
+        method: DeleteTenant
+      parameters:
+      - name: tenantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Tenant id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/saas-plans:
+    get:
+      operationId: platform.ListSaasPlans
+      summary: List SaasPlans
+      description: List SaasPlans visible to the caller, with cursor pagination, filtering and ordering. Everyone but platform staff (guests and tenant users) sees active plans only (isActive), without the internal createdBy and updatedBy (guest projection); platform staff see every plan.
+      tags:
+      - SaasPlan
+      security:
+      - {}
+      - bearerAuth: []
+      x-permission: platform.saas_plan.read
+      x-grpc:
+        service: mysms.platform.v1.SaasPlanService
+        method: ListSaasPlans
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaasPlanList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: platform.CreateSaasPlan
+      summary: Create SaasPlan
+      description: Create a SaasPlan. Supports Idempotency-Key and validateOnly.
+      tags:
+      - SaasPlan
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.saas_plan.create
+      x-grpc:
+        service: mysms.platform.v1.SaasPlanService
+        method: CreateSaasPlan
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaasPlan'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaasPlan'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaasPlan'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/saas-plans/{saasPlanId}:
+    get:
+      operationId: platform.GetSaasPlan
+      summary: Get SaasPlan
+      description: Get one SaasPlan by id. The ETag header carries the row version. Everyone but platform staff (guests and tenant users) sees active plans only (isActive), without the internal createdBy and updatedBy (guest projection); platform staff see every plan.
+      tags:
+      - SaasPlan
+      security:
+      - {}
+      - bearerAuth: []
+      x-permission: platform.saas_plan.read
+      x-grpc:
+        service: mysms.platform.v1.SaasPlanService
+        method: GetSaasPlan
+      parameters:
+      - name: saasPlanId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: SaasPlan id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaasPlan'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: platform.UpdateSaasPlan
+      summary: Update SaasPlan
+      description: Partially update a SaasPlan (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - SaasPlan
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.saas_plan.update
+      x-grpc:
+        service: mysms.platform.v1.SaasPlanService
+        method: UpdateSaasPlan
+      parameters:
+      - name: saasPlanId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: SaasPlan id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaasPlanUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaasPlan'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: platform.DeleteSaasPlan
+      summary: Delete SaasPlan
+      description: Soft delete (sets deleted_at).
+      tags:
+      - SaasPlan
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.saas_plan.delete
+      x-grpc:
+        service: mysms.platform.v1.SaasPlanService
+        method: DeleteSaasPlan
+      parameters:
+      - name: saasPlanId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: SaasPlan id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/tenant-subscriptions:
+    get:
+      operationId: platform.ListTenantSubscriptions
+      summary: List TenantSubscriptions
+      description: List TenantSubscriptions visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - TenantSubscription
+      security:
+      - bearerAuth: []
+      x-permission: platform.tenant_subscription.read
+      x-grpc:
+        service: mysms.platform.v1.TenantSubscriptionService
+        method: ListTenantSubscriptions
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantSubscriptionList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/tenant-subscriptions/{tenantSubscriptionId}:
+    get:
+      operationId: platform.GetTenantSubscription
+      summary: Get TenantSubscription
+      description: Get one TenantSubscription by id. The ETag header carries the row version.
+      tags:
+      - TenantSubscription
+      security:
+      - bearerAuth: []
+      x-permission: platform.tenant_subscription.read
+      x-grpc:
+        service: mysms.platform.v1.TenantSubscriptionService
+        method: GetTenantSubscription
+      parameters:
+      - name: tenantSubscriptionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: TenantSubscription id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantSubscription'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/files:
+    get:
+      operationId: platform.ListFileObjects
+      summary: List FileObjects
+      description: List FileObjects visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - FileObject
+      security:
+      - bearerAuth: []
+      x-permission: platform.file_object.read
+      x-grpc:
+        service: mysms.platform.v1.FileObjectService
+        method: ListFileObjects
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileObjectList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/files/{fileObjectId}:
+    get:
+      operationId: platform.GetFileObject
+      summary: Get FileObject
+      description: Get one FileObject by id. The ETag header carries the row version.
+      tags:
+      - FileObject
+      security:
+      - bearerAuth: []
+      x-permission: platform.file_object.read
+      x-grpc:
+        service: mysms.platform.v1.FileObjectService
+        method: GetFileObject
+      parameters:
+      - name: fileObjectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: FileObject id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileObject'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: platform.DeleteFileObject
+      summary: Delete FileObject
+      description: Soft delete (sets deleted_at).
+      tags:
+      - FileObject
+      security:
+      - bearerAuth: []
+      x-permission: platform.file_object.delete
+      x-grpc:
+        service: mysms.platform.v1.FileObjectService
+        method: DeleteFileObject
+      parameters:
+      - name: fileObjectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: FileObject id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/attachments:
+    get:
+      operationId: platform.ListEntityAttachments
+      summary: List EntityAttachments
+      description: List EntityAttachments visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - EntityAttachment
+      security:
+      - bearerAuth: []
+      x-permission: platform.entity_attachment.read
+      x-grpc:
+        service: mysms.platform.v1.EntityAttachmentService
+        method: ListEntityAttachments
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityAttachmentList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: platform.CreateEntityAttachment
+      summary: Create EntityAttachment
+      description: Create a EntityAttachment. Supports Idempotency-Key and validateOnly.
+      tags:
+      - EntityAttachment
+      security:
+      - bearerAuth: []
+      x-permission: platform.entity_attachment.create
+      x-grpc:
+        service: mysms.platform.v1.EntityAttachmentService
+        method: CreateEntityAttachment
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntityAttachment'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityAttachment'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityAttachment'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/attachments/{entityAttachmentId}:
+    delete:
+      operationId: platform.DeleteEntityAttachment
+      summary: Delete EntityAttachment
+      description: Soft delete (sets deleted_at).
+      tags:
+      - EntityAttachment
+      security:
+      - bearerAuth: []
+      x-permission: platform.entity_attachment.delete
+      x-grpc:
+        service: mysms.platform.v1.EntityAttachmentService
+        method: DeleteEntityAttachment
+      parameters:
+      - name: entityAttachmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: EntityAttachment id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/tags:
+    get:
+      operationId: platform.ListTags
+      summary: List Tags
+      description: List Tags visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Tag
+      security:
+      - bearerAuth: []
+      x-permission: platform.tag.read
+      x-grpc:
+        service: mysms.platform.v1.TagService
+        method: ListTags
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: platform.CreateTag
+      summary: Create Tag
+      description: Create a Tag. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Tag
+      security:
+      - bearerAuth: []
+      x-permission: platform.tag.create
+      x-grpc:
+        service: mysms.platform.v1.TagService
+        method: CreateTag
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tag'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/tags/{tagId}:
+    get:
+      operationId: platform.GetTag
+      summary: Get Tag
+      description: Get one Tag by id. The ETag header carries the row version.
+      tags:
+      - Tag
+      security:
+      - bearerAuth: []
+      x-permission: platform.tag.read
+      x-grpc:
+        service: mysms.platform.v1.TagService
+        method: GetTag
+      parameters:
+      - name: tagId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Tag id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: platform.UpdateTag
+      summary: Update Tag
+      description: Partially update a Tag (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Tag
+      security:
+      - bearerAuth: []
+      x-permission: platform.tag.update
+      x-grpc:
+        service: mysms.platform.v1.TagService
+        method: UpdateTag
+      parameters:
+      - name: tagId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Tag id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: platform.DeleteTag
+      summary: Delete Tag
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Tag
+      security:
+      - bearerAuth: []
+      x-permission: platform.tag.delete
+      x-grpc:
+        service: mysms.platform.v1.TagService
+        method: DeleteTag
+      parameters:
+      - name: tagId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Tag id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/tag-assignments:
+    get:
+      operationId: platform.ListTagAssignments
+      summary: List TagAssignments
+      description: List TagAssignments visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - TagAssignment
+      security:
+      - bearerAuth: []
+      x-permission: platform.tag_assignment.read
+      x-grpc:
+        service: mysms.platform.v1.TagAssignmentService
+        method: ListTagAssignments
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagAssignmentList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: platform.CreateTagAssignment
+      summary: Create TagAssignment
+      description: Create a TagAssignment. Supports Idempotency-Key and validateOnly.
+      tags:
+      - TagAssignment
+      security:
+      - bearerAuth: []
+      x-permission: platform.tag_assignment.create
+      x-grpc:
+        service: mysms.platform.v1.TagAssignmentService
+        method: CreateTagAssignment
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagAssignment'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagAssignment'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagAssignment'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/tag-assignments/{tagAssignmentId}:
+    delete:
+      operationId: platform.DeleteTagAssignment
+      summary: Delete TagAssignment
+      description: Soft delete (sets deleted_at).
+      tags:
+      - TagAssignment
+      security:
+      - bearerAuth: []
+      x-permission: platform.tag_assignment.delete
+      x-grpc:
+        service: mysms.platform.v1.TagAssignmentService
+        method: DeleteTagAssignment
+      parameters:
+      - name: tagAssignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: TagAssignment id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/entity-notes:
+    get:
+      operationId: platform.ListEntityNotes
+      summary: List EntityNotes
+      description: List EntityNotes visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - EntityNote
+      security:
+      - bearerAuth: []
+      x-permission: platform.entity_note.read
+      x-grpc:
+        service: mysms.platform.v1.EntityNoteService
+        method: ListEntityNotes
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityNoteList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: platform.CreateEntityNote
+      summary: Create EntityNote
+      description: Create a EntityNote. Supports Idempotency-Key and validateOnly.
+      tags:
+      - EntityNote
+      security:
+      - bearerAuth: []
+      x-permission: platform.entity_note.create
+      x-grpc:
+        service: mysms.platform.v1.EntityNoteService
+        method: CreateEntityNote
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntityNote'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityNote'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityNote'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/entity-notes/{entityNoteId}:
+    get:
+      operationId: platform.GetEntityNote
+      summary: Get EntityNote
+      description: Get one EntityNote by id. The ETag header carries the row version.
+      tags:
+      - EntityNote
+      security:
+      - bearerAuth: []
+      x-permission: platform.entity_note.read
+      x-grpc:
+        service: mysms.platform.v1.EntityNoteService
+        method: GetEntityNote
+      parameters:
+      - name: entityNoteId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: EntityNote id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityNote'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: platform.UpdateEntityNote
+      summary: Update EntityNote
+      description: Partially update a EntityNote (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - EntityNote
+      security:
+      - bearerAuth: []
+      x-permission: platform.entity_note.update
+      x-grpc:
+        service: mysms.platform.v1.EntityNoteService
+        method: UpdateEntityNote
+      parameters:
+      - name: entityNoteId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: EntityNote id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntityNoteUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityNote'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: platform.DeleteEntityNote
+      summary: Delete EntityNote
+      description: Soft delete (sets deleted_at).
+      tags:
+      - EntityNote
+      security:
+      - bearerAuth: []
+      x-permission: platform.entity_note.delete
+      x-grpc:
+        service: mysms.platform.v1.EntityNoteService
+        method: DeleteEntityNote
+      parameters:
+      - name: entityNoteId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: EntityNote id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/audit-logs:
+    get:
+      operationId: platform.ListAuditLogs
+      summary: List AuditLogs
+      description: List AuditLogs visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - AuditLog
+      security:
+      - bearerAuth: []
+      x-permission: platform.audit_log.read
+      x-grpc:
+        service: mysms.platform.v1.AuditLogService
+        method: ListAuditLogs
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/audit-logs/{auditLogId}:
+    get:
+      operationId: platform.GetAuditLog
+      summary: Get AuditLog
+      description: Get one AuditLog by id. The ETag header carries the row version.
+      tags:
+      - AuditLog
+      security:
+      - bearerAuth: []
+      x-permission: platform.audit_log.read
+      x-grpc:
+        service: mysms.platform.v1.AuditLogService
+        method: GetAuditLog
+      parameters:
+      - name: auditLogId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AuditLog id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLog'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/reserved-keywords:
+    get:
+      operationId: platform.ListReservedKeywords
+      summary: List ReservedKeywords
+      description: List ReservedKeywords visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - ReservedKeyword
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.reserved_keyword.read
+      x-grpc:
+        service: mysms.platform.v1.ReservedKeywordService
+        method: ListReservedKeywords
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservedKeywordList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: platform.CreateReservedKeyword
+      summary: Create ReservedKeyword
+      description: Create a ReservedKeyword. Supports Idempotency-Key and validateOnly.
+      tags:
+      - ReservedKeyword
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.reserved_keyword.create
+      x-grpc:
+        service: mysms.platform.v1.ReservedKeywordService
+        method: CreateReservedKeyword
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservedKeyword'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservedKeyword'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservedKeyword'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/reserved-keywords/{reservedKeywordId}:
+    get:
+      operationId: platform.GetReservedKeyword
+      summary: Get ReservedKeyword
+      description: Get one ReservedKeyword by id. The ETag header carries the row version.
+      tags:
+      - ReservedKeyword
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.reserved_keyword.read
+      x-grpc:
+        service: mysms.platform.v1.ReservedKeywordService
+        method: GetReservedKeyword
+      parameters:
+      - name: reservedKeywordId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: ReservedKeyword id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservedKeyword'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: platform.UpdateReservedKeyword
+      summary: Update ReservedKeyword
+      description: Partially update a ReservedKeyword (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - ReservedKeyword
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.reserved_keyword.update
+      x-grpc:
+        service: mysms.platform.v1.ReservedKeywordService
+        method: UpdateReservedKeyword
+      parameters:
+      - name: reservedKeywordId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: ReservedKeyword id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservedKeywordUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservedKeyword'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: platform.DeleteReservedKeyword
+      summary: Delete ReservedKeyword
+      description: Soft delete (sets deleted_at).
+      tags:
+      - ReservedKeyword
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.reserved_keyword.delete
+      x-grpc:
+        service: mysms.platform.v1.ReservedKeywordService
+        method: DeleteReservedKeyword
+      parameters:
+      - name: reservedKeywordId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: ReservedKeyword id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/sales-enquiries:
+    get:
+      operationId: platform.ListSalesEnquiries
+      summary: List SalesEnquiries
+      description: List SalesEnquiries visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - SalesEnquiry
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.sales_enquiry.read
+      x-grpc:
+        service: mysms.platform.v1.SalesEnquiryService
+        method: ListSalesEnquiries
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesEnquiryList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: platform.CreateSalesEnquiry
+      summary: Create SalesEnquiry
+      description: Create a SalesEnquiry. Supports Idempotency-Key and validateOnly.
+      tags:
+      - SalesEnquiry
+      security:
+      - {}
+      - bearerAuth: []
+      x-permission: platform.sales_enquiry.create
+      x-grpc:
+        service: mysms.platform.v1.SalesEnquiryService
+        method: CreateSalesEnquiry
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesEnquiry'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesEnquiry'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesEnquiry'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/sales-enquiries/{salesEnquiryId}:
+    get:
+      operationId: platform.GetSalesEnquiry
+      summary: Get SalesEnquiry
+      description: Get one SalesEnquiry by id. The ETag header carries the row version.
+      tags:
+      - SalesEnquiry
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.sales_enquiry.read
+      x-grpc:
+        service: mysms.platform.v1.SalesEnquiryService
+        method: GetSalesEnquiry
+      parameters:
+      - name: salesEnquiryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: SalesEnquiry id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesEnquiry'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: platform.UpdateSalesEnquiry
+      summary: Update SalesEnquiry
+      description: Partially update a SalesEnquiry (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - SalesEnquiry
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.sales_enquiry.update
+      x-grpc:
+        service: mysms.platform.v1.SalesEnquiryService
+        method: UpdateSalesEnquiry
+      parameters:
+      - name: salesEnquiryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: SalesEnquiry id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesEnquiryUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesEnquiry'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: platform.DeleteSalesEnquiry
+      summary: Delete SalesEnquiry
+      description: Soft delete (sets deleted_at).
+      tags:
+      - SalesEnquiry
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.sales_enquiry.delete
+      x-grpc:
+        service: mysms.platform.v1.SalesEnquiryService
+        method: DeleteSalesEnquiry
+      parameters:
+      - name: salesEnquiryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: SalesEnquiry id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/system-settings:
+    get:
+      operationId: platform.ListSystemSettings
+      summary: List SystemSettings
+      description: List SystemSettings visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - SystemSetting
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.system_setting.read
+      x-grpc:
+        service: mysms.platform.v1.SystemSettingService
+        method: ListSystemSettings
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemSettingList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: platform.CreateSystemSetting
+      summary: Create SystemSetting
+      description: Create a SystemSetting. Supports Idempotency-Key and validateOnly.
+      tags:
+      - SystemSetting
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.system_setting.create
+      x-grpc:
+        service: mysms.platform.v1.SystemSettingService
+        method: CreateSystemSetting
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemSetting'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemSetting'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemSetting'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/system-settings/{systemSettingId}:
+    get:
+      operationId: platform.GetSystemSetting
+      summary: Get SystemSetting
+      description: Get one SystemSetting by id. The ETag header carries the row version.
+      tags:
+      - SystemSetting
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.system_setting.read
+      x-grpc:
+        service: mysms.platform.v1.SystemSettingService
+        method: GetSystemSetting
+      parameters:
+      - name: systemSettingId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: SystemSetting id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemSetting'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: platform.UpdateSystemSetting
+      summary: Update SystemSetting
+      description: Partially update a SystemSetting (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - SystemSetting
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.system_setting.update
+      x-grpc:
+        service: mysms.platform.v1.SystemSettingService
+        method: UpdateSystemSetting
+      parameters:
+      - name: systemSettingId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: SystemSetting id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemSettingUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemSetting'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: platform.DeleteSystemSetting
+      summary: Delete SystemSetting
+      description: Soft delete (sets deleted_at).
+      tags:
+      - SystemSetting
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.system_setting.delete
+      x-grpc:
+        service: mysms.platform.v1.SystemSettingService
+        method: DeleteSystemSetting
+      parameters:
+      - name: systemSettingId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: SystemSetting id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/themes:
+    get:
+      operationId: platform.ListThemes
+      summary: List Themes
+      description: List Themes visible to the caller, with cursor pagination, filtering and ordering. Guests (no token) receive published rows only, with internal fields omitted (guest projection).
+      tags:
+      - Theme
+      security:
+      - {}
+      - bearerAuth: []
+      x-permission: platform.theme.read
+      x-grpc:
+        service: mysms.platform.v1.ThemeService
+        method: ListThemes
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThemeList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: platform.CreateTheme
+      summary: Create Theme
+      description: Create a Theme. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Theme
+      security:
+      - bearerAuth: []
+      x-permission: platform.theme.create
+      x-grpc:
+        service: mysms.platform.v1.ThemeService
+        method: CreateTheme
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Theme'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Theme'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Theme'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/themes/{themeId}:
+    get:
+      operationId: platform.GetTheme
+      summary: Get Theme
+      description: Get one Theme by id. The ETag header carries the row version. Guests (no token) receive published rows only, with internal fields omitted (guest projection).
+      tags:
+      - Theme
+      security:
+      - {}
+      - bearerAuth: []
+      x-permission: platform.theme.read
+      x-grpc:
+        service: mysms.platform.v1.ThemeService
+        method: GetTheme
+      parameters:
+      - name: themeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Theme id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Theme'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: platform.UpdateTheme
+      summary: Update Theme
+      description: Partially update a Theme (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Theme
+      security:
+      - bearerAuth: []
+      x-permission: platform.theme.update
+      x-grpc:
+        service: mysms.platform.v1.ThemeService
+        method: UpdateTheme
+      parameters:
+      - name: themeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Theme id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThemeUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Theme'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: platform.DeleteTheme
+      summary: Delete Theme
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Theme
+      security:
+      - bearerAuth: []
+      x-permission: platform.theme.delete
+      x-grpc:
+        service: mysms.platform.v1.ThemeService
+        method: DeleteTheme
+      parameters:
+      - name: themeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Theme id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/upload-policies:
+    get:
+      operationId: platform.ListUploadPolicies
+      summary: List UploadPolicies
+      description: List UploadPolicies visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - UploadPolicy
+      security:
+      - bearerAuth: []
+      x-permission: platform.upload_policy.read
+      x-grpc:
+        service: mysms.platform.v1.UploadPolicyService
+        method: ListUploadPolicies
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadPolicyList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: platform.CreateUploadPolicy
+      summary: Create UploadPolicy
+      description: Create a UploadPolicy. Supports Idempotency-Key and validateOnly.
+      tags:
+      - UploadPolicy
+      security:
+      - bearerAuth: []
+      x-permission: platform.upload_policy.create
+      x-grpc:
+        service: mysms.platform.v1.UploadPolicyService
+        method: CreateUploadPolicy
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadPolicy'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadPolicy'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadPolicy'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/upload-policies/{uploadPolicyId}:
+    get:
+      operationId: platform.GetUploadPolicy
+      summary: Get UploadPolicy
+      description: Get one UploadPolicy by id. The ETag header carries the row version.
+      tags:
+      - UploadPolicy
+      security:
+      - bearerAuth: []
+      x-permission: platform.upload_policy.read
+      x-grpc:
+        service: mysms.platform.v1.UploadPolicyService
+        method: GetUploadPolicy
+      parameters:
+      - name: uploadPolicyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UploadPolicy id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadPolicy'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: platform.UpdateUploadPolicy
+      summary: Update UploadPolicy
+      description: Partially update a UploadPolicy (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - UploadPolicy
+      security:
+      - bearerAuth: []
+      x-permission: platform.upload_policy.update
+      x-grpc:
+        service: mysms.platform.v1.UploadPolicyService
+        method: UpdateUploadPolicy
+      parameters:
+      - name: uploadPolicyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UploadPolicy id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadPolicyUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadPolicy'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: platform.DeleteUploadPolicy
+      summary: Delete UploadPolicy
+      description: Soft delete (sets deleted_at).
+      tags:
+      - UploadPolicy
+      security:
+      - bearerAuth: []
+      x-permission: platform.upload_policy.delete
+      x-grpc:
+        service: mysms.platform.v1.UploadPolicyService
+        method: DeleteUploadPolicy
+      parameters:
+      - name: uploadPolicyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UploadPolicy id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/deletion-logs:
+    get:
+      operationId: platform.ListDeletionLogs
+      summary: List DeletionLogs
+      description: List DeletionLogs visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - DeletionLog
+      security:
+      - bearerAuth: []
+      x-permission: platform.deletion_log.read
+      x-grpc:
+        service: mysms.platform.v1.DeletionLogService
+        method: ListDeletionLogs
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionLogList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/deletion-logs/{deletionLogId}:
+    get:
+      operationId: platform.GetDeletionLog
+      summary: Get DeletionLog
+      description: Get one DeletionLog by id. The ETag header carries the row version.
+      tags:
+      - DeletionLog
+      security:
+      - bearerAuth: []
+      x-permission: platform.deletion_log.read
+      x-grpc:
+        service: mysms.platform.v1.DeletionLogService
+        method: GetDeletionLog
+      parameters:
+      - name: deletionLogId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: DeletionLog id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionLog'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/storage-quotas:
+    get:
+      operationId: platform.ListStorageQuotas
+      summary: List StorageQuotas
+      description: List StorageQuotas visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - StorageQuota
+      security:
+      - bearerAuth: []
+      x-permission: platform.storage_quota.read
+      x-grpc:
+        service: mysms.platform.v1.StorageQuotaService
+        method: ListStorageQuotas
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageQuotaList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: platform.CreateStorageQuota
+      summary: Create StorageQuota
+      description: Create a StorageQuota. Supports Idempotency-Key and validateOnly.
+      tags:
+      - StorageQuota
+      security:
+      - bearerAuth: []
+      x-permission: platform.storage_quota.create
+      x-grpc:
+        service: mysms.platform.v1.StorageQuotaService
+        method: CreateStorageQuota
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StorageQuota'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageQuota'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageQuota'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/storage-quotas/{storageQuotaId}:
+    get:
+      operationId: platform.GetStorageQuota
+      summary: Get StorageQuota
+      description: Get one StorageQuota by id. The ETag header carries the row version.
+      tags:
+      - StorageQuota
+      security:
+      - bearerAuth: []
+      x-permission: platform.storage_quota.read
+      x-grpc:
+        service: mysms.platform.v1.StorageQuotaService
+        method: GetStorageQuota
+      parameters:
+      - name: storageQuotaId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: StorageQuota id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageQuota'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: platform.UpdateStorageQuota
+      summary: Update StorageQuota
+      description: Partially update a StorageQuota (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - StorageQuota
+      security:
+      - bearerAuth: []
+      x-permission: platform.storage_quota.update
+      x-grpc:
+        service: mysms.platform.v1.StorageQuotaService
+        method: UpdateStorageQuota
+      parameters:
+      - name: storageQuotaId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: StorageQuota id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StorageQuotaUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageQuota'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: platform.DeleteStorageQuota
+      summary: Delete StorageQuota
+      description: Soft delete (sets deleted_at).
+      tags:
+      - StorageQuota
+      security:
+      - bearerAuth: []
+      x-permission: platform.storage_quota.delete
+      x-grpc:
+        service: mysms.platform.v1.StorageQuotaService
+        method: DeleteStorageQuota
+      parameters:
+      - name: storageQuotaId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: StorageQuota id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/files:createUploadUrl:
+    post:
+      operationId: platform.CreateUploadUrl
+      summary: Create a pending file and a pre-signed upload URL
+      description: Create a pending file and a pre-signed upload URL.
+      tags:
+      - FileObject
+      security:
+      - bearerAuth: []
+      x-permission: platform.file_object.create_upload_url
+      x-grpc:
+        service: mysms.platform.v1.FileObjectService
+        method: CreateUploadUrl
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/UploadTarget
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUploadUrlRequest'
+  /v1/platform/files/{fileObjectId}:complete:
+    post:
+      operationId: platform.CompleteUpload
+      summary: Confirm the bytes were uploaded; the file is scanned and becomes available
+      description: Confirm the bytes were uploaded; the file is scanned and becomes available.
+      tags:
+      - FileObject
+      security:
+      - bearerAuth: []
+      x-permission: platform.file_object.complete_upload
+      x-grpc:
+        service: mysms.platform.v1.FileObjectService
+        method: CompleteUpload
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileObject'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: fileObjectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteUploadRequest'
+  /v1/platform/files/{fileObjectId}:downloadUrl:
+    get:
+      operationId: platform.GetDownloadUrl
+      summary: Pre-signed download URL
+      description: Pre-signed download URL. Signed-in users are checked against the owner record; guests can only resolve files owned by published catalogue content (course / cohort images, preview lessons,
+        public profiles). Public.
+      tags:
+      - FileObject
+      security:
+      - {}
+      - bearerAuth: []
+      x-permission: platform.file_object.get_download_url
+      x-grpc:
+        service: mysms.platform.v1.FileObjectService
+        method: GetDownloadUrl
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/DownloadLink
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: fileObjectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /v1/platform/branding:
+    get:
+      operationId: platform.GetBranding
+      summary: Public branding and locale for login pages and the PWA manifest
+      description: Public branding and locale for login pages and the PWA manifest. Public.
+      tags:
+      - Tenant
+      security:
+      - {}
+      - bearerAuth: []
+      x-permission: platform.tenant.get_branding
+      x-grpc:
+        service: mysms.platform.v1.TenantService
+        method: GetBranding
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/Branding
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: tenantCode
+        in: query
+        required: true
+        description: Tenant code.
+        schema:
+          type: string
+      - name: institutionId
+        in: query
+        required: false
+        description: Institution.
+        schema:
+          type: string
+          format: uuid
+  /v1/platform/tenants/{tenantId}:clearDemoData:
+    post:
+      operationId: platform.ClearDemoData
+      summary: Remove demo data loaded for a trial tenant
+      description: Remove demo data loaded for a trial tenant.
+      tags:
+      - Tenant
+      security:
+      - platformAdminAuth: []
+      x-permission: platform.tenant.clear_demo_data
+      x-grpc:
+        service: mysms.platform.v1.TenantService
+        method: ClearDemoData
+      responses:
+        '202':
+          description: Accepted; poll the operation.
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/Operation
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: tenantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClearDemoDataRequest'
+  /v1/platform/search:
+    get:
+      operationId: platform.GlobalSearch
+      summary: Permission-aware search across students, staff, guardians, courses, media
+      description: Permission-aware search across students, staff, guardians, courses, media...
+      tags:
+      - Tenant
+      security:
+      - bearerAuth: []
+      x-permission: platform.tenant.global_search
+      x-grpc:
+        service: mysms.platform.v1.TenantService
+        method: GlobalSearch
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/SearchHitList
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: query
+        in: query
+        required: true
+        description: Search text.
+        schema:
+          type: string
+      - name: entityTypes
+        in: query
+        required: false
+        description: Restrict to these resource types.
+        schema:
+          type: array
+          items:
+            type: string
+            description: Restrict to these resource types.
+        style: form
+        explode: true
+      - name: pageSize
+        in: query
+        required: false
+        description: Max hits.
+        schema:
+          type: integer
+          format: int32
+      - name: pageToken
+        in: query
+        required: false
+        description: Cursor from next_page_token.
+        schema:
+          type: string
+  /v1/platform/operations/{operationId}:
+    get:
+      operationId: platform.GetOperation
+      summary: Status of a long-running operation started in this module
+      description: Live status of a long-running operation (report, import, export, bulk action) started in the platform module. Operations started in another module are polled at that module (`/v1/{module}/operations/{operationId}`; the `module` field says which).
+      tags:
+      - Operation
+      security:
+      - bearerAuth: []
+      x-permission: platform.operation.read
+      x-grpc:
+        service: mysms.platform.v1.OperationService
+        method: GetOperation
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/Operation
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: operationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /v1/platform/operations:
+    get:
+      operationId: platform.ListOperations
+      summary: Job centre — the caller's operations across all modules
+      description: The caller's long-running operations across all modules (job centre). Platform keeps this index from the operation events every module publishes, so a row may lag the owning module by a few seconds; for live status or cancellation call the owning module's operation endpoints (`module` field).
+      tags:
+      - Operation
+      security:
+      - bearerAuth: []
+      x-permission: platform.operation.read
+      x-grpc:
+        service: mysms.platform.v1.OperationService
+        method: ListOperations
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/OperationList
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: kind
+        in: query
+        required: false
+        description: Filter by kind.
+        schema:
+          type: string
+      - name: pageSize
+        in: query
+        required: false
+        description: Page size.
+        schema:
+          type: integer
+          format: int32
+      - name: pageToken
+        in: query
+        required: false
+        description: Page token.
+        schema:
+          type: string
+  /v1/platform/operations/{operationId}:cancel:
+    post:
+      operationId: platform.CancelOperation
+      summary: Request cancellation of a running operation
+      description: Request cancellation of a running operation started in this module.
+      tags:
+      - Operation
+      security:
+      - bearerAuth: []
+      x-permission: platform.operation.cancel_operation
+      x-grpc:
+        service: mysms.platform.v1.OperationService
+        method: CancelOperation
+      responses:
+        '202':
+          description: Accepted; poll the operation.
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/Operation
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: operationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+  /v1/platform/reports:
+    get:
+      operationId: platform.ListReportDefinitions
+      summary: Reports the caller may run
+      description: Reports the caller may run.
+      tags:
+      - Tenant
+      security:
+      - bearerAuth: []
+      x-permission: platform.tenant.list_report_definitions
+      x-grpc:
+        service: mysms.platform.v1.TenantService
+        method: ListReportDefinitions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/ReportDefinitionList
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: module
+        in: query
+        required: false
+        description: Filter by module.
+        schema:
+          type: string
+      - name: pageSize
+        in: query
+        required: false
+        description: Maximum items to return (1-500, default 50).
+        schema:
+          type: integer
+          format: int32
+      - name: pageToken
+        in: query
+        required: false
+        description: Cursor from next_page_token.
+        schema:
+          type: string
+  /v1/platform/reports:run:
+    post:
+      operationId: platform.RunReport
+      summary: Run a report or printable document asynchronously; the operation result holds the output file
+      description: Run a report or printable document asynchronously; the operation result holds the output file.
+      tags:
+      - Tenant
+      security:
+      - bearerAuth: []
+      x-permission: platform.tenant.run_report
+      x-grpc:
+        service: mysms.platform.v1.TenantService
+        method: RunReport
+      responses:
+        '202':
+          description: Accepted; poll the operation.
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/Operation
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunReportRequest'
+  /v1/platform/imports/templates/{entityType}:
+    get:
+      operationId: platform.GetImportTemplate
+      summary: Download the CSV/XLSX template for an importable entity
+      description: Download the CSV/XLSX template for an importable entity.
+      tags:
+      - Tenant
+      security:
+      - bearerAuth: []
+      x-permission: platform.tenant.get_import_template
+      x-grpc:
+        service: mysms.platform.v1.TenantService
+        method: GetImportTemplate
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/DownloadLink
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: entityType
+        in: path
+        required: true
+        schema:
+          type: string
+  /v1/platform/imports:
+    post:
+      operationId: platform.StartImport
+      summary: Bulk import from a file; the operation result lists row errors (ImportRowError)
+      description: Bulk import from a file; the operation result lists row errors (ImportRowError).
+      tags:
+      - Tenant
+      security:
+      - bearerAuth: []
+      x-permission: platform.tenant.start_import
+      x-grpc:
+        service: mysms.platform.v1.TenantService
+        method: StartImport
+      responses:
+        '202':
+          description: Accepted; poll the operation.
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/Operation
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartImportRequest'
+  /v1/platform/stock-images:
+    get:
+      operationId: platform.SearchStockImages
+      summary: Search a stock-photo provider for cover images
+      description: Search a stock-photo provider for cover images.
+      tags:
+      - Tenant
+      security:
+      - bearerAuth: []
+      x-permission: platform.tenant.search_stock_images
+      x-grpc:
+        service: mysms.platform.v1.TenantService
+        method: SearchStockImages
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/StockImageList
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: query
+        in: query
+        required: true
+        description: Keyword.
+        schema:
+          type: string
+      - name: pageSize
+        in: query
+        required: false
+        description: Maximum items to return (1-500, default 50).
+        schema:
+          type: integer
+          format: int32
+      - name: pageToken
+        in: query
+        required: false
+        description: Cursor from next_page_token.
+        schema:
+          type: string
+  /v1/platform/tenant-subscriptions:checkout:
+    post:
+      operationId: platform.StartSubscriptionCheckout
+      summary: Start paying for a plan
+      description: Start paying for a plan.
+      tags:
+      - TenantSubscription
+      security:
+      - bearerAuth: []
+      x-permission: platform.tenant_subscription.start_subscription_checkout
+      x-grpc:
+        service: mysms.platform.v1.TenantSubscriptionService
+        method: StartSubscriptionCheckout
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionCheckout'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKeyRequired
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartSubscriptionCheckoutRequest'
+  /v1/platform/tenant-subscriptions/{tenantSubscriptionId}:cancel:
+    post:
+      operationId: platform.CancelSubscription
+      summary: Cancel at the end of the paid period
+      description: Cancel at the end of the paid period.
+      tags:
+      - TenantSubscription
+      security:
+      - bearerAuth: []
+      x-permission: platform.tenant_subscription.cancel_subscription
+      x-grpc:
+        service: mysms.platform.v1.TenantSubscriptionService
+        method: CancelSubscription
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantSubscription'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: tenantSubscriptionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelSubscriptionRequest'
+  /v1/platform/sales-enquiries/{salesEnquiryId}:markContacted:
+    post:
+      operationId: platform.MarkEnquiryContacted
+      summary: Record follow-up
+      description: Record follow-up.
+      tags:
+      - SalesEnquiry
+      security:
+      - bearerAuth: []
+      x-permission: platform.sales_enquiry.mark_enquiry_contacted
+      x-grpc:
+        service: mysms.platform.v1.SalesEnquiryService
+        method: MarkEnquiryContacted
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesEnquiry'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: salesEnquiryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkEnquiryContactedRequest'
+  /v1/platform/me/storage:
+    get:
+      operationId: platform.GetMyStorageUsage
+      summary: Caller's storage quota and usage
+      description: Caller's storage quota and usage.
+      tags:
+      - StorageQuota
+      security:
+      - bearerAuth: []
+      x-permission: platform.storage_quota.get_my_storage_usage
+      x-grpc:
+        service: mysms.platform.v1.StorageQuotaService
+        method: GetMyStorageUsage
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageQuota'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/platform/files/{fileObjectId}:copy:
+    post:
+      operationId: platform.CopyFile
+      summary: Server-side copy of a stored file into a new file record (no download / upload round trip)
+      description: Server-side copy of a stored file into a new file record (no download / upload round trip).
+      tags:
+      - FileObject
+      security:
+      - bearerAuth: []
+      x-permission: platform.file_object.copy_file
+      x-grpc:
+        service: mysms.platform.v1.FileObjectService
+        method: CopyFile
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileObject'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: fileObjectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CopyFileRequest'
+components:
+  schemas:
+    SubscriptionCheckout:
+      type: object
+      description: Checkout started for a subscription purchase. References the finance payment by id only.
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+          description: Payment row created in finance.
+        redirectUrl:
+          type: string
+          description: Hosted payment page.
+        gatewayOrderId:
+          type: string
+          description: Gateway order id for client SDKs.
+        gatewayPublicKey:
+          type: string
+          description: Publishable key for client SDKs.
+      required:
+      - paymentId
+    Tenant:
+      type: object
+      description: A customer organisation (school group, trust, single school or training company) that owns all of its data.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        code:
+          type: string
+          maxLength: 50
+          description: Short unique tenant code used in URLs and logins.
+        name:
+          type: string
+          maxLength: 200
+          description: Display name.
+        legalName:
+          type: string
+          maxLength: 200
+          description: Registered legal name.
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+          - closed
+          x-extensible-enum: true
+          description: Tenant lifecycle state.
+        primaryEmail:
+          type: string
+          maxLength: 320
+          description: Main contact e-mail.
+        primaryPhone:
+          type: string
+          maxLength: 20
+          description: Main contact phone.
+        countryId:
+          type: string
+          format: uuid
+          description: Country of registration.
+        defaultCurrencyId:
+          type: string
+          format: uuid
+          description: Default currency for fees and payments.
+        timezone:
+          type: string
+          maxLength: 64
+          description: IANA time zone, e.g. Asia/Kolkata.
+        locale:
+          type: string
+          maxLength: 10
+          description: Default locale.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - code
+      - name
+    TenantUpdate:
+      type: object
+      description: Fields of Tenant that can be updated (partial update; see updateMask).
+      properties:
+        code:
+          type: string
+          maxLength: 50
+          description: Short unique tenant code used in URLs and logins.
+        name:
+          type: string
+          maxLength: 200
+          description: Display name.
+        legalName:
+          type: string
+          maxLength: 200
+          description: Registered legal name.
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+          - closed
+          x-extensible-enum: true
+          description: Tenant lifecycle state.
+        primaryEmail:
+          type: string
+          maxLength: 320
+          description: Main contact e-mail.
+        primaryPhone:
+          type: string
+          maxLength: 20
+          description: Main contact phone.
+        countryId:
+          type: string
+          format: uuid
+          description: Country of registration.
+        defaultCurrencyId:
+          type: string
+          format: uuid
+          description: Default currency for fees and payments.
+        timezone:
+          type: string
+          maxLength: 64
+          description: IANA time zone, e.g. Asia/Kolkata.
+        locale:
+          type: string
+          maxLength: 10
+          description: Default locale.
+    TenantList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tenant'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    SaasPlan:
+      type: object
+      description: Subscription plan offered to tenants, with usage limits.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        code:
+          type: string
+          maxLength: 50
+          description: Unique plan code.
+        displayName:
+          type: string
+          maxLength: 120
+          description: Plan name shown to customers.
+        billingCycleMonths:
+          type: integer
+          format: int32
+          description: Billing cycle length in months.
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Price per billing cycle.
+        currencyId:
+          type: string
+          format: uuid
+          description: Currency of the price.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        isActive:
+          type: boolean
+          description: Whether the plan can be purchased.
+        maxMembers:
+          type: integer
+          format: int32
+          description: Member (user) limit; NULL = unlimited.
+        maxEvents:
+          type: integer
+          format: int32
+          description: Event limit.
+        maxFolders:
+          type: integer
+          format: int32
+          description: Folder limit.
+        maxFiles:
+          type: integer
+          format: int32
+          description: File limit.
+        maxVideos:
+          type: integer
+          format: int32
+          description: Video limit.
+        maxAudios:
+          type: integer
+          format: int32
+          description: Audio limit.
+        maxBulletins:
+          type: integer
+          format: int32
+          description: Bulletin/magazine limit.
+        maxGroups:
+          type: integer
+          format: int32
+          description: Group limit.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - code
+      - displayName
+      - billingCycleMonths
+    SaasPlanUpdate:
+      type: object
+      description: Fields of SaasPlan that can be updated (partial update; see updateMask).
+      properties:
+        code:
+          type: string
+          maxLength: 50
+          description: Unique plan code.
+        displayName:
+          type: string
+          maxLength: 120
+          description: Plan name shown to customers.
+        billingCycleMonths:
+          type: integer
+          format: int32
+          description: Billing cycle length in months.
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Price per billing cycle.
+        currencyId:
+          type: string
+          format: uuid
+          description: Currency of the price.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        isActive:
+          type: boolean
+          description: Whether the plan can be purchased.
+        maxMembers:
+          type: integer
+          format: int32
+          description: Member (user) limit; NULL = unlimited.
+        maxEvents:
+          type: integer
+          format: int32
+          description: Event limit.
+        maxFolders:
+          type: integer
+          format: int32
+          description: Folder limit.
+        maxFiles:
+          type: integer
+          format: int32
+          description: File limit.
+        maxVideos:
+          type: integer
+          format: int32
+          description: Video limit.
+        maxAudios:
+          type: integer
+          format: int32
+          description: Audio limit.
+        maxBulletins:
+          type: integer
+          format: int32
+          description: Bulletin/magazine limit.
+        maxGroups:
+          type: integer
+          format: int32
+          description: Group limit.
+    SaasPlanList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SaasPlan'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    TenantSubscription:
+      type: object
+      description: A tenant's (or one institution's) subscription to a SaaS plan.
+      properties:
+        maxMembers:
+          type: integer
+          description: Plan limit copied at purchase (absent = unlimited).
+          readOnly: true
+        price:
+          type: string
+          format: decimal
+          pattern: ^\d+(\.\d+)?$
+          description: Price paid for the cycle.
+          readOnly: true
+        currencyId:
+          type: string
+          format: uuid
+          description: Currency of the purchase.
+          readOnly: true
+        billingCycleMonths:
+          type: integer
+          description: Billing cycle purchased, in months.
+          readOnly: true
+        gatewayName:
+          type: string
+          description: Gateway that took the subscription payment.
+          readOnly: true
+        gatewayTxnRef:
+          type: string
+          description: Gateway transaction reference.
+          readOnly: true
+        amountPaid:
+          type: string
+          format: decimal
+          pattern: ^\d+(\.\d+)?$
+          description: Amount actually captured.
+          readOnly: true
+        gatewayStatus:
+          type: string
+          description: Status reported by the gateway.
+          readOnly: true
+        paidAt:
+          type: string
+          format: date-time
+          description: When the payment was captured.
+          readOnly: true
+        payerName:
+          type: string
+          description: Payer name as reported.
+          readOnly: true
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution the subscription covers; NULL = whole tenant.
+        planId:
+          type: string
+          format: uuid
+          description: Subscribed plan (NULL while a custom plan is being negotiated).
+        requestedByUserId:
+          type: string
+          format: uuid
+          description: User who requested the subscription.
+        status:
+          type: string
+          enum:
+          - pending
+          - active
+          - cancelled
+          - expired
+          x-extensible-enum: true
+          description: Subscription state. Changed only through the workflow operations.
+          readOnly: true
+        startDate:
+          type: string
+          format: date
+          description: Start of the subscription.
+        endDate:
+          type: string
+          format: date
+          description: End of the current paid period.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - requestedByUserId
+    TenantSubscriptionList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantSubscription'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    FileObject:
+      type: object
+      description: Every stored file (documents, images, videos, attachments). Other tables reference files through *_file_id.
+      properties:
+        status:
+          type: string
+          enum: [pending, available, quarantined, deleted]
+          x-extensible-enum: true
+          description: 'Lifecycle: pending (upload started), available, quarantined (failed scanning), deleted (storage reclaimed).'
+          readOnly: true
+        scannedAt:
+          type: string
+          format: date-time
+          description: When malware/content scanning finished.
+          readOnly: true
+        uploadedByUserId:
+          type: string
+          format: uuid
+          description: User who uploaded the file.
+          readOnly: true
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        fileName:
+          type: string
+          maxLength: 255
+          description: Stored file name.
+        originalName:
+          type: string
+          maxLength: 255
+          description: Name of the file as uploaded.
+        mimeType:
+          type: string
+          maxLength: 150
+          description: MIME type.
+        sizeBytes:
+          type: string
+          format: int64
+          pattern: ^-?[0-9]+$
+          description: File size in bytes.
+        checksumSha256:
+          type: string
+          maxLength: 64
+          description: SHA-256 of the content.
+        ownerEntityType:
+          type: string
+          maxLength: 80
+          description: Polymorphic owner type (table name) when the file belongs to one record.
+        ownerEntityId:
+          type: string
+          format: uuid
+          description: Polymorphic owner record id (pairs with owner_entity_type).
+        collectionName:
+          type: string
+          maxLength: 80
+          description: Logical collection within the owner, e.g. avatar, gallery.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Order within the collection.
+        fileKind:
+          type: string
+          enum:
+          - document
+          - presentation
+          - spreadsheet
+          - pdf
+          - image
+          - audio
+          - video
+          - archive
+          - package
+          - ebook
+          - other
+          x-extensible-enum: true
+          description: Kind of file (from the fixed content-type catalogue), used for icons, viewers and processing.
+        isShared:
+          type: boolean
+          description: Shared with a group of users (readable beyond the owner).
+        processingStatus:
+          type: string
+          enum:
+          - none
+          - pending
+          - in_progress
+          - succeeded
+          - failed
+          x-extensible-enum: true
+          description: State of post-upload processing (package extraction, document-to-e-book conversion, video transcoding).
+        processingAttempts:
+          type: integer
+          format: int32
+          description: Processing attempts so far.
+        processingError:
+          type: string
+          description: Last processing error.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - fileName
+      - sizeBytes
+    FileObjectList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileObject'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    EntityAttachment:
+      type: object
+      description: Attaches one or more files to any record (multi-file fields such as homework submissions, mail attachments).
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        entityType:
+          type: string
+          maxLength: 80
+          description: Polymorphic owner table name, e.g. assessment.homework_submission.
+        entityId:
+          type: string
+          format: uuid
+          description: Polymorphic owner record id.
+        fileId:
+          type: string
+          format: uuid
+          description: Attached file.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        purpose:
+          type: string
+          enum:
+          - attachment
+          - resource
+          - grading_key
+          - review_feedback
+          - submission
+          - inline_media
+          x-extensible-enum: true
+          description: Role of the file on the record (task resources, grading key, reviewer feedback, submitted work, media embedded in rich text).
+        title:
+          type: string
+          maxLength: 255
+          description: Display title of the attachment.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - entityType
+      - entityId
+      - fileId
+    EntityAttachmentList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityAttachment'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    Tag:
+      type: object
+      description: Tenant-defined label used to classify records (posts, library media, courses).
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        tagType:
+          type: string
+          maxLength: 50
+          description: Tag family, e.g. general, post, library_media, lms_course.
+        name:
+          type: string
+          maxLength: 120
+          description: Tag label.
+        slug:
+          type: string
+          maxLength: 140
+          description: URL-safe tag key.
+        translations:
+          description: Localised name/slug values keyed by locale.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        code:
+          type: string
+          maxLength: 50
+          description: Short code (e.g. subject tag code).
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - name
+      - slug
+    TagUpdate:
+      type: object
+      description: Fields of Tag that can be updated (partial update; see updateMask).
+      properties:
+        tagType:
+          type: string
+          maxLength: 50
+          description: Tag family, e.g. general, post, library_media, lms_course.
+        name:
+          type: string
+          maxLength: 120
+          description: Tag label.
+        slug:
+          type: string
+          maxLength: 140
+          description: URL-safe tag key.
+        translations:
+          description: Localised name/slug values keyed by locale.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        code:
+          type: string
+          maxLength: 50
+          description: Short code (e.g. subject tag code).
+    TagList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    TagAssignment:
+      type: object
+      description: Applies a tag to a record.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        tagId:
+          type: string
+          format: uuid
+          description: Tag applied.
+        entityType:
+          type: string
+          maxLength: 80
+          description: Polymorphic target table name.
+        entityId:
+          type: string
+          format: uuid
+          description: Polymorphic target record id.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - tagId
+      - entityType
+      - entityId
+    TagAssignmentList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagAssignment'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    EntityNote:
+      type: object
+      description: Free-text note attached to any record (e.g. an event or student).
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution scope.
+        entityType:
+          type: string
+          maxLength: 80
+          description: Polymorphic target table name.
+        entityId:
+          type: string
+          format: uuid
+          description: Polymorphic target record id.
+        noteText:
+          type: string
+          description: Note content.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - institutionId
+      - entityType
+      - entityId
+      - noteText
+    EntityNoteUpdate:
+      type: object
+      description: Fields of EntityNote that can be updated (partial update; see updateMask).
+      properties:
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution scope.
+        entityType:
+          type: string
+          maxLength: 80
+          description: Polymorphic target table name.
+        entityId:
+          type: string
+          format: uuid
+          description: Polymorphic target record id.
+        noteText:
+          type: string
+          description: Note content.
+    EntityNoteList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityNote'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    AuditLog:
+      type: object
+      description: Immutable audit trail of changes and actions.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        logName:
+          type: string
+          maxLength: 100
+          description: Log channel / category.
+        description:
+          type: string
+          description: Human-readable action description.
+        event:
+          type: string
+          maxLength: 50
+          description: Event name, e.g. created, updated, deleted.
+        subjectType:
+          type: string
+          maxLength: 80
+          description: Polymorphic subject table name.
+        subjectId:
+          type: string
+          format: uuid
+          description: Polymorphic subject record id.
+        causerType:
+          type: string
+          maxLength: 80
+          description: Polymorphic actor type (normally iam.user_account).
+        causerId:
+          type: string
+          format: uuid
+          description: Polymorphic actor record id.
+        properties:
+          description: Before/after values and context.
+        batchId:
+          type: string
+          format: uuid
+          description: Logical id grouping entries written in one operation.
+        ipAddress:
+          type: string
+          description: Client IP.
+        occurredAt:
+          type: string
+          format: date-time
+          description: When the action happened.
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - description
+    AuditLogList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLog'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    ReservedKeyword:
+      type: object
+      description: Words that may not be used in new tenant or institution names.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        keyword:
+          type: string
+          maxLength: 120
+          description: Reserved word.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - keyword
+    ReservedKeywordUpdate:
+      type: object
+      description: Fields of ReservedKeyword that can be updated (partial update; see updateMask).
+      properties:
+        keyword:
+          type: string
+          maxLength: 120
+          description: Reserved word.
+    ReservedKeywordList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservedKeyword'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    SalesEnquiry:
+      type: object
+      description: Inbound enquiry / demo request from a prospective customer.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        contactName:
+          type: string
+          maxLength: 150
+          description: Person making the enquiry.
+        email:
+          type: string
+          maxLength: 320
+          description: Contact e-mail.
+        phone:
+          type: string
+          maxLength: 20
+          description: Contact phone.
+        organisationName:
+          type: string
+          maxLength: 200
+          description: School / organisation name.
+        designation:
+          type: string
+          maxLength: 120
+          description: Contact's role.
+        channel:
+          type: string
+          maxLength: 60
+          description: How the enquiry arrived (web, phone, event).
+        message:
+          type: string
+          description: Enquiry text.
+        status:
+          type: string
+          enum:
+          - new
+          - contacted
+          - qualified
+          - converted
+          - closed
+          x-extensible-enum: true
+          description: Sales follow-up state.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - contactName
+      - email
+      - phone
+      - organisationName
+      - designation
+    SalesEnquiryUpdate:
+      type: object
+      description: Fields of SalesEnquiry that can be updated (partial update; see updateMask).
+      properties:
+        contactName:
+          type: string
+          maxLength: 150
+          description: Person making the enquiry.
+        email:
+          type: string
+          maxLength: 320
+          description: Contact e-mail.
+        phone:
+          type: string
+          maxLength: 20
+          description: Contact phone.
+        organisationName:
+          type: string
+          maxLength: 200
+          description: School / organisation name.
+        designation:
+          type: string
+          maxLength: 120
+          description: Contact's role.
+        channel:
+          type: string
+          maxLength: 60
+          description: How the enquiry arrived (web, phone, event).
+        message:
+          type: string
+          description: Enquiry text.
+        status:
+          type: string
+          enum:
+          - new
+          - contacted
+          - qualified
+          - converted
+          - closed
+          x-extensible-enum: true
+          description: Sales follow-up state.
+    SalesEnquiryList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesEnquiry'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    SystemSetting:
+      type: object
+      description: Platform-wide configurable setting.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        settingKey:
+          type: string
+          maxLength: 120
+          description: Unique key.
+        name:
+          type: string
+          maxLength: 150
+          description: Display name.
+        description:
+          type: string
+          description: Explanation.
+        value:
+          type: string
+          description: Current value (serialised).
+        inputType:
+          type: string
+          maxLength: 50
+          description: Editor control used for the value (text, bool, select, json).
+        isActive:
+          type: boolean
+          description: Whether the setting is in effect.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - settingKey
+      - name
+      - inputType
+    SystemSettingUpdate:
+      type: object
+      description: Fields of SystemSetting that can be updated (partial update; see updateMask).
+      properties:
+        settingKey:
+          type: string
+          maxLength: 120
+          description: Unique key.
+        name:
+          type: string
+          maxLength: 150
+          description: Display name.
+        description:
+          type: string
+          description: Explanation.
+        value:
+          type: string
+          description: Current value (serialised).
+        inputType:
+          type: string
+          maxLength: 50
+          description: Editor control used for the value (text, bool, select, json).
+        isActive:
+          type: boolean
+          description: Whether the setting is in effect.
+    SystemSettingList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemSetting'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    Theme:
+      type: object
+      description: Visual theme (colours, logo placement) selectable per institution. NULL tenant = platform-provided theme.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+          description: Theme name.
+        description:
+          type: string
+          description: Description.
+        thumbnailFileId:
+          type: string
+          format: uuid
+          description: Preview image.
+        thumbnailAltFileId:
+          type: string
+          format: uuid
+          description: Second preview image (e.g. dark variant).
+        tokens:
+          description: Design tokens (colours, fonts) applied by the web and mobile apps.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - name
+    ThemeUpdate:
+      type: object
+      description: Fields of Theme that can be updated (partial update; see updateMask).
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          description: Theme name.
+        description:
+          type: string
+          description: Description.
+        thumbnailFileId:
+          type: string
+          format: uuid
+          description: Preview image.
+        thumbnailAltFileId:
+          type: string
+          format: uuid
+          description: Second preview image (e.g. dark variant).
+        tokens:
+          description: Design tokens (colours, fonts) applied by the web and mobile apps.
+    ThemeList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Theme'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    UploadPolicy:
+      type: object
+      description: File-upload limits per role and feature (maximum size, allowed extensions).
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        roleId:
+          type: string
+          format: uuid
+          description: Role the limit applies to (NULL = everyone).
+        moduleCode:
+          type: string
+          maxLength: 60
+          description: Feature area (assignments, quiz media, profile picture...).
+        operationCode:
+          type: string
+          maxLength: 60
+          description: Specific operation within the feature (e.g. create_question_image).
+        maxSizeBytes:
+          type: string
+          format: int64
+          pattern: ^-?[0-9]+$
+          description: Maximum file size in bytes (NULL = platform default).
+        allowedExtensions:
+          type: string
+          maxLength: 500
+          description: Comma-separated allowed extensions (NULL = platform default list).
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - moduleCode
+    UploadPolicyUpdate:
+      type: object
+      description: Fields of UploadPolicy that can be updated (partial update; see updateMask).
+      properties:
+        roleId:
+          type: string
+          format: uuid
+          description: Role the limit applies to (NULL = everyone).
+        moduleCode:
+          type: string
+          maxLength: 60
+          description: Feature area (assignments, quiz media, profile picture...).
+        operationCode:
+          type: string
+          maxLength: 60
+          description: Specific operation within the feature (e.g. create_question_image).
+        maxSizeBytes:
+          type: string
+          format: int64
+          pattern: ^-?[0-9]+$
+          description: Maximum file size in bytes (NULL = platform default).
+        allowedExtensions:
+          type: string
+          maxLength: 500
+          description: Comma-separated allowed extensions (NULL = platform default list).
+    UploadPolicyList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UploadPolicy'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    DeletionLog:
+      type: object
+      description: Tombstone of a hard-deleted row, so offline clients and integrations can remove it in delta sync. Soft-deleted rows are synced through deleted_at instead.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        entityType:
+          type: string
+          maxLength: 80
+          description: Table of the deleted row (schema.table).
+        entityId:
+          type: string
+          format: uuid
+          description: Polymorphic id of the deleted row.
+        cohortId:
+          type: string
+          format: uuid
+          description: Cohort context, used to route the tombstone to the right devices.
+        deletedAtTs:
+          type: string
+          format: date-time
+          description: When the row was deleted.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - entityType
+      - entityId
+    DeletionLogList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeletionLog'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    StorageQuota:
+      type: object
+      description: Storage allowance and usage of a user or an institution.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        userId:
+          type: string
+          format: uuid
+          description: User the quota belongs to.
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution the quota belongs to (institution-wide pool).
+        quotaBytes:
+          type: string
+          format: int64
+          pattern: ^-?[0-9]+$
+          description: Allowed bytes.
+        usedBytes:
+          type: string
+          format: int64
+          pattern: ^-?[0-9]+$
+          description: Bytes in use (maintained by the application).
+        isActive:
+          type: boolean
+          description: Quota is enforced.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - quotaBytes
+    StorageQuotaUpdate:
+      type: object
+      description: Fields of StorageQuota that can be updated (partial update; see updateMask).
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: User the quota belongs to.
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution the quota belongs to (institution-wide pool).
+        quotaBytes:
+          type: string
+          format: int64
+          pattern: ^-?[0-9]+$
+          description: Allowed bytes.
+        usedBytes:
+          type: string
+          format: int64
+          pattern: ^-?[0-9]+$
+          description: Bytes in use (maintained by the application).
+        isActive:
+          type: boolean
+          description: Quota is enforced.
+    StorageQuotaList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/StorageQuota'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    CreateUploadUrlRequest:
+      type: object
+      properties:
+        fileName:
+          type: string
+          description: Original name.
+        mimeType:
+          type: string
+          description: MIME type.
+        sizeBytes:
+          type: string
+          format: int64
+          pattern: ^-?[0-9]+$
+          description: Size.
+        checksumSha256:
+          type: string
+          description: SHA-256 for integrity.
+        ownerEntityType:
+          type: string
+          description: Owner type.
+        ownerEntityId:
+          type: string
+          format: uuid
+          description: Owner record.
+        collectionName:
+          type: string
+          description: Collection.
+      required:
+      - fileName
+      - mimeType
+      - sizeBytes
+    CompleteUploadRequest:
+      type: object
+      properties: {}
+    ClearDemoDataRequest:
+      type: object
+      properties: {}
+    RunReportRequest:
+      type: object
+      properties:
+        reportCode:
+          type: string
+          description: Report code (see ListReportDefinitions).
+        format:
+          type: string
+          enum:
+          - csv
+          - xlsx
+          - pdf
+          x-extensible-enum: true
+          description: Output format.
+        parameters:
+          description: Report parameters.
+      required:
+      - reportCode
+      - format
+    StartImportRequest:
+      type: object
+      properties:
+        entityType:
+          type: string
+          enum:
+          - students
+          - guardians
+          - staff
+          - library_media
+          - holidays
+          - promotions
+          - lms_course_package
+          x-extensible-enum: true
+          description: What is imported.
+        fileId:
+          type: string
+          format: uuid
+          description: Uploaded file.
+        institutionId:
+          type: string
+          format: uuid
+          description: Target institution.
+        dryRun:
+          type: boolean
+          description: Validate only.
+      required:
+      - entityType
+      - fileId
+    StartSubscriptionCheckoutRequest:
+      type: object
+      properties:
+        planId:
+          type: string
+          format: uuid
+          description: Plan.
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution.
+      required:
+      - planId
+    CancelSubscriptionRequest:
+      type: object
+      properties:
+        etag:
+          type: string
+          description: Concurrency token from the last read (optional but recommended).
+        reason:
+          type: string
+          description: Reason / comment recorded with the transition.
+    MarkEnquiryContactedRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Reason / comment recorded with the transition.
+    CopyFileRequest:
+      type: object
+      properties:
+        ownerEntityType:
+          type: string
+          description: Owner type of the copy.
+        ownerEntityId:
+          type: string
+          format: uuid
+          description: Owner record of the copy.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: OAuth 2.0 / OIDC access token. Claims carry tenant_id, user_id, roles and an optional act-as (impersonation) subject.
+    platformAdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token of MySMS platform staff (audience mysms-platform-admin, MFA required). Only these operations may act across tenants; the target tenant is the resource being addressed.

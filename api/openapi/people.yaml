@@ -1,0 +1,5879 @@
+openapi: 3.1.0
+info:
+  title: MySMS API — People & Profiles
+  version: 1.0.0
+  description: Every human known to the system (students, guardians, staff, applicants, students) and their personal, contact, education and experience records.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-MySMS
+  contact:
+    name: MySMS API team
+    email: api@mysms.example
+servers:
+- url: https://api.mysms.example
+  description: Production (replace with your domain)
+security:
+- bearerAuth: []
+tags:
+- name: Honorific
+  description: Honorific aggregate.
+- name: Person
+  description: Person aggregate.
+- name: Qualification
+  description: Qualification aggregate.
+- name: Skill
+  description: Skill aggregate.
+paths:
+  /v1/people/honorifics:
+    get:
+      operationId: people.ListHonorifics
+      summary: List Honorifics
+      description: List Honorifics visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Honorific
+      security:
+      - bearerAuth: []
+      x-permission: people.honorific.read
+      x-grpc:
+        service: mysms.people.v1.HonorificService
+        method: ListHonorifics
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HonorificList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: people.CreateHonorific
+      summary: Create Honorific
+      description: Create a Honorific. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Honorific
+      security:
+      - bearerAuth: []
+      x-permission: people.honorific.create
+      x-grpc:
+        service: mysms.people.v1.HonorificService
+        method: CreateHonorific
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Honorific'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Honorific'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Honorific'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/honorifics/{honorificId}:
+    get:
+      operationId: people.GetHonorific
+      summary: Get Honorific
+      description: Get one Honorific by id. The ETag header carries the row version.
+      tags:
+      - Honorific
+      security:
+      - bearerAuth: []
+      x-permission: people.honorific.read
+      x-grpc:
+        service: mysms.people.v1.HonorificService
+        method: GetHonorific
+      parameters:
+      - name: honorificId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Honorific id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Honorific'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdateHonorific
+      summary: Update Honorific
+      description: Partially update a Honorific (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Honorific
+      security:
+      - bearerAuth: []
+      x-permission: people.honorific.update
+      x-grpc:
+        service: mysms.people.v1.HonorificService
+        method: UpdateHonorific
+      parameters:
+      - name: honorificId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Honorific id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HonorificUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Honorific'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: people.DeleteHonorific
+      summary: Delete Honorific
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Honorific
+      security:
+      - bearerAuth: []
+      x-permission: people.honorific.delete
+      x-grpc:
+        service: mysms.people.v1.HonorificService
+        method: DeleteHonorific
+      parameters:
+      - name: honorificId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Honorific id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons:
+    get:
+      operationId: people.ListPersons
+      summary: List Persons
+      description: List Persons visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: ListPersons
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: people.CreatePerson
+      summary: Create Person
+      description: Create a Person. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person.create
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: CreatePerson
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Person'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}:
+    get:
+      operationId: people.GetPerson
+      summary: Get Person
+      description: Get one Person by id. The ETag header carries the row version.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: GetPerson
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdatePerson
+      summary: Update Person
+      description: Partially update a Person (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person.update
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: UpdatePerson
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: people.DeletePerson
+      summary: Delete Person
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person.delete
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: DeletePerson
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/addresses:
+    get:
+      operationId: people.ListPersonAddresses
+      summary: List PersonAddresses
+      description: List PersonAddresses visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_address.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: ListPersonAddresses
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonAddressList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: people.CreatePersonAddress
+      summary: Create PersonAddress
+      description: Create a PersonAddress. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_address.create
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: CreatePersonAddress
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonAddress'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonAddress'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonAddress'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/addresses/{personAddressId}:
+    get:
+      operationId: people.GetPersonAddress
+      summary: Get PersonAddress
+      description: Get one PersonAddress by id. The ETag header carries the row version.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_address.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: GetPersonAddress
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: personAddressId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PersonAddress id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonAddress'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdatePersonAddress
+      summary: Update PersonAddress
+      description: Partially update a PersonAddress (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_address.update
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: UpdatePersonAddress
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: personAddressId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PersonAddress id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonAddressUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonAddress'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: people.DeletePersonAddress
+      summary: Delete PersonAddress
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_address.delete
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: DeletePersonAddress
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: personAddressId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PersonAddress id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/emergency-contacts:
+    get:
+      operationId: people.ListEmergencyContacts
+      summary: List EmergencyContacts
+      description: List EmergencyContacts visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.emergency_contact.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: ListEmergencyContacts
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmergencyContactList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: people.CreateEmergencyContact
+      summary: Create EmergencyContact
+      description: Create a EmergencyContact. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.emergency_contact.create
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: CreateEmergencyContact
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmergencyContact'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmergencyContact'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmergencyContact'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/emergency-contacts/{emergencyContactId}:
+    get:
+      operationId: people.GetEmergencyContact
+      summary: Get EmergencyContact
+      description: Get one EmergencyContact by id. The ETag header carries the row version.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.emergency_contact.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: GetEmergencyContact
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: emergencyContactId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: EmergencyContact id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmergencyContact'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdateEmergencyContact
+      summary: Update EmergencyContact
+      description: Partially update a EmergencyContact (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.emergency_contact.update
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: UpdateEmergencyContact
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: emergencyContactId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: EmergencyContact id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmergencyContactUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmergencyContact'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: people.DeleteEmergencyContact
+      summary: Delete EmergencyContact
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.emergency_contact.delete
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: DeleteEmergencyContact
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: emergencyContactId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: EmergencyContact id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/qualifications:
+    get:
+      operationId: people.ListQualifications
+      summary: List Qualifications
+      description: List Qualifications visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Qualification
+      security:
+      - bearerAuth: []
+      x-permission: people.qualification.read
+      x-grpc:
+        service: mysms.people.v1.QualificationService
+        method: ListQualifications
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualificationList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: people.CreateQualification
+      summary: Create Qualification
+      description: Create a Qualification. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Qualification
+      security:
+      - bearerAuth: []
+      x-permission: people.qualification.create
+      x-grpc:
+        service: mysms.people.v1.QualificationService
+        method: CreateQualification
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Qualification'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Qualification'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Qualification'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/qualifications/{qualificationId}:
+    get:
+      operationId: people.GetQualification
+      summary: Get Qualification
+      description: Get one Qualification by id. The ETag header carries the row version.
+      tags:
+      - Qualification
+      security:
+      - bearerAuth: []
+      x-permission: people.qualification.read
+      x-grpc:
+        service: mysms.people.v1.QualificationService
+        method: GetQualification
+      parameters:
+      - name: qualificationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Qualification id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Qualification'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdateQualification
+      summary: Update Qualification
+      description: Partially update a Qualification (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Qualification
+      security:
+      - bearerAuth: []
+      x-permission: people.qualification.update
+      x-grpc:
+        service: mysms.people.v1.QualificationService
+        method: UpdateQualification
+      parameters:
+      - name: qualificationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Qualification id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QualificationUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Qualification'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: people.DeleteQualification
+      summary: Delete Qualification
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Qualification
+      security:
+      - bearerAuth: []
+      x-permission: people.qualification.delete
+      x-grpc:
+        service: mysms.people.v1.QualificationService
+        method: DeleteQualification
+      parameters:
+      - name: qualificationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Qualification id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/education:
+    get:
+      operationId: people.ListEducationHistory
+      summary: List EducationHistory
+      description: List EducationHistory visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.education_history.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: ListEducationHistory
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EducationHistoryList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: people.CreateEducationHistory
+      summary: Create EducationHistory
+      description: Create a EducationHistory. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.education_history.create
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: CreateEducationHistory
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EducationHistory'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EducationHistory'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EducationHistory'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/education/{educationHistoryId}:
+    get:
+      operationId: people.GetEducationHistory
+      summary: Get EducationHistory
+      description: Get one EducationHistory by id. The ETag header carries the row version.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.education_history.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: GetEducationHistory
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: educationHistoryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: EducationHistory id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EducationHistory'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdateEducationHistory
+      summary: Update EducationHistory
+      description: Partially update a EducationHistory (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.education_history.update
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: UpdateEducationHistory
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: educationHistoryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: EducationHistory id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EducationHistoryUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EducationHistory'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: people.DeleteEducationHistory
+      summary: Delete EducationHistory
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.education_history.delete
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: DeleteEducationHistory
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: educationHistoryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: EducationHistory id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/work-experience:
+    get:
+      operationId: people.ListWorkExperiences
+      summary: List WorkExperiences
+      description: List WorkExperiences visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.work_experience.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: ListWorkExperiences
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkExperienceList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: people.CreateWorkExperience
+      summary: Create WorkExperience
+      description: Create a WorkExperience. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.work_experience.create
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: CreateWorkExperience
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkExperience'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkExperience'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkExperience'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/work-experience/{workExperienceId}:
+    get:
+      operationId: people.GetWorkExperience
+      summary: Get WorkExperience
+      description: Get one WorkExperience by id. The ETag header carries the row version.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.work_experience.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: GetWorkExperience
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: workExperienceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: WorkExperience id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkExperience'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdateWorkExperience
+      summary: Update WorkExperience
+      description: Partially update a WorkExperience (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.work_experience.update
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: UpdateWorkExperience
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: workExperienceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: WorkExperience id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkExperienceUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkExperience'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: people.DeleteWorkExperience
+      summary: Delete WorkExperience
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.work_experience.delete
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: DeleteWorkExperience
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: workExperienceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: WorkExperience id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/certifications:
+    get:
+      operationId: people.ListCertifications
+      summary: List Certifications
+      description: List Certifications visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.certification.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: ListCertifications
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificationList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: people.CreateCertification
+      summary: Create Certification
+      description: Create a Certification. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.certification.create
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: CreateCertification
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Certification'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Certification'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Certification'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/certifications/{certificationId}:
+    get:
+      operationId: people.GetCertification
+      summary: Get Certification
+      description: Get one Certification by id. The ETag header carries the row version.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.certification.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: GetCertification
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: certificationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Certification id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Certification'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdateCertification
+      summary: Update Certification
+      description: Partially update a Certification (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.certification.update
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: UpdateCertification
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: certificationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Certification id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificationUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Certification'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: people.DeleteCertification
+      summary: Delete Certification
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.certification.delete
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: DeleteCertification
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: certificationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Certification id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/skills:
+    get:
+      operationId: people.ListSkills
+      summary: List Skills
+      description: List Skills visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Skill
+      security:
+      - bearerAuth: []
+      x-permission: people.skill.read
+      x-grpc:
+        service: mysms.people.v1.SkillService
+        method: ListSkills
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: people.CreateSkill
+      summary: Create Skill
+      description: Create a Skill. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Skill
+      security:
+      - bearerAuth: []
+      x-permission: people.skill.create
+      x-grpc:
+        service: mysms.people.v1.SkillService
+        method: CreateSkill
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Skill'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Skill'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Skill'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/skills/{skillId}:
+    get:
+      operationId: people.GetSkill
+      summary: Get Skill
+      description: Get one Skill by id. The ETag header carries the row version.
+      tags:
+      - Skill
+      security:
+      - bearerAuth: []
+      x-permission: people.skill.read
+      x-grpc:
+        service: mysms.people.v1.SkillService
+        method: GetSkill
+      parameters:
+      - name: skillId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Skill id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Skill'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdateSkill
+      summary: Update Skill
+      description: Partially update a Skill (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Skill
+      security:
+      - bearerAuth: []
+      x-permission: people.skill.update
+      x-grpc:
+        service: mysms.people.v1.SkillService
+        method: UpdateSkill
+      parameters:
+      - name: skillId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Skill id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkillUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Skill'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: people.DeleteSkill
+      summary: Delete Skill
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Skill
+      security:
+      - bearerAuth: []
+      x-permission: people.skill.delete
+      x-grpc:
+        service: mysms.people.v1.SkillService
+        method: DeleteSkill
+      parameters:
+      - name: skillId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Skill id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/skills:
+    get:
+      operationId: people.ListPersonSkills
+      summary: List PersonSkills
+      description: List PersonSkills visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_skill.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: ListPersonSkills
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonSkillList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: people.CreatePersonSkill
+      summary: Create PersonSkill
+      description: Create a PersonSkill. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_skill.create
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: CreatePersonSkill
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonSkill'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonSkill'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonSkill'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/skills/{personSkillId}:
+    get:
+      operationId: people.GetPersonSkill
+      summary: Get PersonSkill
+      description: Get one PersonSkill by id. The ETag header carries the row version.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_skill.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: GetPersonSkill
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: personSkillId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PersonSkill id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonSkill'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdatePersonSkill
+      summary: Update PersonSkill
+      description: Partially update a PersonSkill (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_skill.update
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: UpdatePersonSkill
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: personSkillId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PersonSkill id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonSkillUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonSkill'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: people.DeletePersonSkill
+      summary: Delete PersonSkill
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_skill.delete
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: DeletePersonSkill
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: personSkillId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PersonSkill id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/documents:
+    get:
+      operationId: people.ListPersonDocuments
+      summary: List PersonDocuments
+      description: List PersonDocuments visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_document.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: ListPersonDocuments
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDocumentList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: people.CreatePersonDocument
+      summary: Create PersonDocument
+      description: Create a PersonDocument. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_document.create
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: CreatePersonDocument
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonDocument'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDocument'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDocument'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/documents/{personDocumentId}:
+    get:
+      operationId: people.GetPersonDocument
+      summary: Get PersonDocument
+      description: Get one PersonDocument by id. The ETag header carries the row version.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_document.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: GetPersonDocument
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: personDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PersonDocument id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDocument'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdatePersonDocument
+      summary: Update PersonDocument
+      description: Partially update a PersonDocument (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_document.update
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: UpdatePersonDocument
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: personDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PersonDocument id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonDocumentUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDocument'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: people.DeletePersonDocument
+      summary: Delete PersonDocument
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_document.delete
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: DeletePersonDocument
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: personDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PersonDocument id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/public-profile:
+    post:
+      operationId: people.CreatePublicProfile
+      summary: Create PublicProfile
+      description: Create a PublicProfile. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.public_profile.create
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: CreatePublicProfile
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicProfile'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProfile'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProfile'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/public-profile/{publicProfileId}:
+    get:
+      operationId: people.GetPublicProfile
+      summary: Get PublicProfile
+      description: Get one PublicProfile by id. The ETag header carries the row version.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.public_profile.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: GetPublicProfile
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: publicProfileId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PublicProfile id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProfile'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdatePublicProfile
+      summary: Update PublicProfile
+      description: Partially update a PublicProfile (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.public_profile.update
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: UpdatePublicProfile
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: publicProfileId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PublicProfile id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicProfileUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProfile'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: people.DeletePublicProfile
+      summary: Delete PublicProfile
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.public_profile.delete
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: DeletePublicProfile
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: publicProfileId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PublicProfile id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/social-links:
+    get:
+      operationId: people.ListPersonSocialLinks
+      summary: List PersonSocialLinks
+      description: List PersonSocialLinks visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_social_link.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: ListPersonSocialLinks
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonSocialLinkList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: people.CreatePersonSocialLink
+      summary: Create PersonSocialLink
+      description: Create a PersonSocialLink. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_social_link.create
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: CreatePersonSocialLink
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonSocialLink'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonSocialLink'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonSocialLink'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/social-links/{personSocialLinkId}:
+    get:
+      operationId: people.GetPersonSocialLink
+      summary: Get PersonSocialLink
+      description: Get one PersonSocialLink by id. The ETag header carries the row version.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_social_link.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: GetPersonSocialLink
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: personSocialLinkId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PersonSocialLink id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonSocialLink'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdatePersonSocialLink
+      summary: Update PersonSocialLink
+      description: Partially update a PersonSocialLink (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_social_link.update
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: UpdatePersonSocialLink
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: personSocialLinkId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PersonSocialLink id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonSocialLinkUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonSocialLink'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: people.DeletePersonSocialLink
+      summary: Delete PersonSocialLink
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person_social_link.delete
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: DeletePersonSocialLink
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: personSocialLinkId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: PersonSocialLink id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/consents:
+    get:
+      operationId: people.ListConsentRecords
+      summary: List ConsentRecords
+      description: List ConsentRecords visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.consent_record.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: ListConsentRecords
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentRecordList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: people.CreateConsentRecord
+      summary: Create ConsentRecord
+      description: Create a ConsentRecord. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.consent_record.create
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: CreateConsentRecord
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsentRecord'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentRecord'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentRecord'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons/{personId}/consents/{consentRecordId}:
+    get:
+      operationId: people.GetConsentRecord
+      summary: Get ConsentRecord
+      description: Get one ConsentRecord by id. The ETag header carries the row version.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.consent_record.read
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: GetConsentRecord
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Person id.
+      - name: consentRecordId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: ConsentRecord id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentRecord'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/people/persons:birthdays:
+    get:
+      operationId: people.ListBirthdays
+      summary: Birthdays and work anniversaries in a date window
+      description: Birthdays and work anniversaries in a date window.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person.list_birthdays
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: ListBirthdays
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/BirthdayEntryList
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: institutionId
+        in: query
+        required: true
+        description: Institution.
+        schema:
+          type: string
+          format: uuid
+      - name: fromDate
+        in: query
+        required: true
+        description: From.
+        schema:
+          type: string
+          format: date
+      - name: toDate
+        in: query
+        required: true
+        description: To.
+        schema:
+          type: string
+          format: date
+      - name: kinds
+        in: query
+        required: false
+        description: birthday / work_anniversary.
+        schema:
+          type: array
+          items:
+            type: string
+            description: birthday / work_anniversary.
+        style: form
+        explode: true
+      - name: roles
+        in: query
+        required: false
+        description: student / staff / guardian.
+        schema:
+          type: array
+          items:
+            type: string
+            description: student / staff / guardian.
+        style: form
+        explode: true
+      - name: pageSize
+        in: query
+        required: false
+        description: Maximum items to return (1-500, default 50).
+        schema:
+          type: integer
+          format: int32
+      - name: pageToken
+        in: query
+        required: false
+        description: Cursor from next_page_token.
+        schema:
+          type: string
+  /v1/people/persons:sendGreetings:
+    post:
+      operationId: people.SendGreetings
+      summary: Send birthday / anniversary greetings
+      description: Send birthday / anniversary greetings.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person.send_greetings
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: SendGreetings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/SendResult
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendGreetingsRequest'
+  /v1/people/persons/{personId}/consents/{consentRecordId}:withdraw:
+    post:
+      operationId: people.WithdrawConsent
+      summary: Withdraw a consent (sets withdrawnAt)
+      description: Withdraw a consent (sets withdrawnAt). Publishing that depends on it stops immediately, and already published media for that purpose is unpublished by a background job.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.consent_record.withdraw_consent
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: WithdrawConsent
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentRecord'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: consentRecordId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WithdrawConsentRequest'
+  /v1/people/persons/{personId}:consentStatus:
+    get:
+      operationId: people.GetConsentStatus
+      summary: Consents currently in force for a person, one per purpose (latest record with withdrawnAt empty)
+      description: Consents currently in force for a person, one per purpose (latest record with withdrawnAt empty).
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person.get_consent_status
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: GetConsentStatus
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentRecordList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: personId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: pageSize
+        in: query
+        required: false
+        description: Maximum items to return (1-500, default 50).
+        schema:
+          type: integer
+          format: int32
+      - name: pageToken
+        in: query
+        required: false
+        description: Cursor from next_page_token.
+        schema:
+          type: string
+  /v1/people/me:
+    get:
+      operationId: people.GetMyPerson
+      summary: The caller's own person record
+      description: The Person linked to the caller's user account (token claim pid), without the administrators' internal remarks. 404 when the account has no person record.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person.read_mine
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: GetMyPerson
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: people.UpdateMyPerson
+      summary: Update the caller's own person record
+      description: Partially updates the contact and self-description fields of the caller's own Person (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Person
+      security:
+      - bearerAuth: []
+      x-permission: people.person.update_mine
+      x-grpc:
+        service: mysms.people.v1.PersonService
+        method: UpdateMyPerson
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MyPersonUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+components:
+  schemas:
+    MyPersonUpdate:
+      type: object
+      description: Fields of their own Person a user may change themselves (partial update; see updateMask). Names, identity and statutory fields are changed by administrators with people.UpdatePerson. The profile photo follows once uploads (platform.CreateUploadUrl) are served, so a user can only set a file they uploaded.
+      properties:
+        primaryEmail:
+          type: string
+          maxLength: 320
+          description: Personal e-mail.
+        primaryPhone:
+          type: string
+          maxLength: 20
+          description: Personal phone.
+        alternatePhone:
+          type: string
+          maxLength: 20
+          description: Alternate phone.
+        workPhone:
+          type: string
+          maxLength: 30
+          description: Office / work phone.
+        websiteUrl:
+          type: string
+          maxLength: 500
+          description: Personal web page.
+        aboutMe:
+          type: string
+          description: Short self-description shown on the profile.
+        motherTongue:
+          type: string
+          maxLength: 60
+          description: Mother tongue.
+    Honorific:
+      type: object
+      description: Name prefix such as Mr, Ms, Dr.
+      properties:
+        code:
+          type: string
+          maxLength: 40
+          description: Stable key used by imports, integrations and seed scripts.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        isActive:
+          type: boolean
+          description: Whether offered for new picks.
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        name:
+          type: string
+          maxLength: 40
+          description: Full form, e.g. Doctor.
+        shortcut:
+          type: string
+          maxLength: 10
+          description: Abbreviation, e.g. Dr.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - name
+    HonorificUpdate:
+      type: object
+      description: Fields of Honorific that can be updated (partial update; see updateMask).
+      properties:
+        code:
+          type: string
+          maxLength: 40
+          description: Stable key used by imports, integrations and seed scripts.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        isActive:
+          type: boolean
+          description: Whether offered for new picks.
+        name:
+          type: string
+          maxLength: 40
+          description: Full form, e.g. Doctor.
+        shortcut:
+          type: string
+          maxLength: 10
+          description: Abbreviation, e.g. Dr.
+    HonorificList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Honorific'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    Person:
+      type: object
+      description: A human being. Shared identity for student, guardian, staff, applicant and student roles.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        honorificId:
+          type: string
+          format: uuid
+          description: Name prefix.
+        firstName:
+          type: string
+          maxLength: 100
+          description: Given name.
+        middleName:
+          type: string
+          maxLength: 100
+          description: Middle name.
+        lastName:
+          type: string
+          maxLength: 100
+          description: Family name.
+        displayName:
+          type: string
+          maxLength: 255
+          description: Full name as displayed.
+        dateOfBirth:
+          type: string
+          format: date
+          description: Date of birth.
+        gender:
+          type: string
+          enum:
+          - male
+          - female
+          - other
+          - undisclosed
+          x-extensible-enum: true
+          description: Gender.
+        bloodGroup:
+          type: string
+          enum:
+          - A+
+          - A-
+          - B+
+          - B-
+          - O+
+          - O-
+          - AB+
+          - AB-
+          - A1+
+          - A1-
+          - B1+
+          - B1-
+          - A1B+
+          - A1B-
+          x-extensible-enum: true
+          description: Blood group.
+        maritalStatus:
+          type: string
+          enum:
+          - single
+          - married
+          - divorced
+          - widowed
+          x-extensible-enum: true
+          description: Marital status.
+        birthPlace:
+          type: string
+          maxLength: 120
+          description: Place of birth.
+        nativePlace:
+          type: string
+          maxLength: 120
+          description: Native place / hometown.
+        nationalityCountryId:
+          type: string
+          format: uuid
+          description: Nationality.
+        motherTongue:
+          type: string
+          maxLength: 60
+          description: Mother tongue.
+        religion:
+          type: string
+          maxLength: 60
+          description: Religion (optional, for statutory reporting).
+        socialCategory:
+          type: string
+          maxLength: 30
+          description: Government social category used for statutory reporting (e.g. GEN, OBC, SC, ST).
+        socialSubCategory:
+          type: string
+          maxLength: 60
+          description: Sub-category.
+        nationalIdType:
+          type: string
+          maxLength: 30
+          description: Type of national id (e.g. AADHAAR, SSN, PASSPORT).
+        nationalId:
+          type: string
+          description: 'Plain value, input only: stored encrypted and never returned. National id number, encrypted at rest.'
+          writeOnly: true
+        nationalIdMasked:
+          type: string
+          description: Masked form for display, e.g. "••••1234". Output only.
+          readOnly: true
+        visaInfo:
+          type: string
+          maxLength: 100
+          description: Visa / residence-permit details.
+        primaryEmail:
+          type: string
+          maxLength: 320
+          description: Personal e-mail.
+        primaryPhone:
+          type: string
+          maxLength: 20
+          description: Personal phone.
+        alternatePhone:
+          type: string
+          maxLength: 20
+          description: Alternate phone.
+        photoFileId:
+          type: string
+          format: uuid
+          description: Profile photo.
+        remarks:
+          type: string
+          description: Free-text notes about the person.
+        workPhone:
+          type: string
+          maxLength: 30
+          description: Office / work phone.
+        websiteUrl:
+          type: string
+          maxLength: 500
+          description: Personal web page.
+        aboutMe:
+          type: string
+          description: Short self-description shown on the profile.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - displayName
+    PersonUpdate:
+      type: object
+      description: Fields of Person that can be updated (partial update; see updateMask).
+      properties:
+        honorificId:
+          type: string
+          format: uuid
+          description: Name prefix.
+        firstName:
+          type: string
+          maxLength: 100
+          description: Given name.
+        middleName:
+          type: string
+          maxLength: 100
+          description: Middle name.
+        lastName:
+          type: string
+          maxLength: 100
+          description: Family name.
+        displayName:
+          type: string
+          maxLength: 255
+          description: Full name as displayed.
+        dateOfBirth:
+          type: string
+          format: date
+          description: Date of birth.
+        gender:
+          type: string
+          enum:
+          - male
+          - female
+          - other
+          - undisclosed
+          x-extensible-enum: true
+          description: Gender.
+        bloodGroup:
+          type: string
+          enum:
+          - A+
+          - A-
+          - B+
+          - B-
+          - O+
+          - O-
+          - AB+
+          - AB-
+          - A1+
+          - A1-
+          - B1+
+          - B1-
+          - A1B+
+          - A1B-
+          x-extensible-enum: true
+          description: Blood group.
+        maritalStatus:
+          type: string
+          enum:
+          - single
+          - married
+          - divorced
+          - widowed
+          x-extensible-enum: true
+          description: Marital status.
+        birthPlace:
+          type: string
+          maxLength: 120
+          description: Place of birth.
+        nativePlace:
+          type: string
+          maxLength: 120
+          description: Native place / hometown.
+        nationalityCountryId:
+          type: string
+          format: uuid
+          description: Nationality.
+        motherTongue:
+          type: string
+          maxLength: 60
+          description: Mother tongue.
+        religion:
+          type: string
+          maxLength: 60
+          description: Religion (optional, for statutory reporting).
+        socialCategory:
+          type: string
+          maxLength: 30
+          description: Government social category used for statutory reporting (e.g. GEN, OBC, SC, ST).
+        socialSubCategory:
+          type: string
+          maxLength: 60
+          description: Sub-category.
+        nationalIdType:
+          type: string
+          maxLength: 30
+          description: Type of national id (e.g. AADHAAR, SSN, PASSPORT).
+        nationalId:
+          type: string
+          description: 'Plain value, input only: stored encrypted and never returned. National id number, encrypted at rest.'
+          writeOnly: true
+        visaInfo:
+          type: string
+          maxLength: 100
+          description: Visa / residence-permit details.
+        primaryEmail:
+          type: string
+          maxLength: 320
+          description: Personal e-mail.
+        primaryPhone:
+          type: string
+          maxLength: 20
+          description: Personal phone.
+        alternatePhone:
+          type: string
+          maxLength: 20
+          description: Alternate phone.
+        photoFileId:
+          type: string
+          format: uuid
+          description: Profile photo.
+        remarks:
+          type: string
+          description: Free-text notes about the person.
+        workPhone:
+          type: string
+          maxLength: 30
+          description: Office / work phone.
+        websiteUrl:
+          type: string
+          maxLength: 500
+          description: Personal web page.
+        aboutMe:
+          type: string
+          description: Short self-description shown on the profile.
+    PersonList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Person'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    PersonAddress:
+      type: object
+      description: Postal address of a person, by purpose.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        personId:
+          type: string
+          format: uuid
+          description: Person.
+          readOnly: true
+        addressType:
+          type: string
+          enum:
+          - permanent
+          - communication
+          - official
+          - billing
+          - other
+          x-extensible-enum: true
+          description: Purpose of the address.
+        line1:
+          type: string
+          maxLength: 255
+          description: Address line 1.
+        line2:
+          type: string
+          maxLength: 255
+          description: Address line 2.
+        cityId:
+          type: string
+          format: uuid
+          description: City (from master).
+        cityName:
+          type: string
+          maxLength: 120
+          description: City as free text when not in the master.
+        stateProvinceId:
+          type: string
+          format: uuid
+          description: State / province.
+        countryId:
+          type: string
+          format: uuid
+          description: Country.
+        postalCode:
+          type: string
+          maxLength: 12
+          description: Postal / PIN code.
+        isPrimary:
+          type: boolean
+          description: Primary address of its type.
+        stateName:
+          type: string
+          maxLength: 100
+          description: State / province as free text when not picked from the list.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - addressType
+    PersonAddressUpdate:
+      type: object
+      description: Fields of PersonAddress that can be updated (partial update; see updateMask).
+      properties:
+        addressType:
+          type: string
+          enum:
+          - permanent
+          - communication
+          - official
+          - billing
+          - other
+          x-extensible-enum: true
+          description: Purpose of the address.
+        line1:
+          type: string
+          maxLength: 255
+          description: Address line 1.
+        line2:
+          type: string
+          maxLength: 255
+          description: Address line 2.
+        cityId:
+          type: string
+          format: uuid
+          description: City (from master).
+        cityName:
+          type: string
+          maxLength: 120
+          description: City as free text when not in the master.
+        stateProvinceId:
+          type: string
+          format: uuid
+          description: State / province.
+        countryId:
+          type: string
+          format: uuid
+          description: Country.
+        postalCode:
+          type: string
+          maxLength: 12
+          description: Postal / PIN code.
+        isPrimary:
+          type: boolean
+          description: Primary address of its type.
+        stateName:
+          type: string
+          maxLength: 100
+          description: State / province as free text when not picked from the list.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+    PersonAddressList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonAddress'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    EmergencyContact:
+      type: object
+      description: Person to call in an emergency for another person.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        personId:
+          type: string
+          format: uuid
+          description: Person the contact is for.
+          readOnly: true
+        contactPersonId:
+          type: string
+          format: uuid
+          description: Contact, when recorded as a person.
+        contactName:
+          type: string
+          maxLength: 150
+          description: Contact name (when not a person record).
+        relationship:
+          type: string
+          maxLength: 60
+          description: Relationship to the person.
+        phone:
+          type: string
+          maxLength: 20
+          description: Contact number (may come from the linked person instead).
+        priority:
+          type: integer
+          format: int32
+          description: Call order (1 = first).
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+    EmergencyContactUpdate:
+      type: object
+      description: Fields of EmergencyContact that can be updated (partial update; see updateMask).
+      properties:
+        contactPersonId:
+          type: string
+          format: uuid
+          description: Contact, when recorded as a person.
+        contactName:
+          type: string
+          maxLength: 150
+          description: Contact name (when not a person record).
+        relationship:
+          type: string
+          maxLength: 60
+          description: Relationship to the person.
+        phone:
+          type: string
+          maxLength: 20
+          description: Contact number (may come from the linked person instead).
+        priority:
+          type: integer
+          format: int32
+          description: Call order (1 = first).
+    EmergencyContactList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmergencyContact'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    Qualification:
+      type: object
+      description: Academic / professional qualification catalogue (B.Ed, M.Sc, ...).
+      properties:
+        code:
+          type: string
+          maxLength: 40
+          description: Stable key used by imports, integrations and seed scripts.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+          description: Qualification name.
+        level:
+          type: string
+          enum:
+          - undergraduate
+          - postgraduate
+          - teacher_training
+          - doctorate
+          - diploma
+          - school
+          - other
+          x-extensible-enum: true
+          description: Qualification level.
+        isActive:
+          type: boolean
+          description: Whether selectable.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - name
+    QualificationUpdate:
+      type: object
+      description: Fields of Qualification that can be updated (partial update; see updateMask).
+      properties:
+        code:
+          type: string
+          maxLength: 40
+          description: Stable key used by imports, integrations and seed scripts.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        name:
+          type: string
+          maxLength: 120
+          description: Qualification name.
+        level:
+          type: string
+          enum:
+          - undergraduate
+          - postgraduate
+          - teacher_training
+          - doctorate
+          - diploma
+          - school
+          - other
+          x-extensible-enum: true
+          description: Qualification level.
+        isActive:
+          type: boolean
+          description: Whether selectable.
+    QualificationList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Qualification'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    EducationHistory:
+      type: object
+      description: A person's education record (degree, school, grades).
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        personId:
+          type: string
+          format: uuid
+          description: Person.
+          readOnly: true
+        qualificationId:
+          type: string
+          format: uuid
+          description: Qualification obtained (when in the catalogue).
+        institutionName:
+          type: string
+          maxLength: 200
+          description: School / college / university.
+        location:
+          type: string
+          maxLength: 150
+          description: Location of the institution.
+        degreeType:
+          type: string
+          maxLength: 120
+          description: Degree / certificate type.
+        major:
+          type: string
+          maxLength: 120
+          description: Major / specialisation.
+        gradeType:
+          type: string
+          enum:
+          - percentage
+          - score
+          - letter_grade
+          - uk_class
+          - french_mention
+          - cgpa_4
+          - cgpa_10
+          x-extensible-enum: true
+          description: Grading system of the grade.
+        grade:
+          type: string
+          maxLength: 30
+          description: Grade obtained.
+        startDate:
+          type: string
+          format: date
+          description: Start date.
+        endDate:
+          type: string
+          format: date
+          description: End date.
+        certification:
+          type: string
+          maxLength: 200
+          description: Certificate / degree title obtained.
+        minor:
+          type: string
+          maxLength: 200
+          description: Minor subject.
+        studyMode:
+          type: string
+          enum:
+          - full_time
+          - part_time
+          - correspondence
+          - online
+          x-extensible-enum: true
+          description: Mode of study.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - institutionName
+    EducationHistoryUpdate:
+      type: object
+      description: Fields of EducationHistory that can be updated (partial update; see updateMask).
+      properties:
+        qualificationId:
+          type: string
+          format: uuid
+          description: Qualification obtained (when in the catalogue).
+        institutionName:
+          type: string
+          maxLength: 200
+          description: School / college / university.
+        location:
+          type: string
+          maxLength: 150
+          description: Location of the institution.
+        degreeType:
+          type: string
+          maxLength: 120
+          description: Degree / certificate type.
+        major:
+          type: string
+          maxLength: 120
+          description: Major / specialisation.
+        gradeType:
+          type: string
+          enum:
+          - percentage
+          - score
+          - letter_grade
+          - uk_class
+          - french_mention
+          - cgpa_4
+          - cgpa_10
+          x-extensible-enum: true
+          description: Grading system of the grade.
+        grade:
+          type: string
+          maxLength: 30
+          description: Grade obtained.
+        startDate:
+          type: string
+          format: date
+          description: Start date.
+        endDate:
+          type: string
+          format: date
+          description: End date.
+        certification:
+          type: string
+          maxLength: 200
+          description: Certificate / degree title obtained.
+        minor:
+          type: string
+          maxLength: 200
+          description: Minor subject.
+        studyMode:
+          type: string
+          enum:
+          - full_time
+          - part_time
+          - correspondence
+          - online
+          x-extensible-enum: true
+          description: Mode of study.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+    EducationHistoryList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EducationHistory'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    WorkExperience:
+      type: object
+      description: Job or internship held by a person.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        personId:
+          type: string
+          format: uuid
+          description: Person.
+          readOnly: true
+        experienceType:
+          type: string
+          enum:
+          - job
+          - internship
+          x-extensible-enum: true
+          description: Job or internship.
+        title:
+          type: string
+          maxLength: 150
+          description: Job title.
+        company:
+          type: string
+          maxLength: 200
+          description: Employer.
+        location:
+          type: string
+          maxLength: 150
+          description: Location.
+        fromDate:
+          type: string
+          format: date
+          description: Start date.
+        toDate:
+          type: string
+          format: date
+          description: End date.
+        isCurrent:
+          type: boolean
+          description: Currently in this role.
+        description:
+          type: string
+          description: Responsibilities / achievements.
+        companyWebsite:
+          type: string
+          maxLength: 500
+          description: Company web site.
+        industry:
+          type: string
+          maxLength: 150
+          description: Industry.
+        responsibilities:
+          type: string
+          description: Responsibilities.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - title
+      - company
+      - location
+      - fromDate
+    WorkExperienceUpdate:
+      type: object
+      description: Fields of WorkExperience that can be updated (partial update; see updateMask).
+      properties:
+        experienceType:
+          type: string
+          enum:
+          - job
+          - internship
+          x-extensible-enum: true
+          description: Job or internship.
+        title:
+          type: string
+          maxLength: 150
+          description: Job title.
+        company:
+          type: string
+          maxLength: 200
+          description: Employer.
+        location:
+          type: string
+          maxLength: 150
+          description: Location.
+        fromDate:
+          type: string
+          format: date
+          description: Start date.
+        toDate:
+          type: string
+          format: date
+          description: End date.
+        isCurrent:
+          type: boolean
+          description: Currently in this role.
+        description:
+          type: string
+          description: Responsibilities / achievements.
+        companyWebsite:
+          type: string
+          maxLength: 500
+          description: Company web site.
+        industry:
+          type: string
+          maxLength: 150
+          description: Industry.
+        responsibilities:
+          type: string
+          description: Responsibilities.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+    WorkExperienceList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkExperience'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    Certification:
+      type: object
+      description: Professional certification held by a person.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        personId:
+          type: string
+          format: uuid
+          description: Person.
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+          description: Certification name.
+        issuingOrganization:
+          type: string
+          maxLength: 200
+          description: Issuer.
+        issueDate:
+          type: string
+          format: date
+          description: Issue date.
+        expires:
+          type: boolean
+          description: Whether it expires.
+        expirationDate:
+          type: string
+          format: date
+          description: Expiry date.
+        description:
+          type: string
+          description: Details.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - name
+      - issuingOrganization
+      - issueDate
+    CertificationUpdate:
+      type: object
+      description: Fields of Certification that can be updated (partial update; see updateMask).
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          description: Certification name.
+        issuingOrganization:
+          type: string
+          maxLength: 200
+          description: Issuer.
+        issueDate:
+          type: string
+          format: date
+          description: Issue date.
+        expires:
+          type: boolean
+          description: Whether it expires.
+        expirationDate:
+          type: string
+          format: date
+          description: Expiry date.
+        description:
+          type: string
+          description: Details.
+    CertificationList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Certification'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    Skill:
+      type: object
+      description: Skill catalogue.
+      properties:
+        code:
+          type: string
+          maxLength: 40
+          description: Stable key used by imports, integrations and seed scripts.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        isActive:
+          type: boolean
+          description: Whether offered for new picks.
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+          description: Skill name.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - name
+    SkillUpdate:
+      type: object
+      description: Fields of Skill that can be updated (partial update; see updateMask).
+      properties:
+        code:
+          type: string
+          maxLength: 40
+          description: Stable key used by imports, integrations and seed scripts.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        isActive:
+          type: boolean
+          description: Whether offered for new picks.
+        name:
+          type: string
+          maxLength: 120
+          description: Skill name.
+    SkillList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Skill'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    PersonSkill:
+      type: object
+      description: Skill held by a person.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        personId:
+          type: string
+          format: uuid
+          description: Person.
+          readOnly: true
+        skillId:
+          type: string
+          format: uuid
+          description: Skill.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - skillId
+    PersonSkillUpdate:
+      type: object
+      description: Fields of PersonSkill that can be updated (partial update; see updateMask).
+      properties:
+        skillId:
+          type: string
+          format: uuid
+          description: Skill.
+    PersonSkillList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonSkill'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    PersonDocument:
+      type: object
+      description: Document kept on file for a person (certificates, id proofs).
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        personId:
+          type: string
+          format: uuid
+          description: Person.
+          readOnly: true
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution that holds the document.
+        documentType:
+          type: string
+          enum:
+          - certificate
+          - id_proof
+          - other
+          x-extensible-enum: true
+          description: Document category.
+        name:
+          type: string
+          maxLength: 200
+          description: Document title.
+        fileId:
+          type: string
+          format: uuid
+          description: Stored file.
+        documentVersion:
+          type: integer
+          format: int32
+          description: Version number of this document.
+        status:
+          type: string
+          enum:
+          - active
+          - archived
+          x-extensible-enum: true
+          description: Whether current.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - documentType
+      - name
+      - fileId
+    PersonDocumentUpdate:
+      type: object
+      description: Fields of PersonDocument that can be updated (partial update; see updateMask).
+      properties:
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution that holds the document.
+        documentType:
+          type: string
+          enum:
+          - certificate
+          - id_proof
+          - other
+          x-extensible-enum: true
+          description: Document category.
+        name:
+          type: string
+          maxLength: 200
+          description: Document title.
+        fileId:
+          type: string
+          format: uuid
+          description: Stored file.
+        documentVersion:
+          type: integer
+          format: int32
+          description: Version number of this document.
+        status:
+          type: string
+          enum:
+          - active
+          - archived
+          x-extensible-enum: true
+          description: Whether current.
+    PersonDocumentList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonDocument'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    PublicProfile:
+      type: object
+      description: Public student / alumni profile shown on portfolio and career pages.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        personId:
+          type: string
+          format: uuid
+          description: Person.
+          readOnly: true
+        headline:
+          type: string
+          maxLength: 200
+          description: One-line headline.
+        profession:
+          type: string
+          maxLength: 120
+          description: Profession.
+        personaCategory:
+          type: string
+          enum:
+          - business_owner
+          - manager
+          - employee
+          - student
+          - freelancer
+          - other
+          x-extensible-enum: true
+          description: Self-identified persona.
+        coverImageFileId:
+          type: string
+          format: uuid
+          description: Profile cover image.
+        city:
+          type: string
+          maxLength: 120
+          description: City.
+        countryId:
+          type: string
+          format: uuid
+          description: Country.
+        college:
+          type: string
+          maxLength: 200
+          description: College.
+        branch:
+          type: string
+          maxLength: 120
+          description: Branch / stream.
+        linkedinUrl:
+          type: string
+          maxLength: 500
+          description: LinkedIn URL.
+        githubUrl:
+          type: string
+          maxLength: 500
+          description: GitHub URL.
+        twitterUrl:
+          type: string
+          maxLength: 500
+          description: X / Twitter URL.
+        mediumUrl:
+          type: string
+          maxLength: 500
+          description: Medium URL.
+        hidePrivateInfo:
+          type: boolean
+          description: Hide contact details from the public profile.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+    PublicProfileUpdate:
+      type: object
+      description: Fields of PublicProfile that can be updated (partial update; see updateMask).
+      properties:
+        headline:
+          type: string
+          maxLength: 200
+          description: One-line headline.
+        profession:
+          type: string
+          maxLength: 120
+          description: Profession.
+        personaCategory:
+          type: string
+          enum:
+          - business_owner
+          - manager
+          - employee
+          - student
+          - freelancer
+          - other
+          x-extensible-enum: true
+          description: Self-identified persona.
+        coverImageFileId:
+          type: string
+          format: uuid
+          description: Profile cover image.
+        city:
+          type: string
+          maxLength: 120
+          description: City.
+        countryId:
+          type: string
+          format: uuid
+          description: Country.
+        college:
+          type: string
+          maxLength: 200
+          description: College.
+        branch:
+          type: string
+          maxLength: 120
+          description: Branch / stream.
+        linkedinUrl:
+          type: string
+          maxLength: 500
+          description: LinkedIn URL.
+        githubUrl:
+          type: string
+          maxLength: 500
+          description: GitHub URL.
+        twitterUrl:
+          type: string
+          maxLength: 500
+          description: X / Twitter URL.
+        mediumUrl:
+          type: string
+          maxLength: 500
+          description: Medium URL.
+        hidePrivateInfo:
+          type: boolean
+          description: Hide contact details from the public profile.
+    PersonSocialLink:
+      type: object
+      description: Social network / messaging handle of a person.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        personId:
+          type: string
+          format: uuid
+          description: Person.
+          readOnly: true
+        network:
+          type: string
+          enum:
+          - facebook
+          - twitter
+          - linkedin
+          - instagram
+          - youtube
+          - skype
+          - whatsapp
+          - telegram
+          - github
+          - website
+          - other
+          x-extensible-enum: true
+          description: Network (from the fixed network catalogue).
+        handle:
+          type: string
+          maxLength: 255
+          description: Handle, profile URL or number.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - network
+      - handle
+    PersonSocialLinkUpdate:
+      type: object
+      description: Fields of PersonSocialLink that can be updated (partial update; see updateMask).
+      properties:
+        network:
+          type: string
+          enum:
+          - facebook
+          - twitter
+          - linkedin
+          - instagram
+          - youtube
+          - skype
+          - whatsapp
+          - telegram
+          - github
+          - website
+          - other
+          x-extensible-enum: true
+          description: Network (from the fixed network catalogue).
+        handle:
+          type: string
+          maxLength: 255
+          description: Handle, profile URL or number.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+    PersonSocialLinkList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonSocialLink'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    ConsentRecord:
+      type: object
+      description: Consent given (or withdrawn) for processing a person's data for one purpose; for minors the consent is given by a guardian. Current consent = latest row per person and purpose with withdrawn_at
+        NULL.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        personId:
+          type: string
+          format: uuid
+          description: Person the data belongs to.
+          readOnly: true
+        givenByPersonId:
+          type: string
+          format: uuid
+          description: Person who gave the consent (the person, or a guardian for a minor).
+        purpose:
+          type: string
+          enum:
+          - data_processing
+          - photo_video_publication
+          - public_profile
+          - marketing
+          - third_party_sharing
+          - sms_whatsapp_messages
+          - biometric_data
+          x-extensible-enum: true
+          description: What the consent covers.
+        policyVersion:
+          type: string
+          maxLength: 30
+          description: Version of the privacy notice / consent text shown.
+        grantedAt:
+          type: string
+          format: date-time
+          description: When consent was given.
+        withdrawnAt:
+          type: string
+          format: date-time
+          description: When consent was withdrawn (NULL = in force).
+        channel:
+          type: string
+          enum:
+          - web
+          - mobile_app
+          - paper_form
+          - email
+          - in_person
+          x-extensible-enum: true
+          description: How consent was captured.
+        recordedByUserId:
+          type: string
+          format: uuid
+          description: Staff who recorded a paper / in-person consent.
+        evidenceFileId:
+          type: string
+          format: uuid
+          description: Signed form or other evidence.
+        ipAddress:
+          type: string
+          description: Client address for online consent.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - givenByPersonId
+      - purpose
+      - policyVersion
+      - grantedAt
+      - channel
+    ConsentRecordList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsentRecord'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    SendGreetingsRequest:
+      type: object
+      properties:
+        personIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+            description: People to greet.
+          description: People to greet.
+        templateId:
+          type: string
+          format: uuid
+          description: Message template.
+        channel:
+          type: string
+          enum:
+          - sms
+          - email
+          - push
+          x-extensible-enum: true
+          description: Channel.
+      required:
+      - personIds
+      - templateId
+      - channel
+    WithdrawConsentRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Reason given by the person or guardian.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: OAuth 2.0 / OIDC access token. Claims carry tenant_id, user_id, roles and an optional act-as (impersonation) subject.
+    platformAdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token of MySMS platform staff (audience mysms-platform-admin, MFA required). Only these operations may act across tenants; the target tenant is the resource being addressed.

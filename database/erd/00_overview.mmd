@@ -1,0 +1,113 @@
+flowchart LR
+    master["Master Data<br/><b>master</b> · 6 tables"]
+    platform["Platform & Tenancy<br/><b>platform</b> · 22 tables"]
+    iam["Identity & Access<br/><b>iam</b> · 20 tables"]
+    org["Organisation & Calendar<br/><b>org</b> · 13 tables"]
+    people["People & Profiles<br/><b>people</b> · 18 tables"]
+    academics["Academic Structure<br/><b>academics</b> · 18 tables"]
+    sis["Student Information<br/><b>sis</b> · 22 tables"]
+    hr["Workforce / HR<br/><b>hr</b> · 12 tables"]
+    payroll["Payroll<br/><b>payroll</b> · 17 tables"]
+    admission["Admissions<br/><b>admission</b> · 10 tables"]
+    attendance["Attendance<br/><b>attendance</b> · 10 tables"]
+    facility["Rooms & Facilities<br/><b>facility</b> · 9 tables"]
+    timetable["Timetable<br/><b>timetable</b> · 7 tables"]
+    assessment["Assessment & Results<br/><b>assessment</b> · 25 tables"]
+    lms["Learning Management<br/><b>lms</b> · 133 tables"]
+    finance["Fees & Payments<br/><b>finance</b> · 24 tables"]
+    library["Library<br/><b>library</b> · 22 tables"]
+    transport["Transport<br/><b>transport</b> · 7 tables"]
+    comms["Communication & Community<br/><b>comms</b> · 46 tables"]
+    frontoffice["Front Office<br/><b>frontoffice</b> · 8 tables"]
+    careers["Careers<br/><b>careers</b> · 11 tables"]
+    academics -.->|2| hr
+    academics -.->|1| iam
+    academics -.->|10| org
+    academics -.->|1| platform
+    admission -.->|9| academics
+    admission -.->|3| finance
+    admission -.->|2| master
+    admission -.->|6| org
+    admission -.->|3| people
+    admission -.->|2| platform
+    admission -.->|1| sis
+    assessment -.->|11| academics
+    assessment -.->|1| facility
+    assessment -.->|4| hr
+    assessment -.->|8| iam
+    assessment -.->|9| org
+    assessment -.->|2| platform
+    assessment -.->|5| sis
+    attendance -.->|4| academics
+    attendance -.->|3| hr
+    attendance -.->|2| iam
+    attendance -.->|3| org
+    attendance -.->|2| sis
+    attendance -.->|1| timetable
+    careers -.->|2| iam
+    careers -.->|1| master
+    careers -.->|1| people
+    careers -.->|2| platform
+    comms -.->|5| academics
+    comms -.->|27| iam
+    comms -.->|26| org
+    comms -.->|10| platform
+    comms -.->|4| sis
+    facility -.->|3| academics
+    facility -.->|3| org
+    finance -.->|3| academics
+    finance -.->|5| iam
+    finance -.->|6| master
+    finance -.->|12| org
+    finance -.->|2| people
+    finance -.->|1| platform
+    finance -.->|6| sis
+    frontoffice -.->|1| hr
+    frontoffice -.->|2| iam
+    frontoffice -.->|7| org
+    frontoffice -.->|1| platform
+    frontoffice -.->|1| sis
+    hr -.->|2| iam
+    hr -.->|9| org
+    hr -.->|2| people
+    iam -.->|1| org
+    iam -.->|1| people
+    library -.->|4| academics
+    library -.->|1| finance
+    library -.->|1| hr
+    library -.->|3| iam
+    library -.->|5| org
+    library -.->|3| people
+    library -.->|1| platform
+    library -.->|1| sis
+    lms -.->|3| academics
+    lms -.->|2| assessment
+    lms -.->|7| comms
+    lms -.->|3| finance
+    lms -.->|66| iam
+    lms -.->|4| master
+    lms -.->|16| org
+    lms -.->|23| platform
+    org -.->|4| master
+    org -.->|3| platform
+    payroll -.->|4| hr
+    payroll -.->|1| iam
+    payroll -.->|5| org
+    payroll -.->|2| platform
+    people -.->|5| master
+    people -.->|1| org
+    people -.->|4| platform
+    platform -.->|4| master
+    sis -.->|13| academics
+    sis -.->|1| hr
+    sis -.->|5| iam
+    sis -.->|15| org
+    sis -.->|3| people
+    sis -.->|1| platform
+    timetable -.->|4| academics
+    timetable -.->|1| facility
+    timetable -.->|1| hr
+    timetable -.->|2| org
+    timetable -.->|1| sis
+    transport -.->|3| org
+    transport -.->|1| sis

@@ -1,0 +1,218 @@
+{
+ "module": "attendance",
+ "resources": [
+  {
+   "name": "AbsenceReason",
+   "table": "attendance.absence_reason",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/attendance/absence-reasons",
+   "item": "/v1/attendance/absence-reasons/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "CF435027B",
+    "title": "t-title-e716614d"
+   },
+   "update": {
+    "isActive": true
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "AttendanceRecord",
+   "table": "attendance.attendance_record",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/attendance/attendance-sheets/dd6b98ac-56d6-549b-a071-4163dc248c41/records",
+   "item": "/v1/attendance/attendance-sheets/dd6b98ac-56d6-549b-a071-4163dc248c41/records/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO attendance.attendance_register (tenant_id, institution_id, code, name, register_scope, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C5DDF3AE3', 't-name-410c7673', 'institution', 1, '63ccdae9-a18c-523c-8299-561be44c8686') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO attendance.attendance_sheet (tenant_id, register_id, attendance_date, row_version, id) VALUES (:tenant, '63ccdae9-a18c-523c-8299-561be44c8686', '2026-01-12', 1, 'dd6b98ac-56d6-549b-a071-4163dc248c41') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "sheetId": "dd6b98ac-56d6-549b-a071-4163dc248c41",
+    "studentId": "bb4f527b-812f-502f-bb19-126cbc5c8459",
+    "status": "present"
+   },
+   "update": {},
+   "duplicateConflicts": false,
+   "partition": "attendanceDate",
+   "seedId": "3da57893-8245-5603-a606-2f2588f66ed3",
+   "seed": [
+    "INSERT INTO attendance.attendance_record (sheet_id, student_id, status, attendance_date, tenant_id, row_version, id) VALUES ('dd6b98ac-56d6-549b-a071-4163dc248c41', 'bb4f527b-812f-502f-bb19-126cbc5c8459', 'present', (SELECT p.attendance_date FROM attendance.attendance_sheet p WHERE p.id = 'dd6b98ac-56d6-549b-a071-4163dc248c41'), :tenant, 1, '3da57893-8245-5603-a606-2f2588f66ed3')"
+   ]
+  },
+  {
+   "name": "AttendanceRegister",
+   "table": "attendance.attendance_register",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/attendance/attendance-registers",
+   "item": "/v1/attendance/attendance-registers/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "code": "CDFEF3552",
+    "name": "t-name-33eca582",
+    "registerScope": "institution"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "AttendanceSheet",
+   "table": "attendance.attendance_sheet",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/attendance/attendance-sheets",
+   "item": "/v1/attendance/attendance-sheets/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO attendance.attendance_register (tenant_id, institution_id, code, name, register_scope, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C5DDF3AE3', 't-name-410c7673', 'institution', 1, '63ccdae9-a18c-523c-8299-561be44c8686') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "registerId": "63ccdae9-a18c-523c-8299-561be44c8686",
+    "attendanceDate": "2026-01-10"
+   },
+   "update": {
+    "reference": "Updated reference"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "attendance.StartAttendanceSheet",
+     "path": "/v1/attendance/attendance-sheets/{id}:start",
+     "permission": "attendance.attendance_sheet.start_attendance_sheet",
+     "guard": {
+      "status": [
+       "draft"
+      ]
+     },
+     "prepare": [
+      "UPDATE attendance.attendance_sheet SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "in_progress"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "attendance.CancelAttendanceSheet",
+     "path": "/v1/attendance/attendance-sheets/{id}:cancel",
+     "permission": "attendance.attendance_sheet.cancel_attendance_sheet",
+     "guard": {
+      "status": [
+       "draft",
+       "in_progress"
+      ]
+     },
+     "prepare": [
+      "UPDATE attendance.attendance_sheet SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "cancelled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "attendance.ResetAttendanceSheet",
+     "path": "/v1/attendance/attendance-sheets/{id}:resetToDraft",
+     "permission": "attendance.attendance_sheet.reset_attendance_sheet",
+     "guard": {
+      "status": [
+       "cancelled"
+      ]
+     },
+     "prepare": [
+      "UPDATE attendance.attendance_sheet SET status = 'cancelled' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "draft"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "AttendanceType",
+   "table": "attendance.attendance_type",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/attendance/attendance-types",
+   "item": "/v1/attendance/attendance-types/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "code": "C3F8331EF",
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-a1b1c770"
+   },
+   "update": {
+    "countsPresent": true
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "StaffAttendance",
+   "table": "attendance.staff_attendance",
+   "ops": [
+    "Create",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/attendance/staff-attendance-days",
+   "item": "/v1/attendance/staff-attendance-days/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "staffId": "94e5fd97-afcc-59b8-a83f-327e849cb5e7",
+    "attendanceDate": "2026-01-10",
+    "status": "present"
+   },
+   "update": {
+    "remark": "Updated remark"
+   },
+   "duplicateConflicts": true,
+   "partition": "attendanceDate"
+  }
+ ]
+}

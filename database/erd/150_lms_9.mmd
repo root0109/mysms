@@ -1,0 +1,112 @@
+erDiagram
+    lms__evaluator["lms.evaluator"] {
+        uuid id PK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        date unavailable_from
+        date unavailable_to
+    }
+    lms__evaluator_availability["lms.evaluator_availability"] {
+        uuid id PK
+        uuid evaluator_id FK "NN"
+        varchar(30) weekday "NN"
+        time start_time "NN"
+        time end_time "NN"
+    }
+    lms__certificate["lms.certificate"] {
+        uuid id PK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid course_id FK
+        uuid cohort_id FK
+        uuid evaluator_id FK
+        varchar(40) certificate_number
+        date issue_date "NN"
+        date expiry_date
+        varchar(120) template_code "NN"
+        boolean is_published "NN"
+    }
+    lms__certificate_request["lms.certificate_request"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid cohort_id FK
+        uuid evaluator_user_id FK "→ iam.user_account (logical)"
+        date request_date "NN"
+        varchar(30) weekday
+        time start_time "NN"
+        time end_time "NN"
+        varchar(64) timezone
+        text meeting_link_enc
+        varchar(30) status "NN"
+    }
+    lms__certificate_evaluation["lms.certificate_evaluation"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid cohort_id FK
+        uuid certificate_request_id FK
+        uuid evaluator_user_id FK "→ iam.user_account (logical)"
+        date evaluation_date "NN"
+        time start_time "NN"
+        time end_time
+        numeric rating "3,2"
+        text summary
+        varchar(30) status "NN"
+    }
+    lms__badge["lms.badge"] {
+        uuid id PK
+        varchar(120) title "NN"
+        text description "NN"
+        uuid image_file_id FK "NN · → platform.file_object (logical)"
+        varchar(80) target_entity "NN"
+        varchar(30) trigger_event "NN"
+        text condition_expr "NN"
+        varchar(80) field_to_check
+        varchar(80) user_field "NN"
+        boolean grant_only_once "NN"
+        boolean is_enabled "NN"
+    }
+    lms__badge_award["lms.badge_award"] {
+        uuid id PK
+        uuid badge_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        date issued_on "NN"
+    }
+    lms__learning_program["lms.learning_program"] {
+        uuid id PK
+        varchar(200) title "NN"
+        boolean is_published "NN"
+        boolean enforce_course_order "NN"
+        integer course_count "NN"
+        integer member_count "NN"
+    }
+    lms__learning_program_course["lms.learning_program_course"] {
+        uuid id PK
+        uuid learning_program_id FK "NN"
+        uuid course_id FK "NN"
+        integer sort_order "NN"
+    }
+    lms__learning_program_member["lms.learning_program_member"] {
+        uuid id PK
+        uuid learning_program_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        numeric progress_percent "5,2 · NN"
+    }
+    lms__cohort["lms.cohort"] {
+        uuid id PK "drawn on: Cohorts, schedules & live classes"
+    }
+    lms__course["lms.course"] {
+        uuid id PK "drawn on: Courses, versions & catalogue"
+    }
+    lms__evaluator ||--o{ lms__evaluator_availability : "evaluator_id"
+    lms__learning_program ||--o{ lms__learning_program_course : "learning_program_id"
+    lms__course ||--o{ lms__learning_program_course : "course_id"
+    lms__learning_program ||--o{ lms__learning_program_member : "learning_program_id"
+    lms__course |o--o{ lms__certificate : "course_id"
+    lms__cohort |o--o{ lms__certificate : "cohort_id"
+    lms__evaluator |o--o{ lms__certificate : "evaluator_id"
+    lms__course ||--o{ lms__certificate_request : "course_id"
+    lms__cohort |o--o{ lms__certificate_request : "cohort_id"
+    lms__course ||--o{ lms__certificate_evaluation : "course_id"
+    lms__cohort |o--o{ lms__certificate_evaluation : "cohort_id"
+    lms__certificate_request |o--o{ lms__certificate_evaluation : "certificate_request_id"
+    lms__badge ||--o{ lms__badge_award : "badge_id"

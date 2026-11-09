@@ -1,0 +1,2827 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.assessment.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "AssessmentProto";
+option java_package = "com.mysms.assessment.v1";
+
+// HomeworkService: operations on the Homework aggregate.
+service HomeworkService {
+  // List Homeworks.
+  rpc ListHomeworks(ListHomeworksRequest) returns (ListHomeworksResponse);
+  // Get Homework.
+  rpc GetHomework(GetHomeworkRequest) returns (GetHomeworkResponse);
+  // Create Homework.
+  rpc CreateHomework(CreateHomeworkRequest) returns (CreateHomeworkResponse);
+  // Update Homework.
+  rpc UpdateHomework(UpdateHomeworkRequest) returns (UpdateHomeworkResponse);
+  // Soft-delete Homework.
+  rpc DeleteHomework(DeleteHomeworkRequest) returns (DeleteHomeworkResponse);
+  // List HomeworkApprovals.
+  rpc ListHomeworkApprovals(ListHomeworkApprovalsRequest) returns (ListHomeworkApprovalsResponse);
+  // Get HomeworkApproval.
+  rpc GetHomeworkApproval(GetHomeworkApprovalRequest) returns (GetHomeworkApprovalResponse);
+  // Create HomeworkApproval.
+  rpc CreateHomeworkApproval(CreateHomeworkApprovalRequest) returns (CreateHomeworkApprovalResponse);
+  // Update HomeworkApproval.
+  rpc UpdateHomeworkApproval(UpdateHomeworkApprovalRequest) returns (UpdateHomeworkApprovalResponse);
+  // Soft-delete HomeworkApproval.
+  rpc DeleteHomeworkApproval(DeleteHomeworkApprovalRequest) returns (DeleteHomeworkApprovalResponse);
+  // Publish (or send for approval when approval is required).
+  rpc PublishHomework(PublishHomeworkRequest) returns (PublishHomeworkResponse);
+  // Approve.
+  rpc ApproveHomework(ApproveHomeworkRequest) returns (ApproveHomeworkResponse);
+  // Reject.
+  rpc RejectHomework(RejectHomeworkRequest) returns (RejectHomeworkResponse);
+}
+
+// HomeworkSubmissionService: operations on the HomeworkSubmission aggregate.
+service HomeworkSubmissionService {
+  // List HomeworkSubmissions.
+  rpc ListHomeworkSubmissions(ListHomeworkSubmissionsRequest) returns (ListHomeworkSubmissionsResponse);
+  // Get HomeworkSubmission.
+  rpc GetHomeworkSubmission(GetHomeworkSubmissionRequest) returns (GetHomeworkSubmissionResponse);
+  // Create HomeworkSubmission.
+  rpc CreateHomeworkSubmission(CreateHomeworkSubmissionRequest) returns (CreateHomeworkSubmissionResponse);
+  // Update HomeworkSubmission.
+  rpc UpdateHomeworkSubmission(UpdateHomeworkSubmissionRequest) returns (UpdateHomeworkSubmissionResponse);
+  // Soft-delete HomeworkSubmission.
+  rpc DeleteHomeworkSubmission(DeleteHomeworkSubmissionRequest) returns (DeleteHomeworkSubmissionResponse);
+  // Teacher marks the submission checked.
+  rpc CheckHomeworkSubmission(CheckHomeworkSubmissionRequest) returns (CheckHomeworkSubmissionResponse);
+  // Student replies to comments.
+  rpc ReplyToHomeworkFeedback(ReplyToHomeworkFeedbackRequest) returns (ReplyToHomeworkFeedbackResponse);
+}
+
+// AssignmentTypeService: operations on the AssignmentType aggregate.
+service AssignmentTypeService {
+  // List AssignmentTypes.
+  rpc ListAssignmentTypes(ListAssignmentTypesRequest) returns (ListAssignmentTypesResponse);
+  // Get AssignmentType.
+  rpc GetAssignmentType(GetAssignmentTypeRequest) returns (GetAssignmentTypeResponse);
+  // Create AssignmentType.
+  rpc CreateAssignmentType(CreateAssignmentTypeRequest) returns (CreateAssignmentTypeResponse);
+  // Update AssignmentType.
+  rpc UpdateAssignmentType(UpdateAssignmentTypeRequest) returns (UpdateAssignmentTypeResponse);
+  // Soft-delete AssignmentType.
+  rpc DeleteAssignmentType(DeleteAssignmentTypeRequest) returns (DeleteAssignmentTypeResponse);
+}
+
+// AssignmentService: operations on the Assignment aggregate.
+service AssignmentService {
+  // List Assignments.
+  rpc ListAssignments(ListAssignmentsRequest) returns (ListAssignmentsResponse);
+  // Get Assignment.
+  rpc GetAssignment(GetAssignmentRequest) returns (GetAssignmentResponse);
+  // Create Assignment.
+  rpc CreateAssignment(CreateAssignmentRequest) returns (CreateAssignmentResponse);
+  // Update Assignment.
+  rpc UpdateAssignment(UpdateAssignmentRequest) returns (UpdateAssignmentResponse);
+  // Soft-delete Assignment.
+  rpc DeleteAssignment(DeleteAssignmentRequest) returns (DeleteAssignmentResponse);
+  // List AssignmentSubjects.
+  rpc ListAssignmentSubjects(ListAssignmentSubjectsRequest) returns (ListAssignmentSubjectsResponse);
+  // Get AssignmentSubject.
+  rpc GetAssignmentSubject(GetAssignmentSubjectRequest) returns (GetAssignmentSubjectResponse);
+  // Create AssignmentSubject.
+  rpc CreateAssignmentSubject(CreateAssignmentSubjectRequest) returns (CreateAssignmentSubjectResponse);
+  // Update AssignmentSubject.
+  rpc UpdateAssignmentSubject(UpdateAssignmentSubjectRequest) returns (UpdateAssignmentSubjectResponse);
+  // Soft-delete AssignmentSubject.
+  rpc DeleteAssignmentSubject(DeleteAssignmentSubjectRequest) returns (DeleteAssignmentSubjectResponse);
+  // List AssignmentAllocations.
+  rpc ListAssignmentAllocations(ListAssignmentAllocationsRequest) returns (ListAssignmentAllocationsResponse);
+  // Get AssignmentAllocation.
+  rpc GetAssignmentAllocation(GetAssignmentAllocationRequest) returns (GetAssignmentAllocationResponse);
+  // Create AssignmentAllocation.
+  rpc CreateAssignmentAllocation(CreateAssignmentAllocationRequest) returns (CreateAssignmentAllocationResponse);
+  // Update AssignmentAllocation.
+  rpc UpdateAssignmentAllocation(UpdateAssignmentAllocationRequest) returns (UpdateAssignmentAllocationResponse);
+  // Soft-delete AssignmentAllocation.
+  rpc DeleteAssignmentAllocation(DeleteAssignmentAllocationRequest) returns (DeleteAssignmentAllocationResponse);
+  // List AssignmentApprovals.
+  rpc ListAssignmentApprovals(ListAssignmentApprovalsRequest) returns (ListAssignmentApprovalsResponse);
+  // Get AssignmentApproval.
+  rpc GetAssignmentApproval(GetAssignmentApprovalRequest) returns (GetAssignmentApprovalResponse);
+  // Create AssignmentApproval.
+  rpc CreateAssignmentApproval(CreateAssignmentApprovalRequest) returns (CreateAssignmentApprovalResponse);
+  // Update AssignmentApproval.
+  rpc UpdateAssignmentApproval(UpdateAssignmentApprovalRequest) returns (UpdateAssignmentApprovalResponse);
+  // Soft-delete AssignmentApproval.
+  rpc DeleteAssignmentApproval(DeleteAssignmentApprovalRequest) returns (DeleteAssignmentApprovalResponse);
+  // Publish (status published; becomes ongoing automatically at issued_on).
+  rpc PublishAssignment(PublishAssignmentRequest) returns (PublishAssignmentResponse);
+  // Approve.
+  rpc ApproveAssignment(ApproveAssignmentRequest) returns (ApproveAssignmentResponse);
+  // Reject.
+  rpc RejectAssignment(RejectAssignmentRequest) returns (RejectAssignmentResponse);
+  // Close for submissions.
+  rpc FinishAssignment(FinishAssignmentRequest) returns (FinishAssignmentResponse);
+  // Cancel.
+  rpc CancelAssignment(CancelAssignmentRequest) returns (CancelAssignmentResponse);
+  // Back to draft.
+  rpc ResetAssignment(ResetAssignmentRequest) returns (ResetAssignmentResponse);
+}
+
+// AssignmentSubmissionService: operations on the AssignmentSubmission aggregate.
+service AssignmentSubmissionService {
+  // List AssignmentSubmissions.
+  rpc ListAssignmentSubmissions(ListAssignmentSubmissionsRequest) returns (ListAssignmentSubmissionsResponse);
+  // Get AssignmentSubmission.
+  rpc GetAssignmentSubmission(GetAssignmentSubmissionRequest) returns (GetAssignmentSubmissionResponse);
+  // Create AssignmentSubmission.
+  rpc CreateAssignmentSubmission(CreateAssignmentSubmissionRequest) returns (CreateAssignmentSubmissionResponse);
+  // Update AssignmentSubmission.
+  rpc UpdateAssignmentSubmission(UpdateAssignmentSubmissionRequest) returns (UpdateAssignmentSubmissionResponse);
+  // Soft-delete AssignmentSubmission.
+  rpc DeleteAssignmentSubmission(DeleteAssignmentSubmissionRequest) returns (DeleteAssignmentSubmissionResponse);
+  // Student submits.
+  rpc SubmitAssignmentSubmission(SubmitAssignmentSubmissionRequest) returns (SubmitAssignmentSubmissionResponse);
+  // Accept.
+  rpc AcceptAssignmentSubmission(AcceptAssignmentSubmissionRequest) returns (AcceptAssignmentSubmissionResponse);
+  // Ask for changes.
+  rpc RequestSubmissionChanges(RequestSubmissionChangesRequest) returns (RequestSubmissionChangesResponse);
+  // Reject.
+  rpc RejectAssignmentSubmission(RejectAssignmentSubmissionRequest) returns (RejectAssignmentSubmissionResponse);
+  // Change and resubmit.
+  rpc ResetAssignmentSubmission(ResetAssignmentSubmissionRequest) returns (ResetAssignmentSubmissionResponse);
+  // Award marks.
+  rpc GradeAssignmentSubmission(GradeAssignmentSubmissionRequest) returns (GradeAssignmentSubmissionResponse);
+}
+
+// GradingSchemeService: operations on the GradingScheme aggregate.
+service GradingSchemeService {
+  // List GradingSchemes.
+  rpc ListGradingSchemes(ListGradingSchemesRequest) returns (ListGradingSchemesResponse);
+  // Get GradingScheme.
+  rpc GetGradingScheme(GetGradingSchemeRequest) returns (GetGradingSchemeResponse);
+  // Create GradingScheme.
+  rpc CreateGradingScheme(CreateGradingSchemeRequest) returns (CreateGradingSchemeResponse);
+  // Update GradingScheme.
+  rpc UpdateGradingScheme(UpdateGradingSchemeRequest) returns (UpdateGradingSchemeResponse);
+  // Soft-delete GradingScheme.
+  rpc DeleteGradingScheme(DeleteGradingSchemeRequest) returns (DeleteGradingSchemeResponse);
+}
+
+// GradingBandService: operations on the GradingBand aggregate.
+service GradingBandService {
+  // List GradingBands.
+  rpc ListGradingBands(ListGradingBandsRequest) returns (ListGradingBandsResponse);
+  // Get GradingBand.
+  rpc GetGradingBand(GetGradingBandRequest) returns (GetGradingBandResponse);
+  // Create GradingBand.
+  rpc CreateGradingBand(CreateGradingBandRequest) returns (CreateGradingBandResponse);
+  // Update GradingBand.
+  rpc UpdateGradingBand(UpdateGradingBandRequest) returns (UpdateGradingBandResponse);
+  // Soft-delete GradingBand.
+  rpc DeleteGradingBand(DeleteGradingBandRequest) returns (DeleteGradingBandResponse);
+}
+
+// ExamTypeService: operations on the ExamType aggregate.
+service ExamTypeService {
+  // List ExamTypes.
+  rpc ListExamTypes(ListExamTypesRequest) returns (ListExamTypesResponse);
+  // Get ExamType.
+  rpc GetExamType(GetExamTypeRequest) returns (GetExamTypeResponse);
+  // Create ExamType.
+  rpc CreateExamType(CreateExamTypeRequest) returns (CreateExamTypeResponse);
+  // Update ExamType.
+  rpc UpdateExamType(UpdateExamTypeRequest) returns (UpdateExamTypeResponse);
+  // Soft-delete ExamType.
+  rpc DeleteExamType(DeleteExamTypeRequest) returns (DeleteExamTypeResponse);
+}
+
+// ExamSessionService: operations on the ExamSession aggregate.
+service ExamSessionService {
+  // List ExamSessions.
+  rpc ListExamSessions(ListExamSessionsRequest) returns (ListExamSessionsResponse);
+  // Get ExamSession.
+  rpc GetExamSession(GetExamSessionRequest) returns (GetExamSessionResponse);
+  // Create ExamSession.
+  rpc CreateExamSession(CreateExamSessionRequest) returns (CreateExamSessionResponse);
+  // Update ExamSession.
+  rpc UpdateExamSession(UpdateExamSessionRequest) returns (UpdateExamSessionResponse);
+  // Soft-delete ExamSession.
+  rpc DeleteExamSession(DeleteExamSessionRequest) returns (DeleteExamSessionResponse);
+  // Schedule.
+  rpc ScheduleExamSession(ScheduleExamSessionRequest) returns (ScheduleExamSessionResponse);
+  // Mark held.
+  rpc MarkExamSessionHeld(MarkExamSessionHeldRequest) returns (MarkExamSessionHeldResponse);
+  // Done.
+  rpc CompleteExamSession(CompleteExamSessionRequest) returns (CompleteExamSessionResponse);
+  // Cancel.
+  rpc CancelExamSession(CancelExamSessionRequest) returns (CancelExamSessionResponse);
+  // Back to draft.
+  rpc ResetExamSession(ResetExamSessionRequest) returns (ResetExamSessionResponse);
+}
+
+// ExamService: operations on the Exam aggregate.
+service ExamService {
+  // List Exams.
+  rpc ListExams(ListExamsRequest) returns (ListExamsResponse);
+  // Get Exam.
+  rpc GetExam(GetExamRequest) returns (GetExamResponse);
+  // Create Exam.
+  rpc CreateExam(CreateExamRequest) returns (CreateExamResponse);
+  // Update Exam.
+  rpc UpdateExam(UpdateExamRequest) returns (UpdateExamResponse);
+  // Soft-delete Exam.
+  rpc DeleteExam(DeleteExamRequest) returns (DeleteExamResponse);
+  // List ExamInvigilators.
+  rpc ListExamInvigilators(ListExamInvigilatorsRequest) returns (ListExamInvigilatorsResponse);
+  // Get ExamInvigilator.
+  rpc GetExamInvigilator(GetExamInvigilatorRequest) returns (GetExamInvigilatorResponse);
+  // Create ExamInvigilator.
+  rpc CreateExamInvigilator(CreateExamInvigilatorRequest) returns (CreateExamInvigilatorResponse);
+  // Update ExamInvigilator.
+  rpc UpdateExamInvigilator(UpdateExamInvigilatorRequest) returns (UpdateExamInvigilatorResponse);
+  // Soft-delete ExamInvigilator.
+  rpc DeleteExamInvigilator(DeleteExamInvigilatorRequest) returns (DeleteExamInvigilatorResponse);
+  // Schedule.
+  rpc ScheduleExam(ScheduleExamRequest) returns (ScheduleExamResponse);
+  // Mark held; attendees are registered.
+  rpc MarkExamHeld(MarkExamHeldRequest) returns (MarkExamHeldResponse);
+  // All marks entered.
+  rpc MarkExamResultsUpdated(MarkExamResultsUpdatedRequest) returns (MarkExamResultsUpdatedResponse);
+  // Done.
+  rpc CompleteExam(CompleteExamRequest) returns (CompleteExamResponse);
+  // Cancel.
+  rpc CancelExam(CancelExamRequest) returns (CancelExamResponse);
+  // Back to draft.
+  rpc ResetExam(ResetExamRequest) returns (ResetExamResponse);
+  // Create attendee rows from the students of the class / batch.
+  rpc PopulateExamResults(PopulateExamResultsRequest) returns (PopulateExamResultsResponse);
+  // Distribute attendees across rooms by capacity.
+  rpc AllocateExamRooms(AllocateExamRoomsRequest) returns (AllocateExamRoomsResponse);
+  // Enter or correct marks for many students.
+  rpc RecordExamMarks(RecordExamMarksRequest) returns (RecordExamMarksResponse);
+}
+
+// ExamResultService: operations on the ExamResult aggregate.
+service ExamResultService {
+  // List ExamResults.
+  rpc ListExamResults(ListExamResultsRequest) returns (ListExamResultsResponse);
+  // Get ExamResult.
+  rpc GetExamResult(GetExamResultRequest) returns (GetExamResultResponse);
+  // Update ExamResult.
+  rpc UpdateExamResult(UpdateExamResultRequest) returns (UpdateExamResultResponse);
+}
+
+// ResultTemplateService: operations on the ResultTemplate aggregate.
+service ResultTemplateService {
+  // List ResultTemplates.
+  rpc ListResultTemplates(ListResultTemplatesRequest) returns (ListResultTemplatesResponse);
+  // Get ResultTemplate.
+  rpc GetResultTemplate(GetResultTemplateRequest) returns (GetResultTemplateResponse);
+  // Create ResultTemplate.
+  rpc CreateResultTemplate(CreateResultTemplateRequest) returns (CreateResultTemplateResponse);
+  // Update ResultTemplate.
+  rpc UpdateResultTemplate(UpdateResultTemplateRequest) returns (UpdateResultTemplateResponse);
+  // Soft-delete ResultTemplate.
+  rpc DeleteResultTemplate(DeleteResultTemplateRequest) returns (DeleteResultTemplateResponse);
+  // List ResultTemplateBands.
+  rpc ListResultTemplateBands(ListResultTemplateBandsRequest) returns (ListResultTemplateBandsResponse);
+  // Get ResultTemplateBand.
+  rpc GetResultTemplateBand(GetResultTemplateBandRequest) returns (GetResultTemplateBandResponse);
+  // Create ResultTemplateBand.
+  rpc CreateResultTemplateBand(CreateResultTemplateBandRequest) returns (CreateResultTemplateBandResponse);
+  // Update ResultTemplateBand.
+  rpc UpdateResultTemplateBand(UpdateResultTemplateBandRequest) returns (UpdateResultTemplateBandResponse);
+  // Soft-delete ResultTemplateBand.
+  rpc DeleteResultTemplateBand(DeleteResultTemplateBandRequest) returns (DeleteResultTemplateBandResponse);
+  // Compute result lines and the marksheet for the exam series.
+  rpc GenerateResults(GenerateResultsRequest) returns (GenerateResultsResponse);
+}
+
+// MarksheetService: operations on the Marksheet aggregate.
+service MarksheetService {
+  // Release a validated marksheet to students.
+  rpc PublishMarksheet(PublishMarksheetRequest) returns (PublishMarksheetResponse);
+  // List Marksheets.
+  rpc ListMarksheets(ListMarksheetsRequest) returns (ListMarksheetsResponse);
+  // Get Marksheet.
+  rpc GetMarksheet(GetMarksheetRequest) returns (GetMarksheetResponse);
+  // Create Marksheet.
+  rpc CreateMarksheet(CreateMarksheetRequest) returns (CreateMarksheetResponse);
+  // Update Marksheet.
+  rpc UpdateMarksheet(UpdateMarksheetRequest) returns (UpdateMarksheetResponse);
+  // Soft-delete Marksheet.
+  rpc DeleteMarksheet(DeleteMarksheetRequest) returns (DeleteMarksheetResponse);
+  // Validate; results become visible.
+  rpc ValidateMarksheet(ValidateMarksheetRequest) returns (ValidateMarksheetResponse);
+  // Cancel.
+  rpc CancelMarksheet(CancelMarksheetRequest) returns (CancelMarksheetResponse);
+  // Back to draft.
+  rpc ResetMarksheet(ResetMarksheetRequest) returns (ResetMarksheetResponse);
+}
+
+// MarksheetLineService: operations on the MarksheetLine aggregate.
+service MarksheetLineService {
+  // List MarksheetLines.
+  rpc ListMarksheetLines(ListMarksheetLinesRequest) returns (ListMarksheetLinesResponse);
+  // Get MarksheetLine.
+  rpc GetMarksheetLine(GetMarksheetLineRequest) returns (GetMarksheetLineResponse);
+  // Report-card data for a student (validated marksheets only for students/guardians).
+  rpc GetStudentResults(GetStudentResultsRequest) returns (GetStudentResultsResponse);
+}
+
+// OperationService: long-running operations started in this module.
+service OperationService {
+  // Live status of a long-running operation started in this module.
+  rpc GetOperation(GetOperationRequest) returns (GetOperationResponse);
+  // Long-running operations of this module started by the caller.
+  rpc ListOperations(ListOperationsRequest) returns (ListOperationsResponse);
+  // Request cancellation of a running operation started in this module.
+  rpc CancelOperation(CancelOperationRequest) returns (CancelOperationResponse);
+}
+
+message ListHomeworksRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListHomeworksResponse {
+  repeated Homework items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetHomeworkRequest {
+  // Homework id (UUID).
+  string id = 1;
+}
+message GetHomeworkResponse {
+  Homework homework = 1;
+}
+
+message CreateHomeworkRequest {
+  Homework homework = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateHomeworkResponse {
+  Homework homework = 1;
+}
+
+message UpdateHomeworkRequest {
+  // Resource with id and etag set.
+  Homework homework = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateHomeworkResponse {
+  Homework homework = 1;
+}
+
+message DeleteHomeworkRequest {
+  // Homework id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteHomeworkResponse {
+}
+
+message ListHomeworkApprovalsRequest {
+  // Homework id (UUID).
+  string homework_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListHomeworkApprovalsResponse {
+  repeated HomeworkApproval items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetHomeworkApprovalRequest {
+  // Homework id (UUID).
+  string homework_id = 1;
+  // HomeworkApproval id (UUID).
+  string id = 2;
+}
+message GetHomeworkApprovalResponse {
+  HomeworkApproval homework_approval = 1;
+}
+
+message CreateHomeworkApprovalRequest {
+  // Homework id (UUID).
+  string homework_id = 1;
+  HomeworkApproval homework_approval = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateHomeworkApprovalResponse {
+  HomeworkApproval homework_approval = 1;
+}
+
+message UpdateHomeworkApprovalRequest {
+  // Homework id (UUID).
+  string homework_id = 1;
+  // Resource with id and etag set.
+  HomeworkApproval homework_approval = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateHomeworkApprovalResponse {
+  HomeworkApproval homework_approval = 1;
+}
+
+message DeleteHomeworkApprovalRequest {
+  // Homework id (UUID).
+  string homework_id = 1;
+  // HomeworkApproval id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteHomeworkApprovalResponse {
+}
+
+message ListHomeworkSubmissionsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListHomeworkSubmissionsResponse {
+  repeated HomeworkSubmission items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetHomeworkSubmissionRequest {
+  // HomeworkSubmission id (UUID).
+  string id = 1;
+}
+message GetHomeworkSubmissionResponse {
+  HomeworkSubmission homework_submission = 1;
+}
+
+message CreateHomeworkSubmissionRequest {
+  HomeworkSubmission homework_submission = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateHomeworkSubmissionResponse {
+  HomeworkSubmission homework_submission = 1;
+}
+
+message UpdateHomeworkSubmissionRequest {
+  // Resource with id and etag set.
+  HomeworkSubmission homework_submission = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateHomeworkSubmissionResponse {
+  HomeworkSubmission homework_submission = 1;
+}
+
+message DeleteHomeworkSubmissionRequest {
+  // HomeworkSubmission id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteHomeworkSubmissionResponse {
+}
+
+message ListAssignmentTypesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListAssignmentTypesResponse {
+  repeated AssignmentType items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetAssignmentTypeRequest {
+  // AssignmentType id (UUID).
+  string id = 1;
+}
+message GetAssignmentTypeResponse {
+  AssignmentType assignment_type = 1;
+}
+
+message CreateAssignmentTypeRequest {
+  AssignmentType assignment_type = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateAssignmentTypeResponse {
+  AssignmentType assignment_type = 1;
+}
+
+message UpdateAssignmentTypeRequest {
+  // Resource with id and etag set.
+  AssignmentType assignment_type = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateAssignmentTypeResponse {
+  AssignmentType assignment_type = 1;
+}
+
+message DeleteAssignmentTypeRequest {
+  // AssignmentType id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteAssignmentTypeResponse {
+}
+
+message ListAssignmentsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListAssignmentsResponse {
+  repeated Assignment items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetAssignmentRequest {
+  // Assignment id (UUID).
+  string id = 1;
+}
+message GetAssignmentResponse {
+  Assignment assignment = 1;
+}
+
+message CreateAssignmentRequest {
+  Assignment assignment = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateAssignmentResponse {
+  Assignment assignment = 1;
+}
+
+message UpdateAssignmentRequest {
+  // Resource with id and etag set.
+  Assignment assignment = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateAssignmentResponse {
+  Assignment assignment = 1;
+}
+
+message DeleteAssignmentRequest {
+  // Assignment id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteAssignmentResponse {
+}
+
+message ListAssignmentSubjectsRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListAssignmentSubjectsResponse {
+  repeated AssignmentSubject items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetAssignmentSubjectRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  // AssignmentSubject id (UUID).
+  string id = 2;
+}
+message GetAssignmentSubjectResponse {
+  AssignmentSubject assignment_subject = 1;
+}
+
+message CreateAssignmentSubjectRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  AssignmentSubject assignment_subject = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateAssignmentSubjectResponse {
+  AssignmentSubject assignment_subject = 1;
+}
+
+message UpdateAssignmentSubjectRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  // Resource with id and etag set.
+  AssignmentSubject assignment_subject = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateAssignmentSubjectResponse {
+  AssignmentSubject assignment_subject = 1;
+}
+
+message DeleteAssignmentSubjectRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  // AssignmentSubject id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteAssignmentSubjectResponse {
+}
+
+message ListAssignmentAllocationsRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListAssignmentAllocationsResponse {
+  repeated AssignmentAllocation items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetAssignmentAllocationRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  // AssignmentAllocation id (UUID).
+  string id = 2;
+}
+message GetAssignmentAllocationResponse {
+  AssignmentAllocation assignment_allocation = 1;
+}
+
+message CreateAssignmentAllocationRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  AssignmentAllocation assignment_allocation = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateAssignmentAllocationResponse {
+  AssignmentAllocation assignment_allocation = 1;
+}
+
+message UpdateAssignmentAllocationRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  // Resource with id and etag set.
+  AssignmentAllocation assignment_allocation = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateAssignmentAllocationResponse {
+  AssignmentAllocation assignment_allocation = 1;
+}
+
+message DeleteAssignmentAllocationRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  // AssignmentAllocation id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteAssignmentAllocationResponse {
+}
+
+message ListAssignmentApprovalsRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListAssignmentApprovalsResponse {
+  repeated AssignmentApproval items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetAssignmentApprovalRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  // AssignmentApproval id (UUID).
+  string id = 2;
+}
+message GetAssignmentApprovalResponse {
+  AssignmentApproval assignment_approval = 1;
+}
+
+message CreateAssignmentApprovalRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  AssignmentApproval assignment_approval = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateAssignmentApprovalResponse {
+  AssignmentApproval assignment_approval = 1;
+}
+
+message UpdateAssignmentApprovalRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  // Resource with id and etag set.
+  AssignmentApproval assignment_approval = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateAssignmentApprovalResponse {
+  AssignmentApproval assignment_approval = 1;
+}
+
+message DeleteAssignmentApprovalRequest {
+  // Assignment id (UUID).
+  string assignment_id = 1;
+  // AssignmentApproval id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteAssignmentApprovalResponse {
+}
+
+message ListAssignmentSubmissionsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListAssignmentSubmissionsResponse {
+  repeated AssignmentSubmission items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetAssignmentSubmissionRequest {
+  // AssignmentSubmission id (UUID).
+  string id = 1;
+}
+message GetAssignmentSubmissionResponse {
+  AssignmentSubmission assignment_submission = 1;
+}
+
+message CreateAssignmentSubmissionRequest {
+  AssignmentSubmission assignment_submission = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateAssignmentSubmissionResponse {
+  AssignmentSubmission assignment_submission = 1;
+}
+
+message UpdateAssignmentSubmissionRequest {
+  // Resource with id and etag set.
+  AssignmentSubmission assignment_submission = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateAssignmentSubmissionResponse {
+  AssignmentSubmission assignment_submission = 1;
+}
+
+message DeleteAssignmentSubmissionRequest {
+  // AssignmentSubmission id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteAssignmentSubmissionResponse {
+}
+
+message ListGradingSchemesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListGradingSchemesResponse {
+  repeated GradingScheme items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetGradingSchemeRequest {
+  // GradingScheme id (UUID).
+  string id = 1;
+}
+message GetGradingSchemeResponse {
+  GradingScheme grading_scheme = 1;
+}
+
+message CreateGradingSchemeRequest {
+  GradingScheme grading_scheme = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateGradingSchemeResponse {
+  GradingScheme grading_scheme = 1;
+}
+
+message UpdateGradingSchemeRequest {
+  // Resource with id and etag set.
+  GradingScheme grading_scheme = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateGradingSchemeResponse {
+  GradingScheme grading_scheme = 1;
+}
+
+message DeleteGradingSchemeRequest {
+  // GradingScheme id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteGradingSchemeResponse {
+}
+
+message ListGradingBandsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListGradingBandsResponse {
+  repeated GradingBand items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetGradingBandRequest {
+  // GradingBand id (UUID).
+  string id = 1;
+}
+message GetGradingBandResponse {
+  GradingBand grading_band = 1;
+}
+
+message CreateGradingBandRequest {
+  GradingBand grading_band = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateGradingBandResponse {
+  GradingBand grading_band = 1;
+}
+
+message UpdateGradingBandRequest {
+  // Resource with id and etag set.
+  GradingBand grading_band = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateGradingBandResponse {
+  GradingBand grading_band = 1;
+}
+
+message DeleteGradingBandRequest {
+  // GradingBand id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteGradingBandResponse {
+}
+
+message ListExamTypesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListExamTypesResponse {
+  repeated ExamType items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetExamTypeRequest {
+  // ExamType id (UUID).
+  string id = 1;
+}
+message GetExamTypeResponse {
+  ExamType exam_type = 1;
+}
+
+message CreateExamTypeRequest {
+  ExamType exam_type = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateExamTypeResponse {
+  ExamType exam_type = 1;
+}
+
+message UpdateExamTypeRequest {
+  // Resource with id and etag set.
+  ExamType exam_type = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateExamTypeResponse {
+  ExamType exam_type = 1;
+}
+
+message DeleteExamTypeRequest {
+  // ExamType id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteExamTypeResponse {
+}
+
+message ListExamSessionsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListExamSessionsResponse {
+  repeated ExamSession items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetExamSessionRequest {
+  // ExamSession id (UUID).
+  string id = 1;
+}
+message GetExamSessionResponse {
+  ExamSession exam_session = 1;
+}
+
+message CreateExamSessionRequest {
+  ExamSession exam_session = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateExamSessionResponse {
+  ExamSession exam_session = 1;
+}
+
+message UpdateExamSessionRequest {
+  // Resource with id and etag set.
+  ExamSession exam_session = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateExamSessionResponse {
+  ExamSession exam_session = 1;
+}
+
+message DeleteExamSessionRequest {
+  // ExamSession id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteExamSessionResponse {
+}
+
+message ListExamsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListExamsResponse {
+  repeated Exam items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetExamRequest {
+  // Exam id (UUID).
+  string id = 1;
+}
+message GetExamResponse {
+  Exam exam = 1;
+}
+
+message CreateExamRequest {
+  Exam exam = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateExamResponse {
+  Exam exam = 1;
+}
+
+message UpdateExamRequest {
+  // Resource with id and etag set.
+  Exam exam = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateExamResponse {
+  Exam exam = 1;
+}
+
+message DeleteExamRequest {
+  // Exam id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteExamResponse {
+}
+
+message ListExamInvigilatorsRequest {
+  // Exam id (UUID).
+  string exam_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListExamInvigilatorsResponse {
+  repeated ExamInvigilator items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetExamInvigilatorRequest {
+  // Exam id (UUID).
+  string exam_id = 1;
+  // ExamInvigilator id (UUID).
+  string id = 2;
+}
+message GetExamInvigilatorResponse {
+  ExamInvigilator exam_invigilator = 1;
+}
+
+message CreateExamInvigilatorRequest {
+  // Exam id (UUID).
+  string exam_id = 1;
+  ExamInvigilator exam_invigilator = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateExamInvigilatorResponse {
+  ExamInvigilator exam_invigilator = 1;
+}
+
+message UpdateExamInvigilatorRequest {
+  // Exam id (UUID).
+  string exam_id = 1;
+  // Resource with id and etag set.
+  ExamInvigilator exam_invigilator = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateExamInvigilatorResponse {
+  ExamInvigilator exam_invigilator = 1;
+}
+
+message DeleteExamInvigilatorRequest {
+  // Exam id (UUID).
+  string exam_id = 1;
+  // ExamInvigilator id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteExamInvigilatorResponse {
+}
+
+message ListExamResultsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListExamResultsResponse {
+  repeated ExamResult items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetExamResultRequest {
+  // ExamResult id (UUID).
+  string id = 1;
+}
+message GetExamResultResponse {
+  ExamResult exam_result = 1;
+}
+
+message UpdateExamResultRequest {
+  // Resource with id and etag set.
+  ExamResult exam_result = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateExamResultResponse {
+  ExamResult exam_result = 1;
+}
+
+message ListResultTemplatesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListResultTemplatesResponse {
+  repeated ResultTemplate items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetResultTemplateRequest {
+  // ResultTemplate id (UUID).
+  string id = 1;
+}
+message GetResultTemplateResponse {
+  ResultTemplate result_template = 1;
+}
+
+message CreateResultTemplateRequest {
+  ResultTemplate result_template = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateResultTemplateResponse {
+  ResultTemplate result_template = 1;
+}
+
+message UpdateResultTemplateRequest {
+  // Resource with id and etag set.
+  ResultTemplate result_template = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateResultTemplateResponse {
+  ResultTemplate result_template = 1;
+}
+
+message DeleteResultTemplateRequest {
+  // ResultTemplate id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteResultTemplateResponse {
+}
+
+message ListResultTemplateBandsRequest {
+  // ResultTemplate id (UUID).
+  string result_template_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListResultTemplateBandsResponse {
+  repeated ResultTemplateBand items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetResultTemplateBandRequest {
+  // ResultTemplate id (UUID).
+  string result_template_id = 1;
+  // ResultTemplateBand id (UUID).
+  string id = 2;
+}
+message GetResultTemplateBandResponse {
+  ResultTemplateBand result_template_band = 1;
+}
+
+message CreateResultTemplateBandRequest {
+  // ResultTemplate id (UUID).
+  string result_template_id = 1;
+  ResultTemplateBand result_template_band = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateResultTemplateBandResponse {
+  ResultTemplateBand result_template_band = 1;
+}
+
+message UpdateResultTemplateBandRequest {
+  // ResultTemplate id (UUID).
+  string result_template_id = 1;
+  // Resource with id and etag set.
+  ResultTemplateBand result_template_band = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateResultTemplateBandResponse {
+  ResultTemplateBand result_template_band = 1;
+}
+
+message DeleteResultTemplateBandRequest {
+  // ResultTemplate id (UUID).
+  string result_template_id = 1;
+  // ResultTemplateBand id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteResultTemplateBandResponse {
+}
+
+message ListMarksheetsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListMarksheetsResponse {
+  repeated Marksheet items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetMarksheetRequest {
+  // Marksheet id (UUID).
+  string id = 1;
+}
+message GetMarksheetResponse {
+  Marksheet marksheet = 1;
+}
+
+message CreateMarksheetRequest {
+  Marksheet marksheet = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateMarksheetResponse {
+  Marksheet marksheet = 1;
+}
+
+message UpdateMarksheetRequest {
+  // Resource with id and etag set.
+  Marksheet marksheet = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateMarksheetResponse {
+  Marksheet marksheet = 1;
+}
+
+message DeleteMarksheetRequest {
+  // Marksheet id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteMarksheetResponse {
+}
+
+message ListMarksheetLinesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListMarksheetLinesResponse {
+  repeated MarksheetLine items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetMarksheetLineRequest {
+  // MarksheetLine id (UUID).
+  string id = 1;
+}
+message GetMarksheetLineResponse {
+  MarksheetLine marksheet_line = 1;
+}
+
+message PublishHomeworkRequest {
+  // Path parameter homeworkId.
+  string homework_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message PublishHomeworkResponse {
+  Homework homework = 1;
+}
+
+message ApproveHomeworkRequest {
+  // Path parameter homeworkId.
+  string homework_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message ApproveHomeworkResponse {
+  Homework homework = 1;
+}
+
+message RejectHomeworkRequest {
+  // Path parameter homeworkId.
+  string homework_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message RejectHomeworkResponse {
+  Homework homework = 1;
+}
+
+message CheckHomeworkSubmissionRequest {
+  // Path parameter homeworkSubmissionId.
+  string homework_submission_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Comments.
+  optional string teacher_comments = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CheckHomeworkSubmissionResponse {
+  HomeworkSubmission homework_submission = 1;
+}
+
+message ReplyToHomeworkFeedbackRequest {
+  // Path parameter homeworkSubmissionId.
+  string homework_submission_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reply. Required.
+  string student_reply = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message ReplyToHomeworkFeedbackResponse {
+  HomeworkSubmission homework_submission = 1;
+}
+
+message PublishAssignmentRequest {
+  // Path parameter assignmentId.
+  string assignment_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message PublishAssignmentResponse {
+  Assignment assignment = 1;
+}
+
+message ApproveAssignmentRequest {
+  // Path parameter assignmentId.
+  string assignment_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message ApproveAssignmentResponse {
+  Assignment assignment = 1;
+}
+
+message RejectAssignmentRequest {
+  // Path parameter assignmentId.
+  string assignment_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message RejectAssignmentResponse {
+  Assignment assignment = 1;
+}
+
+message FinishAssignmentRequest {
+  // Path parameter assignmentId.
+  string assignment_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message FinishAssignmentResponse {
+  Assignment assignment = 1;
+}
+
+message CancelAssignmentRequest {
+  // Path parameter assignmentId.
+  string assignment_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CancelAssignmentResponse {
+  Assignment assignment = 1;
+}
+
+message ResetAssignmentRequest {
+  // Path parameter assignmentId.
+  string assignment_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ResetAssignmentResponse {
+  Assignment assignment = 1;
+}
+
+message SubmitAssignmentSubmissionRequest {
+  // Path parameter assignmentSubmissionId.
+  string assignment_submission_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message SubmitAssignmentSubmissionResponse {
+  AssignmentSubmission assignment_submission = 1;
+}
+
+message AcceptAssignmentSubmissionRequest {
+  // Path parameter assignmentSubmissionId.
+  string assignment_submission_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message AcceptAssignmentSubmissionResponse {
+  AssignmentSubmission assignment_submission = 1;
+}
+
+message RequestSubmissionChangesRequest {
+  // Path parameter assignmentSubmissionId.
+  string assignment_submission_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message RequestSubmissionChangesResponse {
+  AssignmentSubmission assignment_submission = 1;
+}
+
+message RejectAssignmentSubmissionRequest {
+  // Path parameter assignmentSubmissionId.
+  string assignment_submission_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message RejectAssignmentSubmissionResponse {
+  AssignmentSubmission assignment_submission = 1;
+}
+
+message ResetAssignmentSubmissionRequest {
+  // Path parameter assignmentSubmissionId.
+  string assignment_submission_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ResetAssignmentSubmissionResponse {
+  AssignmentSubmission assignment_submission = 1;
+}
+
+message GradeAssignmentSubmissionRequest {
+  // Path parameter assignmentSubmissionId.
+  string assignment_submission_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Marks. Required.
+  string marks = 3;
+  // Feedback.
+  optional string feedback = 4;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 5;
+}
+message GradeAssignmentSubmissionResponse {
+  AssignmentSubmission assignment_submission = 1;
+}
+
+message ScheduleExamSessionRequest {
+  // Path parameter examSessionId.
+  string exam_session_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ScheduleExamSessionResponse {
+  ExamSession exam_session = 1;
+}
+
+message MarkExamSessionHeldRequest {
+  // Path parameter examSessionId.
+  string exam_session_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message MarkExamSessionHeldResponse {
+  ExamSession exam_session = 1;
+}
+
+message CompleteExamSessionRequest {
+  // Path parameter examSessionId.
+  string exam_session_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CompleteExamSessionResponse {
+  ExamSession exam_session = 1;
+}
+
+message CancelExamSessionRequest {
+  // Path parameter examSessionId.
+  string exam_session_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CancelExamSessionResponse {
+  ExamSession exam_session = 1;
+}
+
+message ResetExamSessionRequest {
+  // Path parameter examSessionId.
+  string exam_session_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ResetExamSessionResponse {
+  ExamSession exam_session = 1;
+}
+
+message ScheduleExamRequest {
+  // Path parameter examId.
+  string exam_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ScheduleExamResponse {
+  Exam exam = 1;
+}
+
+message MarkExamHeldRequest {
+  // Path parameter examId.
+  string exam_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message MarkExamHeldResponse {
+  Exam exam = 1;
+}
+
+message MarkExamResultsUpdatedRequest {
+  // Path parameter examId.
+  string exam_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message MarkExamResultsUpdatedResponse {
+  Exam exam = 1;
+}
+
+message CompleteExamRequest {
+  // Path parameter examId.
+  string exam_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CompleteExamResponse {
+  Exam exam = 1;
+}
+
+message CancelExamRequest {
+  // Path parameter examId.
+  string exam_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CancelExamResponse {
+  Exam exam = 1;
+}
+
+message ResetExamRequest {
+  // Path parameter examId.
+  string exam_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ResetExamResponse {
+  Exam exam = 1;
+}
+
+message PopulateExamResultsRequest {
+  // Path parameter examId.
+  string exam_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message PopulateExamResultsResponse {
+  repeated ExamResult items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message AllocateExamRoomsRequest {
+  // Path parameter examId.
+  string exam_id = 1;
+  // Rooms in fill order. Required.
+  repeated string room_ids = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message AllocateExamRoomsResponse {
+  repeated ExamResult items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message RecordExamMarksRequest {
+  // Path parameter examId.
+  string exam_id = 1;
+  // Marks per student (upsert). Required.
+  repeated mysms.common.v1.MarkEntry entries = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message RecordExamMarksResponse {
+  repeated ExamResult items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message GenerateResultsRequest {
+  // Path parameter resultTemplateId.
+  string result_template_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message GenerateResultsResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message ValidateMarksheetRequest {
+  // Path parameter marksheetId.
+  string marksheet_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ValidateMarksheetResponse {
+  Marksheet marksheet = 1;
+}
+
+message CancelMarksheetRequest {
+  // Path parameter marksheetId.
+  string marksheet_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CancelMarksheetResponse {
+  Marksheet marksheet = 1;
+}
+
+message ResetMarksheetRequest {
+  // Path parameter marksheetId.
+  string marksheet_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ResetMarksheetResponse {
+  Marksheet marksheet = 1;
+}
+
+message GetStudentResultsRequest {
+  // Path parameter studentId.
+  string student_id = 1;
+  // Year.
+  optional string academic_year_id = 2;
+  // Series.
+  optional string exam_session_id = 3;
+  // Maximum items to return (1-500, default 50).
+  optional int32 page_size = 4;
+  // Cursor from next_page_token.
+  optional string page_token = 5;
+}
+message GetStudentResultsResponse {
+  repeated ResultCard items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+// Homework set for a class section.
+message Homework {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  string academic_year_id = 3;
+  // Class section. [UUID]
+  string class_section_id = 4;
+  // Subject. [UUID]
+  optional string subject_id = 5;
+  // Teacher. [UUID]
+  optional string assigned_by_staff_id = 6;
+  // Instructions.
+  optional string description = 7;
+  // Attachment. [UUID]
+  optional string attachment_file_id = 8;
+  // Assigned on.
+  google.protobuf.Timestamp assigned_on = 9;
+  // Submission deadline.
+  google.protobuf.Timestamp due_at = 10;
+  // Publication state. Changed only through the workflow operations. Output only.
+  Status status = 11;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 12;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 13;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 14;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 15;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 16;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "published"
+    STATUS_PUBLISHED = 2;
+  }
+}
+
+// Review of homework before publication.
+message HomeworkApproval {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Homework. [UUID] Set from the parent path on create.
+  string homework_id = 2;
+  // Decision.
+  Decision decision = 3;
+  // Comments.
+  optional string comments = 4;
+  // Reviewer. [UUID]
+  optional string decided_by_user_id = 5;
+  // Decision time.
+  google.protobuf.Timestamp decided_at = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+  // Allowed values of decision; REST/JSON uses the lowercase value shown in each comment.
+  enum Decision {
+    DECISION_UNSPECIFIED = 0;
+    // "pending"
+    DECISION_PENDING = 1;
+    // "approved"
+    DECISION_APPROVED = 2;
+    // "rejected"
+    DECISION_REJECTED = 3;
+  }
+}
+
+// Student's homework submission and teacher check. Files are attached through platform.entity_attachment.
+message HomeworkSubmission {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Homework. [UUID]
+  string homework_id = 2;
+  // Student. [UUID]
+  string student_id = 3;
+  // Submission date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string submitted_on = 4;
+  // Check state. Changed only through the workflow operations. Output only.
+  Status status = 5;
+  // Checker. [UUID]
+  optional string checked_by_user_id = 6;
+  // Check date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string checked_on = 7;
+  // Teacher comments.
+  optional string teacher_comments = 8;
+  // Student's reply to comments.
+  optional string student_reply = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "unchecked"
+    STATUS_UNCHECKED = 1;
+    // "checked"
+    STATUS_CHECKED = 2;
+  }
+}
+
+// Assignment category (project, lab record, attendance-based...).
+message AssignmentType {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Type code.
+  string code = 2;
+  // Type name.
+  string name = 3;
+  // How it is graded.
+  GradingBasis grading_basis = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+  // Allowed values of grading_basis; REST/JSON uses the lowercase value shown in each comment.
+  enum GradingBasis {
+    GRADING_BASIS_UNSPECIFIED = 0;
+    // "submission"
+    GRADING_BASIS_SUBMISSION = 1;
+    // "attendance"
+    GRADING_BASIS_ATTENDANCE = 2;
+  }
+  // Display order.
+  optional int32 sort_order = 10;
+  // Whether offered for new picks.
+  optional bool is_active = 11;
+}
+
+// Graded assignment for a class section or course batch.
+message Assignment {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  optional string academic_year_id = 3;
+  // Title.
+  string title = 4;
+  // Instructions.
+  optional string description = 5;
+  // Type. [UUID]
+  optional string assignment_type_id = 6;
+  // Class section (K-12). [UUID]
+  optional string class_section_id = 7;
+  // Course (higher education). [UUID]
+  optional string course_id = 8;
+  // Batch (higher education). [UUID]
+  optional string batch_id = 9;
+  // Teacher who set it. [UUID]
+  optional string assigned_by_staff_id = 10;
+  // Teacher who grades it. [UUID]
+  optional string reviewer_staff_id = 11;
+  // Maximum marks. [Decimal string]
+  optional string max_marks = 12;
+  // Issue date.
+  google.protobuf.Timestamp issued_on = 13;
+  // Submission deadline.
+  google.protobuf.Timestamp due_at = 14;
+  // Attachment. [UUID]
+  optional string attachment_file_id = 15;
+  // State. Changed only through the workflow operations. Output only.
+  Status status = 16;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 17;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 18;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 19;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 20;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 21;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "published"
+    STATUS_PUBLISHED = 2;
+    // "ongoing"
+    STATUS_ONGOING = 3;
+    // "completed"
+    STATUS_COMPLETED = 4;
+    // "cancelled"
+    STATUS_CANCELLED = 5;
+  }
+}
+
+// Subject(s) an assignment assesses.
+message AssignmentSubject {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Assignment. [UUID] Set from the parent path on create.
+  string assignment_id = 2;
+  // Subject. [UUID]
+  string subject_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// Students an assignment is allocated to (when not the whole class).
+message AssignmentAllocation {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Assignment. [UUID] Set from the parent path on create.
+  string assignment_id = 2;
+  // Student. [UUID]
+  string student_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// Review of an assignment before publication.
+message AssignmentApproval {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Assignment. [UUID] Set from the parent path on create.
+  string assignment_id = 2;
+  // Decision.
+  Decision decision = 3;
+  // Comments.
+  optional string comments = 4;
+  // Reviewer. [UUID]
+  optional string decided_by_user_id = 5;
+  // Decision time.
+  google.protobuf.Timestamp decided_at = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+  // Allowed values of decision; REST/JSON uses the lowercase value shown in each comment.
+  enum Decision {
+    DECISION_UNSPECIFIED = 0;
+    // "pending"
+    DECISION_PENDING = 1;
+    // "approved"
+    DECISION_APPROVED = 2;
+    // "rejected"
+    DECISION_REJECTED = 3;
+  }
+}
+
+// Student's submission and grading. Files are attached through platform.entity_attachment.
+message AssignmentSubmission {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Assignment. [UUID]
+  string assignment_id = 2;
+  // Student. [UUID]
+  string student_id = 3;
+  // Submission text.
+  optional string content = 4;
+  // Submission time.
+  google.protobuf.Timestamp submitted_at = 5;
+  // Submission state. Changed only through the workflow operations. Output only.
+  Status status = 6;
+  // Marks awarded. [Decimal string]
+  optional string marks_obtained = 7;
+  // Grader. [UUID]
+  optional string graded_by_user_id = 8;
+  // Grading date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string graded_on = 9;
+  // Feedback to the student.
+  optional string feedback = 10;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 11;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 12;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 14;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 15;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "submitted"
+    STATUS_SUBMITTED = 2;
+    // "change_requested"
+    STATUS_CHANGE_REQUESTED = 3;
+    // "accepted"
+    STATUS_ACCEPTED = 4;
+    // "rejected"
+    STATUS_REJECTED = 5;
+    // "graded"
+    STATUS_GRADED = 6;
+    // "cancelled"
+    STATUS_CANCELLED = 7;
+  }
+}
+
+// Grading scheme: scholastic (marks to grade) or co-scholastic (descriptive indicators).
+message GradingScheme {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Year the scheme applies to (NULL = all years). [UUID]
+  optional string academic_year_id = 3;
+  // Scheme name.
+  string name = 4;
+  // Scholastic or co-scholastic.
+  SchemeType scheme_type = 5;
+  // Method.
+  GradingMethod grading_method = 6;
+  // Co-scholastic indicators / areas assessed.
+  google.protobuf.Value criteria = 7;
+  // Whether usable.
+  bool is_active = 8;
+  // Reusable template copied into courses and cohorts.
+  bool is_template = 14;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+  // Allowed values of scheme_type; REST/JSON uses the lowercase value shown in each comment.
+  enum SchemeType {
+    SCHEME_TYPE_UNSPECIFIED = 0;
+    // "scholastic"
+    SCHEME_TYPE_SCHOLASTIC = 1;
+    // "co_scholastic"
+    SCHEME_TYPE_CO_SCHOLASTIC = 2;
+  }
+  // Allowed values of grading_method; REST/JSON uses the lowercase value shown in each comment.
+  enum GradingMethod {
+    GRADING_METHOD_UNSPECIFIED = 0;
+    // "percentage_band"
+    GRADING_METHOD_PERCENTAGE_BAND = 1;
+    // "cbse"
+    GRADING_METHOD_CBSE = 2;
+    // "pass_fail"
+    GRADING_METHOD_PASS_FAIL = 3;
+    // "descriptive"
+    GRADING_METHOD_DESCRIPTIVE = 4;
+  }
+}
+
+// Band of a grading scheme mapping a percentage range to a grade.
+message GradingBand {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Scheme the band belongs to (NULL = standalone band selected per result template). [UUID]
+  optional string grading_scheme_id = 2;
+  // Lower bound (inclusive). [Decimal string]
+  string min_percent = 3;
+  // Upper bound (inclusive). [Decimal string]
+  string max_percent = 4;
+  // Grade / result label.
+  string grade_label = 5;
+  // Grade point. [Decimal string]
+  optional string grade_point = 6;
+  // Whether the band is a pass.
+  bool is_pass = 7;
+  // Descriptor.
+  optional string description = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+}
+
+// Exam category (unit test, mid-term, final...).
+message ExamType {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Code.
+  string code = 2;
+  // Name.
+  string name = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+  // Display order.
+  optional int32 sort_order = 9;
+  // Whether offered for new picks.
+  optional bool is_active = 10;
+}
+
+// Exam series for a class/course batch over a date range (e.g. Term-1 Exams).
+message ExamSession {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  optional string academic_year_id = 3;
+  // Term. [UUID]
+  optional string academic_term_id = 4;
+  // Exam type. [UUID]
+  string exam_type_id = 5;
+  // Series code.
+  string code = 6;
+  // Series name.
+  string name = 7;
+  // Grade (K-12). [UUID]
+  optional string grade_level_id = 8;
+  // Course (higher education). [UUID]
+  optional string course_id = 9;
+  // Batch (higher education). [UUID]
+  optional string batch_id = 10;
+  // Marks or grade evaluation.
+  EvaluationType evaluation_type = 11;
+  // First exam date. [ISO-8601 date (YYYY-MM-DD)]
+  string start_date = 12;
+  // Last exam date. [ISO-8601 date (YYYY-MM-DD)]
+  string end_date = 13;
+  // Venue (when external).
+  optional string venue = 14;
+  // State. Changed only through the workflow operations. Output only.
+  Status status = 15;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 16;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 17;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 18;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 19;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 20;
+  // Allowed values of evaluation_type; REST/JSON uses the lowercase value shown in each comment.
+  enum EvaluationType {
+    EVALUATION_TYPE_UNSPECIFIED = 0;
+    // "marks"
+    EVALUATION_TYPE_MARKS = 1;
+    // "grade"
+    EVALUATION_TYPE_GRADE = 2;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "scheduled"
+    STATUS_SCHEDULED = 2;
+    // "held"
+    STATUS_HELD = 3;
+    // "cancelled"
+    STATUS_CANCELLED = 4;
+    // "done"
+    STATUS_DONE = 5;
+  }
+}
+
+// One paper of an exam series for a subject.
+message Exam {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Exam series. [UUID]
+  string exam_session_id = 2;
+  // Subject. [UUID]
+  string subject_id = 3;
+  // Class section sitting the paper (K-12). [UUID]
+  optional string class_section_id = 4;
+  // Paper code.
+  string code = 5;
+  // Paper name.
+  string name = 6;
+  // Start.
+  google.protobuf.Timestamp start_at = 7;
+  // End.
+  google.protobuf.Timestamp end_at = 8;
+  // Maximum marks. [Decimal string]
+  string total_marks = 9;
+  // Minimum marks to pass. [Decimal string]
+  string pass_marks = 10;
+  // State. Changed only through the workflow operations. Output only.
+  Status status = 11;
+  // All marks have been entered.
+  bool results_entered = 12;
+  // Notes.
+  optional string notes = 13;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 14;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 15;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 16;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 17;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 18;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "scheduled"
+    STATUS_SCHEDULED = 2;
+    // "held"
+    STATUS_HELD = 3;
+    // "result_updated"
+    STATUS_RESULT_UPDATED = 4;
+    // "cancelled"
+    STATUS_CANCELLED = 5;
+    // "done"
+    STATUS_DONE = 6;
+  }
+}
+
+// Staff responsible for a paper.
+message ExamInvigilator {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Paper. [UUID] Set from the parent path on create.
+  string exam_id = 2;
+  // Invigilator / examiner. [UUID]
+  string staff_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// Student sitting a paper, with room and marks.
+message ExamResult {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Paper. [UUID]
+  string exam_id = 2;
+  // Student. [UUID]
+  string student_id = 3;
+  // Exam room. [UUID]
+  optional string room_id = 4;
+  // Attendance.
+  AttendanceStatus attendance_status = 5;
+  // Marks. [Decimal string]
+  optional string marks = 6;
+  // Note.
+  optional string note = 7;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 8;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 9;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 10;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 11;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 12;
+  // Allowed values of attendance_status; REST/JSON uses the lowercase value shown in each comment.
+  enum AttendanceStatus {
+    ATTENDANCE_STATUS_UNSPECIFIED = 0;
+    // "present"
+    ATTENDANCE_STATUS_PRESENT = 1;
+    // "absent"
+    ATTENDANCE_STATUS_ABSENT = 2;
+  }
+  // Maximum marks snapshot at entry time. [Decimal string] Output only.
+  optional string max_marks = 13;
+  // Grade awarded from the grading scheme. Output only.
+  optional string grade_label = 14;
+  // Grade points for GPA systems. [Decimal string] Output only.
+  optional string grade_point = 15;
+  // Credits the exam carries. [Decimal string] Output only.
+  optional string credits = 16;
+  // Graded outcome: pass, fail, absent, withheld or pending. Output only.
+  optional string result_status = 17;
+  // Marksheet line this result was aggregated into. [UUID] Output only.
+  optional string marksheet_line_id = 18;
+  // User who entered/approved the marks. [UUID] Output only.
+  optional string evaluated_by_user_id = 19;
+  // When marks were entered. Output only.
+  google.protobuf.Timestamp evaluated_at = 20;
+}
+
+// Rules for generating results of an exam series (grading scheme, result date).
+message ResultTemplate {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Exam series. [UUID]
+  string exam_session_id = 2;
+  // Grading scheme applied (its bands are used unless specific bands are chosen in result_template_band). [UUID]
+  optional string grading_scheme_id = 3;
+  // Name.
+  string name = 4;
+  // Result date. [ISO-8601 date (YYYY-MM-DD)]
+  string result_date = 5;
+  // State.
+  Status status = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "result_generated"
+    STATUS_RESULT_GENERATED = 2;
+  }
+}
+
+// Specific grading band used by a result template (bands may be shared by several templates).
+message ResultTemplateBand {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Result template. [UUID] Set from the parent path on create.
+  string result_template_id = 2;
+  // Band. [UUID]
+  string grading_band_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// Generated marksheet register for an exam series.
+message Marksheet {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Exam series. [UUID]
+  string exam_session_id = 2;
+  // Template used. [UUID]
+  string result_template_id = 3;
+  // Name.
+  string name = 4;
+  // Generation date. [ISO-8601 date (YYYY-MM-DD)]
+  string generated_on = 5;
+  // Generated by. [UUID]
+  string generated_by_user_id = 6;
+  // State. Changed only through the workflow operations. Output only.
+  Status status = 7;
+  // Number passed.
+  optional int32 total_passed = 8;
+  // Number failed.
+  optional int32 total_failed = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "validated"
+    STATUS_VALIDATED = 2;
+    // "cancelled"
+    STATUS_CANCELLED = 3;
+  }
+  // When results were released to students/guardians. Output only.
+  google.protobuf.Timestamp published_at = 15;
+  // User who published the marksheet. [UUID] Output only.
+  optional string published_by_user_id = 16;
+  // Whether guardians can see it once published.
+  optional bool visible_to_guardians = 17;
+}
+
+// One student's aggregate on a marksheet.
+message MarksheetLine {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Marksheet. [UUID]
+  string marksheet_id = 2;
+  // Student. [UUID]
+  string student_id = 3;
+  // Total marks. [Decimal string]
+  optional string total_marks = 4;
+  // Percentage. [Decimal string]
+  optional string percentage = 5;
+  // Grade.
+  optional string grade_label = 6;
+  // Result.
+  optional ResultStatus result_status = 7;
+  // Generation date. [ISO-8601 date (YYYY-MM-DD)]
+  string generated_on = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+  // Allowed values of result_status; REST/JSON uses the lowercase value shown in each comment.
+  enum ResultStatus {
+    RESULT_STATUS_UNSPECIFIED = 0;
+    // "pass"
+    RESULT_STATUS_PASS = 1;
+    // "fail"
+    RESULT_STATUS_FAIL = 2;
+  }
+  // Credits attempted in the period (higher-ed). [Decimal string] Output only.
+  optional string credits_attempted = 14;
+  // Credits earned in the period (higher-ed). [Decimal string] Output only.
+  optional string credits_earned = 15;
+  // Total weighted grade points (higher-ed). [Decimal string] Output only.
+  optional string grade_points = 16;
+  // Term GPA (higher-ed). [Decimal string] Output only.
+  optional string sgpa = 17;
+  // Cumulative GPA to date (higher-ed). [Decimal string] Output only.
+  optional string cgpa = 18;
+}
+
+message ResultCard {
+  // Exam series. Required. [UUID]
+  string exam_session_id = 1;
+  // Aggregate.
+  MarksheetLine marksheet_line = 2;
+  // Per-paper results.
+  repeated ExamResult results = 3;
+}
+
+message PublishMarksheetRequest {
+  // Path parameter marksheetId.
+  string marksheet_id = 1;
+  // ETag from the last read.
+  string etag = 2;
+  // Whether guardians can see it.
+  optional bool visible_to_guardians = 3;
+}
+message PublishMarksheetResponse {
+  Marksheet marksheet = 1;
+}
+
+message GetOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+}
+
+message GetOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message ListOperationsRequest {
+  // Filter by kind.
+  optional string kind = 1;
+  // Page size.
+  optional int32 page_size = 2;
+  // Page token.
+  optional string page_token = 3;
+}
+
+message ListOperationsResponse {
+  repeated mysms.common.v1.Operation items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message CancelOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+
+message CancelOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}

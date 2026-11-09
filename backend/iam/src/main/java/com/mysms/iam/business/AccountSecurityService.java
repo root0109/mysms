@@ -1,0 +1,210 @@
+package com.mysms.iam.business;
+
+import com.mysms.authclient.AuthContext;
+import com.mysms.authclient.DataScope;
+import com.mysms.contracts.iam.model.AcceptTermsRequest;
+import com.mysms.contracts.iam.model.ChangePasswordRequest;
+import com.mysms.contracts.iam.model.SetUserCredentialsRequest;
+import com.mysms.contracts.iam.model.UserAccount;
+import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.error.DuplicateResourceException;
+import com.mysms.core.error.FieldError;
+import com.mysms.core.error.PermissionDeniedException;
+import com.mysms.core.error.ResourceNotFoundException;
+import com.mysms.core.error.ValidationFailedException;
+import com.mysms.core.outbox.AuditWriter;
+import com.mysms.core.outbox.OutboxWriter;
+import com.mysms.core.validation.DtoValidator;
+import com.mysms.iam.config.IamDatabaseConfig;
+import com.mysms.iam.config.IamEventsConfig;
+import com.mysms.iam.events.IamEvents;
+import com.mysms.iam.mapper.UserAccountMapper;
+import com.mysms.iam.repository.AccountRepository;
+import com.mysms.iam.repository.AuthTokenRepository;
+import com.mysms.iam.repository.GrantRepository;
+import com.mysms.iam.repository.SignInAccount;
+import com.mysms.iam.repository.SignInSessionRepository;
+import com.mysms.iam.repository.UserAccountRepository;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+
+/**
+ * The account's own credentials and an administrator's reset of them (iam.ChangePassword, iam.SetUserCredentials,
+ * iam.AcceptTerms), JAVA-CODING-RULES §16:
+ * <ul>
+ *   <li>passwords are 12 to 1024 characters and stored only as argon2id hashes;</li>
+ *   <li>changing one's password needs the current one (a wrong one counts towards the sign-in lockout, and a
+ *       locked account cannot try) and signs every other session out, ending any open MFA step;</li>
+ *   <li>an administrator may set another account's password only when they hold every permission of that account
+ *       tenant-wide (no takeover of a more privileged account), never their own; it signs the account out
+ *       everywhere and, by default, requires a new password at the next sign-in.</li>
+ * </ul>
+ */
+@Service
+public class AccountSecurityService {
+
+    static final int MIN_PASSWORD = 12;
+    static final int MAX_PASSWORD = 1024;
+    private static final String PERMISSION_SET_CREDENTIALS = "iam.user_account.set_user_credentials";
+
+    private final ModuleDatabase database;
+    private final AccountRepository accounts;
+    private final UserAccountRepository rows;
+    private final UserAccountMapper mapper;
+    private final AuthTokenRepository tokens;
+    private final SignInSessionRepository sessions;
+    private final GrantRepository grants;
+    private final AccessRules rules;
+    private final PasswordHasher passwords;
+    private final OutboxWriter outbox;
+    private final AuditWriter audit;
+    private final DtoValidator validator;
+    private final Clock clock;
+
+    public AccountSecurityService(@Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
+                                  AccountRepository accounts, UserAccountRepository rows, UserAccountMapper mapper,
+                                  AuthTokenRepository tokens, SignInSessionRepository sessions, GrantRepository grants,
+                                  AccessRules rules, PasswordHasher passwords,
+                                  @Qualifier(IamEventsConfig.OUTBOX) OutboxWriter outbox,
+                                  @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator,
+                                  Clock clock) {
+        this.database = database;
+        this.accounts = accounts;
+        this.rows = rows;
+        this.mapper = mapper;
+        this.tokens = tokens;
+        this.sessions = sessions;
+        this.grants = grants;
+        this.rules = rules;
+        this.passwords = passwords;
+        this.outbox = outbox;
+        this.audit = audit;
+        this.validator = validator;
+        this.clock = clock;
+    }
+
+    /** iam.ChangePassword: the caller's own password, given the current one. */
+    public void changePassword(ChangePasswordRequest request) {
+        validator.validate(request);
+        requireStrong("newPassword", request.getNewPassword());
+        AuthContext caller = AuthContext.require();
+        UUID user = caller.userId();
+        OffsetDateTime now = now();
+        Optional<SignInAccount> account = database.tx().read(() -> accounts.findSignInById(user));
+        if (account.isPresent() && !account.get().canSignInAt(now)) {
+            throw new PermissionDeniedException("Too many failed attempts; try again later.");
+        }
+        String current = request.getCurrentPassword();
+        boolean matches = account.isPresent() && current.length() <= MAX_PASSWORD
+                && passwords.matches(current, account.get().passwordHash());
+        if (!matches) {
+            database.tx().write(() -> {
+                accounts.recordFailure(user, now, SignInService.LOCK_THRESHOLD, SignInService.MAX_LOCK_MINUTES);
+                outbox.publish(IamEvents.SIGN_IN_FAILED, IamEvents.USER_ACCOUNT, user, IamEvents.payload(user));
+                return null;
+            });
+            throw new ValidationFailedException(List.of(new FieldError("currentPassword", "does not match",
+                    "INVALID_PASSWORD")));
+        }
+        String hash = passwords.hash(request.getNewPassword());
+        database.tx().write(() -> {
+            if (accounts.setCredentials(user, hash, null, false, now, user) == 0) {
+                throw new ResourceNotFoundException(IamEvents.USER_ACCOUNT, user);
+            }
+            tokens.revokeOneTime(user, now);
+            Optional<UUID> session = caller.sessionId();
+            if (session.isPresent()) {
+                tokens.revokeAllExcept(user, session.get(), now);
+                sessions.endAllExcept(user, session.get(), now);
+            } else {
+                tokens.revokeAll(user, now);
+                sessions.endAll(user, now);
+            }
+            audit.recordUpdate(IamEvents.USER_ACCOUNT, user, List.of("password"));
+            outbox.publish(IamEvents.PASSWORD_CHANGED, IamEvents.USER_ACCOUNT, user, IamEvents.payload(user));
+            return null;
+        });
+    }
+
+    /** iam.SetUserCredentials: an administrator sets another account's login name and a temporary password. */
+    public UserAccount setUserCredentials(UUID userId, SetUserCredentialsRequest request) {
+        validator.validate(request);
+        requireStrong("temporaryPassword", request.getTemporaryPassword());
+        String requested = request.getUsername();
+        String username = requested == null ? null : requested.trim();
+        if (username != null && (username.isEmpty() || username.length() > 150)) {
+            throw new ValidationFailedException(List.of(new FieldError("username", "must be 1 to 150 characters",
+                    "Size")));
+        }
+        boolean mustReset = !Boolean.FALSE.equals(request.getMustResetPassword());
+        rules.requireNotSelf(userId);
+        DataScope scope = DataScope.current(PERMISSION_SET_CREDENTIALS);
+        String hash = passwords.hash(request.getTemporaryPassword());
+        UUID actor = AuthContext.require().userId();
+        OffsetDateTime now = now();
+        return database.tx().write(() -> {
+            rows.findById(userId).orElseThrow(() -> new ResourceNotFoundException(IamEvents.USER_ACCOUNT, userId));
+            // user accounts are tenant-level rows: changing their credentials needs the permission tenant-wide
+            scope.requireWritable(Optional.empty());
+            LocalDate today = LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC);
+            for (String code : grants.heldOrScheduledPermissions(userId, today)) {
+                rules.requireTenantWide(code);
+            }
+            if (username != null && accounts.identifierTaken(username, userId)) {
+                throw new DuplicateResourceException("Another user account already signs in with this username.");
+            }
+            accounts.setCredentials(userId, hash, username, mustReset, now, actor);
+            tokens.revokeAll(userId, now);
+            tokens.revokeOneTime(userId, now);
+            sessions.deactivateDevices(userId, now);
+            sessions.endAll(userId, now);
+            audit.recordUpdate(IamEvents.USER_ACCOUNT, userId, username == null ? List.of("password", "mustResetPassword")
+                    : List.of("username", "password", "mustResetPassword"));
+            outbox.publish(IamEvents.CREDENTIALS_SET, IamEvents.USER_ACCOUNT, userId, IamEvents.payload(userId));
+            return mapper.toDto(rows.findById(userId).orElseThrow());
+        });
+    }
+
+    /** iam.AcceptTerms: records when the caller accepted the terms; the version accepted is kept in the audit. */
+    public UserAccount acceptTerms(AcceptTermsRequest request) {
+        validator.validate(request);
+        String version = request.getTermsVersion().trim();
+        if (version.isEmpty() || version.length() > 50) {
+            throw new ValidationFailedException(List.of(new FieldError("termsVersion", "must be 1 to 50 characters",
+                    "Size")));
+        }
+        UUID user = AuthContext.require().userId();
+        OffsetDateTime now = now();
+        return database.tx().write(() -> {
+            if (accounts.acceptTerms(user, now) == 0) {
+                throw new ResourceNotFoundException(IamEvents.USER_ACCOUNT, user);
+            }
+            audit.recordTransition(IamEvents.USER_ACCOUNT, user, "acceptTerms", List.of("termsAcceptedAt"),
+                    "terms version " + version);
+            outbox.publish(IamEvents.TERMS_ACCEPTED, IamEvents.USER_ACCOUNT, user, IamEvents.payload(user));
+            return mapper.toDto(rows.findById(user).orElseThrow());
+        });
+    }
+
+    static void requireStrong(String field, String password) {
+        if (password == null || password.length() < MIN_PASSWORD || password.length() > MAX_PASSWORD) {
+            throw new ValidationFailedException(List.of(new FieldError(field, "must be " + MIN_PASSWORD + " to "
+                    + MAX_PASSWORD + " characters", "PASSWORD_POLICY")));
+        }
+        if (password.isBlank()) {
+            throw new ValidationFailedException(List.of(new FieldError(field, "must not be blank", "PASSWORD_POLICY")));
+        }
+    }
+
+    private OffsetDateTime now() {
+        return OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+    }
+}

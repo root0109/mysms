@@ -1,0 +1,196 @@
+erDiagram
+    lms__assignment["lms.assignment"] {
+        uuid id PK
+        varchar(200) title "NN"
+        text question "NN"
+        varchar(30) submission_type "NN"
+        uuid course_id FK
+        boolean is_graded "NN"
+        boolean show_model_answer "NN"
+        text model_answer
+        boolean scheduling_enabled "NN"
+        timestamptz schedule_start
+        timestamptz schedule_end
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(30) submission_mode "NN"
+        integer min_group_size
+        integer max_group_size
+        numeric peer_review_points "8,2"
+        boolean uses_inline_authoring "NN"
+        boolean is_in_repository "NN"
+        integer version "NN"
+        uuid superseded_by_id FK
+        timestamptz published_at
+    }
+    lms__assignment_submission["lms.assignment_submission"] {
+        uuid id PK
+        uuid assignment_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid lesson_id FK
+        uuid course_id FK
+        varchar(30) submission_type
+        text question_snapshot
+        text answer
+        uuid attachment_file_id FK "→ platform.file_object (logical)"
+        varchar(30) status "NN"
+        uuid evaluator_user_id FK "→ iam.user_account (logical)"
+        text evaluator_comments
+        uuid content_item_id FK
+        uuid group_id FK
+        varchar(255) title
+        timestamptz submitted_at
+        boolean is_final "NN"
+        timestamptz finalized_at
+    }
+    lms__assignment_group["lms.assignment_group"] {
+        uuid id PK
+        uuid content_item_id FK "NN"
+        uuid cohort_id FK "NN"
+        varchar(120) name "NN"
+        numeric points "8,2"
+        boolean is_active "NN"
+        uuid discussion_topic_id FK
+        boolean is_reassigned "NN"
+    }
+    lms__assignment_group_member["lms.assignment_group_member"] {
+        uuid id PK
+        uuid assignment_group_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid content_item_id FK "NN"
+        varchar(30) status "NN"
+    }
+    lms__peer_review["lms.peer_review"] {
+        uuid id PK
+        uuid assignment_group_id FK "NN"
+        uuid reviewer_user_id FK "NN · → iam.user_account (logical)"
+        uuid reviewee_user_id FK "NN · → iam.user_account (logical)"
+        numeric points "8,2"
+    }
+    lms__programming_exercise["lms.programming_exercise"] {
+        uuid id PK
+        varchar(200) title "NN"
+        text problem_statement "NN"
+        varchar(30) language "NN"
+        text starter_code
+    }
+    lms__exercise_test_case["lms.exercise_test_case"] {
+        uuid id PK
+        uuid exercise_id FK "NN"
+        integer sort_order "NN"
+        text input
+        text expected_output "NN"
+        boolean is_hidden "NN"
+    }
+    lms__exercise_submission["lms.exercise_submission"] {
+        uuid id PK
+        uuid exercise_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        text code "NN"
+        boolean is_full_code "NN"
+        varchar(30) status
+    }
+    lms__exercise_test_result["lms.exercise_test_result"] {
+        uuid id PK
+        uuid exercise_submission_id FK "NN"
+        uuid test_case_id FK
+        text input
+        text expected_output
+        text actual_output
+        varchar(30) status "NN"
+    }
+    lms__plagiarism_account["lms.plagiarism_account"] {
+        uuid id PK
+        varchar(40) provider "NN"
+        varchar(100) account_ref "NN"
+        varchar(100) sub_account_ref
+        varchar(500) api_url
+        text shared_secret_enc
+        boolean is_default "NN"
+        uuid default_teacher_user_id FK "→ iam.user_account (logical)"
+        varchar(255) default_teacher_email
+        varchar(100) default_teacher_first_name
+        varchar(100) default_teacher_last_name
+    }
+    lms__plagiarism_cohort_link["lms.plagiarism_cohort_link"] {
+        uuid id PK
+        uuid cohort_id FK "NN"
+        uuid plagiarism_account_id FK "NN"
+        varchar(100) account_ref
+        varchar(100) provider_class_ref
+        varchar(255) provider_class_title
+        timestamptz provider_class_end_at
+        varchar(100) provider_assignment_ref
+        varchar(255) provider_assignment_title
+        timestamptz provider_assignment_start_at
+        timestamptz provider_assignment_due_at
+        text provider_assignment_instructions
+        boolean student_report_access "NN"
+        varchar(255) teacher_email
+        varchar(100) teacher_first_name
+        varchar(100) teacher_last_name
+        boolean class_created "NN"
+        boolean assignment_created "NN"
+    }
+    lms__plagiarism_user_link["lms.plagiarism_user_link"] {
+        uuid id PK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid plagiarism_account_id FK "NN"
+        varchar(100) account_ref
+        varchar(100) provider_user_ref "NN"
+    }
+    lms__plagiarism_report["lms.plagiarism_report"] {
+        uuid id PK
+        uuid plagiarism_account_id FK
+        uuid entity_attachment_id FK "→ platform.entity_attachment (logical)"
+        uuid file_id FK "NN · → platform.file_object (logical)"
+        varchar(30) item_kind
+        varchar(100) provider_submission_ref
+        varchar(100) provider_object_ref
+        timestamptz submitted_at
+        timestamptz provider_submitted_at
+        varchar(40) status
+        varchar(20) similarity_score
+        varchar(1000) report_url
+        numeric tolerance "6,2"
+        varchar(40) grademark_status
+        varchar(40) error_code
+        text error_text
+        timestamptz last_checked_at
+        timestamptz received_at
+    }
+    lms__cohort["lms.cohort"] {
+        uuid id PK "drawn on: Cohorts, schedules & live classes"
+    }
+    lms__content_item["lms.content_item"] {
+        uuid id PK "drawn on: Outline, content delivery & progress"
+    }
+    lms__course["lms.course"] {
+        uuid id PK "drawn on: Courses, versions & catalogue"
+    }
+    lms__forum_topic["lms.forum_topic"] {
+        uuid id PK "drawn on: Discussions"
+    }
+    lms__lesson["lms.lesson"] {
+        uuid id PK "drawn on: Outline, content delivery & progress"
+    }
+    lms__course |o--o{ lms__assignment : "course_id"
+    lms__assignment ||--o{ lms__assignment_submission : "assignment_id"
+    lms__lesson |o--o{ lms__assignment_submission : "lesson_id"
+    lms__course |o--o{ lms__assignment_submission : "course_id"
+    lms__content_item |o--o{ lms__assignment_submission : "content_item_id"
+    lms__assignment_group |o--o{ lms__assignment_submission : "group_id"
+    lms__programming_exercise ||--o{ lms__exercise_test_case : "exercise_id"
+    lms__programming_exercise ||--o{ lms__exercise_submission : "exercise_id"
+    lms__exercise_submission ||--o{ lms__exercise_test_result : "exercise_submission_id"
+    lms__exercise_test_case |o--o{ lms__exercise_test_result : "test_case_id"
+    lms__content_item ||--o{ lms__assignment_group : "content_item_id"
+    lms__cohort ||--o{ lms__assignment_group : "cohort_id"
+    lms__forum_topic |o--o{ lms__assignment_group : "discussion_topic_id"
+    lms__assignment_group ||--o{ lms__assignment_group_member : "assignment_group_id"
+    lms__content_item ||--o{ lms__assignment_group_member : "content_item_id"
+    lms__assignment_group ||--o{ lms__peer_review : "assignment_group_id"
+    lms__cohort ||--o{ lms__plagiarism_cohort_link : "cohort_id"
+    lms__plagiarism_account ||--o{ lms__plagiarism_cohort_link : "plagiarism_account_id"
+    lms__plagiarism_account ||--o{ lms__plagiarism_user_link : "plagiarism_account_id"
+    lms__plagiarism_account |o--o{ lms__plagiarism_report : "plagiarism_account_id"
+    lms__assignment |o--o{ lms__assignment : "superseded_by_id"

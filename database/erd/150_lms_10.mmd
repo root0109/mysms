@@ -1,0 +1,190 @@
+erDiagram
+    lms__drive_item["lms.drive_item"] {
+        uuid id PK
+        uuid owner_user_id FK "NN · → iam.user_account (logical)"
+        uuid file_id FK "→ platform.file_object (logical)"
+        varchar(40) item_type
+        varchar(100) icon
+        varchar(255) title "NN"
+        text description
+        varchar(500) keywords
+        bigint size_bytes
+        varchar(1000) link_url
+        timestamptz uploaded_at "NN"
+        uuid course_id FK
+        boolean is_shared "NN"
+        integer like_count "NN"
+        integer dislike_count "NN"
+    }
+    lms__drive_item_share["lms.drive_item_share"] {
+        uuid id PK
+        uuid drive_item_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        varchar(30) reaction
+    }
+    lms__import_export_job["lms.import_export_job"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(30) direction "NN"
+        varchar(30) package_format "NN"
+        varchar(30) scope "NN"
+        uuid course_id FK
+        uuid cohort_id FK
+        uuid target_chapter_id FK
+        boolean add_to_repository "NN"
+        uuid package_file_id FK "→ platform.file_object (logical)"
+        uuid requested_by FK "NN · → iam.user_account (logical)"
+        date requested_on "NN"
+        date started_on
+        varchar(30) status "NN"
+        varchar(30) unarchive_status
+        text error_log
+        varchar(50) cohort_code
+        date cohort_start_date
+        varchar(50) course_code
+        varchar(20) course_version
+        varchar(200) course_title
+    }
+    lms__settings["lms.settings"] {
+        uuid id PK
+        varchar(500) livecode_url
+        uuid default_currency_id FK "→ master.currency (logical)"
+        boolean apply_gst "NN"
+        boolean show_usd_equivalent "NN"
+        boolean apply_rounding "NN"
+        varchar(60) payment_gateway
+        boolean identify_user_category "NN"
+        boolean persona_captured "NN"
+        boolean lms_is_default_home "NN"
+        boolean send_calendar_invite_for_evaluations "NN"
+        boolean allow_guest_access "NN"
+        boolean disable_signup "NN"
+        boolean disable_pwa "NN"
+        boolean allow_job_posting "NN"
+        boolean certified_members_page "NN"
+        boolean prevent_skipping_videos "NN"
+        integer lesson_dwell_seconds "NN"
+        boolean enforce_video_completion "NN"
+        boolean enforce_quiz_completion "NN"
+        boolean enforce_quiz_passing "NN"
+        boolean enforce_open_ended_quiz_passing "NN"
+        boolean enforce_assignment_completion "NN"
+        boolean enforce_assignment_passing "NN"
+        boolean enforce_exercise_completion "NN"
+        boolean enforce_exercise_passing "NN"
+        boolean show_courses "NN"
+        boolean show_students "NN"
+        boolean show_assessments "NN"
+        boolean show_live_class "NN"
+        boolean show_discussions "NN"
+        boolean show_emails "NN"
+        boolean show_dashboard "NN"
+        boolean show_day_view "NN"
+        varchar(30) text_direction "NN"
+        varchar(30) notify_published_courses
+        varchar(30) notify_published_cohorts
+        boolean send_payment_reminders_cohort "NN"
+        boolean send_payment_reminders_course "NN"
+        uuid mentor_request_template_id FK "→ comms.message_template (logical)"
+        uuid mentor_status_template_id FK "→ comms.message_template (logical)"
+        uuid cohort_confirmation_template_id FK "→ comms.message_template (logical)"
+        uuid certificate_template_id FK "→ comms.message_template (logical)"
+        uuid payment_reminder_template_id FK "→ comms.message_template (logical)"
+        text custom_signup_content
+        text meta_description
+        text meta_keywords
+        uuid meta_image_file_id FK "→ platform.file_object (logical)"
+        varchar(320) contact_us_email
+        varchar(500) contact_us_url
+        text unsplash_access_key_enc
+        boolean demo_data_present "NN"
+    }
+    lms__settings_sidebar_item["lms.settings_sidebar_item"] {
+        uuid id PK
+        uuid settings_id FK "NN"
+        integer sort_order "NN"
+        varchar(30) item_type "NN"
+        varchar(60) item_key
+        varchar(120) title
+        varchar(60) icon
+        varchar(255) web_page_route
+        varchar(255) route
+        varchar(500) url
+        boolean is_standard "NN"
+        boolean is_hidden "NN"
+        boolean open_in_new_window "NN"
+    }
+    lms__settings_primary_country["lms.settings_primary_country"] {
+        uuid id PK
+        uuid settings_id FK "NN"
+        uuid country_id FK "NN · → master.country (logical)"
+    }
+    lms__outbox_event["lms.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    lms__inbox_event["lms.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    lms__idempotency_key["lms.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    lms__operation["lms.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    lms__number_sequence["lms.number_sequence"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(40) sequence_code "NN"
+        varchar(20) period_key "NN"
+        varchar(20) prefix
+        smallint padding "NN"
+        bigint next_value "NN"
+    }
+    lms__chapter["lms.chapter"] {
+        uuid id PK "drawn on: Outline, content delivery & progress"
+    }
+    lms__cohort["lms.cohort"] {
+        uuid id PK "drawn on: Cohorts, schedules & live classes"
+    }
+    lms__course["lms.course"] {
+        uuid id PK "drawn on: Courses, versions & catalogue"
+    }
+    lms__settings ||--o{ lms__settings_sidebar_item : "settings_id"
+    lms__settings ||--o{ lms__settings_primary_country : "settings_id"
+    lms__drive_item ||--o{ lms__drive_item_share : "drive_item_id"
+    lms__course |o--o{ lms__import_export_job : "course_id"
+    lms__cohort |o--o{ lms__import_export_job : "cohort_id"
+    lms__chapter |o--o{ lms__import_export_job : "target_chapter_id"
+    lms__course |o--o{ lms__drive_item : "course_id"

@@ -1,0 +1,19 @@
+{
+ "module": "timetable",
+ "cleanup": [
+  {
+   "event": "facility.room.deleted",
+   "table": "timetable.session",
+   "column": "room_id",
+   "action": "null the column",
+   "ownerId": "e02b6258-0ae3-5bec-8386-60bda44ca5bd",
+   "rowId": "d2f1622b-6b85-5f7a-a216-29c9b42294f2",
+   "otherRowId": "45897a81-6fb9-559c-8a4f-619affff8850",
+   "fixtures": [],
+   "row": "INSERT INTO timetable.session (tenant_id, institution_id, start_at, end_at, class_section_id, row_version, room_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '2026-01-10T09:00:00Z', '2026-01-10T10:00:00Z', '0196f000-0000-7000-8000-0000000c5e01', 1, 'e02b6258-0ae3-5bec-8386-60bda44ca5bd', 'd2f1622b-6b85-5f7a-a216-29c9b42294f2')",
+   "otherFixtures": [],
+   "other": "INSERT INTO timetable.session (tenant_id, institution_id, start_at, end_at, class_section_id, row_version, room_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', '2026-01-10T09:00:00Z', '2026-01-10T10:00:00Z', 'f1bb0404-2e20-5e18-ad1a-cff0fc779b6f', 1, 'e02b6258-0ae3-5bec-8386-60bda44ca5bd', '45897a81-6fb9-559c-8a4f-619affff8850')",
+   "softDeletable": true
+  }
+ ]
+}

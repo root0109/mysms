@@ -1,0 +1,107 @@
+{
+ "module": "frontoffice",
+ "resources": [
+  {
+   "name": "CallLog",
+   "table": "frontoffice.call_log",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/frontoffice/call-logs",
+   "item": "/v1/frontoffice/call-logs/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "direction": "incoming",
+    "callerName": "t-caller-name-253d2392",
+    "callDate": "2026-01-10"
+   },
+   "update": {
+    "purpose": "Updated purpose"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "DirectoryContact",
+   "table": "frontoffice.directory_contact",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/frontoffice/directory-contacts",
+   "item": "/v1/frontoffice/directory-contacts/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-672ee727",
+    "designation": "t-designation-d081d454",
+    "phone": "+919822057097"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "PostalRecord",
+   "table": "frontoffice.postal_record",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/frontoffice/postal-records",
+   "item": "/v1/frontoffice/postal-records/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "direction": "dispatch",
+    "postType": "t-post-type-d9fbe3cc",
+    "postalDate": "2026-01-10",
+    "description": "t-description-dd138093"
+   },
+   "update": {
+    "postType": "Updated post_type"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "VisitorLog",
+   "table": "frontoffice.visitor_log",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/frontoffice/visitor-logs",
+   "item": "/v1/frontoffice/visitor-logs/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "visitorName": "t-visitor-name-f5ce2b32",
+    "visitorType": "t-visitor-type-b72d178a",
+    "purpose": "t-purpose-bb47192b",
+    "visitDate": "2026-01-10"
+   },
+   "update": {
+    "visitorName": "Updated visitor_name"
+   },
+   "duplicateConflicts": false
+  }
+ ]
+}

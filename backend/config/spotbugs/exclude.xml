@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SpotBugs exclusions. Each entry carries a one-line reason (JAVA-CODING-RULES §13). -->
+<FindBugsFilter>
+  <!-- generated code (OpenAPI interfaces/DTOs, protobuf/gRPC stubs, MapStruct implementations) is never hand-edited -->
+  <Match>
+    <Or>
+      <Package name="~com\.mysms\.contracts\..*"/>
+      <Package name="~com\.mysms\.sdk\..*"/>
+      <Package name="~com\.mysms\.[a-z]+\.v1(\..*)?"/>
+      <Class name="~.*MapperImpl"/>
+    </Or>
+  </Match>
+  <!-- Spring injects collaborators by constructor and owns their lifecycle; storing the injected reference is the design -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP2"/>
+    <Or>
+      <Class name="~com\.mysms\..*(Controller|Service|Repository|Config|Configuration|Filter|Executor|Writer|Store|Checker|Verifier|Factory|Indicator|Handler|Bootstrap|Scopes|Rules|Bus|Relay|Processor|Runtime|Trail|Cleanup|Sync)"/>
+    </Or>
+  </Match>
+  <!-- ModuleDatabase exists to hand the module's own pool, transaction manager and executor to its repositories -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP"/>
+    <Class name="com.mysms.core.db.ModuleDatabase"/>
+  </Match>
+  <!-- entities are mutable Lombok beans by rule (§5); their collections and dates are owned by the business layer -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    <Package name="~com\.mysms\.[a-z]+\.domain"/>
+  </Match>
+  <!-- Spring calls package-private/protected test fixtures reflectively; tests are not production code -->
+  <Match>
+    <Class name="~.*(Test|ComponentTest|TestSupport)(\$.*)?"/>
+  </Match>
+</FindBugsFilter>

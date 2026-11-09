@@ -1,0 +1,238 @@
+{
+ "module": "admission",
+ "resources": [
+  {
+   "name": "AdmissionCycle",
+   "table": "admission.admission_cycle",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/admission/admission-cycles",
+   "item": "/v1/admission/admission-cycles/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-d8852bbd",
+    "startDate": "2026-01-10"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "admission.ConfirmAdmissionCycle",
+     "path": "/v1/admission/admission-cycles/{id}:confirm",
+     "permission": "admission.admission_cycle.confirm_admission_cycle",
+     "guard": {
+      "status": [
+       "draft"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.admission_cycle SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "confirmed"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "admission.CloseAdmissionCycle",
+     "path": "/v1/admission/admission-cycles/{id}:close",
+     "permission": "admission.admission_cycle.close_admission_cycle",
+     "guard": {
+      "status": [
+       "open",
+       "admission"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.admission_cycle SET status = 'open' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "closed"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "admission.CancelAdmissionCycle",
+     "path": "/v1/admission/admission-cycles/{id}:cancel",
+     "permission": "admission.admission_cycle.cancel_admission_cycle",
+     "guard": {
+      "status": [
+       "draft",
+       "confirmed",
+       "open"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.admission_cycle SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "cancelled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "admission.ResetAdmissionCycle",
+     "path": "/v1/admission/admission-cycles/{id}:resetToDraft",
+     "permission": "admission.admission_cycle.reset_admission_cycle",
+     "guard": {
+      "status": [
+       "cancelled"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.admission_cycle SET status = 'cancelled' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "draft"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "AdmissionCycleFee",
+   "table": "admission.admission_cycle_fee",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/admission/admission-cycles/d16ce6e5-13fd-5513-b48a-f2b05c35208f/fees",
+   "item": "/v1/admission/admission-cycles/d16ce6e5-13fd-5513-b48a-f2b05c35208f/fees/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO admission.admission_cycle (tenant_id, institution_id, name, start_date, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-0f7a1c09', '2026-01-10', 1, 'd16ce6e5-13fd-5513-b48a-f2b05c35208f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "admissionCycleId": "d16ce6e5-13fd-5513-b48a-f2b05c35208f",
+    "courseId": "b1048065-6944-5ea8-bd29-b8709210e154"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Application",
+   "table": "admission.application",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/admission/applications",
+   "item": "/v1/admission/applications/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "applicationNumber": "t-application-number-ed774619",
+    "fullName": "t-full-name-6a4d4bd4",
+    "dateOfBirth": "2026-01-10",
+    "gender": "male",
+    "nationalId": "Secret-b97cb3-00001234"
+   },
+   "update": {
+    "fullName": "Updated full_name"
+   },
+   "duplicateConflicts": true,
+   "secrets": [
+    {
+     "field": "nationalId",
+     "masked": "nationalIdMasked",
+     "mask": "\u2022\u2022\u2022\u20221234",
+     "rotated": "Rotated-secret-5678",
+     "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM admission.application WHERE id = '{id}' AND (national_id_enc IS NULL OR national_id_enc NOT LIKE 'v1.%' OR strpos(national_id_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
+    }
+   ]
+  },
+  {
+   "name": "ApplicationEmergencyContact",
+   "table": "admission.application_emergency_contact",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/admission/applications/a0d45c71-73ac-56ea-a931-db5992537693/emergency-contacts",
+   "item": "/v1/admission/applications/a0d45c71-73ac-56ea-a931-db5992537693/emergency-contacts/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-application-number-75d8ebe7', 't-full-name-9aef97e0', '2026-01-10', 'male', 1, 'a0d45c71-73ac-56ea-a931-db5992537693') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "applicationId": "a0d45c71-73ac-56ea-a931-db5992537693",
+    "priority": 3,
+    "contactNumber": "t-contact-number-bc7",
+    "relationship": "t-relationship-e84ac687"
+   },
+   "update": {
+    "contactNumber": "Updated contact_numb"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "ApplicationGuardian",
+   "table": "admission.application_guardian",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/admission/applications/a0d45c71-73ac-56ea-a931-db5992537693/guardians",
+   "item": "/v1/admission/applications/a0d45c71-73ac-56ea-a931-db5992537693/guardians/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO admission.application (tenant_id, institution_id, application_number, full_name, date_of_birth, gender, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-application-number-75d8ebe7', 't-full-name-9aef97e0', '2026-01-10', 'male', 1, 'a0d45c71-73ac-56ea-a931-db5992537693') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "applicationId": "a0d45c71-73ac-56ea-a931-db5992537693",
+    "relationship": "father",
+    "name": "t-name-1ac35748",
+    "nationalId": "Secret-ac79d7-00001234"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true,
+   "secrets": [
+    {
+     "field": "nationalId",
+     "masked": "nationalIdMasked",
+     "mask": "\u2022\u2022\u2022\u20221234",
+     "rotated": "Rotated-secret-5678",
+     "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM admission.application_guardian WHERE id = '{id}' AND (national_id_enc IS NULL OR national_id_enc NOT LIKE 'v1.%' OR strpos(national_id_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
+    }
+   ]
+  }
+ ]
+}

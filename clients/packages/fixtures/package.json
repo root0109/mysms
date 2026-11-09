@@ -1,0 +1,23 @@
+{
+  "name": "@mysms/fixtures",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Typed seed data and an in-memory fake API for tests only (ui/05 \u00a713). Never imported by shipping code.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint --max-warnings 0 src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mysms/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@mysms/config": "workspace:*",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

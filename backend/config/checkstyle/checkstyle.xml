@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN" "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!--
+  MySMS Checkstyle rules (JAVA-CODING-RULES §4, §13, §16). Hand-written code only; generated code is never checked.
+  Every suppression lives in suppressions.xml with a one-line reason.
+-->
+<module name="Checker">
+  <property name="charset" value="UTF-8"/>
+  <property name="severity" value="error"/>
+  <property name="fileExtensions" value="java"/>
+
+  <module name="SuppressionFilter">
+    <property name="file" value="${config_loc}/suppressions.xml"/>
+  </module>
+
+  <module name="FileTabCharacter"/>
+  <module name="NewlineAtEndOfFile"/>
+  <module name="LineLength">
+    <property name="max" value="130"/>
+    <property name="ignorePattern" value="^(package|import) |https?://"/>
+  </module>
+
+  <!-- §4: transactions are programmatic, on PlatformTransactionManager, through TenantTransactionExecutor -->
+  <module name="RegexpSingleline">
+    <property name="id" value="noTransactionalAnnotation"/>
+    <property name="format" value="@Transactional\b|\bTransactionTemplate\b|import\s+org\.springframework\.transaction\.annotation\."/>
+    <property name="message" value="@Transactional and TransactionTemplate are banned: use TenantTransactionExecutor (JAVA-CODING-RULES §4)."/>
+  </module>
+  <!-- §1.1: no ORM, ever -->
+  <module name="RegexpSingleline">
+    <property name="id" value="noOrm"/>
+    <property name="format" value="import\s+(jakarta\.persistence|org\.hibernate\.(?!validator)|org\.springframework\.data\.(jpa|jdbc|relational))\."/>
+    <property name="message" value="No ORM and no Spring Data repositories: plain Spring JDBC only (JAVA-CODING-RULES §1.1)."/>
+  </module>
+  <!-- §16 X2: no Spring Security / Nimbus / vendor auth type outside auth-client and iam -->
+  <module name="RegexpSingleline">
+    <property name="id" value="noSecurityTypes"/>
+    <property name="format" value="import\s+(static\s+)?(org\.springframework\.security|com\.nimbusds)\."/>
+    <property name="message" value="Auth types belong to auth-client: modules read AuthContext only (JAVA-CODING-RULES §16 X2)."/>
+  </module>
+  <!-- §1.5: no System.out/err in production code; use the logger (never with personal data) -->
+  <module name="RegexpSingleline">
+    <property name="id" value="noSystemOut"/>
+    <property name="format" value="System\.(out|err)\.print"/>
+    <property name="message" value="Use the logger, never System.out/err."/>
+  </module>
+
+  <module name="TreeWalker">
+    <module name="AvoidStarImport"/>
+    <module name="UnusedImports"/>
+    <module name="RedundantImport"/>
+    <module name="IllegalImport"/>
+    <module name="NeedBraces"/>
+    <module name="LeftCurly"/>
+    <module name="RightCurly"/>
+    <module name="EmptyBlock">
+      <property name="option" value="TEXT"/>
+    </module>
+    <module name="EmptyStatement"/>
+    <module name="EqualsHashCode"/>
+    <module name="SimplifyBooleanExpression"/>
+    <module name="SimplifyBooleanReturn"/>
+    <module name="StringLiteralEquality"/>
+    <module name="MissingSwitchDefault"/>
+    <module name="FallThrough"/>
+    <module name="OneStatementPerLine"/>
+    <module name="MultipleVariableDeclarations"/>
+    <module name="ModifierOrder"/>
+    <module name="RedundantModifier"/>
+    <module name="UpperEll"/>
+    <module name="ArrayTypeStyle"/>
+    <module name="FinalClass"/>
+    <module name="HideUtilityClassConstructor"/>
+    <module name="MutableException"/>
+    <module name="IllegalCatch">
+      <property name="illegalClassNames" value="java.lang.Throwable"/>
+    </module>
+    <module name="ConstantName"/>
+    <module name="LocalVariableName"/>
+    <module name="MemberName"/>
+    <module name="MethodName"/>
+    <module name="PackageName">
+      <property name="format" value="^com\.mysms(\.[a-z][a-z0-9]*)*$"/>
+    </module>
+    <module name="ParameterName"/>
+    <module name="TypeName"/>
+    <module name="WhitespaceAround"/>
+    <module name="WhitespaceAfter"/>
+    <module name="NoWhitespaceBefore"/>
+    <module name="MethodParamPad"/>
+    <module name="ParenPad"/>
+  </module>
+</module>

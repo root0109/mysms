@@ -1,0 +1,19 @@
+{
+ "module": "careers",
+ "cleanup": [
+  {
+   "event": "people.person.deleted",
+   "table": "careers.candidate_preference",
+   "column": "person_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "8b90d36e-cb8e-5f4e-a918-cbba5bd0d41f",
+   "rowId": "0529d55b-3b1e-5ba4-8f54-71c4cbe5deb4",
+   "otherRowId": "9818a18a-dc63-54ba-bf62-ab99fa954a2a",
+   "fixtures": [],
+   "row": "INSERT INTO careers.candidate_preference (tenant_id, row_version, person_id, id) VALUES (:tenant, 1, '8b90d36e-cb8e-5f4e-a918-cbba5bd0d41f', '0529d55b-3b1e-5ba4-8f54-71c4cbe5deb4')",
+   "otherFixtures": [],
+   "other": "INSERT INTO careers.candidate_preference (tenant_id, row_version, person_id, id) VALUES (:tenant, 1, '64ded1ba-589b-5b04-ab2a-3745fb5d7e08', '9818a18a-dc63-54ba-bf62-ab99fa954a2a')",
+   "softDeletable": true
+  }
+ ]
+}

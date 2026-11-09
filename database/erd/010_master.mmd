@@ -1,0 +1,53 @@
+erDiagram
+    master__country["master.country"] {
+        uuid id PK
+        char(2) iso2 UK
+        char(3) iso3
+        varchar(120) name "NN"
+        varchar(60) short_name
+        varchar(8) phone_prefix
+        integer sort_order
+        boolean is_active "NN"
+    }
+    master__state_province["master.state_province"] {
+        uuid id PK
+        uuid country_id FK "NN"
+        varchar(10) code
+        varchar(120) name "NN"
+        boolean is_active "NN"
+    }
+    master__city["master.city"] {
+        uuid id PK
+        uuid country_id FK "NN"
+        uuid state_province_id FK
+        varchar(120) name "NN"
+        boolean is_active "NN"
+    }
+    master__currency["master.currency"] {
+        uuid id PK
+        char(3) code UK "NN"
+        varchar(60) name "NN"
+        varchar(8) symbol
+        smallint minor_units "NN"
+        boolean is_active "NN"
+    }
+    master__outbox_event["master.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    master__inbox_event["master.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    master__country ||--o{ master__state_province : "country_id"
+    master__country ||--o{ master__city : "country_id"
+    master__state_province |o--o{ master__city : "state_province_id"

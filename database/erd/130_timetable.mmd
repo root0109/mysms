@@ -1,0 +1,78 @@
+erDiagram
+    timetable__period["timetable.period"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(60) name "NN"
+        time start_time "NN"
+        numeric duration_minutes "6,2"
+        integer sequence
+    }
+    timetable__session["timetable.session"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid period_id FK
+        timestamptz start_at "NN"
+        timestamptz end_at "NN"
+        smallint weekday
+        uuid class_section_id FK "→ academics.class_section (logical)"
+        uuid course_id FK "→ academics.course (logical)"
+        uuid batch_id FK "→ academics.batch (logical)"
+        uuid subject_id FK "→ academics.subject (logical)"
+        uuid staff_id FK "→ hr.staff (logical)"
+        uuid room_id FK "→ facility.room (logical)"
+        varchar(150) title
+        varchar(30) session_type
+        smallint color
+        varchar(30) status "NN"
+    }
+    timetable__session_student["timetable.session_student"] {
+        uuid id PK
+        uuid session_id FK "NN"
+        uuid student_id FK "NN · → sis.student (logical)"
+    }
+    timetable__outbox_event["timetable.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    timetable__inbox_event["timetable.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    timetable__idempotency_key["timetable.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    timetable__operation["timetable.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    timetable__period |o--o{ timetable__session : "period_id"
+    timetable__session ||--o{ timetable__session_student : "session_id"

@@ -1,0 +1,2333 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.sis.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+import "mysms/people/v1/people.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "SisProto";
+option java_package = "com.mysms.sis.v1";
+
+// StudentCategoryService: operations on the StudentCategory aggregate.
+service StudentCategoryService {
+  // List StudentCategories.
+  rpc ListStudentCategories(ListStudentCategoriesRequest) returns (ListStudentCategoriesResponse);
+  // Get StudentCategory.
+  rpc GetStudentCategory(GetStudentCategoryRequest) returns (GetStudentCategoryResponse);
+  // Create StudentCategory.
+  rpc CreateStudentCategory(CreateStudentCategoryRequest) returns (CreateStudentCategoryResponse);
+  // Update StudentCategory.
+  rpc UpdateStudentCategory(UpdateStudentCategoryRequest) returns (UpdateStudentCategoryResponse);
+  // Soft-delete StudentCategory.
+  rpc DeleteStudentCategory(DeleteStudentCategoryRequest) returns (DeleteStudentCategoryResponse);
+}
+
+// StudentService: operations on the Student aggregate.
+service StudentService {
+  // List Students.
+  rpc ListStudents(ListStudentsRequest) returns (ListStudentsResponse);
+  // Get Student.
+  rpc GetStudent(GetStudentRequest) returns (GetStudentResponse);
+  // Create Student.
+  rpc CreateStudent(CreateStudentRequest) returns (CreateStudentResponse);
+  // Update Student.
+  rpc UpdateStudent(UpdateStudentRequest) returns (UpdateStudentResponse);
+  // Soft-delete Student.
+  rpc DeleteStudent(DeleteStudentRequest) returns (DeleteStudentResponse);
+  // List StudentGuardians.
+  rpc ListStudentGuardians(ListStudentGuardiansRequest) returns (ListStudentGuardiansResponse);
+  // Get StudentGuardian.
+  rpc GetStudentGuardian(GetStudentGuardianRequest) returns (GetStudentGuardianResponse);
+  // Create StudentGuardian.
+  rpc CreateStudentGuardian(CreateStudentGuardianRequest) returns (CreateStudentGuardianResponse);
+  // Update StudentGuardian.
+  rpc UpdateStudentGuardian(UpdateStudentGuardianRequest) returns (UpdateStudentGuardianResponse);
+  // Soft-delete StudentGuardian.
+  rpc DeleteStudentGuardian(DeleteStudentGuardianRequest) returns (DeleteStudentGuardianResponse);
+  // List StudentSiblings.
+  rpc ListStudentSiblings(ListStudentSiblingsRequest) returns (ListStudentSiblingsResponse);
+  // Get StudentSibling.
+  rpc GetStudentSibling(GetStudentSiblingRequest) returns (GetStudentSiblingResponse);
+  // Create StudentSibling.
+  rpc CreateStudentSibling(CreateStudentSiblingRequest) returns (CreateStudentSiblingResponse);
+  // Update StudentSibling.
+  rpc UpdateStudentSibling(UpdateStudentSiblingRequest) returns (UpdateStudentSiblingResponse);
+  // Soft-delete StudentSibling.
+  rpc DeleteStudentSibling(DeleteStudentSiblingRequest) returns (DeleteStudentSiblingResponse);
+  // Change status (active, inactive, withdrawn, transferred, alumni, graduated) with exit details.
+  rpc ChangeStudentStatus(ChangeStudentStatusRequest) returns (ChangeStudentStatusResponse);
+  // Student 360 overview.
+  rpc GetStudentSummary(GetStudentSummaryRequest) returns (GetStudentSummaryResponse);
+  // Generate a bonafide certificate PDF and record its number.
+  rpc IssueBonafideCertificate(IssueBonafideCertificateRequest) returns (IssueBonafideCertificateResponse);
+  // Create the student login account and grant the student role.
+  rpc CreateStudentPortalAccount(CreateStudentPortalAccountRequest) returns (CreateStudentPortalAccountResponse);
+}
+
+// GuardianService: operations on the Guardian aggregate.
+service GuardianService {
+  // List Guardians.
+  rpc ListGuardians(ListGuardiansRequest) returns (ListGuardiansResponse);
+  // Get Guardian.
+  rpc GetGuardian(GetGuardianRequest) returns (GetGuardianResponse);
+  // Create Guardian.
+  rpc CreateGuardian(CreateGuardianRequest) returns (CreateGuardianResponse);
+  // Update Guardian.
+  rpc UpdateGuardian(UpdateGuardianRequest) returns (UpdateGuardianResponse);
+  // Soft-delete Guardian.
+  rpc DeleteGuardian(DeleteGuardianRequest) returns (DeleteGuardianResponse);
+  // Create the guardian's login account and grant the guardian role scoped to their children.
+  rpc CreatePortalAccount(CreatePortalAccountRequest) returns (CreatePortalAccountResponse);
+  // Children of the calling guardian.
+  rpc ListMyChildren(ListMyChildrenRequest) returns (ListMyChildrenResponse);
+}
+
+// RelationshipTypeService: operations on the RelationshipType aggregate.
+service RelationshipTypeService {
+  // List RelationshipTypes.
+  rpc ListRelationshipTypes(ListRelationshipTypesRequest) returns (ListRelationshipTypesResponse);
+  // Get RelationshipType.
+  rpc GetRelationshipType(GetRelationshipTypeRequest) returns (GetRelationshipTypeResponse);
+  // Create RelationshipType.
+  rpc CreateRelationshipType(CreateRelationshipTypeRequest) returns (CreateRelationshipTypeResponse);
+  // Update RelationshipType.
+  rpc UpdateRelationshipType(UpdateRelationshipTypeRequest) returns (UpdateRelationshipTypeResponse);
+  // Soft-delete RelationshipType.
+  rpc DeleteRelationshipType(DeleteRelationshipTypeRequest) returns (DeleteRelationshipTypeResponse);
+}
+
+// StudentEnrollmentService: operations on the StudentEnrollment aggregate.
+service StudentEnrollmentService {
+  // Current roster of a class section (open placements with student names).
+  rpc ListClassRoster(ListClassRosterRequest) returns (ListClassRosterResponse);
+  // List StudentEnrollments.
+  rpc ListStudentEnrollments(ListStudentEnrollmentsRequest) returns (ListStudentEnrollmentsResponse);
+  // Get StudentEnrollment.
+  rpc GetStudentEnrollment(GetStudentEnrollmentRequest) returns (GetStudentEnrollmentResponse);
+  // Create StudentEnrollment.
+  rpc CreateStudentEnrollment(CreateStudentEnrollmentRequest) returns (CreateStudentEnrollmentResponse);
+  // Update StudentEnrollment.
+  rpc UpdateStudentEnrollment(UpdateStudentEnrollmentRequest) returns (UpdateStudentEnrollmentResponse);
+  // Soft-delete StudentEnrollment.
+  rpc DeleteStudentEnrollment(DeleteStudentEnrollmentRequest) returns (DeleteStudentEnrollmentResponse);
+}
+
+// ProgramEnrollmentService: operations on the ProgramEnrollment aggregate.
+service ProgramEnrollmentService {
+  // List ProgramEnrollments.
+  rpc ListProgramEnrollments(ListProgramEnrollmentsRequest) returns (ListProgramEnrollmentsResponse);
+  // Get ProgramEnrollment.
+  rpc GetProgramEnrollment(GetProgramEnrollmentRequest) returns (GetProgramEnrollmentResponse);
+  // Create ProgramEnrollment.
+  rpc CreateProgramEnrollment(CreateProgramEnrollmentRequest) returns (CreateProgramEnrollmentResponse);
+  // Update ProgramEnrollment.
+  rpc UpdateProgramEnrollment(UpdateProgramEnrollmentRequest) returns (UpdateProgramEnrollmentResponse);
+  // Soft-delete ProgramEnrollment.
+  rpc DeleteProgramEnrollment(DeleteProgramEnrollmentRequest) returns (DeleteProgramEnrollmentResponse);
+  // List ProgramEnrollmentSubjects.
+  rpc ListProgramEnrollmentSubjects(ListProgramEnrollmentSubjectsRequest) returns (ListProgramEnrollmentSubjectsResponse);
+  // Get ProgramEnrollmentSubject.
+  rpc GetProgramEnrollmentSubject(GetProgramEnrollmentSubjectRequest) returns (GetProgramEnrollmentSubjectResponse);
+  // Create ProgramEnrollmentSubject.
+  rpc CreateProgramEnrollmentSubject(CreateProgramEnrollmentSubjectRequest) returns (CreateProgramEnrollmentSubjectResponse);
+  // Update ProgramEnrollmentSubject.
+  rpc UpdateProgramEnrollmentSubject(UpdateProgramEnrollmentSubjectRequest) returns (UpdateProgramEnrollmentSubjectResponse);
+  // Soft-delete ProgramEnrollmentSubject.
+  rpc DeleteProgramEnrollmentSubject(DeleteProgramEnrollmentSubjectRequest) returns (DeleteProgramEnrollmentSubjectResponse);
+}
+
+// SubjectRegistrationService: operations on the SubjectRegistration aggregate.
+service SubjectRegistrationService {
+  // List SubjectRegistrations.
+  rpc ListSubjectRegistrations(ListSubjectRegistrationsRequest) returns (ListSubjectRegistrationsResponse);
+  // Get SubjectRegistration.
+  rpc GetSubjectRegistration(GetSubjectRegistrationRequest) returns (GetSubjectRegistrationResponse);
+  // Create SubjectRegistration.
+  rpc CreateSubjectRegistration(CreateSubjectRegistrationRequest) returns (CreateSubjectRegistrationResponse);
+  // Update SubjectRegistration.
+  rpc UpdateSubjectRegistration(UpdateSubjectRegistrationRequest) returns (UpdateSubjectRegistrationResponse);
+  // Soft-delete SubjectRegistration.
+  rpc DeleteSubjectRegistration(DeleteSubjectRegistrationRequest) returns (DeleteSubjectRegistrationResponse);
+  // List SubjectRegistrationLines.
+  rpc ListSubjectRegistrationLines(ListSubjectRegistrationLinesRequest) returns (ListSubjectRegistrationLinesResponse);
+  // Get SubjectRegistrationLine.
+  rpc GetSubjectRegistrationLine(GetSubjectRegistrationLineRequest) returns (GetSubjectRegistrationLineResponse);
+  // Create SubjectRegistrationLine.
+  rpc CreateSubjectRegistrationLine(CreateSubjectRegistrationLineRequest) returns (CreateSubjectRegistrationLineResponse);
+  // Update SubjectRegistrationLine.
+  rpc UpdateSubjectRegistrationLine(UpdateSubjectRegistrationLineRequest) returns (UpdateSubjectRegistrationLineResponse);
+  // Soft-delete SubjectRegistrationLine.
+  rpc DeleteSubjectRegistrationLine(DeleteSubjectRegistrationLineRequest) returns (DeleteSubjectRegistrationLineResponse);
+  // Submit for approval.
+  rpc SubmitSubjectRegistration(SubmitSubjectRegistrationRequest) returns (SubmitSubjectRegistrationResponse);
+  // Approve; subjects are added to the registration.
+  rpc ApproveSubjectRegistration(ApproveSubjectRegistrationRequest) returns (ApproveSubjectRegistrationResponse);
+  // Reject.
+  rpc RejectSubjectRegistration(RejectSubjectRegistrationRequest) returns (RejectSubjectRegistrationResponse);
+  // Back to draft.
+  rpc ResetSubjectRegistration(ResetSubjectRegistrationRequest) returns (ResetSubjectRegistrationResponse);
+  // Pre-fill compulsory/elective lines from the course subjects.
+  rpc LoadCourseSubjects(LoadCourseSubjectsRequest) returns (LoadCourseSubjectsResponse);
+}
+
+// PromotionService: operations on the Promotion aggregate.
+service PromotionService {
+  // List Promotions.
+  rpc ListPromotions(ListPromotionsRequest) returns (ListPromotionsResponse);
+  // Get Promotion.
+  rpc GetPromotion(GetPromotionRequest) returns (GetPromotionResponse);
+  // Create Promotion.
+  rpc CreatePromotion(CreatePromotionRequest) returns (CreatePromotionResponse);
+  // Update Promotion.
+  rpc UpdatePromotion(UpdatePromotionRequest) returns (UpdatePromotionResponse);
+  // Soft-delete Promotion.
+  rpc DeletePromotion(DeletePromotionRequest) returns (DeletePromotionResponse);
+  // Create proposed promotions for a class.
+  rpc ProposePromotions(ProposePromotionsRequest) returns (ProposePromotionsResponse);
+  // Approve.
+  rpc ApprovePromotion(ApprovePromotionRequest) returns (ApprovePromotionResponse);
+  // Reject (student detained).
+  rpc RejectPromotion(RejectPromotionRequest) returns (RejectPromotionResponse);
+  // Create next-year enrolments for approved promotions and close the current ones.
+  rpc ApplyPromotions(ApplyPromotionsRequest) returns (ApplyPromotionsResponse);
+}
+
+// StudentHealthRecordService: operations on the StudentHealthRecord aggregate.
+service StudentHealthRecordService {
+  // List StudentHealthRecords.
+  rpc ListStudentHealthRecords(ListStudentHealthRecordsRequest) returns (ListStudentHealthRecordsResponse);
+  // Get StudentHealthRecord.
+  rpc GetStudentHealthRecord(GetStudentHealthRecordRequest) returns (GetStudentHealthRecordResponse);
+  // Create StudentHealthRecord.
+  rpc CreateStudentHealthRecord(CreateStudentHealthRecordRequest) returns (CreateStudentHealthRecordResponse);
+  // Update StudentHealthRecord.
+  rpc UpdateStudentHealthRecord(UpdateStudentHealthRecordRequest) returns (UpdateStudentHealthRecordResponse);
+  // Soft-delete StudentHealthRecord.
+  rpc DeleteStudentHealthRecord(DeleteStudentHealthRecordRequest) returns (DeleteStudentHealthRecordResponse);
+}
+
+// DisciplineIncidentService: operations on the DisciplineIncident aggregate.
+service DisciplineIncidentService {
+  // List DisciplineIncidents.
+  rpc ListDisciplineIncidents(ListDisciplineIncidentsRequest) returns (ListDisciplineIncidentsResponse);
+  // Get DisciplineIncident.
+  rpc GetDisciplineIncident(GetDisciplineIncidentRequest) returns (GetDisciplineIncidentResponse);
+  // Create DisciplineIncident.
+  rpc CreateDisciplineIncident(CreateDisciplineIncidentRequest) returns (CreateDisciplineIncidentResponse);
+  // Update DisciplineIncident.
+  rpc UpdateDisciplineIncident(UpdateDisciplineIncidentRequest) returns (UpdateDisciplineIncidentResponse);
+  // Soft-delete DisciplineIncident.
+  rpc DeleteDisciplineIncident(DeleteDisciplineIncidentRequest) returns (DeleteDisciplineIncidentResponse);
+  // Record that action was taken.
+  rpc MarkIncidentActionTaken(MarkIncidentActionTakenRequest) returns (MarkIncidentActionTakenResponse);
+  // Guardian acknowledges the incident.
+  rpc MarkIncidentSeen(MarkIncidentSeenRequest) returns (MarkIncidentSeenResponse);
+}
+
+// ActivityTypeService: operations on the ActivityType aggregate.
+service ActivityTypeService {
+  // List ActivityTypes.
+  rpc ListActivityTypes(ListActivityTypesRequest) returns (ListActivityTypesResponse);
+  // Get ActivityType.
+  rpc GetActivityType(GetActivityTypeRequest) returns (GetActivityTypeResponse);
+  // Create ActivityType.
+  rpc CreateActivityType(CreateActivityTypeRequest) returns (CreateActivityTypeResponse);
+  // Update ActivityType.
+  rpc UpdateActivityType(UpdateActivityTypeRequest) returns (UpdateActivityTypeResponse);
+  // Soft-delete ActivityType.
+  rpc DeleteActivityType(DeleteActivityTypeRequest) returns (DeleteActivityTypeResponse);
+}
+
+// StudentActivityService: operations on the StudentActivity aggregate.
+service StudentActivityService {
+  // List StudentActivities.
+  rpc ListStudentActivities(ListStudentActivitiesRequest) returns (ListStudentActivitiesResponse);
+  // Get StudentActivity.
+  rpc GetStudentActivity(GetStudentActivityRequest) returns (GetStudentActivityResponse);
+  // Create StudentActivity.
+  rpc CreateStudentActivity(CreateStudentActivityRequest) returns (CreateStudentActivityResponse);
+  // Update StudentActivity.
+  rpc UpdateStudentActivity(UpdateStudentActivityRequest) returns (UpdateStudentActivityResponse);
+  // Soft-delete StudentActivity.
+  rpc DeleteStudentActivity(DeleteStudentActivityRequest) returns (DeleteStudentActivityResponse);
+}
+
+message ListStudentCategoriesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListStudentCategoriesResponse {
+  repeated StudentCategory items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetStudentCategoryRequest {
+  // StudentCategory id (UUID).
+  string id = 1;
+}
+message GetStudentCategoryResponse {
+  StudentCategory student_category = 1;
+}
+
+message CreateStudentCategoryRequest {
+  StudentCategory student_category = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateStudentCategoryResponse {
+  StudentCategory student_category = 1;
+}
+
+message UpdateStudentCategoryRequest {
+  // Resource with id and etag set.
+  StudentCategory student_category = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStudentCategoryResponse {
+  StudentCategory student_category = 1;
+}
+
+message DeleteStudentCategoryRequest {
+  // StudentCategory id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteStudentCategoryResponse {
+}
+
+message ListStudentsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListStudentsResponse {
+  repeated Student items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetStudentRequest {
+  // Student id (UUID).
+  string id = 1;
+}
+message GetStudentResponse {
+  Student student = 1;
+}
+
+message CreateStudentRequest {
+  Student student = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateStudentResponse {
+  Student student = 1;
+}
+
+message UpdateStudentRequest {
+  // Resource with id and etag set.
+  Student student = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStudentResponse {
+  Student student = 1;
+}
+
+message DeleteStudentRequest {
+  // Student id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteStudentResponse {
+}
+
+message ListGuardiansRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListGuardiansResponse {
+  repeated Guardian items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetGuardianRequest {
+  // Guardian id (UUID).
+  string id = 1;
+}
+message GetGuardianResponse {
+  Guardian guardian = 1;
+}
+
+message CreateGuardianRequest {
+  Guardian guardian = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateGuardianResponse {
+  Guardian guardian = 1;
+}
+
+message UpdateGuardianRequest {
+  // Resource with id and etag set.
+  Guardian guardian = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateGuardianResponse {
+  Guardian guardian = 1;
+}
+
+message DeleteGuardianRequest {
+  // Guardian id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteGuardianResponse {
+}
+
+message ListRelationshipTypesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListRelationshipTypesResponse {
+  repeated RelationshipType items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetRelationshipTypeRequest {
+  // RelationshipType id (UUID).
+  string id = 1;
+}
+message GetRelationshipTypeResponse {
+  RelationshipType relationship_type = 1;
+}
+
+message CreateRelationshipTypeRequest {
+  RelationshipType relationship_type = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateRelationshipTypeResponse {
+  RelationshipType relationship_type = 1;
+}
+
+message UpdateRelationshipTypeRequest {
+  // Resource with id and etag set.
+  RelationshipType relationship_type = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateRelationshipTypeResponse {
+  RelationshipType relationship_type = 1;
+}
+
+message DeleteRelationshipTypeRequest {
+  // RelationshipType id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteRelationshipTypeResponse {
+}
+
+message ListStudentGuardiansRequest {
+  // Student id (UUID).
+  string student_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListStudentGuardiansResponse {
+  repeated StudentGuardian items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetStudentGuardianRequest {
+  // Student id (UUID).
+  string student_id = 1;
+  // StudentGuardian id (UUID).
+  string id = 2;
+}
+message GetStudentGuardianResponse {
+  StudentGuardian student_guardian = 1;
+}
+
+message CreateStudentGuardianRequest {
+  // Student id (UUID).
+  string student_id = 1;
+  StudentGuardian student_guardian = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateStudentGuardianResponse {
+  StudentGuardian student_guardian = 1;
+}
+
+message UpdateStudentGuardianRequest {
+  // Student id (UUID).
+  string student_id = 1;
+  // Resource with id and etag set.
+  StudentGuardian student_guardian = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateStudentGuardianResponse {
+  StudentGuardian student_guardian = 1;
+}
+
+message DeleteStudentGuardianRequest {
+  // Student id (UUID).
+  string student_id = 1;
+  // StudentGuardian id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteStudentGuardianResponse {
+}
+
+message ListStudentSiblingsRequest {
+  // Student id (UUID).
+  string student_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListStudentSiblingsResponse {
+  repeated StudentSibling items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetStudentSiblingRequest {
+  // Student id (UUID).
+  string student_id = 1;
+  // StudentSibling id (UUID).
+  string id = 2;
+}
+message GetStudentSiblingResponse {
+  StudentSibling student_sibling = 1;
+}
+
+message CreateStudentSiblingRequest {
+  // Student id (UUID).
+  string student_id = 1;
+  StudentSibling student_sibling = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateStudentSiblingResponse {
+  StudentSibling student_sibling = 1;
+}
+
+message UpdateStudentSiblingRequest {
+  // Student id (UUID).
+  string student_id = 1;
+  // Resource with id and etag set.
+  StudentSibling student_sibling = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateStudentSiblingResponse {
+  StudentSibling student_sibling = 1;
+}
+
+message DeleteStudentSiblingRequest {
+  // Student id (UUID).
+  string student_id = 1;
+  // StudentSibling id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteStudentSiblingResponse {
+}
+
+message ListStudentEnrollmentsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListStudentEnrollmentsResponse {
+  repeated StudentEnrollment items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetStudentEnrollmentRequest {
+  // StudentEnrollment id (UUID).
+  string id = 1;
+}
+message GetStudentEnrollmentResponse {
+  StudentEnrollment student_enrollment = 1;
+}
+
+message CreateStudentEnrollmentRequest {
+  StudentEnrollment student_enrollment = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateStudentEnrollmentResponse {
+  StudentEnrollment student_enrollment = 1;
+}
+
+message UpdateStudentEnrollmentRequest {
+  // Resource with id and etag set.
+  StudentEnrollment student_enrollment = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStudentEnrollmentResponse {
+  StudentEnrollment student_enrollment = 1;
+}
+
+message DeleteStudentEnrollmentRequest {
+  // StudentEnrollment id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteStudentEnrollmentResponse {
+}
+
+message ListProgramEnrollmentsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListProgramEnrollmentsResponse {
+  repeated ProgramEnrollment items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetProgramEnrollmentRequest {
+  // ProgramEnrollment id (UUID).
+  string id = 1;
+}
+message GetProgramEnrollmentResponse {
+  ProgramEnrollment program_enrollment = 1;
+}
+
+message CreateProgramEnrollmentRequest {
+  ProgramEnrollment program_enrollment = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateProgramEnrollmentResponse {
+  ProgramEnrollment program_enrollment = 1;
+}
+
+message UpdateProgramEnrollmentRequest {
+  // Resource with id and etag set.
+  ProgramEnrollment program_enrollment = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateProgramEnrollmentResponse {
+  ProgramEnrollment program_enrollment = 1;
+}
+
+message DeleteProgramEnrollmentRequest {
+  // ProgramEnrollment id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteProgramEnrollmentResponse {
+}
+
+message ListProgramEnrollmentSubjectsRequest {
+  // ProgramEnrollment id (UUID).
+  string program_enrollment_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListProgramEnrollmentSubjectsResponse {
+  repeated ProgramEnrollmentSubject items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetProgramEnrollmentSubjectRequest {
+  // ProgramEnrollment id (UUID).
+  string program_enrollment_id = 1;
+  // ProgramEnrollmentSubject id (UUID).
+  string id = 2;
+}
+message GetProgramEnrollmentSubjectResponse {
+  ProgramEnrollmentSubject program_enrollment_subject = 1;
+}
+
+message CreateProgramEnrollmentSubjectRequest {
+  // ProgramEnrollment id (UUID).
+  string program_enrollment_id = 1;
+  ProgramEnrollmentSubject program_enrollment_subject = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateProgramEnrollmentSubjectResponse {
+  ProgramEnrollmentSubject program_enrollment_subject = 1;
+}
+
+message UpdateProgramEnrollmentSubjectRequest {
+  // ProgramEnrollment id (UUID).
+  string program_enrollment_id = 1;
+  // Resource with id and etag set.
+  ProgramEnrollmentSubject program_enrollment_subject = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateProgramEnrollmentSubjectResponse {
+  ProgramEnrollmentSubject program_enrollment_subject = 1;
+}
+
+message DeleteProgramEnrollmentSubjectRequest {
+  // ProgramEnrollment id (UUID).
+  string program_enrollment_id = 1;
+  // ProgramEnrollmentSubject id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteProgramEnrollmentSubjectResponse {
+}
+
+message ListSubjectRegistrationsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListSubjectRegistrationsResponse {
+  repeated SubjectRegistration items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetSubjectRegistrationRequest {
+  // SubjectRegistration id (UUID).
+  string id = 1;
+}
+message GetSubjectRegistrationResponse {
+  SubjectRegistration subject_registration = 1;
+}
+
+message CreateSubjectRegistrationRequest {
+  SubjectRegistration subject_registration = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateSubjectRegistrationResponse {
+  SubjectRegistration subject_registration = 1;
+}
+
+message UpdateSubjectRegistrationRequest {
+  // Resource with id and etag set.
+  SubjectRegistration subject_registration = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateSubjectRegistrationResponse {
+  SubjectRegistration subject_registration = 1;
+}
+
+message DeleteSubjectRegistrationRequest {
+  // SubjectRegistration id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteSubjectRegistrationResponse {
+}
+
+message ListSubjectRegistrationLinesRequest {
+  // SubjectRegistration id (UUID).
+  string subject_registration_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListSubjectRegistrationLinesResponse {
+  repeated SubjectRegistrationLine items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetSubjectRegistrationLineRequest {
+  // SubjectRegistration id (UUID).
+  string subject_registration_id = 1;
+  // SubjectRegistrationLine id (UUID).
+  string id = 2;
+}
+message GetSubjectRegistrationLineResponse {
+  SubjectRegistrationLine subject_registration_line = 1;
+}
+
+message CreateSubjectRegistrationLineRequest {
+  // SubjectRegistration id (UUID).
+  string subject_registration_id = 1;
+  SubjectRegistrationLine subject_registration_line = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateSubjectRegistrationLineResponse {
+  SubjectRegistrationLine subject_registration_line = 1;
+}
+
+message UpdateSubjectRegistrationLineRequest {
+  // SubjectRegistration id (UUID).
+  string subject_registration_id = 1;
+  // Resource with id and etag set.
+  SubjectRegistrationLine subject_registration_line = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateSubjectRegistrationLineResponse {
+  SubjectRegistrationLine subject_registration_line = 1;
+}
+
+message DeleteSubjectRegistrationLineRequest {
+  // SubjectRegistration id (UUID).
+  string subject_registration_id = 1;
+  // SubjectRegistrationLine id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteSubjectRegistrationLineResponse {
+}
+
+message ListPromotionsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListPromotionsResponse {
+  repeated Promotion items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetPromotionRequest {
+  // Promotion id (UUID).
+  string id = 1;
+}
+message GetPromotionResponse {
+  Promotion promotion = 1;
+}
+
+message CreatePromotionRequest {
+  Promotion promotion = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreatePromotionResponse {
+  Promotion promotion = 1;
+}
+
+message UpdatePromotionRequest {
+  // Resource with id and etag set.
+  Promotion promotion = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdatePromotionResponse {
+  Promotion promotion = 1;
+}
+
+message DeletePromotionRequest {
+  // Promotion id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeletePromotionResponse {
+}
+
+message ListStudentHealthRecordsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListStudentHealthRecordsResponse {
+  repeated StudentHealthRecord items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetStudentHealthRecordRequest {
+  // StudentHealthRecord id (UUID).
+  string id = 1;
+}
+message GetStudentHealthRecordResponse {
+  StudentHealthRecord student_health_record = 1;
+}
+
+message CreateStudentHealthRecordRequest {
+  StudentHealthRecord student_health_record = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateStudentHealthRecordResponse {
+  StudentHealthRecord student_health_record = 1;
+}
+
+message UpdateStudentHealthRecordRequest {
+  // Resource with id and etag set.
+  StudentHealthRecord student_health_record = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStudentHealthRecordResponse {
+  StudentHealthRecord student_health_record = 1;
+}
+
+message DeleteStudentHealthRecordRequest {
+  // StudentHealthRecord id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteStudentHealthRecordResponse {
+}
+
+message ListDisciplineIncidentsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListDisciplineIncidentsResponse {
+  repeated DisciplineIncident items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetDisciplineIncidentRequest {
+  // DisciplineIncident id (UUID).
+  string id = 1;
+}
+message GetDisciplineIncidentResponse {
+  DisciplineIncident discipline_incident = 1;
+}
+
+message CreateDisciplineIncidentRequest {
+  DisciplineIncident discipline_incident = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateDisciplineIncidentResponse {
+  DisciplineIncident discipline_incident = 1;
+}
+
+message UpdateDisciplineIncidentRequest {
+  // Resource with id and etag set.
+  DisciplineIncident discipline_incident = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateDisciplineIncidentResponse {
+  DisciplineIncident discipline_incident = 1;
+}
+
+message DeleteDisciplineIncidentRequest {
+  // DisciplineIncident id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteDisciplineIncidentResponse {
+}
+
+message ListActivityTypesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListActivityTypesResponse {
+  repeated ActivityType items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetActivityTypeRequest {
+  // ActivityType id (UUID).
+  string id = 1;
+}
+message GetActivityTypeResponse {
+  ActivityType activity_type = 1;
+}
+
+message CreateActivityTypeRequest {
+  ActivityType activity_type = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateActivityTypeResponse {
+  ActivityType activity_type = 1;
+}
+
+message UpdateActivityTypeRequest {
+  // Resource with id and etag set.
+  ActivityType activity_type = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateActivityTypeResponse {
+  ActivityType activity_type = 1;
+}
+
+message DeleteActivityTypeRequest {
+  // ActivityType id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteActivityTypeResponse {
+}
+
+message ListStudentActivitiesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListStudentActivitiesResponse {
+  repeated StudentActivity items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetStudentActivityRequest {
+  // StudentActivity id (UUID).
+  string id = 1;
+}
+message GetStudentActivityResponse {
+  StudentActivity student_activity = 1;
+}
+
+message CreateStudentActivityRequest {
+  StudentActivity student_activity = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateStudentActivityResponse {
+  StudentActivity student_activity = 1;
+}
+
+message UpdateStudentActivityRequest {
+  // Resource with id and etag set.
+  StudentActivity student_activity = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStudentActivityResponse {
+  StudentActivity student_activity = 1;
+}
+
+message DeleteStudentActivityRequest {
+  // StudentActivity id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteStudentActivityResponse {
+}
+
+message ChangeStudentStatusRequest {
+  // Path parameter studentId.
+  string student_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // New status. Required.
+  Status status = 3;
+  // Exit date.
+  optional string exit_date = 4;
+  // Reason.
+  optional string exit_reason = 5;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 6;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "inactive"
+    STATUS_INACTIVE = 2;
+    // "alumni"
+    STATUS_ALUMNI = 3;
+    // "withdrawn"
+    STATUS_WITHDRAWN = 4;
+    // "transferred"
+    STATUS_TRANSFERRED = 5;
+    // "graduated"
+    STATUS_GRADUATED = 6;
+  }
+}
+message ChangeStudentStatusResponse {
+  Student student = 1;
+}
+
+message GetStudentSummaryRequest {
+  // Path parameter studentId.
+  string student_id = 1;
+  // Year (default current).
+  optional string academic_year_id = 2;
+}
+message GetStudentSummaryResponse {
+  StudentSummary result = 1;
+}
+
+message IssueBonafideCertificateRequest {
+  // Path parameter studentId.
+  string student_id = 1;
+  // Purpose printed on the certificate.
+  optional string purpose = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message IssueBonafideCertificateResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message CreateStudentPortalAccountRequest {
+  // Path parameter studentId.
+  string student_id = 1;
+  // Send invitation.
+  optional bool send_invite = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CreateStudentPortalAccountResponse {
+  Student student = 1;
+}
+
+message CreatePortalAccountRequest {
+  // Path parameter guardianId.
+  string guardian_id = 1;
+  // E-mail / SMS an invitation.
+  optional bool send_invite = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CreatePortalAccountResponse {
+  Guardian guardian = 1;
+}
+
+message ListMyChildrenRequest {
+  // Maximum items to return (1-500, default 50).
+  optional int32 page_size = 1;
+  // Cursor from next_page_token.
+  optional string page_token = 2;
+}
+message ListMyChildrenResponse {
+  repeated ChildCard items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message ProposePromotionsRequest {
+  // Class being promoted. Required.
+  string from_class_section_id = 1;
+  // Next year. Required.
+  string to_academic_year_id = 2;
+  // Next grade. Required.
+  string to_grade_level_id = 3;
+  // Next section (default same name).
+  optional string to_section_id = 4;
+  // Exam series used.
+  optional string based_on_exam_session_id = 5;
+  // Subset (default whole class).
+  repeated string student_ids = 6;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 7;
+}
+message ProposePromotionsResponse {
+  repeated Promotion items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message ApprovePromotionRequest {
+  // Path parameter promotionId.
+  string promotion_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ApprovePromotionResponse {
+  Promotion promotion = 1;
+}
+
+message RejectPromotionRequest {
+  // Path parameter promotionId.
+  string promotion_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message RejectPromotionResponse {
+  Promotion promotion = 1;
+}
+
+message ApplyPromotionsRequest {
+  // Approved promotions. Required.
+  repeated string promotion_ids = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message ApplyPromotionsResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message SubmitSubjectRegistrationRequest {
+  // Path parameter subjectRegistrationId.
+  string subject_registration_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message SubmitSubjectRegistrationResponse {
+  SubjectRegistration subject_registration = 1;
+}
+
+message ApproveSubjectRegistrationRequest {
+  // Path parameter subjectRegistrationId.
+  string subject_registration_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ApproveSubjectRegistrationResponse {
+  SubjectRegistration subject_registration = 1;
+}
+
+message RejectSubjectRegistrationRequest {
+  // Path parameter subjectRegistrationId.
+  string subject_registration_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message RejectSubjectRegistrationResponse {
+  SubjectRegistration subject_registration = 1;
+}
+
+message ResetSubjectRegistrationRequest {
+  // Path parameter subjectRegistrationId.
+  string subject_registration_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ResetSubjectRegistrationResponse {
+  SubjectRegistration subject_registration = 1;
+}
+
+message LoadCourseSubjectsRequest {
+  // Path parameter subjectRegistrationId.
+  string subject_registration_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message LoadCourseSubjectsResponse {
+  SubjectRegistration subject_registration = 1;
+}
+
+message MarkIncidentActionTakenRequest {
+  // Path parameter disciplineIncidentId.
+  string discipline_incident_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Response text.
+  optional string response = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message MarkIncidentActionTakenResponse {
+  DisciplineIncident discipline_incident = 1;
+}
+
+message MarkIncidentSeenRequest {
+  // Path parameter disciplineIncidentId.
+  string discipline_incident_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message MarkIncidentSeenResponse {
+  DisciplineIncident discipline_incident = 1;
+}
+
+// Student category for fees/quotas (e.g. General, Staff Ward, Scholarship).
+message StudentCategory {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Category code.
+  string code = 3;
+  // Category name.
+  string name = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+  // Display order.
+  optional int32 sort_order = 10;
+  // Whether offered for new picks.
+  optional bool is_active = 11;
+}
+
+// A student of an institution. One row per person per institution.
+message Student {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person. [UUID]
+  string person_id = 2;
+  // Student login account. [UUID]
+  optional string user_id = 3;
+  // Institution. [UUID]
+  string institution_id = 4;
+  // Admission / registration number.
+  optional string admission_number = 5;
+  // Date of admission. [ISO-8601 date (YYYY-MM-DD)]
+  optional string admission_date = 6;
+  // First attendance date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string joining_date = 7;
+  // Category. [UUID]
+  optional string student_category_id = 8;
+  // External government education-registry id (e.g. EMIS/UDISE+ PEN).
+  optional string government_student_id = 9;
+  // Number of the last bonafide certificate issued.
+  optional string bonafide_certificate_number = 10;
+  // Student state. Changed only through the workflow operations. Output only.
+  Status status = 11;
+  // Date the student left. [ISO-8601 date (YYYY-MM-DD)]
+  optional string exit_date = 12;
+  // Reason for leaving.
+  optional string exit_reason = 13;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 14;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 15;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 16;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 17;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 18;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "inactive"
+    STATUS_INACTIVE = 2;
+    // "alumni"
+    STATUS_ALUMNI = 3;
+    // "withdrawn"
+    STATUS_WITHDRAWN = 4;
+    // "transferred"
+    STATUS_TRANSFERRED = 5;
+    // "graduated"
+    STATUS_GRADUATED = 6;
+  }
+}
+
+// Parent or guardian. Independent of institution so one guardian can follow children across institutions.
+message Guardian {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person. [UUID]
+  string person_id = 2;
+  // Guardian login account. [UUID]
+  optional string user_id = 3;
+  // Profession.
+  optional Profession profession = 4;
+  // Occupation detail.
+  optional string sub_occupation = 5;
+  // Designation.
+  optional string designation = 6;
+  // Employer.
+  optional string organization_name = 7;
+  // Annual income. [Decimal string]
+  optional string annual_income = 8;
+  // Highest qualification. [UUID]
+  optional string qualification_id = 9;
+  // Contact mobile used for school communication.
+  optional string mobile = 10;
+  // Contact e-mail used for school communication.
+  optional string email = 11;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 12;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 13;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 14;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 15;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 16;
+  // Allowed values of profession; REST/JSON uses the lowercase value shown in each comment.
+  enum Profession {
+    PROFESSION_UNSPECIFIED = 0;
+    // "admin"
+    PROFESSION_ADMIN = 1;
+    // "business"
+    PROFESSION_BUSINESS = 2;
+    // "central_government"
+    PROFESSION_CENTRAL_GOVERNMENT = 3;
+    // "state_government"
+    PROFESSION_STATE_GOVERNMENT = 4;
+    // "private_sector"
+    PROFESSION_PRIVATE_SECTOR = 5;
+    // "home_maker"
+    PROFESSION_HOME_MAKER = 6;
+    // "teacher"
+    PROFESSION_TEACHER = 7;
+    // "librarian"
+    PROFESSION_LIBRARIAN = 8;
+    // "other"
+    PROFESSION_OTHER = 9;
+  }
+}
+
+// Guardian-to-student relationship (Father, Mother, Guardian, Grandparent...).
+message RelationshipType {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Relationship name.
+  string name = 2;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 3;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 4;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 5;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 6;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 7;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 8;
+  // Display order.
+  optional int32 sort_order = 9;
+  // Whether offered for new picks.
+  optional bool is_active = 10;
+}
+
+// Links a student to a guardian. A link alone does not grant data access; access is granted by iam.user_role.
+message StudentGuardian {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Student. [UUID] Set from the parent path on create.
+  string student_id = 2;
+  // Guardian. [UUID]
+  string guardian_id = 3;
+  // Relationship. [UUID]
+  optional string relationship_type_id = 4;
+  // First contact for the student.
+  bool is_primary_contact = 5;
+  // Receives notices and alerts.
+  bool receives_communication = 6;
+  // Authorised to collect the student.
+  bool can_pick_up = 7;
+  // Link state.
+  Status status = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "inactive"
+    STATUS_INACTIVE = 2;
+  }
+  // Whether this guardian is a legal guardian (consent authority).
+  optional bool is_legal_guardian = 14;
+  // Whether this guardian has custody; drives pickup and visibility rules.
+  optional bool has_custody = 15;
+}
+
+// Sibling recorded for a student (enrolled or not).
+message StudentSibling {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Student. [UUID] Set from the parent path on create.
+  string student_id = 2;
+  // Sibling, when enrolled in the system. [UUID]
+  optional string sibling_student_id = 3;
+  // Sibling name when not enrolled.
+  optional string sibling_name = 4;
+  // Notes (school, grade).
+  optional string details = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+}
+
+// Student's placement in a class section for an academic year (K-12 placement).
+message StudentEnrollment {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Student. [UUID]
+  string student_id = 2;
+  // Academic year. [UUID]
+  string academic_year_id = 3;
+  // Class section. [UUID]
+  optional string class_section_id = 4;
+  // Roll number in the class.
+  optional string roll_number = 5;
+  // Identity-card number for the year.
+  optional string id_card_number = 6;
+  // Examination-board registration number.
+  optional string board_registration_number = 7;
+  // Placement state.
+  EnrollmentStatus enrollment_status = 8;
+  // Year-end result.
+  ResultStatus result_status = 9;
+  // Placement date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string enrolled_on = 10;
+  // Date the placement ended. [ISO-8601 date (YYYY-MM-DD)]
+  optional string left_on = 11;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 12;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 13;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 14;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 15;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 16;
+  // Allowed values of enrollment_status; REST/JSON uses the lowercase value shown in each comment.
+  enum EnrollmentStatus {
+    ENROLLMENT_STATUS_UNSPECIFIED = 0;
+    // "enrolled"
+    ENROLLMENT_STATUS_ENROLLED = 1;
+    // "promoted"
+    ENROLLMENT_STATUS_PROMOTED = 2;
+    // "detained"
+    ENROLLMENT_STATUS_DETAINED = 3;
+    // "left"
+    ENROLLMENT_STATUS_LEFT = 4;
+    // "completed"
+    ENROLLMENT_STATUS_COMPLETED = 5;
+  }
+  // Allowed values of result_status; REST/JSON uses the lowercase value shown in each comment.
+  enum ResultStatus {
+    RESULT_STATUS_UNSPECIFIED = 0;
+    // "pending"
+    RESULT_STATUS_PENDING = 1;
+    // "pass"
+    RESULT_STATUS_PASS = 2;
+    // "fail"
+    RESULT_STATUS_FAIL = 3;
+  }
+  // Day this placement takes effect.
+  optional string effective_from = 17;
+  // Day this placement was superseded or closed (NULL = current). Output only.
+  optional string effective_to = 18;
+  // Placement this row superseded. [UUID] Output only.
+  optional string previous_enrollment_id = 19;
+  // Why the row exists: initial, promotion, transfer_in, section_change, re_admission or correction.
+  optional string change_reason = 20;
+}
+
+// Student registration on a course/batch (higher-education / coaching registration).
+message ProgramEnrollment {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Student. [UUID]
+  string student_id = 2;
+  // Course. [UUID]
+  string course_id = 3;
+  // Batch. [UUID]
+  optional string batch_id = 4;
+  // Academic year. [UUID]
+  optional string academic_year_id = 5;
+  // Academic term. [UUID]
+  optional string academic_term_id = 6;
+  // Roll number in the batch.
+  optional string roll_number = 7;
+  // Registration state.
+  Status status = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 12;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 13;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 14;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 15;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 16;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "running"
+    STATUS_RUNNING = 1;
+    // "finished"
+    STATUS_FINISHED = 2;
+    // "dropped"
+    STATUS_DROPPED = 3;
+  }
+}
+
+// Subjects a registration covers.
+message ProgramEnrollmentSubject {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Registration. [UUID] Set from the parent path on create.
+  string program_enrollment_id = 2;
+  // Subject. [UUID]
+  string subject_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// Student request to register compulsory and elective subjects for a course/batch.
+message SubjectRegistration {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Student. [UUID]
+  string student_id = 2;
+  // Course. [UUID]
+  string course_id = 3;
+  // Batch. [UUID]
+  optional string batch_id = 4;
+  // Registration reference.
+  optional string reference_no = 5;
+  // Approval state. Changed only through the workflow operations. Output only.
+  Status status = 6;
+  // Minimum credits. [Decimal string]
+  optional string min_unit_load = 7;
+  // Maximum credits. [Decimal string]
+  optional string max_unit_load = 8;
+  // Student has seen the decision.
+  bool read_by_student = 9;
+  // Guardian has seen the decision.
+  bool read_by_guardian = 10;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 11;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 12;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 14;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 15;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "submitted"
+    STATUS_SUBMITTED = 2;
+    // "approved"
+    STATUS_APPROVED = 3;
+    // "rejected"
+    STATUS_REJECTED = 4;
+  }
+  // Academic year the registration is for. [UUID]
+  optional string academic_year_id = 16;
+  // Term/semester the registration is for. [UUID]
+  optional string academic_term_id = 17;
+  // Program enrollment this registration belongs to. [UUID]
+  optional string program_enrollment_id = 18;
+}
+
+// Subject requested in a subject registration.
+message SubjectRegistrationLine {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Registration. [UUID] Set from the parent path on create.
+  string subject_registration_id = 2;
+  // Subject. [UUID]
+  string subject_id = 3;
+  // Compulsory or elective.
+  SelectionType selection_type = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+  // Allowed values of selection_type; REST/JSON uses the lowercase value shown in each comment.
+  enum SelectionType {
+    SELECTION_TYPE_UNSPECIFIED = 0;
+    // "compulsory"
+    SELECTION_TYPE_COMPULSORY = 1;
+    // "elective"
+    SELECTION_TYPE_ELECTIVE = 2;
+  }
+  // Course-plan row being registered. [UUID]
+  optional string course_subject_id = 10;
+}
+
+// Promotion / detention decision moving a student to the next year's grade and section.
+message Promotion {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Student. [UUID]
+  string student_id = 2;
+  // Institution. [UUID]
+  string institution_id = 3;
+  // Current year. [UUID]
+  string from_academic_year_id = 4;
+  // Current grade. [UUID]
+  string from_grade_level_id = 5;
+  // Current section. [UUID]
+  optional string from_section_id = 6;
+  // Next year. [UUID]
+  optional string to_academic_year_id = 7;
+  // Next grade. [UUID]
+  optional string to_grade_level_id = 8;
+  // Next section. [UUID]
+  optional string to_section_id = 9;
+  // Exam series the decision is based on. [UUID]
+  optional string based_on_exam_session_id = 10;
+  // Comments.
+  optional string remarks = 11;
+  // Decision state. Changed only through the workflow operations. Output only.
+  Status status = 12;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 13;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 14;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 15;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 16;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 17;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "proposed"
+    STATUS_PROPOSED = 1;
+    // "approved"
+    STATUS_APPROVED = 2;
+    // "applied"
+    STATUS_APPLIED = 3;
+    // "rejected"
+    STATUS_REJECTED = 4;
+  }
+}
+
+// Student's health data for an academic year.
+message StudentHealthRecord {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Student. [UUID]
+  string student_id = 2;
+  // Year recorded. [UUID]
+  optional string academic_year_id = 3;
+  // Height (cm). [Decimal string]
+  optional string height_cm = 4;
+  // Weight (kg). [Decimal string]
+  optional string weight_kg = 5;
+  // Known medical problems.
+  optional string medical_conditions = 6;
+  // Medication needs.
+  optional string medication_needs = 7;
+  // Drug allergies.
+  optional string medication_allergies = 8;
+  // Food allergies.
+  optional string food_allergies = 9;
+  // Other allergies.
+  optional string other_allergies = 10;
+  // Other medical information.
+  optional string other_medical_info = 11;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 12;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 13;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 14;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 15;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 16;
+}
+
+// Behaviour / performance incident recorded against a student.
+message DisciplineIncident {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  string academic_year_id = 3;
+  // Student's class at the time. [UUID]
+  optional string class_section_id = 4;
+  // Student. [UUID]
+  string student_id = 5;
+  // When it happened.
+  google.protobuf.Timestamp incident_at = 6;
+  // Reporter. [UUID]
+  string reported_by_user_id = 7;
+  // Type.
+  IncidentType incident_type = 8;
+  // Description.
+  string details = 9;
+  // Student / guardian response.
+  optional string response = 10;
+  // Whether action has been taken.
+  bool action_taken = 11;
+  // Type of evidence attached.
+  optional EvidenceMediaType evidence_media_type = 12;
+  // Evidence file. [UUID]
+  optional string evidence_file_id = 13;
+  // Guardians are notified.
+  bool notify_guardians = 14;
+  // Guardian has viewed it.
+  bool seen_by_guardian = 15;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 16;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 17;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 18;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 19;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 20;
+  // Allowed values of incident_type; REST/JSON uses the lowercase value shown in each comment.
+  enum IncidentType {
+    INCIDENT_TYPE_UNSPECIFIED = 0;
+    // "discipline"
+    INCIDENT_TYPE_DISCIPLINE = 1;
+    // "performance"
+    INCIDENT_TYPE_PERFORMANCE = 2;
+    // "other"
+    INCIDENT_TYPE_OTHER = 3;
+  }
+  // Allowed values of evidence_media_type; REST/JSON uses the lowercase value shown in each comment.
+  enum EvidenceMediaType {
+    EVIDENCE_MEDIA_TYPE_UNSPECIFIED = 0;
+    // "video"
+    EVIDENCE_MEDIA_TYPE_VIDEO = 1;
+    // "audio"
+    EVIDENCE_MEDIA_TYPE_AUDIO = 2;
+    // "image"
+    EVIDENCE_MEDIA_TYPE_IMAGE = 3;
+  }
+}
+
+// Type of co-curricular / student activity.
+message ActivityType {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Activity type.
+  string name = 2;
+  // Whether in use.
+  bool is_active = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 9;
+  // Display order.
+  optional int32 sort_order = 10;
+}
+
+// Co-curricular activity / achievement logged for a student.
+message StudentActivity {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Student. [UUID]
+  string student_id = 2;
+  // Staff member who logged / supervised. [UUID]
+  optional string staff_id = 3;
+  // Type. [UUID]
+  optional string activity_type_id = 4;
+  // Date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string activity_date = 5;
+  // Description.
+  optional string description = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+}
+
+message StudentSummary {
+  // Student. Required.
+  Student student = 1;
+  // Person. Required.
+  mysms.people.v1.Person person = 2;
+  // Current class placement.
+  StudentEnrollment current_enrollment = 3;
+  // Course registrations.
+  repeated ProgramEnrollment program_enrollments = 4;
+  // Guardian links.
+  repeated StudentGuardian guardians = 5;
+  // Attendance this year.
+  mysms.common.v1.AttendanceSummary attendance = 6;
+  // Unpaid fee total. [Decimal string]
+  optional string outstanding_fees = 7;
+  // Library items on loan.
+  optional int32 open_loans = 8;
+  // Discipline incidents without action.
+  optional int32 open_incidents = 9;
+}
+
+message ChildCard {
+  // Child. Required.
+  Student student = 1;
+  // Child person. Required.
+  mysms.people.v1.Person person = 2;
+  // School.
+  optional string institution_name = 3;
+  // Class, e.g. Grade 5-A.
+  optional string class_section_label = 4;
+  // Relationship of the caller to the child.
+  optional string relationship = 5;
+}
+
+message ListClassRosterRequest {
+  // Path parameter classSectionId.
+  string class_section_id = 1;
+  // Maximum items to return (1-500, default 50).
+  optional int32 page_size = 2;
+  // Cursor from next_page_token.
+  optional string page_token = 3;
+}
+message ListClassRosterResponse {
+  repeated StudentEnrollment items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+// Leave requested for a student (by a guardian or staff), approved by staff; approved leave explains absences in attendance.
+message StudentLeaveRequest {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Student the leave is for. [UUID]
+  string student_id = 2;
+  // Academic year the leave falls in. [UUID]
+  optional string academic_year_id = 3;
+  // First day of leave.
+  string from_date = 4;
+  // Last day of leave.
+  string to_date = 5;
+  // Which part of the day.
+  optional string day_part = 6;
+  // Stated reason.
+  optional string reason = 7;
+  // Changed by the decide ops. Output only.
+  optional string status = 8;
+  // User who filed the request. [UUID] Output only.
+  optional string requested_by_user_id = 9;
+  // Staff user who decided it. [UUID] Output only.
+  optional string decided_by_user_id = 10;
+  // When it was decided. Output only.
+  google.protobuf.Timestamp decided_at = 11;
+  // Note recorded with the decision. Output only.
+  optional string decision_note = 12;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 13;
+  // User account that created the row (audit reference). [UUID] Output only.
+  optional string created_by = 14;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 15;
+  // User account that last updated the row (audit reference). [UUID] Output only.
+  optional string updated_by = 16;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 17;
+}
+
+message ListStudentLeaveRequestsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListStudentLeaveRequestsResponse {
+  repeated StudentLeaveRequest items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetStudentLeaveRequestRequest {
+  // StudentLeaveRequest id (UUID).
+  string id = 1;
+}
+message GetStudentLeaveRequestResponse {
+  StudentLeaveRequest student_leave_request = 1;
+}
+
+message CreateStudentLeaveRequestRequest {
+  StudentLeaveRequest student_leave_request = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateStudentLeaveRequestResponse {
+  StudentLeaveRequest student_leave_request = 1;
+}
+
+message UpdateStudentLeaveRequestRequest {
+  // Resource with id and etag set.
+  StudentLeaveRequest student_leave_request = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStudentLeaveRequestResponse {
+  StudentLeaveRequest student_leave_request = 1;
+}
+
+message DeleteStudentLeaveRequestRequest {
+  // StudentLeaveRequest id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteStudentLeaveRequestResponse {
+}
+
+// StudentLeaveRequestService: operations on the StudentLeaveRequest aggregate.
+service StudentLeaveRequestService {
+  // List StudentLeaveRequests.
+  rpc ListStudentLeaveRequests(ListStudentLeaveRequestsRequest) returns (ListStudentLeaveRequestsResponse);
+  // Get StudentLeaveRequest.
+  rpc GetStudentLeaveRequest(GetStudentLeaveRequestRequest) returns (GetStudentLeaveRequestResponse);
+  // Create StudentLeaveRequest.
+  rpc CreateStudentLeaveRequest(CreateStudentLeaveRequestRequest) returns (CreateStudentLeaveRequestResponse);
+  // Update StudentLeaveRequest.
+  rpc UpdateStudentLeaveRequest(UpdateStudentLeaveRequestRequest) returns (UpdateStudentLeaveRequestResponse);
+  // Soft-delete StudentLeaveRequest.
+  rpc DeleteStudentLeaveRequest(DeleteStudentLeaveRequestRequest) returns (DeleteStudentLeaveRequestResponse);
+  // Approve the request.
+  rpc ApproveStudentLeaveRequest(ApproveStudentLeaveRequestRequest) returns (ApproveStudentLeaveRequestResponse);
+  // Reject the request.
+  rpc RejectStudentLeaveRequest(RejectStudentLeaveRequestRequest) returns (RejectStudentLeaveRequestResponse);
+}
+
+// OperationService: long-running operations started in this module.
+service OperationService {
+  // Live status of a long-running operation started in this module.
+  rpc GetOperation(GetOperationRequest) returns (GetOperationResponse);
+  // Long-running operations of this module started by the caller.
+  rpc ListOperations(ListOperationsRequest) returns (ListOperationsResponse);
+  // Request cancellation of a running operation started in this module.
+  rpc CancelOperation(CancelOperationRequest) returns (CancelOperationResponse);
+}
+
+message ApproveStudentLeaveRequestRequest {
+  // Path parameter studentLeaveRequestId.
+  string student_leave_request_id = 1;
+  // ETag from the last read.
+  string etag = 2;
+  // Note recorded with the decision.
+  optional string decision_note = 3;
+}
+message ApproveStudentLeaveRequestResponse {
+  StudentLeaveRequest student_leave_request = 1;
+}
+message RejectStudentLeaveRequestRequest {
+  // Path parameter studentLeaveRequestId.
+  string student_leave_request_id = 1;
+  // ETag from the last read.
+  string etag = 2;
+  // Note recorded with the decision.
+  optional string decision_note = 3;
+}
+message RejectStudentLeaveRequestResponse {
+  StudentLeaveRequest student_leave_request = 1;
+}
+
+message GetOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+}
+
+message GetOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message ListOperationsRequest {
+  // Filter by kind.
+  optional string kind = 1;
+  // Page size.
+  optional int32 page_size = 2;
+  // Page token.
+  optional string page_token = 3;
+}
+
+message ListOperationsResponse {
+  repeated mysms.common.v1.Operation items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message CancelOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+
+message CancelOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}

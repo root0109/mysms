@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN" "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+<!-- Every suppression carries a one-line reason (JAVA-CODING-RULES §13). -->
+<suppressions>
+  <!-- auth-client is the one place that may use Spring Security / Nimbus types (§16) -->
+  <suppress id="noSecurityTypes" files="[\\/]auth-client[\\/]"/>
+  <!-- iam is the OIDC issuer and embeds Spring Authorization Server (§16) -->
+  <suppress id="noSecurityTypes" files="[\\/]iam[\\/]src[\\/]main[\\/]"/>
+  <!-- the checkstyle rule that bans @Transactional has to name it in its own unit test -->
+  <suppress id="noTransactionalAnnotation" files="[\\/]core[\\/]src[\\/]test[\\/].*ModuleChecksTest\.java"/>
+</suppressions>

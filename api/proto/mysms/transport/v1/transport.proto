@@ -1,0 +1,340 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.transport.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "TransportProto";
+option java_package = "com.mysms.transport.v1";
+
+// RouteService: operations on the Route aggregate.
+service RouteService {
+  // List Routes.
+  rpc ListRoutes(ListRoutesRequest) returns (ListRoutesResponse);
+  // Get Route.
+  rpc GetRoute(GetRouteRequest) returns (GetRouteResponse);
+  // Create Route.
+  rpc CreateRoute(CreateRouteRequest) returns (CreateRouteResponse);
+  // Update Route.
+  rpc UpdateRoute(UpdateRouteRequest) returns (UpdateRouteResponse);
+  // Soft-delete Route.
+  rpc DeleteRoute(DeleteRouteRequest) returns (DeleteRouteResponse);
+  // List RouteStops.
+  rpc ListRouteStops(ListRouteStopsRequest) returns (ListRouteStopsResponse);
+  // Get RouteStop.
+  rpc GetRouteStop(GetRouteStopRequest) returns (GetRouteStopResponse);
+  // Create RouteStop.
+  rpc CreateRouteStop(CreateRouteStopRequest) returns (CreateRouteStopResponse);
+  // Update RouteStop.
+  rpc UpdateRouteStop(UpdateRouteStopRequest) returns (UpdateRouteStopResponse);
+  // Soft-delete RouteStop.
+  rpc DeleteRouteStop(DeleteRouteStopRequest) returns (DeleteRouteStopResponse);
+}
+
+// StudentTransportService: operations on the StudentTransport aggregate.
+service StudentTransportService {
+  // List StudentTransports.
+  rpc ListStudentTransports(ListStudentTransportsRequest) returns (ListStudentTransportsResponse);
+  // Get StudentTransport.
+  rpc GetStudentTransport(GetStudentTransportRequest) returns (GetStudentTransportResponse);
+  // Create StudentTransport.
+  rpc CreateStudentTransport(CreateStudentTransportRequest) returns (CreateStudentTransportResponse);
+  // Update StudentTransport.
+  rpc UpdateStudentTransport(UpdateStudentTransportRequest) returns (UpdateStudentTransportResponse);
+  // Soft-delete StudentTransport.
+  rpc DeleteStudentTransport(DeleteStudentTransportRequest) returns (DeleteStudentTransportResponse);
+}
+
+message ListRoutesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListRoutesResponse {
+  repeated Route items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetRouteRequest {
+  // Route id (UUID).
+  string id = 1;
+}
+message GetRouteResponse {
+  Route route = 1;
+}
+
+message CreateRouteRequest {
+  Route route = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateRouteResponse {
+  Route route = 1;
+}
+
+message UpdateRouteRequest {
+  // Resource with id and etag set.
+  Route route = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateRouteResponse {
+  Route route = 1;
+}
+
+message DeleteRouteRequest {
+  // Route id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteRouteResponse {
+}
+
+message ListRouteStopsRequest {
+  // Route id (UUID).
+  string route_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListRouteStopsResponse {
+  repeated RouteStop items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetRouteStopRequest {
+  // Route id (UUID).
+  string route_id = 1;
+  // RouteStop id (UUID).
+  string id = 2;
+}
+message GetRouteStopResponse {
+  RouteStop route_stop = 1;
+}
+
+message CreateRouteStopRequest {
+  // Route id (UUID).
+  string route_id = 1;
+  RouteStop route_stop = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateRouteStopResponse {
+  RouteStop route_stop = 1;
+}
+
+message UpdateRouteStopRequest {
+  // Route id (UUID).
+  string route_id = 1;
+  // Resource with id and etag set.
+  RouteStop route_stop = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateRouteStopResponse {
+  RouteStop route_stop = 1;
+}
+
+message DeleteRouteStopRequest {
+  // Route id (UUID).
+  string route_id = 1;
+  // RouteStop id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteRouteStopResponse {
+}
+
+message ListStudentTransportsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListStudentTransportsResponse {
+  repeated StudentTransport items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetStudentTransportRequest {
+  // StudentTransport id (UUID).
+  string id = 1;
+}
+message GetStudentTransportResponse {
+  StudentTransport student_transport = 1;
+}
+
+message CreateStudentTransportRequest {
+  StudentTransport student_transport = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateStudentTransportResponse {
+  StudentTransport student_transport = 1;
+}
+
+message UpdateStudentTransportRequest {
+  // Resource with id and etag set.
+  StudentTransport student_transport = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStudentTransportResponse {
+  StudentTransport student_transport = 1;
+}
+
+message DeleteStudentTransportRequest {
+  // StudentTransport id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteStudentTransportResponse {
+}
+
+// Transport route served by a vehicle.
+message Route {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Year the route runs. [UUID]
+  optional string academic_year_id = 3;
+  // Route name.
+  string name = 4;
+  // Vehicle registration number.
+  string vehicle_number = 5;
+  // Departure time. [Time of day (HH:MM[:SS])]
+  string start_time = 6;
+  // Arrival time. [Time of day (HH:MM[:SS])]
+  string end_time = 7;
+  // Whether running.
+  bool is_active = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+}
+
+// Stop on a route.
+message RouteStop {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Route. [UUID] Set from the parent path on create.
+  string route_id = 2;
+  // Order on the route.
+  int32 sequence = 3;
+  // Stop name.
+  string stop_name = 4;
+  // Morning pickup time. [Time of day (HH:MM[:SS])]
+  optional string pickup_time = 5;
+  // Evening drop time. [Time of day (HH:MM[:SS])]
+  optional string drop_time = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+}
+
+// How a student travels in an academic year.
+message StudentTransport {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Student. [UUID]
+  string student_id = 2;
+  // Academic year. [UUID]
+  string academic_year_id = 3;
+  // Mode.
+  TransportMode transport_mode = 4;
+  // School route (school_bus). [UUID]
+  optional string route_id = 5;
+  // Boarding stop. [UUID]
+  optional string route_stop_id = 6;
+  // Bus pass issued.
+  bool bus_pass_issued = 7;
+  // Notes (driver contact, private van...).
+  optional string details = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+  // Allowed values of transport_mode; REST/JSON uses the lowercase value shown in each comment.
+  enum TransportMode {
+    TRANSPORT_MODE_UNSPECIFIED = 0;
+    // "auto"
+    TRANSPORT_MODE_AUTO = 1;
+    // "car"
+    TRANSPORT_MODE_CAR = 2;
+    // "city_bus"
+    TRANSPORT_MODE_CITY_BUS = 3;
+    // "cycle"
+    TRANSPORT_MODE_CYCLE = 4;
+    // "rickshaw"
+    TRANSPORT_MODE_RICKSHAW = 5;
+    // "school_bus"
+    TRANSPORT_MODE_SCHOOL_BUS = 6;
+    // "taxi"
+    TRANSPORT_MODE_TAXI = 7;
+    // "walking"
+    TRANSPORT_MODE_WALKING = 8;
+  }
+}
+

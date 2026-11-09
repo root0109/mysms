@@ -1,0 +1,141 @@
+erDiagram
+    lms__web_resource["lms.web_resource"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(255) title "NN"
+        text description
+        varchar(30) resource_type "NN"
+        varchar(1000) url
+        varchar(500) launch_file
+        varchar(500) window_features
+        uuid category_id FK
+        boolean is_in_repository "NN"
+    }
+    lms__resource_category["lms.resource_category"] {
+        uuid id PK
+        varchar(120) name "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    lms__ebook["lms.ebook"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(255) title "NN"
+        text description
+        varchar(30) ebook_type "NN"
+        uuid file_id FK "→ platform.file_object (logical)"
+        uuid source_file_id FK "→ platform.file_object (logical)"
+        varchar(100) conversion_job_ref
+        boolean show_related_materials "NN"
+        text related_material_seed
+        uuid category_id FK
+        boolean is_in_repository "NN"
+    }
+    lms__related_material["lms.related_material"] {
+        uuid id PK
+        uuid ebook_id FK "NN"
+        varchar(500) title
+        varchar(1000) url "NN"
+        text summary
+        varchar(100) source
+        varchar(40) media_type
+        bigint content_length
+        varchar(40) content_length_band
+        bigint video_length_seconds
+        varchar(40) video_length_band
+        integer initial_rank
+        integer interactivity_level
+        varchar(40) interactivity_band
+        varchar(40) conceptual_level
+        numeric language_complexity "6,2"
+        varchar(40) language_complexity_band
+    }
+    lms__related_material_rank["lms.related_material_rank"] {
+        uuid id PK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid ebook_id FK "NN"
+        uuid course_id FK
+        uuid file_id FK "→ platform.file_object (logical)"
+        varchar(500) subject_tags
+    }
+    lms__related_material_rank_item["lms.related_material_rank_item"] {
+        uuid id PK
+        uuid related_material_rank_id FK "NN"
+        uuid related_material_id FK "NN"
+        smallint position "NN"
+    }
+    lms__discussion_prompt["lms.discussion_prompt"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(255) title "NN"
+        text description
+        boolean is_in_repository "NN"
+        boolean uses_inline_authoring "NN"
+    }
+    lms__participation_activity["lms.participation_activity"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(255) title "NN"
+        text description
+        boolean is_in_repository "NN"
+    }
+    lms__external_tool["lms.external_tool"] {
+        uuid id PK
+        varchar(200) title "NN"
+        text description
+        boolean is_included "NN"
+        boolean is_paid "NN"
+    }
+    lms__external_tool_setting["lms.external_tool_setting"] {
+        uuid id PK
+        uuid external_tool_id FK "NN"
+        varchar(100) setting_key "NN"
+        text setting_value
+        text secret_value_enc
+    }
+    lms__external_tool_institution["lms.external_tool_institution"] {
+        uuid id PK
+        uuid external_tool_id FK "NN"
+        uuid institution_id FK "NN · → org.institution (logical)"
+    }
+    lms__external_tool_role["lms.external_tool_role"] {
+        uuid id PK
+        uuid external_tool_id FK "NN"
+        uuid role_id FK "NN · → iam.role (logical)"
+    }
+    lms__external_tool_option["lms.external_tool_option"] {
+        uuid id PK
+        uuid external_tool_id FK "NN"
+        varchar(30) option_kind "NN"
+        varchar(40) option_value "NN"
+    }
+    lms__external_tool_resource["lms.external_tool_resource"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(255) title "NN"
+        text description
+    }
+    lms__external_tool_link["lms.external_tool_link"] {
+        uuid id PK
+        uuid external_tool_resource_id FK "NN"
+        uuid external_tool_id FK
+        varchar(255) link_ref "NN"
+        varchar(255) link_title
+    }
+    lms__course["lms.course"] {
+        uuid id PK "drawn on: Courses, versions & catalogue"
+    }
+    lms__resource_category |o--o{ lms__web_resource : "category_id"
+    lms__resource_category |o--o{ lms__ebook : "category_id"
+    lms__ebook ||--o{ lms__related_material : "ebook_id"
+    lms__ebook ||--o{ lms__related_material_rank : "ebook_id"
+    lms__course |o--o{ lms__related_material_rank : "course_id"
+    lms__external_tool ||--o{ lms__external_tool_setting : "external_tool_id"
+    lms__external_tool ||--o{ lms__external_tool_institution : "external_tool_id"
+    lms__external_tool ||--o{ lms__external_tool_role : "external_tool_id"
+    lms__external_tool ||--o{ lms__external_tool_option : "external_tool_id"
+    lms__external_tool_resource ||--o{ lms__external_tool_link : "external_tool_resource_id"
+    lms__external_tool |o--o{ lms__external_tool_link : "external_tool_id"
+    lms__related_material_rank ||--o{ lms__related_material_rank_item : "related_material_rank_id"
+    lms__related_material ||--o{ lms__related_material_rank_item : "related_material_id"

@@ -1,0 +1,206 @@
+erDiagram
+    library__media_type["library.media_type"] {
+        uuid id PK
+        varchar(30) code "NN"
+        varchar(120) name "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    library__media_category["library.media_category"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(120) name "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    library__author["library.author"] {
+        uuid id PK
+        varchar(200) name "NN"
+    }
+    library__publisher["library.publisher"] {
+        uuid id PK
+        varchar(200) name "NN"
+    }
+    library__media["library.media"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid acquired_academic_year_id FK "→ org.academic_year (logical)"
+        varchar(300) title "NN"
+        varchar(20) isbn
+        varchar(40) internal_code
+        varchar(60) edition
+        text description
+        uuid media_type_id FK
+        uuid media_category_id FK
+        uuid cover_image_file_id FK "→ platform.file_object (logical)"
+        boolean is_active "NN"
+    }
+    library__media_author["library.media_author"] {
+        uuid id PK
+        uuid media_id FK "NN"
+        uuid author_id FK "NN"
+        integer sort_order "NN"
+    }
+    library__media_publisher["library.media_publisher"] {
+        uuid id PK
+        uuid media_id FK "NN"
+        uuid publisher_id FK "NN"
+    }
+    library__media_course["library.media_course"] {
+        uuid id PK
+        uuid media_id FK "NN"
+        uuid course_id FK "NN · → academics.course (logical)"
+    }
+    library__media_subject["library.media_subject"] {
+        uuid id PK
+        uuid media_id FK "NN"
+        uuid subject_id FK "NN · → academics.subject (logical)"
+    }
+    library__media_unit["library.media_unit"] {
+        uuid id PK
+        uuid media_id FK "NN"
+        varchar(40) accession_number "NN"
+        varchar(60) barcode
+        varchar(30) status "NN"
+    }
+    library__library_card_type["library.library_card_type"] {
+        uuid id PK
+        varchar(120) name "NN"
+        integer max_items "NN"
+        integer loan_days "NN"
+        numeric fine_per_day "10,2 · NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    library__library_card["library.library_card"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(40) card_number "NN"
+        uuid card_type_id FK "NN"
+        varchar(30) holder_type "NN"
+        uuid person_id FK "NN · → people.person (logical)"
+        uuid student_id FK "→ sis.student (logical)"
+        uuid staff_id FK "→ hr.staff (logical)"
+        integer max_items_override
+        date issue_date "NN"
+        date expiry_date
+        varchar(30) status "NN"
+    }
+    library__loan["library.loan"] {
+        uuid id PK
+        uuid media_unit_id FK "NN"
+        uuid media_id FK "NN"
+        uuid library_card_id FK "NN"
+        uuid borrower_user_id FK "→ iam.user_account (logical)"
+        date issued_on
+        date due_on
+        date returned_on
+        numeric fine_amount "10,2 · NN"
+        uuid invoice_id FK "→ finance.invoice (logical)"
+        uuid issued_by_user_id FK "→ iam.user_account (logical)"
+        varchar(30) status "NN"
+    }
+    library__reservation["library.reservation"] {
+        uuid id PK
+        uuid media_id FK "NN"
+        varchar(40) reference
+        uuid requested_by_person_id FK "→ people.person (logical)"
+        uuid requested_by_user_id FK "→ iam.user_account (logical)"
+        date date_from "NN"
+        date date_to "NN"
+        varchar(30) status "NN"
+    }
+    library__purchase_request["library.purchase_request"] {
+        uuid id PK
+        varchar(40) request_number
+        varchar(300) title "NN"
+        varchar(300) author_text "NN"
+        varchar(60) edition
+        varchar(200) publisher_text
+        uuid media_type_id FK
+        uuid requested_by_person_id FK "→ people.person (logical)"
+        date request_date
+        varchar(30) status "NN"
+    }
+    library__purchase_request_course["library.purchase_request_course"] {
+        uuid id PK
+        uuid purchase_request_id FK "NN"
+        uuid course_id FK "NN · → academics.course (logical)"
+    }
+    library__purchase_request_subject["library.purchase_request_subject"] {
+        uuid id PK
+        uuid purchase_request_id FK "NN"
+        uuid subject_id FK "NN · → academics.subject (logical)"
+    }
+    library__outbox_event["library.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    library__inbox_event["library.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    library__idempotency_key["library.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    library__operation["library.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    library__number_sequence["library.number_sequence"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(40) sequence_code "NN"
+        varchar(20) period_key "NN"
+        varchar(20) prefix
+        smallint padding "NN"
+        bigint next_value "NN"
+    }
+    library__media_type |o--o{ library__media : "media_type_id"
+    library__media_category |o--o{ library__media : "media_category_id"
+    library__media ||--o{ library__media_author : "media_id"
+    library__author ||--o{ library__media_author : "author_id"
+    library__media ||--o{ library__media_publisher : "media_id"
+    library__publisher ||--o{ library__media_publisher : "publisher_id"
+    library__media ||--o{ library__media_course : "media_id"
+    library__media ||--o{ library__media_subject : "media_id"
+    library__media ||--o{ library__media_unit : "media_id"
+    library__library_card_type ||--o{ library__library_card : "card_type_id"
+    library__media_unit ||--o{ library__loan : "media_unit_id"
+    library__media ||--o{ library__loan : "media_id"
+    library__library_card ||--o{ library__loan : "library_card_id"
+    library__media ||--o{ library__reservation : "media_id"
+    library__media_type |o--o{ library__purchase_request : "media_type_id"
+    library__purchase_request ||--o{ library__purchase_request_course : "purchase_request_id"
+    library__purchase_request ||--o{ library__purchase_request_subject : "purchase_request_id"

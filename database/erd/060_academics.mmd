@@ -1,0 +1,202 @@
+erDiagram
+    academics__program_level["academics.program_level"] {
+        uuid id PK
+        varchar(80) name "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    academics__program["academics.program"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid department_id FK "→ org.department (logical)"
+        uuid program_level_id FK "NN"
+        varchar(30) code "NN"
+        varchar(200) name "NN"
+        numeric min_unit_load "6,2"
+        numeric max_unit_load "6,2"
+        uuid image_file_id FK "→ platform.file_object (logical)"
+        boolean is_active "NN"
+    }
+    academics__course["academics.course"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid program_id FK
+        uuid department_id FK "→ org.department (logical)"
+        uuid parent_course_id FK
+        varchar(30) code "NN"
+        varchar(200) name "NN"
+        varchar(30) evaluation_type "NN"
+        numeric min_unit_load "6,2"
+        numeric max_unit_load "6,2"
+        boolean is_active "NN"
+    }
+    academics__batch["academics.batch"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        varchar(30) code "NN"
+        varchar(150) name "NN"
+        date start_date "NN"
+        date end_date "NN"
+        boolean is_active "NN"
+    }
+    academics__grade_level["academics.grade_level"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(60) name "NN"
+        varchar(60) slug "NN"
+        integer sort_order
+        boolean is_active "NN"
+    }
+    academics__section["academics.section"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(30) name "NN"
+        boolean is_active "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+    }
+    academics__class_section["academics.class_section"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "NN · → org.academic_year (logical)"
+        uuid grade_level_id FK "NN"
+        uuid section_id FK "NN"
+        uuid class_teacher_staff_id FK "→ hr.staff (logical)"
+        integer capacity
+        varchar(60) stream
+        boolean is_active "NN"
+    }
+    academics__subject["academics.subject"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid department_id FK "→ org.department (logical)"
+        varchar(256) code
+        varchar(150) name "NN"
+        varchar(30) delivery_type "NN"
+        varchar(30) default_category "NN"
+        numeric grade_weightage "6,2"
+        boolean is_active "NN"
+    }
+    academics__course_subject["academics.course_subject"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        uuid subject_id FK "NN"
+        smallint term_number
+        numeric credits "5,2"
+        varchar(30) subject_category
+        numeric max_marks "7,2"
+    }
+    academics__class_subject["academics.class_subject"] {
+        uuid id PK
+        uuid class_section_id FK "NN"
+        uuid subject_id FK "NN"
+        varchar(30) offering_type "NN"
+        boolean is_active "NN"
+    }
+    academics__teaching_assignment["academics.teaching_assignment"] {
+        uuid id PK
+        uuid class_subject_id FK "NN"
+        uuid staff_id FK "NN · → hr.staff (logical)"
+        integer periods_per_week
+        integer periods_remaining
+        varchar(40) teacher_role
+        boolean is_active "NN"
+    }
+    academics__curriculum_unit["academics.curriculum_unit"] {
+        uuid id PK
+        uuid class_subject_id FK "NN"
+        varchar(200) name "NN"
+        integer sequence
+        varchar(30) status "NN"
+    }
+    academics__lesson_plan["academics.lesson_plan"] {
+        uuid id PK
+        uuid teaching_assignment_id FK "NN"
+        uuid curriculum_unit_id FK
+        varchar(20) unit_no "NN"
+        varchar(200) unit_name "NN"
+        varchar(200) title "NN"
+        integer planned_duration_minutes "NN"
+        text description "NN"
+        text objective
+        text materials_required
+        text introduction
+        text procedure_text
+        text conclusion
+        text assessment_text
+        text modification
+        text notes
+        varchar(30) status "NN"
+        boolean is_published "NN"
+        timestamptz published_at
+        date start_date
+        date end_date
+    }
+    academics__lesson_plan_approval["academics.lesson_plan_approval"] {
+        uuid id PK
+        uuid lesson_plan_id FK "NN"
+        varchar(30) decision "NN"
+        text comments "NN"
+        uuid decided_by_user_id FK "→ iam.user_account (logical)"
+        timestamptz decided_at
+    }
+    academics__outbox_event["academics.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    academics__inbox_event["academics.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    academics__idempotency_key["academics.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    academics__operation["academics.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    academics__program_level ||--o{ academics__program : "program_level_id"
+    academics__program |o--o{ academics__course : "program_id"
+    academics__course |o--o{ academics__course : "parent_course_id"
+    academics__course ||--o{ academics__batch : "course_id"
+    academics__grade_level ||--o{ academics__class_section : "grade_level_id"
+    academics__section ||--o{ academics__class_section : "section_id"
+    academics__course ||--o{ academics__course_subject : "course_id"
+    academics__subject ||--o{ academics__course_subject : "subject_id"
+    academics__class_section ||--o{ academics__class_subject : "class_section_id"
+    academics__subject ||--o{ academics__class_subject : "subject_id"
+    academics__class_subject ||--o{ academics__teaching_assignment : "class_subject_id"
+    academics__class_subject ||--o{ academics__curriculum_unit : "class_subject_id"
+    academics__teaching_assignment ||--o{ academics__lesson_plan : "teaching_assignment_id"
+    academics__curriculum_unit |o--o{ academics__lesson_plan : "curriculum_unit_id"
+    academics__lesson_plan ||--o{ academics__lesson_plan_approval : "lesson_plan_id"

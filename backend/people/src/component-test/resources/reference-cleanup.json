@@ -1,0 +1,77 @@
+{
+ "module": "people",
+ "cleanup": [
+  {
+   "event": "platform.file_object.deleted",
+   "table": "people.consent_record",
+   "column": "evidence_file_id",
+   "action": "null the column",
+   "ownerId": "79d38498-a222-5042-9740-60c6c12891b8",
+   "rowId": "750b5338-dbca-523c-a8af-9cb7e5b3220f",
+   "otherRowId": "ca84c9aa-0988-51d5-bc94-825675b916fd",
+   "fixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-0c87986d', 1, 'd799045a-94cc-509b-a662-85e4ce3a09c8') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-cad12ef4', 1, 'a2da1934-b1b5-5f1f-8564-66e9edef348f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO people.consent_record (tenant_id, person_id, given_by_person_id, purpose, policy_version, granted_at, channel, row_version, evidence_file_id, id) VALUES (:tenant, 'd799045a-94cc-509b-a662-85e4ce3a09c8', 'a2da1934-b1b5-5f1f-8564-66e9edef348f', 'data_processing', 't-policy-version-bfee0ce8', '2026-01-10T09:00:00Z', 'web', 1, '79d38498-a222-5042-9740-60c6c12891b8', '750b5338-dbca-523c-a8af-9cb7e5b3220f')",
+   "otherFixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-0c87986d', 1, '5f3626fd-da28-5699-9cac-33dd371873c6') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-cad12ef4', 1, '39dc80ad-ff05-5b76-aa16-27bba9fb68ec') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO people.consent_record (tenant_id, person_id, given_by_person_id, purpose, policy_version, granted_at, channel, row_version, evidence_file_id, id) VALUES (:tenant, '5f3626fd-da28-5699-9cac-33dd371873c6', '39dc80ad-ff05-5b76-aa16-27bba9fb68ec', 'data_processing', 't-policy-version-93613ab8', '2026-01-10T09:00:00Z', 'web', 1, '79d38498-a222-5042-9740-60c6c12891b8', 'ca84c9aa-0988-51d5-bc94-825675b916fd')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "people.person",
+   "column": "photo_file_id",
+   "action": "null the column",
+   "ownerId": "6fd317b3-ab0c-5229-ba63-29eb0e1736c1",
+   "rowId": "ee283c19-456f-58d9-8876-e65770d841ee",
+   "otherRowId": "506a27e3-c38a-5ba3-a4e0-79d018fdbb84",
+   "fixtures": [],
+   "row": "INSERT INTO people.person (tenant_id, display_name, row_version, photo_file_id, id) VALUES (:tenant, 't-display-name-5d93404d', 1, '6fd317b3-ab0c-5229-ba63-29eb0e1736c1', 'ee283c19-456f-58d9-8876-e65770d841ee')",
+   "otherFixtures": [],
+   "other": "INSERT INTO people.person (tenant_id, display_name, row_version, photo_file_id, id) VALUES (:tenant, 't-display-name-62882efc', 1, '6fd317b3-ab0c-5229-ba63-29eb0e1736c1', '506a27e3-c38a-5ba3-a4e0-79d018fdbb84')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "people.public_profile",
+   "column": "cover_image_file_id",
+   "action": "null the column",
+   "ownerId": "99bbf6f9-d3fd-545e-8dfa-bc9acbd48615",
+   "rowId": "9e224b3c-38c0-55b0-a034-8522848326ca",
+   "otherRowId": "3483a6e3-e2f5-5a03-80c1-603007600599",
+   "fixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-0c87986d', 1, 'd799045a-94cc-509b-a662-85e4ce3a09c8') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO people.public_profile (tenant_id, person_id, row_version, cover_image_file_id, id) VALUES (:tenant, 'd799045a-94cc-509b-a662-85e4ce3a09c8', 1, '99bbf6f9-d3fd-545e-8dfa-bc9acbd48615', '9e224b3c-38c0-55b0-a034-8522848326ca')",
+   "otherFixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-0c87986d', 1, '5f3626fd-da28-5699-9cac-33dd371873c6') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO people.public_profile (tenant_id, person_id, row_version, cover_image_file_id, id) VALUES (:tenant, '5f3626fd-da28-5699-9cac-33dd371873c6', 1, '99bbf6f9-d3fd-545e-8dfa-bc9acbd48615', '3483a6e3-e2f5-5a03-80c1-603007600599')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "people.consent_record",
+   "column": "recorded_by_user_id",
+   "action": "null the column",
+   "ownerId": "a98a12ab-557a-55d9-a8ac-9c1774fe6c03",
+   "rowId": "953cb9f0-91a8-51c8-bf3d-a9273a7d24c9",
+   "otherRowId": "b2bf8526-ab5f-5760-8d4b-49f1249af01a",
+   "fixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-0c87986d', 1, 'd799045a-94cc-509b-a662-85e4ce3a09c8') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-cad12ef4', 1, 'a2da1934-b1b5-5f1f-8564-66e9edef348f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO people.consent_record (tenant_id, person_id, given_by_person_id, purpose, policy_version, granted_at, channel, row_version, recorded_by_user_id, id) VALUES (:tenant, 'd799045a-94cc-509b-a662-85e4ce3a09c8', 'a2da1934-b1b5-5f1f-8564-66e9edef348f', 'data_processing', 't-policy-version-73929d32', '2026-01-10T09:00:00Z', 'web', 1, 'a98a12ab-557a-55d9-a8ac-9c1774fe6c03', '953cb9f0-91a8-51c8-bf3d-a9273a7d24c9')",
+   "otherFixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-0c87986d', 1, '5f3626fd-da28-5699-9cac-33dd371873c6') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-cad12ef4', 1, '39dc80ad-ff05-5b76-aa16-27bba9fb68ec') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO people.consent_record (tenant_id, person_id, given_by_person_id, purpose, policy_version, granted_at, channel, row_version, recorded_by_user_id, id) VALUES (:tenant, '5f3626fd-da28-5699-9cac-33dd371873c6', '39dc80ad-ff05-5b76-aa16-27bba9fb68ec', 'data_processing', 't-policy-version-5348777c', '2026-01-10T09:00:00Z', 'web', 1, 'a98a12ab-557a-55d9-a8ac-9c1774fe6c03', 'b2bf8526-ab5f-5760-8d4b-49f1249af01a')",
+   "softDeletable": true
+  }
+ ]
+}

@@ -1,0 +1,178 @@
+erDiagram
+    lms__category["lms.category"] {
+        uuid id PK
+        varchar(120) name "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    lms__course["lms.course"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(200) title "NN"
+        text short_introduction
+        text description
+        uuid image_file_id FK "→ platform.file_object (logical)"
+        varchar(500) video_url
+        uuid category_id FK
+        varchar(30) status "NN"
+        boolean is_published "NN"
+        date published_on
+        boolean is_upcoming "NN"
+        boolean is_featured "NN"
+        boolean disable_self_learning "NN"
+        boolean enforce_lesson_order "NN"
+        boolean certification_enabled "NN"
+        boolean paid_certificate "NN"
+        uuid default_evaluator_id FK
+        boolean is_paid "NN"
+        numeric price "14,2"
+        uuid currency_id FK "→ master.currency (logical)"
+        numeric price_usd "14,2"
+        varchar(30) card_gradient
+        varchar(64) timezone
+        boolean publish_notification_sent "NN"
+        integer enrollment_count "NN"
+        integer lesson_count "NN"
+        numeric average_rating "3,2"
+        varchar(50) code
+        varchar(100) state_standard_code
+        numeric credits "6,2"
+        text prerequisites
+        text corequisites
+        date effective_from
+        varchar(30) lifecycle_status "NN"
+        date deactivated_on
+        integer version_major "NN"
+        integer version_minor "NN"
+        uuid previous_version_id FK
+        uuid root_course_id FK
+        text author_comments
+        varchar(100) external_ref
+        integer nominal_duration
+        varchar(30) delivery_modality
+        boolean is_shared "NN"
+        timestamptz content_updated_at
+        varchar(30) grade_display "NN"
+        uuid grading_scheme_id FK "→ assessment.grading_scheme (logical)"
+        boolean is_in_catalog "NN"
+        text catalog_description
+        timestamptz catalog_visible_from
+        timestamptz catalog_visible_until
+        text outline
+        integer workload_hours
+        varchar(30) catalog_status "NN"
+    }
+    lms__course_teacher["lms.course_teacher"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        integer sort_order "NN"
+    }
+    lms__related_course["lms.related_course"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        uuid related_course_id FK "NN"
+        integer sort_order "NN"
+        uuid author_profile_id FK
+    }
+    lms__course_mentor["lms.course_mentor"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+    }
+    lms__course_author_profile["lms.course_author_profile"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        varchar(200) name "NN"
+        text bio
+        uuid photo_file_id FK "→ platform.file_object (logical)"
+        varchar(255) qualification
+        integer sort_order "NN"
+    }
+    lms__course_preview["lms.course_preview"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        varchar(30) preview_kind "NN"
+        uuid file_id FK "NN · → platform.file_object (logical)"
+        varchar(100) icon
+        varchar(255) title
+        text description
+        integer sort_order "NN"
+    }
+    lms__course_testimonial["lms.course_testimonial"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        varchar(255) title
+        text quote
+        uuid photo_file_id FK "→ platform.file_object (logical)"
+        varchar(255) current_position
+        integer sort_order "NN"
+    }
+    lms__catalog_banner["lms.catalog_banner"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        varchar(30) placement "NN"
+        uuid image_file_id FK "→ platform.file_object (logical)"
+        integer sort_order "NN"
+    }
+    lms__enrollment_request["lms.enrollment_request"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        uuid cohort_id FK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        timestamptz requested_at "NN"
+        varchar(30) status "NN"
+        uuid decided_by FK "→ iam.user_account (logical)"
+        timestamptz decided_at
+    }
+    lms__course_review["lms.course_review"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        numeric rating "3,2 · NN"
+        text review
+    }
+    lms__course_interest["lms.course_interest"] {
+        uuid id PK
+        uuid course_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        boolean email_sent "NN"
+    }
+    lms__learning_objective["lms.learning_objective"] {
+        uuid id PK
+        uuid course_id FK
+        uuid chapter_id FK
+        text objective "NN"
+        integer sort_order "NN"
+        uuid copied_from_id FK
+    }
+    lms__chapter["lms.chapter"] {
+        uuid id PK "drawn on: Outline, content delivery & progress"
+    }
+    lms__cohort["lms.cohort"] {
+        uuid id PK "drawn on: Cohorts, schedules & live classes"
+    }
+    lms__evaluator["lms.evaluator"] {
+        uuid id PK "drawn on: Evaluation, certificates, badges & programs"
+    }
+    lms__category |o--o{ lms__course : "category_id"
+    lms__evaluator |o--o{ lms__course : "default_evaluator_id"
+    lms__course |o--o{ lms__course : "previous_version_id"
+    lms__course |o--o{ lms__course : "root_course_id"
+    lms__course ||--o{ lms__course_teacher : "course_id"
+    lms__course ||--o{ lms__related_course : "course_id"
+    lms__course ||--o{ lms__related_course : "related_course_id"
+    lms__course_author_profile |o--o{ lms__related_course : "author_profile_id"
+    lms__course ||--o{ lms__course_mentor : "course_id"
+    lms__course ||--o{ lms__course_review : "course_id"
+    lms__course ||--o{ lms__course_interest : "course_id"
+    lms__course |o--o{ lms__learning_objective : "course_id"
+    lms__chapter |o--o{ lms__learning_objective : "chapter_id"
+    lms__learning_objective |o--o{ lms__learning_objective : "copied_from_id"
+    lms__course ||--o{ lms__course_author_profile : "course_id"
+    lms__course ||--o{ lms__course_preview : "course_id"
+    lms__course ||--o{ lms__course_testimonial : "course_id"
+    lms__course ||--o{ lms__catalog_banner : "course_id"
+    lms__course ||--o{ lms__enrollment_request : "course_id"
+    lms__cohort |o--o{ lms__enrollment_request : "cohort_id"

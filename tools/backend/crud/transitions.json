@@ -1,0 +1,93 @@
+{
+ "description": "State transitions served as generated workflow operations. Each entry: the operation, the guard (column -> values the row must have, else 409), the columns it sets ($now, $today, $actor, $param:<requestField>, or a literal) and whether the request carries a reason (kept in the audit record). Only transitions that change nothing but these columns are listed; operations with further effects (notifications, approval records, balances, enrolment, payments...) are hand-written work. The state machines are documented in api/state-machines.md, generated from this file.",
+ "transitions": [
+  {"op": "academics.SubmitLessonPlan", "guard": {"status": ["draft"]}, "set": {"status": "pending"}},
+  {"op": "academics.RejectLessonPlan", "guard": {"status": ["pending"]}, "set": {"status": "rejected"}, "reason": true},
+  {"op": "academics.PublishLessonPlan", "guard": {"status": ["approved"], "is_published": [false]}, "set": {"is_published": true, "published_at": "$now"}},
+  {"op": "academics.ArchiveLessonPlan", "guard": {"status": ["approved", "rejected", "cancelled"]}, "set": {"status": "archived"}},
+
+  {"op": "admission.ConfirmAdmissionCycle", "guard": {"status": ["draft"]}, "set": {"status": "confirmed"}},
+  {"op": "admission.CloseAdmissionCycle", "guard": {"status": ["open", "admission"]}, "set": {"status": "closed"}},
+  {"op": "admission.CancelAdmissionCycle", "guard": {"status": ["draft", "confirmed", "open"]}, "set": {"status": "cancelled"}, "reason": true},
+  {"op": "admission.ResetAdmissionCycle", "guard": {"status": ["cancelled"]}, "set": {"status": "draft"}},
+
+  {"op": "assessment.PublishAssignment", "guard": {"status": ["draft"]}, "set": {"status": "published"}},
+  {"op": "assessment.CancelAssignment", "guard": {"status": ["draft", "published", "ongoing"]}, "set": {"status": "cancelled"}, "reason": true},
+  {"op": "assessment.ResetAssignment", "guard": {"status": ["cancelled"]}, "set": {"status": "draft"}},
+  {"op": "assessment.SubmitAssignmentSubmission", "guard": {"status": ["draft", "change_requested"]}, "set": {"status": "submitted", "submitted_at": "$now"}},
+  {"op": "assessment.AcceptAssignmentSubmission", "guard": {"status": ["submitted"]}, "set": {"status": "accepted"}},
+  {"op": "assessment.RejectAssignmentSubmission", "guard": {"status": ["submitted"]}, "set": {"status": "rejected"}, "reason": true},
+  {"op": "assessment.ScheduleExamSession", "guard": {"status": ["draft"]}, "set": {"status": "scheduled"}},
+  {"op": "assessment.MarkExamSessionHeld", "guard": {"status": ["scheduled"]}, "set": {"status": "held"}},
+  {"op": "assessment.CompleteExamSession", "guard": {"status": ["held"]}, "set": {"status": "done"}},
+  {"op": "assessment.CancelExamSession", "guard": {"status": ["draft", "scheduled"]}, "set": {"status": "cancelled"}, "reason": true},
+  {"op": "assessment.ResetExamSession", "guard": {"status": ["cancelled"]}, "set": {"status": "draft"}},
+  {"op": "assessment.ScheduleExam", "guard": {"status": ["draft"]}, "set": {"status": "scheduled"}},
+  {"op": "assessment.CompleteExam", "guard": {"status": ["held", "result_updated"]}, "set": {"status": "done"}},
+  {"op": "assessment.CancelExam", "guard": {"status": ["draft", "scheduled"]}, "set": {"status": "cancelled"}, "reason": true},
+  {"op": "assessment.ResetExam", "guard": {"status": ["cancelled"]}, "set": {"status": "draft"}},
+  {"op": "assessment.CancelMarksheet", "guard": {"status": ["draft", "validated"]}, "set": {"status": "cancelled"}, "reason": true},
+  {"op": "assessment.ResetMarksheet", "guard": {"status": ["cancelled"]}, "set": {"status": "draft"}},
+
+  {"op": "attendance.StartAttendanceSheet", "guard": {"status": ["draft"]}, "set": {"status": "in_progress"}},
+  {"op": "attendance.CancelAttendanceSheet", "guard": {"status": ["draft", "in_progress"]}, "set": {"status": "cancelled"}, "reason": true},
+  {"op": "attendance.ResetAttendanceSheet", "guard": {"status": ["cancelled"]}, "set": {"status": "draft"}},
+
+  {"op": "careers.CloseJobOpening", "guard": {"status": ["open"]}, "set": {"status": "closed"}},
+  {"op": "careers.ReopenJobOpening", "guard": {"status": ["closed"]}, "set": {"status": "open"}},
+
+  {"op": "comms.PublishNotice", "guard": {"is_published": [false], "is_closed": [false]}, "set": {"is_published": true}},
+  {"op": "comms.UnpublishNotice", "guard": {"is_published": [true]}, "set": {"is_published": false}},
+  {"op": "comms.DeactivateNotice", "guard": {"is_closed": [false]}, "set": {"is_closed": true}, "reason": true},
+  {"op": "comms.ReactivateNotice", "guard": {"is_closed": [true]}, "set": {"is_closed": false}},
+  {"op": "comms.ActivateEvent", "guard": {"status": ["inactive"]}, "set": {"status": "active"}},
+  {"op": "comms.DeactivateEvent", "guard": {"status": ["active"]}, "set": {"status": "inactive"}},
+  {"op": "comms.CloseFeedbackThread", "guard": {"status": ["open"]}, "set": {"status": "closed"}},
+  {"op": "comms.ReopenFeedbackThread", "guard": {"status": ["closed"]}, "set": {"status": "open"}},
+  {"op": "comms.CompleteTask", "guard": {"is_completed": [false]}, "set": {"is_completed": true}},
+  {"op": "comms.ReopenTask", "guard": {"is_completed": [true]}, "set": {"is_completed": false}},
+  {"op": "comms.SnoozeTask", "guard": {"is_completed": [false]}, "set": {"is_snoozed": true, "reminder_at": "$param:until"}},
+  {"op": "comms.ApprovePost", "guard": {"status": ["pending"]}, "set": {"status": "posted", "posted_at": "$now"}},
+  {"op": "comms.CancelPost", "guard": {"status": ["draft", "pending", "posted"]}, "set": {"status": "cancelled"}, "reason": true},
+  {"op": "comms.CancelEventOccurrence", "guard": {"is_cancelled": [false]}, "set": {"is_cancelled": true}, "reason": true},
+
+  {"op": "finance.ArchiveFeeStructure", "guard": {"status": ["published"]}, "set": {"status": "archived"}},
+
+  {"op": "hr.RejectLeave", "guard": {"status": ["pending"]}, "set": {"status": "rejected", "decided_by_user_id": "$actor", "decided_on": "$today"}, "reason": true},
+  {"op": "hr.CancelLeave", "guard": {"status": ["pending"]}, "set": {"status": "cancelled"}, "reason": true},
+
+  {"op": "iam.ActivateUser", "guard": {"status": ["inactive"]}, "set": {"status": "active"}},
+  {"op": "iam.DeactivateUser", "guard": {"status": ["active", "locked"]}, "set": {"status": "inactive"}, "reason": true},
+  {"op": "iam.UnlockUser", "guard": {}, "set": {"failed_login_count": 0, "locked_until": null}},
+
+  {"op": "library.AcceptReservation", "guard": {"status": ["requested"]}, "set": {"status": "accepted"}},
+  {"op": "library.RejectReservation", "guard": {"status": ["requested"]}, "set": {"status": "rejected"}, "reason": true},
+  {"op": "library.SubmitPurchaseRequest", "guard": {"status": ["draft"]}, "set": {"status": "requested"}},
+  {"op": "library.AcceptPurchaseRequest", "guard": {"status": ["requested"]}, "set": {"status": "accepted"}},
+  {"op": "library.RejectPurchaseRequest", "guard": {"status": ["requested"]}, "set": {"status": "rejected"}, "reason": true},
+
+  {"op": "lms.AcceptGroupRequest", "guard": {"status": ["requested"]}, "set": {"status": "active"}},
+  {"op": "lms.RejectGroupRequest", "guard": {"status": ["requested"]}, "set": {"status": "rejected"}, "reason": true},
+  {"op": "lms.HideForumTopic", "guard": {"is_hidden": [false]}, "set": {"is_hidden": true}},
+  {"op": "lms.UnhideForumTopic", "guard": {"is_hidden": [true]}, "set": {"is_hidden": false}},
+  {"op": "lms.RejectEnrollmentRequest", "guard": {"status": ["pending"]}, "set": {"status": "rejected", "decided_by": "$actor", "decided_at": "$now"}, "reason": true},
+  {"op": "lms.CancelImportExportJob", "guard": {"status": ["pending"]}, "set": {"status": "cancelled"}},
+
+  {"op": "org.CloseAcademicYear", "guard": {"status": ["active"]}, "set": {"status": "closed", "is_current": false}},
+
+  {"op": "payroll.CancelPayslip", "guard": {"status": ["unpaid"]}, "set": {"status": "cancelled"}, "reason": true},
+
+  {"op": "sis.ApprovePromotion", "guard": {"status": ["proposed"]}, "set": {"status": "approved"}},
+  {"op": "sis.RejectPromotion", "guard": {"status": ["proposed"]}, "set": {"status": "rejected"}, "reason": true},
+  {"op": "sis.SubmitSubjectRegistration", "guard": {"status": ["draft"]}, "set": {"status": "submitted"}},
+  {"op": "sis.RejectSubjectRegistration", "guard": {"status": ["submitted"]}, "set": {"status": "rejected"}, "reason": true},
+  {"op": "sis.ResetSubjectRegistration", "guard": {"status": ["rejected"]}, "set": {"status": "draft"}},
+  {"op": "sis.ApproveStudentLeaveRequest", "guard": {"status": ["pending"]}, "set": {"status": "approved", "decided_by_user_id": "$actor", "decided_at": "$now", "decision_note": "$param:decisionNote"}},
+  {"op": "sis.RejectStudentLeaveRequest", "guard": {"status": ["pending"]}, "set": {"status": "rejected", "decided_by_user_id": "$actor", "decided_at": "$now", "decision_note": "$param:decisionNote"}},
+
+  {"op": "timetable.ConfirmSession", "guard": {"status": ["draft"]}, "set": {"status": "confirmed"}},
+  {"op": "timetable.CompleteSession", "guard": {"status": ["confirmed"]}, "set": {"status": "done"}},
+  {"op": "timetable.CancelSession", "guard": {"status": ["draft", "confirmed"]}, "set": {"status": "cancelled"}, "reason": true},
+  {"op": "timetable.ResetSession", "guard": {"status": ["cancelled"]}, "set": {"status": "draft"}}
+ ]
+}

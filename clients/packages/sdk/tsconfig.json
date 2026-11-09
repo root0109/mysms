@@ -1,0 +1,4 @@
+{
+  "extends": "@mysms/config/tsconfig.lib.json",
+  "include": ["src"]
+}

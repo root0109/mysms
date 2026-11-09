@@ -1,0 +1,57 @@
+{
+ "module": "attendance",
+ "cleanup": [
+  {
+   "event": "sis.student_leave_request.deleted",
+   "table": "attendance.attendance_record",
+   "column": "leave_request_id",
+   "action": "null the column",
+   "ownerId": "27491672-d92e-5288-838c-e42c56773327",
+   "rowId": "5a50609d-70c0-5de8-a8e6-76d918ab46e5",
+   "otherRowId": "13db4373-e0ce-5176-9089-2ca22f93fe15",
+   "fixtures": [
+    "INSERT INTO attendance.attendance_register (tenant_id, institution_id, code, name, register_scope, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C56BADF73', 't-name-77e88e2b', 'institution', 1, 'a2d6b50f-86b8-5a53-b2d7-189aa18d876e') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO attendance.attendance_sheet (tenant_id, register_id, attendance_date, row_version, id) VALUES (:tenant, 'a2d6b50f-86b8-5a53-b2d7-189aa18d876e', '2026-01-12', 1, '45d80e66-c56a-5a22-a86b-f9526b14baa6') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO attendance.attendance_record (tenant_id, sheet_id, student_id, status, attendance_date, row_version, leave_request_id, id) VALUES (:tenant, '45d80e66-c56a-5a22-a86b-f9526b14baa6', 'd0ba8b58-f45a-5b65-be92-d4140226da36', 'present', '2026-01-12', 1, '27491672-d92e-5288-838c-e42c56773327', '5a50609d-70c0-5de8-a8e6-76d918ab46e5')",
+   "otherFixtures": [
+    "INSERT INTO attendance.attendance_register (tenant_id, institution_id, code, name, register_scope, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'C56BADF73', 't-name-77e88e2b', 'institution', 1, '0cda4ffd-378f-5d35-af5b-f914c7488d4b') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO attendance.attendance_sheet (tenant_id, register_id, attendance_date, row_version, id) VALUES (:tenant, '0cda4ffd-378f-5d35-af5b-f914c7488d4b', '2026-01-12', 1, 'ce9c28d8-ca6d-5af3-89ad-a249ef480db4') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO attendance.attendance_record (tenant_id, sheet_id, student_id, status, attendance_date, row_version, leave_request_id, id) VALUES (:tenant, 'ce9c28d8-ca6d-5af3-89ad-a249ef480db4', 'f0a60703-fb5d-5593-9f1f-f8a8662e92ed', 'present', '2026-01-12', 1, '27491672-d92e-5288-838c-e42c56773327', '13db4373-e0ce-5176-9089-2ca22f93fe15')",
+   "softDeletable": true
+  },
+  {
+   "event": "timetable.session.deleted",
+   "table": "attendance.attendance_sheet",
+   "column": "timetable_session_id",
+   "action": "null the column",
+   "ownerId": "1959cb6b-bf4a-5f04-919d-5602ffded1f0",
+   "rowId": "44047249-6a8c-589f-9e67-9213b19dee58",
+   "otherRowId": "8f8a7d28-cc02-562d-89d1-f477c39b7fd8",
+   "fixtures": [
+    "INSERT INTO attendance.attendance_register (tenant_id, institution_id, code, name, register_scope, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C56BADF73', 't-name-77e88e2b', 'institution', 1, 'a2d6b50f-86b8-5a53-b2d7-189aa18d876e') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO attendance.attendance_sheet (tenant_id, register_id, attendance_date, row_version, day_part, timetable_session_id, id) VALUES (:tenant, 'a2d6b50f-86b8-5a53-b2d7-189aa18d876e', '2026-01-12', 1, 'afternoon', '1959cb6b-bf4a-5f04-919d-5602ffded1f0', '44047249-6a8c-589f-9e67-9213b19dee58')",
+   "otherFixtures": [
+    "INSERT INTO attendance.attendance_register (tenant_id, institution_id, code, name, register_scope, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'C56BADF73', 't-name-77e88e2b', 'institution', 1, '0cda4ffd-378f-5d35-af5b-f914c7488d4b') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO attendance.attendance_sheet (tenant_id, register_id, attendance_date, row_version, day_part, timetable_session_id, id) VALUES (:tenant, '0cda4ffd-378f-5d35-af5b-f914c7488d4b', '2026-01-12', 1, 'afternoon', '1959cb6b-bf4a-5f04-919d-5602ffded1f0', '8f8a7d28-cc02-562d-89d1-f477c39b7fd8')",
+   "softDeletable": true
+  },
+  {
+   "event": "hr.leave_application.deleted",
+   "table": "attendance.staff_attendance",
+   "column": "leave_application_id",
+   "action": "null the column",
+   "ownerId": "c373ebec-a311-5b7c-940e-be7571f5dd7d",
+   "rowId": "a4eaad67-fb2b-5390-81bd-d3cd5f07e66b",
+   "otherRowId": "2bf8ece4-42ed-57f5-94a2-776556f29bd0",
+   "fixtures": [],
+   "row": "INSERT INTO attendance.staff_attendance (tenant_id, staff_id, attendance_date, status, row_version, leave_application_id, id) VALUES (:tenant, '0f006513-4cd0-5ff5-9c6a-b3bf60779a5b', '2026-01-10', 'present', 1, 'c373ebec-a311-5b7c-940e-be7571f5dd7d', 'a4eaad67-fb2b-5390-81bd-d3cd5f07e66b')",
+   "otherFixtures": [],
+   "other": "INSERT INTO attendance.staff_attendance (tenant_id, staff_id, attendance_date, status, row_version, leave_application_id, id) VALUES (:tenant, '4c138994-0650-5899-a443-5633bbe99a14', '2026-01-10', 'present', 1, 'c373ebec-a311-5b7c-940e-be7571f5dd7d', '2bf8ece4-42ed-57f5-94a2-776556f29bd0')",
+   "softDeletable": true
+  }
+ ]
+}

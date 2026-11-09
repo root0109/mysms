@@ -1,0 +1,213 @@
+erDiagram
+    lms__grading_category["lms.grading_category"] {
+        uuid id PK
+        uuid course_id FK
+        uuid cohort_id FK
+        varchar(120) name "NN"
+        numeric weight_percent "5,2"
+        boolean equal_item_weighting "NN"
+    }
+    lms__gradebook_entry["lms.gradebook_entry"] {
+        uuid id PK
+        uuid cohort_id FK "NN"
+        uuid content_item_id FK "NN"
+        uuid user_id FK "→ iam.user_account (logical)"
+        uuid group_id FK
+        uuid quiz_submission_id FK
+        uuid forum_topic_id FK
+        numeric points "8,2"
+        numeric auto_points "8,2"
+        numeric manual_points "8,2"
+        numeric peer_points "8,2"
+        text feedback
+        text teacher_comment
+        varchar(30) status "NN"
+        uuid graded_by FK "→ iam.user_account (logical)"
+        timestamptz graded_at
+        boolean is_published "NN"
+        timestamptz published_at
+        numeric points_possible "7,2"
+    }
+    lms__grade_change_log["lms.grade_change_log"] {
+        uuid id PK
+        uuid gradebook_entry_id FK "NN"
+        numeric points "8,2"
+        numeric auto_points "8,2"
+        numeric manual_points "8,2"
+        text comment
+        boolean was_published
+        timestamptz published_at
+        uuid changed_by FK "NN · → iam.user_account (logical)"
+        timestamptz changed_at "NN"
+        uuid student_user_id FK "→ iam.user_account (logical)"
+    }
+    lms__item_override["lms.item_override"] {
+        uuid id PK
+        uuid content_item_id FK "NN"
+        uuid user_id FK "→ iam.user_account (logical)"
+        uuid group_id FK
+        timestamptz available_from
+        timestamptz due_at
+        integer extra_attempts
+        integer extra_time_minutes
+        varchar(200) reason
+    }
+    lms__reassignment_log["lms.reassignment_log"] {
+        uuid id PK
+        uuid content_item_id FK "NN"
+        uuid user_id FK "→ iam.user_account (logical)"
+        uuid group_id FK
+        uuid quiz_submission_id FK
+        text comment
+        uuid reassigned_by FK "NN · → iam.user_account (logical)"
+        timestamptz reassigned_at "NN"
+    }
+    lms__rubric["lms.rubric"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(200) title "NN"
+        boolean is_default "NN"
+        integer version "NN"
+        uuid superseded_by_id FK
+        timestamptz published_at
+    }
+    lms__rubric_criterion["lms.rubric_criterion"] {
+        uuid id PK
+        uuid rubric_id FK "NN"
+        varchar(200) name "NN"
+        varchar(200) group_name
+        numeric weight_percent "6,2"
+        numeric group_weight_percent "6,2"
+        integer sort_order "NN"
+    }
+    lms__rubric_level["lms.rubric_level"] {
+        uuid id PK
+        uuid rubric_id FK "NN"
+        varchar(100) label "NN"
+        text description
+        numeric score_percent "6,2"
+        integer sort_order "NN"
+    }
+    lms__rubric_cell["lms.rubric_cell"] {
+        uuid id PK
+        uuid rubric_id FK "NN"
+        uuid rubric_criterion_id FK "NN"
+        uuid rubric_level_id FK "NN"
+        text description
+        integer sort_order "NN"
+    }
+    lms__rubric_assessment["lms.rubric_assessment"] {
+        uuid id PK
+        uuid content_item_id FK "NN"
+        uuid user_id FK "→ iam.user_account (logical)"
+        uuid group_id FK
+        uuid rubric_cell_id FK "NN"
+        text comment
+        integer rubric_version
+        numeric points_awarded "7,2"
+    }
+    lms__release_rule["lms.release_rule"] {
+        uuid id PK
+        uuid course_id FK
+        uuid cohort_id FK
+        uuid source_content_item_id FK "NN"
+        varchar(200) title
+        boolean stop_if_true "NN"
+        boolean is_disabled "NN"
+        boolean reassign_source "NN"
+        integer sort_order "NN"
+        uuid copied_from_id FK
+    }
+    lms__release_rule_condition["lms.release_rule_condition"] {
+        uuid id PK
+        uuid release_rule_id FK "NN"
+        varchar(45) operator "NN"
+        varchar(45) value
+        varchar(45) value2
+        integer sort_order "NN"
+        varchar(45) condition_type "NN"
+    }
+    lms__release_rule_target["lms.release_rule_target"] {
+        uuid id PK
+        uuid release_rule_id FK "NN"
+        uuid content_item_id FK
+        uuid chapter_id FK
+    }
+    lms__release_grant["lms.release_grant"] {
+        uuid id PK
+        uuid content_item_id FK "NN"
+        uuid chapter_id FK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        boolean is_released "NN"
+        boolean access_granted "NN"
+    }
+    lms__student_alert["lms.student_alert"] {
+        uuid id PK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid cohort_id FK
+        uuid course_id FK
+        varchar(100) metric_code
+        uuid content_item_id FK
+        timestamptz sent_at "NN"
+        uuid sent_by FK "→ iam.user_account (logical)"
+        varchar(255) subject
+        text message
+        text details
+        timestamptz read_at
+    }
+    lms__assignment_group["lms.assignment_group"] {
+        uuid id PK "drawn on: Assignments, exercises & plagiarism checks"
+    }
+    lms__chapter["lms.chapter"] {
+        uuid id PK "drawn on: Outline, content delivery & progress"
+    }
+    lms__cohort["lms.cohort"] {
+        uuid id PK "drawn on: Cohorts, schedules & live classes"
+    }
+    lms__content_item["lms.content_item"] {
+        uuid id PK "drawn on: Outline, content delivery & progress"
+    }
+    lms__course["lms.course"] {
+        uuid id PK "drawn on: Courses, versions & catalogue"
+    }
+    lms__forum_topic["lms.forum_topic"] {
+        uuid id PK "drawn on: Discussions"
+    }
+    lms__quiz_submission["lms.quiz_submission"] {
+        uuid id PK "drawn on: Quizzes & question bank"
+    }
+    lms__course |o--o{ lms__grading_category : "course_id"
+    lms__cohort |o--o{ lms__grading_category : "cohort_id"
+    lms__content_item ||--o{ lms__item_override : "content_item_id"
+    lms__assignment_group |o--o{ lms__item_override : "group_id"
+    lms__cohort ||--o{ lms__gradebook_entry : "cohort_id"
+    lms__content_item ||--o{ lms__gradebook_entry : "content_item_id"
+    lms__assignment_group |o--o{ lms__gradebook_entry : "group_id"
+    lms__quiz_submission |o--o{ lms__gradebook_entry : "quiz_submission_id"
+    lms__forum_topic |o--o{ lms__gradebook_entry : "forum_topic_id"
+    lms__gradebook_entry ||--o{ lms__grade_change_log : "gradebook_entry_id"
+    lms__content_item ||--o{ lms__reassignment_log : "content_item_id"
+    lms__assignment_group |o--o{ lms__reassignment_log : "group_id"
+    lms__quiz_submission |o--o{ lms__reassignment_log : "quiz_submission_id"
+    lms__rubric ||--o{ lms__rubric_criterion : "rubric_id"
+    lms__rubric ||--o{ lms__rubric_level : "rubric_id"
+    lms__rubric ||--o{ lms__rubric_cell : "rubric_id"
+    lms__rubric_criterion ||--o{ lms__rubric_cell : "rubric_criterion_id"
+    lms__rubric_level ||--o{ lms__rubric_cell : "rubric_level_id"
+    lms__content_item ||--o{ lms__rubric_assessment : "content_item_id"
+    lms__assignment_group |o--o{ lms__rubric_assessment : "group_id"
+    lms__rubric_cell ||--o{ lms__rubric_assessment : "rubric_cell_id"
+    lms__course |o--o{ lms__release_rule : "course_id"
+    lms__cohort |o--o{ lms__release_rule : "cohort_id"
+    lms__content_item ||--o{ lms__release_rule : "source_content_item_id"
+    lms__release_rule |o--o{ lms__release_rule : "copied_from_id"
+    lms__release_rule ||--o{ lms__release_rule_condition : "release_rule_id"
+    lms__release_rule ||--o{ lms__release_rule_target : "release_rule_id"
+    lms__content_item |o--o{ lms__release_rule_target : "content_item_id"
+    lms__chapter |o--o{ lms__release_rule_target : "chapter_id"
+    lms__content_item ||--o{ lms__release_grant : "content_item_id"
+    lms__chapter |o--o{ lms__release_grant : "chapter_id"
+    lms__cohort |o--o{ lms__student_alert : "cohort_id"
+    lms__course |o--o{ lms__student_alert : "course_id"
+    lms__content_item |o--o{ lms__student_alert : "content_item_id"
+    lms__rubric |o--o{ lms__rubric : "superseded_by_id"

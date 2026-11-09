@@ -1,0 +1,76 @@
+# MySMS backend
+
+Java 17 · Spring Boot 4.1 · plain Spring JDBC · Flyway · PostgreSQL 16. Twenty-one domain microservices — one per database schema — that also assemble into one monolith. The rules every line follows are in [`../JAVA-CODING-RULES.md`](../JAVA-CODING-RULES.md); the module graph is in [`../ARCHITECTURE.md`](../ARCHITECTURE.md).
+
+## Requirements
+
+- JDK 17 (or later; the build targets Java 17 with `--release 17`) and Maven 3.9 or later.
+- For the tests: Docker (Testcontainers starts PostgreSQL 16), **or** an existing PostgreSQL 16 server given by `MYSMS_TEST_JDBC_URL` (an admin connection such as `jdbc:postgresql://localhost:5432/postgres`), `MYSMS_TEST_JDBC_USER` and `MYSMS_TEST_JDBC_PASSWORD`. Each test class gets its own fresh database and a non-superuser role, so row-level security is exercised exactly as in production.
+
+## Commands
+
+```bash
+mvn verify                         # everything: generate, compile, unit + component tests, Checkstyle, SpotBugs, JaCoCo
+mvn -pl master -am package         # the master microservice  -> master/target/master-0.1.0-SNAPSHOT-exec.jar
+mvn -pl app -am package            # the monolith             -> app/target/app-0.1.0-SNAPSHOT-exec.jar
+mvn -pl contracts,sdk -am install  # regenerate the Java contracts and SDK after an /api change
+```
+
+Run a service (all settings come from the environment; nothing secret is in the repository):
+
+```bash
+export MYSMS_DB_URL=jdbc:postgresql://localhost:5432/mysms MYSMS_DB_USER=mysms MYSMS_DB_PASSWORD=...
+export MYSMS_AUTH_ISSUER=https://iam.example.com MYSMS_AUTH_JWK_SET_URI=https://iam.example.com/oauth2/jwks
+java -jar master/target/master-0.1.0-SNAPSHOT-exec.jar      # one microservice (schema master)
+java -jar app/target/app-0.1.0-SNAPSHOT-exec.jar            # all 21 modules in one process
+```
+
+Every module can point at its own database: `MYSMS_<MODULE>_DB_URL`, `_DB_USER`, `_DB_PASSWORD`, `_DB_POOL_SIZE` (and `_DB_MIGRATE_USER`, `_DB_MIGRATE_PASSWORD`) override the shared `MYSMS_DB_*` values. A service refuses to start unless `MYSMS_AUTH_ISSUER` is an absolute http(s) URL. The full deployment guide — database roles, keys, monolith or microservices, clients, tests — is [`../DEPLOYMENT.md`](../DEPLOYMENT.md).
+
+The iam service (and the monolith, which contains it) is the token issuer and also needs:
+
+| Variable | Meaning |
+|---|---|
+| `MYSMS_IAM_SIGNING_KEY` | **Secret.** PEM PKCS#8 RSA private key (2048 bits or more) that signs access tokens; iam refuses to start without it. Its public half is served at `/oauth2/jwks`, which is what `MYSMS_AUTH_JWK_SET_URI` of every service points to. |
+| `MYSMS_IAM_SIGNING_KEY_ID` | Optional `kid`; default: the key's RFC 7638 thumbprint. |
+| `MYSMS_SECRETS_KEYS` | **Secret.** Field-encryption master keys, `<id>:<base64 32 bytes>[,…]` (DEPLOYMENT.md §3a). Every service except master refuses to start without it (secret columns and the encrypted Idempotency-Key responses). `MYSMS_SECRETS_ACTIVE_KEY` picks the key for new values (default: the last listed). |
+| `MYSMS_IAM_ACCESS_TOKEN_TTL`, `MYSMS_IAM_REFRESH_TOKEN_TTL` | Optional; default `PT15M` and `P30D`. |
+| `MYSMS_IAM_PREVIOUS_PUBLIC_KEY` | Key rotation: the retiring key's PEM public key, still published in the JWKS until the access tokens it signed have expired (one access-token lifetime), then removed. |
+| `MYSMS_PEOPLE_URL` | Base URL of the people service (or the monolith itself) so `iam.GetMe` includes the person record; empty = without it. |
+| `MYSMS_IAM_BOOTSTRAP_TENANT_CODE`, `MYSMS_IAM_BOOTSTRAP_ADMIN_USERNAME`, `MYSMS_IAM_BOOTSTRAP_ADMIN_PASSWORD` | First start of a new installation: when all three are set, iam makes sure the tenant code exists, the tenant has a system role `administrator` with every permission, and an administrator account (password at least 12 characters) holds it. Idempotent; an existing account's password is never changed. Remove the password from the environment once the administrator has signed in. |
+
+Create a signing key with `openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out iam-signing.pem` and keep it in the secret store, never in git.
+
+## Modules
+
+| Module | What it is |
+|---|---|
+| `core` | Plain library in every module: UUIDv7, call and trace context (W3C traceparent), problem+json errors, ETag/If-Match, update and read masks, keyset paging, the `filter` parser, the per-module database factory (own pool, transaction manager, Flyway history) and the programmatic transaction executor that binds the tenant for row-level security, outbox and audit writers, SDK client factory. Its test-jar is the module test kit (`TestDatabase`, `ModuleChecks`). No schema, no domain code. |
+| `contracts` | Generated on every build from `/api`: Spring server interfaces and DTOs per module (OpenAPI Generator), gRPC stubs and protobuf messages (protoc), and each module's operation table for the auth filter. |
+| `sdk` | Generated Java clients (Spring HTTP service interfaces) for module-to-module calls. |
+| `auth-client` | The only auth code a module touches: `AuthContext`, `TokenVerifier`, `PermissionChecker` and the edge filter that verifies tokens and enforces each operation's security scheme and `x-permission` (marking the matched operation so an unserved one is answered 501). Its test-jar provides `TestTokens`. |
+| `master` … `careers` | The 21 domain microservices, one per schema. Each boots alone on its own database, migrates only its own schema from `database/migrations/<module>`, and has its own `<module>-service.yml`. |
+| `app` | Assembly only: all 21 modules in one process, each still with its own pool and Flyway history. |
+
+## Status
+
+| Area | State |
+|---|---|
+| Build, quality gates, generated contracts + SDK for all 21 modules (2052 operations, 226 gRPC services) | Done; `mvn verify` green |
+| `core`, `auth-client` (servlet edge) | Done, unit + component tested |
+| `master` | Complete: all 20 operations of its contract (countries, states, cities, currencies) with validation, uniqueness, If-Match, update/read masks, keyset paging, filters, soft delete, audit + domain events in its outbox |
+| `iam` — sign-in and the caller's account | Served: `Login` (argon2id, one answer for every failure, progressive lockout of password sign-in from the 5th failure: 1, 2, 4… up to 60 minutes, which never ends existing sessions; a suspended tenant can neither sign in nor refresh), `RefreshToken` (opaque tokens stored as SHA-256 only, rotated on every use; a reused token revokes its whole session), `Logout` (this session or all, with their push devices), `GetMe` (account, role grants, effective permissions, and the person record from people; institutions and student, staff and guardian ids follow when org, sis and hr are served), RS256 access tokens with `sub tid perms ins roles pid sid jti amr`, compacted permission wildcards, the public keys at `/oauth2/jwks`, and the installation bootstrap. Accounts with an enrolled second factor are refused with 501 until the MFA operations are served |
+| `iam` — hierarchical settings | Served: the setting catalogue (`ListSettingDefinitions`, `GetSettingDefinition`), administrators' values at tenant, institution, department, class-section or user scope with locks (`*SettingValue`, limited to the scopes of the caller's own grants), and the caller's effective settings (`ListMySettings`, `SetMySetting`, `ResetMySetting`: user > primary class section > primary department > institution > tenant > default; a broader lock wins; settings users may not change are visible only to their administrators) |
+| `iam` — access management | Served: roles, role permissions, the permission catalogue, user accounts and their role grants, direct permissions, department access, devices, preferences and sessions (standard operations, generated, plus the hand-written `*Rules`). No escalation: a permission enters a role only from someone holding it tenant-wide; a role is granted only by someone holding all its permissions at the grant's reach (institution, or tenant-wide for the tenant and other scopes); direct grants need the permission tenant-wide; nobody changes their own access or deletes their own account; system roles are fixed; deleting an account revokes its refresh tokens, ends its sessions and retires its devices and preferences in the same transaction; ending a session revokes its refresh family. Changes reach a user's token at their next refresh (at most one access-token lifetime, 15 minutes) |
+| `people` — the caller's own record | Served: `GetMyPerson` and `UpdateMyPerson` (the token's `pid`; contact and self-description fields only; internal remarks and the national id never returned) |
+| Standard operations of 327 resources in 20 modules (1,513 operations) | Served, generated by `../tools/backend/crud` (JAVA-CODING-RULES §4 "Generated standard operations"): `List`/`Get`/`Create`/`Update`/`Delete` with validation, NOT NULL and decimal precision checks, in-module reference checks (422), uniqueness (409), If-Match (428/412), update and read masks, keyset paging, filters, soft delete refused while live rows still reference the row (409), audit + domain events in each module's outbox, and the institution data scope: rows of other institutions are 404, tenant-level rows change only through a tenant-wide grant. Each module's `<Module>CrudComponentTest` proves all of it per resource against PostgreSQL. The list is `../api/standard-resources.json`; every operation's status is in `../api/operations-status.md` |
+| Secrets (`*_enc` columns) | Served through the generated operations of 13 more resources (people, applicants and guardians, gateway accounts, bank and disbursement accounts, channel and tool secrets, conferencing, plagiarism and live-class secrets): write-only input, stored as a per-tenant AES-256-GCM envelope (core `FieldCipher`, DEPLOYMENT.md §3a), shown only masked (`••••1234`). The contract tests prove that the stored value is an envelope and never the plaintext, that the plaintext is never returned, and that replacing a secret rewrites it |
+| iam second factors and credentials | Served (hand-written): `EnrollMfa` (authenticator app, TOTP RFC 6238; secret and ten recovery codes shown once, stored encrypted / hashed), `CompleteMfa` (sign-in waits for the code; one-time step token, five minutes; codes never accepted twice; wrong codes count towards the lockout), `DisableMfa` and `RegenerateRecoveryCodes` (a current code required), `ListMfaCredentials`, `ChangePassword` (current password required; other sessions signed out), `SetUserCredentials` (administrators only for accounts whose permissions they hold tenant-wide, never their own; signs the account out), `AcceptTerms`. SMS and e-mail factors answer 501 (no message delivery yet) |
+| State transitions of 30 resources (74 operations: submit, publish, cancel, close, reopen, reset, reject…) | Served, generated from `../tools/backend/crud/transitions.json`; the states and steps are in `../api/state-machines.md`. A step is allowed only from its listed states (else 409 `INVALID_STATE_TRANSITION`, nothing changes), needs its own permission and the same data scope as an update, checks the body `etag` or the declared `If-Match` (428/412), and writes an audit record (with the reason) and a `<resource>.<step>` event in the same transaction. Steps with further effects (notifications, approval records, balances, enrolment, grading) are hand-written work and still answer 501 |
+| Every other operation | A contract operation without an implementation answers **501 `NOT_IMPLEMENTED`** (never a misleading 404), and each module's `<Module>ControllerStubsTest` pins how many remain: workflow operations (enrol, approve, issue, post, grade…), read models and reports, the remaining iam operations (users, roles, role grants, MFA, password reset, impersonation — kept hand-written for their privilege rules), platform administration (tenants, plans, system settings), and resources whose contract and table do not map column for column |
+| Long-running operations | Served in the 10 modules that have them (admission, assessment, comms, finance, iam, lms, payroll, platform, sis, timetable), generated by `../tools/backend/crud/gen_operations.py`: `List`/`Get`/`CancelOperation`. Callers see and cancel their own operations; the module's operation-read permission held tenant-wide covers the whole tenant. Only a `running` operation can be cancelled (409 otherwise); the cancel is audited and publishes `<module>.operation.cancelled` |
+| Idempotency-Key | Served for every operation that declares the header (core `IdempotencyFilter` + the module's `idempotency_key` table): replay with `Idempotent-Replayed: true`, 422 `IDEMPOTENCY_KEY_REUSED`, 409 `REQUEST_IN_PROGRESS`, 400 without a key where the contract requires one; kept responses are encrypted, a 5xx is not kept, keys last 24 hours |
+| Partitioned tables | Served (generated): attendance records, staff attendance, outbound messages and content views. A list must bound the partition key on both sides (400 `INVALID_FILTER` otherwise, at most 366 days). Core's `PartitionMaintenanceJob` keeps monthly partitions ahead, alerts on rows in a default partition and drops old months only when a retention is set (`MYSMS_PARTITIONS_*`, DEPLOYMENT.md §5.6) |
+| Tenant filter and design conformance | Every statement over a tenant table states `tenant_id = :tenantId`, bound by core's `TenantJdbcClient`; `python3 ../tools/backend/conformance.py` checks that and the other mechanical design rules (0 violations) |
+| Events | Core's `EventBus` interface with RabbitMQ as the default implementation (`messaging-rabbitmq`, a runtime dependency only) and an in-process one; per-module outbox relay (as the relay role `mysms_relay`; bad rows set aside), inbox (exactly once per tenant and event), delayed redelivery, dead-letter and unrouted queues with an operator replay command (`EventsAdmin`), one broker user per service checked by broker and consumer, and an `events` health component. Consumers: the platform's audit trail (`audit.recorded` → `platform.audit_log`) and the generated reference cleanup of 19 modules (153 actions of database/logical-references.md). DEPLOYMENT.md §5.7 |
+| Not built yet | gRPC services and the gRPC auth interceptor; filling `iam.tenant_directory` from platform tenant events (the tenant lifecycle operations are platform-staff variants not served yet; the bootstrap fills it for the first tenant); rate limiting at the gateway; reference reconciliation against the owners (needs service-to-service identity, PRINCIPAL-REVIEW P1-34; references are stored as given by decision, and cleaned up from the owners' deletion events) |

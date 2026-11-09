@@ -1,0 +1,534 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.facility.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "FacilityProto";
+option java_package = "com.mysms.facility.v1";
+
+// FacilityService: operations on the Facility aggregate.
+service FacilityService {
+  // List Facilities.
+  rpc ListFacilities(ListFacilitiesRequest) returns (ListFacilitiesResponse);
+  // Get Facility.
+  rpc GetFacility(GetFacilityRequest) returns (GetFacilityResponse);
+  // Create Facility.
+  rpc CreateFacility(CreateFacilityRequest) returns (CreateFacilityResponse);
+  // Update Facility.
+  rpc UpdateFacility(UpdateFacilityRequest) returns (UpdateFacilityResponse);
+  // Soft-delete Facility.
+  rpc DeleteFacility(DeleteFacilityRequest) returns (DeleteFacilityResponse);
+}
+
+// RoomService: operations on the Room aggregate.
+service RoomService {
+  // List Rooms.
+  rpc ListRooms(ListRoomsRequest) returns (ListRoomsResponse);
+  // Get Room.
+  rpc GetRoom(GetRoomRequest) returns (GetRoomResponse);
+  // Create Room.
+  rpc CreateRoom(CreateRoomRequest) returns (CreateRoomResponse);
+  // Update Room.
+  rpc UpdateRoom(UpdateRoomRequest) returns (UpdateRoomResponse);
+  // Soft-delete Room.
+  rpc DeleteRoom(DeleteRoomRequest) returns (DeleteRoomResponse);
+  // List RoomFacilities.
+  rpc ListRoomFacilities(ListRoomFacilitiesRequest) returns (ListRoomFacilitiesResponse);
+  // Get RoomFacility.
+  rpc GetRoomFacility(GetRoomFacilityRequest) returns (GetRoomFacilityResponse);
+  // Create RoomFacility.
+  rpc CreateRoomFacility(CreateRoomFacilityRequest) returns (CreateRoomFacilityResponse);
+  // Update RoomFacility.
+  rpc UpdateRoomFacility(UpdateRoomFacilityRequest) returns (UpdateRoomFacilityResponse);
+  // Soft-delete RoomFacility.
+  rpc DeleteRoomFacility(DeleteRoomFacilityRequest) returns (DeleteRoomFacilityResponse);
+  // List RoomAssets.
+  rpc ListRoomAssets(ListRoomAssetsRequest) returns (ListRoomAssetsResponse);
+  // Get RoomAsset.
+  rpc GetRoomAsset(GetRoomAssetRequest) returns (GetRoomAssetResponse);
+  // Create RoomAsset.
+  rpc CreateRoomAsset(CreateRoomAssetRequest) returns (CreateRoomAssetResponse);
+  // Update RoomAsset.
+  rpc UpdateRoomAsset(UpdateRoomAssetRequest) returns (UpdateRoomAssetResponse);
+  // Soft-delete RoomAsset.
+  rpc DeleteRoomAsset(DeleteRoomAssetRequest) returns (DeleteRoomAssetResponse);
+}
+
+// AssetItemService: operations on the AssetItem aggregate.
+service AssetItemService {
+  // List AssetItems.
+  rpc ListAssetItems(ListAssetItemsRequest) returns (ListAssetItemsResponse);
+  // Get AssetItem.
+  rpc GetAssetItem(GetAssetItemRequest) returns (GetAssetItemResponse);
+  // Create AssetItem.
+  rpc CreateAssetItem(CreateAssetItemRequest) returns (CreateAssetItemResponse);
+  // Update AssetItem.
+  rpc UpdateAssetItem(UpdateAssetItemRequest) returns (UpdateAssetItemResponse);
+  // Soft-delete AssetItem.
+  rpc DeleteAssetItem(DeleteAssetItemRequest) returns (DeleteAssetItemResponse);
+}
+
+message ListFacilitiesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListFacilitiesResponse {
+  repeated Facility items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetFacilityRequest {
+  // Facility id (UUID).
+  string id = 1;
+}
+message GetFacilityResponse {
+  Facility facility = 1;
+}
+
+message CreateFacilityRequest {
+  Facility facility = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateFacilityResponse {
+  Facility facility = 1;
+}
+
+message UpdateFacilityRequest {
+  // Resource with id and etag set.
+  Facility facility = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateFacilityResponse {
+  Facility facility = 1;
+}
+
+message DeleteFacilityRequest {
+  // Facility id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteFacilityResponse {
+}
+
+message ListRoomsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListRoomsResponse {
+  repeated Room items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetRoomRequest {
+  // Room id (UUID).
+  string id = 1;
+}
+message GetRoomResponse {
+  Room room = 1;
+}
+
+message CreateRoomRequest {
+  Room room = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateRoomResponse {
+  Room room = 1;
+}
+
+message UpdateRoomRequest {
+  // Resource with id and etag set.
+  Room room = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateRoomResponse {
+  Room room = 1;
+}
+
+message DeleteRoomRequest {
+  // Room id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteRoomResponse {
+}
+
+message ListRoomFacilitiesRequest {
+  // Room id (UUID).
+  string room_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListRoomFacilitiesResponse {
+  repeated RoomFacility items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetRoomFacilityRequest {
+  // Room id (UUID).
+  string room_id = 1;
+  // RoomFacility id (UUID).
+  string id = 2;
+}
+message GetRoomFacilityResponse {
+  RoomFacility room_facility = 1;
+}
+
+message CreateRoomFacilityRequest {
+  // Room id (UUID).
+  string room_id = 1;
+  RoomFacility room_facility = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateRoomFacilityResponse {
+  RoomFacility room_facility = 1;
+}
+
+message UpdateRoomFacilityRequest {
+  // Room id (UUID).
+  string room_id = 1;
+  // Resource with id and etag set.
+  RoomFacility room_facility = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateRoomFacilityResponse {
+  RoomFacility room_facility = 1;
+}
+
+message DeleteRoomFacilityRequest {
+  // Room id (UUID).
+  string room_id = 1;
+  // RoomFacility id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteRoomFacilityResponse {
+}
+
+message ListAssetItemsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListAssetItemsResponse {
+  repeated AssetItem items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetAssetItemRequest {
+  // AssetItem id (UUID).
+  string id = 1;
+}
+message GetAssetItemResponse {
+  AssetItem asset_item = 1;
+}
+
+message CreateAssetItemRequest {
+  AssetItem asset_item = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateAssetItemResponse {
+  AssetItem asset_item = 1;
+}
+
+message UpdateAssetItemRequest {
+  // Resource with id and etag set.
+  AssetItem asset_item = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateAssetItemResponse {
+  AssetItem asset_item = 1;
+}
+
+message DeleteAssetItemRequest {
+  // AssetItem id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteAssetItemResponse {
+}
+
+message ListRoomAssetsRequest {
+  // Room id (UUID).
+  string room_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListRoomAssetsResponse {
+  repeated RoomAsset items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetRoomAssetRequest {
+  // Room id (UUID).
+  string room_id = 1;
+  // RoomAsset id (UUID).
+  string id = 2;
+}
+message GetRoomAssetResponse {
+  RoomAsset room_asset = 1;
+}
+
+message CreateRoomAssetRequest {
+  // Room id (UUID).
+  string room_id = 1;
+  RoomAsset room_asset = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateRoomAssetResponse {
+  RoomAsset room_asset = 1;
+}
+
+message UpdateRoomAssetRequest {
+  // Room id (UUID).
+  string room_id = 1;
+  // Resource with id and etag set.
+  RoomAsset room_asset = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateRoomAssetResponse {
+  RoomAsset room_asset = 1;
+}
+
+message DeleteRoomAssetRequest {
+  // Room id (UUID).
+  string room_id = 1;
+  // RoomAsset id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteRoomAssetResponse {
+}
+
+// Facility type available in rooms (projector, smart board, AC...).
+message Facility {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Facility code.
+  string code = 3;
+  // Facility name.
+  string name = 4;
+  // Whether in use.
+  bool is_active = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+  // Display order.
+  optional int32 sort_order = 11;
+}
+
+// Room that can host sessions or exams.
+message Room {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Room code.
+  string code = 3;
+  // Room name.
+  string name = 4;
+  // Room type.
+  RoomType room_type = 5;
+  // Seating capacity.
+  int32 capacity = 6;
+  // Course the room is normally allotted to. [UUID]
+  optional string default_course_id = 7;
+  // Batch the room is normally allotted to. [UUID]
+  optional string default_batch_id = 8;
+  // Class section the room is normally allotted to. [UUID]
+  optional string default_class_section_id = 9;
+  // Whether usable.
+  bool is_active = 10;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 11;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 12;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 14;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 15;
+  // Allowed values of room_type; REST/JSON uses the lowercase value shown in each comment.
+  enum RoomType {
+    ROOM_TYPE_UNSPECIFIED = 0;
+    // "classroom"
+    ROOM_TYPE_CLASSROOM = 1;
+    // "laboratory"
+    ROOM_TYPE_LABORATORY = 2;
+    // "hall"
+    ROOM_TYPE_HALL = 3;
+    // "exam_hall"
+    ROOM_TYPE_EXAM_HALL = 4;
+    // "library"
+    ROOM_TYPE_LIBRARY = 5;
+    // "other"
+    ROOM_TYPE_OTHER = 6;
+  }
+}
+
+// Facility available in a room and its quantity.
+message RoomFacility {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Room. [UUID] Set from the parent path on create.
+  string room_id = 2;
+  // Facility. [UUID]
+  string facility_id = 3;
+  // Quantity. [Decimal string]
+  string quantity = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// Catalogue of movable assets placed in rooms (desks, computers...).
+message AssetItem {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Asset code.
+  optional string code = 3;
+  // Asset name.
+  string name = 4;
+  // Unit.
+  string unit_of_measure = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+  // Display order.
+  optional int32 sort_order = 11;
+  // Whether offered for new picks.
+  optional bool is_active = 12;
+}
+
+// Asset held in a room.
+message RoomAsset {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Room. [UUID] Set from the parent path on create.
+  string room_id = 2;
+  // Asset. [UUID]
+  string asset_item_id = 3;
+  // Asset tag / serial code.
+  optional string tag_code = 4;
+  // Quantity. [Decimal string]
+  string quantity = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+}
+

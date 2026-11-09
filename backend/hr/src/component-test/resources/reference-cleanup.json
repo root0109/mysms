@@ -1,0 +1,33 @@
+{
+ "module": "hr",
+ "cleanup": [
+  {
+   "event": "org.department.deleted",
+   "table": "hr.staff",
+   "column": "primary_department_id",
+   "action": "null the column",
+   "ownerId": "0c67a422-538b-55a1-bb29-f7826ba5dea8",
+   "rowId": "d52c6a9f-1078-5859-8576-be087c01cc23",
+   "otherRowId": "1aa0b768-ecfe-548c-859a-c386bff1d72b",
+   "fixtures": [],
+   "row": "INSERT INTO hr.staff (tenant_id, person_id, institution_id, row_version, primary_department_id, id) VALUES (:tenant, 'cadc8b79-5127-5360-87f7-818144ae8da0', '0196f000-0000-7000-8000-00000000a001', 1, '0c67a422-538b-55a1-bb29-f7826ba5dea8', 'd52c6a9f-1078-5859-8576-be087c01cc23')",
+   "otherFixtures": [],
+   "other": "INSERT INTO hr.staff (tenant_id, person_id, institution_id, row_version, primary_department_id, id) VALUES (:tenant, '86eef73e-067e-5187-95cc-c993801e87b8', '7a86f7d0-7e3a-52bd-9804-cb866553556c', 1, '0c67a422-538b-55a1-bb29-f7826ba5dea8', '1aa0b768-ecfe-548c-859a-c386bff1d72b')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "hr.staff",
+   "column": "user_id",
+   "action": "null the column",
+   "ownerId": "74234c49-5839-5bd3-b4e9-17fcea9d1c5a",
+   "rowId": "94e4e0da-a510-5e39-9fe6-024961fd82b5",
+   "otherRowId": "98a2709f-cd80-5146-b629-d93e6b8bacfa",
+   "fixtures": [],
+   "row": "INSERT INTO hr.staff (tenant_id, person_id, institution_id, row_version, user_id, id) VALUES (:tenant, 'b3d98648-f17f-526a-86f6-6dd3354b0e56', '0196f000-0000-7000-8000-00000000a001', 1, '74234c49-5839-5bd3-b4e9-17fcea9d1c5a', '94e4e0da-a510-5e39-9fe6-024961fd82b5')",
+   "otherFixtures": [],
+   "other": "INSERT INTO hr.staff (tenant_id, person_id, institution_id, row_version, user_id, id) VALUES (:tenant, '64bfb8b2-d6a5-5881-b7d6-84b92c104cbf', '7a86f7d0-7e3a-52bd-9804-cb866553556c', 1, 'b43a62a1-7c8f-5e96-bd80-e8840fac6bbc', '98a2709f-cd80-5146-b629-d93e6b8bacfa')",
+   "softDeletable": true
+  }
+ ]
+}

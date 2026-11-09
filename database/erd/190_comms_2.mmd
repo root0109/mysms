@@ -1,0 +1,134 @@
+erDiagram
+    comms__notice_background["comms.notice_background"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(30) usage "NN"
+        uuid image_file_id FK "→ platform.file_object (logical)"
+    }
+    comms__notice["comms.notice"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        varchar(30) audience "NN"
+        uuid class_section_id FK "→ academics.class_section (logical)"
+        uuid background_id FK
+        varchar(200) title "NN"
+        text body "NN"
+        uuid attachment_file_id FK "→ platform.file_object (logical)"
+        timestamptz publish_at
+        timestamptz expire_at
+        boolean is_published "NN"
+        uuid cohort_id FK "→ lms.cohort (logical)"
+        boolean show_in_calendar "NN"
+        boolean allow_replies "NN"
+        uuid discussion_topic_id FK "→ lms.forum_topic (logical)"
+        boolean is_closed "NN"
+        boolean is_deactivated "NN"
+        text author_comment
+    }
+    comms__notice_audience["comms.notice_audience"] {
+        uuid id PK
+        uuid notice_id FK "NN"
+        uuid institution_id FK "→ org.institution (logical)"
+        uuid role_id FK "→ iam.role (logical)"
+    }
+    comms__notice_version["comms.notice_version"] {
+        uuid id PK
+        uuid notice_id FK "NN"
+        text body
+        timestamptz publish_at
+        timestamptz expire_at
+        uuid discussion_topic_id FK "→ lms.forum_topic (logical)"
+        boolean is_closed "NN"
+        boolean is_deactivated "NN"
+        text author_comment
+        timestamptz versioned_at "NN"
+        timestamptz original_created_at
+    }
+    comms__event["comms.event"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        varchar(30) audience "NN"
+        uuid class_section_id FK "→ academics.class_section (logical)"
+        varchar(120) audience_label
+        varchar(200) title "NN"
+        text description
+        varchar(30) category "NN"
+        text location
+        text organised_by
+        uuid image_file_id FK "→ platform.file_object (logical)"
+        varchar(20) color
+        timestamptz start_at
+        timestamptz end_at
+        boolean is_all_day "NN"
+        integer repeat_count "NN"
+        integer repeat_interval "NN"
+        varchar(30) repeat_unit
+        varchar(500) url
+        varchar(30) status "NN"
+        uuid cohort_id FK "→ lms.cohort (logical)"
+        uuid owner_user_id FK "→ iam.user_account (logical)"
+        varchar(500) recurrence_rule
+        boolean for_all_members "NN"
+        boolean staff_can_edit "NN"
+        varchar(30) importance
+    }
+    comms__event_institution["comms.event_institution"] {
+        uuid id PK
+        uuid event_id FK "NN"
+        uuid institution_id FK "NN · → org.institution (logical)"
+    }
+    comms__event_occurrence["comms.event_occurrence"] {
+        uuid id PK
+        uuid event_id FK "NN"
+        uuid user_id FK "→ iam.user_account (logical)"
+        uuid cohort_id FK "→ lms.cohort (logical)"
+        varchar(200) title
+        varchar(20) color
+        text description
+        timestamptz start_at "NN"
+        timestamptz end_at
+        boolean is_cancelled "NN"
+        varchar(30) response_status
+        varchar(30) importance
+    }
+    comms__event_attendee["comms.event_attendee"] {
+        uuid id PK
+        uuid event_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+    }
+    comms__calendar_export["comms.calendar_export"] {
+        uuid id PK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        varchar(30) provider "NN"
+        uuid cohort_id FK "→ lms.cohort (logical)"
+        varchar(60) entity_type "NN"
+        uuid entity_id "NN"
+        varchar(100) property_name
+        varchar(500) property_value
+        boolean is_deleted "NN"
+        timestamptz last_exported_at
+    }
+    comms__event_gallery_item["comms.event_gallery_item"] {
+        uuid id PK
+        uuid event_id FK "NN"
+        uuid file_id FK "NN · → platform.file_object (logical)"
+        integer sort_order "NN"
+    }
+    comms__magazine["comms.magazine"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "NN · → org.academic_year (logical)"
+        varchar(200) title
+        integer publication_year
+        uuid cover_image_file_id FK "→ platform.file_object (logical)"
+        uuid document_file_id FK "→ platform.file_object (logical)"
+    }
+    comms__notice_background |o--o{ comms__notice : "background_id"
+    comms__event ||--o{ comms__event_gallery_item : "event_id"
+    comms__notice ||--o{ comms__notice_audience : "notice_id"
+    comms__notice ||--o{ comms__notice_version : "notice_id"
+    comms__event ||--o{ comms__event_institution : "event_id"
+    comms__event ||--o{ comms__event_occurrence : "event_id"
+    comms__event ||--o{ comms__event_attendee : "event_id"

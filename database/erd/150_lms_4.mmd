@@ -1,0 +1,259 @@
+erDiagram
+    lms__quiz["lms.quiz"] {
+        uuid id PK
+        varchar(200) title "NN"
+        uuid course_id FK
+        uuid lesson_id FK
+        integer max_attempts
+        integer passing_percentage "NN"
+        numeric total_marks "8,2 · NN"
+        boolean show_answers "NN"
+        boolean show_submission_history "NN"
+        boolean shuffle_questions "NN"
+        integer limit_questions_to
+        integer duration_minutes
+        boolean proctoring_enabled "NN"
+        integer max_violations
+        boolean negative_marking_enabled "NN"
+        numeric negative_marks "8,2"
+        boolean scheduling_enabled "NN"
+        timestamptz schedule_start
+        timestamptz schedule_end
+        uuid institution_id FK "→ org.institution (logical)"
+        text description
+        boolean is_auto_graded "NN"
+        boolean is_adaptive "NN"
+        boolean equal_question_weighting "NN"
+        numeric marks_per_question "8,2"
+        boolean allow_pause "NN"
+        varchar(30) attempt_scoring "NN"
+        boolean drop_lowest_attempt "NN"
+        boolean draws_from_pool "NN"
+        boolean show_feedback "NN"
+        boolean is_in_repository "NN"
+        integer version "NN"
+        uuid superseded_by_id FK
+        timestamptz published_at
+    }
+    lms__question["lms.question"] {
+        uuid id PK
+        varchar(30) question_code
+        text question_text
+        varchar(30) question_type "NN"
+        boolean allows_multiple "NN"
+        numeric marks "8,2"
+        varchar(255) title
+        boolean shuffle_options "NN"
+        varchar(20) option_label_style
+        integer max_selections
+        varchar(20) difficulty
+        text general_feedback
+        text correct_feedback
+        text incorrect_feedback
+        text model_answer
+        boolean true_false_answer
+        varchar(50) numeric_answer
+        varchar(50) numeric_tolerance
+        boolean numeric_is_range "NN"
+        boolean case_sensitive "NN"
+        boolean allow_superscript "NN"
+        boolean allow_subscript "NN"
+        boolean is_retired "NN"
+        integer version "NN"
+        uuid superseded_by_id FK
+        timestamptz published_at
+    }
+    lms__question_option["lms.question_option"] {
+        uuid id PK
+        uuid question_id FK "NN"
+        smallint sort_order "NN"
+        text option_text "NN"
+        boolean is_correct "NN"
+        text explanation
+        varchar(10) label
+    }
+    lms__question_accepted_answer["lms.question_accepted_answer"] {
+        uuid id PK
+        uuid question_id FK "NN"
+        smallint sort_order "NN"
+        text answer_text "NN"
+    }
+    lms__question_blank["lms.question_blank"] {
+        uuid id PK
+        uuid question_id FK "NN"
+        varchar(500) blank_text "NN"
+        integer sort_order "NN"
+    }
+    lms__question_blank_answer["lms.question_blank_answer"] {
+        uuid id PK
+        uuid question_blank_id FK "NN"
+        varchar(500) answer_text "NN"
+        text feedback
+    }
+    lms__question_hotspot["lms.question_hotspot"] {
+        uuid id PK
+        uuid question_id FK "NN"
+        varchar(40) hotspot_type "NN"
+        uuid image_file_id FK "→ platform.file_object (logical)"
+    }
+    lms__question_hotspot_region["lms.question_hotspot_region"] {
+        uuid id PK
+        uuid question_hotspot_id FK "NN"
+        varchar(200) label
+        varchar(40) shape "NN"
+        varchar(1000) coordinates "NN"
+        boolean is_correct "NN"
+        text feedback
+    }
+    lms__question_match_pair["lms.question_match_pair"] {
+        uuid id PK
+        uuid question_id FK "NN"
+        varchar(500) left_text "NN"
+        varchar(500) right_text "NN"
+        integer sort_order "NN"
+    }
+    lms__question_pattern["lms.question_pattern"] {
+        uuid id PK
+        uuid question_id FK "NN"
+        text model_answer "NN"
+        varchar(1000) pattern "NN"
+        integer sort_order "NN"
+    }
+    lms__question_pool["lms.question_pool"] {
+        uuid id PK
+        varchar(200) title "NN"
+        text description
+    }
+    lms__question_pool_item["lms.question_pool_item"] {
+        uuid id PK
+        uuid question_pool_id FK "NN"
+        uuid question_id FK "NN"
+    }
+    lms__quiz_question["lms.quiz_question"] {
+        uuid id PK
+        uuid quiz_id FK "NN"
+        uuid question_id FK "NN"
+        numeric marks "8,2 · NN"
+        integer sort_order "NN"
+    }
+    lms__quiz_question_history["lms.quiz_question_history"] {
+        uuid id PK
+        uuid quiz_id FK "NN"
+        uuid question_id FK "NN"
+        numeric marks "8,2"
+        integer sort_order
+        timestamptz superseded_at "NN"
+    }
+    lms__quiz_submission["lms.quiz_submission"] {
+        uuid id PK
+        uuid quiz_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid course_id FK
+        numeric score "8,2"
+        numeric score_out_of "8,2"
+        numeric percentage "5,2"
+        numeric passing_percentage "5,2"
+        integer violation_count "NN"
+        varchar(60) submission_reason
+        uuid content_item_id FK
+        uuid cohort_id FK
+        varchar(30) status "NN"
+        timestamptz started_at
+        timestamptz submitted_at
+        integer time_taken_seconds
+        integer answered_count
+        integer correct_count
+        integer incorrect_count
+        boolean is_reassigned "NN"
+        uuid reassigned_from_id FK
+        text teacher_comment
+        integer attempt_number "NN"
+    }
+    lms__quiz_answer["lms.quiz_answer"] {
+        uuid id PK
+        uuid quiz_submission_id FK "NN"
+        uuid question_id FK
+        text question_text
+        varchar(30) question_type
+        text answer
+        boolean is_correct
+        numeric marks_awarded "8,2"
+        numeric marks_possible "8,2"
+        integer sort_order
+        text feedback
+        uuid graded_by FK "→ iam.user_account (logical)"
+        uuid learning_objective_id FK
+        bigint time_spent_ms
+    }
+    lms__quiz_violation["lms.quiz_violation"] {
+        uuid id PK
+        uuid quiz_submission_id FK "NN"
+        varchar(30) event_type "NN"
+        varchar(30) severity "NN"
+        timestamptz occurred_at "NN"
+    }
+    lms__content_author["lms.content_author"] {
+        uuid id PK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid quiz_id FK
+        uuid question_id FK
+        uuid assignment_id FK
+        uuid exercise_id FK
+        uuid learning_program_id FK
+    }
+    lms__assignment["lms.assignment"] {
+        uuid id PK "drawn on: Assignments, exercises & plagiarism checks"
+    }
+    lms__cohort["lms.cohort"] {
+        uuid id PK "drawn on: Cohorts, schedules & live classes"
+    }
+    lms__content_item["lms.content_item"] {
+        uuid id PK "drawn on: Outline, content delivery & progress"
+    }
+    lms__course["lms.course"] {
+        uuid id PK "drawn on: Courses, versions & catalogue"
+    }
+    lms__learning_objective["lms.learning_objective"] {
+        uuid id PK "drawn on: Courses, versions & catalogue"
+    }
+    lms__learning_program["lms.learning_program"] {
+        uuid id PK "drawn on: Evaluation, certificates, badges & programs"
+    }
+    lms__lesson["lms.lesson"] {
+        uuid id PK "drawn on: Outline, content delivery & progress"
+    }
+    lms__programming_exercise["lms.programming_exercise"] {
+        uuid id PK "drawn on: Assignments, exercises & plagiarism checks"
+    }
+    lms__course |o--o{ lms__quiz : "course_id"
+    lms__lesson |o--o{ lms__quiz : "lesson_id"
+    lms__question ||--o{ lms__question_option : "question_id"
+    lms__question ||--o{ lms__question_accepted_answer : "question_id"
+    lms__quiz ||--o{ lms__quiz_question : "quiz_id"
+    lms__question ||--o{ lms__quiz_question : "question_id"
+    lms__quiz ||--o{ lms__quiz_submission : "quiz_id"
+    lms__course |o--o{ lms__quiz_submission : "course_id"
+    lms__content_item |o--o{ lms__quiz_submission : "content_item_id"
+    lms__cohort |o--o{ lms__quiz_submission : "cohort_id"
+    lms__quiz_submission |o--o{ lms__quiz_submission : "reassigned_from_id"
+    lms__quiz_submission ||--o{ lms__quiz_answer : "quiz_submission_id"
+    lms__question |o--o{ lms__quiz_answer : "question_id"
+    lms__learning_objective |o--o{ lms__quiz_answer : "learning_objective_id"
+    lms__quiz_submission ||--o{ lms__quiz_violation : "quiz_submission_id"
+    lms__quiz |o--o{ lms__content_author : "quiz_id"
+    lms__question |o--o{ lms__content_author : "question_id"
+    lms__assignment |o--o{ lms__content_author : "assignment_id"
+    lms__programming_exercise |o--o{ lms__content_author : "exercise_id"
+    lms__learning_program |o--o{ lms__content_author : "learning_program_id"
+    lms__quiz ||--o{ lms__quiz_question_history : "quiz_id"
+    lms__question ||--o{ lms__quiz_question_history : "question_id"
+    lms__question ||--o{ lms__question_blank : "question_id"
+    lms__question_blank ||--o{ lms__question_blank_answer : "question_blank_id"
+    lms__question ||--o{ lms__question_hotspot : "question_id"
+    lms__question_hotspot ||--o{ lms__question_hotspot_region : "question_hotspot_id"
+    lms__question ||--o{ lms__question_match_pair : "question_id"
+    lms__question ||--o{ lms__question_pattern : "question_id"
+    lms__question_pool ||--o{ lms__question_pool_item : "question_pool_id"
+    lms__question ||--o{ lms__question_pool_item : "question_id"
+    lms__quiz |o--o{ lms__quiz : "superseded_by_id"
+    lms__question |o--o{ lms__question : "superseded_by_id"

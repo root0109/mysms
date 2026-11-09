@@ -1,0 +1,12 @@
+{
+  "name": "@mysms/config",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared TypeScript and Vitest presets.",
+  "exports": {
+    "./tsconfig.lib.json": "./tsconfig.lib.json",
+    "./tsconfig.react.json": "./tsconfig.react.json",
+    "./tsconfig.native.json": "./tsconfig.native.json",
+    "./vitest": "./vitest.preset.mjs"
+  }
+}

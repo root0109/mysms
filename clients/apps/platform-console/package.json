@@ -1,0 +1,44 @@
+{
+  "name": "@mysms/platform-console",
+  "version": "0.1.0",
+  "private": true,
+  "description": "C — the platform console for MySMS operators (ui/02 §3.17): the web shell with a platform band.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/check-budget.mjs",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint --max-warnings 0 src scripts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "5.2.2",
+    "@mysms/core": "workspace:*",
+    "@mysms/i18n": "workspace:*",
+    "@mysms/tokens": "workspace:*",
+    "@mysms/ui-web": "workspace:*",
+    "@mysms/web-kit": "workspace:*",
+    "@tanstack/react-query": "5.106.1",
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "react-hook-form": "7.91.0",
+    "react-router": "7.18.5",
+    "zod": "4.1.13"
+  },
+  "devDependencies": {
+    "@mysms/config": "workspace:*",
+    "@mysms/fixtures": "workspace:*",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/jest-dom": "6.10.0",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
+    "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
+    "@vitejs/plugin-react": "5.2.0",
+    "jsdom": "26.1.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.7",
+    "vitest": "3.2.7"
+  }
+}

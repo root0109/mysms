@@ -1,0 +1,319 @@
+erDiagram
+    finance__fee_head["finance.fee_head"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(40) code "NN"
+        varchar(150) name "NN"
+        text description
+        numeric default_amount "14,2"
+        uuid currency_id FK "→ master.currency (logical)"
+        varchar(40) ledger_account_code
+        boolean is_active "NN"
+    }
+    finance__fee_plan["finance.fee_plan"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(40) code "NN"
+        varchar(150) name "NN"
+        varchar(30) schedule_basis "NN"
+        integer offset_days
+        varchar(30) offset_direction
+        numeric discount_percent "5,2"
+        text notes
+        boolean is_active "NN"
+    }
+    finance__fee_plan_installment["finance.fee_plan_installment"] {
+        uuid id PK
+        uuid fee_plan_id FK "NN"
+        integer sequence "NN"
+        integer due_days
+        date due_date
+        numeric share_percent "6,3 · NN"
+    }
+    finance__fee_plan_installment_component["finance.fee_plan_installment_component"] {
+        uuid id PK
+        uuid installment_id FK "NN"
+        uuid fee_head_id FK "NN"
+        integer sequence
+        numeric share_percent "6,3 · NN"
+    }
+    finance__student_fee_due["finance.student_fee_due"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid student_id FK "NN · → sis.student (logical)"
+        uuid program_enrollment_id FK "→ sis.program_enrollment (logical)"
+        uuid student_enrollment_id FK "→ sis.student_enrollment (logical)"
+        uuid installment_id FK
+        uuid fee_head_id FK
+        date due_date
+        numeric amount "14,2 · NN"
+        uuid currency_id FK "NN · → master.currency (logical)"
+        numeric discount_percent "5,2"
+        numeric fee_factor "8,4"
+        varchar(30) status "NN"
+        uuid invoice_id FK
+        uuid academic_year_id FK "NN · → org.academic_year (logical)"
+        uuid fee_structure_id FK
+        uuid concession_id FK
+        numeric discount_amount "14,2 · NN"
+        numeric net_amount "14,2"
+    }
+    finance__invoice["finance.invoice"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(40) invoice_number "NN"
+        uuid student_id FK "→ sis.student (logical)"
+        uuid bill_to_user_id FK "→ iam.user_account (logical)"
+        varchar(200) bill_to_name "NN"
+        date invoice_date "NN"
+        date due_date
+        uuid currency_id FK "NN · → master.currency (logical)"
+        numeric subtotal "14,2 · NN"
+        numeric discount_total "14,2 · NN"
+        numeric tax_total "14,2 · NN"
+        numeric total "14,2 · NN"
+        numeric amount_paid "14,2 · NN"
+        varchar(30) status "NN"
+        varchar(20) invoice_type "NN"
+        uuid credit_for_invoice_id FK
+        timestamptz posted_at
+        timestamptz cancelled_at
+        uuid document_file_id FK "→ platform.file_object (logical)"
+    }
+    finance__invoice_line["finance.invoice_line"] {
+        uuid id PK
+        uuid invoice_id FK "NN"
+        uuid fee_head_id FK
+        varchar(255) description "NN"
+        numeric quantity "10,2 · NN"
+        numeric unit_price "14,2 · NN"
+        numeric discount_amount "14,2 · NN"
+        numeric tax_amount "14,2 · NN"
+        numeric line_total "14,2 · NN"
+        numeric tax_rate_percent "5,2"
+        varchar(30) tax_code
+    }
+    finance__coupon["finance.coupon"] {
+        uuid id PK
+        varchar(40) code "NN"
+        varchar(30) discount_type "NN"
+        numeric percentage_discount "5,2"
+        numeric fixed_discount "14,2"
+        date expires_on
+        integer usage_limit
+        integer redemption_count "NN"
+        boolean is_enabled "NN"
+    }
+    finance__coupon_scope["finance.coupon_scope"] {
+        uuid id PK
+        uuid coupon_id FK "NN"
+        uuid lms_course_id FK "→ lms.course (logical)"
+        uuid lms_cohort_id FK "→ lms.cohort (logical)"
+    }
+    finance__payment["finance.payment"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        uuid payer_user_id FK "→ iam.user_account (logical)"
+        varchar(30) purpose "NN"
+        uuid invoice_id FK
+        uuid lms_course_id FK "→ lms.course (logical)"
+        uuid lms_cohort_id FK "→ lms.cohort (logical)"
+        uuid admission_application_id FK "→ admission.application (logical)"
+        varchar(60) gateway_name
+        varchar(120) gateway_order_id
+        varchar(120) gateway_payment_id
+        numeric original_amount "14,2"
+        numeric discount_amount "14,2 · NN"
+        numeric amount "14,2 · NN"
+        numeric amount_with_tax "14,2"
+        uuid currency_id FK "NN · → master.currency (logical)"
+        uuid coupon_id FK
+        varchar(40) coupon_code
+        varchar(200) billing_name "NN"
+        uuid billing_address_id FK "→ people.person_address (logical)"
+        varchar(30) tax_registration_number
+        text tax_identity_enc
+        uuid acquisition_source_id FK
+        boolean payer_consent "NN"
+        varchar(30) status "NN"
+        timestamptz received_at
+        uuid payer_person_id FK "→ people.person (logical)"
+        varchar(200) payer_name
+        varchar(30) payment_method "NN"
+        varchar(40) receipt_number
+        varchar(80) instrument_reference
+        date instrument_date
+        varchar(120) bank_name
+        uuid gateway_account_id FK
+        uuid received_by_user_id FK "→ iam.user_account (logical)"
+    }
+    finance__payment_gateway_account["finance.payment_gateway_account"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(60) gateway_name "NN"
+        varchar(150) display_name "NN"
+        varchar(120) merchant_id
+        varchar(120) key_id
+        text key_secret_enc
+        text webhook_secret_enc
+        uuid currency_id FK "→ master.currency (logical)"
+        boolean is_default "NN"
+        boolean is_active "NN"
+    }
+    finance__payment_allocation["finance.payment_allocation"] {
+        uuid id PK
+        uuid payment_id FK "NN"
+        uuid invoice_id FK
+        uuid student_fee_due_id FK
+        numeric amount "14,2 · NN"
+        uuid currency_id FK "NN · → master.currency (logical)"
+    }
+    finance__refund["finance.refund"] {
+        uuid id PK
+        uuid payment_id FK "NN"
+        numeric amount "14,2 · NN"
+        varchar(300) reason
+        varchar(30) status "NN"
+        varchar(120) gateway_refund_id
+        varchar(30) refund_method "NN"
+        uuid refunded_by_user_id FK "→ iam.user_account (logical)"
+        timestamptz refunded_at
+    }
+    finance__gateway_event["finance.gateway_event"] {
+        uuid id PK
+        uuid gateway_account_id FK
+        varchar(60) gateway_name "NN"
+        varchar(150) gateway_event_id
+        varchar(80) event_type "NN"
+        uuid payment_id FK
+        text raw_payload
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    finance__fee_structure["finance.fee_structure"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        uuid academic_year_id FK "NN · → org.academic_year (logical)"
+        uuid grade_level_id FK "→ academics.grade_level (logical)"
+        uuid program_id FK "→ academics.program (logical)"
+        uuid fee_plan_id FK "NN"
+        varchar(150) name "NN"
+        varchar(20) status "NN"
+    }
+    finance__fee_concession["finance.fee_concession"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        uuid student_id FK "NN · → sis.student (logical)"
+        uuid academic_year_id FK "NN · → org.academic_year (logical)"
+        uuid fee_head_id FK
+        varchar(20) concession_type "NN"
+        numeric concession_value "14,2 · NN"
+        varchar(300) reason
+        uuid approved_by_user_id FK "→ iam.user_account (logical)"
+        varchar(20) status "NN"
+        date valid_from
+        date valid_until
+    }
+    finance__program_enrollment_fee["finance.program_enrollment_fee"] {
+        uuid id PK
+        uuid program_enrollment_id FK "NN · → sis.program_enrollment (logical)"
+        uuid fee_plan_id FK
+        uuid fee_head_id FK
+        date fee_start_date
+    }
+    finance__course_fee_default["finance.course_fee_default"] {
+        uuid id PK
+        uuid course_id FK "NN · → academics.course (logical)"
+        uuid fee_plan_id FK "NN"
+    }
+    finance__acquisition_source["finance.acquisition_source"] {
+        uuid id PK
+        varchar(120) name "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    finance__outbox_event["finance.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    finance__inbox_event["finance.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    finance__idempotency_key["finance.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    finance__operation["finance.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    finance__number_sequence["finance.number_sequence"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(40) sequence_code "NN"
+        varchar(20) period_key "NN"
+        varchar(20) prefix
+        smallint padding "NN"
+        bigint next_value "NN"
+    }
+    finance__fee_plan ||--o{ finance__fee_plan_installment : "fee_plan_id"
+    finance__fee_plan_installment ||--o{ finance__fee_plan_installment_component : "installment_id"
+    finance__fee_head ||--o{ finance__fee_plan_installment_component : "fee_head_id"
+    finance__fee_plan_installment |o--o{ finance__student_fee_due : "installment_id"
+    finance__fee_head |o--o{ finance__student_fee_due : "fee_head_id"
+    finance__invoice |o--o{ finance__student_fee_due : "invoice_id"
+    finance__invoice ||--o{ finance__invoice_line : "invoice_id"
+    finance__fee_head |o--o{ finance__invoice_line : "fee_head_id"
+    finance__coupon ||--o{ finance__coupon_scope : "coupon_id"
+    finance__invoice |o--o{ finance__payment : "invoice_id"
+    finance__coupon |o--o{ finance__payment : "coupon_id"
+    finance__payment_gateway_account |o--o{ finance__payment : "gateway_account_id"
+    finance__payment ||--o{ finance__payment_allocation : "payment_id"
+    finance__invoice |o--o{ finance__payment_allocation : "invoice_id"
+    finance__student_fee_due |o--o{ finance__payment_allocation : "student_fee_due_id"
+    finance__payment ||--o{ finance__refund : "payment_id"
+    finance__payment_gateway_account |o--o{ finance__gateway_event : "gateway_account_id"
+    finance__payment |o--o{ finance__gateway_event : "payment_id"
+    finance__fee_plan ||--o{ finance__fee_structure : "fee_plan_id"
+    finance__fee_head |o--o{ finance__fee_concession : "fee_head_id"
+    finance__fee_structure |o--o{ finance__student_fee_due : "fee_structure_id"
+    finance__fee_concession |o--o{ finance__student_fee_due : "concession_id"
+    finance__fee_plan |o--o{ finance__program_enrollment_fee : "fee_plan_id"
+    finance__fee_head |o--o{ finance__program_enrollment_fee : "fee_head_id"
+    finance__fee_plan ||--o{ finance__course_fee_default : "fee_plan_id"
+    finance__acquisition_source |o--o{ finance__payment : "acquisition_source_id"
+    finance__invoice |o--o{ finance__invoice : "credit_for_invoice_id"
+    finance__payment ||--o{ finance__payment_allocation : "payment_id"
+    finance__invoice |o--o{ finance__payment_allocation : "invoice_id"
+    finance__student_fee_due |o--o{ finance__payment_allocation : "student_fee_due_id"

@@ -1,0 +1,23 @@
+{
+  "name": "@mysms/i18n",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Message catalogues (ICU MessageFormat) and Intl formatting (ui/04 §7). en is the source of truth.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint --max-warnings 0 src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "intl-messageformat": "10.7.18"
+  },
+  "devDependencies": {
+    "@mysms/config": "workspace:*",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

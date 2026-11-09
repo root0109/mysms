@@ -1,0 +1,5275 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.comms.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "CommsProto";
+option java_package = "com.mysms.comms.v1";
+
+// MessageTemplateService: operations on the MessageTemplate aggregate.
+service MessageTemplateService {
+  // List MessageTemplates.
+  rpc ListMessageTemplates(ListMessageTemplatesRequest) returns (ListMessageTemplatesResponse);
+  // Get MessageTemplate.
+  rpc GetMessageTemplate(GetMessageTemplateRequest) returns (GetMessageTemplateResponse);
+  // Create MessageTemplate.
+  rpc CreateMessageTemplate(CreateMessageTemplateRequest) returns (CreateMessageTemplateResponse);
+  // Update MessageTemplate.
+  rpc UpdateMessageTemplate(UpdateMessageTemplateRequest) returns (UpdateMessageTemplateResponse);
+  // Soft-delete MessageTemplate.
+  rpc DeleteMessageTemplate(DeleteMessageTemplateRequest) returns (DeleteMessageTemplateResponse);
+}
+
+// OutboundMessageService: operations on the OutboundMessage aggregate.
+service OutboundMessageService {
+  // List OutboundMessages.
+  rpc ListOutboundMessages(ListOutboundMessagesRequest) returns (ListOutboundMessagesResponse);
+  // Get OutboundMessage.
+  rpc GetOutboundMessage(GetOutboundMessageRequest) returns (GetOutboundMessageResponse);
+  // Queue SMS / e-mail / push to people, classes, groups or guardians.
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+  // Cancel a queued message.
+  rpc CancelOutboundMessage(CancelOutboundMessageRequest) returns (CancelOutboundMessageResponse);
+  // Retry a failed message.
+  rpc RetryOutboundMessage(RetryOutboundMessageRequest) returns (RetryOutboundMessageResponse);
+}
+
+// MailboxMessageService: operations on the MailboxMessage aggregate.
+service MailboxMessageService {
+  // List MailboxMessages.
+  rpc ListMailboxMessages(ListMailboxMessagesRequest) returns (ListMailboxMessagesResponse);
+  // Get MailboxMessage.
+  rpc GetMailboxMessage(GetMailboxMessageRequest) returns (GetMailboxMessageResponse);
+  // Soft-delete MailboxMessage.
+  rpc DeleteMailboxMessage(DeleteMailboxMessageRequest) returns (DeleteMailboxMessageResponse);
+  // Send internal mail; copies land in recipients' inboxes.
+  rpc ComposeMail(ComposeMailRequest) returns (ComposeMailResponse);
+  // Mark read.
+  rpc MarkMailRead(MarkMailReadRequest) returns (MarkMailReadResponse);
+}
+
+// InAppNotificationService: operations on the InAppNotification aggregate.
+service InAppNotificationService {
+  // List InAppNotifications.
+  rpc ListInAppNotifications(ListInAppNotificationsRequest) returns (ListInAppNotificationsResponse);
+  // Get InAppNotification.
+  rpc GetInAppNotification(GetInAppNotificationRequest) returns (GetInAppNotificationResponse);
+  // Mark read.
+  rpc MarkNotificationRead(MarkNotificationReadRequest) returns (MarkNotificationReadResponse);
+  // Mark all of the caller's notifications read.
+  rpc MarkAllNotificationsRead(MarkAllNotificationsReadRequest) returns (MarkAllNotificationsReadResponse);
+  // Hide notifications from the caller's inbox (archived_at); they stay in the audit history.
+  rpc ArchiveNotifications(ArchiveNotificationsRequest) returns (ArchiveNotificationsResponse);
+}
+
+// NoticeBackgroundService: operations on the NoticeBackground aggregate.
+service NoticeBackgroundService {
+  // List NoticeBackgrounds.
+  rpc ListNoticeBackgrounds(ListNoticeBackgroundsRequest) returns (ListNoticeBackgroundsResponse);
+  // Get NoticeBackground.
+  rpc GetNoticeBackground(GetNoticeBackgroundRequest) returns (GetNoticeBackgroundResponse);
+  // Create NoticeBackground.
+  rpc CreateNoticeBackground(CreateNoticeBackgroundRequest) returns (CreateNoticeBackgroundResponse);
+  // Update NoticeBackground.
+  rpc UpdateNoticeBackground(UpdateNoticeBackgroundRequest) returns (UpdateNoticeBackgroundResponse);
+  // Soft-delete NoticeBackground.
+  rpc DeleteNoticeBackground(DeleteNoticeBackgroundRequest) returns (DeleteNoticeBackgroundResponse);
+}
+
+// NoticeService: operations on the Notice aggregate.
+service NoticeService {
+  // List Notices.
+  rpc ListNotices(ListNoticesRequest) returns (ListNoticesResponse);
+  // Get Notice.
+  rpc GetNotice(GetNoticeRequest) returns (GetNoticeResponse);
+  // Create Notice.
+  rpc CreateNotice(CreateNoticeRequest) returns (CreateNoticeResponse);
+  // Update Notice.
+  rpc UpdateNotice(UpdateNoticeRequest) returns (UpdateNoticeResponse);
+  // Soft-delete Notice.
+  rpc DeleteNotice(DeleteNoticeRequest) returns (DeleteNoticeResponse);
+  // List NoticeAudiences.
+  rpc ListNoticeAudiences(ListNoticeAudiencesRequest) returns (ListNoticeAudiencesResponse);
+  // Get NoticeAudience.
+  rpc GetNoticeAudience(GetNoticeAudienceRequest) returns (GetNoticeAudienceResponse);
+  // Create NoticeAudience.
+  rpc CreateNoticeAudience(CreateNoticeAudienceRequest) returns (CreateNoticeAudienceResponse);
+  // Update NoticeAudience.
+  rpc UpdateNoticeAudience(UpdateNoticeAudienceRequest) returns (UpdateNoticeAudienceResponse);
+  // Soft-delete NoticeAudience.
+  rpc DeleteNoticeAudience(DeleteNoticeAudienceRequest) returns (DeleteNoticeAudienceResponse);
+  // List NoticeVersions.
+  rpc ListNoticeVersions(ListNoticeVersionsRequest) returns (ListNoticeVersionsResponse);
+  // Get NoticeVersion.
+  rpc GetNoticeVersion(GetNoticeVersionRequest) returns (GetNoticeVersionResponse);
+  // Publish.
+  rpc PublishNotice(PublishNoticeRequest) returns (PublishNoticeResponse);
+  // Unpublish.
+  rpc UnpublishNotice(UnpublishNoticeRequest) returns (UnpublishNoticeResponse);
+  // Stop accepting replies.
+  rpc CloseNoticeReplies(CloseNoticeRepliesRequest) returns (CloseNoticeRepliesResponse);
+  // Withdraw a notice.
+  rpc DeactivateNotice(DeactivateNoticeRequest) returns (DeactivateNoticeResponse);
+  // Restore a withdrawn notice.
+  rpc ReactivateNotice(ReactivateNoticeRequest) returns (ReactivateNoticeResponse);
+}
+
+// EventService: operations on the Event aggregate.
+service EventService {
+  // List Events.
+  rpc ListEvents(ListEventsRequest) returns (ListEventsResponse);
+  // Get Event.
+  rpc GetEvent(GetEventRequest) returns (GetEventResponse);
+  // Create Event.
+  rpc CreateEvent(CreateEventRequest) returns (CreateEventResponse);
+  // Update Event.
+  rpc UpdateEvent(UpdateEventRequest) returns (UpdateEventResponse);
+  // Soft-delete Event.
+  rpc DeleteEvent(DeleteEventRequest) returns (DeleteEventResponse);
+  // List EventGalleryItems.
+  rpc ListEventGalleryItems(ListEventGalleryItemsRequest) returns (ListEventGalleryItemsResponse);
+  // Get EventGalleryItem.
+  rpc GetEventGalleryItem(GetEventGalleryItemRequest) returns (GetEventGalleryItemResponse);
+  // Create EventGalleryItem.
+  rpc CreateEventGalleryItem(CreateEventGalleryItemRequest) returns (CreateEventGalleryItemResponse);
+  // Update EventGalleryItem.
+  rpc UpdateEventGalleryItem(UpdateEventGalleryItemRequest) returns (UpdateEventGalleryItemResponse);
+  // Soft-delete EventGalleryItem.
+  rpc DeleteEventGalleryItem(DeleteEventGalleryItemRequest) returns (DeleteEventGalleryItemResponse);
+  // List EventInstitutions.
+  rpc ListEventInstitutions(ListEventInstitutionsRequest) returns (ListEventInstitutionsResponse);
+  // Get EventInstitution.
+  rpc GetEventInstitution(GetEventInstitutionRequest) returns (GetEventInstitutionResponse);
+  // Create EventInstitution.
+  rpc CreateEventInstitution(CreateEventInstitutionRequest) returns (CreateEventInstitutionResponse);
+  // Update EventInstitution.
+  rpc UpdateEventInstitution(UpdateEventInstitutionRequest) returns (UpdateEventInstitutionResponse);
+  // Soft-delete EventInstitution.
+  rpc DeleteEventInstitution(DeleteEventInstitutionRequest) returns (DeleteEventInstitutionResponse);
+  // List EventOccurrences.
+  rpc ListEventOccurrences(ListEventOccurrencesRequest) returns (ListEventOccurrencesResponse);
+  // Get EventOccurrence.
+  rpc GetEventOccurrence(GetEventOccurrenceRequest) returns (GetEventOccurrenceResponse);
+  // Create EventOccurrence.
+  rpc CreateEventOccurrence(CreateEventOccurrenceRequest) returns (CreateEventOccurrenceResponse);
+  // Update EventOccurrence.
+  rpc UpdateEventOccurrence(UpdateEventOccurrenceRequest) returns (UpdateEventOccurrenceResponse);
+  // Soft-delete EventOccurrence.
+  rpc DeleteEventOccurrence(DeleteEventOccurrenceRequest) returns (DeleteEventOccurrenceResponse);
+  // List EventAttendees.
+  rpc ListEventAttendees(ListEventAttendeesRequest) returns (ListEventAttendeesResponse);
+  // Get EventAttendee.
+  rpc GetEventAttendee(GetEventAttendeeRequest) returns (GetEventAttendeeResponse);
+  // Create EventAttendee.
+  rpc CreateEventAttendee(CreateEventAttendeeRequest) returns (CreateEventAttendeeResponse);
+  // Update EventAttendee.
+  rpc UpdateEventAttendee(UpdateEventAttendeeRequest) returns (UpdateEventAttendeeResponse);
+  // Soft-delete EventAttendee.
+  rpc DeleteEventAttendee(DeleteEventAttendeeRequest) returns (DeleteEventAttendeeResponse);
+  // Approve / show.
+  rpc ActivateEvent(ActivateEventRequest) returns (ActivateEventResponse);
+  // Hide.
+  rpc DeactivateEvent(DeactivateEventRequest) returns (DeactivateEventResponse);
+  // Merged calendar of the caller: institution and cohort events, personal events, item due dates, live classes, cohort sessions and holidays.
+  rpc GetMyCalendar(GetMyCalendarRequest) returns (GetMyCalendarResponse);
+  // Cancel one occurrence.
+  rpc CancelEventOccurrence(CancelEventOccurrenceRequest) returns (CancelEventOccurrenceResponse);
+  // Mark a personal to-do event complete.
+  rpc CompletePersonalEvent(CompletePersonalEventRequest) returns (CompletePersonalEventResponse);
+}
+
+// MagazineService: operations on the Magazine aggregate.
+service MagazineService {
+  // List Magazines.
+  rpc ListMagazines(ListMagazinesRequest) returns (ListMagazinesResponse);
+  // Get Magazine.
+  rpc GetMagazine(GetMagazineRequest) returns (GetMagazineResponse);
+  // Create Magazine.
+  rpc CreateMagazine(CreateMagazineRequest) returns (CreateMagazineResponse);
+  // Update Magazine.
+  rpc UpdateMagazine(UpdateMagazineRequest) returns (UpdateMagazineResponse);
+  // Soft-delete Magazine.
+  rpc DeleteMagazine(DeleteMagazineRequest) returns (DeleteMagazineResponse);
+}
+
+// ConversationService: operations on the Conversation aggregate.
+service ConversationService {
+  // List Conversations.
+  rpc ListConversations(ListConversationsRequest) returns (ListConversationsResponse);
+  // Get Conversation.
+  rpc GetConversation(GetConversationRequest) returns (GetConversationResponse);
+  // Create Conversation.
+  rpc CreateConversation(CreateConversationRequest) returns (CreateConversationResponse);
+  // Update Conversation.
+  rpc UpdateConversation(UpdateConversationRequest) returns (UpdateConversationResponse);
+  // Soft-delete Conversation.
+  rpc DeleteConversation(DeleteConversationRequest) returns (DeleteConversationResponse);
+  // List ConversationParticipants.
+  rpc ListConversationParticipants(ListConversationParticipantsRequest) returns (ListConversationParticipantsResponse);
+  // Get ConversationParticipant.
+  rpc GetConversationParticipant(GetConversationParticipantRequest) returns (GetConversationParticipantResponse);
+  // Create ConversationParticipant.
+  rpc CreateConversationParticipant(CreateConversationParticipantRequest) returns (CreateConversationParticipantResponse);
+  // Update ConversationParticipant.
+  rpc UpdateConversationParticipant(UpdateConversationParticipantRequest) returns (UpdateConversationParticipantResponse);
+  // Soft-delete ConversationParticipant.
+  rpc DeleteConversationParticipant(DeleteConversationParticipantRequest) returns (DeleteConversationParticipantResponse);
+  // List ConversationMessages.
+  rpc ListConversationMessages(ListConversationMessagesRequest) returns (ListConversationMessagesResponse);
+  // Get ConversationMessage.
+  rpc GetConversationMessage(GetConversationMessageRequest) returns (GetConversationMessageResponse);
+  // Create ConversationMessage.
+  rpc CreateConversationMessage(CreateConversationMessageRequest) returns (CreateConversationMessageResponse);
+  // Update ConversationMessage.
+  rpc UpdateConversationMessage(UpdateConversationMessageRequest) returns (UpdateConversationMessageResponse);
+  // Soft-delete ConversationMessage.
+  rpc DeleteConversationMessage(DeleteConversationMessageRequest) returns (DeleteConversationMessageResponse);
+  // Mark all messages read for the caller.
+  rpc MarkConversationRead(MarkConversationReadRequest) returns (MarkConversationReadResponse);
+  // Hide a message for the caller only.
+  rpc HideMessageForMe(HideMessageForMeRequest) returns (HideMessageForMeResponse);
+}
+
+// FeedbackThreadService: operations on the FeedbackThread aggregate.
+service FeedbackThreadService {
+  // List FeedbackThreads.
+  rpc ListFeedbackThreads(ListFeedbackThreadsRequest) returns (ListFeedbackThreadsResponse);
+  // Get FeedbackThread.
+  rpc GetFeedbackThread(GetFeedbackThreadRequest) returns (GetFeedbackThreadResponse);
+  // Create FeedbackThread.
+  rpc CreateFeedbackThread(CreateFeedbackThreadRequest) returns (CreateFeedbackThreadResponse);
+  // Update FeedbackThread.
+  rpc UpdateFeedbackThread(UpdateFeedbackThreadRequest) returns (UpdateFeedbackThreadResponse);
+  // Soft-delete FeedbackThread.
+  rpc DeleteFeedbackThread(DeleteFeedbackThreadRequest) returns (DeleteFeedbackThreadResponse);
+  // List FeedbackMessages.
+  rpc ListFeedbackMessages(ListFeedbackMessagesRequest) returns (ListFeedbackMessagesResponse);
+  // Get FeedbackMessage.
+  rpc GetFeedbackMessage(GetFeedbackMessageRequest) returns (GetFeedbackMessageResponse);
+  // Create FeedbackMessage.
+  rpc CreateFeedbackMessage(CreateFeedbackMessageRequest) returns (CreateFeedbackMessageResponse);
+  // Update FeedbackMessage.
+  rpc UpdateFeedbackMessage(UpdateFeedbackMessageRequest) returns (UpdateFeedbackMessageResponse);
+  // Soft-delete FeedbackMessage.
+  rpc DeleteFeedbackMessage(DeleteFeedbackMessageRequest) returns (DeleteFeedbackMessageResponse);
+  // Close.
+  rpc CloseFeedbackThread(CloseFeedbackThreadRequest) returns (CloseFeedbackThreadResponse);
+  // Reopen.
+  rpc ReopenFeedbackThread(ReopenFeedbackThreadRequest) returns (ReopenFeedbackThreadResponse);
+  // Mark seen / action taken.
+  rpc MarkFeedbackMessage(MarkFeedbackMessageRequest) returns (MarkFeedbackMessageResponse);
+}
+
+// AudienceGroupService: operations on the AudienceGroup aggregate.
+service AudienceGroupService {
+  // List AudienceGroups.
+  rpc ListAudienceGroups(ListAudienceGroupsRequest) returns (ListAudienceGroupsResponse);
+  // Get AudienceGroup.
+  rpc GetAudienceGroup(GetAudienceGroupRequest) returns (GetAudienceGroupResponse);
+  // Create AudienceGroup.
+  rpc CreateAudienceGroup(CreateAudienceGroupRequest) returns (CreateAudienceGroupResponse);
+  // Update AudienceGroup.
+  rpc UpdateAudienceGroup(UpdateAudienceGroupRequest) returns (UpdateAudienceGroupResponse);
+  // Soft-delete AudienceGroup.
+  rpc DeleteAudienceGroup(DeleteAudienceGroupRequest) returns (DeleteAudienceGroupResponse);
+  // List AudienceGroupMembers.
+  rpc ListAudienceGroupMembers(ListAudienceGroupMembersRequest) returns (ListAudienceGroupMembersResponse);
+  // Get AudienceGroupMember.
+  rpc GetAudienceGroupMember(GetAudienceGroupMemberRequest) returns (GetAudienceGroupMemberResponse);
+  // Create AudienceGroupMember.
+  rpc CreateAudienceGroupMember(CreateAudienceGroupMemberRequest) returns (CreateAudienceGroupMemberResponse);
+  // Update AudienceGroupMember.
+  rpc UpdateAudienceGroupMember(UpdateAudienceGroupMemberRequest) returns (UpdateAudienceGroupMemberResponse);
+  // Soft-delete AudienceGroupMember.
+  rpc DeleteAudienceGroupMember(DeleteAudienceGroupMemberRequest) returns (DeleteAudienceGroupMemberResponse);
+  // Add many members.
+  rpc AddGroupMembers(AddGroupMembersRequest) returns (AddGroupMembersResponse);
+}
+
+// TaskService: operations on the Task aggregate.
+service TaskService {
+  // List Tasks.
+  rpc ListTasks(ListTasksRequest) returns (ListTasksResponse);
+  // Get Task.
+  rpc GetTask(GetTaskRequest) returns (GetTaskResponse);
+  // Create Task.
+  rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
+  // Update Task.
+  rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse);
+  // Soft-delete Task.
+  rpc DeleteTask(DeleteTaskRequest) returns (DeleteTaskResponse);
+  // List TaskAssignees.
+  rpc ListTaskAssignees(ListTaskAssigneesRequest) returns (ListTaskAssigneesResponse);
+  // Get TaskAssignee.
+  rpc GetTaskAssignee(GetTaskAssigneeRequest) returns (GetTaskAssigneeResponse);
+  // Create TaskAssignee.
+  rpc CreateTaskAssignee(CreateTaskAssigneeRequest) returns (CreateTaskAssigneeResponse);
+  // Update TaskAssignee.
+  rpc UpdateTaskAssignee(UpdateTaskAssigneeRequest) returns (UpdateTaskAssigneeResponse);
+  // Soft-delete TaskAssignee.
+  rpc DeleteTaskAssignee(DeleteTaskAssigneeRequest) returns (DeleteTaskAssigneeResponse);
+  // Complete.
+  rpc CompleteTask(CompleteTaskRequest) returns (CompleteTaskResponse);
+  // Reopen.
+  rpc ReopenTask(ReopenTaskRequest) returns (ReopenTaskResponse);
+  // Snooze reminder.
+  rpc SnoozeTask(SnoozeTaskRequest) returns (SnoozeTaskResponse);
+  // Claim an open task.
+  rpc ClaimTask(ClaimTaskRequest) returns (ClaimTaskResponse);
+}
+
+// ContentViewService: operations on the ContentView aggregate.
+service ContentViewService {
+  // List ContentViews.
+  rpc ListContentViews(ListContentViewsRequest) returns (ListContentViewsResponse);
+  // Get ContentView.
+  rpc GetContentView(GetContentViewRequest) returns (GetContentViewResponse);
+  // Create ContentView.
+  rpc CreateContentView(CreateContentViewRequest) returns (CreateContentViewResponse);
+  // Update ContentView.
+  rpc UpdateContentView(UpdateContentViewRequest) returns (UpdateContentViewResponse);
+  // Soft-delete ContentView.
+  rpc DeleteContentView(DeleteContentViewRequest) returns (DeleteContentViewResponse);
+}
+
+// PageCategoryService: operations on the PageCategory aggregate.
+service PageCategoryService {
+  // List PageCategories.
+  rpc ListPageCategories(ListPageCategoriesRequest) returns (ListPageCategoriesResponse);
+  // Get PageCategory.
+  rpc GetPageCategory(GetPageCategoryRequest) returns (GetPageCategoryResponse);
+  // Create PageCategory.
+  rpc CreatePageCategory(CreatePageCategoryRequest) returns (CreatePageCategoryResponse);
+  // Update PageCategory.
+  rpc UpdatePageCategory(UpdatePageCategoryRequest) returns (UpdatePageCategoryResponse);
+  // Soft-delete PageCategory.
+  rpc DeletePageCategory(DeletePageCategoryRequest) returns (DeletePageCategoryResponse);
+}
+
+// ClassPageService: operations on the ClassPage aggregate.
+service ClassPageService {
+  // List ClassPages.
+  rpc ListClassPages(ListClassPagesRequest) returns (ListClassPagesResponse);
+  // Get ClassPage.
+  rpc GetClassPage(GetClassPageRequest) returns (GetClassPageResponse);
+  // Create ClassPage.
+  rpc CreateClassPage(CreateClassPageRequest) returns (CreateClassPageResponse);
+  // Update ClassPage.
+  rpc UpdateClassPage(UpdateClassPageRequest) returns (UpdateClassPageResponse);
+  // Soft-delete ClassPage.
+  rpc DeleteClassPage(DeleteClassPageRequest) returns (DeleteClassPageResponse);
+  // List ClassPageAttachments.
+  rpc ListClassPageAttachments(ListClassPageAttachmentsRequest) returns (ListClassPageAttachmentsResponse);
+  // Get ClassPageAttachment.
+  rpc GetClassPageAttachment(GetClassPageAttachmentRequest) returns (GetClassPageAttachmentResponse);
+  // Create ClassPageAttachment.
+  rpc CreateClassPageAttachment(CreateClassPageAttachmentRequest) returns (CreateClassPageAttachmentResponse);
+  // Update ClassPageAttachment.
+  rpc UpdateClassPageAttachment(UpdateClassPageAttachmentRequest) returns (UpdateClassPageAttachmentResponse);
+  // Soft-delete ClassPageAttachment.
+  rpc DeleteClassPageAttachment(DeleteClassPageAttachmentRequest) returns (DeleteClassPageAttachmentResponse);
+  // List ClassPageMembers.
+  rpc ListClassPageMembers(ListClassPageMembersRequest) returns (ListClassPageMembersResponse);
+  // Get ClassPageMember.
+  rpc GetClassPageMember(GetClassPageMemberRequest) returns (GetClassPageMemberResponse);
+  // Create ClassPageMember.
+  rpc CreateClassPageMember(CreateClassPageMemberRequest) returns (CreateClassPageMemberResponse);
+  // Update ClassPageMember.
+  rpc UpdateClassPageMember(UpdateClassPageMemberRequest) returns (UpdateClassPageMemberResponse);
+  // Soft-delete ClassPageMember.
+  rpc DeleteClassPageMember(DeleteClassPageMemberRequest) returns (DeleteClassPageMemberResponse);
+  // Follow or unfollow.
+  rpc FollowClassPage(FollowClassPageRequest) returns (FollowClassPageResponse);
+}
+
+// PostService: operations on the Post aggregate.
+service PostService {
+  // List Posts.
+  rpc ListPosts(ListPostsRequest) returns (ListPostsResponse);
+  // Get Post.
+  rpc GetPost(GetPostRequest) returns (GetPostResponse);
+  // Create Post.
+  rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
+  // Update Post.
+  rpc UpdatePost(UpdatePostRequest) returns (UpdatePostResponse);
+  // Soft-delete Post.
+  rpc DeletePost(DeletePostRequest) returns (DeletePostResponse);
+  // List PostAudienceClasses.
+  rpc ListPostAudienceClasses(ListPostAudienceClassesRequest) returns (ListPostAudienceClassesResponse);
+  // Get PostAudienceClass.
+  rpc GetPostAudienceClass(GetPostAudienceClassRequest) returns (GetPostAudienceClassResponse);
+  // Create PostAudienceClass.
+  rpc CreatePostAudienceClass(CreatePostAudienceClassRequest) returns (CreatePostAudienceClassResponse);
+  // Update PostAudienceClass.
+  rpc UpdatePostAudienceClass(UpdatePostAudienceClassRequest) returns (UpdatePostAudienceClassResponse);
+  // Soft-delete PostAudienceClass.
+  rpc DeletePostAudienceClass(DeletePostAudienceClassRequest) returns (DeletePostAudienceClassResponse);
+  // List PostReactions.
+  rpc ListPostReactions(ListPostReactionsRequest) returns (ListPostReactionsResponse);
+  // Get PostReaction.
+  rpc GetPostReaction(GetPostReactionRequest) returns (GetPostReactionResponse);
+  // Create PostReaction.
+  rpc CreatePostReaction(CreatePostReactionRequest) returns (CreatePostReactionResponse);
+  // Update PostReaction.
+  rpc UpdatePostReaction(UpdatePostReactionRequest) returns (UpdatePostReactionResponse);
+  // Soft-delete PostReaction.
+  rpc DeletePostReaction(DeletePostReactionRequest) returns (DeletePostReactionResponse);
+  // List PostComments.
+  rpc ListPostComments(ListPostCommentsRequest) returns (ListPostCommentsResponse);
+  // Get PostComment.
+  rpc GetPostComment(GetPostCommentRequest) returns (GetPostCommentResponse);
+  // Create PostComment.
+  rpc CreatePostComment(CreatePostCommentRequest) returns (CreatePostCommentResponse);
+  // Update PostComment.
+  rpc UpdatePostComment(UpdatePostCommentRequest) returns (UpdatePostCommentResponse);
+  // Soft-delete PostComment.
+  rpc DeletePostComment(DeletePostCommentRequest) returns (DeletePostCommentResponse);
+  // Submit for moderation / publish.
+  rpc SubmitPost(SubmitPostRequest) returns (SubmitPostResponse);
+  // Approve and publish.
+  rpc ApprovePost(ApprovePostRequest) returns (ApprovePostResponse);
+  // Withdraw.
+  rpc CancelPost(CancelPostRequest) returns (CancelPostResponse);
+  // Personalised feed.
+  rpc GetFeed(GetFeedRequest) returns (GetFeedResponse);
+}
+
+// CommentReactionService: operations on the CommentReaction aggregate.
+service CommentReactionService {
+  // List CommentReactions.
+  rpc ListCommentReactions(ListCommentReactionsRequest) returns (ListCommentReactionsResponse);
+  // Get CommentReaction.
+  rpc GetCommentReaction(GetCommentReactionRequest) returns (GetCommentReactionResponse);
+  // Create CommentReaction.
+  rpc CreateCommentReaction(CreateCommentReactionRequest) returns (CreateCommentReactionResponse);
+  // Update CommentReaction.
+  rpc UpdateCommentReaction(UpdateCommentReactionRequest) returns (UpdateCommentReactionResponse);
+  // Soft-delete CommentReaction.
+  rpc DeleteCommentReaction(DeleteCommentReactionRequest) returns (DeleteCommentReactionResponse);
+}
+
+// CalendarExportService: operations on the CalendarExport aggregate.
+service CalendarExportService {
+  // List CalendarExports.
+  rpc ListCalendarExports(ListCalendarExportsRequest) returns (ListCalendarExportsResponse);
+  // Get CalendarExport.
+  rpc GetCalendarExport(GetCalendarExportRequest) returns (GetCalendarExportResponse);
+  // Soft-delete CalendarExport.
+  rpc DeleteCalendarExport(DeleteCalendarExportRequest) returns (DeleteCalendarExportResponse);
+  // Push the caller's calendar items to a connected external calendar (updates and deletions are tracked).
+  rpc ExportCalendar(ExportCalendarRequest) returns (ExportCalendarResponse);
+}
+
+// NotificationTypeService: operations on the NotificationType aggregate.
+service NotificationTypeService {
+  // List NotificationTypes.
+  rpc ListNotificationTypes(ListNotificationTypesRequest) returns (ListNotificationTypesResponse);
+  // Get NotificationType.
+  rpc GetNotificationType(GetNotificationTypeRequest) returns (GetNotificationTypeResponse);
+  // Create NotificationType.
+  rpc CreateNotificationType(CreateNotificationTypeRequest) returns (CreateNotificationTypeResponse);
+  // Update NotificationType.
+  rpc UpdateNotificationType(UpdateNotificationTypeRequest) returns (UpdateNotificationTypeResponse);
+  // Soft-delete NotificationType.
+  rpc DeleteNotificationType(DeleteNotificationTypeRequest) returns (DeleteNotificationTypeResponse);
+  // List NotificationTypeProperties.
+  rpc ListNotificationTypeProperties(ListNotificationTypePropertiesRequest) returns (ListNotificationTypePropertiesResponse);
+  // Get NotificationTypeProperty.
+  rpc GetNotificationTypeProperty(GetNotificationTypePropertyRequest) returns (GetNotificationTypePropertyResponse);
+  // Create NotificationTypeProperty.
+  rpc CreateNotificationTypeProperty(CreateNotificationTypePropertyRequest) returns (CreateNotificationTypePropertyResponse);
+  // Update NotificationTypeProperty.
+  rpc UpdateNotificationTypeProperty(UpdateNotificationTypePropertyRequest) returns (UpdateNotificationTypePropertyResponse);
+  // Soft-delete NotificationTypeProperty.
+  rpc DeleteNotificationTypeProperty(DeleteNotificationTypePropertyRequest) returns (DeleteNotificationTypePropertyResponse);
+  // List NotificationRules.
+  rpc ListNotificationRules(ListNotificationRulesRequest) returns (ListNotificationRulesResponse);
+  // Get NotificationRule.
+  rpc GetNotificationRule(GetNotificationRuleRequest) returns (GetNotificationRuleResponse);
+  // Create NotificationRule.
+  rpc CreateNotificationRule(CreateNotificationRuleRequest) returns (CreateNotificationRuleResponse);
+  // Update NotificationRule.
+  rpc UpdateNotificationRule(UpdateNotificationRuleRequest) returns (UpdateNotificationRuleResponse);
+  // Soft-delete NotificationRule.
+  rpc DeleteNotificationRule(DeleteNotificationRuleRequest) returns (DeleteNotificationRuleResponse);
+  // List NotificationCohortSettings.
+  rpc ListNotificationCohortSettings(ListNotificationCohortSettingsRequest) returns (ListNotificationCohortSettingsResponse);
+  // Get NotificationCohortSetting.
+  rpc GetNotificationCohortSetting(GetNotificationCohortSettingRequest) returns (GetNotificationCohortSettingResponse);
+  // Create NotificationCohortSetting.
+  rpc CreateNotificationCohortSetting(CreateNotificationCohortSettingRequest) returns (CreateNotificationCohortSettingResponse);
+  // Update NotificationCohortSetting.
+  rpc UpdateNotificationCohortSetting(UpdateNotificationCohortSettingRequest) returns (UpdateNotificationCohortSettingResponse);
+  // Soft-delete NotificationCohortSetting.
+  rpc DeleteNotificationCohortSetting(DeleteNotificationCohortSettingRequest) returns (DeleteNotificationCohortSettingResponse);
+}
+
+// NotificationChannelService: operations on the NotificationChannel aggregate.
+service NotificationChannelService {
+  // List NotificationChannels.
+  rpc ListNotificationChannels(ListNotificationChannelsRequest) returns (ListNotificationChannelsResponse);
+  // Get NotificationChannel.
+  rpc GetNotificationChannel(GetNotificationChannelRequest) returns (GetNotificationChannelResponse);
+  // Create NotificationChannel.
+  rpc CreateNotificationChannel(CreateNotificationChannelRequest) returns (CreateNotificationChannelResponse);
+  // Update NotificationChannel.
+  rpc UpdateNotificationChannel(UpdateNotificationChannelRequest) returns (UpdateNotificationChannelResponse);
+  // Soft-delete NotificationChannel.
+  rpc DeleteNotificationChannel(DeleteNotificationChannelRequest) returns (DeleteNotificationChannelResponse);
+  // List NotificationChannelProperties.
+  rpc ListNotificationChannelProperties(ListNotificationChannelPropertiesRequest) returns (ListNotificationChannelPropertiesResponse);
+  // Get NotificationChannelProperty.
+  rpc GetNotificationChannelProperty(GetNotificationChannelPropertyRequest) returns (GetNotificationChannelPropertyResponse);
+  // Create NotificationChannelProperty.
+  rpc CreateNotificationChannelProperty(CreateNotificationChannelPropertyRequest) returns (CreateNotificationChannelPropertyResponse);
+  // Update NotificationChannelProperty.
+  rpc UpdateNotificationChannelProperty(UpdateNotificationChannelPropertyRequest) returns (UpdateNotificationChannelPropertyResponse);
+  // Soft-delete NotificationChannelProperty.
+  rpc DeleteNotificationChannelProperty(DeleteNotificationChannelPropertyRequest) returns (DeleteNotificationChannelPropertyResponse);
+  // Send a test message through the channel configuration.
+  rpc SendTestMessage(SendTestMessageRequest) returns (SendTestMessageResponse);
+}
+
+// NotificationPreferenceSetService: operations on the NotificationPreferenceSet aggregate.
+service NotificationPreferenceSetService {
+  // List NotificationPreferenceSets.
+  rpc ListNotificationPreferenceSets(ListNotificationPreferenceSetsRequest) returns (ListNotificationPreferenceSetsResponse);
+  // Get NotificationPreferenceSet.
+  rpc GetNotificationPreferenceSet(GetNotificationPreferenceSetRequest) returns (GetNotificationPreferenceSetResponse);
+  // Create NotificationPreferenceSet.
+  rpc CreateNotificationPreferenceSet(CreateNotificationPreferenceSetRequest) returns (CreateNotificationPreferenceSetResponse);
+  // Update NotificationPreferenceSet.
+  rpc UpdateNotificationPreferenceSet(UpdateNotificationPreferenceSetRequest) returns (UpdateNotificationPreferenceSetResponse);
+  // Soft-delete NotificationPreferenceSet.
+  rpc DeleteNotificationPreferenceSet(DeleteNotificationPreferenceSetRequest) returns (DeleteNotificationPreferenceSetResponse);
+  // List NotificationPreferences.
+  rpc ListNotificationPreferences(ListNotificationPreferencesRequest) returns (ListNotificationPreferencesResponse);
+  // Get NotificationPreference.
+  rpc GetNotificationPreference(GetNotificationPreferenceRequest) returns (GetNotificationPreferenceResponse);
+  // Create NotificationPreference.
+  rpc CreateNotificationPreference(CreateNotificationPreferenceRequest) returns (CreateNotificationPreferenceResponse);
+  // Update NotificationPreference.
+  rpc UpdateNotificationPreference(UpdateNotificationPreferenceRequest) returns (UpdateNotificationPreferenceResponse);
+  // Soft-delete NotificationPreference.
+  rpc DeleteNotificationPreference(DeleteNotificationPreferenceRequest) returns (DeleteNotificationPreferenceResponse);
+}
+
+// OperationService: long-running operations started in this module.
+service OperationService {
+  // Live status of a long-running operation started in this module.
+  rpc GetOperation(GetOperationRequest) returns (GetOperationResponse);
+  // Long-running operations of this module started by the caller.
+  rpc ListOperations(ListOperationsRequest) returns (ListOperationsResponse);
+  // Request cancellation of a running operation started in this module.
+  rpc CancelOperation(CancelOperationRequest) returns (CancelOperationResponse);
+}
+
+message ListMessageTemplatesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListMessageTemplatesResponse {
+  repeated MessageTemplate items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetMessageTemplateRequest {
+  // MessageTemplate id (UUID).
+  string id = 1;
+}
+message GetMessageTemplateResponse {
+  MessageTemplate message_template = 1;
+}
+
+message CreateMessageTemplateRequest {
+  MessageTemplate message_template = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateMessageTemplateResponse {
+  MessageTemplate message_template = 1;
+}
+
+message UpdateMessageTemplateRequest {
+  // Resource with id and etag set.
+  MessageTemplate message_template = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateMessageTemplateResponse {
+  MessageTemplate message_template = 1;
+}
+
+message DeleteMessageTemplateRequest {
+  // MessageTemplate id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteMessageTemplateResponse {
+}
+
+message ListOutboundMessagesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListOutboundMessagesResponse {
+  repeated OutboundMessage items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetOutboundMessageRequest {
+  // OutboundMessage id (UUID).
+  string id = 1;
+}
+message GetOutboundMessageResponse {
+  OutboundMessage outbound_message = 1;
+}
+
+message ListMailboxMessagesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListMailboxMessagesResponse {
+  repeated MailboxMessage items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetMailboxMessageRequest {
+  // MailboxMessage id (UUID).
+  string id = 1;
+}
+message GetMailboxMessageResponse {
+  MailboxMessage mailbox_message = 1;
+}
+
+message DeleteMailboxMessageRequest {
+  // MailboxMessage id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteMailboxMessageResponse {
+}
+
+message ListInAppNotificationsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListInAppNotificationsResponse {
+  repeated InAppNotification items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetInAppNotificationRequest {
+  // InAppNotification id (UUID).
+  string id = 1;
+}
+message GetInAppNotificationResponse {
+  InAppNotification in_app_notification = 1;
+}
+
+message ListNoticeBackgroundsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListNoticeBackgroundsResponse {
+  repeated NoticeBackground items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetNoticeBackgroundRequest {
+  // NoticeBackground id (UUID).
+  string id = 1;
+}
+message GetNoticeBackgroundResponse {
+  NoticeBackground notice_background = 1;
+}
+
+message CreateNoticeBackgroundRequest {
+  NoticeBackground notice_background = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateNoticeBackgroundResponse {
+  NoticeBackground notice_background = 1;
+}
+
+message UpdateNoticeBackgroundRequest {
+  // Resource with id and etag set.
+  NoticeBackground notice_background = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateNoticeBackgroundResponse {
+  NoticeBackground notice_background = 1;
+}
+
+message DeleteNoticeBackgroundRequest {
+  // NoticeBackground id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteNoticeBackgroundResponse {
+}
+
+message ListNoticesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListNoticesResponse {
+  repeated Notice items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetNoticeRequest {
+  // Notice id (UUID).
+  string id = 1;
+}
+message GetNoticeResponse {
+  Notice notice = 1;
+}
+
+message CreateNoticeRequest {
+  Notice notice = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateNoticeResponse {
+  Notice notice = 1;
+}
+
+message UpdateNoticeRequest {
+  // Resource with id and etag set.
+  Notice notice = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateNoticeResponse {
+  Notice notice = 1;
+}
+
+message DeleteNoticeRequest {
+  // Notice id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteNoticeResponse {
+}
+
+message ListEventsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListEventsResponse {
+  repeated Event items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetEventRequest {
+  // Event id (UUID).
+  string id = 1;
+}
+message GetEventResponse {
+  Event event = 1;
+}
+
+message CreateEventRequest {
+  Event event = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateEventResponse {
+  Event event = 1;
+}
+
+message UpdateEventRequest {
+  // Resource with id and etag set.
+  Event event = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateEventResponse {
+  Event event = 1;
+}
+
+message DeleteEventRequest {
+  // Event id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteEventResponse {
+}
+
+message ListEventGalleryItemsRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListEventGalleryItemsResponse {
+  repeated EventGalleryItem items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetEventGalleryItemRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // EventGalleryItem id (UUID).
+  string id = 2;
+}
+message GetEventGalleryItemResponse {
+  EventGalleryItem event_gallery_item = 1;
+}
+
+message CreateEventGalleryItemRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  EventGalleryItem event_gallery_item = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateEventGalleryItemResponse {
+  EventGalleryItem event_gallery_item = 1;
+}
+
+message UpdateEventGalleryItemRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // Resource with id and etag set.
+  EventGalleryItem event_gallery_item = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateEventGalleryItemResponse {
+  EventGalleryItem event_gallery_item = 1;
+}
+
+message DeleteEventGalleryItemRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // EventGalleryItem id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteEventGalleryItemResponse {
+}
+
+message ListMagazinesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListMagazinesResponse {
+  repeated Magazine items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetMagazineRequest {
+  // Magazine id (UUID).
+  string id = 1;
+}
+message GetMagazineResponse {
+  Magazine magazine = 1;
+}
+
+message CreateMagazineRequest {
+  Magazine magazine = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateMagazineResponse {
+  Magazine magazine = 1;
+}
+
+message UpdateMagazineRequest {
+  // Resource with id and etag set.
+  Magazine magazine = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateMagazineResponse {
+  Magazine magazine = 1;
+}
+
+message DeleteMagazineRequest {
+  // Magazine id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteMagazineResponse {
+}
+
+message ListConversationsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListConversationsResponse {
+  repeated Conversation items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetConversationRequest {
+  // Conversation id (UUID).
+  string id = 1;
+}
+message GetConversationResponse {
+  Conversation conversation = 1;
+}
+
+message CreateConversationRequest {
+  Conversation conversation = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateConversationResponse {
+  Conversation conversation = 1;
+}
+
+message UpdateConversationRequest {
+  // Resource with id and etag set.
+  Conversation conversation = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateConversationResponse {
+  Conversation conversation = 1;
+}
+
+message DeleteConversationRequest {
+  // Conversation id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteConversationResponse {
+}
+
+message ListConversationParticipantsRequest {
+  // Conversation id (UUID).
+  string conversation_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListConversationParticipantsResponse {
+  repeated ConversationParticipant items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetConversationParticipantRequest {
+  // Conversation id (UUID).
+  string conversation_id = 1;
+  // ConversationParticipant id (UUID).
+  string id = 2;
+}
+message GetConversationParticipantResponse {
+  ConversationParticipant conversation_participant = 1;
+}
+
+message CreateConversationParticipantRequest {
+  // Conversation id (UUID).
+  string conversation_id = 1;
+  ConversationParticipant conversation_participant = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateConversationParticipantResponse {
+  ConversationParticipant conversation_participant = 1;
+}
+
+message UpdateConversationParticipantRequest {
+  // Conversation id (UUID).
+  string conversation_id = 1;
+  // Resource with id and etag set.
+  ConversationParticipant conversation_participant = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateConversationParticipantResponse {
+  ConversationParticipant conversation_participant = 1;
+}
+
+message DeleteConversationParticipantRequest {
+  // Conversation id (UUID).
+  string conversation_id = 1;
+  // ConversationParticipant id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteConversationParticipantResponse {
+}
+
+message ListConversationMessagesRequest {
+  // Conversation id (UUID).
+  string conversation_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListConversationMessagesResponse {
+  repeated ConversationMessage items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetConversationMessageRequest {
+  // Conversation id (UUID).
+  string conversation_id = 1;
+  // ConversationMessage id (UUID).
+  string id = 2;
+}
+message GetConversationMessageResponse {
+  ConversationMessage conversation_message = 1;
+}
+
+message CreateConversationMessageRequest {
+  // Conversation id (UUID).
+  string conversation_id = 1;
+  ConversationMessage conversation_message = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateConversationMessageResponse {
+  ConversationMessage conversation_message = 1;
+}
+
+message UpdateConversationMessageRequest {
+  // Conversation id (UUID).
+  string conversation_id = 1;
+  // Resource with id and etag set.
+  ConversationMessage conversation_message = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateConversationMessageResponse {
+  ConversationMessage conversation_message = 1;
+}
+
+message DeleteConversationMessageRequest {
+  // Conversation id (UUID).
+  string conversation_id = 1;
+  // ConversationMessage id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteConversationMessageResponse {
+}
+
+message ListFeedbackThreadsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListFeedbackThreadsResponse {
+  repeated FeedbackThread items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetFeedbackThreadRequest {
+  // FeedbackThread id (UUID).
+  string id = 1;
+}
+message GetFeedbackThreadResponse {
+  FeedbackThread feedback_thread = 1;
+}
+
+message CreateFeedbackThreadRequest {
+  FeedbackThread feedback_thread = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateFeedbackThreadResponse {
+  FeedbackThread feedback_thread = 1;
+}
+
+message UpdateFeedbackThreadRequest {
+  // Resource with id and etag set.
+  FeedbackThread feedback_thread = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateFeedbackThreadResponse {
+  FeedbackThread feedback_thread = 1;
+}
+
+message DeleteFeedbackThreadRequest {
+  // FeedbackThread id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteFeedbackThreadResponse {
+}
+
+message ListFeedbackMessagesRequest {
+  // FeedbackThread id (UUID).
+  string feedback_thread_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListFeedbackMessagesResponse {
+  repeated FeedbackMessage items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetFeedbackMessageRequest {
+  // FeedbackThread id (UUID).
+  string feedback_thread_id = 1;
+  // FeedbackMessage id (UUID).
+  string id = 2;
+}
+message GetFeedbackMessageResponse {
+  FeedbackMessage feedback_message = 1;
+}
+
+message CreateFeedbackMessageRequest {
+  // FeedbackThread id (UUID).
+  string feedback_thread_id = 1;
+  FeedbackMessage feedback_message = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateFeedbackMessageResponse {
+  FeedbackMessage feedback_message = 1;
+}
+
+message UpdateFeedbackMessageRequest {
+  // FeedbackThread id (UUID).
+  string feedback_thread_id = 1;
+  // Resource with id and etag set.
+  FeedbackMessage feedback_message = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateFeedbackMessageResponse {
+  FeedbackMessage feedback_message = 1;
+}
+
+message DeleteFeedbackMessageRequest {
+  // FeedbackThread id (UUID).
+  string feedback_thread_id = 1;
+  // FeedbackMessage id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteFeedbackMessageResponse {
+}
+
+message ListAudienceGroupsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListAudienceGroupsResponse {
+  repeated AudienceGroup items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetAudienceGroupRequest {
+  // AudienceGroup id (UUID).
+  string id = 1;
+}
+message GetAudienceGroupResponse {
+  AudienceGroup audience_group = 1;
+}
+
+message CreateAudienceGroupRequest {
+  AudienceGroup audience_group = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateAudienceGroupResponse {
+  AudienceGroup audience_group = 1;
+}
+
+message UpdateAudienceGroupRequest {
+  // Resource with id and etag set.
+  AudienceGroup audience_group = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateAudienceGroupResponse {
+  AudienceGroup audience_group = 1;
+}
+
+message DeleteAudienceGroupRequest {
+  // AudienceGroup id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteAudienceGroupResponse {
+}
+
+message ListAudienceGroupMembersRequest {
+  // AudienceGroup id (UUID).
+  string audience_group_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListAudienceGroupMembersResponse {
+  repeated AudienceGroupMember items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetAudienceGroupMemberRequest {
+  // AudienceGroup id (UUID).
+  string audience_group_id = 1;
+  // AudienceGroupMember id (UUID).
+  string id = 2;
+}
+message GetAudienceGroupMemberResponse {
+  AudienceGroupMember audience_group_member = 1;
+}
+
+message CreateAudienceGroupMemberRequest {
+  // AudienceGroup id (UUID).
+  string audience_group_id = 1;
+  AudienceGroupMember audience_group_member = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateAudienceGroupMemberResponse {
+  AudienceGroupMember audience_group_member = 1;
+}
+
+message UpdateAudienceGroupMemberRequest {
+  // AudienceGroup id (UUID).
+  string audience_group_id = 1;
+  // Resource with id and etag set.
+  AudienceGroupMember audience_group_member = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateAudienceGroupMemberResponse {
+  AudienceGroupMember audience_group_member = 1;
+}
+
+message DeleteAudienceGroupMemberRequest {
+  // AudienceGroup id (UUID).
+  string audience_group_id = 1;
+  // AudienceGroupMember id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteAudienceGroupMemberResponse {
+}
+
+message ListTasksRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListTasksResponse {
+  repeated Task items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetTaskRequest {
+  // Task id (UUID).
+  string id = 1;
+}
+message GetTaskResponse {
+  Task task = 1;
+}
+
+message CreateTaskRequest {
+  Task task = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateTaskResponse {
+  Task task = 1;
+}
+
+message UpdateTaskRequest {
+  // Resource with id and etag set.
+  Task task = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateTaskResponse {
+  Task task = 1;
+}
+
+message DeleteTaskRequest {
+  // Task id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteTaskResponse {
+}
+
+message ListTaskAssigneesRequest {
+  // Task id (UUID).
+  string task_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListTaskAssigneesResponse {
+  repeated TaskAssignee items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetTaskAssigneeRequest {
+  // Task id (UUID).
+  string task_id = 1;
+  // TaskAssignee id (UUID).
+  string id = 2;
+}
+message GetTaskAssigneeResponse {
+  TaskAssignee task_assignee = 1;
+}
+
+message CreateTaskAssigneeRequest {
+  // Task id (UUID).
+  string task_id = 1;
+  TaskAssignee task_assignee = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateTaskAssigneeResponse {
+  TaskAssignee task_assignee = 1;
+}
+
+message UpdateTaskAssigneeRequest {
+  // Task id (UUID).
+  string task_id = 1;
+  // Resource with id and etag set.
+  TaskAssignee task_assignee = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateTaskAssigneeResponse {
+  TaskAssignee task_assignee = 1;
+}
+
+message DeleteTaskAssigneeRequest {
+  // Task id (UUID).
+  string task_id = 1;
+  // TaskAssignee id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteTaskAssigneeResponse {
+}
+
+message ListContentViewsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListContentViewsResponse {
+  repeated ContentView items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetContentViewRequest {
+  // ContentView id (UUID).
+  string id = 1;
+}
+message GetContentViewResponse {
+  ContentView content_view = 1;
+}
+
+message CreateContentViewRequest {
+  ContentView content_view = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateContentViewResponse {
+  ContentView content_view = 1;
+}
+
+message UpdateContentViewRequest {
+  // Resource with id and etag set.
+  ContentView content_view = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateContentViewResponse {
+  ContentView content_view = 1;
+}
+
+message DeleteContentViewRequest {
+  // ContentView id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteContentViewResponse {
+}
+
+message ListPageCategoriesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListPageCategoriesResponse {
+  repeated PageCategory items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetPageCategoryRequest {
+  // PageCategory id (UUID).
+  string id = 1;
+}
+message GetPageCategoryResponse {
+  PageCategory page_category = 1;
+}
+
+message CreatePageCategoryRequest {
+  PageCategory page_category = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreatePageCategoryResponse {
+  PageCategory page_category = 1;
+}
+
+message UpdatePageCategoryRequest {
+  // Resource with id and etag set.
+  PageCategory page_category = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdatePageCategoryResponse {
+  PageCategory page_category = 1;
+}
+
+message DeletePageCategoryRequest {
+  // PageCategory id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeletePageCategoryResponse {
+}
+
+message ListClassPagesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListClassPagesResponse {
+  repeated ClassPage items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetClassPageRequest {
+  // ClassPage id (UUID).
+  string id = 1;
+}
+message GetClassPageResponse {
+  ClassPage class_page = 1;
+}
+
+message CreateClassPageRequest {
+  ClassPage class_page = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateClassPageResponse {
+  ClassPage class_page = 1;
+}
+
+message UpdateClassPageRequest {
+  // Resource with id and etag set.
+  ClassPage class_page = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateClassPageResponse {
+  ClassPage class_page = 1;
+}
+
+message DeleteClassPageRequest {
+  // ClassPage id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteClassPageResponse {
+}
+
+message ListClassPageAttachmentsRequest {
+  // ClassPage id (UUID).
+  string class_page_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListClassPageAttachmentsResponse {
+  repeated ClassPageAttachment items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetClassPageAttachmentRequest {
+  // ClassPage id (UUID).
+  string class_page_id = 1;
+  // ClassPageAttachment id (UUID).
+  string id = 2;
+}
+message GetClassPageAttachmentResponse {
+  ClassPageAttachment class_page_attachment = 1;
+}
+
+message CreateClassPageAttachmentRequest {
+  // ClassPage id (UUID).
+  string class_page_id = 1;
+  ClassPageAttachment class_page_attachment = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateClassPageAttachmentResponse {
+  ClassPageAttachment class_page_attachment = 1;
+}
+
+message UpdateClassPageAttachmentRequest {
+  // ClassPage id (UUID).
+  string class_page_id = 1;
+  // Resource with id and etag set.
+  ClassPageAttachment class_page_attachment = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateClassPageAttachmentResponse {
+  ClassPageAttachment class_page_attachment = 1;
+}
+
+message DeleteClassPageAttachmentRequest {
+  // ClassPage id (UUID).
+  string class_page_id = 1;
+  // ClassPageAttachment id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteClassPageAttachmentResponse {
+}
+
+message ListClassPageMembersRequest {
+  // ClassPage id (UUID).
+  string class_page_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListClassPageMembersResponse {
+  repeated ClassPageMember items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetClassPageMemberRequest {
+  // ClassPage id (UUID).
+  string class_page_id = 1;
+  // ClassPageMember id (UUID).
+  string id = 2;
+}
+message GetClassPageMemberResponse {
+  ClassPageMember class_page_member = 1;
+}
+
+message CreateClassPageMemberRequest {
+  // ClassPage id (UUID).
+  string class_page_id = 1;
+  ClassPageMember class_page_member = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateClassPageMemberResponse {
+  ClassPageMember class_page_member = 1;
+}
+
+message UpdateClassPageMemberRequest {
+  // ClassPage id (UUID).
+  string class_page_id = 1;
+  // Resource with id and etag set.
+  ClassPageMember class_page_member = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateClassPageMemberResponse {
+  ClassPageMember class_page_member = 1;
+}
+
+message DeleteClassPageMemberRequest {
+  // ClassPage id (UUID).
+  string class_page_id = 1;
+  // ClassPageMember id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteClassPageMemberResponse {
+}
+
+message ListPostsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListPostsResponse {
+  repeated Post items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetPostRequest {
+  // Post id (UUID).
+  string id = 1;
+}
+message GetPostResponse {
+  Post post = 1;
+}
+
+message CreatePostRequest {
+  Post post = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreatePostResponse {
+  Post post = 1;
+}
+
+message UpdatePostRequest {
+  // Resource with id and etag set.
+  Post post = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdatePostResponse {
+  Post post = 1;
+}
+
+message DeletePostRequest {
+  // Post id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeletePostResponse {
+}
+
+message ListPostAudienceClassesRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListPostAudienceClassesResponse {
+  repeated PostAudienceClass items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetPostAudienceClassRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  // PostAudienceClass id (UUID).
+  string id = 2;
+}
+message GetPostAudienceClassResponse {
+  PostAudienceClass post_audience_class = 1;
+}
+
+message CreatePostAudienceClassRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  PostAudienceClass post_audience_class = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreatePostAudienceClassResponse {
+  PostAudienceClass post_audience_class = 1;
+}
+
+message UpdatePostAudienceClassRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  // Resource with id and etag set.
+  PostAudienceClass post_audience_class = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdatePostAudienceClassResponse {
+  PostAudienceClass post_audience_class = 1;
+}
+
+message DeletePostAudienceClassRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  // PostAudienceClass id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeletePostAudienceClassResponse {
+}
+
+message ListPostReactionsRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListPostReactionsResponse {
+  repeated PostReaction items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetPostReactionRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  // PostReaction id (UUID).
+  string id = 2;
+}
+message GetPostReactionResponse {
+  PostReaction post_reaction = 1;
+}
+
+message CreatePostReactionRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  PostReaction post_reaction = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreatePostReactionResponse {
+  PostReaction post_reaction = 1;
+}
+
+message UpdatePostReactionRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  // Resource with id and etag set.
+  PostReaction post_reaction = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdatePostReactionResponse {
+  PostReaction post_reaction = 1;
+}
+
+message DeletePostReactionRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  // PostReaction id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeletePostReactionResponse {
+}
+
+message ListPostCommentsRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListPostCommentsResponse {
+  repeated PostComment items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetPostCommentRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  // PostComment id (UUID).
+  string id = 2;
+}
+message GetPostCommentResponse {
+  PostComment post_comment = 1;
+}
+
+message CreatePostCommentRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  PostComment post_comment = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreatePostCommentResponse {
+  PostComment post_comment = 1;
+}
+
+message UpdatePostCommentRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  // Resource with id and etag set.
+  PostComment post_comment = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdatePostCommentResponse {
+  PostComment post_comment = 1;
+}
+
+message DeletePostCommentRequest {
+  // Post id (UUID).
+  string post_id = 1;
+  // PostComment id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeletePostCommentResponse {
+}
+
+message ListCommentReactionsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListCommentReactionsResponse {
+  repeated CommentReaction items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetCommentReactionRequest {
+  // CommentReaction id (UUID).
+  string id = 1;
+}
+message GetCommentReactionResponse {
+  CommentReaction comment_reaction = 1;
+}
+
+message CreateCommentReactionRequest {
+  CommentReaction comment_reaction = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateCommentReactionResponse {
+  CommentReaction comment_reaction = 1;
+}
+
+message UpdateCommentReactionRequest {
+  // Resource with id and etag set.
+  CommentReaction comment_reaction = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateCommentReactionResponse {
+  CommentReaction comment_reaction = 1;
+}
+
+message DeleteCommentReactionRequest {
+  // CommentReaction id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteCommentReactionResponse {
+}
+
+message ListNoticeAudiencesRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListNoticeAudiencesResponse {
+  repeated NoticeAudience items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetNoticeAudienceRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // NoticeAudience id (UUID).
+  string id = 2;
+}
+message GetNoticeAudienceResponse {
+  NoticeAudience notice_audience = 1;
+}
+
+message CreateNoticeAudienceRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  NoticeAudience notice_audience = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateNoticeAudienceResponse {
+  NoticeAudience notice_audience = 1;
+}
+
+message UpdateNoticeAudienceRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // Resource with id and etag set.
+  NoticeAudience notice_audience = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateNoticeAudienceResponse {
+  NoticeAudience notice_audience = 1;
+}
+
+message DeleteNoticeAudienceRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // NoticeAudience id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteNoticeAudienceResponse {
+}
+
+message ListNoticeVersionsRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListNoticeVersionsResponse {
+  repeated NoticeVersion items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetNoticeVersionRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // NoticeVersion id (UUID).
+  string id = 2;
+}
+message GetNoticeVersionResponse {
+  NoticeVersion notice_version = 1;
+}
+
+message ListEventInstitutionsRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListEventInstitutionsResponse {
+  repeated EventInstitution items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetEventInstitutionRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // EventInstitution id (UUID).
+  string id = 2;
+}
+message GetEventInstitutionResponse {
+  EventInstitution event_institution = 1;
+}
+
+message CreateEventInstitutionRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  EventInstitution event_institution = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateEventInstitutionResponse {
+  EventInstitution event_institution = 1;
+}
+
+message UpdateEventInstitutionRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // Resource with id and etag set.
+  EventInstitution event_institution = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateEventInstitutionResponse {
+  EventInstitution event_institution = 1;
+}
+
+message DeleteEventInstitutionRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // EventInstitution id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteEventInstitutionResponse {
+}
+
+message ListEventOccurrencesRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListEventOccurrencesResponse {
+  repeated EventOccurrence items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetEventOccurrenceRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // EventOccurrence id (UUID).
+  string id = 2;
+}
+message GetEventOccurrenceResponse {
+  EventOccurrence event_occurrence = 1;
+}
+
+message CreateEventOccurrenceRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  EventOccurrence event_occurrence = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateEventOccurrenceResponse {
+  EventOccurrence event_occurrence = 1;
+}
+
+message UpdateEventOccurrenceRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // Resource with id and etag set.
+  EventOccurrence event_occurrence = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateEventOccurrenceResponse {
+  EventOccurrence event_occurrence = 1;
+}
+
+message DeleteEventOccurrenceRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // EventOccurrence id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteEventOccurrenceResponse {
+}
+
+message ListEventAttendeesRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListEventAttendeesResponse {
+  repeated EventAttendee items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetEventAttendeeRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // EventAttendee id (UUID).
+  string id = 2;
+}
+message GetEventAttendeeResponse {
+  EventAttendee event_attendee = 1;
+}
+
+message CreateEventAttendeeRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  EventAttendee event_attendee = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateEventAttendeeResponse {
+  EventAttendee event_attendee = 1;
+}
+
+message UpdateEventAttendeeRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // Resource with id and etag set.
+  EventAttendee event_attendee = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateEventAttendeeResponse {
+  EventAttendee event_attendee = 1;
+}
+
+message DeleteEventAttendeeRequest {
+  // Event id (UUID).
+  string event_id = 1;
+  // EventAttendee id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteEventAttendeeResponse {
+}
+
+message ListCalendarExportsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListCalendarExportsResponse {
+  repeated CalendarExport items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetCalendarExportRequest {
+  // CalendarExport id (UUID).
+  string id = 1;
+}
+message GetCalendarExportResponse {
+  CalendarExport calendar_export = 1;
+}
+
+message DeleteCalendarExportRequest {
+  // CalendarExport id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteCalendarExportResponse {
+}
+
+message ListNotificationTypesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListNotificationTypesResponse {
+  repeated NotificationType items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetNotificationTypeRequest {
+  // NotificationType id (UUID).
+  string id = 1;
+}
+message GetNotificationTypeResponse {
+  NotificationType notification_type = 1;
+}
+
+message CreateNotificationTypeRequest {
+  NotificationType notification_type = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateNotificationTypeResponse {
+  NotificationType notification_type = 1;
+}
+
+message UpdateNotificationTypeRequest {
+  // Resource with id and etag set.
+  NotificationType notification_type = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateNotificationTypeResponse {
+  NotificationType notification_type = 1;
+}
+
+message DeleteNotificationTypeRequest {
+  // NotificationType id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteNotificationTypeResponse {
+}
+
+message ListNotificationTypePropertiesRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListNotificationTypePropertiesResponse {
+  repeated NotificationTypeProperty items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetNotificationTypePropertyRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  // NotificationTypeProperty id (UUID).
+  string id = 2;
+}
+message GetNotificationTypePropertyResponse {
+  NotificationTypeProperty notification_type_property = 1;
+}
+
+message CreateNotificationTypePropertyRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  NotificationTypeProperty notification_type_property = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateNotificationTypePropertyResponse {
+  NotificationTypeProperty notification_type_property = 1;
+}
+
+message UpdateNotificationTypePropertyRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  // Resource with id and etag set.
+  NotificationTypeProperty notification_type_property = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateNotificationTypePropertyResponse {
+  NotificationTypeProperty notification_type_property = 1;
+}
+
+message DeleteNotificationTypePropertyRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  // NotificationTypeProperty id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteNotificationTypePropertyResponse {
+}
+
+message ListNotificationRulesRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListNotificationRulesResponse {
+  repeated NotificationRule items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetNotificationRuleRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  // NotificationRule id (UUID).
+  string id = 2;
+}
+message GetNotificationRuleResponse {
+  NotificationRule notification_rule = 1;
+}
+
+message CreateNotificationRuleRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  NotificationRule notification_rule = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateNotificationRuleResponse {
+  NotificationRule notification_rule = 1;
+}
+
+message UpdateNotificationRuleRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  // Resource with id and etag set.
+  NotificationRule notification_rule = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateNotificationRuleResponse {
+  NotificationRule notification_rule = 1;
+}
+
+message DeleteNotificationRuleRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  // NotificationRule id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteNotificationRuleResponse {
+}
+
+message ListNotificationCohortSettingsRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListNotificationCohortSettingsResponse {
+  repeated NotificationCohortSetting items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetNotificationCohortSettingRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  // NotificationCohortSetting id (UUID).
+  string id = 2;
+}
+message GetNotificationCohortSettingResponse {
+  NotificationCohortSetting notification_cohort_setting = 1;
+}
+
+message CreateNotificationCohortSettingRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  NotificationCohortSetting notification_cohort_setting = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateNotificationCohortSettingResponse {
+  NotificationCohortSetting notification_cohort_setting = 1;
+}
+
+message UpdateNotificationCohortSettingRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  // Resource with id and etag set.
+  NotificationCohortSetting notification_cohort_setting = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateNotificationCohortSettingResponse {
+  NotificationCohortSetting notification_cohort_setting = 1;
+}
+
+message DeleteNotificationCohortSettingRequest {
+  // NotificationType id (UUID).
+  string notification_type_id = 1;
+  // NotificationCohortSetting id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteNotificationCohortSettingResponse {
+}
+
+message ListNotificationChannelsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListNotificationChannelsResponse {
+  repeated NotificationChannel items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetNotificationChannelRequest {
+  // NotificationChannel id (UUID).
+  string id = 1;
+}
+message GetNotificationChannelResponse {
+  NotificationChannel notification_channel = 1;
+}
+
+message CreateNotificationChannelRequest {
+  NotificationChannel notification_channel = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateNotificationChannelResponse {
+  NotificationChannel notification_channel = 1;
+}
+
+message UpdateNotificationChannelRequest {
+  // Resource with id and etag set.
+  NotificationChannel notification_channel = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateNotificationChannelResponse {
+  NotificationChannel notification_channel = 1;
+}
+
+message DeleteNotificationChannelRequest {
+  // NotificationChannel id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteNotificationChannelResponse {
+}
+
+message ListNotificationChannelPropertiesRequest {
+  // NotificationChannel id (UUID).
+  string notification_channel_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListNotificationChannelPropertiesResponse {
+  repeated NotificationChannelProperty items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetNotificationChannelPropertyRequest {
+  // NotificationChannel id (UUID).
+  string notification_channel_id = 1;
+  // NotificationChannelProperty id (UUID).
+  string id = 2;
+}
+message GetNotificationChannelPropertyResponse {
+  NotificationChannelProperty notification_channel_property = 1;
+}
+
+message CreateNotificationChannelPropertyRequest {
+  // NotificationChannel id (UUID).
+  string notification_channel_id = 1;
+  NotificationChannelProperty notification_channel_property = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateNotificationChannelPropertyResponse {
+  NotificationChannelProperty notification_channel_property = 1;
+}
+
+message UpdateNotificationChannelPropertyRequest {
+  // NotificationChannel id (UUID).
+  string notification_channel_id = 1;
+  // Resource with id and etag set.
+  NotificationChannelProperty notification_channel_property = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateNotificationChannelPropertyResponse {
+  NotificationChannelProperty notification_channel_property = 1;
+}
+
+message DeleteNotificationChannelPropertyRequest {
+  // NotificationChannel id (UUID).
+  string notification_channel_id = 1;
+  // NotificationChannelProperty id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteNotificationChannelPropertyResponse {
+}
+
+message ListNotificationPreferenceSetsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListNotificationPreferenceSetsResponse {
+  repeated NotificationPreferenceSet items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetNotificationPreferenceSetRequest {
+  // NotificationPreferenceSet id (UUID).
+  string id = 1;
+}
+message GetNotificationPreferenceSetResponse {
+  NotificationPreferenceSet notification_preference_set = 1;
+}
+
+message CreateNotificationPreferenceSetRequest {
+  NotificationPreferenceSet notification_preference_set = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateNotificationPreferenceSetResponse {
+  NotificationPreferenceSet notification_preference_set = 1;
+}
+
+message UpdateNotificationPreferenceSetRequest {
+  // Resource with id and etag set.
+  NotificationPreferenceSet notification_preference_set = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateNotificationPreferenceSetResponse {
+  NotificationPreferenceSet notification_preference_set = 1;
+}
+
+message DeleteNotificationPreferenceSetRequest {
+  // NotificationPreferenceSet id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteNotificationPreferenceSetResponse {
+}
+
+message ListNotificationPreferencesRequest {
+  // NotificationPreferenceSet id (UUID).
+  string notification_preference_set_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListNotificationPreferencesResponse {
+  repeated NotificationPreference items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetNotificationPreferenceRequest {
+  // NotificationPreferenceSet id (UUID).
+  string notification_preference_set_id = 1;
+  // NotificationPreference id (UUID).
+  string id = 2;
+}
+message GetNotificationPreferenceResponse {
+  NotificationPreference notification_preference = 1;
+}
+
+message CreateNotificationPreferenceRequest {
+  // NotificationPreferenceSet id (UUID).
+  string notification_preference_set_id = 1;
+  NotificationPreference notification_preference = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateNotificationPreferenceResponse {
+  NotificationPreference notification_preference = 1;
+}
+
+message UpdateNotificationPreferenceRequest {
+  // NotificationPreferenceSet id (UUID).
+  string notification_preference_set_id = 1;
+  // Resource with id and etag set.
+  NotificationPreference notification_preference = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateNotificationPreferenceResponse {
+  NotificationPreference notification_preference = 1;
+}
+
+message DeleteNotificationPreferenceRequest {
+  // NotificationPreferenceSet id (UUID).
+  string notification_preference_set_id = 1;
+  // NotificationPreference id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteNotificationPreferenceResponse {
+}
+
+message PublishNoticeRequest {
+  // Path parameter noticeId.
+  string notice_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message PublishNoticeResponse {
+  Notice notice = 1;
+}
+
+message UnpublishNoticeRequest {
+  // Path parameter noticeId.
+  string notice_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message UnpublishNoticeResponse {
+  Notice notice = 1;
+}
+
+message ActivateEventRequest {
+  // Path parameter eventId.
+  string event_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ActivateEventResponse {
+  Event event = 1;
+}
+
+message DeactivateEventRequest {
+  // Path parameter eventId.
+  string event_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message DeactivateEventResponse {
+  Event event = 1;
+}
+
+message SendMessageRequest {
+  // Channel. Required.
+  Channel channel = 1;
+  // Recipients. Required.
+  mysms.common.v1.Recipients recipients = 2;
+  // Template.
+  optional string template_id = 3;
+  // Subject.
+  optional string subject = 4;
+  // Body (when no template).
+  optional string body = 5;
+  // Template variables.
+  google.protobuf.Value payload = 6;
+  // Send later.
+  google.protobuf.Timestamp scheduled_at = 7;
+  // Kind. Required.
+  MessageKind message_kind = 8;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 9;
+  // Allowed values of channel; REST/JSON uses the lowercase value shown in each comment.
+  enum Channel {
+    CHANNEL_UNSPECIFIED = 0;
+    // "sms"
+    CHANNEL_SMS = 1;
+    // "email"
+    CHANNEL_EMAIL = 2;
+    // "push"
+    CHANNEL_PUSH = 3;
+    // "web_push"
+    CHANNEL_WEB_PUSH = 4;
+  }
+  // Allowed values of message_kind; REST/JSON uses the lowercase value shown in each comment.
+  enum MessageKind {
+    MESSAGE_KIND_UNSPECIFIED = 0;
+    // "notification"
+    MESSAGE_KIND_NOTIFICATION = 1;
+    // "reminder"
+    MESSAGE_KIND_REMINDER = 2;
+    // "broadcast"
+    MESSAGE_KIND_BROADCAST = 3;
+  }
+}
+message SendMessageResponse {
+  mysms.common.v1.SendResult result = 1;
+}
+
+message CancelOutboundMessageRequest {
+  // Path parameter outboundMessageId.
+  string outbound_message_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CancelOutboundMessageResponse {
+  OutboundMessage outbound_message = 1;
+}
+
+message RetryOutboundMessageRequest {
+  // Path parameter outboundMessageId.
+  string outbound_message_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message RetryOutboundMessageResponse {
+  OutboundMessage outbound_message = 1;
+}
+
+message MarkNotificationReadRequest {
+  // Path parameter inAppNotificationId.
+  string in_app_notification_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message MarkNotificationReadResponse {
+  InAppNotification in_app_notification = 1;
+}
+
+message MarkAllNotificationsReadRequest {
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 1;
+}
+message MarkAllNotificationsReadResponse {
+}
+
+message ComposeMailRequest {
+  // Recipients.
+  repeated string to_user_ids = 1;
+  // External addresses.
+  repeated string to_addresses = 2;
+  // Student concerned.
+  optional string about_student_id = 3;
+  // Subject. Required.
+  string subject = 4;
+  // Body. Required.
+  string body = 5;
+  // Attachments.
+  repeated string attachment_file_ids = 6;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 7;
+}
+message ComposeMailResponse {
+  MailboxMessage mailbox_message = 1;
+}
+
+message MarkMailReadRequest {
+  // Path parameter mailboxMessageId.
+  string mailbox_message_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message MarkMailReadResponse {
+  MailboxMessage mailbox_message = 1;
+}
+
+message MarkConversationReadRequest {
+  // Path parameter conversationId.
+  string conversation_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message MarkConversationReadResponse {
+}
+
+message HideMessageForMeRequest {
+  // Path parameter messageId.
+  string message_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message HideMessageForMeResponse {
+}
+
+message CloseFeedbackThreadRequest {
+  // Path parameter feedbackThreadId.
+  string feedback_thread_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CloseFeedbackThreadResponse {
+  FeedbackThread feedback_thread = 1;
+}
+
+message ReopenFeedbackThreadRequest {
+  // Path parameter feedbackThreadId.
+  string feedback_thread_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ReopenFeedbackThreadResponse {
+  FeedbackThread feedback_thread = 1;
+}
+
+message MarkFeedbackMessageRequest {
+  // Path parameter messageId.
+  string message_id = 1;
+  // Status. Required.
+  ReviewStatus review_status = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+  // Allowed values of review_status; REST/JSON uses the lowercase value shown in each comment.
+  enum ReviewStatus {
+    REVIEW_STATUS_UNSPECIFIED = 0;
+    // "seen"
+    REVIEW_STATUS_SEEN = 1;
+    // "action_taken"
+    REVIEW_STATUS_ACTION_TAKEN = 2;
+  }
+}
+message MarkFeedbackMessageResponse {
+  FeedbackMessage result = 1;
+}
+
+message AddGroupMembersRequest {
+  // Path parameter audienceGroupId.
+  string audience_group_id = 1;
+  // Users. Required.
+  repeated string user_ids = 2;
+  // Type. Required.
+  MemberType member_type = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+  // Allowed values of member_type; REST/JSON uses the lowercase value shown in each comment.
+  enum MemberType {
+    MEMBER_TYPE_UNSPECIFIED = 0;
+    // "student"
+    MEMBER_TYPE_STUDENT = 1;
+    // "teacher"
+    MEMBER_TYPE_TEACHER = 2;
+    // "non_teaching"
+    MEMBER_TYPE_NON_TEACHING = 3;
+  }
+}
+message AddGroupMembersResponse {
+  repeated AudienceGroupMember items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message CompleteTaskRequest {
+  // Path parameter taskId.
+  string task_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CompleteTaskResponse {
+  Task task = 1;
+}
+
+message ReopenTaskRequest {
+  // Path parameter taskId.
+  string task_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ReopenTaskResponse {
+  Task task = 1;
+}
+
+message SnoozeTaskRequest {
+  // Path parameter taskId.
+  string task_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // New reminder time. Required.
+  google.protobuf.Timestamp until = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message SnoozeTaskResponse {
+  Task task = 1;
+}
+
+message ClaimTaskRequest {
+  // Path parameter taskId.
+  string task_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message ClaimTaskResponse {
+  repeated TaskAssignee items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message SubmitPostRequest {
+  // Path parameter postId.
+  string post_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message SubmitPostResponse {
+  Post post = 1;
+}
+
+message ApprovePostRequest {
+  // Path parameter postId.
+  string post_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ApprovePostResponse {
+  Post post = 1;
+}
+
+message CancelPostRequest {
+  // Path parameter postId.
+  string post_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CancelPostResponse {
+  Post post = 1;
+}
+
+message GetFeedRequest {
+  // Class wall.
+  optional string class_section_id = 1;
+  // Page.
+  optional string class_page_id = 2;
+  // Saved posts.
+  optional bool saved_only = 3;
+  // Page size.
+  optional int32 page_size = 4;
+  // Page token.
+  optional string page_token = 5;
+}
+message GetFeedResponse {
+  repeated Post items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message FollowClassPageRequest {
+  // Path parameter classPageId.
+  string class_page_id = 1;
+  // Follow / unfollow. Required.
+  bool follow = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message FollowClassPageResponse {
+  ClassPageMember result = 1;
+}
+
+message CloseNoticeRepliesRequest {
+  // Path parameter noticeId.
+  string notice_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CloseNoticeRepliesResponse {
+  Notice notice = 1;
+}
+
+message DeactivateNoticeRequest {
+  // Path parameter noticeId.
+  string notice_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message DeactivateNoticeResponse {
+  Notice notice = 1;
+}
+
+message ReactivateNoticeRequest {
+  // Path parameter noticeId.
+  string notice_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ReactivateNoticeResponse {
+  Notice notice = 1;
+}
+
+message GetMyCalendarRequest {
+  // Window start. Required.
+  google.protobuf.Timestamp from = 1;
+  // Window end. Required.
+  google.protobuf.Timestamp to = 2;
+  // Only one cohort.
+  optional string cohort_id = 3;
+  // Filter kinds.
+  repeated string item_types = 4;
+  // Maximum items to return (1-500, default 50).
+  optional int32 page_size = 5;
+  // Cursor from next_page_token.
+  optional string page_token = 6;
+}
+message GetMyCalendarResponse {
+  repeated mysms.common.v1.CalendarItem items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message CancelEventOccurrenceRequest {
+  // Path parameter eventId.
+  string event_id = 1;
+  // Path parameter eventOccurrenceId.
+  string event_occurrence_id = 2;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 3;
+  // Reason / comment recorded with the transition.
+  optional string reason = 4;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 5;
+}
+message CancelEventOccurrenceResponse {
+  EventOccurrence event_occurrence = 1;
+}
+
+message CompletePersonalEventRequest {
+  // Path parameter eventId.
+  string event_id = 1;
+  // Path parameter eventOccurrenceId.
+  string event_occurrence_id = 2;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CompletePersonalEventResponse {
+  EventOccurrence event_occurrence = 1;
+}
+
+message ExportCalendarRequest {
+  // External calendar. Required.
+  Provider provider = 1;
+  // Window start. Required.
+  google.protobuf.Timestamp from = 2;
+  // Window end. Required.
+  google.protobuf.Timestamp to = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+  // Allowed values of provider; REST/JSON uses the lowercase value shown in each comment.
+  enum Provider {
+    PROVIDER_UNSPECIFIED = 0;
+    // "google"
+    PROVIDER_GOOGLE = 1;
+    // "microsoft"
+    PROVIDER_MICROSOFT = 2;
+  }
+}
+message ExportCalendarResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message SendTestMessageRequest {
+  // Path parameter notificationChannelId.
+  string notification_channel_id = 1;
+  // Address / number. Required.
+  string to = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message SendTestMessageResponse {
+}
+
+message ArchiveNotificationsRequest {
+  // Notifications to hide (default: all read ones).
+  repeated string notification_ids = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message ArchiveNotificationsResponse {
+}
+
+// Reusable message template for e-mail, SMS, push or in-app messages.
+message MessageTemplate {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution (NULL = tenant-wide). [UUID]
+  optional string institution_id = 2;
+  // Delivery channel.
+  Channel channel = 3;
+  // Template key used by the application.
+  optional string code = 4;
+  // Template name.
+  string name = 5;
+  // Subject (e-mail).
+  optional string subject = 6;
+  // Body with placeholders.
+  optional string body = 7;
+  // External provider-registered template id (e.g. SMS DLT template id).
+  optional string external_template_id = 8;
+  // Whether usable.
+  bool is_active = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+  // Allowed values of channel; REST/JSON uses the lowercase value shown in each comment.
+  enum Channel {
+    CHANNEL_UNSPECIFIED = 0;
+    // "email"
+    CHANNEL_EMAIL = 1;
+    // "sms"
+    CHANNEL_SMS = 2;
+    // "push"
+    CHANNEL_PUSH = 3;
+    // "in_app"
+    CHANNEL_IN_APP = 4;
+  }
+}
+
+// Queued SMS / e-mail / push message (notifications, reminders, broadcasts) and its delivery state.
+message OutboundMessage {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  optional string academic_year_id = 3;
+  // Kind.
+  MessageKind message_kind = 4;
+  // Channel.
+  Channel channel = 5;
+  // Sender address / id.
+  string sender = 6;
+  // Recipient address / number.
+  string recipient = 7;
+  // Recipient account when known. [UUID]
+  optional string recipient_user_id = 8;
+  // Subject.
+  optional string subject = 9;
+  // Message body.
+  string body = 10;
+  // Template used. [UUID]
+  optional string template_id = 11;
+  // Polymorphic table name of the record the message is about.
+  optional string related_entity_type = 12;
+  // Polymorphic id of the record the message is about. [UUID]
+  optional string related_entity_id = 13;
+  // Delivery state. Changed only through the workflow operations. Output only.
+  Status status = 15;
+  // Gateway response.
+  optional string provider_response = 16;
+  // Send no earlier than.
+  google.protobuf.Timestamp scheduled_at = 17;
+  // When sent.
+  google.protobuf.Timestamp sent_at = 18;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 19;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 20;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 21;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 22;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 23;
+  // Allowed values of message_kind; REST/JSON uses the lowercase value shown in each comment.
+  enum MessageKind {
+    MESSAGE_KIND_UNSPECIFIED = 0;
+    // "notification"
+    MESSAGE_KIND_NOTIFICATION = 1;
+    // "reminder"
+    MESSAGE_KIND_REMINDER = 2;
+    // "broadcast"
+    MESSAGE_KIND_BROADCAST = 3;
+  }
+  // Allowed values of channel; REST/JSON uses the lowercase value shown in each comment.
+  enum Channel {
+    CHANNEL_UNSPECIFIED = 0;
+    // "sms"
+    CHANNEL_SMS = 1;
+    // "email"
+    CHANNEL_EMAIL = 2;
+    // "push"
+    CHANNEL_PUSH = 3;
+    // "web_push"
+    CHANNEL_WEB_PUSH = 4;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "queued"
+    STATUS_QUEUED = 1;
+    // "processing"
+    STATUS_PROCESSING = 2;
+    // "delivered"
+    STATUS_DELIVERED = 3;
+    // "failed"
+    STATUS_FAILED = 4;
+    // "cancelled"
+    STATUS_CANCELLED = 5;
+  }
+  // Ordered values for provider-side SMS/WhatsApp templates. Output only.
+  repeated string template_params = 24;
+  // Deep link the message points at. Output only.
+  optional string action_url = 25;
+}
+
+// Internal mail between users (inbox / sent / outbox). Attachments via platform.entity_attachment.
+message MailboxMessage {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  optional string academic_year_id = 3;
+  // Mailbox owner. [UUID]
+  optional string owner_user_id = 4;
+  // Student the mail concerns. [UUID]
+  optional string about_student_id = 5;
+  // Folder.
+  Folder folder = 6;
+  // Sender address.
+  optional string from_address = 7;
+  // Sender display name.
+  optional string from_display = 8;
+  // Recipients.
+  optional string to_addresses = 9;
+  // Subject.
+  optional string subject = 10;
+  // Body.
+  optional string body = 11;
+  // Delivery state.
+  optional DeliveryStatus delivery_status = 12;
+  // Provider message id.
+  optional string provider_message_id = 13;
+  // Dispatch processed.
+  bool is_processed = 14;
+  // Processing time.
+  google.protobuf.Timestamp processed_at = 15;
+  // Hand-off time to the provider.
+  google.protobuf.Timestamp dispatched_at = 16;
+  // When read.
+  google.protobuf.Timestamp read_at = 17;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 18;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 19;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 20;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 21;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 22;
+  // Allowed values of folder; REST/JSON uses the lowercase value shown in each comment.
+  enum Folder {
+    FOLDER_UNSPECIFIED = 0;
+    // "outbox"
+    FOLDER_OUTBOX = 1;
+    // "inbox"
+    FOLDER_INBOX = 2;
+    // "sent"
+    FOLDER_SENT = 3;
+  }
+  // Allowed values of delivery_status; REST/JSON uses the lowercase value shown in each comment.
+  enum DeliveryStatus {
+    DELIVERY_STATUS_UNSPECIFIED = 0;
+    // "queued"
+    DELIVERY_STATUS_QUEUED = 1;
+    // "delivered"
+    DELIVERY_STATUS_DELIVERED = 2;
+    // "failed"
+    DELIVERY_STATUS_FAILED = 3;
+  }
+}
+
+// Notification shown in a user's in-app inbox.
+message InAppNotification {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Recipient. [UUID]
+  string recipient_user_id = 2;
+  // When read.
+  google.protobuf.Timestamp read_at = 5;
+  // When created. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // Notification type (catalogue entry). [UUID]
+  optional string notification_type_id = 8;
+  // Title.
+  optional string title = 10;
+  // Message.
+  optional string body = 11;
+  // Short SMS rendering.
+  optional string sms_text = 12;
+  // Deep link opened when the notification is tapped: mysms://<module>/<resource-path> (e.g. mysms://lms/cohorts/{id}/gradebook); the web app and universal / app links resolve the same path under https://<tenant host>/app/.
+  optional string action_url = 13;
+  // Cohort context. [UUID]
+  optional string cohort_id = 14;
+  // E-mail delivery state.
+  EmailStatus email_status = 15;
+  // SMS delivery state.
+  SmsStatus sms_status = 16;
+  // Popup display state.
+  PopupStatus popup_status = 17;
+  // Daily-digest inclusion state.
+  DigestStatus digest_status = 18;
+  // Hidden from the recipient's inbox (kept for history).
+  google.protobuf.Timestamp archived_at = 19;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 7;
+  // Allowed values of email_status; REST/JSON uses the lowercase value shown in each comment.
+  enum EmailStatus {
+    EMAIL_STATUS_UNSPECIFIED = 0;
+    // "not_required"
+    EMAIL_STATUS_NOT_REQUIRED = 1;
+    // "pending"
+    EMAIL_STATUS_PENDING = 2;
+    // "sent"
+    EMAIL_STATUS_SENT = 3;
+    // "failed"
+    EMAIL_STATUS_FAILED = 4;
+  }
+  // Allowed values of sms_status; REST/JSON uses the lowercase value shown in each comment.
+  enum SmsStatus {
+    SMS_STATUS_UNSPECIFIED = 0;
+    // "not_required"
+    SMS_STATUS_NOT_REQUIRED = 1;
+    // "pending"
+    SMS_STATUS_PENDING = 2;
+    // "sent"
+    SMS_STATUS_SENT = 3;
+    // "failed"
+    SMS_STATUS_FAILED = 4;
+  }
+  // Allowed values of popup_status; REST/JSON uses the lowercase value shown in each comment.
+  enum PopupStatus {
+    POPUP_STATUS_UNSPECIFIED = 0;
+    // "not_required"
+    POPUP_STATUS_NOT_REQUIRED = 1;
+    // "pending"
+    POPUP_STATUS_PENDING = 2;
+    // "shown"
+    POPUP_STATUS_SHOWN = 3;
+  }
+  // Allowed values of digest_status; REST/JSON uses the lowercase value shown in each comment.
+  enum DigestStatus {
+    DIGEST_STATUS_UNSPECIFIED = 0;
+    // "not_required"
+    DIGEST_STATUS_NOT_REQUIRED = 1;
+    // "pending"
+    DIGEST_STATUS_PENDING = 2;
+    // "sent"
+    DIGEST_STATUS_SENT = 3;
+  }
+  // Kind of record the notification is about (deep-link target). Output only.
+  optional string entity_type = 20;
+  // Id of that record. [UUID] Output only.
+  optional string entity_id = 21;
+}
+
+// Background image for notices / event cards.
+message NoticeBackground {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Where it is used.
+  Usage usage = 3;
+  // Image. [UUID]
+  optional string image_file_id = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+  // Allowed values of usage; REST/JSON uses the lowercase value shown in each comment.
+  enum Usage {
+    USAGE_UNSPECIFIED = 0;
+    // "event"
+    USAGE_EVENT = 1;
+    // "notice"
+    USAGE_NOTICE = 2;
+  }
+}
+
+// Notice-board item for the school, a class or teachers.
+message Notice {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution (NULL = tenant-wide; audiences in comms.notice_audience). [UUID]
+  optional string institution_id = 2;
+  // Academic year (NULL = not tied to a year, e.g. cohort or tenant notices). [UUID]
+  optional string academic_year_id = 3;
+  // Audience.
+  Audience audience = 4;
+  // Class (audience = class). [UUID]
+  optional string class_section_id = 5;
+  // Background image. [UUID]
+  optional string background_id = 6;
+  // Title.
+  string title = 7;
+  // Body.
+  string body = 8;
+  // Attachment. [UUID]
+  optional string attachment_file_id = 9;
+  // Publish time.
+  google.protobuf.Timestamp publish_at = 10;
+  // Expiry time.
+  google.protobuf.Timestamp expire_at = 11;
+  // Published. Changed only through the workflow operations. Output only.
+  bool is_published = 12;
+  // Cohort the notice is posted to (audience = cohort). [UUID]
+  optional string cohort_id = 18;
+  // Also shown in the calendar.
+  bool show_in_calendar = 19;
+  // Readers may reply (through the linked discussion topic).
+  bool allow_replies = 20;
+  // Discussion topic holding the replies. [UUID]
+  optional string discussion_topic_id = 21;
+  // Replies closed.
+  bool is_closed = 22;
+  // Withdrawn by the author.
+  bool is_deactivated = 23;
+  // Author's note on the latest change.
+  optional string author_comment = 24;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 13;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 14;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 15;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 16;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 17;
+  // Allowed values of audience; REST/JSON uses the lowercase value shown in each comment.
+  enum Audience {
+    AUDIENCE_UNSPECIFIED = 0;
+    // "school"
+    AUDIENCE_SCHOOL = 1;
+    // "class"
+    AUDIENCE_CLASS = 2;
+    // "teachers"
+    AUDIENCE_TEACHERS = 3;
+    // "cohort"
+    AUDIENCE_COHORT = 4;
+    // "roles"
+    AUDIENCE_ROLES = 5;
+  }
+}
+
+// Calendar event (school event, holiday, exam, meeting, live class).
+message Event {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution (NULL = tenant-wide event, e.g. a live class of a tenant-wide cohort). [UUID]
+  optional string institution_id = 2;
+  // Academic year. [UUID]
+  optional string academic_year_id = 3;
+  // Audience.
+  Audience audience = 4;
+  // Class (audience = class). [UUID]
+  optional string class_section_id = 5;
+  // Free-text audience / batch label.
+  optional string audience_label = 6;
+  // Title.
+  string title = 7;
+  // Description.
+  optional string description = 8;
+  // Category.
+  Category category = 9;
+  // Location.
+  optional string location = 10;
+  // Organiser(s).
+  optional string organised_by = 11;
+  // Banner image. [UUID]
+  optional string image_file_id = 12;
+  // Calendar colour.
+  optional string color = 13;
+  // Start.
+  google.protobuf.Timestamp start_at = 14;
+  // End.
+  google.protobuf.Timestamp end_at = 15;
+  // All-day event.
+  bool is_all_day = 16;
+  // Occurrences to repeat (0 = none).
+  int32 repeat_count = 17;
+  // Interval between occurrences.
+  int32 repeat_interval = 18;
+  // Unit of the interval.
+  optional RepeatUnit repeat_unit = 19;
+  // Related link.
+  optional string url = 20;
+  // Visible when active. Changed only through the workflow operations. Output only.
+  Status status = 21;
+  // Cohort of a cohort event (audience = cohort). [UUID]
+  optional string cohort_id = 27;
+  // Owner of a personal event (audience = personal). [UUID]
+  optional string owner_user_id = 28;
+  // iCalendar RRULE of a recurring event (NULL = not recurring); occurrences are materialised in comms.event_occurrence.
+  optional string recurrence_rule = 29;
+  // Cohort event for every member (false = invited attendees only).
+  bool for_all_members = 30;
+  // Cohort staff may change the event.
+  bool staff_can_edit = 31;
+  // Importance of a personal event.
+  optional Importance importance = 32;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 22;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 23;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 24;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 25;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 26;
+  // Allowed values of audience; REST/JSON uses the lowercase value shown in each comment.
+  enum Audience {
+    AUDIENCE_UNSPECIFIED = 0;
+    // "school"
+    AUDIENCE_SCHOOL = 1;
+    // "class"
+    AUDIENCE_CLASS = 2;
+    // "alumni"
+    AUDIENCE_ALUMNI = 3;
+    // "tenant"
+    AUDIENCE_TENANT = 4;
+    // "cohort"
+    AUDIENCE_COHORT = 5;
+    // "personal"
+    AUDIENCE_PERSONAL = 6;
+  }
+  // Allowed values of category; REST/JSON uses the lowercase value shown in each comment.
+  enum Category {
+    CATEGORY_UNSPECIFIED = 0;
+    // "cultural"
+    CATEGORY_CULTURAL = 1;
+    // "education"
+    CATEGORY_EDUCATION = 2;
+    // "exam"
+    CATEGORY_EXAM = 3;
+    // "holiday"
+    CATEGORY_HOLIDAY = 4;
+    // "meeting"
+    CATEGORY_MEETING = 5;
+    // "live_class"
+    CATEGORY_LIVE_CLASS = 6;
+    // "other"
+    CATEGORY_OTHER = 7;
+  }
+  // Allowed values of repeat_unit; REST/JSON uses the lowercase value shown in each comment.
+  enum RepeatUnit {
+    REPEAT_UNIT_UNSPECIFIED = 0;
+    // "day"
+    REPEAT_UNIT_DAY = 1;
+    // "week"
+    REPEAT_UNIT_WEEK = 2;
+    // "month"
+    REPEAT_UNIT_MONTH = 3;
+    // "year"
+    REPEAT_UNIT_YEAR = 4;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "inactive"
+    STATUS_INACTIVE = 2;
+  }
+  // Allowed values of importance; REST/JSON uses the lowercase value shown in each comment.
+  enum Importance {
+    IMPORTANCE_UNSPECIFIED = 0;
+    // "high"
+    IMPORTANCE_HIGH = 1;
+    // "medium"
+    IMPORTANCE_MEDIUM = 2;
+    // "low"
+    IMPORTANCE_LOW = 3;
+  }
+}
+
+// Photo / video in an event gallery.
+message EventGalleryItem {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Event. [UUID] Set from the parent path on create.
+  string event_id = 2;
+  // Media file. [UUID]
+  string file_id = 3;
+  // Order.
+  int32 sort_order = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// School magazine / bulletin issue.
+message Magazine {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  string academic_year_id = 3;
+  // Title.
+  optional string title = 4;
+  // Year.
+  optional int32 publication_year = 5;
+  // Cover. [UUID]
+  optional string cover_image_file_id = 6;
+  // Magazine file. [UUID]
+  optional string document_file_id = 7;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 8;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 9;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 10;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 11;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 12;
+}
+
+// Chat conversation (direct 1:1 or group).
+message Conversation {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  optional string institution_id = 2;
+  // Direct or group.
+  ConversationType conversation_type = 3;
+  // Group title.
+  optional string title = 4;
+  // Last activity.
+  google.protobuf.Timestamp last_message_at = 5;
+  // Open.
+  bool is_active = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+  // Allowed values of conversation_type; REST/JSON uses the lowercase value shown in each comment.
+  enum ConversationType {
+    CONVERSATION_TYPE_UNSPECIFIED = 0;
+    // "direct"
+    CONVERSATION_TYPE_DIRECT = 1;
+    // "group"
+    CONVERSATION_TYPE_GROUP = 2;
+  }
+}
+
+// Member of a conversation.
+message ConversationParticipant {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Conversation. [UUID] Set from the parent path on create.
+  string conversation_id = 2;
+  // Participant. [UUID]
+  string user_id = 3;
+  // Read up to.
+  google.protobuf.Timestamp last_read_at = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// Message in a conversation.
+message ConversationMessage {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Conversation. [UUID] Set from the parent path on create.
+  string conversation_id = 2;
+  // Sender. [UUID]
+  string sender_user_id = 3;
+  // Message.
+  string body = 4;
+  // Hidden for the sender.
+  bool deleted_by_sender = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+}
+
+// Feedback / complaint thread between a guardian and the school about a student.
+message FeedbackThread {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Guardian. [UUID]
+  string guardian_id = 3;
+  // Student concerned. [UUID]
+  string student_id = 4;
+  // Staff handling it. [UUID]
+  string assigned_to_user_id = 5;
+  // State. Changed only through the workflow operations. Output only.
+  Status status = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "open"
+    STATUS_OPEN = 1;
+    // "closed"
+    STATUS_CLOSED = 2;
+  }
+}
+
+// Message in a feedback thread.
+message FeedbackMessage {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Thread. [UUID] Set from the parent path on create.
+  string thread_id = 2;
+  // Sender. [UUID]
+  string sender_user_id = 3;
+  // Category.
+  Category category = 4;
+  // Message.
+  string message = 5;
+  // Attachment. [UUID]
+  optional string attachment_file_id = 6;
+  // Handling state.
+  ReviewStatus review_status = 7;
+  // Hidden for the sender.
+  bool deleted_by_sender = 8;
+  // Hidden for the receiver.
+  bool deleted_by_receiver = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+  // Allowed values of category; REST/JSON uses the lowercase value shown in each comment.
+  enum Category {
+    CATEGORY_UNSPECIFIED = 0;
+    // "app_feedback_or_bug"
+    CATEGORY_APP_FEEDBACK_OR_BUG = 1;
+    // "student_profile"
+    CATEGORY_STUDENT_PROFILE = 2;
+    // "complaint"
+    CATEGORY_COMPLAINT = 3;
+    // "suggestion"
+    CATEGORY_SUGGESTION = 4;
+    // "other"
+    CATEGORY_OTHER = 5;
+  }
+  // Allowed values of review_status; REST/JSON uses the lowercase value shown in each comment.
+  enum ReviewStatus {
+    REVIEW_STATUS_UNSPECIFIED = 0;
+    // "new"
+    REVIEW_STATUS_NEW = 1;
+    // "seen"
+    REVIEW_STATUS_SEEN = 2;
+    // "action_taken"
+    REVIEW_STATUS_ACTION_TAKEN = 3;
+  }
+}
+
+// Named group of users for messaging and tasks (tenant-wide, school-wide or class-scoped).
+message AudienceGroup {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution (NULL = tenant-wide group). [UUID]
+  optional string institution_id = 2;
+  // Class (scope = class). [UUID]
+  optional string class_section_id = 3;
+  // Group name.
+  string name = 4;
+  // Scope.
+  GroupScope group_scope = 5;
+  // Active.
+  bool is_active = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+  // Allowed values of group_scope; REST/JSON uses the lowercase value shown in each comment.
+  enum GroupScope {
+    GROUP_SCOPE_UNSPECIFIED = 0;
+    // "global"
+    GROUP_SCOPE_GLOBAL = 1;
+    // "class"
+    GROUP_SCOPE_CLASS = 2;
+  }
+}
+
+// Member of a group.
+message AudienceGroupMember {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Group. [UUID] Set from the parent path on create.
+  string group_id = 2;
+  // Member. [UUID]
+  string user_id = 3;
+  // Member type.
+  MemberType member_type = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+  // Allowed values of member_type; REST/JSON uses the lowercase value shown in each comment.
+  enum MemberType {
+    MEMBER_TYPE_UNSPECIFIED = 0;
+    // "student"
+    MEMBER_TYPE_STUDENT = 1;
+    // "teacher"
+    MEMBER_TYPE_TEACHER = 2;
+    // "non_teaching"
+    MEMBER_TYPE_NON_TEACHING = 3;
+  }
+}
+
+// To-do / task created by a user for self or others.
+message Task {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  optional string academic_year_id = 3;
+  // Creator / owner. [UUID]
+  string owner_user_id = 4;
+  // Title.
+  string title = 5;
+  // Who the task is for.
+  TaskCategory task_category = 6;
+  // Due date-time.
+  google.protobuf.Timestamp due_at = 7;
+  // Reminder rule.
+  ReminderOption reminder_option = 8;
+  // Reminder time.
+  google.protobuf.Timestamp reminder_at = 9;
+  // Checklist / details.
+  string checklist = 10;
+  // Completed. Changed only through the workflow operations. Output only.
+  bool is_completed = 11;
+  // Snoozed. Changed only through the workflow operations. Output only.
+  bool is_snoozed = 12;
+  // Priority.
+  Priority priority = 13;
+  // Individual, shared or open-to-claim.
+  AssignmentMode assignment_mode = 14;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 15;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 16;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 17;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 18;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 19;
+  // Allowed values of task_category; REST/JSON uses the lowercase value shown in each comment.
+  enum TaskCategory {
+    TASK_CATEGORY_UNSPECIFIED = 0;
+    // "self"
+    TASK_CATEGORY_SELF = 1;
+    // "student"
+    TASK_CATEGORY_STUDENT = 2;
+    // "class"
+    TASK_CATEGORY_CLASS = 3;
+    // "group"
+    TASK_CATEGORY_GROUP = 4;
+    // "teacher"
+    TASK_CATEGORY_TEACHER = 5;
+    // "non_teaching"
+    TASK_CATEGORY_NON_TEACHING = 6;
+  }
+  // Allowed values of reminder_option; REST/JSON uses the lowercase value shown in each comment.
+  enum ReminderOption {
+    REMINDER_OPTION_UNSPECIFIED = 0;
+    // "one_hour_before"
+    REMINDER_OPTION_ONE_HOUR_BEFORE = 1;
+    // "one_day_before"
+    REMINDER_OPTION_ONE_DAY_BEFORE = 2;
+    // "two_days_before"
+    REMINDER_OPTION_TWO_DAYS_BEFORE = 3;
+    // "custom"
+    REMINDER_OPTION_CUSTOM = 4;
+  }
+  // Allowed values of priority; REST/JSON uses the lowercase value shown in each comment.
+  enum Priority {
+    PRIORITY_UNSPECIFIED = 0;
+    // "low"
+    PRIORITY_LOW = 1;
+    // "normal"
+    PRIORITY_NORMAL = 2;
+    // "high"
+    PRIORITY_HIGH = 3;
+  }
+  // Allowed values of assignment_mode; REST/JSON uses the lowercase value shown in each comment.
+  enum AssignmentMode {
+    ASSIGNMENT_MODE_UNSPECIFIED = 0;
+    // "individual"
+    ASSIGNMENT_MODE_INDIVIDUAL = 1;
+    // "group_task"
+    ASSIGNMENT_MODE_GROUP_TASK = 2;
+    // "open"
+    ASSIGNMENT_MODE_OPEN = 3;
+  }
+}
+
+// Person, class or group a task is assigned to.
+message TaskAssignee {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Task. [UUID] Set from the parent path on create.
+  string task_id = 2;
+  // Assignee kind.
+  AssigneeType assignee_type = 3;
+  // User. [UUID]
+  optional string user_id = 4;
+  // Class. [UUID]
+  optional string class_section_id = 5;
+  // Group. [UUID]
+  optional string group_id = 6;
+  // User who claimed an open task. [UUID]
+  optional string claimed_by_user_id = 7;
+  // State.
+  Status status = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+  // Allowed values of assignee_type; REST/JSON uses the lowercase value shown in each comment.
+  enum AssigneeType {
+    ASSIGNEE_TYPE_UNSPECIFIED = 0;
+    // "user"
+    ASSIGNEE_TYPE_USER = 1;
+    // "class"
+    ASSIGNEE_TYPE_CLASS = 2;
+    // "group"
+    ASSIGNEE_TYPE_GROUP = 3;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "pending"
+    STATUS_PENDING = 1;
+    // "completed"
+    STATUS_COMPLETED = 2;
+  }
+}
+
+// Guardian's view receipt of a student's homework, assignment or media.
+message ContentView {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  optional string institution_id = 2;
+  // Student. [UUID]
+  string student_id = 3;
+  // Guardian who viewed. [UUID]
+  optional string viewer_user_id = 4;
+  // Content type.
+  ContentType content_type = 5;
+  // Polymorphic id of the item viewed (table given by content_type). [UUID]
+  string content_id = 6;
+  // When viewed.
+  google.protobuf.Timestamp viewed_at = 7;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 8;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 9;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 10;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 11;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 12;
+  // Allowed values of content_type; REST/JSON uses the lowercase value shown in each comment.
+  enum ContentType {
+    CONTENT_TYPE_UNSPECIFIED = 0;
+    // "image"
+    CONTENT_TYPE_IMAGE = 1;
+    // "video"
+    CONTENT_TYPE_VIDEO = 2;
+    // "assignment"
+    CONTENT_TYPE_ASSIGNMENT = 3;
+    // "homework"
+    CONTENT_TYPE_HOMEWORK = 4;
+  }
+}
+
+// Category of class pages.
+message PageCategory {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  optional string academic_year_id = 3;
+  // Category.
+  string name = 4;
+  // Active.
+  bool is_active = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 11;
+  // Display order.
+  optional int32 sort_order = 12;
+}
+
+// Class / club page that members follow and post to.
+message ClassPage {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  optional string academic_year_id = 3;
+  // Category. [UUID]
+  string page_category_id = 4;
+  // Page name.
+  string name = 5;
+  // Description.
+  string description = 6;
+  // Cover image. [UUID]
+  optional string cover_image_file_id = 7;
+  // Page owner. [UUID]
+  optional string owner_user_id = 8;
+  // Active.
+  bool is_active = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+}
+
+// File attached to a class page.
+message ClassPageAttachment {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Page. [UUID] Set from the parent path on create.
+  string class_page_id = 2;
+  // File. [UUID]
+  string file_id = 3;
+  // Visible.
+  bool is_active = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// User's follow / reaction state on a class page.
+message ClassPageMember {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Page. [UUID] Set from the parent path on create.
+  string class_page_id = 2;
+  // User. [UUID]
+  string user_id = 3;
+  // Follows the page.
+  bool is_following = 4;
+  // Reaction.
+  optional Reaction reaction = 5;
+  // Active.
+  bool is_active = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+  // Allowed values of reaction; REST/JSON uses the lowercase value shown in each comment.
+  enum Reaction {
+    REACTION_UNSPECIFIED = 0;
+    // "like"
+    REACTION_LIKE = 1;
+    // "dislike"
+    REACTION_DISLIKE = 2;
+  }
+}
+
+// Social post on a class page or to classes. Attachments via platform.entity_attachment; tags via platform.tag_assignment.
+message Post {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  string academic_year_id = 3;
+  // Page posted on. [UUID]
+  optional string class_page_id = 4;
+  // Author. [UUID]
+  string author_user_id = 5;
+  // Post text.
+  string body = 6;
+  // Who sees it.
+  Visibility visibility = 7;
+  // Moderation state. Changed only through the workflow operations. Output only.
+  Status status = 8;
+  // Scheduled publish time.
+  google.protobuf.Timestamp scheduled_for = 9;
+  // Published time.
+  google.protobuf.Timestamp posted_at = 10;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 11;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 12;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 14;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 15;
+  // Allowed values of visibility; REST/JSON uses the lowercase value shown in each comment.
+  enum Visibility {
+    VISIBILITY_UNSPECIFIED = 0;
+    // "all_classes"
+    VISIBILITY_ALL_CLASSES = 1;
+    // "selected_classes"
+    VISIBILITY_SELECTED_CLASSES = 2;
+    // "page_members"
+    VISIBILITY_PAGE_MEMBERS = 3;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "pending"
+    STATUS_PENDING = 2;
+    // "posted"
+    STATUS_POSTED = 3;
+    // "cancelled"
+    STATUS_CANCELLED = 4;
+  }
+}
+
+// Class a post is visible to (visibility = selected_classes).
+message PostAudienceClass {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Post. [UUID] Set from the parent path on create.
+  string post_id = 2;
+  // Class. [UUID]
+  string class_section_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// User's like / unlike / save on a post.
+message PostReaction {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Post. [UUID] Set from the parent path on create.
+  string post_id = 2;
+  // User. [UUID]
+  string user_id = 3;
+  // Reaction.
+  optional Reaction reaction = 4;
+  // Saved / bookmarked.
+  bool is_saved = 5;
+  // Active.
+  bool is_active = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+  // Allowed values of reaction; REST/JSON uses the lowercase value shown in each comment.
+  enum Reaction {
+    REACTION_UNSPECIFIED = 0;
+    // "like"
+    REACTION_LIKE = 1;
+    // "unlike"
+    REACTION_UNLIKE = 2;
+  }
+}
+
+// Comment on a post, or reply to another comment.
+message PostComment {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Post. [UUID] Set from the parent path on create.
+  string post_id = 2;
+  // Comment replied to. [UUID]
+  optional string parent_comment_id = 3;
+  // Author. [UUID]
+  string author_user_id = 4;
+  // Comment text.
+  optional string body = 5;
+  // Attachment. [UUID]
+  optional string attachment_file_id = 6;
+  // Visible.
+  bool is_active = 7;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 8;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 9;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 10;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 11;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 12;
+}
+
+// User's like / unlike on a comment.
+message CommentReaction {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Comment. [UUID]
+  string comment_id = 2;
+  // User. [UUID]
+  string user_id = 3;
+  // Reaction.
+  optional Reaction reaction = 4;
+  // Active.
+  bool is_active = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+  // Allowed values of reaction; REST/JSON uses the lowercase value shown in each comment.
+  enum Reaction {
+    REACTION_UNSPECIFIED = 0;
+    // "like"
+    REACTION_LIKE = 1;
+    // "unlike"
+    REACTION_UNLIKE = 2;
+  }
+}
+
+// Institution and role a notice is published to (several rows = several audiences).
+message NoticeAudience {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Notice. [UUID] Set from the parent path on create.
+  string notice_id = 2;
+  // Institution (NULL = all institutions of the tenant). [UUID]
+  optional string institution_id = 3;
+  // Role (NULL = every role). [UUID]
+  optional string role_id = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// Earlier version of a notice, kept when it is edited after publication.
+message NoticeVersion {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Notice. [UUID] Set from the parent path on create.
+  string notice_id = 2;
+  // Body of this version.
+  optional string body = 3;
+  // Publication start of this version.
+  google.protobuf.Timestamp publish_at = 4;
+  // Publication end of this version.
+  google.protobuf.Timestamp expire_at = 5;
+  // Discussion topic linked at the time. [UUID]
+  optional string discussion_topic_id = 6;
+  // Replies were closed.
+  bool is_closed = 7;
+  // Version was deactivated.
+  bool is_deactivated = 8;
+  // Author's note on the change.
+  optional string author_comment = 9;
+  // When this version was superseded.
+  google.protobuf.Timestamp versioned_at = 10;
+  // Creation time of the original notice.
+  google.protobuf.Timestamp original_created_at = 11;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 12;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 13;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 14;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 15;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 16;
+}
+
+// Institution an event is shared with (tenant-level events shown in several institutions).
+message EventInstitution {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Event. [UUID] Set from the parent path on create.
+  string event_id = 2;
+  // Institution. [UUID]
+  string institution_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// One occurrence of an event (generated from its recurrence or a one-off), which can be edited or cancelled individually.
+message EventOccurrence {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Event. [UUID] Set from the parent path on create.
+  string event_id = 2;
+  // Attendee whose personal copy this is (personal events shared with several users). [UUID]
+  optional string user_id = 3;
+  // Cohort of a cohort event. [UUID]
+  optional string cohort_id = 4;
+  // Title override.
+  optional string title = 5;
+  // Colour override.
+  optional string color = 6;
+  // Description override.
+  optional string description = 7;
+  // Start.
+  google.protobuf.Timestamp start_at = 8;
+  // End.
+  google.protobuf.Timestamp end_at = 9;
+  // Occurrence cancelled.
+  bool is_cancelled = 10;
+  // Attendee's response, or completed for a personal to-do event.
+  optional ResponseStatus response_status = 11;
+  // Importance (personal events).
+  optional Importance importance = 12;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 13;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 14;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 15;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 16;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 17;
+  // Allowed values of response_status; REST/JSON uses the lowercase value shown in each comment.
+  enum ResponseStatus {
+    RESPONSE_STATUS_UNSPECIFIED = 0;
+    // "needs_action"
+    RESPONSE_STATUS_NEEDS_ACTION = 1;
+    // "accepted"
+    RESPONSE_STATUS_ACCEPTED = 2;
+    // "tentative"
+    RESPONSE_STATUS_TENTATIVE = 3;
+    // "declined"
+    RESPONSE_STATUS_DECLINED = 4;
+    // "completed"
+    RESPONSE_STATUS_COMPLETED = 5;
+  }
+  // Allowed values of importance; REST/JSON uses the lowercase value shown in each comment.
+  enum Importance {
+    IMPORTANCE_UNSPECIFIED = 0;
+    // "high"
+    IMPORTANCE_HIGH = 1;
+    // "medium"
+    IMPORTANCE_MEDIUM = 2;
+    // "low"
+    IMPORTANCE_LOW = 3;
+  }
+}
+
+// User invited to a cohort event that is not for all members.
+message EventAttendee {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Event. [UUID] Set from the parent path on create.
+  string event_id = 2;
+  // Invited user. [UUID]
+  string user_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// Record of an item pushed to a user's external calendar (Google / Microsoft), for updates and deletions.
+message CalendarExport {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // User whose calendar it is. [UUID]
+  string user_id = 2;
+  // External calendar provider.
+  Provider provider = 3;
+  // Cohort context. [UUID]
+  optional string cohort_id = 4;
+  // Kind of exported item (event, occurrence, content_item, live_class).
+  string entity_type = 5;
+  // Polymorphic id of the exported item. [UUID]
+  string entity_id = 6;
+  // Provider property stored (e.g. external event id).
+  optional string property_name = 7;
+  // Provider value.
+  optional string property_value = 8;
+  // Item was removed from the external calendar.
+  bool is_deleted = 9;
+  // Last push time.
+  google.protobuf.Timestamp last_exported_at = 10;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 11;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 12;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 14;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 15;
+  // Allowed values of provider; REST/JSON uses the lowercase value shown in each comment.
+  enum Provider {
+    PROVIDER_UNSPECIFIED = 0;
+    // "google"
+    PROVIDER_GOOGLE = 1;
+    // "microsoft"
+    PROVIDER_MICROSOFT = 2;
+    // "ics"
+    PROVIDER_ICS = 3;
+  }
+}
+
+// Kind of notification raised by the application (e.g. reply to my post, grade published), with defaults.
+message NotificationType {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Notification code.
+  string code = 2;
+  // Default message text with placeholders.
+  string description = 3;
+  // Module raising it (see iam.app_module).
+  string module_code = 4;
+  // Platform role code it is addressed to by default (resolved to each tenant's role with that code).
+  optional string role_code = 15;
+  // Enabled by default.
+  bool is_enabled = 6;
+  // Shown as an in-app popup to students.
+  bool popup_enabled = 7;
+  // Shown as an in-app popup to teachers.
+  bool teacher_popup_enabled = 8;
+  // Placeholders the message may use.
+  optional string valid_parameters = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+}
+
+// Additional property of a notification type for a module (e.g. frequency).
+message NotificationTypeProperty {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Notification type. [UUID] Set from the parent path on create.
+  string notification_type_id = 2;
+  // Module.
+  optional string module_code = 3;
+  // Property value.
+  string property_value = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// Tenant rule: which notification a role receives for an operation, and its e-mail / SMS templates.
+message NotificationRule {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Recipient role. [UUID]
+  string role_id = 2;
+  // Notification type. [UUID] Set from the parent path on create.
+  string notification_type_id = 3;
+  // Operation (permission) that triggers it. [UUID]
+  optional string permission_id = 4;
+  // Rule active.
+  bool is_enabled = 5;
+  // E-mail subject template.
+  optional string email_subject_template = 6;
+  // E-mail body template.
+  optional string email_body_template = 7;
+  // SMS template.
+  optional string sms_template = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+}
+
+// Cohort-level override of a notification type.
+message NotificationCohortSetting {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Cohort. [UUID]
+  string cohort_id = 2;
+  // Notification type. [UUID] Set from the parent path on create.
+  string notification_type_id = 3;
+  // Show as popup in this cohort.
+  bool popup_enabled = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// Delivery channel configuration (e-mail, SMS, popup) and whether it is enabled. NULL tenant = platform default.
+message NotificationChannel {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Channel code (notification.email, notification.sms, notification.popup).
+  string code = 2;
+  // Description.
+  optional string description = 3;
+  // Channel enabled.
+  bool is_enabled = 4;
+  // Display order.
+  int32 sort_order = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+}
+
+// Setting of a delivery channel (SMTP host, port, sender, frequency...). Secrets are stored encrypted.
+message NotificationChannelProperty {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Channel. [UUID] Set from the parent path on create.
+  string notification_channel_id = 2;
+  // Property key.
+  string property_key = 3;
+  // Non-secret value.
+  optional string property_value = 4;
+  // Plain value, input only: stored encrypted and never returned. Secret value (e.g. SMTP password), encrypted by the application; set instead of property_value.
+  optional string secret_value = 13;
+  // Masked form for display, e.g. "••••1234". Output only.
+  optional string secret_value_masked = 14;
+  // Display order.
+  int32 sort_order = 6;
+  // Value must be set for the channel to work.
+  bool is_mandatory = 7;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 8;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 9;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 10;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 11;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 12;
+}
+
+// A user's notification preferences for one of their roles.
+message NotificationPreferenceSet {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // User. [UUID]
+  string user_id = 2;
+  // Role the preferences apply to (NULL = all roles). [UUID]
+  optional string role_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// One preference value (channel on/off, frequency) for a notification type.
+message NotificationPreference {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Preference set. [UUID] Set from the parent path on create.
+  string preference_set_id = 2;
+  // Notification type (NULL = all types). [UUID]
+  optional string notification_type_id = 3;
+  // Property (e.g. notification.email.frequency).
+  string property_name = 4;
+  // Value.
+  optional string property_value = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+}
+
+message GetOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+}
+
+message GetOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message ListOperationsRequest {
+  // Filter by kind.
+  optional string kind = 1;
+  // Page size.
+  optional int32 page_size = 2;
+  // Page token.
+  optional string page_token = 3;
+}
+
+message ListOperationsResponse {
+  repeated mysms.common.v1.Operation items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message CancelOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+
+message CancelOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}

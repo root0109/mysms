@@ -1,0 +1,868 @@
+{
+ "module": "assessment",
+ "resources": [
+  {
+   "name": "Assignment",
+   "table": "assessment.assignment",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/assignments",
+   "item": "/v1/assessment/assignments/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "title": "t-title-4e585dbb",
+    "classSectionId": "0196f000-0000-7000-8000-0000000c5e01"
+   },
+   "update": {
+    "title": "Updated title"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "assessment.PublishAssignment",
+     "path": "/v1/assessment/assignments/{id}:publish",
+     "permission": "assessment.assignment.publish_assignment",
+     "guard": {
+      "status": [
+       "draft"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.assignment SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "published"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "assessment.CancelAssignment",
+     "path": "/v1/assessment/assignments/{id}:cancel",
+     "permission": "assessment.assignment.cancel_assignment",
+     "guard": {
+      "status": [
+       "draft",
+       "published",
+       "ongoing"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.assignment SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "cancelled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "assessment.ResetAssignment",
+     "path": "/v1/assessment/assignments/{id}:resetToDraft",
+     "permission": "assessment.assignment.reset_assignment",
+     "guard": {
+      "status": [
+       "cancelled"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.assignment SET status = 'cancelled' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "draft"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "AssignmentAllocation",
+   "table": "assessment.assignment_allocation",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/assignments/dc24f09f-bdf4-55ef-895e-768f30579b9c/allocations",
+   "item": "/v1/assessment/assignments/dc24f09f-bdf4-55ef-895e-768f30579b9c/allocations/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.assignment (tenant_id, institution_id, title, class_section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-4f21ef31', '0196f000-0000-7000-8000-0000000c5e01', 1, 'dc24f09f-bdf4-55ef-895e-768f30579b9c') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "assignmentId": "dc24f09f-bdf4-55ef-895e-768f30579b9c",
+    "studentId": "936c77eb-49dc-575d-96b8-57bc4e9e059c"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "AssignmentApproval",
+   "table": "assessment.assignment_approval",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/assignments/dc24f09f-bdf4-55ef-895e-768f30579b9c/approvals",
+   "item": "/v1/assessment/assignments/dc24f09f-bdf4-55ef-895e-768f30579b9c/approvals/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.assignment (tenant_id, institution_id, title, class_section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-4f21ef31', '0196f000-0000-7000-8000-0000000c5e01', 1, 'dc24f09f-bdf4-55ef-895e-768f30579b9c') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "assignmentId": "dc24f09f-bdf4-55ef-895e-768f30579b9c"
+   },
+   "update": {
+    "comments": "Updated comments"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "AssignmentSubject",
+   "table": "assessment.assignment_subject",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/assignments/dc24f09f-bdf4-55ef-895e-768f30579b9c/subjects",
+   "item": "/v1/assessment/assignments/dc24f09f-bdf4-55ef-895e-768f30579b9c/subjects/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.assignment (tenant_id, institution_id, title, class_section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-4f21ef31', '0196f000-0000-7000-8000-0000000c5e01', 1, 'dc24f09f-bdf4-55ef-895e-768f30579b9c') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "assignmentId": "dc24f09f-bdf4-55ef-895e-768f30579b9c",
+    "subjectId": "70c407f9-6c3a-5cb1-86b1-afc387c8ab1e"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "AssignmentSubmission",
+   "table": "assessment.assignment_submission",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/assignment-submissions",
+   "item": "/v1/assessment/assignment-submissions/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.assignment (tenant_id, institution_id, title, class_section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-4f21ef31', '0196f000-0000-7000-8000-0000000c5e01', 1, 'dc24f09f-bdf4-55ef-895e-768f30579b9c') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "assignmentId": "dc24f09f-bdf4-55ef-895e-768f30579b9c",
+    "studentId": "7ed39e3a-c31f-5635-ae4d-919643586ec0",
+    "submittedAt": "2026-01-10T09:00:00Z"
+   },
+   "update": {
+    "content": "Updated content"
+   },
+   "duplicateConflicts": true,
+   "transitions": [
+    {
+     "operation": "assessment.SubmitAssignmentSubmission",
+     "path": "/v1/assessment/assignment-submissions/{id}:submit",
+     "permission": "assessment.assignment_submission.submit_assignment_submission",
+     "guard": {
+      "status": [
+       "draft",
+       "change_requested"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.assignment_submission SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "submitted"
+     },
+     "stamps": [
+      "submittedAt"
+     ],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "assessment.AcceptAssignmentSubmission",
+     "path": "/v1/assessment/assignment-submissions/{id}:accept",
+     "permission": "assessment.assignment_submission.accept_assignment_submission",
+     "guard": {
+      "status": [
+       "submitted"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.assignment_submission SET status = 'submitted' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "accepted"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "assessment.RejectAssignmentSubmission",
+     "path": "/v1/assessment/assignment-submissions/{id}:reject",
+     "permission": "assessment.assignment_submission.reject_assignment_submission",
+     "guard": {
+      "status": [
+       "submitted"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.assignment_submission SET status = 'submitted' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "rejected"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "AssignmentType",
+   "table": "assessment.assignment_type",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/assignment-types",
+   "item": "/v1/assessment/assignment-types/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "CE0C59670",
+    "name": "t-name-09bf5e17"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Exam",
+   "table": "assessment.exam",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/exams",
+   "item": "/v1/assessment/exams/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.exam_type (tenant_id, code, name, row_version, id) VALUES (:tenant, 'CAC1141C0', 't-name-54f9e1fa', 1, 'de928278-f096-58b7-a632-d3e504bbb8f0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.exam_session (tenant_id, institution_id, exam_type_id, code, name, grade_level_id, start_date, end_date, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'de928278-f096-58b7-a632-d3e504bbb8f0', 'C57E13B0C', 't-name-0a7d7313', '0196f000-0000-7000-8000-0000000c1e01', '2026-01-10', '2026-01-20', 1, '162564a7-6514-589f-b710-55c3b08302bd') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "examSessionId": "162564a7-6514-589f-b710-55c3b08302bd",
+    "subjectId": "2a184158-f362-5dc9-a8b1-ab074e32020f",
+    "code": "CF243B324",
+    "name": "t-name-be4b852e",
+    "startAt": "2026-01-10T09:00:00Z",
+    "endAt": "2026-01-10T10:00:00Z",
+    "totalMarks": "2",
+    "passMarks": "1"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true,
+   "transitions": [
+    {
+     "operation": "assessment.ScheduleExam",
+     "path": "/v1/assessment/exams/{id}:schedule",
+     "permission": "assessment.exam.schedule_exam",
+     "guard": {
+      "status": [
+       "draft"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.exam SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "scheduled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "assessment.CompleteExam",
+     "path": "/v1/assessment/exams/{id}:complete",
+     "permission": "assessment.exam.complete_exam",
+     "guard": {
+      "status": [
+       "held",
+       "result_updated"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.exam SET status = 'held' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "done"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "assessment.CancelExam",
+     "path": "/v1/assessment/exams/{id}:cancel",
+     "permission": "assessment.exam.cancel_exam",
+     "guard": {
+      "status": [
+       "draft",
+       "scheduled"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.exam SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "cancelled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "assessment.ResetExam",
+     "path": "/v1/assessment/exams/{id}:resetToDraft",
+     "permission": "assessment.exam.reset_exam",
+     "guard": {
+      "status": [
+       "cancelled"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.exam SET status = 'cancelled' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "draft"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "ExamInvigilator",
+   "table": "assessment.exam_invigilator",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/exams/e9bccb3b-95db-5f72-a52e-69b5311b0ea0/invigilators",
+   "item": "/v1/assessment/exams/e9bccb3b-95db-5f72-a52e-69b5311b0ea0/invigilators/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.exam_type (tenant_id, code, name, row_version, id) VALUES (:tenant, 'CAC1141C0', 't-name-54f9e1fa', 1, 'de928278-f096-58b7-a632-d3e504bbb8f0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.exam_session (tenant_id, institution_id, exam_type_id, code, name, grade_level_id, start_date, end_date, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'de928278-f096-58b7-a632-d3e504bbb8f0', 'C57E13B0C', 't-name-0a7d7313', '0196f000-0000-7000-8000-0000000c1e01', '2026-01-10', '2026-01-20', 1, '162564a7-6514-589f-b710-55c3b08302bd') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.exam (tenant_id, exam_session_id, subject_id, code, name, start_at, end_at, total_marks, pass_marks, row_version, id) VALUES (:tenant, '162564a7-6514-589f-b710-55c3b08302bd', '609e2299-86c9-59bf-af05-0c2a4c5f4884', 'C37691610', 't-name-242bd9c2', '2026-01-10T09:00:00Z', '2026-01-10T10:00:00Z', 2, 1, 1, 'e9bccb3b-95db-5f72-a52e-69b5311b0ea0') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "examId": "e9bccb3b-95db-5f72-a52e-69b5311b0ea0",
+    "staffId": "3a03158b-4edc-53dd-a0e9-30352e746a88"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "ExamResult",
+   "table": "assessment.exam_result",
+   "ops": [
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/exam-results",
+   "item": "/v1/assessment/exam-results/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.exam_type (tenant_id, code, name, row_version, id) VALUES (:tenant, 'CAC1141C0', 't-name-54f9e1fa', 1, 'de928278-f096-58b7-a632-d3e504bbb8f0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.exam_session (tenant_id, institution_id, exam_type_id, code, name, grade_level_id, start_date, end_date, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'de928278-f096-58b7-a632-d3e504bbb8f0', 'C57E13B0C', 't-name-0a7d7313', '0196f000-0000-7000-8000-0000000c1e01', '2026-01-10', '2026-01-20', 1, '162564a7-6514-589f-b710-55c3b08302bd') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.exam (tenant_id, exam_session_id, subject_id, code, name, start_at, end_at, total_marks, pass_marks, row_version, id) VALUES (:tenant, '162564a7-6514-589f-b710-55c3b08302bd', '609e2299-86c9-59bf-af05-0c2a4c5f4884', 'C37691610', 't-name-242bd9c2', '2026-01-10T09:00:00Z', '2026-01-10T10:00:00Z', 2, 1, 1, 'e9bccb3b-95db-5f72-a52e-69b5311b0ea0') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "examId": "e9bccb3b-95db-5f72-a52e-69b5311b0ea0",
+    "studentId": "5b25aa48-b7d3-58b0-879c-7722a273c1e7"
+   },
+   "update": {
+    "note": "Updated note"
+   },
+   "duplicateConflicts": true,
+   "seedId": "4cd0be3c-ea60-5894-9596-acce7a894795",
+   "seed": [
+    "INSERT INTO assessment.exam_result (exam_id, student_id, tenant_id, row_version, id) VALUES ('e9bccb3b-95db-5f72-a52e-69b5311b0ea0', '5b25aa48-b7d3-58b0-879c-7722a273c1e7', :tenant, 1, '4cd0be3c-ea60-5894-9596-acce7a894795')"
+   ]
+  },
+  {
+   "name": "ExamSession",
+   "table": "assessment.exam_session",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/exam-sessions",
+   "item": "/v1/assessment/exam-sessions/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO assessment.exam_type (tenant_id, code, name, row_version, id) VALUES (:tenant, 'CAC1141C0', 't-name-54f9e1fa', 1, 'de928278-f096-58b7-a632-d3e504bbb8f0') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "examTypeId": "de928278-f096-58b7-a632-d3e504bbb8f0",
+    "code": "C7D7A834F",
+    "name": "t-name-0e5ec457",
+    "gradeLevelId": "0196f000-0000-7000-8000-0000000c1e01",
+    "startDate": "2026-01-10",
+    "endDate": "2026-01-20"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true,
+   "transitions": [
+    {
+     "operation": "assessment.ScheduleExamSession",
+     "path": "/v1/assessment/exam-sessions/{id}:schedule",
+     "permission": "assessment.exam_session.schedule_exam_session",
+     "guard": {
+      "status": [
+       "draft"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.exam_session SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "scheduled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "assessment.MarkExamSessionHeld",
+     "path": "/v1/assessment/exam-sessions/{id}:markHeld",
+     "permission": "assessment.exam_session.mark_exam_session_held",
+     "guard": {
+      "status": [
+       "scheduled"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.exam_session SET status = 'scheduled' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "held"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "assessment.CompleteExamSession",
+     "path": "/v1/assessment/exam-sessions/{id}:complete",
+     "permission": "assessment.exam_session.complete_exam_session",
+     "guard": {
+      "status": [
+       "held"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.exam_session SET status = 'held' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "done"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "assessment.CancelExamSession",
+     "path": "/v1/assessment/exam-sessions/{id}:cancel",
+     "permission": "assessment.exam_session.cancel_exam_session",
+     "guard": {
+      "status": [
+       "draft",
+       "scheduled"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.exam_session SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "cancelled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "assessment.ResetExamSession",
+     "path": "/v1/assessment/exam-sessions/{id}:resetToDraft",
+     "permission": "assessment.exam_session.reset_exam_session",
+     "guard": {
+      "status": [
+       "cancelled"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.exam_session SET status = 'cancelled' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "draft"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "ExamType",
+   "table": "assessment.exam_type",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/exam-types",
+   "item": "/v1/assessment/exam-types/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C714E0382",
+    "name": "t-name-24478a31"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "GradingBand",
+   "table": "assessment.grading_band",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/grading-bands",
+   "item": "/v1/assessment/grading-bands/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.grading_scheme (tenant_id, institution_id, name, scheme_type, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-30703b2c', 'scholastic', 1, '0808f195-e7c9-58e4-9662-ec9b3d4c3bc2') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "gradingSchemeId": "0808f195-e7c9-58e4-9662-ec9b3d4c3bc2",
+    "minPercent": "1",
+    "maxPercent": "2",
+    "gradeLabel": "t-grade-label-0e99bc5e"
+   },
+   "update": {
+    "description": "Updated description"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Homework",
+   "table": "assessment.homework",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/homeworks",
+   "item": "/v1/assessment/homeworks/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "academicYearId": "7d2bb934-4d85-5212-bf30-0edae5816406",
+    "classSectionId": "476fd473-c1ea-5583-ba7b-dc986f0c0f29"
+   },
+   "update": {
+    "description": "Updated description"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "HomeworkApproval",
+   "table": "assessment.homework_approval",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/homeworks/bcf4d48f-95da-5ea4-915c-cd971af1fca6/approvals",
+   "item": "/v1/assessment/homeworks/bcf4d48f-95da-5ea4-915c-cd971af1fca6/approvals/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.homework (tenant_id, institution_id, academic_year_id, class_section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'a41706c8-775a-5826-8e87-7dde00cc7313', 'af7b4589-b50c-5b80-ab27-4381397b6f24', 1, 'bcf4d48f-95da-5ea4-915c-cd971af1fca6') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "homeworkId": "bcf4d48f-95da-5ea4-915c-cd971af1fca6"
+   },
+   "update": {
+    "comments": "Updated comments"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "HomeworkSubmission",
+   "table": "assessment.homework_submission",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/homework-submissions",
+   "item": "/v1/assessment/homework-submissions/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.homework (tenant_id, institution_id, academic_year_id, class_section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'a41706c8-775a-5826-8e87-7dde00cc7313', 'af7b4589-b50c-5b80-ab27-4381397b6f24', 1, 'bcf4d48f-95da-5ea4-915c-cd971af1fca6') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "homeworkId": "bcf4d48f-95da-5ea4-915c-cd971af1fca6",
+    "studentId": "df27d827-d7fe-591b-bed9-d8b659495d9d"
+   },
+   "update": {
+    "teacherComments": "Updated teacher_comments"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Marksheet",
+   "table": "assessment.marksheet",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/marksheets",
+   "item": "/v1/assessment/marksheets/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.exam_type (tenant_id, code, name, row_version, id) VALUES (:tenant, 'CAC1141C0', 't-name-54f9e1fa', 1, 'de928278-f096-58b7-a632-d3e504bbb8f0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.exam_session (tenant_id, institution_id, exam_type_id, code, name, grade_level_id, start_date, end_date, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'de928278-f096-58b7-a632-d3e504bbb8f0', 'C57E13B0C', 't-name-0a7d7313', '0196f000-0000-7000-8000-0000000c1e01', '2026-01-10', '2026-01-20', 1, '162564a7-6514-589f-b710-55c3b08302bd') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.result_template (tenant_id, exam_session_id, name, result_date, row_version, id) VALUES (:tenant, '162564a7-6514-589f-b710-55c3b08302bd', 't-name-4c607828', '2026-01-10', 1, '8987b025-8eed-51d2-b24b-d7f8e9dd1557') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "examSessionId": "162564a7-6514-589f-b710-55c3b08302bd",
+    "resultTemplateId": "8987b025-8eed-51d2-b24b-d7f8e9dd1557",
+    "name": "t-name-43289c60",
+    "generatedOn": "2026-01-10",
+    "generatedByUserId": "341d7a3e-626b-51f2-9e62-1a074a0e86e5"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "assessment.CancelMarksheet",
+     "path": "/v1/assessment/marksheets/{id}:cancel",
+     "permission": "assessment.marksheet.cancel_marksheet",
+     "guard": {
+      "status": [
+       "draft",
+       "validated"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.marksheet SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "cancelled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "assessment.ResetMarksheet",
+     "path": "/v1/assessment/marksheets/{id}:resetToDraft",
+     "permission": "assessment.marksheet.reset_marksheet",
+     "guard": {
+      "status": [
+       "cancelled"
+      ]
+     },
+     "prepare": [
+      "UPDATE assessment.marksheet SET status = 'cancelled' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "draft"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "MarksheetLine",
+   "table": "assessment.marksheet_line",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/assessment/marksheet-lines",
+   "item": "/v1/assessment/marksheet-lines/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.exam_type (tenant_id, code, name, row_version, id) VALUES (:tenant, 'CAC1141C0', 't-name-54f9e1fa', 1, 'de928278-f096-58b7-a632-d3e504bbb8f0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.exam_session (tenant_id, institution_id, exam_type_id, code, name, grade_level_id, start_date, end_date, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'de928278-f096-58b7-a632-d3e504bbb8f0', 'C57E13B0C', 't-name-0a7d7313', '0196f000-0000-7000-8000-0000000c1e01', '2026-01-10', '2026-01-20', 1, '162564a7-6514-589f-b710-55c3b08302bd') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.result_template (tenant_id, exam_session_id, name, result_date, row_version, id) VALUES (:tenant, '162564a7-6514-589f-b710-55c3b08302bd', 't-name-4c607828', '2026-01-10', 1, '8987b025-8eed-51d2-b24b-d7f8e9dd1557') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.marksheet (tenant_id, exam_session_id, result_template_id, name, generated_on, generated_by_user_id, row_version, id) VALUES (:tenant, '162564a7-6514-589f-b710-55c3b08302bd', '8987b025-8eed-51d2-b24b-d7f8e9dd1557', 't-name-7ad2f907', '2026-01-10', 'a1d78799-ee30-5f06-a536-d2231e9b9783', 1, '4837e630-e790-5030-b66d-813281f45f56') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "marksheetId": "4837e630-e790-5030-b66d-813281f45f56",
+    "studentId": "492a7bc3-8a3d-5e97-b52d-8769e8924434",
+    "generatedOn": "2026-01-10"
+   },
+   "update": {},
+   "duplicateConflicts": true,
+   "seedId": "abeae829-36ac-53c3-b604-186cec694883",
+   "seed": [
+    "INSERT INTO assessment.marksheet_line (marksheet_id, student_id, generated_on, tenant_id, row_version, id) VALUES ('4837e630-e790-5030-b66d-813281f45f56', '492a7bc3-8a3d-5e97-b52d-8769e8924434', '2026-01-10', :tenant, 1, 'abeae829-36ac-53c3-b604-186cec694883')"
+   ]
+  },
+  {
+   "name": "ResultTemplate",
+   "table": "assessment.result_template",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/result-templates",
+   "item": "/v1/assessment/result-templates/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.exam_type (tenant_id, code, name, row_version, id) VALUES (:tenant, 'CAC1141C0', 't-name-54f9e1fa', 1, 'de928278-f096-58b7-a632-d3e504bbb8f0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.exam_session (tenant_id, institution_id, exam_type_id, code, name, grade_level_id, start_date, end_date, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'de928278-f096-58b7-a632-d3e504bbb8f0', 'C57E13B0C', 't-name-0a7d7313', '0196f000-0000-7000-8000-0000000c1e01', '2026-01-10', '2026-01-20', 1, '162564a7-6514-589f-b710-55c3b08302bd') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "examSessionId": "162564a7-6514-589f-b710-55c3b08302bd",
+    "name": "t-name-28578971",
+    "resultDate": "2026-01-10"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "ResultTemplateBand",
+   "table": "assessment.result_template_band",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/result-templates/8987b025-8eed-51d2-b24b-d7f8e9dd1557/result-template-bands",
+   "item": "/v1/assessment/result-templates/8987b025-8eed-51d2-b24b-d7f8e9dd1557/result-template-bands/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO assessment.exam_type (tenant_id, code, name, row_version, id) VALUES (:tenant, 'CAC1141C0', 't-name-54f9e1fa', 1, 'de928278-f096-58b7-a632-d3e504bbb8f0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.exam_session (tenant_id, institution_id, exam_type_id, code, name, grade_level_id, start_date, end_date, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'de928278-f096-58b7-a632-d3e504bbb8f0', 'C57E13B0C', 't-name-0a7d7313', '0196f000-0000-7000-8000-0000000c1e01', '2026-01-10', '2026-01-20', 1, '162564a7-6514-589f-b710-55c3b08302bd') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.result_template (tenant_id, exam_session_id, name, result_date, row_version, id) VALUES (:tenant, '162564a7-6514-589f-b710-55c3b08302bd', 't-name-4c607828', '2026-01-10', 1, '8987b025-8eed-51d2-b24b-d7f8e9dd1557') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.grading_scheme (tenant_id, institution_id, name, scheme_type, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-26d69db1', 'scholastic', 1, '07ca09c0-ac7d-511e-8132-7a75d25ce963') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO assessment.grading_band (tenant_id, grading_scheme_id, min_percent, max_percent, grade_label, row_version, id) VALUES (:tenant, '07ca09c0-ac7d-511e-8132-7a75d25ce963', 1, 2, 't-grade-label-f9bd3fde', 1, '99a83f1f-f1a5-58a8-aa99-6a2fbee4dda8') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "resultTemplateId": "8987b025-8eed-51d2-b24b-d7f8e9dd1557",
+    "gradingBandId": "99a83f1f-f1a5-58a8-aa99-6a2fbee4dda8"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  }
+ ]
+}

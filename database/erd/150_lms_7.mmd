@@ -1,0 +1,283 @@
+erDiagram
+    lms__cohort["lms.cohort"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(200) title "NN"
+        text description
+        text details
+        uuid category_id FK
+        varchar(30) medium "NN"
+        date start_date "NN"
+        date end_date "NN"
+        time start_time
+        time end_time
+        varchar(64) timezone "NN"
+        integer seat_count
+        boolean is_published "NN"
+        boolean allow_self_enrollment "NN"
+        boolean allow_future_access "NN"
+        boolean is_paid "NN"
+        numeric price "14,2"
+        uuid currency_id FK "→ master.currency (logical)"
+        numeric price_usd "14,2"
+        boolean show_live_class "NN"
+        boolean evaluation_enabled "NN"
+        date evaluation_end_date
+        boolean certification_enabled "NN"
+        varchar(30) conferencing_provider
+        uuid conferencing_account_id FK
+        uuid timetable_template_id FK
+        uuid confirmation_template_id FK "→ comms.message_template (logical)"
+        uuid meta_image_file_id FK "→ platform.file_object (logical)"
+        uuid intro_video_file_id FK "→ platform.file_object (logical)"
+        text custom_component
+        text custom_script
+        boolean publish_notification_sent "NN"
+        varchar(50) code
+        uuid academic_term_id FK "→ org.academic_term (logical)"
+        uuid program_id FK "→ academics.program (logical)"
+        varchar(100) external_ref
+        varchar(30) lifecycle_status "NN"
+        timestamptz staff_access_from
+        timestamptz staff_access_until
+        timestamptz student_access_from
+        timestamptz student_access_until
+        boolean has_schedule "NN"
+        boolean staff_can_edit_schedule "NN"
+        varchar(30) grade_display "NN"
+        uuid grading_scheme_id FK "→ assessment.grading_scheme (logical)"
+        timestamptz enrollment_opens_at
+        timestamptz enrollment_closes_at
+        uuid class_subject_id FK "→ academics.class_subject (logical)"
+        uuid batch_id FK "→ academics.batch (logical)"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+    }
+    lms__cohort_course["lms.cohort_course"] {
+        uuid id PK
+        uuid cohort_id FK "NN"
+        uuid course_id FK "NN"
+        uuid evaluator_id FK
+    }
+    lms__cohort_teacher["lms.cohort_teacher"] {
+        uuid id PK
+        uuid cohort_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid role_id FK "→ iam.role (logical)"
+        varchar(100) role_label
+        boolean is_active "NN"
+        boolean has_office_hours "NN"
+        timestamptz removed_at
+    }
+    lms__cohort_enrollment["lms.cohort_enrollment"] {
+        uuid id PK
+        uuid cohort_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid payment_id FK "→ finance.payment (logical)"
+        uuid acquisition_source_id FK "→ finance.acquisition_source (logical)"
+        boolean confirmation_email_sent "NN"
+        boolean is_active "NN"
+        boolean is_self_enrolled "NN"
+        varchar(10) final_grade
+        numeric final_gpa "4,2"
+        uuid graded_by FK "→ iam.user_account (logical)"
+        timestamptz graded_at
+        boolean grade_published "NN"
+        timestamptz grade_published_at
+        text teacher_comment
+        boolean has_accommodation "NN"
+        varchar(100) accommodation_ref
+        smallint survey_status
+        timestamptz removed_at
+        varchar(30) removal_reason
+    }
+    lms__cohort_feedback["lms.cohort_feedback"] {
+        uuid id PK
+        uuid cohort_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        text feedback "NN"
+        numeric content_rating "3,2"
+        numeric teacher_rating "3,2"
+        numeric value_rating "3,2"
+    }
+    lms__cohort_group["lms.cohort_group"] {
+        uuid id PK
+        uuid cohort_id FK "NN"
+        varchar(120) name "NN"
+        text description
+        boolean is_disabled "NN"
+    }
+    lms__cohort_schedule_slot["lms.cohort_schedule_slot"] {
+        uuid id PK
+        uuid cohort_id FK "NN"
+        varchar(30) slot_type "NN"
+        uuid cohort_teacher_id FK
+        varchar(30) weekday "NN"
+        time start_time "NN"
+        time end_time "NN"
+        varchar(200) venue
+    }
+    lms__cohort_session["lms.cohort_session"] {
+        uuid id PK
+        uuid cohort_id FK "NN"
+        timestamptz starts_at "NN"
+        timestamptz ends_at "NN"
+        text description
+        varchar(200) venue
+        boolean is_cancelled "NN"
+    }
+    lms__cohort_holiday["lms.cohort_holiday"] {
+        uuid id PK
+        uuid cohort_id FK "NN"
+        uuid holiday_id FK "→ org.holiday (logical)"
+        varchar(200) title "NN"
+        date start_date "NN"
+        date end_date "NN"
+        boolean is_included "NN"
+    }
+    lms__timetable_template["lms.timetable_template"] {
+        uuid id PK
+        varchar(150) title "NN"
+    }
+    lms__timetable_entry["lms.timetable_entry"] {
+        uuid id PK
+        uuid cohort_id FK
+        uuid timetable_template_id FK
+        uuid lesson_id FK
+        uuid quiz_id FK
+        uuid assignment_id FK
+        uuid exercise_id FK
+        uuid live_class_id FK
+        date entry_date
+        integer day_number
+        time start_time
+        time end_time
+        integer duration_minutes
+        boolean is_milestone "NN"
+    }
+    lms__timetable_legend["lms.timetable_legend"] {
+        uuid id PK
+        uuid cohort_id FK
+        uuid timetable_template_id FK
+        varchar(30) item_kind "NN"
+        varchar(20) color "NN"
+        varchar(60) label "NN"
+    }
+    lms__live_class["lms.live_class"] {
+        uuid id PK
+        uuid cohort_id FK
+        varchar(200) title "NN"
+        text description
+        date class_date "NN"
+        time start_time "NN"
+        integer duration_minutes "NN"
+        varchar(64) timezone "NN"
+        uuid host_user_id FK "NN · → iam.user_account (logical)"
+        varchar(30) conferencing_provider "NN"
+        uuid conferencing_account_id FK
+        varchar(120) meeting_id
+        varchar(120) meeting_uuid
+        text start_url_enc
+        text join_url
+        text meeting_password_enc
+        varchar(30) auto_recording "NN"
+        uuid calendar_event_id FK "→ comms.event (logical)"
+        integer attendee_count
+        varchar(30) invite_status "NN"
+        integer invite_attempts "NN"
+        text moderator_password_enc
+        text welcome_message
+        varchar(50) provider_created_ref
+        varchar(1000) recording_url
+        integer invitee_count
+        integer prep_minutes
+        integer extension_minutes
+        boolean show_in_calendar "NN"
+        boolean host_joined "NN"
+        boolean is_active "NN"
+        timestamptz ended_at
+    }
+    lms__live_class_participant["lms.live_class_participant"] {
+        uuid id PK
+        uuid live_class_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        timestamptz joined_at "NN"
+        timestamptz left_at
+        integer duration_minutes
+        text join_url_enc
+        boolean is_presenter "NN"
+        boolean attended "NN"
+        varchar(30) invite_status
+    }
+    lms__conferencing_account["lms.conferencing_account"] {
+        uuid id PK
+        varchar(30) provider "NN"
+        varchar(120) account_name "NN"
+        uuid owner_user_id FK "NN · → iam.user_account (logical)"
+        boolean is_enabled "NN"
+        varchar(120) external_account_id
+        varchar(200) client_id
+        text client_secret_enc
+        varchar(200) external_calendar_id
+    }
+    lms__conferencing_token["lms.conferencing_token"] {
+        uuid id PK
+        uuid conferencing_account_id FK "NN"
+        varchar(20) token_type "NN"
+        text token_enc "NN"
+        timestamptz expires_at
+    }
+    lms__mentorship["lms.mentorship"] {
+        uuid id PK
+        uuid mentor_user_id FK "NN · → iam.user_account (logical)"
+        uuid mentee_user_id FK "NN · → iam.user_account (logical)"
+        date valid_from
+        date valid_to
+    }
+    lms__assignment["lms.assignment"] {
+        uuid id PK "drawn on: Assignments, exercises & plagiarism checks"
+    }
+    lms__category["lms.category"] {
+        uuid id PK "drawn on: Courses, versions & catalogue"
+    }
+    lms__course["lms.course"] {
+        uuid id PK "drawn on: Courses, versions & catalogue"
+    }
+    lms__evaluator["lms.evaluator"] {
+        uuid id PK "drawn on: Evaluation, certificates, badges & programs"
+    }
+    lms__lesson["lms.lesson"] {
+        uuid id PK "drawn on: Outline, content delivery & progress"
+    }
+    lms__programming_exercise["lms.programming_exercise"] {
+        uuid id PK "drawn on: Assignments, exercises & plagiarism checks"
+    }
+    lms__quiz["lms.quiz"] {
+        uuid id PK "drawn on: Quizzes & question bank"
+    }
+    lms__category |o--o{ lms__cohort : "category_id"
+    lms__conferencing_account |o--o{ lms__cohort : "conferencing_account_id"
+    lms__timetable_template |o--o{ lms__cohort : "timetable_template_id"
+    lms__cohort ||--o{ lms__cohort_course : "cohort_id"
+    lms__course ||--o{ lms__cohort_course : "course_id"
+    lms__evaluator |o--o{ lms__cohort_course : "evaluator_id"
+    lms__cohort ||--o{ lms__cohort_teacher : "cohort_id"
+    lms__cohort |o--o{ lms__timetable_entry : "cohort_id"
+    lms__timetable_template |o--o{ lms__timetable_entry : "timetable_template_id"
+    lms__lesson |o--o{ lms__timetable_entry : "lesson_id"
+    lms__quiz |o--o{ lms__timetable_entry : "quiz_id"
+    lms__assignment |o--o{ lms__timetable_entry : "assignment_id"
+    lms__programming_exercise |o--o{ lms__timetable_entry : "exercise_id"
+    lms__live_class |o--o{ lms__timetable_entry : "live_class_id"
+    lms__cohort |o--o{ lms__timetable_legend : "cohort_id"
+    lms__timetable_template |o--o{ lms__timetable_legend : "timetable_template_id"
+    lms__cohort ||--o{ lms__cohort_enrollment : "cohort_id"
+    lms__cohort ||--o{ lms__cohort_feedback : "cohort_id"
+    lms__cohort |o--o{ lms__live_class : "cohort_id"
+    lms__conferencing_account |o--o{ lms__live_class : "conferencing_account_id"
+    lms__live_class ||--o{ lms__live_class_participant : "live_class_id"
+    lms__cohort ||--o{ lms__cohort_group : "cohort_id"
+    lms__cohort ||--o{ lms__cohort_schedule_slot : "cohort_id"
+    lms__cohort_teacher |o--o{ lms__cohort_schedule_slot : "cohort_teacher_id"
+    lms__cohort ||--o{ lms__cohort_session : "cohort_id"
+    lms__cohort ||--o{ lms__cohort_holiday : "cohort_id"
+    lms__conferencing_account ||--o{ lms__conferencing_token : "conferencing_account_id"

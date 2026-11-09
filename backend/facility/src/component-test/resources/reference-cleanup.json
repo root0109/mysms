@@ -1,0 +1,47 @@
+{
+ "module": "facility",
+ "cleanup": [
+  {
+   "event": "academics.batch.deleted",
+   "table": "facility.room",
+   "column": "default_batch_id",
+   "action": "null the column",
+   "ownerId": "e82161a0-2290-564d-8334-161460aa60c8",
+   "rowId": "89ebfd1e-5d17-5f45-968b-307b1f4137d3",
+   "otherRowId": "27c5bb70-0284-5b58-a4ae-7611c6d76c8b",
+   "fixtures": [],
+   "row": "INSERT INTO facility.room (tenant_id, institution_id, code, name, capacity, row_version, default_batch_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C599E8023', 't-name-6a858416', 1, 1, 'e82161a0-2290-564d-8334-161460aa60c8', '89ebfd1e-5d17-5f45-968b-307b1f4137d3')",
+   "otherFixtures": [],
+   "other": "INSERT INTO facility.room (tenant_id, institution_id, code, name, capacity, row_version, default_batch_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'CC22111F6', 't-name-f191113e', 1, 1, 'e82161a0-2290-564d-8334-161460aa60c8', '27c5bb70-0284-5b58-a4ae-7611c6d76c8b')",
+   "softDeletable": true
+  },
+  {
+   "event": "academics.class_section.deleted",
+   "table": "facility.room",
+   "column": "default_class_section_id",
+   "action": "null the column",
+   "ownerId": "be18bd5b-de1b-50c6-ade9-f44ee4ae8d6b",
+   "rowId": "4bab0fda-fe30-5906-9240-59bed5d42383",
+   "otherRowId": "ec9c5615-725d-5f80-a1bb-e2c35b660dfe",
+   "fixtures": [],
+   "row": "INSERT INTO facility.room (tenant_id, institution_id, code, name, capacity, row_version, default_class_section_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'CA5460B02', 't-name-52cffb11', 1, 1, 'be18bd5b-de1b-50c6-ade9-f44ee4ae8d6b', '4bab0fda-fe30-5906-9240-59bed5d42383')",
+   "otherFixtures": [],
+   "other": "INSERT INTO facility.room (tenant_id, institution_id, code, name, capacity, row_version, default_class_section_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'CFC9D489B', 't-name-1596fdee', 1, 1, 'be18bd5b-de1b-50c6-ade9-f44ee4ae8d6b', 'ec9c5615-725d-5f80-a1bb-e2c35b660dfe')",
+   "softDeletable": true
+  },
+  {
+   "event": "academics.course.deleted",
+   "table": "facility.room",
+   "column": "default_course_id",
+   "action": "null the column",
+   "ownerId": "6a6bd40d-53ee-54c7-94cd-f6bd41e66d08",
+   "rowId": "a2c212fb-8d2d-5472-9c33-2ff00ecb231f",
+   "otherRowId": "7466f6e1-dc9e-5fc3-a90c-38b544efc64c",
+   "fixtures": [],
+   "row": "INSERT INTO facility.room (tenant_id, institution_id, code, name, capacity, row_version, default_course_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C9D1E417F', 't-name-fa35ca2c', 1, 1, '6a6bd40d-53ee-54c7-94cd-f6bd41e66d08', 'a2c212fb-8d2d-5472-9c33-2ff00ecb231f')",
+   "otherFixtures": [],
+   "other": "INSERT INTO facility.room (tenant_id, institution_id, code, name, capacity, row_version, default_course_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'CFFB4DA76', 't-name-f24be00a', 1, 1, '6a6bd40d-53ee-54c7-94cd-f6bd41e66d08', '7466f6e1-dc9e-5fc3-a90c-38b544efc64c')",
+   "softDeletable": true
+  }
+ ]
+}

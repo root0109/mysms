@@ -1,0 +1,1900 @@
+openapi: 3.1.0
+info:
+  title: MySMS API — shared components
+  version: 1.0.0
+  description: Shared schemas, parameters and error responses referenced by every MySMS module contract.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-MySMS
+  contact:
+    name: MySMS API team
+    email: api@mysms.example
+servers:
+- url: https://api.mysms.example
+  description: Production (replace with your domain)
+security:
+- bearerAuth: []
+paths: {}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: OAuth 2.0 / OIDC access token. Claims carry tenant_id, user_id, roles and an optional act-as (impersonation) subject.
+    platformAdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token of MySMS platform staff (audience mysms-platform-admin, MFA required). Only these operations may act across tenants; the target tenant is the resource being addressed.
+  parameters:
+    PageSize:
+      name: pageSize
+      in: query
+      description: Maximum items to return (1-500, default 50).
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 500
+        default: 50
+    PageToken:
+      name: pageToken
+      in: query
+      description: Opaque cursor from nextPageToken.
+      schema:
+        type: string
+    Filter:
+      name: filter
+      in: query
+      description: Filter expression (AIP-160 subset) over the resource fields, e.g. `status = "active" AND academicYearId = "…"`.
+      schema:
+        type: string
+        maxLength: 2000
+    OrderBy:
+      name: orderBy
+      in: query
+      description: Comma-separated fields, optional " desc", e.g. `createTime desc`.
+      schema:
+        type: string
+        maxLength: 500
+    ReadMask:
+      name: fields
+      in: query
+      description: Comma-separated fields to return (partial response).
+      schema:
+        type: string
+    UpdateMask:
+      name: updateMask
+      in: query
+      description: Comma-separated fields to update. If omitted, every field present in the body is updated.
+      schema:
+        type: string
+    ValidateOnly:
+      name: validateOnly
+      in: query
+      description: Validate the request without persisting.
+      schema:
+        type: boolean
+        default: false
+    IfMatch:
+      name: If-Match
+      in: header
+      description: ETag from the last read; required for updates and deletes.
+      required: true
+      schema:
+        type: string
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      description: Client-generated UUID; repeating a request with the same key returns the original result for 24 h.
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKeyRequired:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Client-generated UUID; repeating a request with the same key returns the original result for 24 h.
+      schema:
+        type: string
+        format: uuid
+    InstitutionContext:
+      name: X-Institution-Id
+      in: header
+      description: Institution the caller is acting in (must be within the caller's grants). Defaults to the caller's primary institution.
+      schema:
+        type: string
+        format: uuid
+  headers:
+    ETag:
+      description: Entity tag (row version).
+      schema:
+        type: string
+  responses:
+    '400':
+      description: Malformed request.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '401':
+      description: Missing or invalid credentials.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '403':
+      description: Authenticated but not permitted.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '404':
+      description: Resource not found (or not visible to the caller).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '409':
+      description: Conflict with the current state (duplicate, invalid state transition).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '412':
+      description: ETag precondition failed (stale row_version).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '422':
+      description: Validation failed; see errors[].
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '428':
+      description: Precondition required (If-Match missing or `*`; send the ETag of the last read).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '429':
+      description: Rate limit exceeded.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: integer
+        RateLimit-Limit:
+          description: Requests allowed in the current window.
+          schema:
+            type: integer
+        RateLimit-Remaining:
+          description: Requests left in the current window.
+          schema:
+            type: integer
+        RateLimit-Reset:
+          description: Seconds until the window resets.
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '500':
+      description: Unexpected server error.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '503':
+      description: Temporarily unavailable.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    Problem:
+      type: object
+      description: RFC 9457 problem details.
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+        code:
+          type: string
+          description: Stable machine-readable error code, e.g. INVALID_STATE_TRANSITION.
+        traceId:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            required:
+            - field
+            - message
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+              code:
+                type: string
+    TokenPair:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: Short-lived JWT access token.
+        refreshToken:
+          type: string
+          description: Refresh token (rotating).
+        expiresInSeconds:
+          type: integer
+          format: int32
+          description: Access-token lifetime.
+        tokenType:
+          type: string
+          description: Always "Bearer".
+      required:
+      - accessToken
+      - refreshToken
+      - expiresInSeconds
+      - tokenType
+    RoleGrant:
+      type: object
+      properties:
+        roleCode:
+          type: string
+          description: Role code.
+        scopeType:
+          type: string
+          enum:
+          - tenant
+          - institution
+          - department
+          - class_section
+          - course
+          - lms_course
+          - lms_cohort
+          x-extensible-enum: true
+          description: Scope type (same values as iam.user_role.scope_type).
+        scopeId:
+          type: string
+          format: uuid
+          description: Scope record.
+      required:
+      - roleCode
+      - scopeType
+    UploadTarget:
+      type: object
+      properties:
+        fileId:
+          type: string
+          format: uuid
+          description: File record created in pending state.
+        uploadUrl:
+          type: string
+          description: Pre-signed URL to PUT the bytes to.
+        uploadHeaders:
+          description: Headers the client must send with the PUT.
+        expiresAt:
+          type: string
+          format: date-time
+          description: URL expiry.
+      required:
+      - fileId
+      - uploadUrl
+      - expiresAt
+    DownloadLink:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Pre-signed download URL.
+        expiresAt:
+          type: string
+          format: date-time
+          description: URL expiry.
+      required:
+      - url
+      - expiresAt
+    Operation:
+      type: object
+      properties:
+        operationId:
+          type: string
+          format: uuid
+          description: Operation id.
+        module:
+          type: string
+          readOnly: true
+          description: Module that owns the operation; poll and cancel it at /v1/{module}/operations/{operationId}.
+        kind:
+          type: string
+          description: Operation kind, e.g. report.run, import.students.
+        status:
+          type: string
+          enum:
+          - queued
+          - running
+          - succeeded
+          - failed
+          - cancelled
+          x-extensible-enum: true
+          description: State.
+        progressPercent:
+          type: integer
+          format: int32
+          description: Progress 0-100.
+        resultFileId:
+          type: string
+          format: uuid
+          description: Output file (reports / exports).
+        result:
+          description: Structured result summary.
+        errorMessage:
+          type: string
+          description: Failure reason.
+        createTime:
+          type: string
+          format: date-time
+          description: Submitted at.
+        doneTime:
+          type: string
+          format: date-time
+          description: Finished at.
+      required:
+      - operationId
+      - module
+      - kind
+      - status
+      - createTime
+    ImportRowError:
+      type: object
+      properties:
+        rowNumber:
+          type: integer
+          format: int32
+          description: 1-based row number.
+        field:
+          type: string
+          description: Column.
+        message:
+          type: string
+          description: Problem.
+      required:
+      - rowNumber
+      - message
+    SearchHit:
+      type: object
+      properties:
+        entityType:
+          type: string
+          description: Resource type, e.g. sis.student.
+        entityId:
+          type: string
+          format: uuid
+          description: Record id.
+        title:
+          type: string
+          description: Display title.
+        subtitle:
+          type: string
+          description: Secondary text.
+        urlPath:
+          type: string
+          description: App route.
+      required:
+      - entityType
+      - entityId
+      - title
+    Branding:
+      type: object
+      properties:
+        tenantName:
+          type: string
+          description: Tenant name.
+        institutionName:
+          type: string
+          description: Institution name.
+        logoFileUrl:
+          type: string
+          description: Logo URL.
+        primaryColor:
+          type: string
+          description: Brand colour.
+        locale:
+          type: string
+          description: Default locale.
+        timezone:
+          type: string
+          description: Default time zone.
+      required:
+      - tenantName
+    Recipients:
+      type: object
+      properties:
+        userIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+            description: Individual users.
+          description: Individual users.
+        audienceGroupIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+            description: Groups.
+          description: Groups.
+        classSectionIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+            description: All students of these classes.
+          description: All students of these classes.
+        includeGuardians:
+          type: boolean
+          description: Also send to the guardians of the selected students.
+        staffOnly:
+          type: boolean
+          description: Only staff members of the selected scope.
+        cohortIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+            description: Students of these LMS cohorts.
+          description: Students of these LMS cohorts.
+    AttendanceMark:
+      type: object
+      properties:
+        studentId:
+          type: string
+          format: uuid
+          description: Student.
+        status:
+          type: string
+          enum:
+          - present
+          - absent
+          - late
+          - excused
+          x-extensible-enum: true
+          description: Status.
+        attendanceTypeId:
+          type: string
+          format: uuid
+          description: Configured mark.
+        absenceReasonId:
+          type: string
+          format: uuid
+          description: Reason.
+        remark:
+          type: string
+          description: Remark.
+      required:
+      - studentId
+      - status
+    AttendanceSummary:
+      type: object
+      properties:
+        studentId:
+          type: string
+          format: uuid
+          description: Student (when grouped by student).
+        classSectionId:
+          type: string
+          format: uuid
+          description: Class (when grouped by class).
+        date:
+          type: string
+          format: date
+          description: Date (when grouped by date).
+        present:
+          type: integer
+          format: int32
+          description: Present count.
+        absent:
+          type: integer
+          format: int32
+          description: Absent count.
+        late:
+          type: integer
+          format: int32
+          description: Late count.
+        excused:
+          type: integer
+          format: int32
+          description: Excused count.
+        attendancePercent:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Present+late / total marks.
+      required:
+      - present
+      - absent
+      - late
+      - excused
+      - attendancePercent
+    MarkEntry:
+      type: object
+      properties:
+        studentId:
+          type: string
+          format: uuid
+          description: Student.
+        attendanceStatus:
+          type: string
+          enum:
+          - present
+          - absent
+          x-extensible-enum: true
+          description: Attendance.
+        marksObtained:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Marks.
+        note:
+          type: string
+          description: Note.
+      required:
+      - studentId
+      - attendanceStatus
+    WeeklySlot:
+      type: object
+      properties:
+        weekday:
+          type: integer
+          format: int32
+          description: ISO weekday 1-7.
+        periodId:
+          type: string
+          format: uuid
+          description: Period.
+        subjectId:
+          type: string
+          format: uuid
+          description: Subject.
+        staffId:
+          type: string
+          format: uuid
+          description: Teacher.
+        roomId:
+          type: string
+          format: uuid
+          description: Room.
+      required:
+      - weekday
+      - periodId
+      - subjectId
+      - staffId
+    LeaveBalanceSummary:
+      type: object
+      description: Computed leave position per leave type (entitled, taken, pending, available); not the stored hr LeaveBalance resource.
+      properties:
+        leaveTypeId:
+          type: string
+          format: uuid
+          description: Leave type.
+        entitledDays:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Entitlement.
+        takenDays:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Approved days taken.
+        pendingDays:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Days pending approval.
+        availableDays:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Remaining.
+      required:
+      - leaveTypeId
+      - entitledDays
+      - takenDays
+      - pendingDays
+      - availableDays
+    OrderQuote:
+      type: object
+      properties:
+        originalAmount:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: List price.
+        discountAmount:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Coupon discount.
+        taxAmount:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Tax.
+        totalAmount:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Payable.
+        currencyCode:
+          type: string
+          description: Currency.
+        couponApplied:
+          type: boolean
+          description: Coupon valid and applied.
+        couponMessage:
+          type: string
+          description: Why a coupon was rejected.
+      required:
+      - originalAmount
+      - discountAmount
+      - taxAmount
+      - totalAmount
+      - currencyCode
+      - couponApplied
+    QuizQuestionView:
+      type: object
+      properties:
+        quizQuestionId:
+          type: string
+          format: uuid
+          description: Quiz question.
+        questionId:
+          type: string
+          format: uuid
+          description: Question.
+        questionText:
+          type: string
+          description: Question.
+        questionType:
+          type: string
+          description: Type.
+        allowsMultiple:
+          type: boolean
+          description: Multiple answers allowed.
+        marks:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Marks.
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/OptionView'
+          description: Choices (correctness hidden).
+        maxSelections:
+          type: integer
+          format: int32
+          description: Maximum options that may be ticked.
+        blanks:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlankView'
+          description: Blanks of a fill-in-the-blanks question.
+        matchLeft:
+          type: array
+          items:
+            $ref: '#/components/schemas/OptionView'
+          description: Left column of a matching question.
+        matchRight:
+          type: array
+          items:
+            $ref: '#/components/schemas/OptionView'
+          description: Right column of a matching question, shuffled.
+        hotspotImageFileId:
+          type: string
+          format: uuid
+          description: Image of a hot-spot question.
+        hotspotSelection:
+          type: string
+          enum:
+          - single
+          - multiple
+          x-extensible-enum: true
+          description: Hot-spot selection mode.
+        caseSensitive:
+          type: boolean
+          description: Text answers are case sensitive.
+      required:
+      - quizQuestionId
+      - questionId
+      - questionText
+      - questionType
+      - allowsMultiple
+      - marks
+    BlankView:
+      type: object
+      properties:
+        blankId:
+          type: string
+          format: uuid
+          description: Blank.
+        label:
+          type: string
+          description: Blank label / placeholder.
+      required:
+      - blankId
+      - label
+    BlankAnswer:
+      type: object
+      properties:
+        blankId:
+          type: string
+          format: uuid
+          description: Blank.
+        text:
+          type: string
+          description: Answer typed in the blank.
+      required:
+      - blankId
+      - text
+    MatchAnswer:
+      type: object
+      properties:
+        leftId:
+          type: string
+          format: uuid
+          description: Left item.
+        rightId:
+          type: string
+          format: uuid
+          description: Matched right item.
+      required:
+      - leftId
+      - rightId
+    HotspotPoint:
+      type: object
+      properties:
+        x:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: X coordinate (image pixels).
+        y:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Y coordinate (image pixels).
+      required:
+      - x
+      - y
+    OptionView:
+      type: object
+      properties:
+        optionId:
+          type: string
+          format: uuid
+          description: Choice id.
+        optionText:
+          type: string
+          description: Choice.
+      required:
+      - optionId
+      - optionText
+    QuizAnswerInput:
+      type: object
+      properties:
+        questionId:
+          type: string
+          format: uuid
+          description: Question.
+        selectedOptionIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+            description: Chosen options (choices, true/false).
+          description: Chosen options (choices, true/false).
+        answerText:
+          type: string
+          description: Typed answer (short / open-ended / pattern).
+        numericValue:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Numeric answer.
+        blankAnswers:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlankAnswer'
+          description: Answers per blank.
+        matchAnswers:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchAnswer'
+          description: Matched pairs.
+        hotspotPoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/HotspotPoint'
+          description: Points clicked on the image.
+        answeredAt:
+          type: string
+          format: date-time
+          description: Client time the answer was given (offline ordering).
+      required:
+      - questionId
+    ViolationEvent:
+      type: object
+      properties:
+        eventType:
+          type: string
+          enum:
+          - tab_switch
+          - no_face
+          - multiple_faces
+          - focus_loss
+          - camera_disconnect
+          x-extensible-enum: true
+          description: Event.
+        severity:
+          type: string
+          enum:
+          - violation
+          - warning
+          x-extensible-enum: true
+          description: Severity.
+        occurredAt:
+          type: string
+          format: date-time
+          description: When.
+      required:
+      - eventType
+      - severity
+      - occurredAt
+    AnswerCheck:
+      type: object
+      properties:
+        isCorrect:
+          type: boolean
+          description: Correct.
+        explanation:
+          type: string
+          description: Explanation.
+        correctOptionIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+            description: Correct choices (when the quiz shows answers).
+          description: Correct choices (when the quiz shows answers).
+      required:
+      - isCorrect
+    TestOutput:
+      type: object
+      properties:
+        testCaseId:
+          type: string
+          format: uuid
+          description: Test case.
+        actualOutput:
+          type: string
+          description: Output produced by the sandbox.
+      required:
+      - testCaseId
+      - actualOutput
+    CourseOutlineLesson:
+      type: object
+      properties:
+        lessonId:
+          type: string
+          format: uuid
+          description: Lesson.
+        title:
+          type: string
+          description: Title.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Position.
+        includeInPreview:
+          type: boolean
+          description: Previewable.
+        progressStatus:
+          type: string
+          description: Caller progress.
+      required:
+      - lessonId
+      - title
+      - sortOrder
+      - includeInPreview
+    CourseOutlineChapter:
+      type: object
+      properties:
+        chapterId:
+          type: string
+          format: uuid
+          description: Chapter.
+        title:
+          type: string
+          description: Title.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Position.
+        isScormPackage:
+          type: boolean
+          description: SCORM.
+        lessons:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourseOutlineLesson'
+          description: Lessons.
+      required:
+      - chapterId
+      - title
+      - sortOrder
+      - isScormPackage
+    ScormLaunch:
+      type: object
+      properties:
+        launchUrl:
+          type: string
+          description: URL of the SCORM launch file.
+        runtimeState:
+          description: Saved CMI data.
+      required:
+      - launchUrl
+    DailyCount:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: Day.
+        count:
+          type: integer
+          format: int32
+          description: Count.
+      required:
+      - date
+      - count
+    ProgressBucket:
+      type: object
+      properties:
+        rangeLabel:
+          type: string
+          description: e.g. 0-25%.
+        students:
+          type: integer
+          format: int32
+          description: Students.
+      required:
+      - rangeLabel
+      - students
+    CertificateVerification:
+      type: object
+      properties:
+        valid:
+          type: boolean
+          description: Certificate exists and is published.
+        studentName:
+          type: string
+          description: Student.
+        title:
+          type: string
+          description: Course / cohort.
+        issueDate:
+          type: string
+          format: date
+          description: Issued.
+        expiryDate:
+          type: string
+          format: date
+          description: Expires.
+      required:
+      - valid
+    EvaluatorSlot:
+      type: object
+      properties:
+        evaluatorUserId:
+          type: string
+          format: uuid
+          description: Evaluator.
+        date:
+          type: string
+          format: date
+          description: Date.
+        startTime:
+          type: string
+          format: time
+          pattern: ^\d{2}:\d{2}(:\d{2})?$
+          description: Start.
+        endTime:
+          type: string
+          format: time
+          pattern: ^\d{2}:\d{2}(:\d{2})?$
+          description: End.
+      required:
+      - evaluatorUserId
+      - date
+      - startTime
+      - endTime
+    CohortStudentProgress:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: Student.
+        courseProgress:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourseProgress'
+          description: Per course.
+        assessmentsCompleted:
+          type: integer
+          format: int32
+          description: Completed.
+        assessmentsTotal:
+          type: integer
+          format: int32
+          description: Total.
+      required:
+      - userId
+      - assessmentsCompleted
+      - assessmentsTotal
+    CourseProgress:
+      type: object
+      properties:
+        courseId:
+          type: string
+          format: uuid
+          description: Course.
+        progressPercent:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Completion.
+      required:
+      - courseId
+      - progressPercent
+    BatchEnrollPreview:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: User.
+        alreadyEnrolled:
+          type: boolean
+          description: Already enrolled.
+        paymentRequired:
+          type: boolean
+          description: Payment needed.
+      required:
+      - userId
+      - alreadyEnrolled
+      - paymentRequired
+    BirthdayEntry:
+      type: object
+      properties:
+        personId:
+          type: string
+          format: uuid
+          description: Person.
+        displayName:
+          type: string
+          description: Name.
+        date:
+          type: string
+          format: date
+          description: Birthday / joining date.
+        kind:
+          type: string
+          enum:
+          - birthday
+          - work_anniversary
+          x-extensible-enum: true
+          description: Occasion.
+        role:
+          type: string
+          enum:
+          - student
+          - staff
+          - guardian
+          x-extensible-enum: true
+          description: Role.
+        years:
+          type: integer
+          format: int32
+          description: Age / years of service.
+      required:
+      - personId
+      - displayName
+      - date
+      - kind
+      - role
+    SendResult:
+      type: object
+      properties:
+        queued:
+          type: integer
+          format: int32
+          description: Messages queued.
+        skipped:
+          type: integer
+          format: int32
+          description: Recipients without a usable address.
+        operation:
+          $ref: '#/components/schemas/Operation'
+      required:
+      - queued
+      - skipped
+    LmsStatistics:
+      type: object
+      properties:
+        publishedCourses:
+          type: integer
+          format: int32
+          description: Published courses.
+        students:
+          type: integer
+          format: int32
+          description: Students with an enrolment.
+        enrollments:
+          type: integer
+          format: int32
+          description: Enrolments.
+        certificatesIssued:
+          type: integer
+          format: int32
+          description: Published certificates.
+        completionPercent:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Share of enrolments at 100%.
+      required:
+      - publishedCourses
+      - students
+      - enrollments
+      - certificatesIssued
+      - completionPercent
+    ImpersonationToken:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: Access token acting as the target user (not refreshable).
+        expiresInSeconds:
+          type: integer
+          format: int32
+          description: Lifetime (maximum 1800).
+        impersonatedUserId:
+          type: string
+          format: uuid
+          description: Target user.
+      required:
+      - accessToken
+      - expiresInSeconds
+      - impersonatedUserId
+    ExternalLink:
+      type: object
+      properties:
+        url:
+          type: string
+          description: URL to open (provider meeting, OAuth consent page...).
+        expiresAt:
+          type: string
+          format: date-time
+          description: When the link stops working, if known.
+      required:
+      - url
+    InstitutionCard:
+      type: object
+      properties:
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution.
+        tenantCode:
+          type: string
+          description: Tenant code to sign in with.
+        name:
+          type: string
+          description: Name.
+        city:
+          type: string
+          description: City.
+        logoFileUrl:
+          type: string
+          description: Logo.
+      required:
+      - institutionId
+      - tenantCode
+      - name
+    ReportDefinition:
+      type: object
+      properties:
+        reportCode:
+          type: string
+          description: Report code.
+        module:
+          type: string
+          description: Owning module.
+        title:
+          type: string
+          description: Title.
+        formats:
+          type: array
+          items:
+            type: string
+            description: csv / xlsx / pdf.
+          description: csv / xlsx / pdf.
+        parameters:
+          description: JSON Schema of parameters.
+      required:
+      - reportCode
+      - module
+      - title
+      - formats
+    StockImage:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Image URL.
+        thumbUrl:
+          type: string
+          description: Thumbnail.
+        author:
+          type: string
+          description: Photographer credit.
+      required:
+      - url
+      - thumbUrl
+    GradeInput:
+      type: object
+      properties:
+        points:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Points awarded (omit to leave unchanged).
+        feedback:
+          type: string
+          description: Feedback to the student.
+        teacherComment:
+          type: string
+          description: Private note.
+        status:
+          type: string
+          enum:
+          - graded
+          - excused
+          - not_submitted
+          x-extensible-enum: true
+          description: Grading state (default graded).
+        rubricCellIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+            description: Chosen rubric cells (one per criterion).
+          description: Chosen rubric cells (one per criterion).
+        publish:
+          type: boolean
+          description: Publish to the student immediately.
+    GradebookColumn:
+      type: object
+      properties:
+        contentItemId:
+          type: string
+          format: uuid
+          description: Graded item.
+        title:
+          type: string
+          description: Item title.
+        itemKind:
+          type: string
+          description: Item kind.
+        gradingCategoryId:
+          type: string
+          format: uuid
+          description: Category.
+        points:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Maximum points.
+        weightPercent:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Weight in its category.
+        dueAt:
+          type: string
+          format: date-time
+          description: Due date.
+      required:
+      - contentItemId
+      - title
+      - itemKind
+    GradebookCell:
+      type: object
+      properties:
+        contentItemId:
+          type: string
+          format: uuid
+          description: Item.
+        entryId:
+          type: string
+          format: uuid
+          description: Gradebook entry (absent when not graded yet).
+        points:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Points.
+        status:
+          type: string
+          description: Grading state.
+        isPublished:
+          type: boolean
+          description: Visible to the student.
+        isLate:
+          type: boolean
+          description: Submitted after the due date.
+      required:
+      - contentItemId
+      - status
+      - isPublished
+    GradebookRow:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: Student.
+        studentName:
+          type: string
+          description: Student name.
+        cells:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradebookCell'
+          description: One cell per column.
+        categoryPercents:
+          description: Percentage per grading category.
+        totalPercent:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Weighted total.
+        letterGrade:
+          type: string
+          description: Letter grade from the scale.
+        finalGrade:
+          type: string
+          description: Final grade awarded (cohort enrolment).
+      required:
+      - userId
+      - studentName
+    CohortPerformance:
+      type: object
+      properties:
+        contentItemId:
+          type: string
+          format: uuid
+          description: Item.
+        averagePercent:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Average.
+        medianPercent:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Median.
+        submitted:
+          type: integer
+          format: int32
+          description: Submissions.
+        graded:
+          type: integer
+          format: int32
+          description: Graded.
+        missing:
+          type: integer
+          format: int32
+          description: Not submitted after the due date.
+      required:
+      - contentItemId
+      - submitted
+      - graded
+      - missing
+    RosterEntry:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: Member.
+        displayName:
+          type: string
+          description: Name.
+        email:
+          type: string
+          description: E-mail; returned only to cohort staff and administrators (empty for students, guardians and observers).
+        roleCode:
+          type: string
+          description: Role in the cohort (student, teacher, assistant, observer...).
+        isActive:
+          type: boolean
+          description: Active member.
+        enrollmentId:
+          type: string
+          format: uuid
+          description: Student enrolment.
+        teacherId:
+          type: string
+          format: uuid
+          description: Staff membership.
+      required:
+      - userId
+      - displayName
+      - roleCode
+      - isActive
+    MemberAssignment:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: User.
+        roleId:
+          type: string
+          format: uuid
+          description: Cohort role (staff); omit for students.
+        roleLabel:
+          type: string
+          description: Label shown for the role.
+      required:
+      - userId
+    CalendarItem:
+      type: object
+      properties:
+        itemType:
+          type: string
+          enum:
+          - event
+          - occurrence
+          - due_date
+          - live_class
+          - cohort_session
+          - holiday
+          x-extensible-enum: true
+          description: Kind of item.
+        id:
+          type: string
+          format: uuid
+          description: Record id.
+        title:
+          type: string
+          description: Title.
+        startAt:
+          type: string
+          format: date-time
+          description: Start.
+        endAt:
+          type: string
+          format: date-time
+          description: End.
+        allDay:
+          type: boolean
+          description: All-day item.
+        color:
+          type: string
+          description: Colour.
+        cohortId:
+          type: string
+          format: uuid
+          description: Cohort.
+        contentItemId:
+          type: string
+          format: uuid
+          description: Item due.
+        isCancelled:
+          type: boolean
+          description: Cancelled occurrence.
+        isCompleted:
+          type: boolean
+          description: Submitted / completed by the caller.
+      required:
+      - itemType
+      - id
+      - title
+      - startAt
+    ReleaseStatus:
+      type: object
+      properties:
+        contentItemId:
+          type: string
+          format: uuid
+          description: Item.
+        isReleased:
+          type: boolean
+          description: Released to the student.
+        reason:
+          type: string
+          description: Rule outcome or manual grant.
+        pendingConditions:
+          type: array
+          items:
+            type: string
+            description: Conditions not yet met.
+          description: Conditions not yet met.
+      required:
+      - contentItemId
+      - isReleased
+    UnreadCounts:
+      type: object
+      properties:
+        forumPosts:
+          type: integer
+          format: int32
+          description: Unread discussion posts.
+        notifications:
+          type: integer
+          format: int32
+          description: Unread notifications.
+        mailbox:
+          type: integer
+          format: int32
+          description: Unread internal mail.
+        perCohort:
+          description: Unread posts per cohort id.
+      required:
+      - forumPosts
+      - notifications
+      - mailbox
+    Dependencies:
+      type: object
+      properties:
+        canDelete:
+          type: boolean
+          description: No blocking dependants.
+        blocking:
+          description: Counts of dependent records per type (cohorts, versions, catalogue entries...).
+      required:
+      - canDelete
+    LtiLaunch:
+      type: object
+      properties:
+        launchUrl:
+          type: string
+          description: Tool launch URL.
+        method:
+          type: string
+          description: HTTP method (POST for LTI 1.1 / 1.3 form launch).
+        formFields:
+          description: Signed launch parameters / id_token to auto-submit.
+        expiresAt:
+          type: string
+          format: date-time
+          description: Launch expiry.
+      required:
+      - launchUrl
+      - method
+      - formFields
+    QuizAutosaveResult:
+      type: object
+      properties:
+        savedCount:
+          type: integer
+          format: int32
+          description: Answers stored (stale ones ignored).
+        ignoredStale:
+          type: integer
+          format: int32
+          description: Answers ignored because a newer one is stored.
+        serverTime:
+          type: string
+          format: date-time
+          description: Server clock, for timer correction.
+        deadlineAt:
+          type: string
+          format: date-time
+          description: When the attempt closes (time limit / window).
+        remainingSeconds:
+          type: integer
+          format: int32
+          description: Time left on a timed attempt.
+      required:
+      - savedCount
+      - ignoredStale
+      - serverTime
+    PeerPoints:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: Group member reviewed.
+        points:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Points awarded.
+      required:
+      - userId
+      - points
+    AnswerGrade:
+      type: object
+      properties:
+        questionId:
+          type: string
+          format: uuid
+          description: Question.
+        marks:
+          type: string
+          format: decimal
+          pattern: ^-?\d+(\.\d+)?$
+          description: Marks awarded.
+        feedback:
+          type: string
+          description: Feedback on the answer.
+      required:
+      - questionId
+      - marks
+    GradeEntryInput:
+      type: object
+      properties:
+        contentItemId:
+          type: string
+          format: uuid
+          description: Graded item.
+        userId:
+          type: string
+          format: uuid
+          description: Student.
+        groupId:
+          type: string
+          format: uuid
+          description: Group.
+        etag:
+          type: string
+          description: Concurrency token of the existing entry (send when updating).
+        grade:
+          $ref: '#/components/schemas/GradeInput'
+      required:
+      - contentItemId
+      - grade
+    Availability:
+      type: object
+      properties:
+        available:
+          type: boolean
+          description: The value is free.
+        suggestion:
+          type: string
+          description: A free alternative when not available.
+      required:
+      - available
+    AttendanceSummaryList:
+      type: object
+      description: A page of AttendanceSummary.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceSummary'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    BatchEnrollPreviewList:
+      type: object
+      description: A page of BatchEnrollPreview.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchEnrollPreview'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    BirthdayEntryList:
+      type: object
+      description: A page of BirthdayEntry.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BirthdayEntry'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    CalendarItemList:
+      type: object
+      description: A page of CalendarItem.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarItem'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    CohortPerformanceList:
+      type: object
+      description: A page of CohortPerformance.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CohortPerformance'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    CohortStudentProgressList:
+      type: object
+      description: A page of CohortStudentProgress.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CohortStudentProgress'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    EvaluatorSlotList:
+      type: object
+      description: A page of EvaluatorSlot.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluatorSlot'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    InstitutionCardList:
+      type: object
+      description: A page of InstitutionCard.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstitutionCard'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    LeaveBalanceSummaryList:
+      type: object
+      description: A page of LeaveBalanceSummary.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaveBalanceSummary'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    OperationList:
+      type: object
+      description: A page of Operation.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    ProgressBucketList:
+      type: object
+      description: A page of ProgressBucket.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProgressBucket'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    ReportDefinitionList:
+      type: object
+      description: A page of ReportDefinition.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportDefinition'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    RosterEntryList:
+      type: object
+      description: A page of RosterEntry.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RosterEntry'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    SearchHitList:
+      type: object
+      description: A page of SearchHit.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchHit'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+    StockImageList:
+      type: object
+      description: A page of StockImage.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockImage'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.

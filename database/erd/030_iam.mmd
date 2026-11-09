@@ -1,0 +1,222 @@
+erDiagram
+    iam__user_account["iam.user_account"] {
+        uuid id PK
+        uuid person_id FK "→ people.person (logical)"
+        varchar(150) username
+        varchar(320) email
+        varchar(20) mobile_no
+        text password_hash
+        varchar(30) status "NN"
+        timestamptz email_verified_at
+        timestamptz mobile_verified_at
+        boolean must_reset_password "NN"
+        uuid referred_by_user_id FK
+        timestamptz terms_accepted_at
+        varchar(10) locale
+        varchar(64) timezone
+        timestamptz last_login_at
+        timestamptz account_expires_at
+        integer failed_login_count "NN"
+        uuid last_login_role_id FK
+        timestamptz registered_at
+        date joined_on
+        varchar(100) external_ref
+        text signature
+        boolean use_signature "NN"
+        varchar(40) user_type
+    }
+    iam__role["iam.role"] {
+        uuid id PK
+        varchar(80) code "NN"
+        varchar(120) display_name
+        text description
+        boolean is_system "NN"
+        boolean is_active "NN"
+        integer authority_level
+        uuid parent_role_id FK
+    }
+    iam__permission["iam.permission"] {
+        uuid id PK
+        varchar(120) code UK "NN"
+        varchar(150) display_name
+        text description
+        varchar(50) module_code
+        boolean is_navigation "NN"
+        boolean is_modifiable "NN"
+        boolean applies_to_all_roles "NN"
+        boolean is_object_level "NN"
+    }
+    iam__role_permission["iam.role_permission"] {
+        uuid id PK
+        uuid role_id FK "NN"
+        uuid permission_id FK "NN"
+    }
+    iam__user_role["iam.user_role"] {
+        uuid id PK
+        uuid user_id FK "NN"
+        uuid role_id FK "NN"
+        varchar(30) scope_type "NN"
+        uuid scope_id
+        date valid_from
+        date valid_to
+        boolean is_active "NN"
+    }
+    iam__user_permission["iam.user_permission"] {
+        uuid id PK
+        uuid user_id FK "NN"
+        uuid permission_id FK "NN"
+        varchar(30) effect "NN"
+    }
+    iam__user_department_access["iam.user_department_access"] {
+        uuid id PK
+        uuid user_id FK "NN"
+        uuid department_id FK "NN · → org.department (logical)"
+        boolean is_primary "NN"
+    }
+    iam__auth_token["iam.auth_token"] {
+        uuid id PK
+        uuid user_id FK "NN"
+        varchar(30) token_type "NN"
+        varchar(120) name
+        char(64) token_hash UK "NN"
+        varchar(320) sent_to
+        inet ip_address
+        timestamptz expires_at
+        timestamptz last_used_at
+        timestamptz revoked_at
+        varchar(100) scopes
+    }
+    iam__user_device["iam.user_device"] {
+        uuid id PK
+        uuid user_id FK "NN"
+        text device_identifier "NN"
+        varchar(30) platform "NN"
+        text push_token
+        timestamptz last_seen_at
+        boolean is_active "NN"
+    }
+    iam__user_preference["iam.user_preference"] {
+        uuid id PK
+        uuid user_id FK "NN"
+        varchar(100) pref_key "NN"
+        varchar(500) pref_value
+    }
+    iam__user_session["iam.user_session"] {
+        uuid id PK
+        uuid user_id FK "NN"
+        varchar(128) session_ref UK "NN"
+        uuid device_id FK
+        inet ip_address
+        varchar(500) user_agent
+        timestamptz started_at "NN"
+        timestamptz last_seen_at
+        timestamptz ended_at
+    }
+    iam__mfa_credential["iam.mfa_credential"] {
+        uuid id PK
+        uuid user_id FK "NN"
+        varchar(20) credential_type "NN"
+        varchar(100) label
+        text secret_enc "NN"
+        timestamptz verified_at
+        timestamptz last_used_at
+        boolean is_active "NN"
+    }
+    iam__legacy_credential["iam.legacy_credential"] {
+        uuid id PK
+        uuid user_id FK,UK "NN"
+        varchar(30) algorithm "NN"
+        text password_hash "NN"
+        varchar(120) salt
+        timestamptz migrated_at
+    }
+    iam__outbox_event["iam.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    iam__inbox_event["iam.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    iam__idempotency_key["iam.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    iam__operation["iam.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    iam__setting_definition["iam.setting_definition"] {
+        uuid id PK
+        varchar(100) setting_key UK "NN"
+        varchar(60) category "NN"
+        varchar(20) value_type "NN"
+        varchar(60) allowed_values
+        integer min_value
+        integer max_value
+        varchar(500) default_value
+        varchar(20) allowed_scopes "NN"
+        boolean user_editable "NN"
+        text description
+        integer sort_order "NN"
+    }
+    iam__setting_value["iam.setting_value"] {
+        uuid id PK
+        varchar(20) scope_type "NN"
+        uuid scope_id
+        varchar(100) setting_key FK "NN"
+        varchar(500) value "NN"
+        boolean is_locked "NN"
+    }
+    iam__tenant_directory["iam.tenant_directory"] {
+        varchar(60) tenant_code UK "NN"
+        varchar(20) status "NN"
+        timestamptz synced_at "NN"
+        integer source_version "NN"
+    }
+    iam__user_account |o--o{ iam__user_account : "referred_by_user_id"
+    iam__role |o--o{ iam__user_account : "last_login_role_id"
+    iam__role |o--o{ iam__role : "parent_role_id"
+    iam__role ||--o{ iam__role_permission : "role_id"
+    iam__permission ||--o{ iam__role_permission : "permission_id"
+    iam__user_account ||--o{ iam__user_role : "user_id"
+    iam__role ||--o{ iam__user_role : "role_id"
+    iam__user_account ||--o{ iam__user_permission : "user_id"
+    iam__permission ||--o{ iam__user_permission : "permission_id"
+    iam__user_account ||--o{ iam__user_department_access : "user_id"
+    iam__user_account ||--o{ iam__auth_token : "user_id"
+    iam__user_account ||--o{ iam__user_device : "user_id"
+    iam__user_account ||--o{ iam__user_preference : "user_id"
+    iam__user_account ||--o{ iam__user_session : "user_id"
+    iam__user_device |o--o{ iam__user_session : "device_id"
+    iam__user_account ||--o{ iam__mfa_credential : "user_id"
+    iam__user_account ||--o| iam__legacy_credential : "user_id"
+    iam__setting_definition ||--o{ iam__setting_value : "setting_key"

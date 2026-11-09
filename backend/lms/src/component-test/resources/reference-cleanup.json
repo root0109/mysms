@@ -1,0 +1,1201 @@
+{
+ "module": "lms",
+ "cleanup": [
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.access_log",
+   "column": "user_id",
+   "action": "null the column",
+   "ownerId": "a0f75e84-1ee3-5c40-9b03-528f2542bace",
+   "rowId": "cca84fa0-4942-549d-921c-0cd6369901f6",
+   "otherRowId": "514a6ddf-ec96-5810-98c1-680f64f61ace",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.access_log (tenant_id, accessed_at, cohort_id, user_id, id) VALUES (:tenant, '2026-01-10T09:00:00Z', 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 'a0f75e84-1ee3-5c40-9b03-528f2542bace', 'cca84fa0-4942-549d-921c-0cd6369901f6')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.access_log (tenant_id, accessed_at, cohort_id, user_id, id) VALUES (:tenant, '2026-01-10T09:00:00Z', '2452bf4e-8d10-5137-929d-2c378ae52598', 'a0f75e84-1ee3-5c40-9b03-528f2542bace', '514a6ddf-ec96-5810-98c1-680f64f61ace')",
+   "softDeletable": false
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.annotation",
+   "column": "file_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "f3082fd6-11b6-5171-bddd-a00b6830ca11",
+   "rowId": "3bc9eb66-0b33-5454-9879-736e32a5c447",
+   "otherRowId": "8fb53c44-26d0-58ae-a991-56808f8aec16",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.annotation (tenant_id, user_id, cohort_id, annotation_type, row_version, file_id, id) VALUES (:tenant, 'bec688b9-8a69-5dce-b1f8-7f1de944ce5c', 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 'highlight', 1, 'f3082fd6-11b6-5171-bddd-a00b6830ca11', '3bc9eb66-0b33-5454-9879-736e32a5c447')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.annotation (tenant_id, user_id, cohort_id, annotation_type, row_version, file_id, id) VALUES (:tenant, '0012a456-9fd2-5f73-946c-efb89bb13ac3', '2452bf4e-8d10-5137-929d-2c378ae52598', 'highlight', 1, 'f3082fd6-11b6-5171-bddd-a00b6830ca11', '8fb53c44-26d0-58ae-a991-56808f8aec16')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.annotation",
+   "column": "media_file_id",
+   "action": "null the column",
+   "ownerId": "4db68158-70d2-523a-83a9-43ce14b684ce",
+   "rowId": "e23c1884-d079-524c-aac3-d411eb8688da",
+   "otherRowId": "8b54a900-400d-5b78-98cb-44e93ed95dcb",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.annotation (tenant_id, user_id, cohort_id, annotation_type, row_version, media_file_id, id) VALUES (:tenant, '21791f5e-de91-5b39-b0b3-569359352045', 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 'highlight', 1, '4db68158-70d2-523a-83a9-43ce14b684ce', 'e23c1884-d079-524c-aac3-d411eb8688da')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.annotation (tenant_id, user_id, cohort_id, annotation_type, row_version, media_file_id, id) VALUES (:tenant, '4d96a61f-5c3d-5ae0-b53b-13bcf3d0aa60', '2452bf4e-8d10-5137-929d-2c378ae52598', 'highlight', 1, '4db68158-70d2-523a-83a9-43ce14b684ce', '8b54a900-400d-5b78-98cb-44e93ed95dcb')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.annotation_share",
+   "column": "shared_with_user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "e9c64011-e545-58f9-aa0f-bccd01085c49",
+   "rowId": "eefbee30-7420-5111-abbc-fca4e96328dc",
+   "otherRowId": "2e95d615-ad72-5eb9-a8e6-1fa37a463fd1",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.annotation (tenant_id, user_id, cohort_id, annotation_type, row_version, id) VALUES (:tenant, '5df13931-5d1a-561b-a22a-e1ace3a7b42c', 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 'highlight', 1, '976eeff8-ebee-5710-87bc-da480be5470e') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.annotation_share (tenant_id, annotation_id, row_version, shared_with_user_id, id) VALUES (:tenant, '976eeff8-ebee-5710-87bc-da480be5470e', 1, 'e9c64011-e545-58f9-aa0f-bccd01085c49', 'eefbee30-7420-5111-abbc-fca4e96328dc')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.annotation (tenant_id, user_id, cohort_id, annotation_type, row_version, id) VALUES (:tenant, 'd0a4f1bd-6fd9-5130-8991-70732e22e541', '2452bf4e-8d10-5137-929d-2c378ae52598', 'highlight', 1, '2f830be5-57c9-54de-a312-a6af52bc244d') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.annotation_share (tenant_id, annotation_id, row_version, shared_with_user_id, id) VALUES (:tenant, '2f830be5-57c9-54de-a312-a6af52bc244d', 1, '31e2c4eb-4426-556d-b74f-3dcb6b780203', '2e95d615-ad72-5eb9-a8e6-1fa37a463fd1')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.institution.deleted",
+   "table": "lms.assignment",
+   "column": "institution_id",
+   "action": "null the column",
+   "ownerId": "ce4d7eec-9433-5969-971d-738343e84c5e",
+   "rowId": "0f980b16-64cf-5844-a13d-cb6d22b5377f",
+   "otherRowId": "1409e0b7-a87c-56f5-b869-bd89e41ae0ec",
+   "fixtures": [],
+   "row": "INSERT INTO lms.assignment (tenant_id, title, question, submission_type, row_version, institution_id, id) VALUES (:tenant, 't-title-769a8d3f', 't-question-109beeb2', 'document', 1, 'ce4d7eec-9433-5969-971d-738343e84c5e', '0f980b16-64cf-5844-a13d-cb6d22b5377f')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.assignment (tenant_id, title, question, submission_type, row_version, institution_id, id) VALUES (:tenant, 't-title-37cfa239', 't-question-cfc1922b', 'document', 1, 'ce4d7eec-9433-5969-971d-738343e84c5e', '1409e0b7-a87c-56f5-b869-bd89e41ae0ec')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.assignment_group_member",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "02ab7b04-27fe-595f-a216-a85b0d678a34",
+   "rowId": "d92d479b-f214-504e-ae16-7e3445eceade",
+   "otherRowId": "d69d2508-1dc2-5de9-95c1-55b939dbe1b4",
+   "fixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, id) VALUES (:tenant, 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 't-title-94a546bc', 1, 1, '54fd9eee-473b-5b70-920d-db4d54b5ac56') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.lesson (tenant_id, chapter_id, title, sort_order, row_version, id) VALUES (:tenant, '54fd9eee-473b-5b70-920d-db4d54b5ac56', 't-title-d619c79d', 1, 1, '1067d723-fc9c-5a65-a0a0-2cf14ba43e61') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.content_item (tenant_id, chapter_id, course_id, item_kind, lesson_id, row_version, id) VALUES (:tenant, '54fd9eee-473b-5b70-920d-db4d54b5ac56', 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 'lesson', '1067d723-fc9c-5a65-a0a0-2cf14ba43e61', 1, 'c6a78f65-4a04-52ba-93d8-6705b965358d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.assignment_group (tenant_id, content_item_id, cohort_id, name, row_version, id) VALUES (:tenant, 'c6a78f65-4a04-52ba-93d8-6705b965358d', 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 't-name-43d744ba', 1, '90b702c9-4233-58d2-a16c-8202d8096ea2') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.assignment_group_member (tenant_id, assignment_group_id, content_item_id, row_version, user_id, id) VALUES (:tenant, '90b702c9-4233-58d2-a16c-8202d8096ea2', 'c6a78f65-4a04-52ba-93d8-6705b965358d', 1, '02ab7b04-27fe-595f-a216-a85b0d678a34', 'd92d479b-f214-504e-ae16-7e3445eceade')",
+   "otherFixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-23808069', 1, 'cca9a1bc-4691-5c48-9047-af34412443bc') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, id) VALUES (:tenant, 'cca9a1bc-4691-5c48-9047-af34412443bc', 't-title-94a546bc', 1, 1, '258b96fb-8367-53b3-99ef-35ae89892a7d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.lesson (tenant_id, chapter_id, title, sort_order, row_version, id) VALUES (:tenant, '258b96fb-8367-53b3-99ef-35ae89892a7d', 't-title-d619c79d', 1, 1, 'b9d427e5-ca58-5626-9889-0207b3b85883') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.content_item (tenant_id, chapter_id, course_id, item_kind, lesson_id, row_version, id) VALUES (:tenant, '258b96fb-8367-53b3-99ef-35ae89892a7d', 'cca9a1bc-4691-5c48-9047-af34412443bc', 'lesson', 'b9d427e5-ca58-5626-9889-0207b3b85883', 1, '127185a2-e0a9-53b1-89ec-5f444318740e') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.assignment_group (tenant_id, content_item_id, cohort_id, name, row_version, id) VALUES (:tenant, '127185a2-e0a9-53b1-89ec-5f444318740e', '2452bf4e-8d10-5137-929d-2c378ae52598', 't-name-43d744ba', 1, 'c083841b-869f-59e2-8ab1-560556da19dc') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.assignment_group_member (tenant_id, assignment_group_id, content_item_id, row_version, user_id, id) VALUES (:tenant, 'c083841b-869f-59e2-8ab1-560556da19dc', '127185a2-e0a9-53b1-89ec-5f444318740e', 1, '735789c4-e7f4-59bd-8a53-cb7f0c54d97e', 'd69d2508-1dc2-5de9-95c1-55b939dbe1b4')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.assignment_submission",
+   "column": "attachment_file_id",
+   "action": "null the column",
+   "ownerId": "1a7116d3-dc4c-5f7f-91b2-586eca90b2e1",
+   "rowId": "378e50dd-ede8-57e5-b4a6-859fe33f8ce2",
+   "otherRowId": "70315dd1-f623-5622-b3cd-581485e254e5",
+   "fixtures": [
+    "INSERT INTO lms.assignment (tenant_id, title, question, submission_type, institution_id, row_version, id) VALUES (:tenant, 't-title-46b6177a', 't-question-960d03c7', 'document', '0196f000-0000-7000-8000-00000000a001', 1, '32250c36-1e2f-51da-b0fc-0ad53922b101') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.assignment_submission (tenant_id, assignment_id, user_id, row_version, attachment_file_id, id) VALUES (:tenant, '32250c36-1e2f-51da-b0fc-0ad53922b101', '30661f45-8e72-586a-84a6-f7766045039f', 1, '1a7116d3-dc4c-5f7f-91b2-586eca90b2e1', '378e50dd-ede8-57e5-b4a6-859fe33f8ce2')",
+   "otherFixtures": [
+    "INSERT INTO lms.assignment (tenant_id, title, question, submission_type, institution_id, row_version, id) VALUES (:tenant, 't-title-46b6177a', 't-question-960d03c7', 'document', '7a86f7d0-7e3a-52bd-9804-cb866553556c', 1, '42dc1d4e-027f-52ed-800c-1ce52920cb07') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.assignment_submission (tenant_id, assignment_id, user_id, row_version, attachment_file_id, id) VALUES (:tenant, '42dc1d4e-027f-52ed-800c-1ce52920cb07', '376c92d1-3571-504c-ab60-912869d8c6c0', 1, '1a7116d3-dc4c-5f7f-91b2-586eca90b2e1', '70315dd1-f623-5622-b3cd-581485e254e5')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.bookmark",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "218f0d83-32b6-5e13-a1ed-506c00753f87",
+   "rowId": "a3eb0700-ec8f-5eed-8864-28badc54ba94",
+   "otherRowId": "b1b6055e-9505-5f70-8573-7dcf9e8e0123",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.bookmark (tenant_id, title, url, cohort_id, row_version, user_id, id) VALUES (:tenant, 't-title-11a19319', 'https://example.org/7b458ac4', 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 1, '218f0d83-32b6-5e13-a1ed-506c00753f87', 'a3eb0700-ec8f-5eed-8864-28badc54ba94')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.bookmark (tenant_id, title, url, cohort_id, row_version, user_id, id) VALUES (:tenant, 't-title-b93461f9', 'https://example.org/52216db0', '2452bf4e-8d10-5137-929d-2c378ae52598', 1, '218f0d83-32b6-5e13-a1ed-506c00753f87', 'b1b6055e-9505-5f70-8573-7dcf9e8e0123')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.catalog_banner",
+   "column": "image_file_id",
+   "action": "null the column",
+   "ownerId": "2f8ed06c-ac76-5cad-8e5d-7d43e2ec9860",
+   "rowId": "0a55b6da-84d4-543f-b3ba-4e27e3359b95",
+   "otherRowId": "e01b85db-bc41-5b2b-ac4f-324deba85825",
+   "fixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.catalog_banner (tenant_id, course_id, placement, row_version, image_file_id, id) VALUES (:tenant, 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 'featured', 1, '2f8ed06c-ac76-5cad-8e5d-7d43e2ec9860', '0a55b6da-84d4-543f-b3ba-4e27e3359b95')",
+   "otherFixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-23808069', 1, 'cca9a1bc-4691-5c48-9047-af34412443bc') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.catalog_banner (tenant_id, course_id, placement, row_version, image_file_id, id) VALUES (:tenant, 'cca9a1bc-4691-5c48-9047-af34412443bc', 'featured', 1, '2f8ed06c-ac76-5cad-8e5d-7d43e2ec9860', 'e01b85db-bc41-5b2b-ac4f-324deba85825')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.chapter",
+   "column": "scorm_package_file_id",
+   "action": "null the column",
+   "ownerId": "14140eca-2eb0-5535-b9a1-a514579ef145",
+   "rowId": "d1106510-4fc4-5272-9b2b-8c7ee947351c",
+   "otherRowId": "e9f245da-c754-56d0-9330-f937bae5b84b",
+   "fixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-6732be5b', 1, 'f4d46540-46ce-5ab7-b39b-504f7710036c') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, scorm_package_file_id, id) VALUES (:tenant, 'f4d46540-46ce-5ab7-b39b-504f7710036c', 't-title-978d4f7e', 5, 1, '14140eca-2eb0-5535-b9a1-a514579ef145', 'd1106510-4fc4-5272-9b2b-8c7ee947351c')",
+   "otherFixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-6732be5b', 1, '72799303-51bf-56b5-a056-9095fde54a00') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, scorm_package_file_id, id) VALUES (:tenant, '72799303-51bf-56b5-a056-9095fde54a00', 't-title-ea62000a', 5, 1, '14140eca-2eb0-5535-b9a1-a514579ef145', 'e9f245da-c754-56d0-9330-f937bae5b84b')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.academic_term.deleted",
+   "table": "lms.cohort",
+   "column": "academic_term_id",
+   "action": "null the column",
+   "ownerId": "86ee5b8d-487c-521a-8430-99575e5e97db",
+   "rowId": "21986d0a-365a-57d6-89a3-4e1afba6cd1e",
+   "otherRowId": "39fa3bce-f74f-58f3-ada3-6b85bb237aa8",
+   "fixtures": [],
+   "row": "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, academic_term_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-8b09dda8', '2026-01-10', '2026-01-20', 't-timezone-fee86580', 1, '86ee5b8d-487c-521a-8430-99575e5e97db', '21986d0a-365a-57d6-89a3-4e1afba6cd1e')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, academic_term_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-30255643', '2026-01-10', '2026-01-20', 't-timezone-c372f08b', 1, '86ee5b8d-487c-521a-8430-99575e5e97db', '39fa3bce-f74f-58f3-ada3-6b85bb237aa8')",
+   "softDeletable": true
+  },
+  {
+   "event": "comms.message_template.deleted",
+   "table": "lms.cohort",
+   "column": "confirmation_template_id",
+   "action": "null the column",
+   "ownerId": "c72d899d-5a0b-5a9d-af4f-1f45e9e40fea",
+   "rowId": "e0cd1919-26bb-56fb-9eef-ac0c8f49e7cb",
+   "otherRowId": "31604bec-6952-5897-a3f4-950eef9c84b8",
+   "fixtures": [],
+   "row": "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, confirmation_template_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-34c8c564', '2026-01-10', '2026-01-20', 't-timezone-b99c4e93', 1, 'c72d899d-5a0b-5a9d-af4f-1f45e9e40fea', 'e0cd1919-26bb-56fb-9eef-ac0c8f49e7cb')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, confirmation_template_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-2a3db4fb', '2026-01-10', '2026-01-20', 't-timezone-555a1c80', 1, 'c72d899d-5a0b-5a9d-af4f-1f45e9e40fea', '31604bec-6952-5897-a3f4-950eef9c84b8')",
+   "softDeletable": true
+  },
+  {
+   "event": "assessment.grading_scheme.deleted",
+   "table": "lms.cohort",
+   "column": "grading_scheme_id",
+   "action": "null the column",
+   "ownerId": "be157ac6-6f12-50f5-8a49-668071e78510",
+   "rowId": "d0738a6b-f71b-51da-a228-4e87d930a00d",
+   "otherRowId": "41175454-1c77-57fd-ad64-de7c0c6a027a",
+   "fixtures": [],
+   "row": "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, grading_scheme_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-c8e24b44', '2026-01-10', '2026-01-20', 't-timezone-ef3480ab', 1, 'be157ac6-6f12-50f5-8a49-668071e78510', 'd0738a6b-f71b-51da-a228-4e87d930a00d')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, grading_scheme_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-7271835f', '2026-01-10', '2026-01-20', 't-timezone-16cb1d9d', 1, 'be157ac6-6f12-50f5-8a49-668071e78510', '41175454-1c77-57fd-ad64-de7c0c6a027a')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.cohort",
+   "column": "intro_video_file_id",
+   "action": "null the column",
+   "ownerId": "27597233-2b56-52ec-b6e6-f1316326c012",
+   "rowId": "417a62ff-7089-5b84-b2bc-b4bc7243335e",
+   "otherRowId": "26aac7dd-175c-5a4a-9717-039f5ad2ffac",
+   "fixtures": [],
+   "row": "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, intro_video_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-0f2652e9', '2026-01-10', '2026-01-20', 't-timezone-b358376c', 1, '27597233-2b56-52ec-b6e6-f1316326c012', '417a62ff-7089-5b84-b2bc-b4bc7243335e')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, intro_video_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-83da05ee', '2026-01-10', '2026-01-20', 't-timezone-a9cf6f54', 1, '27597233-2b56-52ec-b6e6-f1316326c012', '26aac7dd-175c-5a4a-9717-039f5ad2ffac')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.cohort",
+   "column": "meta_image_file_id",
+   "action": "null the column",
+   "ownerId": "4ca37f81-c556-5ae0-92e3-b01c80e120f0",
+   "rowId": "51b0377b-90a1-5976-ac6e-cb56a544c019",
+   "otherRowId": "2feed9a4-6f29-5729-aff7-0a8ad57466cb",
+   "fixtures": [],
+   "row": "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, meta_image_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-6c8d392f', '2026-01-10', '2026-01-20', 't-timezone-618b5d44', 1, '4ca37f81-c556-5ae0-92e3-b01c80e120f0', '51b0377b-90a1-5976-ac6e-cb56a544c019')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, meta_image_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-b80f450f', '2026-01-10', '2026-01-20', 't-timezone-76d5011b', 1, '4ca37f81-c556-5ae0-92e3-b01c80e120f0', '2feed9a4-6f29-5729-aff7-0a8ad57466cb')",
+   "softDeletable": true
+  },
+  {
+   "event": "academics.program.deleted",
+   "table": "lms.cohort",
+   "column": "program_id",
+   "action": "null the column",
+   "ownerId": "8d9d145a-0823-56b5-a837-351710cb6ad5",
+   "rowId": "40f7be3b-b9e7-53ac-b184-d9e02bf06c4b",
+   "otherRowId": "6cc73207-6f99-5b5d-a6f7-671335b514e9",
+   "fixtures": [],
+   "row": "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, program_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac301514', '2026-01-10', '2026-01-20', 't-timezone-f38f3de0', 1, '8d9d145a-0823-56b5-a837-351710cb6ad5', '40f7be3b-b9e7-53ac-b184-d9e02bf06c4b')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, program_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-59fe2e18', '2026-01-10', '2026-01-20', 't-timezone-cbae6c40', 1, '8d9d145a-0823-56b5-a837-351710cb6ad5', '6cc73207-6f99-5b5d-a6f7-671335b514e9')",
+   "softDeletable": true
+  },
+  {
+   "event": "finance.acquisition_source.deleted",
+   "table": "lms.cohort_enrollment",
+   "column": "acquisition_source_id",
+   "action": "null the column",
+   "ownerId": "d1850ec5-b2a5-5aa4-81a8-5a1ec8da1bf4",
+   "rowId": "e03d5c76-975d-5ede-b916-7485f16ffbc9",
+   "otherRowId": "c2b35297-f586-53dc-a461-5349abc983e6",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-9e11fbbb', '2026-01-10', '2026-01-20', 't-timezone-e8443c71', 1, 'd0237c76-06d1-5735-a946-29750a1b97ba') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.cohort_enrollment (tenant_id, cohort_id, user_id, row_version, acquisition_source_id, id) VALUES (:tenant, 'd0237c76-06d1-5735-a946-29750a1b97ba', '77773a77-f62b-5fea-b8e4-5ab58cad3ed6', 1, 'd1850ec5-b2a5-5aa4-81a8-5a1ec8da1bf4', 'e03d5c76-975d-5ede-b916-7485f16ffbc9')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-9e11fbbb', '2026-01-10', '2026-01-20', 't-timezone-e8443c71', 1, '071266a2-b2ef-56fc-bd8c-e8936a04008e') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.cohort_enrollment (tenant_id, cohort_id, user_id, row_version, acquisition_source_id, id) VALUES (:tenant, '071266a2-b2ef-56fc-bd8c-e8936a04008e', '2b733e6a-7213-57b7-ad9b-eb8a898cb8c5', 1, 'd1850ec5-b2a5-5aa4-81a8-5a1ec8da1bf4', 'c2b35297-f586-53dc-a461-5349abc983e6')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.cohort_enrollment",
+   "column": "graded_by",
+   "action": "null the column",
+   "ownerId": "b1745fda-4306-5812-a968-a0c919c037ca",
+   "rowId": "18d2256e-19be-5085-8cb6-00f51388547a",
+   "otherRowId": "b922b0eb-125d-5ea2-9e9f-57d0361be5fe",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-9e11fbbb', '2026-01-10', '2026-01-20', 't-timezone-e8443c71', 1, 'd0237c76-06d1-5735-a946-29750a1b97ba') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.cohort_enrollment (tenant_id, cohort_id, user_id, row_version, graded_by, id) VALUES (:tenant, 'd0237c76-06d1-5735-a946-29750a1b97ba', '71bc7aa1-1079-5143-8978-9fa38bbf2dd8', 1, 'b1745fda-4306-5812-a968-a0c919c037ca', '18d2256e-19be-5085-8cb6-00f51388547a')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-9e11fbbb', '2026-01-10', '2026-01-20', 't-timezone-e8443c71', 1, '071266a2-b2ef-56fc-bd8c-e8936a04008e') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.cohort_enrollment (tenant_id, cohort_id, user_id, row_version, graded_by, id) VALUES (:tenant, '071266a2-b2ef-56fc-bd8c-e8936a04008e', '31ac0a1a-c339-5315-aa3a-89413db01f0c', 1, 'b1745fda-4306-5812-a968-a0c919c037ca', 'b922b0eb-125d-5ea2-9e9f-57d0361be5fe')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.holiday.deleted",
+   "table": "lms.cohort_holiday",
+   "column": "holiday_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "f6ac24fc-9451-570d-bca4-89730c5833da",
+   "rowId": "6894cc0f-68ce-5df6-a822-d7de8d401d9c",
+   "otherRowId": "82d95b44-886e-54a1-99d9-b5cae8b92d0e",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.cohort_holiday (tenant_id, cohort_id, title, start_date, end_date, row_version, holiday_id, id) VALUES (:tenant, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 't-title-5e73e784', '2026-01-10', '2026-01-20', 1, 'f6ac24fc-9451-570d-bca4-89730c5833da', '6894cc0f-68ce-5df6-a822-d7de8d401d9c')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.cohort_holiday (tenant_id, cohort_id, title, start_date, end_date, row_version, holiday_id, id) VALUES (:tenant, '2452bf4e-8d10-5137-929d-2c378ae52598', 't-title-9c9a8989', '2026-01-10', '2026-01-20', 1, 'f6ac24fc-9451-570d-bca4-89730c5833da', '82d95b44-886e-54a1-99d9-b5cae8b92d0e')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.role.deleted",
+   "table": "lms.cohort_teacher",
+   "column": "role_id",
+   "action": "null the column",
+   "ownerId": "a021c4a4-bfc9-5d70-a2e4-d61a953a832b",
+   "rowId": "ab4d8a46-0947-5f67-bc31-a98e79dbd1da",
+   "otherRowId": "2de7a1c0-ad35-5012-87d1-0c11b60b1578",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-9e11fbbb', '2026-01-10', '2026-01-20', 't-timezone-e8443c71', 1, 'd0237c76-06d1-5735-a946-29750a1b97ba') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.cohort_teacher (tenant_id, cohort_id, user_id, row_version, role_id, id) VALUES (:tenant, 'd0237c76-06d1-5735-a946-29750a1b97ba', 'dbf1ae8a-b4b4-5e02-a641-2a11a8eeb6e8', 1, 'a021c4a4-bfc9-5d70-a2e4-d61a953a832b', 'ab4d8a46-0947-5f67-bc31-a98e79dbd1da')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-9e11fbbb', '2026-01-10', '2026-01-20', 't-timezone-e8443c71', 1, '071266a2-b2ef-56fc-bd8c-e8936a04008e') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.cohort_teacher (tenant_id, cohort_id, user_id, row_version, role_id, id) VALUES (:tenant, '071266a2-b2ef-56fc-bd8c-e8936a04008e', '921c2682-92ad-52b9-899d-e3e463db4e9b', 1, 'a021c4a4-bfc9-5d70-a2e4-d61a953a832b', '2de7a1c0-ad35-5012-87d1-0c11b60b1578')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.content_item_rating",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "065e9282-652f-5e4d-a06b-8e7ccd09e80c",
+   "rowId": "e9570779-dc47-5fc0-ab8c-b46e8b262c4d",
+   "otherRowId": "95cd5cd2-3330-5783-8c01-344eb6bdae25",
+   "fixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, id) VALUES (:tenant, 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 't-title-94a546bc', 1, 1, '54fd9eee-473b-5b70-920d-db4d54b5ac56') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.lesson (tenant_id, chapter_id, title, sort_order, row_version, id) VALUES (:tenant, '54fd9eee-473b-5b70-920d-db4d54b5ac56', 't-title-d619c79d', 1, 1, '1067d723-fc9c-5a65-a0a0-2cf14ba43e61') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.content_item (tenant_id, chapter_id, course_id, item_kind, lesson_id, row_version, id) VALUES (:tenant, '54fd9eee-473b-5b70-920d-db4d54b5ac56', 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 'lesson', '1067d723-fc9c-5a65-a0a0-2cf14ba43e61', 1, 'c6a78f65-4a04-52ba-93d8-6705b965358d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.content_item_rating (tenant_id, content_item_id, cohort_id, row_version, user_id, id) VALUES (:tenant, 'c6a78f65-4a04-52ba-93d8-6705b965358d', 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 1, '065e9282-652f-5e4d-a06b-8e7ccd09e80c', 'e9570779-dc47-5fc0-ab8c-b46e8b262c4d')",
+   "otherFixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-23808069', 1, 'cca9a1bc-4691-5c48-9047-af34412443bc') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, id) VALUES (:tenant, 'cca9a1bc-4691-5c48-9047-af34412443bc', 't-title-94a546bc', 1, 1, '258b96fb-8367-53b3-99ef-35ae89892a7d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.lesson (tenant_id, chapter_id, title, sort_order, row_version, id) VALUES (:tenant, '258b96fb-8367-53b3-99ef-35ae89892a7d', 't-title-d619c79d', 1, 1, 'b9d427e5-ca58-5626-9889-0207b3b85883') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.content_item (tenant_id, chapter_id, course_id, item_kind, lesson_id, row_version, id) VALUES (:tenant, '258b96fb-8367-53b3-99ef-35ae89892a7d', 'cca9a1bc-4691-5c48-9047-af34412443bc', 'lesson', 'b9d427e5-ca58-5626-9889-0207b3b85883', 1, '127185a2-e0a9-53b1-89ec-5f444318740e') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.content_item_rating (tenant_id, content_item_id, cohort_id, row_version, user_id, id) VALUES (:tenant, '127185a2-e0a9-53b1-89ec-5f444318740e', '2452bf4e-8d10-5137-929d-2c378ae52598', 1, '49355ab6-aca0-5079-a524-4275b97eaa00', '95cd5cd2-3330-5783-8c01-344eb6bdae25')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.content_view_session",
+   "column": "file_id",
+   "action": "null the column",
+   "ownerId": "b1aadd06-61fd-5a58-a840-989e69083dcd",
+   "rowId": "db6eb4ce-5ffe-56d2-8562-0d845bfe8fd9",
+   "otherRowId": "d7e1d47e-f940-5bcd-b0a2-623050d685e0",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.content_view_session (tenant_id, user_id, cohort_id, started_at, row_version, file_id, id) VALUES (:tenant, '4a9d8b1c-441f-56a6-8345-3bb67179f091', 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', '2026-01-10T09:00:00Z', 1, 'b1aadd06-61fd-5a58-a840-989e69083dcd', 'db6eb4ce-5ffe-56d2-8562-0d845bfe8fd9')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.content_view_session (tenant_id, user_id, cohort_id, started_at, row_version, file_id, id) VALUES (:tenant, '8c43d874-e984-5e48-af03-93c79eb3405f', '2452bf4e-8d10-5137-929d-2c378ae52598', '2026-01-10T09:00:00Z', 1, 'b1aadd06-61fd-5a58-a840-989e69083dcd', 'd7e1d47e-f940-5bcd-b0a2-623050d685e0')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.content_view_session",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "8445f6c2-bdfa-5283-82d7-8e157afbe71a",
+   "rowId": "3021341d-1e60-54f7-8df6-244400f65734",
+   "otherRowId": "cb35b5bf-3ee3-5267-92f2-f7df21e1f363",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.content_view_session (tenant_id, cohort_id, started_at, row_version, user_id, id) VALUES (:tenant, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', '2026-01-10T09:00:00Z', 1, '8445f6c2-bdfa-5283-82d7-8e157afbe71a', '3021341d-1e60-54f7-8df6-244400f65734')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.content_view_session (tenant_id, cohort_id, started_at, row_version, user_id, id) VALUES (:tenant, '2452bf4e-8d10-5137-929d-2c378ae52598', '2026-01-10T09:00:00Z', 1, '8445f6c2-bdfa-5283-82d7-8e157afbe71a', 'cb35b5bf-3ee3-5267-92f2-f7df21e1f363')",
+   "softDeletable": true
+  },
+  {
+   "event": "assessment.grading_scheme.deleted",
+   "table": "lms.course",
+   "column": "grading_scheme_id",
+   "action": "null the column",
+   "ownerId": "ca90f3fb-9b1f-56d9-bc9f-de426ea2f9fc",
+   "rowId": "fa10e055-960f-5d48-81a9-c7da46f60036",
+   "otherRowId": "07724951-4e54-523f-aab4-94f06e605427",
+   "fixtures": [],
+   "row": "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, grading_scheme_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-92979efc', 1, 'ca90f3fb-9b1f-56d9-bc9f-de426ea2f9fc', 'fa10e055-960f-5d48-81a9-c7da46f60036')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, grading_scheme_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-871e7652', 1, 'ca90f3fb-9b1f-56d9-bc9f-de426ea2f9fc', '07724951-4e54-523f-aab4-94f06e605427')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.course",
+   "column": "image_file_id",
+   "action": "null the column",
+   "ownerId": "0ab99091-58e1-580e-9da3-9eb0f8baf9ad",
+   "rowId": "a72537bf-a935-531a-888f-6fad0a0a0960",
+   "otherRowId": "5fe61894-c985-55bf-9dff-fb973729fbf9",
+   "fixtures": [],
+   "row": "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, image_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-33916133', 1, '0ab99091-58e1-580e-9da3-9eb0f8baf9ad', 'a72537bf-a935-531a-888f-6fad0a0a0960')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, image_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-6db1efa9', 1, '0ab99091-58e1-580e-9da3-9eb0f8baf9ad', '5fe61894-c985-55bf-9dff-fb973729fbf9')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.course_author_profile",
+   "column": "photo_file_id",
+   "action": "null the column",
+   "ownerId": "435c0aac-c749-59c8-b33a-9c2d6152dbf3",
+   "rowId": "c8ef0963-90e4-5720-b3d2-f3c88bd43de1",
+   "otherRowId": "428a2aff-c78a-56dc-98b4-6f1e11732fda",
+   "fixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.course_author_profile (tenant_id, course_id, name, row_version, photo_file_id, id) VALUES (:tenant, 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 't-name-69e062f6', 1, '435c0aac-c749-59c8-b33a-9c2d6152dbf3', 'c8ef0963-90e4-5720-b3d2-f3c88bd43de1')",
+   "otherFixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-23808069', 1, 'cca9a1bc-4691-5c48-9047-af34412443bc') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.course_author_profile (tenant_id, course_id, name, row_version, photo_file_id, id) VALUES (:tenant, 'cca9a1bc-4691-5c48-9047-af34412443bc', 't-name-a1f114e2', 1, '435c0aac-c749-59c8-b33a-9c2d6152dbf3', '428a2aff-c78a-56dc-98b4-6f1e11732fda')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.course_testimonial",
+   "column": "photo_file_id",
+   "action": "null the column",
+   "ownerId": "aba0a45f-2aea-5365-b1ba-323ac83abcc3",
+   "rowId": "655b101c-a421-571e-8160-ff6c094e5285",
+   "otherRowId": "da4a3035-fee3-52fe-95bd-d8997c35784a",
+   "fixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.course_testimonial (tenant_id, course_id, row_version, photo_file_id, id) VALUES (:tenant, 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 1, 'aba0a45f-2aea-5365-b1ba-323ac83abcc3', '655b101c-a421-571e-8160-ff6c094e5285')",
+   "otherFixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-23808069', 1, 'cca9a1bc-4691-5c48-9047-af34412443bc') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.course_testimonial (tenant_id, course_id, row_version, photo_file_id, id) VALUES (:tenant, 'cca9a1bc-4691-5c48-9047-af34412443bc', 1, 'aba0a45f-2aea-5365-b1ba-323ac83abcc3', 'da4a3035-fee3-52fe-95bd-d8997c35784a')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.institution.deleted",
+   "table": "lms.discussion_prompt",
+   "column": "institution_id",
+   "action": "null the column",
+   "ownerId": "91d3d682-d2d1-5f39-875c-9e5e60b7cf87",
+   "rowId": "a2a51249-8023-578f-8b85-8bf30a5fc123",
+   "otherRowId": "3d144efa-8c57-5d7c-8027-81159f973816",
+   "fixtures": [],
+   "row": "INSERT INTO lms.discussion_prompt (tenant_id, title, row_version, institution_id, id) VALUES (:tenant, 't-title-52cecccb', 1, '91d3d682-d2d1-5f39-875c-9e5e60b7cf87', 'a2a51249-8023-578f-8b85-8bf30a5fc123')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.discussion_prompt (tenant_id, title, row_version, institution_id, id) VALUES (:tenant, 't-title-1b4f7e87', 1, '91d3d682-d2d1-5f39-875c-9e5e60b7cf87', '3d144efa-8c57-5d7c-8027-81159f973816')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.drive_item",
+   "column": "file_id",
+   "action": "null the column",
+   "ownerId": "dac85aff-ca9f-59c0-bdd8-6b9fa4d445c5",
+   "rowId": "58155799-8b6a-537a-a5c4-25cc173e1745",
+   "otherRowId": "0e54b8fc-416f-54ed-bb8d-c8bbe93291b4",
+   "fixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.drive_item (tenant_id, owner_user_id, title, link_url, course_id, row_version, file_id, id) VALUES (:tenant, '2dcb50de-228d-55b6-a2fd-4c7dde60e96b', 't-title-717694c4', 'https://example.org/drive', 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 1, 'dac85aff-ca9f-59c0-bdd8-6b9fa4d445c5', '58155799-8b6a-537a-a5c4-25cc173e1745')",
+   "otherFixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-23808069', 1, 'cca9a1bc-4691-5c48-9047-af34412443bc') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.drive_item (tenant_id, owner_user_id, title, link_url, course_id, row_version, file_id, id) VALUES (:tenant, 'dcfcf0c8-32ea-5709-96fb-b79dfab94794', 't-title-8e3616c1', 'https://example.org/drive', 'cca9a1bc-4691-5c48-9047-af34412443bc', 1, 'dac85aff-ca9f-59c0-bdd8-6b9fa4d445c5', '0e54b8fc-416f-54ed-bb8d-c8bbe93291b4')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.drive_item",
+   "column": "owner_user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "aa7cd5bb-947f-5c7c-93a5-432af48cedda",
+   "rowId": "f412639e-1750-561b-8cd7-a6a313693ebe",
+   "otherRowId": "906da2fa-ec7a-597a-b171-01208f04e305",
+   "fixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.drive_item (tenant_id, title, link_url, course_id, row_version, owner_user_id, id) VALUES (:tenant, 't-title-f2aa399b', 'https://example.org/drive', 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 1, 'aa7cd5bb-947f-5c7c-93a5-432af48cedda', 'f412639e-1750-561b-8cd7-a6a313693ebe')",
+   "otherFixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-23808069', 1, 'cca9a1bc-4691-5c48-9047-af34412443bc') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.drive_item (tenant_id, title, link_url, course_id, row_version, owner_user_id, id) VALUES (:tenant, 't-title-869bee04', 'https://example.org/drive', 'cca9a1bc-4691-5c48-9047-af34412443bc', 1, 'aa7cd5bb-947f-5c7c-93a5-432af48cedda', '906da2fa-ec7a-597a-b171-01208f04e305')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.drive_item_share",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "b1b42411-39ad-5202-adf1-1bdfd03f485b",
+   "rowId": "98ef9f64-2172-5616-9508-e12f3fccb045",
+   "otherRowId": "5a576424-5458-5e0c-be49-ab4c3b789381",
+   "fixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.drive_item (tenant_id, owner_user_id, title, link_url, course_id, row_version, id) VALUES (:tenant, '1270e970-96a7-523a-83f8-611498502d75', 't-title-941dfa27', 'https://example.org/drive', 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 1, '4cdba939-211e-5588-9e9c-4f313fe0030d') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.drive_item_share (tenant_id, drive_item_id, row_version, user_id, id) VALUES (:tenant, '4cdba939-211e-5588-9e9c-4f313fe0030d', 1, 'b1b42411-39ad-5202-adf1-1bdfd03f485b', '98ef9f64-2172-5616-9508-e12f3fccb045')",
+   "otherFixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-23808069', 1, 'cca9a1bc-4691-5c48-9047-af34412443bc') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.drive_item (tenant_id, owner_user_id, title, link_url, course_id, row_version, id) VALUES (:tenant, 'e0176916-65d5-5895-ba72-61e156d7df91', 't-title-941dfa27', 'https://example.org/drive', 'cca9a1bc-4691-5c48-9047-af34412443bc', 1, 'dc8ff1a1-ad02-5c25-a17d-1cfc2032b860') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.drive_item_share (tenant_id, drive_item_id, row_version, user_id, id) VALUES (:tenant, 'dc8ff1a1-ad02-5c25-a17d-1cfc2032b860', 1, '8c110864-c95d-5c96-abba-3d288694a466', '5a576424-5458-5e0c-be49-ab4c3b789381')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.ebook",
+   "column": "file_id",
+   "action": "null the column",
+   "ownerId": "32c23e87-a0f7-5deb-a40d-eb9dd3edfeda",
+   "rowId": "10ce0f2e-c5e2-5493-9a8f-0ba14f4a5b27",
+   "otherRowId": "9290568d-7398-5d40-ae50-beb45c680228",
+   "fixtures": [],
+   "row": "INSERT INTO lms.ebook (tenant_id, institution_id, title, row_version, file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-aacadc63', 1, '32c23e87-a0f7-5deb-a40d-eb9dd3edfeda', '10ce0f2e-c5e2-5493-9a8f-0ba14f4a5b27')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.ebook (tenant_id, institution_id, title, row_version, file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-9c9dc977', 1, '32c23e87-a0f7-5deb-a40d-eb9dd3edfeda', '9290568d-7398-5d40-ae50-beb45c680228')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.institution.deleted",
+   "table": "lms.ebook",
+   "column": "institution_id",
+   "action": "null the column",
+   "ownerId": "a507a4ec-ea9b-528f-8264-6bcd9a2aceb0",
+   "rowId": "aae54c08-ce21-5180-b568-d580e7729372",
+   "otherRowId": "3c09bc8a-06a5-519d-9503-46487cd755b9",
+   "fixtures": [],
+   "row": "INSERT INTO lms.ebook (tenant_id, title, row_version, institution_id, id) VALUES (:tenant, 't-title-27a1e2a4', 1, 'a507a4ec-ea9b-528f-8264-6bcd9a2aceb0', 'aae54c08-ce21-5180-b568-d580e7729372')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.ebook (tenant_id, title, row_version, institution_id, id) VALUES (:tenant, 't-title-891244a8', 1, 'a507a4ec-ea9b-528f-8264-6bcd9a2aceb0', '3c09bc8a-06a5-519d-9503-46487cd755b9')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.ebook",
+   "column": "source_file_id",
+   "action": "null the column",
+   "ownerId": "cbec7576-a80c-56c8-8c80-b2775438b6df",
+   "rowId": "77c7f093-dc0b-5982-a548-8b7657808609",
+   "otherRowId": "fb6005f4-913f-5f31-9dde-39193f02d06e",
+   "fixtures": [],
+   "row": "INSERT INTO lms.ebook (tenant_id, institution_id, title, row_version, source_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-6a475299', 1, 'cbec7576-a80c-56c8-8c80-b2775438b6df', '77c7f093-dc0b-5982-a548-8b7657808609')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.ebook (tenant_id, institution_id, title, row_version, source_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-77d5647f', 1, 'cbec7576-a80c-56c8-8c80-b2775438b6df', 'fb6005f4-913f-5f31-9dde-39193f02d06e')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.enrollment_request",
+   "column": "decided_by",
+   "action": "null the column",
+   "ownerId": "2cc4d61e-db75-5750-9c51-9c57ca530ece",
+   "rowId": "43cafaa3-6fc3-524a-9bbc-fe902b1d762c",
+   "otherRowId": "7c46b875-8996-51ef-91f9-109bad622c8c",
+   "fixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-6732be5b', 1, 'f4d46540-46ce-5ab7-b39b-504f7710036c') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.enrollment_request (tenant_id, course_id, user_id, row_version, decided_by, id) VALUES (:tenant, 'f4d46540-46ce-5ab7-b39b-504f7710036c', '709cc25b-a0c4-557c-a83e-feda0c9df3e5', 1, '2cc4d61e-db75-5750-9c51-9c57ca530ece', '43cafaa3-6fc3-524a-9bbc-fe902b1d762c')",
+   "otherFixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-6732be5b', 1, '72799303-51bf-56b5-a056-9095fde54a00') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.enrollment_request (tenant_id, course_id, user_id, row_version, decided_by, id) VALUES (:tenant, '72799303-51bf-56b5-a056-9095fde54a00', '7e77c587-fffe-597f-904e-4a8272464af6', 1, '2cc4d61e-db75-5750-9c51-9c57ca530ece', '7c46b875-8996-51ef-91f9-109bad622c8c')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.enrollment_request",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "7b21c311-79c2-57b1-af9f-f635ba012b67",
+   "rowId": "eca344d2-4a05-5e44-a7fa-5a5e7ad1d755",
+   "otherRowId": "25d079a0-910b-5637-ac27-6897bc1baf7a",
+   "fixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-6732be5b', 1, 'f4d46540-46ce-5ab7-b39b-504f7710036c') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.enrollment_request (tenant_id, course_id, row_version, user_id, id) VALUES (:tenant, 'f4d46540-46ce-5ab7-b39b-504f7710036c', 1, '7b21c311-79c2-57b1-af9f-f635ba012b67', 'eca344d2-4a05-5e44-a7fa-5a5e7ad1d755')",
+   "otherFixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-6732be5b', 1, '72799303-51bf-56b5-a056-9095fde54a00') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.enrollment_request (tenant_id, course_id, row_version, user_id, id) VALUES (:tenant, '72799303-51bf-56b5-a056-9095fde54a00', 1, 'b8ba9500-91bf-5885-8252-59b205cd8771', '25d079a0-910b-5637-ac27-6897bc1baf7a')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.institution.deleted",
+   "table": "lms.external_tool_institution",
+   "column": "institution_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "981484a8-719d-5670-80c1-1b54e5295c94",
+   "rowId": "b006d377-cca0-575d-b74b-196429c0c5b9",
+   "otherRowId": "43e27379-b8f8-5a5e-9183-abfe5751b253",
+   "fixtures": [
+    "INSERT INTO lms.external_tool (tenant_id, title, row_version, id) VALUES (:tenant, 't-title-0e16b1bd', 1, '11fcdfb3-c05f-53ba-84b4-21775b7d35cb') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.external_tool_institution (tenant_id, external_tool_id, row_version, institution_id, id) VALUES (:tenant, '11fcdfb3-c05f-53ba-84b4-21775b7d35cb', 1, '981484a8-719d-5670-80c1-1b54e5295c94', 'b006d377-cca0-575d-b74b-196429c0c5b9')",
+   "otherFixtures": [
+    "INSERT INTO lms.external_tool (tenant_id, title, row_version, id) VALUES (:tenant, 't-title-0e16b1bd', 1, 'f818c0a9-2f47-5ab1-8a22-81eb39c5b2c6') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.external_tool_institution (tenant_id, external_tool_id, row_version, institution_id, id) VALUES (:tenant, 'f818c0a9-2f47-5ab1-8a22-81eb39c5b2c6', 1, '3551f8c6-781d-511f-ae2d-be4b51062941', '43e27379-b8f8-5a5e-9183-abfe5751b253')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.institution.deleted",
+   "table": "lms.external_tool_resource",
+   "column": "institution_id",
+   "action": "null the column",
+   "ownerId": "19df473f-9131-52f8-9128-f3fbaece46d2",
+   "rowId": "169e7865-5998-5d2f-a458-48aea94fe8f1",
+   "otherRowId": "db7314bd-41a0-5e62-a0bc-b6a13e9c29c5",
+   "fixtures": [],
+   "row": "INSERT INTO lms.external_tool_resource (tenant_id, title, row_version, institution_id, id) VALUES (:tenant, 't-title-3dd872cb', 1, '19df473f-9131-52f8-9128-f3fbaece46d2', '169e7865-5998-5d2f-a458-48aea94fe8f1')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.external_tool_resource (tenant_id, title, row_version, institution_id, id) VALUES (:tenant, 't-title-bb0a30a3', 1, '19df473f-9131-52f8-9128-f3fbaece46d2', 'db7314bd-41a0-5e62-a0bc-b6a13e9c29c5')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.role.deleted",
+   "table": "lms.external_tool_role",
+   "column": "role_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "8d86b05f-04eb-5e4b-80c3-fd94cc649558",
+   "rowId": "ef0f7c5a-cebc-5cd9-a586-d626311feed7",
+   "otherRowId": "4cf4eb85-3f85-5a5c-a887-45479bcbe276",
+   "fixtures": [
+    "INSERT INTO lms.external_tool (tenant_id, title, row_version, id) VALUES (:tenant, 't-title-0e16b1bd', 1, '11fcdfb3-c05f-53ba-84b4-21775b7d35cb') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.external_tool_role (tenant_id, external_tool_id, row_version, role_id, id) VALUES (:tenant, '11fcdfb3-c05f-53ba-84b4-21775b7d35cb', 1, '8d86b05f-04eb-5e4b-80c3-fd94cc649558', 'ef0f7c5a-cebc-5cd9-a586-d626311feed7')",
+   "otherFixtures": [
+    "INSERT INTO lms.external_tool (tenant_id, title, row_version, id) VALUES (:tenant, 't-title-0e16b1bd', 1, 'f818c0a9-2f47-5ab1-8a22-81eb39c5b2c6') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.external_tool_role (tenant_id, external_tool_id, row_version, role_id, id) VALUES (:tenant, 'f818c0a9-2f47-5ab1-8a22-81eb39c5b2c6', 1, '176125c6-5e61-53f3-ae83-ed3af4319323', '4cf4eb85-3f85-5a5c-a887-45479bcbe276')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.forum_post",
+   "column": "abuse_confirmed_by",
+   "action": "null the column",
+   "ownerId": "5740d47d-ff8e-59c4-8ecc-3b3755c3380f",
+   "rowId": "eb720fb3-62fd-59b8-bf8f-523f3013e7e6",
+   "otherRowId": "1330ce00-190b-5752-882e-7f66af90ef63",
+   "fixtures": [
+    "INSERT INTO lms.discussion_prompt (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-73ba1d03', 1, '47898a3b-d4d4-5be5-a231-c92b51a4c64a') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, row_version, id) VALUES (:tenant, 't-title-a5e5f6d1', '47898a3b-d4d4-5be5-a231-c92b51a4c64a', 1, '97dac196-c22c-58dc-b99b-595c90a429ae') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.forum_post (tenant_id, forum_topic_id, author_user_id, row_version, abuse_confirmed_by, id) VALUES (:tenant, '97dac196-c22c-58dc-b99b-595c90a429ae', '6b9e2ff0-1595-57f9-9c8e-1855e0fddef7', 1, '5740d47d-ff8e-59c4-8ecc-3b3755c3380f', 'eb720fb3-62fd-59b8-bf8f-523f3013e7e6')",
+   "otherFixtures": [
+    "INSERT INTO lms.discussion_prompt (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-73ba1d03', 1, '4ef9af2a-4596-58f9-8856-a106e02f2b50') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, row_version, id) VALUES (:tenant, 't-title-a5e5f6d1', '4ef9af2a-4596-58f9-8856-a106e02f2b50', 1, '50f003a5-789a-5e3e-a1d5-784ef7057b15') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.forum_post (tenant_id, forum_topic_id, author_user_id, row_version, abuse_confirmed_by, id) VALUES (:tenant, '50f003a5-789a-5e3e-a1d5-784ef7057b15', '90c75f99-30b2-5dce-a9a5-ffdfd601038b', 1, '5740d47d-ff8e-59c4-8ecc-3b3755c3380f', '1330ce00-190b-5752-882e-7f66af90ef63')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.forum_post_vote",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "d36000ba-ba6d-5097-9202-133d90b80ef8",
+   "rowId": "f7c551c4-8e1c-552a-9bbd-2234ecfc5051",
+   "otherRowId": "8cce07f0-a1ab-5cf7-bc9f-d5a0a09a1997",
+   "fixtures": [
+    "INSERT INTO lms.discussion_prompt (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-73ba1d03', 1, '47898a3b-d4d4-5be5-a231-c92b51a4c64a') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, row_version, id) VALUES (:tenant, 't-title-a5e5f6d1', '47898a3b-d4d4-5be5-a231-c92b51a4c64a', 1, '97dac196-c22c-58dc-b99b-595c90a429ae') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_post (tenant_id, forum_topic_id, author_user_id, row_version, id) VALUES (:tenant, '97dac196-c22c-58dc-b99b-595c90a429ae', '29a16719-0ef0-5484-abc5-3dfb3dbe12d2', 1, '3743bad0-0a1d-5697-b411-0b7f25499aa1') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.forum_post_vote (tenant_id, forum_post_id, is_like, row_version, user_id, id) VALUES (:tenant, '3743bad0-0a1d-5697-b411-0b7f25499aa1', false, 1, 'd36000ba-ba6d-5097-9202-133d90b80ef8', 'f7c551c4-8e1c-552a-9bbd-2234ecfc5051')",
+   "otherFixtures": [
+    "INSERT INTO lms.discussion_prompt (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-73ba1d03', 1, '4ef9af2a-4596-58f9-8856-a106e02f2b50') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, row_version, id) VALUES (:tenant, 't-title-a5e5f6d1', '4ef9af2a-4596-58f9-8856-a106e02f2b50', 1, '50f003a5-789a-5e3e-a1d5-784ef7057b15') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_post (tenant_id, forum_topic_id, author_user_id, row_version, id) VALUES (:tenant, '50f003a5-789a-5e3e-a1d5-784ef7057b15', '94b53d18-e859-5d5b-a471-21eeb9f9b967', 1, '725eb23d-568b-5609-998c-533a22f832cb') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.forum_post_vote (tenant_id, forum_post_id, is_like, row_version, user_id, id) VALUES (:tenant, '725eb23d-568b-5609-998c-533a22f832cb', false, 1, '1facaca8-27c0-5773-ac0c-7a3cd3f1e1a9', '8cce07f0-a1ab-5cf7-bc9f-d5a0a09a1997')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.forum_read_state",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "cf82dbd0-6e65-58b0-8603-7937a704f380",
+   "rowId": "d2a9bccf-c275-55f6-b4f8-e9d4d82fc911",
+   "otherRowId": "6fccaa84-6400-58fc-bed4-1ad04590a108",
+   "fixtures": [
+    "INSERT INTO lms.discussion_prompt (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-73ba1d03', 1, '47898a3b-d4d4-5be5-a231-c92b51a4c64a') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, row_version, id) VALUES (:tenant, 't-title-c76ee750', '47898a3b-d4d4-5be5-a231-c92b51a4c64a', 1, '3a2f526a-7f21-5bc8-986f-10dd2788f052') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.forum_read_state (tenant_id, forum_topic_id, row_version, user_id, id) VALUES (:tenant, '3a2f526a-7f21-5bc8-986f-10dd2788f052', 1, 'cf82dbd0-6e65-58b0-8603-7937a704f380', 'd2a9bccf-c275-55f6-b4f8-e9d4d82fc911')",
+   "otherFixtures": [
+    "INSERT INTO lms.discussion_prompt (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-73ba1d03', 1, '4ef9af2a-4596-58f9-8856-a106e02f2b50') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, row_version, id) VALUES (:tenant, 't-title-c76ee750', '4ef9af2a-4596-58f9-8856-a106e02f2b50', 1, '4834a6d2-3807-501b-b252-b537204f8013') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.forum_read_state (tenant_id, forum_topic_id, row_version, user_id, id) VALUES (:tenant, '4834a6d2-3807-501b-b252-b537204f8013', 1, '48bb8c85-00a0-5a6f-9161-40290a0dc3a7', '6fccaa84-6400-58fc-bed4-1ad04590a108')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.forum_topic",
+   "column": "individual_user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "b5a6bdd4-a670-5304-929b-a5acfc1694cb",
+   "rowId": "665de566-e758-530e-aeb7-460c5052d9b5",
+   "otherRowId": "9a65295a-f120-50c1-809b-39d68878f5c1",
+   "fixtures": [
+    "INSERT INTO lms.discussion_prompt (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-73ba1d03', 1, '47898a3b-d4d4-5be5-a231-c92b51a4c64a') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, row_version, individual_user_id, id) VALUES (:tenant, 't-title-027af624', '47898a3b-d4d4-5be5-a231-c92b51a4c64a', 1, 'b5a6bdd4-a670-5304-929b-a5acfc1694cb', '665de566-e758-530e-aeb7-460c5052d9b5')",
+   "otherFixtures": [
+    "INSERT INTO lms.discussion_prompt (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-73ba1d03', 1, '4ef9af2a-4596-58f9-8856-a106e02f2b50') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, row_version, individual_user_id, id) VALUES (:tenant, 't-title-9963ad0f', '4ef9af2a-4596-58f9-8856-a106e02f2b50', 1, 'b5a6bdd4-a670-5304-929b-a5acfc1694cb', '9a65295a-f120-50c1-809b-39d68878f5c1')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.grade_change_log",
+   "column": "student_user_id",
+   "action": "null the column",
+   "ownerId": "c1eb6bb2-6c43-56fa-8720-91f749f21082",
+   "rowId": "5255c13e-72a6-51b6-92cd-c9d075949a9b",
+   "otherRowId": "2e233b8d-fc52-5d7d-a34d-89ab0a3beefe",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, id) VALUES (:tenant, 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 't-title-94a546bc', 1, 1, '54fd9eee-473b-5b70-920d-db4d54b5ac56') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.lesson (tenant_id, chapter_id, title, sort_order, row_version, id) VALUES (:tenant, '54fd9eee-473b-5b70-920d-db4d54b5ac56', 't-title-d619c79d', 1, 1, '1067d723-fc9c-5a65-a0a0-2cf14ba43e61') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.content_item (tenant_id, chapter_id, course_id, item_kind, lesson_id, row_version, id) VALUES (:tenant, '54fd9eee-473b-5b70-920d-db4d54b5ac56', 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 'lesson', '1067d723-fc9c-5a65-a0a0-2cf14ba43e61', 1, '33f45148-7c83-54fd-8625-2b783212edb7') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.gradebook_entry (tenant_id, cohort_id, content_item_id, user_id, row_version, id) VALUES (:tenant, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', '33f45148-7c83-54fd-8625-2b783212edb7', '0196f000-0000-7000-8000-0000000a5e01', 1, 'bc2a3949-405b-52a7-ab86-609a608b7a6a') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.grade_change_log (tenant_id, gradebook_entry_id, changed_by, changed_at, row_version, student_user_id, id) VALUES (:tenant, 'bc2a3949-405b-52a7-ab86-609a608b7a6a', '36a1744b-b3a3-5d3a-b23d-2ed859767ca4', '2026-01-10T09:00:00Z', 1, 'c1eb6bb2-6c43-56fa-8720-91f749f21082', '5255c13e-72a6-51b6-92cd-c9d075949a9b')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-23808069', 1, 'cca9a1bc-4691-5c48-9047-af34412443bc') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, id) VALUES (:tenant, 'cca9a1bc-4691-5c48-9047-af34412443bc', 't-title-94a546bc', 1, 1, '258b96fb-8367-53b3-99ef-35ae89892a7d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.lesson (tenant_id, chapter_id, title, sort_order, row_version, id) VALUES (:tenant, '258b96fb-8367-53b3-99ef-35ae89892a7d', 't-title-d619c79d', 1, 1, 'b9d427e5-ca58-5626-9889-0207b3b85883') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.content_item (tenant_id, chapter_id, course_id, item_kind, lesson_id, row_version, id) VALUES (:tenant, '258b96fb-8367-53b3-99ef-35ae89892a7d', 'cca9a1bc-4691-5c48-9047-af34412443bc', 'lesson', 'b9d427e5-ca58-5626-9889-0207b3b85883', 1, 'b5d33e57-6d05-5c77-ab07-2c232dcf5011') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.gradebook_entry (tenant_id, cohort_id, content_item_id, user_id, row_version, id) VALUES (:tenant, '2452bf4e-8d10-5137-929d-2c378ae52598', 'b5d33e57-6d05-5c77-ab07-2c232dcf5011', 'b3ffa9df-6726-54b1-abbe-5f8dab9e0dfd', 1, '4f7fb691-1f29-5f6b-949e-a571846c3fe9') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.grade_change_log (tenant_id, gradebook_entry_id, changed_by, changed_at, row_version, student_user_id, id) VALUES (:tenant, '4f7fb691-1f29-5f6b-949e-a571846c3fe9', '003bef8b-939d-59a6-84bf-fa4d091b9d11', '2026-01-10T09:00:00Z', 1, 'c1eb6bb2-6c43-56fa-8720-91f749f21082', '2e233b8d-fc52-5d7d-a34d-89ab0a3beefe')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.gradebook_entry",
+   "column": "graded_by",
+   "action": "null the column",
+   "ownerId": "8b69b654-bfed-558d-846d-858c8bc8c4e4",
+   "rowId": "21a44354-5411-5e99-a082-446f3407e741",
+   "otherRowId": "f828f4ac-d8a8-55da-84e2-0bf906e586d1",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, id) VALUES (:tenant, 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 't-title-94a546bc', 1, 1, '54fd9eee-473b-5b70-920d-db4d54b5ac56') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.lesson (tenant_id, chapter_id, title, sort_order, row_version, id) VALUES (:tenant, '54fd9eee-473b-5b70-920d-db4d54b5ac56', 't-title-d619c79d', 1, 1, '1067d723-fc9c-5a65-a0a0-2cf14ba43e61') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.content_item (tenant_id, chapter_id, course_id, item_kind, lesson_id, row_version, id) VALUES (:tenant, '54fd9eee-473b-5b70-920d-db4d54b5ac56', 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 'lesson', '1067d723-fc9c-5a65-a0a0-2cf14ba43e61', 1, 'c6a78f65-4a04-52ba-93d8-6705b965358d') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.gradebook_entry (tenant_id, cohort_id, content_item_id, user_id, row_version, graded_by, id) VALUES (:tenant, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 'c6a78f65-4a04-52ba-93d8-6705b965358d', '0196f000-0000-7000-8000-0000000a5e01', 1, '8b69b654-bfed-558d-846d-858c8bc8c4e4', '21a44354-5411-5e99-a082-446f3407e741')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-23808069', 1, 'cca9a1bc-4691-5c48-9047-af34412443bc') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, id) VALUES (:tenant, 'cca9a1bc-4691-5c48-9047-af34412443bc', 't-title-94a546bc', 1, 1, '258b96fb-8367-53b3-99ef-35ae89892a7d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.lesson (tenant_id, chapter_id, title, sort_order, row_version, id) VALUES (:tenant, '258b96fb-8367-53b3-99ef-35ae89892a7d', 't-title-d619c79d', 1, 1, 'b9d427e5-ca58-5626-9889-0207b3b85883') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.content_item (tenant_id, chapter_id, course_id, item_kind, lesson_id, row_version, id) VALUES (:tenant, '258b96fb-8367-53b3-99ef-35ae89892a7d', 'cca9a1bc-4691-5c48-9047-af34412443bc', 'lesson', 'b9d427e5-ca58-5626-9889-0207b3b85883', 1, '127185a2-e0a9-53b1-89ec-5f444318740e') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.gradebook_entry (tenant_id, cohort_id, content_item_id, user_id, row_version, graded_by, id) VALUES (:tenant, '2452bf4e-8d10-5137-929d-2c378ae52598', '127185a2-e0a9-53b1-89ec-5f444318740e', 'b3ffa9df-6726-54b1-abbe-5f8dab9e0dfd', 1, '8b69b654-bfed-558d-846d-858c8bc8c4e4', 'f828f4ac-d8a8-55da-84e2-0bf906e586d1')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.institution.deleted",
+   "table": "lms.import_export_job",
+   "column": "institution_id",
+   "action": "null the column",
+   "ownerId": "8dd5d9d7-8f57-5292-8a72-6b0613972cab",
+   "rowId": "0878b7a0-82a8-5d01-836e-d6c82b13c7c2",
+   "otherRowId": "019f2b42-5041-5f15-8cbe-4a565af7b628",
+   "fixtures": [],
+   "row": "INSERT INTO lms.import_export_job (tenant_id, direction, package_format, scope, requested_by, requested_on, row_version, institution_id, id) VALUES (:tenant, 'import', 'native', 'course', '49c53d05-75a8-53e1-ae4e-865cf76275da', '2026-01-10', 1, '8dd5d9d7-8f57-5292-8a72-6b0613972cab', '0878b7a0-82a8-5d01-836e-d6c82b13c7c2')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.import_export_job (tenant_id, direction, package_format, scope, requested_by, requested_on, row_version, institution_id, id) VALUES (:tenant, 'import', 'native', 'course', 'c799d786-cfdc-5bb3-b8c5-2c43e87181eb', '2026-01-10', 1, '8dd5d9d7-8f57-5292-8a72-6b0613972cab', '019f2b42-5041-5f15-8cbe-4a565af7b628')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.import_export_job",
+   "column": "package_file_id",
+   "action": "null the column",
+   "ownerId": "dbe2de23-dfce-5779-a96c-1a17ea03ec0a",
+   "rowId": "a9ce9418-e6f9-51bc-8138-9cd949eeddd1",
+   "otherRowId": "bb9f3f93-793f-5368-a6b2-7b2d523a0b1c",
+   "fixtures": [],
+   "row": "INSERT INTO lms.import_export_job (tenant_id, institution_id, direction, package_format, scope, requested_by, requested_on, row_version, package_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'import', 'native', 'course', 'ac7b5f10-4cac-57fb-b36c-2aa0848a0380', '2026-01-10', 1, 'dbe2de23-dfce-5779-a96c-1a17ea03ec0a', 'a9ce9418-e6f9-51bc-8138-9cd949eeddd1')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.import_export_job (tenant_id, institution_id, direction, package_format, scope, requested_by, requested_on, row_version, package_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'import', 'native', 'course', 'f125d824-9194-5a18-82d6-e5233d58b2a0', '2026-01-10', 1, 'dbe2de23-dfce-5779-a96c-1a17ea03ec0a', 'bb9f3f93-793f-5368-a6b2-7b2d523a0b1c')",
+   "softDeletable": true
+  },
+  {
+   "event": "comms.event.deleted",
+   "table": "lms.live_class",
+   "column": "calendar_event_id",
+   "action": "null the column",
+   "ownerId": "bec8fb64-c602-5560-beec-254786f25b9e",
+   "rowId": "d1cdf391-5194-5aa0-ab11-6026ed59cce3",
+   "otherRowId": "0df7587a-9313-503c-9f86-fd5d4d1f924f",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.live_class (tenant_id, cohort_id, title, class_date, start_time, duration_minutes, timezone, host_user_id, conferencing_provider, row_version, calendar_event_id, id) VALUES (:tenant, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 't-title-cb077f6d', '2026-01-10', '09:00', 1, 't-timezone-26d28e76', 'f5407857-33f2-5174-9dc2-f40383fa8750', 'zoom', 1, 'bec8fb64-c602-5560-beec-254786f25b9e', 'd1cdf391-5194-5aa0-ab11-6026ed59cce3')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.live_class (tenant_id, cohort_id, title, class_date, start_time, duration_minutes, timezone, host_user_id, conferencing_provider, row_version, calendar_event_id, id) VALUES (:tenant, '2452bf4e-8d10-5137-929d-2c378ae52598', 't-title-d6fd53f6', '2026-01-10', '09:00', 1, 't-timezone-73959e64', 'e8ef5703-e727-5991-b352-375cc6ff335e', 'zoom', 1, 'bec8fb64-c602-5560-beec-254786f25b9e', '0df7587a-9313-503c-9f86-fd5d4d1f924f')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.mentorship",
+   "column": "mentee_user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "20b79a53-fc87-5495-8cfa-5a4b87e9aaf8",
+   "rowId": "376062cc-3af0-5809-aafe-b6cad5d1839d",
+   "otherRowId": "dd71d078-29e8-5fc3-b49d-f8d57388a9c6",
+   "fixtures": [],
+   "row": "INSERT INTO lms.mentorship (tenant_id, mentor_user_id, row_version, mentee_user_id, id) VALUES (:tenant, 'b0a78268-7feb-55bc-8652-796340c78abc', 1, '20b79a53-fc87-5495-8cfa-5a4b87e9aaf8', '376062cc-3af0-5809-aafe-b6cad5d1839d')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.mentorship (tenant_id, mentor_user_id, row_version, mentee_user_id, id) VALUES (:tenant, '7d481a63-d31a-5491-bbcd-6fd5b4a6c8f6', 1, 'bdce56d1-10d7-5617-be88-40c53d9f5fdb', 'dd71d078-29e8-5fc3-b49d-f8d57388a9c6')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.mentorship",
+   "column": "mentor_user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "91ae9ec5-c810-50a9-832c-bdd051419cc8",
+   "rowId": "a0382071-3108-5a6f-93b6-8ae9eb7bfc4e",
+   "otherRowId": "79018148-f01f-5736-8bae-0d70f04e27cc",
+   "fixtures": [],
+   "row": "INSERT INTO lms.mentorship (tenant_id, mentee_user_id, row_version, mentor_user_id, id) VALUES (:tenant, '3cef2f7c-8ccc-5fcc-980d-e712259e27fa', 1, '91ae9ec5-c810-50a9-832c-bdd051419cc8', 'a0382071-3108-5a6f-93b6-8ae9eb7bfc4e')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.mentorship (tenant_id, mentee_user_id, row_version, mentor_user_id, id) VALUES (:tenant, '884df614-bea2-5035-a6c2-840c9e3a850f', 1, '0ba9a227-68e2-57cc-aa0b-9904ca12cc83', '79018148-f01f-5736-8bae-0d70f04e27cc')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.institution.deleted",
+   "table": "lms.participation_activity",
+   "column": "institution_id",
+   "action": "null the column",
+   "ownerId": "17fcad5e-4b18-5aad-8e5f-2ff8d26f0d98",
+   "rowId": "418e9c5f-864b-5c78-8538-38c938936684",
+   "otherRowId": "a62d95c3-fdd0-5572-8c53-d2a929eade24",
+   "fixtures": [],
+   "row": "INSERT INTO lms.participation_activity (tenant_id, title, row_version, institution_id, id) VALUES (:tenant, 't-title-2483ac2d', 1, '17fcad5e-4b18-5aad-8e5f-2ff8d26f0d98', '418e9c5f-864b-5c78-8538-38c938936684')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.participation_activity (tenant_id, title, row_version, institution_id, id) VALUES (:tenant, 't-title-28efb350', 1, '17fcad5e-4b18-5aad-8e5f-2ff8d26f0d98', 'a62d95c3-fdd0-5572-8c53-d2a929eade24')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.plagiarism_account",
+   "column": "default_teacher_user_id",
+   "action": "null the column",
+   "ownerId": "78b94b2e-43fe-5b77-aa16-ec27d575387f",
+   "rowId": "92697a5c-2792-5573-ba56-bef8571bc94b",
+   "otherRowId": "ac0a44d1-3447-5a4c-840b-360e1a759422",
+   "fixtures": [],
+   "row": "INSERT INTO lms.plagiarism_account (tenant_id, account_ref, row_version, default_teacher_user_id, id) VALUES (:tenant, 't-account-ref-21b8362c', 1, '78b94b2e-43fe-5b77-aa16-ec27d575387f', '92697a5c-2792-5573-ba56-bef8571bc94b')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.plagiarism_account (tenant_id, account_ref, row_version, default_teacher_user_id, id) VALUES (:tenant, 't-account-ref-52c8ecff', 1, '78b94b2e-43fe-5b77-aa16-ec27d575387f', 'ac0a44d1-3447-5a4c-840b-360e1a759422')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.entity_attachment.deleted",
+   "table": "lms.plagiarism_report",
+   "column": "entity_attachment_id",
+   "action": "null the column",
+   "ownerId": "11a41f4d-032e-5865-b77c-fa5ecaefd4e5",
+   "rowId": "a5b091d6-f1ed-512f-80af-6987d5fc1094",
+   "otherRowId": "cf50969c-5db7-5bbc-9657-ce1703d4141a",
+   "fixtures": [],
+   "row": "INSERT INTO lms.plagiarism_report (tenant_id, file_id, row_version, entity_attachment_id, id) VALUES (:tenant, '7011bafe-97a1-5d31-b552-d526468fa212', 1, '11a41f4d-032e-5865-b77c-fa5ecaefd4e5', 'a5b091d6-f1ed-512f-80af-6987d5fc1094')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.plagiarism_report (tenant_id, file_id, row_version, entity_attachment_id, id) VALUES (:tenant, 'dfde3d19-a6f4-5234-bef2-48af0542e3cd', 1, '11a41f4d-032e-5865-b77c-fa5ecaefd4e5', 'cf50969c-5db7-5bbc-9657-ce1703d4141a')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.plagiarism_user_link",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "16c90be3-274e-5a7d-8bac-640a48f46382",
+   "rowId": "83cc234d-5979-5575-934c-361f1ec31fac",
+   "otherRowId": "04b5a487-cbeb-5957-b0a8-5e02c9e004be",
+   "fixtures": [
+    "INSERT INTO lms.plagiarism_account (tenant_id, account_ref, row_version, id) VALUES (:tenant, 't-account-ref-92413f89', 1, '9fee7f81-85b9-5680-b094-a1e7f0e1608f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.plagiarism_user_link (tenant_id, plagiarism_account_id, provider_user_ref, row_version, user_id, id) VALUES (:tenant, '9fee7f81-85b9-5680-b094-a1e7f0e1608f', 't-provider-user-ref-58c16acf', 1, '16c90be3-274e-5a7d-8bac-640a48f46382', '83cc234d-5979-5575-934c-361f1ec31fac')",
+   "otherFixtures": [
+    "INSERT INTO lms.plagiarism_account (tenant_id, account_ref, row_version, id) VALUES (:tenant, 't-account-ref-92413f89', 1, '8b8e511b-669d-5882-b44e-36baece62ccb') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.plagiarism_user_link (tenant_id, plagiarism_account_id, provider_user_ref, row_version, user_id, id) VALUES (:tenant, '8b8e511b-669d-5882-b44e-36baece62ccb', 't-provider-user-ref-4a2500a1', 1, '89261431-3cbd-5bc3-b327-9b7b1635ddf5', '04b5a487-cbeb-5957-b0a8-5e02c9e004be')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.question_hotspot",
+   "column": "image_file_id",
+   "action": "null the column",
+   "ownerId": "211ff0d6-7b33-579a-a3a9-7084d27c0691",
+   "rowId": "6d628f42-f31f-5db6-bb77-f09061d56141",
+   "otherRowId": "75e76cba-be96-5c7e-a666-9869f524570a",
+   "fixtures": [
+    "INSERT INTO lms.question (tenant_id, row_version, id) VALUES (:tenant, 1, '7cd98606-8cb3-515f-bc37-e7a456abc0bf') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.question_hotspot (tenant_id, question_id, hotspot_type, row_version, image_file_id, id) VALUES (:tenant, '7cd98606-8cb3-515f-bc37-e7a456abc0bf', 't-hotspot-type-0807a233', 1, '211ff0d6-7b33-579a-a3a9-7084d27c0691', '6d628f42-f31f-5db6-bb77-f09061d56141')",
+   "otherFixtures": [
+    "INSERT INTO lms.question (tenant_id, row_version, id) VALUES (:tenant, 1, 'd5225093-8d6f-57d8-94a9-55ffe6c32b9e') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.question_hotspot (tenant_id, question_id, hotspot_type, row_version, image_file_id, id) VALUES (:tenant, 'd5225093-8d6f-57d8-94a9-55ffe6c32b9e', 't-hotspot-type-2cba19c6', 1, '211ff0d6-7b33-579a-a3a9-7084d27c0691', '75e76cba-be96-5c7e-a666-9869f524570a')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.institution.deleted",
+   "table": "lms.quiz",
+   "column": "institution_id",
+   "action": "null the column",
+   "ownerId": "aaad279f-b81e-5b68-a1d4-3418da376267",
+   "rowId": "af51e201-a937-589e-9999-473d788302c1",
+   "otherRowId": "e485a7fb-f187-5fb9-9dd0-87df9b69ebf3",
+   "fixtures": [],
+   "row": "INSERT INTO lms.quiz (tenant_id, title, passing_percentage, total_marks, row_version, institution_id, id) VALUES (:tenant, 't-title-7c196f00', 1, 2, 1, 'aaad279f-b81e-5b68-a1d4-3418da376267', 'af51e201-a937-589e-9999-473d788302c1')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.quiz (tenant_id, title, passing_percentage, total_marks, row_version, institution_id, id) VALUES (:tenant, 't-title-c8c95ab5', 1, 2, 1, 'aaad279f-b81e-5b68-a1d4-3418da376267', 'e485a7fb-f187-5fb9-9dd0-87df9b69ebf3')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.quiz_answer",
+   "column": "graded_by",
+   "action": "null the column",
+   "ownerId": "c3fe93f1-9b1e-5941-8f64-6516eff81cf6",
+   "rowId": "c28ad58d-d13f-57d4-9763-6f3e96e4d502",
+   "otherRowId": "e62db51b-bed1-59d8-81ec-833fd56ae011",
+   "fixtures": [
+    "INSERT INTO lms.quiz (tenant_id, title, passing_percentage, total_marks, institution_id, row_version, id) VALUES (:tenant, 't-title-7d01526d', 1, 2, '0196f000-0000-7000-8000-00000000a001', 1, '40dfc79a-bb66-5e67-948b-8d634687edb4') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.quiz_submission (tenant_id, quiz_id, user_id, row_version, id) VALUES (:tenant, '40dfc79a-bb66-5e67-948b-8d634687edb4', '1e854681-bd11-5687-aa73-eb2802f404a1', 1, 'f93f52ac-d3a9-5609-9f26-8e445360a014') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.quiz_answer (tenant_id, quiz_submission_id, row_version, graded_by, id) VALUES (:tenant, 'f93f52ac-d3a9-5609-9f26-8e445360a014', 1, 'c3fe93f1-9b1e-5941-8f64-6516eff81cf6', 'c28ad58d-d13f-57d4-9763-6f3e96e4d502')",
+   "otherFixtures": [
+    "INSERT INTO lms.quiz (tenant_id, title, passing_percentage, total_marks, institution_id, row_version, id) VALUES (:tenant, 't-title-7d01526d', 1, 2, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 1, 'ef71beb2-ee33-5404-8e1f-a35499012caf') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.quiz_submission (tenant_id, quiz_id, user_id, row_version, id) VALUES (:tenant, 'ef71beb2-ee33-5404-8e1f-a35499012caf', '013eee12-bd15-594f-b30e-2e722954a0b6', 1, '0e251fb1-4245-5c89-8294-113952cc5781') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.quiz_answer (tenant_id, quiz_submission_id, row_version, graded_by, id) VALUES (:tenant, '0e251fb1-4245-5c89-8294-113952cc5781', 1, 'c3fe93f1-9b1e-5941-8f64-6516eff81cf6', 'e62db51b-bed1-59d8-81ec-833fd56ae011')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.related_material_rank",
+   "column": "file_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "e974b75a-162e-5f9a-a174-e1557f68e4fe",
+   "rowId": "b8c670a8-1509-5cfe-ad79-e5d91f915fff",
+   "otherRowId": "839b04a3-37f8-5cb9-acab-42fc4e4c3f0d",
+   "fixtures": [
+    "INSERT INTO lms.ebook (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-4e93f15f', 1, 'e2960d28-a1a9-54f0-bc31-77a1a7dfe6ff') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.related_material_rank (tenant_id, user_id, ebook_id, row_version, file_id, id) VALUES (:tenant, '15e9c04c-0206-5793-b97d-1b079314e8ac', 'e2960d28-a1a9-54f0-bc31-77a1a7dfe6ff', 1, 'e974b75a-162e-5f9a-a174-e1557f68e4fe', 'b8c670a8-1509-5cfe-ad79-e5d91f915fff')",
+   "otherFixtures": [
+    "INSERT INTO lms.ebook (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-4e93f15f', 1, '2b94915a-76d7-58f9-a885-26c1ee04d613') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.related_material_rank (tenant_id, user_id, ebook_id, row_version, file_id, id) VALUES (:tenant, '1f6c1b4e-0982-538f-9442-c5be631c2e5e', '2b94915a-76d7-58f9-a885-26c1ee04d613', 1, 'e974b75a-162e-5f9a-a174-e1557f68e4fe', '839b04a3-37f8-5cb9-acab-42fc4e4c3f0d')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.related_material_rank",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "4c5fab24-d3fe-50e2-aa2d-9d730f8090d8",
+   "rowId": "c2be4ae9-be8b-5db5-a9c1-69a308c664d3",
+   "otherRowId": "84f33112-524b-5eff-9da0-1b9c8c8e8475",
+   "fixtures": [
+    "INSERT INTO lms.ebook (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-4e93f15f', 1, 'e2960d28-a1a9-54f0-bc31-77a1a7dfe6ff') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.related_material_rank (tenant_id, ebook_id, row_version, user_id, id) VALUES (:tenant, 'e2960d28-a1a9-54f0-bc31-77a1a7dfe6ff', 1, '4c5fab24-d3fe-50e2-aa2d-9d730f8090d8', 'c2be4ae9-be8b-5db5-a9c1-69a308c664d3')",
+   "otherFixtures": [
+    "INSERT INTO lms.ebook (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-4e93f15f', 1, '2b94915a-76d7-58f9-a885-26c1ee04d613') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.related_material_rank (tenant_id, ebook_id, row_version, user_id, id) VALUES (:tenant, '2b94915a-76d7-58f9-a885-26c1ee04d613', 1, '07ded2fd-bd7e-590c-be5e-58def91b01df', '84f33112-524b-5eff-9da0-1b9c8c8e8475')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.release_grant",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "02599032-8d0f-52c0-86bd-136fa2afcba7",
+   "rowId": "65f0faaf-57a7-5262-a899-a2d6e60a4720",
+   "otherRowId": "d85aca92-d78b-57f2-8ce4-6353f1573032",
+   "fixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, id) VALUES (:tenant, 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 't-title-94a546bc', 1, 1, '54fd9eee-473b-5b70-920d-db4d54b5ac56') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.lesson (tenant_id, chapter_id, title, sort_order, row_version, id) VALUES (:tenant, '54fd9eee-473b-5b70-920d-db4d54b5ac56', 't-title-d619c79d', 1, 1, '1067d723-fc9c-5a65-a0a0-2cf14ba43e61') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.content_item (tenant_id, chapter_id, course_id, item_kind, lesson_id, row_version, id) VALUES (:tenant, '54fd9eee-473b-5b70-920d-db4d54b5ac56', 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 'lesson', '1067d723-fc9c-5a65-a0a0-2cf14ba43e61', 1, 'c6a78f65-4a04-52ba-93d8-6705b965358d') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.release_grant (tenant_id, content_item_id, row_version, user_id, id) VALUES (:tenant, 'c6a78f65-4a04-52ba-93d8-6705b965358d', 1, '02599032-8d0f-52c0-86bd-136fa2afcba7', '65f0faaf-57a7-5262-a899-a2d6e60a4720')",
+   "otherFixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-23808069', 1, 'cca9a1bc-4691-5c48-9047-af34412443bc') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, id) VALUES (:tenant, 'cca9a1bc-4691-5c48-9047-af34412443bc', 't-title-94a546bc', 1, 1, '258b96fb-8367-53b3-99ef-35ae89892a7d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.lesson (tenant_id, chapter_id, title, sort_order, row_version, id) VALUES (:tenant, '258b96fb-8367-53b3-99ef-35ae89892a7d', 't-title-d619c79d', 1, 1, 'b9d427e5-ca58-5626-9889-0207b3b85883') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.content_item (tenant_id, chapter_id, course_id, item_kind, lesson_id, row_version, id) VALUES (:tenant, '258b96fb-8367-53b3-99ef-35ae89892a7d', 'cca9a1bc-4691-5c48-9047-af34412443bc', 'lesson', 'b9d427e5-ca58-5626-9889-0207b3b85883', 1, '127185a2-e0a9-53b1-89ec-5f444318740e') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.release_grant (tenant_id, content_item_id, row_version, user_id, id) VALUES (:tenant, '127185a2-e0a9-53b1-89ec-5f444318740e', 1, '799692c2-1656-5d20-8cc9-db13c59ccc12', 'd85aca92-d78b-57f2-8ce4-6353f1573032')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.institution.deleted",
+   "table": "lms.rubric",
+   "column": "institution_id",
+   "action": "null the column",
+   "ownerId": "edc6eb3d-5e79-56ba-8904-6e56731d87ab",
+   "rowId": "7c298628-a2d8-5e13-8829-9cc2e74f1c03",
+   "otherRowId": "0d233197-483e-57f0-a3f2-104e6e75f924",
+   "fixtures": [],
+   "row": "INSERT INTO lms.rubric (tenant_id, title, row_version, institution_id, id) VALUES (:tenant, 't-title-8fdf247f', 1, 'edc6eb3d-5e79-56ba-8904-6e56731d87ab', '7c298628-a2d8-5e13-8829-9cc2e74f1c03')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.rubric (tenant_id, title, row_version, institution_id, id) VALUES (:tenant, 't-title-87838e17', 1, 'edc6eb3d-5e79-56ba-8904-6e56731d87ab', '0d233197-483e-57f0-a3f2-104e6e75f924')",
+   "softDeletable": true
+  },
+  {
+   "event": "comms.message_template.deleted",
+   "table": "lms.settings",
+   "column": "certificate_template_id",
+   "action": "null the column",
+   "ownerId": "7645b403-1b46-5213-9810-a33d19bbff3f",
+   "rowId": "6d2e7b77-5080-5461-bc36-f6594cd43ebb",
+   "otherRowId": "afb60b54-b01e-53f6-835b-dbf015c2675e",
+   "fixtures": [],
+   "row": "INSERT INTO lms.settings (tenant_id, row_version, certificate_template_id, id) VALUES (:tenant, 1, '7645b403-1b46-5213-9810-a33d19bbff3f', '6d2e7b77-5080-5461-bc36-f6594cd43ebb')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.settings (tenant_id, row_version, certificate_template_id, id) VALUES (:tenant, 1, '7645b403-1b46-5213-9810-a33d19bbff3f', 'afb60b54-b01e-53f6-835b-dbf015c2675e')",
+   "softDeletable": true
+  },
+  {
+   "event": "comms.message_template.deleted",
+   "table": "lms.settings",
+   "column": "cohort_confirmation_template_id",
+   "action": "null the column",
+   "ownerId": "5df58115-40aa-5a2c-907f-a63251d6322b",
+   "rowId": "006a5f76-1aab-58c8-8cd1-2a4053c65e26",
+   "otherRowId": "d8dcb4a3-8d08-5259-b255-eb7c95449a49",
+   "fixtures": [],
+   "row": "INSERT INTO lms.settings (tenant_id, row_version, cohort_confirmation_template_id, id) VALUES (:tenant, 1, '5df58115-40aa-5a2c-907f-a63251d6322b', '006a5f76-1aab-58c8-8cd1-2a4053c65e26')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.settings (tenant_id, row_version, cohort_confirmation_template_id, id) VALUES (:tenant, 1, '5df58115-40aa-5a2c-907f-a63251d6322b', 'd8dcb4a3-8d08-5259-b255-eb7c95449a49')",
+   "softDeletable": true
+  },
+  {
+   "event": "comms.message_template.deleted",
+   "table": "lms.settings",
+   "column": "mentor_request_template_id",
+   "action": "null the column",
+   "ownerId": "6fbf46c2-ffac-5ca8-8f01-688a46f58194",
+   "rowId": "090cc851-9a21-5098-b825-e37fac55ba74",
+   "otherRowId": "e2bb6856-9dfa-5b9e-adc0-af9d64e407d9",
+   "fixtures": [],
+   "row": "INSERT INTO lms.settings (tenant_id, row_version, mentor_request_template_id, id) VALUES (:tenant, 1, '6fbf46c2-ffac-5ca8-8f01-688a46f58194', '090cc851-9a21-5098-b825-e37fac55ba74')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.settings (tenant_id, row_version, mentor_request_template_id, id) VALUES (:tenant, 1, '6fbf46c2-ffac-5ca8-8f01-688a46f58194', 'e2bb6856-9dfa-5b9e-adc0-af9d64e407d9')",
+   "softDeletable": true
+  },
+  {
+   "event": "comms.message_template.deleted",
+   "table": "lms.settings",
+   "column": "mentor_status_template_id",
+   "action": "null the column",
+   "ownerId": "3efb581c-c3a9-5639-bfb9-2f60c44be2b5",
+   "rowId": "02a2dd24-06cf-5de8-869f-06759168b201",
+   "otherRowId": "8dc7e864-cfa4-5a25-90a5-2e744692842c",
+   "fixtures": [],
+   "row": "INSERT INTO lms.settings (tenant_id, row_version, mentor_status_template_id, id) VALUES (:tenant, 1, '3efb581c-c3a9-5639-bfb9-2f60c44be2b5', '02a2dd24-06cf-5de8-869f-06759168b201')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.settings (tenant_id, row_version, mentor_status_template_id, id) VALUES (:tenant, 1, '3efb581c-c3a9-5639-bfb9-2f60c44be2b5', '8dc7e864-cfa4-5a25-90a5-2e744692842c')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "lms.settings",
+   "column": "meta_image_file_id",
+   "action": "null the column",
+   "ownerId": "ee296cbf-a20d-5fe4-bdcc-acb5880fcab4",
+   "rowId": "746261b3-34e7-5cd0-8328-6f8f508ac85a",
+   "otherRowId": "97d51515-2368-5ede-bac0-bfc67f4a56a0",
+   "fixtures": [],
+   "row": "INSERT INTO lms.settings (tenant_id, row_version, meta_image_file_id, id) VALUES (:tenant, 1, 'ee296cbf-a20d-5fe4-bdcc-acb5880fcab4', '746261b3-34e7-5cd0-8328-6f8f508ac85a')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.settings (tenant_id, row_version, meta_image_file_id, id) VALUES (:tenant, 1, 'ee296cbf-a20d-5fe4-bdcc-acb5880fcab4', '97d51515-2368-5ede-bac0-bfc67f4a56a0')",
+   "softDeletable": true
+  },
+  {
+   "event": "comms.message_template.deleted",
+   "table": "lms.settings",
+   "column": "payment_reminder_template_id",
+   "action": "null the column",
+   "ownerId": "bc7387cc-5ec8-5aa4-adb8-fe3224097727",
+   "rowId": "1ae85d47-3b42-5de4-a588-a7eb1c16cb59",
+   "otherRowId": "170f1ed8-b78b-564b-b183-939341ee475b",
+   "fixtures": [],
+   "row": "INSERT INTO lms.settings (tenant_id, row_version, payment_reminder_template_id, id) VALUES (:tenant, 1, 'bc7387cc-5ec8-5aa4-adb8-fe3224097727', '1ae85d47-3b42-5de4-a588-a7eb1c16cb59')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.settings (tenant_id, row_version, payment_reminder_template_id, id) VALUES (:tenant, 1, 'bc7387cc-5ec8-5aa4-adb8-fe3224097727', '170f1ed8-b78b-564b-b183-939341ee475b')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.student_alert",
+   "column": "sent_by",
+   "action": "null the column",
+   "ownerId": "f23c9b96-c5f7-5960-b01b-47d5834e0249",
+   "rowId": "be45da46-74dd-5650-b95a-aaf1d175ec01",
+   "otherRowId": "3b551c87-5bbf-578e-9b45-7722c4eb7db2",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.student_alert (tenant_id, user_id, cohort_id, row_version, sent_by, id) VALUES (:tenant, '0f516a39-7e11-5722-8fb4-8b99dac0e296', 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 1, 'f23c9b96-c5f7-5960-b01b-47d5834e0249', 'be45da46-74dd-5650-b95a-aaf1d175ec01')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.student_alert (tenant_id, user_id, cohort_id, row_version, sent_by, id) VALUES (:tenant, '1a054ac2-1200-5edf-8924-acc46c9c2379', '2452bf4e-8d10-5137-929d-2c378ae52598', 1, 'f23c9b96-c5f7-5960-b01b-47d5834e0249', '3b551c87-5bbf-578e-9b45-7722c4eb7db2')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "lms.student_alert",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "5e0523a3-1b65-5f4c-8869-35571ada36ec",
+   "rowId": "1e3dfd5f-afc5-5d2d-b85f-bc89eb927dc1",
+   "otherRowId": "1bbad45f-2cdb-59c7-8e88-1bfbfedf6859",
+   "fixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO lms.student_alert (tenant_id, cohort_id, row_version, user_id, id) VALUES (:tenant, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 1, '5e0523a3-1b65-5f4c-8869-35571ada36ec', '1e3dfd5f-afc5-5d2d-b85f-bc89eb927dc1')",
+   "otherFixtures": [
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, '2452bf4e-8d10-5137-929d-2c378ae52598') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO lms.student_alert (tenant_id, cohort_id, row_version, user_id, id) VALUES (:tenant, '2452bf4e-8d10-5137-929d-2c378ae52598', 1, '5e0523a3-1b65-5f4c-8869-35571ada36ec', '1bbad45f-2cdb-59c7-8e88-1bfbfedf6859')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.institution.deleted",
+   "table": "lms.web_resource",
+   "column": "institution_id",
+   "action": "null the column",
+   "ownerId": "e503c6c3-2591-5b64-a717-b3bf1f94bdd1",
+   "rowId": "2ea6c692-ad2b-5681-afd7-47f2d90f84ca",
+   "otherRowId": "5251ce4f-866d-5dab-89ef-0fa9d8162302",
+   "fixtures": [],
+   "row": "INSERT INTO lms.web_resource (tenant_id, title, resource_type, row_version, institution_id, id) VALUES (:tenant, 't-title-4b23179c', 'url', 1, 'e503c6c3-2591-5b64-a717-b3bf1f94bdd1', '2ea6c692-ad2b-5681-afd7-47f2d90f84ca')",
+   "otherFixtures": [],
+   "other": "INSERT INTO lms.web_resource (tenant_id, title, resource_type, row_version, institution_id, id) VALUES (:tenant, 't-title-f1b365e3', 'url', 1, 'e503c6c3-2591-5b64-a717-b3bf1f94bdd1', '5251ce4f-866d-5dab-89ef-0fa9d8162302')",
+   "softDeletable": true
+  }
+ ]
+}

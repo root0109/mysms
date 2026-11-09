@@ -1,0 +1,358 @@
+{
+ "module": "payroll",
+ "resources": [
+  {
+   "name": "DisbursementAccount",
+   "table": "payroll.disbursement_account",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/payroll/disbursement-accounts",
+   "item": "/v1/payroll/disbursement-accounts/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "managedByUserId": "969d9668-a347-580b-9a25-a52713e28fab",
+    "name": "t-name-d3e2a256",
+    "accountKey": "t-account-key-6001ccfc",
+    "accountNumber": "Secret-78bad8-00001234",
+    "bankRoutingCode": "C3E9CFDC2"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true,
+   "secrets": [
+    {
+     "field": "accountNumber",
+     "masked": "accountNumberMasked",
+     "mask": "\u2022\u2022\u2022\u20221234",
+     "rotated": "Rotated-secret-5678",
+     "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM payroll.disbursement_account WHERE id = '{id}' AND (account_number_enc IS NULL OR account_number_enc NOT LIKE 'v1.%' OR strpos(account_number_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
+    }
+   ]
+  },
+  {
+   "name": "PayCategory",
+   "table": "payroll.pay_category",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/payroll/pay-categories",
+   "item": "/v1/payroll/pay-categories/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C9CC185BD",
+    "name": "t-name-eda02738"
+   },
+   "update": {
+    "isActive": true
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "PayComponent",
+   "table": "payroll.pay_component",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/payroll/pay-components",
+   "item": "/v1/payroll/pay-components/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "CE2C8F8DB",
+    "name": "t-name-8a928484",
+    "componentType": "earning"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "PaymentType",
+   "table": "payroll.payment_type",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/payroll/payment-types",
+   "item": "/v1/payroll/payment-types/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "CF051A3AB",
+    "name": "t-name-e9c83ca4"
+   },
+   "update": {
+    "isActive": true
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "PayrollPayment",
+   "table": "payroll.payroll_payment",
+   "ops": [
+    "Create",
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/payroll/payroll-payments",
+   "item": "/v1/payroll/payroll-payments/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "transactionNumber": "t-transaction-number-949f26cc",
+    "staffId": "1b8bce6c-60b1-529c-9acf-6a6ac38b107e",
+    "transactionDate": "2026-01-10",
+    "amount": "1",
+    "paymentMethod": "cash"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Payslip",
+   "table": "payroll.payslip",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/payroll/payslips",
+   "item": "/v1/payroll/payslips/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO payroll.salary_template (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-2781d523', 1, '6aa489f0-2dc5-5423-a7bf-419d21f3c30d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.staff_salary (tenant_id, staff_id, salary_template_id, gross_salary, effective_date, row_version, id) VALUES (:tenant, '8dfc1080-57fc-515a-b12b-066f80493b63', '6aa489f0-2dc5-5423-a7bf-419d21f3c30d', 1, '2026-01-10', 1, 'fb94b1c3-a7a2-53c4-a2fd-70f898ca0bb2') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "payslipNumber": "t-payslip-number-68affd2a",
+    "staffId": "c6ba0a60-c873-5779-b6e8-f53946bd8fc7",
+    "staffSalaryId": "fb94b1c3-a7a2-53c4-a2fd-70f898ca0bb2",
+    "periodStart": "2026-01-10",
+    "periodEnd": "2026-01-20"
+   },
+   "update": {},
+   "duplicateConflicts": true,
+   "transitions": [
+    {
+     "operation": "payroll.CancelPayslip",
+     "path": "/v1/payroll/payslips/{id}:cancel",
+     "permission": "payroll.payslip.cancel_payslip",
+     "guard": {
+      "status": [
+       "unpaid"
+      ]
+     },
+     "prepare": [
+      "UPDATE payroll.payslip SET status = 'unpaid' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "cancelled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ],
+   "seedId": "ba4aa192-835c-5917-81d2-21e2b72f463f",
+   "seed": [
+    "INSERT INTO payroll.payslip (institution_id, payslip_number, staff_id, staff_salary_id, period_start, period_end, tenant_id, row_version, id) VALUES ('0196f000-0000-7000-8000-00000000a001', 't-payslip-number-68affd2a', 'c6ba0a60-c873-5779-b6e8-f53946bd8fc7', 'fb94b1c3-a7a2-53c4-a2fd-70f898ca0bb2', '2026-01-10', '2026-01-20', :tenant, 1, 'ba4aa192-835c-5917-81d2-21e2b72f463f')"
+   ]
+  },
+  {
+   "name": "PayslipLine",
+   "table": "payroll.payslip_line",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/payroll/payslips/c6bc22ec-ade0-5133-a653-bf52e7d4a70a/lines",
+   "item": "/v1/payroll/payslips/c6bc22ec-ade0-5133-a653-bf52e7d4a70a/lines/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO payroll.salary_template (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-2781d523', 1, '6aa489f0-2dc5-5423-a7bf-419d21f3c30d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.staff_salary (tenant_id, staff_id, salary_template_id, gross_salary, effective_date, row_version, id) VALUES (:tenant, '8dfc1080-57fc-515a-b12b-066f80493b63', '6aa489f0-2dc5-5423-a7bf-419d21f3c30d', 1, '2026-01-10', 1, 'fb94b1c3-a7a2-53c4-a2fd-70f898ca0bb2') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.payslip (tenant_id, institution_id, payslip_number, staff_id, staff_salary_id, period_start, period_end, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-payslip-number-abc65169', 'ab212ef5-796f-5321-8753-d66e4af7f079', 'fb94b1c3-a7a2-53c4-a2fd-70f898ca0bb2', '2026-01-10', '2026-01-20', 1, 'c6bc22ec-ade0-5133-a653-bf52e7d4a70a') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.staff_salary (tenant_id, staff_id, salary_template_id, gross_salary, effective_date, row_version, id) VALUES (:tenant, '4b750f2a-9f82-5465-8161-e40d07680fcf', '6aa489f0-2dc5-5423-a7bf-419d21f3c30d', 1, '2026-01-10', 1, '85941c8d-1e22-5160-9a1e-40a705c413c6') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.salary_template (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-ae2d4993', 1, '09080102-c53f-5e2f-80bc-6564ab7e9685') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.pay_component (tenant_id, code, name, component_type, row_version, id) VALUES (:tenant, 'C84F215E0', 't-name-c64cb073', 'earning', 1, '67b9df8f-4979-5e41-bbe2-f3385c7b8fb2') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.pay_category (tenant_id, name, row_version, code, id) VALUES (:tenant, 't-name-f72ac3ac', 1, 'C4DC7E639', '49d38ade-c1e6-505a-8cdd-a68f7ce7bedd') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.salary_template_component (tenant_id, salary_template_id, pay_component_id, pay_category_id, row_version, id) VALUES (:tenant, '09080102-c53f-5e2f-80bc-6564ab7e9685', '67b9df8f-4979-5e41-bbe2-f3385c7b8fb2', '49d38ade-c1e6-505a-8cdd-a68f7ce7bedd', 1, '2dce024b-11a2-5766-af97-81a210b1b7fc') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.staff_salary_component (tenant_id, staff_salary_id, salary_template_component_id, amount, row_version, id) VALUES (:tenant, '85941c8d-1e22-5160-9a1e-40a705c413c6', '2dce024b-11a2-5766-af97-81a210b1b7fc', 1, 1, '9e774f35-acea-57f9-abef-9fea81c84c75') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "payslipId": "c6bc22ec-ade0-5133-a653-bf52e7d4a70a",
+    "staffSalaryComponentId": "9e774f35-acea-57f9-abef-9fea81c84c75",
+    "amount": "1"
+   },
+   "update": {},
+   "duplicateConflicts": true,
+   "seedId": "e3b5ae27-3995-5edf-95fc-527844d35164",
+   "seed": [
+    "INSERT INTO payroll.payslip_line (payslip_id, staff_salary_component_id, amount, tenant_id, row_version, id) VALUES ('c6bc22ec-ade0-5133-a653-bf52e7d4a70a', '9e774f35-acea-57f9-abef-9fea81c84c75', '1', :tenant, 1, 'e3b5ae27-3995-5edf-95fc-527844d35164')"
+   ]
+  },
+  {
+   "name": "SalaryTemplate",
+   "table": "payroll.salary_template",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/payroll/salary-templates",
+   "item": "/v1/payroll/salary-templates/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-bcf7aa29"
+   },
+   "update": {
+    "isActive": true
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "SalaryTemplateComponent",
+   "table": "payroll.salary_template_component",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/payroll/salary-templates/6aa489f0-2dc5-5423-a7bf-419d21f3c30d/components",
+   "item": "/v1/payroll/salary-templates/6aa489f0-2dc5-5423-a7bf-419d21f3c30d/components/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO payroll.salary_template (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-2781d523', 1, '6aa489f0-2dc5-5423-a7bf-419d21f3c30d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.pay_component (tenant_id, code, name, component_type, row_version, id) VALUES (:tenant, 'C84F215E0', 't-name-c64cb073', 'earning', 1, '67b9df8f-4979-5e41-bbe2-f3385c7b8fb2') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.pay_category (tenant_id, name, row_version, code, id) VALUES (:tenant, 't-name-f72ac3ac', 1, 'C4DC7E639', '49d38ade-c1e6-505a-8cdd-a68f7ce7bedd') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "salaryTemplateId": "6aa489f0-2dc5-5423-a7bf-419d21f3c30d",
+    "payComponentId": "67b9df8f-4979-5e41-bbe2-f3385c7b8fb2",
+    "payCategoryId": "49d38ade-c1e6-505a-8cdd-a68f7ce7bedd"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "StaffBankAccount",
+   "table": "payroll.staff_bank_account",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/payroll/staff-bank-accounts",
+   "item": "/v1/payroll/staff-bank-accounts/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "accountNumber": "Secret-3aa809-00001234",
+    "staffId": "2b286635-b555-5392-9827-73d1615d6ba4",
+    "accountHolderName": "t-account-holder-name-dd4f43ef"
+   },
+   "update": {
+    "accountHolderName": "Updated account_holder_name"
+   },
+   "duplicateConflicts": false,
+   "secrets": [
+    {
+     "field": "accountNumber",
+     "masked": "accountNumberMasked",
+     "mask": "\u2022\u2022\u2022\u20221234",
+     "rotated": "Rotated-secret-5678",
+     "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM payroll.staff_bank_account WHERE id = '{id}' AND (account_number_enc IS NULL OR account_number_enc NOT LIKE 'v1.%' OR strpos(account_number_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
+    }
+   ]
+  },
+  {
+   "name": "StaffSalary",
+   "table": "payroll.staff_salary",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/payroll/staff-salaries",
+   "item": "/v1/payroll/staff-salaries/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO payroll.salary_template (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-2781d523', 1, '6aa489f0-2dc5-5423-a7bf-419d21f3c30d') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "staffId": "d57ba5da-1c51-542b-8f59-b763ed5f32c4",
+    "salaryTemplateId": "6aa489f0-2dc5-5423-a7bf-419d21f3c30d",
+    "grossSalary": "1",
+    "effectiveDate": "2026-01-10"
+   },
+   "update": {
+    "remarks": "Updated remarks"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "StaffSalaryComponent",
+   "table": "payroll.staff_salary_component",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/payroll/staff-salaries/fb94b1c3-a7a2-53c4-a2fd-70f898ca0bb2/components",
+   "item": "/v1/payroll/staff-salaries/fb94b1c3-a7a2-53c4-a2fd-70f898ca0bb2/components/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO payroll.salary_template (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-2781d523', 1, '6aa489f0-2dc5-5423-a7bf-419d21f3c30d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.staff_salary (tenant_id, staff_id, salary_template_id, gross_salary, effective_date, row_version, id) VALUES (:tenant, '8dfc1080-57fc-515a-b12b-066f80493b63', '6aa489f0-2dc5-5423-a7bf-419d21f3c30d', 1, '2026-01-10', 1, 'fb94b1c3-a7a2-53c4-a2fd-70f898ca0bb2') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.salary_template (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-ae2d4993', 1, '09080102-c53f-5e2f-80bc-6564ab7e9685') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.pay_component (tenant_id, code, name, component_type, row_version, id) VALUES (:tenant, 'C84F215E0', 't-name-c64cb073', 'earning', 1, '67b9df8f-4979-5e41-bbe2-f3385c7b8fb2') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.pay_category (tenant_id, name, row_version, code, id) VALUES (:tenant, 't-name-f72ac3ac', 1, 'C4DC7E639', '49d38ade-c1e6-505a-8cdd-a68f7ce7bedd') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO payroll.salary_template_component (tenant_id, salary_template_id, pay_component_id, pay_category_id, row_version, id) VALUES (:tenant, '09080102-c53f-5e2f-80bc-6564ab7e9685', '67b9df8f-4979-5e41-bbe2-f3385c7b8fb2', '49d38ade-c1e6-505a-8cdd-a68f7ce7bedd', 1, '2dce024b-11a2-5766-af97-81a210b1b7fc') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "staffSalaryId": "fb94b1c3-a7a2-53c4-a2fd-70f898ca0bb2",
+    "salaryTemplateComponentId": "2dce024b-11a2-5766-af97-81a210b1b7fc",
+    "amount": "1"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  }
+ ]
+}

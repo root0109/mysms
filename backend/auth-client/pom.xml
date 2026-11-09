@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  auth-client: the only auth surface a module touches (JAVA-CODING-RULES §16). Hand-written, owned by the iam team.
+  Public API (frozen for the 21 modules): AuthContext, TokenVerifier, PermissionChecker and the edge filter that
+  verifies the bearer token, resolves the tenant, enforces the operation's x-permission and fills AuthContext.
+  Spring Security / Nimbus are implementation details of the `internal` package; swapping the OIDC issuer changes
+  configuration here, never a module.
+  Its test-jar provides TestTokens: signed tokens for component tests.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.mysms</groupId>
+    <artifactId>mysms</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>auth-client</artifactId>
+  <name>MySMS auth client</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-oauth2-jose</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>contracts</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>test-tokens</id>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+            <configuration>
+              <includes>
+                <include>com/mysms/authclient/testing/**</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

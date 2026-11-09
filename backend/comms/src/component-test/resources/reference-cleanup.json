@@ -1,0 +1,467 @@
+{
+ "module": "comms",
+ "cleanup": [
+  {
+   "event": "iam.user_account.deleted",
+   "table": "comms.calendar_export",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "c1a8b27b-6bb7-5e32-bafe-52f60007d57b",
+   "rowId": "dd4b1348-7047-5f03-8319-d00f98e99fc6",
+   "otherRowId": "930fcf09-3d2c-5aa9-8097-eb5e8d499e90",
+   "fixtures": [],
+   "row": "INSERT INTO comms.calendar_export (tenant_id, provider, entity_type, entity_id, row_version, user_id, id) VALUES (:tenant, 'google', 't-entity-type-fbb8e8d5', '1d621c8a-7b76-5c42-a130-b260b0486715', 1, 'c1a8b27b-6bb7-5e32-bafe-52f60007d57b', 'dd4b1348-7047-5f03-8319-d00f98e99fc6')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.calendar_export (tenant_id, provider, entity_type, entity_id, row_version, user_id, id) VALUES (:tenant, 'google', 't-entity-type-8969584c', '6e01a47c-90c5-5d29-9639-ac4a2857c124', 1, '3fee9797-d69b-5fb7-88e1-fc29cab5ffb8', '930fcf09-3d2c-5aa9-8097-eb5e8d499e90')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "comms.class_page",
+   "column": "cover_image_file_id",
+   "action": "null the column",
+   "ownerId": "a2f313e8-3b99-5a8e-933b-300a9597eeaf",
+   "rowId": "29de71a8-3537-5565-b785-4993dc4d5ba0",
+   "otherRowId": "09ab72f3-8ef2-55af-941c-47faa5f04d15",
+   "fixtures": [
+    "INSERT INTO comms.page_category (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-c0c0500c', 1, 'C58D20914', 'e87a992d-54ba-5d40-b729-9bbe23a762a4') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.class_page (tenant_id, institution_id, page_category_id, name, description, row_version, cover_image_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'e87a992d-54ba-5d40-b729-9bbe23a762a4', 't-name-95d2784c', 't-description-e94d3bfd', 1, 'a2f313e8-3b99-5a8e-933b-300a9597eeaf', '29de71a8-3537-5565-b785-4993dc4d5ba0')",
+   "otherFixtures": [
+    "INSERT INTO comms.page_category (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-name-c0c0500c', 1, 'C58D20914', '6596a4cf-b692-5d8f-81ef-3e6f77479fc7') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.class_page (tenant_id, institution_id, page_category_id, name, description, row_version, cover_image_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', '6596a4cf-b692-5d8f-81ef-3e6f77479fc7', 't-name-0b289c17', 't-description-ff47351e', 1, 'a2f313e8-3b99-5a8e-933b-300a9597eeaf', '09ab72f3-8ef2-55af-941c-47faa5f04d15')",
+   "softDeletable": true
+  },
+  {
+   "event": "sis.student.deleted",
+   "table": "comms.content_view",
+   "column": "student_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "61943d1d-34e0-59b5-93ee-f04a5d7f0571",
+   "rowId": "ccc6cf64-c783-5a18-a406-43ef4be6e72c",
+   "otherRowId": "c8bd20eb-ebc2-59b9-8657-179799a75ccc",
+   "fixtures": [],
+   "row": "INSERT INTO comms.content_view (tenant_id, institution_id, content_type, content_id, row_version, student_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'image', 'c8fe1a5d-45f4-52fc-ada5-ac7fa400b46b', 1, '61943d1d-34e0-59b5-93ee-f04a5d7f0571', 'ccc6cf64-c783-5a18-a406-43ef4be6e72c')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.content_view (tenant_id, institution_id, content_type, content_id, row_version, student_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'image', 'bd6c4fa9-10fb-5da0-9432-e5208c382a89', 1, '61943d1d-34e0-59b5-93ee-f04a5d7f0571', 'c8bd20eb-ebc2-59b9-8657-179799a75ccc')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "comms.event",
+   "column": "image_file_id",
+   "action": "null the column",
+   "ownerId": "44255476-d30f-5b94-b7fd-804c286eeec7",
+   "rowId": "6c04b0bb-6b50-5de4-9e97-b73f17ab1415",
+   "otherRowId": "91da8e41-8d8a-5889-8240-49a55149c777",
+   "fixtures": [],
+   "row": "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, image_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-6bbc3d5a', 1, '44255476-d30f-5b94-b7fd-804c286eeec7', '6c04b0bb-6b50-5de4-9e97-b73f17ab1415')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, image_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-8be5b093', 1, '44255476-d30f-5b94-b7fd-804c286eeec7', '91da8e41-8d8a-5889-8240-49a55149c777')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "comms.event",
+   "column": "owner_user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "afc803ae-7e38-5090-9ecd-5eefaa08b0cc",
+   "rowId": "d9a3723a-1d4a-5b64-994a-9afabed14dd6",
+   "otherRowId": "3e45c3d3-c086-5362-99e4-1f37623af295",
+   "fixtures": [],
+   "row": "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, audience, owner_user_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-12c3c1c8', 1, 'personal', 'afc803ae-7e38-5090-9ecd-5eefaa08b0cc', 'd9a3723a-1d4a-5b64-994a-9afabed14dd6')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, audience, owner_user_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-6bbe202c', 1, 'personal', 'afc803ae-7e38-5090-9ecd-5eefaa08b0cc', '3e45c3d3-c086-5362-99e4-1f37623af295')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "comms.event_attendee",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "a773cd53-dc6f-5520-ab7a-bbd9e5b822dd",
+   "rowId": "2e24664b-c2d1-5309-b9d3-52ba2bcc1e45",
+   "otherRowId": "b62efe5e-3f23-56cb-90b9-8866c5362b1b",
+   "fixtures": [
+    "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-9c9f705d', 1, '0038cdd0-b4f3-5897-a990-f7129142bc93') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.event_attendee (tenant_id, event_id, row_version, user_id, id) VALUES (:tenant, '0038cdd0-b4f3-5897-a990-f7129142bc93', 1, 'a773cd53-dc6f-5520-ab7a-bbd9e5b822dd', '2e24664b-c2d1-5309-b9d3-52ba2bcc1e45')",
+   "otherFixtures": [
+    "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-9c9f705d', 1, '3e8e285c-a549-534d-b7ec-1b82895ebb29') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.event_attendee (tenant_id, event_id, row_version, user_id, id) VALUES (:tenant, '3e8e285c-a549-534d-b7ec-1b82895ebb29', 1, '04de33e5-c764-50f3-8d74-1cf3beac1103', 'b62efe5e-3f23-56cb-90b9-8866c5362b1b')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.institution.deleted",
+   "table": "comms.event_institution",
+   "column": "institution_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "3948fa9a-93ed-5e3f-b1a4-27256bae7298",
+   "rowId": "86a89c28-7804-5939-b714-c9a495aff6fb",
+   "otherRowId": "2eb6f41e-fdbc-56a4-b31b-f3bd3495d032",
+   "fixtures": [
+    "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-9c9f705d', 1, '0038cdd0-b4f3-5897-a990-f7129142bc93') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.event_institution (tenant_id, event_id, row_version, institution_id, id) VALUES (:tenant, '0038cdd0-b4f3-5897-a990-f7129142bc93', 1, '3948fa9a-93ed-5e3f-b1a4-27256bae7298', '86a89c28-7804-5939-b714-c9a495aff6fb')",
+   "otherFixtures": [
+    "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-9c9f705d', 1, '3e8e285c-a549-534d-b7ec-1b82895ebb29') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.event_institution (tenant_id, event_id, row_version, institution_id, id) VALUES (:tenant, '3e8e285c-a549-534d-b7ec-1b82895ebb29', 1, '3843b0e9-4f1f-52ef-97e2-9446dfa97d2c', '2eb6f41e-fdbc-56a4-b31b-f3bd3495d032')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "comms.event_occurrence",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "dc4417ec-9c47-5376-827a-0bd0d02ae563",
+   "rowId": "3a1bb6ae-783c-5cc2-8ce5-90c6c5ca3f93",
+   "otherRowId": "82076241-0e90-5e0d-ab7b-929da1004608",
+   "fixtures": [
+    "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-b9a17eab', 1, 'ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.event_occurrence (tenant_id, event_id, start_at, row_version, user_id, id) VALUES (:tenant, 'ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7', '2026-01-10T09:00:00Z', 1, 'dc4417ec-9c47-5376-827a-0bd0d02ae563', '3a1bb6ae-783c-5cc2-8ce5-90c6c5ca3f93')",
+   "otherFixtures": [
+    "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-b9a17eab', 1, 'ac6aa8e9-7e9e-5116-ac25-7bf3d8c89abb') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.event_occurrence (tenant_id, event_id, start_at, row_version, user_id, id) VALUES (:tenant, 'ac6aa8e9-7e9e-5116-ac25-7bf3d8c89abb', '2026-01-10T09:00:00Z', 1, 'dc4417ec-9c47-5376-827a-0bd0d02ae563', '82076241-0e90-5e0d-ab7b-929da1004608')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "comms.feedback_message",
+   "column": "attachment_file_id",
+   "action": "null the column",
+   "ownerId": "e534183b-af06-5a7a-8e17-ec9b370d935d",
+   "rowId": "5c2d6dd6-a990-58bf-a8fb-1b43ccc7d21c",
+   "otherRowId": "eb6a3636-292f-5e2a-b64d-c6fce84d3fcc",
+   "fixtures": [
+    "INSERT INTO comms.feedback_thread (tenant_id, institution_id, guardian_id, student_id, assigned_to_user_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '86719043-51da-538d-8c92-63b3551f45d1', 'f64db0bf-f2bd-5444-a2ec-a024c6561f55', '03a57fe9-7c91-5293-b496-1a7facd3e897', 1, 'e1e7ab19-88d0-5cc5-91ab-03ef6779e2fa') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.feedback_message (tenant_id, thread_id, sender_user_id, category, message, row_version, attachment_file_id, id) VALUES (:tenant, 'e1e7ab19-88d0-5cc5-91ab-03ef6779e2fa', '1f98415b-e987-5163-a48e-04655e989d86', 'app_feedback_or_bug', 't-message-4751808f', 1, 'e534183b-af06-5a7a-8e17-ec9b370d935d', '5c2d6dd6-a990-58bf-a8fb-1b43ccc7d21c')",
+   "otherFixtures": [
+    "INSERT INTO comms.feedback_thread (tenant_id, institution_id, guardian_id, student_id, assigned_to_user_id, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', '304aa3d8-6982-52f5-bb80-9bcbe6e48f69', '79208699-913a-5c2c-97ba-316adc04a9e4', '7f5c2fa0-4aae-5e3a-87c0-70f43ac6acf9', 1, 'ebcae08f-1fb0-599c-817d-d1aef89a5ae9') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.feedback_message (tenant_id, thread_id, sender_user_id, category, message, row_version, attachment_file_id, id) VALUES (:tenant, 'ebcae08f-1fb0-599c-817d-d1aef89a5ae9', '0080a89b-03a9-51f3-9624-277538993e72', 'app_feedback_or_bug', 't-message-6d290e6d', 1, 'e534183b-af06-5a7a-8e17-ec9b370d935d', 'eb6a3636-292f-5e2a-b64d-c6fce84d3fcc')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "comms.magazine",
+   "column": "cover_image_file_id",
+   "action": "null the column",
+   "ownerId": "21df10c4-6982-504f-a04f-f92a5afdc4a3",
+   "rowId": "20a042ca-e227-578e-bb66-5b8c61cbbf0c",
+   "otherRowId": "9840878a-7252-5763-ad37-004d86fa698e",
+   "fixtures": [],
+   "row": "INSERT INTO comms.magazine (tenant_id, institution_id, academic_year_id, row_version, cover_image_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'f327e53b-7846-52d4-9ad8-f1c934f1548b', 1, '21df10c4-6982-504f-a04f-f92a5afdc4a3', '20a042ca-e227-578e-bb66-5b8c61cbbf0c')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.magazine (tenant_id, institution_id, academic_year_id, row_version, cover_image_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', '6e95d199-dfab-5ed1-ad71-4ea05ecd8b3c', 1, '21df10c4-6982-504f-a04f-f92a5afdc4a3', '9840878a-7252-5763-ad37-004d86fa698e')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "comms.magazine",
+   "column": "document_file_id",
+   "action": "null the column",
+   "ownerId": "15353194-3fed-5ac8-8922-bc0afb687d55",
+   "rowId": "22246e13-0688-5f81-ad23-be4c859c5077",
+   "otherRowId": "275523ca-dc08-5453-b1d6-58da4f1d58b7",
+   "fixtures": [],
+   "row": "INSERT INTO comms.magazine (tenant_id, institution_id, academic_year_id, row_version, document_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'b6fd04c9-cd91-5b76-90cf-11c04dc923ee', 1, '15353194-3fed-5ac8-8922-bc0afb687d55', '22246e13-0688-5f81-ad23-be4c859c5077')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.magazine (tenant_id, institution_id, academic_year_id, row_version, document_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', '7fae0437-caa3-512c-aa2a-0745b39a3895', 1, '15353194-3fed-5ac8-8922-bc0afb687d55', '275523ca-dc08-5453-b1d6-58da4f1d58b7')",
+   "softDeletable": true
+  },
+  {
+   "event": "sis.student.deleted",
+   "table": "comms.mailbox_message",
+   "column": "about_student_id",
+   "action": "null the column",
+   "ownerId": "1fea098e-d611-5979-a71c-df66b8ffb10c",
+   "rowId": "4c4ffc26-8356-52f5-b040-75e693e690cf",
+   "otherRowId": "9f56b1ae-0df3-561e-8ba8-db7f6865ddd0",
+   "fixtures": [],
+   "row": "INSERT INTO comms.mailbox_message (tenant_id, institution_id, folder, row_version, about_student_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'outbox', 1, '1fea098e-d611-5979-a71c-df66b8ffb10c', '4c4ffc26-8356-52f5-b040-75e693e690cf')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.mailbox_message (tenant_id, institution_id, folder, row_version, about_student_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'outbox', 1, '1fea098e-d611-5979-a71c-df66b8ffb10c', '9f56b1ae-0df3-561e-8ba8-db7f6865ddd0')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "comms.notice",
+   "column": "attachment_file_id",
+   "action": "null the column",
+   "ownerId": "29258949-6518-5b7a-85f0-973edcfe670f",
+   "rowId": "b36a2325-b99c-5f37-be97-fcd7325bf753",
+   "otherRowId": "607652f0-400f-5dd3-a3e4-abd130d3ffd1",
+   "fixtures": [],
+   "row": "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, attachment_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'school', 't-title-19e3d65a', 't-body-db04a5c2', 1, '29258949-6518-5b7a-85f0-973edcfe670f', 'b36a2325-b99c-5f37-be97-fcd7325bf753')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, attachment_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'school', 't-title-9f69967e', 't-body-12769e15', 1, '29258949-6518-5b7a-85f0-973edcfe670f', '607652f0-400f-5dd3-a3e4-abd130d3ffd1')",
+   "softDeletable": true
+  },
+  {
+   "event": "org.institution.deleted",
+   "table": "comms.notice_audience",
+   "column": "institution_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "f167c073-8537-5523-b9c9-626cf1efa89d",
+   "rowId": "6b71327f-01aa-5d04-8c86-adf0fa9cb8e2",
+   "otherRowId": "e5e32295-90df-54a0-961a-4a7ca0ed2ea6",
+   "fixtures": [
+    "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'school', 't-title-930a024a', 't-body-40d8f8a7', 1, '611e12fe-3fc2-51e1-b4f6-81c26ca17ebe') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.notice_audience (tenant_id, notice_id, row_version, institution_id, id) VALUES (:tenant, '611e12fe-3fc2-51e1-b4f6-81c26ca17ebe', 1, 'f167c073-8537-5523-b9c9-626cf1efa89d', '6b71327f-01aa-5d04-8c86-adf0fa9cb8e2')",
+   "otherFixtures": [
+    "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'school', 't-title-930a024a', 't-body-40d8f8a7', 1, '0e289e6b-fb17-5b13-b081-4cc59005c2a6') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.notice_audience (tenant_id, notice_id, row_version, institution_id, id) VALUES (:tenant, '0e289e6b-fb17-5b13-b081-4cc59005c2a6', 1, 'f167c073-8537-5523-b9c9-626cf1efa89d', 'e5e32295-90df-54a0-961a-4a7ca0ed2ea6')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.role.deleted",
+   "table": "comms.notice_audience",
+   "column": "role_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "d6eff501-4b1d-5041-b462-43c47fe09673",
+   "rowId": "d597dedb-2904-599b-b876-80d5f384ce8e",
+   "otherRowId": "6ba39cac-ff4e-5f46-83e4-4906dc11462a",
+   "fixtures": [
+    "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'school', 't-title-930a024a', 't-body-40d8f8a7', 1, '611e12fe-3fc2-51e1-b4f6-81c26ca17ebe') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.notice_audience (tenant_id, notice_id, institution_id, row_version, role_id, id) VALUES (:tenant, '611e12fe-3fc2-51e1-b4f6-81c26ca17ebe', '0196f000-0000-7000-8000-00000000a001', 1, 'd6eff501-4b1d-5041-b462-43c47fe09673', 'd597dedb-2904-599b-b876-80d5f384ce8e')",
+   "otherFixtures": [
+    "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'school', 't-title-930a024a', 't-body-40d8f8a7', 1, '0e289e6b-fb17-5b13-b081-4cc59005c2a6') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.notice_audience (tenant_id, notice_id, institution_id, row_version, role_id, id) VALUES (:tenant, '0e289e6b-fb17-5b13-b081-4cc59005c2a6', '7a86f7d0-7e3a-52bd-9804-cb866553556c', 1, 'd6eff501-4b1d-5041-b462-43c47fe09673', '6ba39cac-ff4e-5f46-83e4-4906dc11462a')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "comms.notice_background",
+   "column": "image_file_id",
+   "action": "null the column",
+   "ownerId": "abd34f63-c03f-578c-87b0-14b1e3a64406",
+   "rowId": "90649e18-9b2b-53b9-be64-88ad407e037a",
+   "otherRowId": "7ced2bd7-caf5-5169-b44d-194cba3a84bf",
+   "fixtures": [],
+   "row": "INSERT INTO comms.notice_background (tenant_id, institution_id, usage, row_version, image_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'event', 1, 'abd34f63-c03f-578c-87b0-14b1e3a64406', '90649e18-9b2b-53b9-be64-88ad407e037a')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.notice_background (tenant_id, institution_id, usage, row_version, image_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'event', 1, 'abd34f63-c03f-578c-87b0-14b1e3a64406', '7ced2bd7-caf5-5169-b44d-194cba3a84bf')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.role.deleted",
+   "table": "comms.notification_preference_set",
+   "column": "role_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "007128c8-54b3-5858-989c-b5ddaad9546d",
+   "rowId": "6e4e3405-babc-5e3a-a486-af01c169d4dd",
+   "otherRowId": "c870621c-3683-5bd5-a9be-eeebcb0e3bd4",
+   "fixtures": [],
+   "row": "INSERT INTO comms.notification_preference_set (tenant_id, user_id, row_version, role_id, id) VALUES (:tenant, 'c4a4e803-f46d-50dd-8c9c-b613dbd139f6', 1, '007128c8-54b3-5858-989c-b5ddaad9546d', '6e4e3405-babc-5e3a-a486-af01c169d4dd')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.notification_preference_set (tenant_id, user_id, row_version, role_id, id) VALUES (:tenant, 'f621fd6d-e104-5a44-8292-fcbdda88b7d2', 1, '007128c8-54b3-5858-989c-b5ddaad9546d', 'c870621c-3683-5bd5-a9be-eeebcb0e3bd4')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.user_account.deleted",
+   "table": "comms.notification_preference_set",
+   "column": "user_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "e16cab10-5224-5f45-8177-0f058a9b4934",
+   "rowId": "2a086c45-deb8-59fa-abbd-c0f16338bfda",
+   "otherRowId": "0b0f9d7e-2767-5ffd-b664-7338d32e96e6",
+   "fixtures": [],
+   "row": "INSERT INTO comms.notification_preference_set (tenant_id, row_version, user_id, id) VALUES (:tenant, 1, 'e16cab10-5224-5f45-8177-0f058a9b4934', '2a086c45-deb8-59fa-abbd-c0f16338bfda')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.notification_preference_set (tenant_id, row_version, user_id, id) VALUES (:tenant, 1, '9ad5843c-e16a-5bb8-930d-01cab4aee848', '0b0f9d7e-2767-5ffd-b664-7338d32e96e6')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.permission.deleted",
+   "table": "comms.notification_rule",
+   "column": "permission_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "0241e082-1db3-59e9-b7d2-73d04f60545a",
+   "rowId": "0caf4048-ebe8-531d-857e-5fc6ec331a47",
+   "otherRowId": "42af1aaa-23a0-5f3a-a5b1-c6a0f7983904",
+   "fixtures": [
+    "INSERT INTO comms.notification_type (code, description, module_code, row_version, id) VALUES ('C61B4CC05', 't-description-f1ddf3e2', 'C7E11A17F', 1, '006110c6-e117-50ed-baaf-1f1417a00eb8') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.notification_rule (tenant_id, role_id, notification_type_id, row_version, permission_id, id) VALUES (:tenant, 'cbfa7d28-01ee-5be9-88e6-4f5c271086c8', '006110c6-e117-50ed-baaf-1f1417a00eb8', 1, '0241e082-1db3-59e9-b7d2-73d04f60545a', '0caf4048-ebe8-531d-857e-5fc6ec331a47')",
+   "otherFixtures": [
+    "INSERT INTO comms.notification_type (code, description, module_code, row_version, id) VALUES ('C61B4CC05', 't-description-f1ddf3e2', 'C7E11A17F', 1, '006110c6-e117-50ed-baaf-1f1417a00eb8') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.notification_rule (tenant_id, role_id, notification_type_id, row_version, permission_id, id) VALUES (:tenant, '98e255d6-c5b4-597b-b315-5a545af02202', '006110c6-e117-50ed-baaf-1f1417a00eb8', 1, '0241e082-1db3-59e9-b7d2-73d04f60545a', '42af1aaa-23a0-5f3a-a5b1-c6a0f7983904')",
+   "softDeletable": true
+  },
+  {
+   "event": "iam.role.deleted",
+   "table": "comms.notification_rule",
+   "column": "role_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "b388ae57-7835-5476-b1b6-aaa891a086ed",
+   "rowId": "399f8606-be9e-5ef9-a4ed-0bb712059b21",
+   "otherRowId": "d0148725-d4b5-52b5-9e62-44b237573247",
+   "fixtures": [
+    "INSERT INTO comms.notification_type (code, description, module_code, row_version, id) VALUES ('C61B4CC05', 't-description-f1ddf3e2', 'C7E11A17F', 1, '006110c6-e117-50ed-baaf-1f1417a00eb8') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.notification_rule (tenant_id, notification_type_id, row_version, role_id, id) VALUES (:tenant, '006110c6-e117-50ed-baaf-1f1417a00eb8', 1, 'b388ae57-7835-5476-b1b6-aaa891a086ed', '399f8606-be9e-5ef9-a4ed-0bb712059b21')",
+   "otherFixtures": [
+    "INSERT INTO comms.notification_type (code, description, module_code, row_version, id) VALUES ('C61B4CC05', 't-description-f1ddf3e2', 'C7E11A17F', 1, '006110c6-e117-50ed-baaf-1f1417a00eb8') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.notification_rule (tenant_id, notification_type_id, row_version, role_id, id) VALUES (:tenant, '006110c6-e117-50ed-baaf-1f1417a00eb8', 1, '89faf93d-5909-5d5c-b64b-52341b3226b7', 'd0148725-d4b5-52b5-9e62-44b237573247')",
+   "softDeletable": true
+  },
+  {
+   "event": "academics.class_section.deleted",
+   "table": "comms.post_audience_class",
+   "column": "class_section_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "d9e3d073-7104-5cb6-8fa0-50da7a4850ba",
+   "rowId": "fe058d6e-5fc4-50f5-820f-a3bed07973b4",
+   "otherRowId": "d407cfa4-76ab-5e66-a970-b5b551a17d25",
+   "fixtures": [
+    "INSERT INTO comms.post (tenant_id, institution_id, academic_year_id, author_user_id, body, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '7b252bc8-2fa4-549e-b1a1-71b4b2e5007f', 'ae128f04-bfed-5e0f-a3f5-ec086c5bd73b', 't-body-b826f370', 1, 'a68129ce-ebba-5249-b426-8f252e12a2de') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.post_audience_class (tenant_id, post_id, row_version, class_section_id, id) VALUES (:tenant, 'a68129ce-ebba-5249-b426-8f252e12a2de', 1, 'd9e3d073-7104-5cb6-8fa0-50da7a4850ba', 'fe058d6e-5fc4-50f5-820f-a3bed07973b4')",
+   "otherFixtures": [
+    "INSERT INTO comms.post (tenant_id, institution_id, academic_year_id, author_user_id, body, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', '3229a8d1-538a-5e4e-a595-99b9e636f218', '24bb42dd-00ae-571b-8bff-8f4ae31015db', 't-body-b826f370', 1, '7758f87d-9398-55ba-9fa5-57bb15c89af3') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.post_audience_class (tenant_id, post_id, row_version, class_section_id, id) VALUES (:tenant, '7758f87d-9398-55ba-9fa5-57bb15c89af3', 1, '43940bc1-2420-55b3-b7eb-911b797171fd', 'd407cfa4-76ab-5e66-a970-b5b551a17d25')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "comms.post_comment",
+   "column": "attachment_file_id",
+   "action": "null the column",
+   "ownerId": "0e484223-91d0-58a3-97c4-2ed85ff1b65c",
+   "rowId": "626d4d92-6cd5-5452-9e94-59c494494313",
+   "otherRowId": "59e8be83-8137-5bfb-b496-85c300438423",
+   "fixtures": [
+    "INSERT INTO comms.post (tenant_id, institution_id, academic_year_id, author_user_id, body, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '0508a346-b33a-5f98-a9f6-01438fc815d7', 'f71482ff-076a-53ef-8369-4eee9d8763f6', 't-body-d0d53282', 1, '7881eb3d-f824-5883-b284-e2c7b34c9b29') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.post_comment (tenant_id, post_id, author_user_id, row_version, attachment_file_id, id) VALUES (:tenant, '7881eb3d-f824-5883-b284-e2c7b34c9b29', '28dafdce-5cde-565e-85c6-6e5e83c0cddf', 1, '0e484223-91d0-58a3-97c4-2ed85ff1b65c', '626d4d92-6cd5-5452-9e94-59c494494313')",
+   "otherFixtures": [
+    "INSERT INTO comms.post (tenant_id, institution_id, academic_year_id, author_user_id, body, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', '28c87661-5aa6-5634-8259-7f49e40a93e6', '04f4ffdf-9c3b-53a7-8228-bf5ccf2d1dd1', 't-body-d0d53282', 1, '9cf5ab69-dbd2-57ad-9fdd-79c3441ec088') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.post_comment (tenant_id, post_id, author_user_id, row_version, attachment_file_id, id) VALUES (:tenant, '9cf5ab69-dbd2-57ad-9fdd-79c3441ec088', '6d6c102d-3baf-576f-a0e0-92981146f110', 1, '0e484223-91d0-58a3-97c4-2ed85ff1b65c', '59e8be83-8137-5bfb-b496-85c300438423')",
+   "softDeletable": true
+  },
+  {
+   "event": "lms.cohort.deleted",
+   "table": "comms.notice",
+   "column": "cohort_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "4f856b1c-22fa-5785-a274-82e3c86fc23c",
+   "rowId": "c7512347-94d6-56ff-a27f-654d3c60b45d",
+   "otherRowId": "845552b8-c7df-5d07-b2ce-14849f397ef3",
+   "fixtures": [],
+   "row": "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, cohort_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'cohort', 't-title-22b373f5', 't-body-c962902e', 1, '4f856b1c-22fa-5785-a274-82e3c86fc23c', 'c7512347-94d6-56ff-a27f-654d3c60b45d')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, cohort_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'cohort', 't-title-3ffbd863', 't-body-eaa801bc', 1, '4f856b1c-22fa-5785-a274-82e3c86fc23c', '845552b8-c7df-5d07-b2ce-14849f397ef3')",
+   "softDeletable": true
+  },
+  {
+   "event": "lms.forum_topic.deleted",
+   "table": "comms.notice",
+   "column": "discussion_topic_id",
+   "action": "null the column",
+   "ownerId": "3efa4d35-ff8c-5e65-82db-8d7500261ea4",
+   "rowId": "9d7b5c7b-1d46-5e45-acd4-107aef9e241e",
+   "otherRowId": "2c86b9d6-f21e-5cc7-a00e-63c79c731b3a",
+   "fixtures": [],
+   "row": "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, discussion_topic_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'school', 't-title-89a22b37', 't-body-225f0a97', 1, '3efa4d35-ff8c-5e65-82db-8d7500261ea4', '9d7b5c7b-1d46-5e45-acd4-107aef9e241e')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, discussion_topic_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'school', 't-title-1932884b', 't-body-45f02fd8', 1, '3efa4d35-ff8c-5e65-82db-8d7500261ea4', '2c86b9d6-f21e-5cc7-a00e-63c79c731b3a')",
+   "softDeletable": true
+  },
+  {
+   "event": "lms.cohort.deleted",
+   "table": "comms.event",
+   "column": "cohort_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "e7f34607-4bf1-5cfc-a717-815659438799",
+   "rowId": "55a78fc5-37ad-5d06-a8ad-c3e074f284d2",
+   "otherRowId": "8b4e0955-a391-5470-aeaa-7ea2c5dde93b",
+   "fixtures": [],
+   "row": "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, audience, cohort_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-47b2985f', 1, 'cohort', 'e7f34607-4bf1-5cfc-a717-815659438799', '55a78fc5-37ad-5d06-a8ad-c3e074f284d2')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, audience, cohort_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-5875b707', 1, 'cohort', 'e7f34607-4bf1-5cfc-a717-815659438799', '8b4e0955-a391-5470-aeaa-7ea2c5dde93b')",
+   "softDeletable": true
+  },
+  {
+   "event": "lms.forum_topic.deleted",
+   "table": "comms.notice_version",
+   "column": "discussion_topic_id",
+   "action": "null the column",
+   "ownerId": "ce580087-e97d-5ab6-a820-3076fe95a629",
+   "rowId": "a66d0c13-c49e-5d4d-891d-05ce72da11d0",
+   "otherRowId": "38e2755c-f52a-5832-be94-fa558895ebc6",
+   "fixtures": [
+    "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'school', 't-title-ddd19229', 't-body-7dbec4cb', 1, 'e29a6e57-7418-58c5-894e-774a6ed6e415') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.notice_version (tenant_id, notice_id, versioned_at, row_version, discussion_topic_id, id) VALUES (:tenant, 'e29a6e57-7418-58c5-894e-774a6ed6e415', '2026-01-10T09:00:00Z', 1, 'ce580087-e97d-5ab6-a820-3076fe95a629', 'a66d0c13-c49e-5d4d-891d-05ce72da11d0')",
+   "otherFixtures": [
+    "INSERT INTO comms.notice (tenant_id, institution_id, audience, title, body, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'school', 't-title-ddd19229', 't-body-7dbec4cb', 1, '8801b404-e4f8-5ade-bc48-dc41f5923280') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.notice_version (tenant_id, notice_id, versioned_at, row_version, discussion_topic_id, id) VALUES (:tenant, '8801b404-e4f8-5ade-bc48-dc41f5923280', '2026-01-10T09:00:00Z', 1, 'ce580087-e97d-5ab6-a820-3076fe95a629', '38e2755c-f52a-5832-be94-fa558895ebc6')",
+   "softDeletable": true
+  },
+  {
+   "event": "lms.cohort.deleted",
+   "table": "comms.event_occurrence",
+   "column": "cohort_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "50fc9767-a458-5eba-9320-f45720cfddb9",
+   "rowId": "55fff4af-f473-544c-9d2f-d78479c02771",
+   "otherRowId": "1fda788d-40b5-5018-807c-753a6286041b",
+   "fixtures": [
+    "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-b9a17eab', 1, 'ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.event_occurrence (tenant_id, event_id, start_at, row_version, cohort_id, id) VALUES (:tenant, 'ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7', '2026-01-10T09:00:00Z', 1, '50fc9767-a458-5eba-9320-f45720cfddb9', '55fff4af-f473-544c-9d2f-d78479c02771')",
+   "otherFixtures": [
+    "INSERT INTO comms.event (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-title-b9a17eab', 1, 'ac6aa8e9-7e9e-5116-ac25-7bf3d8c89abb') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.event_occurrence (tenant_id, event_id, start_at, row_version, cohort_id, id) VALUES (:tenant, 'ac6aa8e9-7e9e-5116-ac25-7bf3d8c89abb', '2026-01-10T09:00:00Z', 1, '50fc9767-a458-5eba-9320-f45720cfddb9', '1fda788d-40b5-5018-807c-753a6286041b')",
+   "softDeletable": true
+  },
+  {
+   "event": "lms.cohort.deleted",
+   "table": "comms.calendar_export",
+   "column": "cohort_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "554ad6a2-b66d-582c-a3be-f0eb879f5978",
+   "rowId": "c8176d27-3c7a-59eb-819b-8b9493e1c03f",
+   "otherRowId": "70a016fe-9844-51b7-8874-7f0246da4231",
+   "fixtures": [],
+   "row": "INSERT INTO comms.calendar_export (tenant_id, user_id, provider, entity_type, entity_id, row_version, cohort_id, id) VALUES (:tenant, 'cd55583a-73f6-5170-a68b-25f819649abd', 'google', 't-entity-type-85f9b3be', 'fab13e62-c8db-529e-932d-388e2639dcd2', 1, '554ad6a2-b66d-582c-a3be-f0eb879f5978', 'c8176d27-3c7a-59eb-819b-8b9493e1c03f')",
+   "otherFixtures": [],
+   "other": "INSERT INTO comms.calendar_export (tenant_id, user_id, provider, entity_type, entity_id, row_version, cohort_id, id) VALUES (:tenant, '930ecb23-5d99-5951-9bb2-37887698a90c', 'google', 't-entity-type-96808a5f', '4c6a6f19-a6dd-59ef-b3fd-733643fdb840', 1, '554ad6a2-b66d-582c-a3be-f0eb879f5978', '70a016fe-9844-51b7-8874-7f0246da4231')",
+   "softDeletable": true
+  },
+  {
+   "event": "lms.cohort.deleted",
+   "table": "comms.notification_cohort_setting",
+   "column": "cohort_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "96cb461a-1ae4-5c66-abde-55765ecb457a",
+   "rowId": "eb017888-d32a-515e-931a-4ceb6df93be7",
+   "otherRowId": "9e9c527b-eedd-5d7e-9c2b-259bd20c2395",
+   "fixtures": [
+    "INSERT INTO comms.notification_type (code, description, module_code, row_version, id) VALUES ('C61B4CC05', 't-description-f1ddf3e2', 'C7E11A17F', 1, '006110c6-e117-50ed-baaf-1f1417a00eb8') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO comms.notification_cohort_setting (tenant_id, notification_type_id, row_version, cohort_id, id) VALUES (:tenant, '006110c6-e117-50ed-baaf-1f1417a00eb8', 1, '96cb461a-1ae4-5c66-abde-55765ecb457a', 'eb017888-d32a-515e-931a-4ceb6df93be7')",
+   "otherFixtures": [
+    "INSERT INTO comms.notification_type (code, description, module_code, row_version, id) VALUES ('C61B4CC05', 't-description-f1ddf3e2', 'C7E11A17F', 1, '006110c6-e117-50ed-baaf-1f1417a00eb8') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO comms.notification_cohort_setting (tenant_id, notification_type_id, row_version, cohort_id, id) VALUES (:tenant, '006110c6-e117-50ed-baaf-1f1417a00eb8', 1, 'cc4fffd8-1f30-57e5-b70f-44ef3883741e', '9e9c527b-eedd-5d7e-9c2b-259bd20c2395')",
+   "softDeletable": true
+  }
+ ]
+}

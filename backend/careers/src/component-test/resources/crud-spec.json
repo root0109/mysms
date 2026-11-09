@@ -1,0 +1,215 @@
+{
+ "module": "careers",
+ "resources": [
+  {
+   "name": "CandidatePreference",
+   "table": "careers.candidate_preference",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/careers/candidate-preferences",
+   "item": "/v1/careers/candidate-preferences/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "personId": "3e12fab5-b29a-5ca1-be0a-ba7fe5dc4962"
+   },
+   "update": {
+    "preferredLocation": "Updated preferred_location"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "CandidatePreferredFunction",
+   "table": "careers.candidate_preferred_function",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/careers/candidate-preferences/5e91bc93-3853-5e4d-9295-d974371d3560/functions",
+   "item": "/v1/careers/candidate-preferences/5e91bc93-3853-5e4d-9295-d974371d3560/functions/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO careers.candidate_preference (tenant_id, person_id, row_version, id) VALUES (:tenant, '1cc10298-8a70-5043-9496-9c3067237c6b', 1, '5e91bc93-3853-5e4d-9295-d974371d3560') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO careers.function_area (tenant_id, name, row_version, code, id) VALUES (:tenant, 't-name-62022892', 1, 'CB5A573EC', 'c5bf7f6f-4782-583b-8d45-e75187ea1d13') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "candidatePreferenceId": "5e91bc93-3853-5e4d-9295-d974371d3560",
+    "functionAreaId": "c5bf7f6f-4782-583b-8d45-e75187ea1d13"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "CandidatePreferredIndustry",
+   "table": "careers.candidate_preferred_industry",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/careers/candidate-preferences/5e91bc93-3853-5e4d-9295-d974371d3560/industries",
+   "item": "/v1/careers/candidate-preferences/5e91bc93-3853-5e4d-9295-d974371d3560/industries/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO careers.candidate_preference (tenant_id, person_id, row_version, id) VALUES (:tenant, '1cc10298-8a70-5043-9496-9c3067237c6b', 1, '5e91bc93-3853-5e4d-9295-d974371d3560') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO careers.industry (tenant_id, name, row_version, code, id) VALUES (:tenant, 't-name-c278d9e2', 1, 'C7ADA4F5D', '28e22dc1-799a-5377-ac98-ea397725061a') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "candidatePreferenceId": "5e91bc93-3853-5e4d-9295-d974371d3560",
+    "industryId": "28e22dc1-799a-5377-ac98-ea397725061a"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "FunctionArea",
+   "table": "careers.function_area",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/careers/function-areas",
+   "item": "/v1/careers/function-areas/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C905B8765",
+    "name": "t-name-246e61d2"
+   },
+   "update": {
+    "isActive": true
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Industry",
+   "table": "careers.industry",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/careers/industries",
+   "item": "/v1/careers/industries/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "CB196DABC",
+    "name": "t-name-1faa4a13"
+   },
+   "update": {
+    "isActive": true
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "JobApplication",
+   "table": "careers.job_application",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/careers/job-openings/61b1aa84-f117-5f71-a4a9-6807b5299cf8/applications",
+   "item": "/v1/careers/job-openings/61b1aa84-f117-5f71-a4a9-6807b5299cf8/applications/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO careers.job_opening (tenant_id, title, location, country_id, employment_type, description, company_name, company_website, company_email, company_logo_file_id, row_version, id) VALUES (:tenant, 't-title-acace7ba', 't-location-5211fb8d', '26d0e157-4f00-5039-b0f3-212405d617f2', 'full_time', 't-description-0f1dc57b', 't-company-name-54665849', 't-company-website-7cfca817', 'ud3b9b94d@example.org', '9b82d3d0-fb1f-5e2b-8355-05a3c7ce54cf', 1, '61b1aa84-f117-5f71-a4a9-6807b5299cf8') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "jobOpeningId": "61b1aa84-f117-5f71-a4a9-6807b5299cf8",
+    "applicantUserId": "3e1ca679-d966-58ab-bb8e-b9e5dc26cd5e",
+    "resumeFileId": "aa42f44a-fdc9-5517-8900-3460201a7e4a"
+   },
+   "update": {},
+   "duplicateConflicts": true
+  },
+  {
+   "name": "JobOpening",
+   "table": "careers.job_opening",
+   "ops": [
+    "Create",
+    "Delete",
+    "Update"
+   ],
+   "collection": "/v1/careers/job-openings",
+   "item": "/v1/careers/job-openings/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "title": "t-title-0c6bf076",
+    "location": "t-location-1988a6e1",
+    "countryId": "0ec9b238-0e02-5935-9633-c0a0f1eaeea2",
+    "employmentType": "full_time",
+    "description": "t-description-598ec38d",
+    "companyName": "t-company-name-4296518f",
+    "companyWebsite": "t-company-website-4eb858a5",
+    "companyEmail": "u9d05da57@example.org",
+    "companyLogoFileId": "b79a9de6-8e7e-5f44-a92c-9d66b80a6ad0"
+   },
+   "update": {
+    "title": "Updated title"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "careers.CloseJobOpening",
+     "path": "/v1/careers/job-openings/{id}:close",
+     "permission": "careers.job_opening.close_job_opening",
+     "guard": {
+      "status": [
+       "open"
+      ]
+     },
+     "prepare": [
+      "UPDATE careers.job_opening SET status = 'open' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "closed"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "careers.ReopenJobOpening",
+     "path": "/v1/careers/job-openings/{id}:reopen",
+     "permission": "careers.job_opening.reopen_job_opening",
+     "guard": {
+      "status": [
+       "closed"
+      ]
+     },
+     "prepare": [
+      "UPDATE careers.job_opening SET status = 'closed' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "open"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  }
+ ]
+}

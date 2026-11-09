@@ -1,0 +1,35 @@
+{
+  "name": "@mysms/native-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "What the Expo apps (mobile S/P/T and tablet B) share: root provider, secure-storage token vault, sign-in, deep-link handling.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint --max-warnings 0 src"
+  },
+  "dependencies": {
+    "@mysms/core": "workspace:*",
+    "@mysms/i18n": "workspace:*",
+    "@mysms/ui-native": "workspace:*"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.106.1",
+    "expo-secure-store": "~15.0.8",
+    "react": "^19.1.0",
+    "react-native": "^0.81.0"
+  },
+  "devDependencies": {
+    "@mysms/config": "workspace:*",
+    "@tanstack/react-query": "5.106.1",
+    "@types/react": "19.1.17",
+    "expo": "54.0.38",
+    "expo-secure-store": "15.0.8",
+    "react": "19.1.10",
+    "react-native": "0.81.6",
+    "typescript": "5.9.3"
+  }
+}

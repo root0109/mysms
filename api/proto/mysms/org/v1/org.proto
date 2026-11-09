@@ -1,0 +1,1075 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.org.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "OrgProto";
+option java_package = "com.mysms.org.v1";
+
+// InstitutionService: operations on the Institution aggregate.
+service InstitutionService {
+  // List Institutions.
+  rpc ListInstitutions(ListInstitutionsRequest) returns (ListInstitutionsResponse);
+  // Get Institution.
+  rpc GetInstitution(GetInstitutionRequest) returns (GetInstitutionResponse);
+  // Create Institution.
+  rpc CreateInstitution(CreateInstitutionRequest) returns (CreateInstitutionResponse);
+  // Update Institution.
+  rpc UpdateInstitution(UpdateInstitutionRequest) returns (UpdateInstitutionResponse);
+  // Soft-delete Institution.
+  rpc DeleteInstitution(DeleteInstitutionRequest) returns (DeleteInstitutionResponse);
+  // List InstitutionAttributes.
+  rpc ListInstitutionAttributes(ListInstitutionAttributesRequest) returns (ListInstitutionAttributesResponse);
+  // Get InstitutionAttribute.
+  rpc GetInstitutionAttribute(GetInstitutionAttributeRequest) returns (GetInstitutionAttributeResponse);
+  // Create InstitutionAttribute.
+  rpc CreateInstitutionAttribute(CreateInstitutionAttributeRequest) returns (CreateInstitutionAttributeResponse);
+  // Update InstitutionAttribute.
+  rpc UpdateInstitutionAttribute(UpdateInstitutionAttributeRequest) returns (UpdateInstitutionAttributeResponse);
+  // Soft-delete InstitutionAttribute.
+  rpc DeleteInstitutionAttribute(DeleteInstitutionAttributeRequest) returns (DeleteInstitutionAttributeResponse);
+  // Find a school / college to sign in to (mobile app school picker). Public.
+  rpc FindInstitutions(FindInstitutionsRequest) returns (FindInstitutionsResponse);
+}
+
+// DepartmentService: operations on the Department aggregate.
+service DepartmentService {
+  // List Departments.
+  rpc ListDepartments(ListDepartmentsRequest) returns (ListDepartmentsResponse);
+  // Get Department.
+  rpc GetDepartment(GetDepartmentRequest) returns (GetDepartmentResponse);
+  // Create Department.
+  rpc CreateDepartment(CreateDepartmentRequest) returns (CreateDepartmentResponse);
+  // Update Department.
+  rpc UpdateDepartment(UpdateDepartmentRequest) returns (UpdateDepartmentResponse);
+  // Soft-delete Department.
+  rpc DeleteDepartment(DeleteDepartmentRequest) returns (DeleteDepartmentResponse);
+}
+
+// AcademicYearService: operations on the AcademicYear aggregate.
+service AcademicYearService {
+  // List AcademicYears.
+  rpc ListAcademicYears(ListAcademicYearsRequest) returns (ListAcademicYearsResponse);
+  // Get AcademicYear.
+  rpc GetAcademicYear(GetAcademicYearRequest) returns (GetAcademicYearResponse);
+  // Create AcademicYear.
+  rpc CreateAcademicYear(CreateAcademicYearRequest) returns (CreateAcademicYearResponse);
+  // Update AcademicYear.
+  rpc UpdateAcademicYear(UpdateAcademicYearRequest) returns (UpdateAcademicYearResponse);
+  // Soft-delete AcademicYear.
+  rpc DeleteAcademicYear(DeleteAcademicYearRequest) returns (DeleteAcademicYearResponse);
+  // List AcademicTerms.
+  rpc ListAcademicTerms(ListAcademicTermsRequest) returns (ListAcademicTermsResponse);
+  // Get AcademicTerm.
+  rpc GetAcademicTerm(GetAcademicTermRequest) returns (GetAcademicTermResponse);
+  // Create AcademicTerm.
+  rpc CreateAcademicTerm(CreateAcademicTermRequest) returns (CreateAcademicTermResponse);
+  // Update AcademicTerm.
+  rpc UpdateAcademicTerm(UpdateAcademicTermRequest) returns (UpdateAcademicTermResponse);
+  // Soft-delete AcademicTerm.
+  rpc DeleteAcademicTerm(DeleteAcademicTermRequest) returns (DeleteAcademicTermResponse);
+  // Make the year active and current for its institution.
+  rpc ActivateAcademicYear(ActivateAcademicYearRequest) returns (ActivateAcademicYearResponse);
+  // Close the year (read-only afterwards).
+  rpc CloseAcademicYear(CloseAcademicYearRequest) returns (CloseAcademicYearResponse);
+  // Create terms from term_structure.
+  rpc GenerateTerms(GenerateTermsRequest) returns (GenerateTermsResponse);
+}
+
+// InstitutionTypeService: operations on the InstitutionType aggregate.
+service InstitutionTypeService {
+  // List InstitutionTypes.
+  rpc ListInstitutionTypes(ListInstitutionTypesRequest) returns (ListInstitutionTypesResponse);
+  // Get InstitutionType.
+  rpc GetInstitutionType(GetInstitutionTypeRequest) returns (GetInstitutionTypeResponse);
+  // Create InstitutionType.
+  rpc CreateInstitutionType(CreateInstitutionTypeRequest) returns (CreateInstitutionTypeResponse);
+  // Update InstitutionType.
+  rpc UpdateInstitutionType(UpdateInstitutionTypeRequest) returns (UpdateInstitutionTypeResponse);
+  // Soft-delete InstitutionType.
+  rpc DeleteInstitutionType(DeleteInstitutionTypeRequest) returns (DeleteInstitutionTypeResponse);
+  // List InstitutionTypeAttributes.
+  rpc ListInstitutionTypeAttributes(ListInstitutionTypeAttributesRequest) returns (ListInstitutionTypeAttributesResponse);
+  // Get InstitutionTypeAttribute.
+  rpc GetInstitutionTypeAttribute(GetInstitutionTypeAttributeRequest) returns (GetInstitutionTypeAttributeResponse);
+  // Create InstitutionTypeAttribute.
+  rpc CreateInstitutionTypeAttribute(CreateInstitutionTypeAttributeRequest) returns (CreateInstitutionTypeAttributeResponse);
+  // Update InstitutionTypeAttribute.
+  rpc UpdateInstitutionTypeAttribute(UpdateInstitutionTypeAttributeRequest) returns (UpdateInstitutionTypeAttributeResponse);
+  // Soft-delete InstitutionTypeAttribute.
+  rpc DeleteInstitutionTypeAttribute(DeleteInstitutionTypeAttributeRequest) returns (DeleteInstitutionTypeAttributeResponse);
+}
+
+// AttributeDefinitionService: operations on the AttributeDefinition aggregate.
+service AttributeDefinitionService {
+  // List AttributeDefinitions.
+  rpc ListAttributeDefinitions(ListAttributeDefinitionsRequest) returns (ListAttributeDefinitionsResponse);
+  // Get AttributeDefinition.
+  rpc GetAttributeDefinition(GetAttributeDefinitionRequest) returns (GetAttributeDefinitionResponse);
+  // Create AttributeDefinition.
+  rpc CreateAttributeDefinition(CreateAttributeDefinitionRequest) returns (CreateAttributeDefinitionResponse);
+  // Update AttributeDefinition.
+  rpc UpdateAttributeDefinition(UpdateAttributeDefinitionRequest) returns (UpdateAttributeDefinitionResponse);
+  // Soft-delete AttributeDefinition.
+  rpc DeleteAttributeDefinition(DeleteAttributeDefinitionRequest) returns (DeleteAttributeDefinitionResponse);
+}
+
+// HolidayService: operations on the Holiday aggregate.
+service HolidayService {
+  // List Holidays.
+  rpc ListHolidays(ListHolidaysRequest) returns (ListHolidaysResponse);
+  // Get Holiday.
+  rpc GetHoliday(GetHolidayRequest) returns (GetHolidayResponse);
+  // Create Holiday.
+  rpc CreateHoliday(CreateHolidayRequest) returns (CreateHolidayResponse);
+  // Update Holiday.
+  rpc UpdateHoliday(UpdateHolidayRequest) returns (UpdateHolidayResponse);
+  // Soft-delete Holiday.
+  rpc DeleteHoliday(DeleteHolidayRequest) returns (DeleteHolidayResponse);
+}
+
+message ListInstitutionsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListInstitutionsResponse {
+  repeated Institution items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetInstitutionRequest {
+  // Institution id (UUID).
+  string id = 1;
+}
+message GetInstitutionResponse {
+  Institution institution = 1;
+}
+
+message CreateInstitutionRequest {
+  Institution institution = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateInstitutionResponse {
+  Institution institution = 1;
+}
+
+message UpdateInstitutionRequest {
+  // Resource with id and etag set.
+  Institution institution = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateInstitutionResponse {
+  Institution institution = 1;
+}
+
+message DeleteInstitutionRequest {
+  // Institution id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteInstitutionResponse {
+}
+
+message ListInstitutionAttributesRequest {
+  // Institution id (UUID).
+  string institution_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListInstitutionAttributesResponse {
+  repeated InstitutionAttribute items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetInstitutionAttributeRequest {
+  // Institution id (UUID).
+  string institution_id = 1;
+  // InstitutionAttribute id (UUID).
+  string id = 2;
+}
+message GetInstitutionAttributeResponse {
+  InstitutionAttribute institution_attribute = 1;
+}
+
+message CreateInstitutionAttributeRequest {
+  // Institution id (UUID).
+  string institution_id = 1;
+  InstitutionAttribute institution_attribute = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateInstitutionAttributeResponse {
+  InstitutionAttribute institution_attribute = 1;
+}
+
+message UpdateInstitutionAttributeRequest {
+  // Institution id (UUID).
+  string institution_id = 1;
+  // Resource with id and etag set.
+  InstitutionAttribute institution_attribute = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateInstitutionAttributeResponse {
+  InstitutionAttribute institution_attribute = 1;
+}
+
+message DeleteInstitutionAttributeRequest {
+  // Institution id (UUID).
+  string institution_id = 1;
+  // InstitutionAttribute id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteInstitutionAttributeResponse {
+}
+
+message ListDepartmentsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListDepartmentsResponse {
+  repeated Department items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetDepartmentRequest {
+  // Department id (UUID).
+  string id = 1;
+}
+message GetDepartmentResponse {
+  Department department = 1;
+}
+
+message CreateDepartmentRequest {
+  Department department = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateDepartmentResponse {
+  Department department = 1;
+}
+
+message UpdateDepartmentRequest {
+  // Resource with id and etag set.
+  Department department = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateDepartmentResponse {
+  Department department = 1;
+}
+
+message DeleteDepartmentRequest {
+  // Department id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteDepartmentResponse {
+}
+
+message ListAcademicYearsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListAcademicYearsResponse {
+  repeated AcademicYear items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetAcademicYearRequest {
+  // AcademicYear id (UUID).
+  string id = 1;
+}
+message GetAcademicYearResponse {
+  AcademicYear academic_year = 1;
+}
+
+message CreateAcademicYearRequest {
+  AcademicYear academic_year = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateAcademicYearResponse {
+  AcademicYear academic_year = 1;
+}
+
+message UpdateAcademicYearRequest {
+  // Resource with id and etag set.
+  AcademicYear academic_year = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateAcademicYearResponse {
+  AcademicYear academic_year = 1;
+}
+
+message DeleteAcademicYearRequest {
+  // AcademicYear id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteAcademicYearResponse {
+}
+
+message ListAcademicTermsRequest {
+  // AcademicYear id (UUID).
+  string academic_year_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListAcademicTermsResponse {
+  repeated AcademicTerm items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetAcademicTermRequest {
+  // AcademicYear id (UUID).
+  string academic_year_id = 1;
+  // AcademicTerm id (UUID).
+  string id = 2;
+}
+message GetAcademicTermResponse {
+  AcademicTerm academic_term = 1;
+}
+
+message CreateAcademicTermRequest {
+  // AcademicYear id (UUID).
+  string academic_year_id = 1;
+  AcademicTerm academic_term = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateAcademicTermResponse {
+  AcademicTerm academic_term = 1;
+}
+
+message UpdateAcademicTermRequest {
+  // AcademicYear id (UUID).
+  string academic_year_id = 1;
+  // Resource with id and etag set.
+  AcademicTerm academic_term = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateAcademicTermResponse {
+  AcademicTerm academic_term = 1;
+}
+
+message DeleteAcademicTermRequest {
+  // AcademicYear id (UUID).
+  string academic_year_id = 1;
+  // AcademicTerm id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteAcademicTermResponse {
+}
+
+message ListInstitutionTypesRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListInstitutionTypesResponse {
+  repeated InstitutionType items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetInstitutionTypeRequest {
+  // InstitutionType id (UUID).
+  string id = 1;
+}
+message GetInstitutionTypeResponse {
+  InstitutionType institution_type = 1;
+}
+
+message CreateInstitutionTypeRequest {
+  InstitutionType institution_type = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateInstitutionTypeResponse {
+  InstitutionType institution_type = 1;
+}
+
+message UpdateInstitutionTypeRequest {
+  // Resource with id and etag set.
+  InstitutionType institution_type = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateInstitutionTypeResponse {
+  InstitutionType institution_type = 1;
+}
+
+message DeleteInstitutionTypeRequest {
+  // InstitutionType id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteInstitutionTypeResponse {
+}
+
+message ListAttributeDefinitionsRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListAttributeDefinitionsResponse {
+  repeated AttributeDefinition items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetAttributeDefinitionRequest {
+  // AttributeDefinition id (UUID).
+  string id = 1;
+}
+message GetAttributeDefinitionResponse {
+  AttributeDefinition attribute_definition = 1;
+}
+
+message CreateAttributeDefinitionRequest {
+  AttributeDefinition attribute_definition = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateAttributeDefinitionResponse {
+  AttributeDefinition attribute_definition = 1;
+}
+
+message UpdateAttributeDefinitionRequest {
+  // Resource with id and etag set.
+  AttributeDefinition attribute_definition = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateAttributeDefinitionResponse {
+  AttributeDefinition attribute_definition = 1;
+}
+
+message DeleteAttributeDefinitionRequest {
+  // AttributeDefinition id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteAttributeDefinitionResponse {
+}
+
+message ListInstitutionTypeAttributesRequest {
+  // InstitutionType id (UUID).
+  string institution_type_id = 1;
+  // Page size (1-500, default 50).
+  int32 page_size = 2;
+  // Cursor from next_page_token.
+  string page_token = 3;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 5;
+}
+message ListInstitutionTypeAttributesResponse {
+  repeated InstitutionTypeAttribute items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetInstitutionTypeAttributeRequest {
+  // InstitutionType id (UUID).
+  string institution_type_id = 1;
+  // InstitutionTypeAttribute id (UUID).
+  string id = 2;
+}
+message GetInstitutionTypeAttributeResponse {
+  InstitutionTypeAttribute institution_type_attribute = 1;
+}
+
+message CreateInstitutionTypeAttributeRequest {
+  // InstitutionType id (UUID).
+  string institution_type_id = 1;
+  InstitutionTypeAttribute institution_type_attribute = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateInstitutionTypeAttributeResponse {
+  InstitutionTypeAttribute institution_type_attribute = 1;
+}
+
+message UpdateInstitutionTypeAttributeRequest {
+  // InstitutionType id (UUID).
+  string institution_type_id = 1;
+  // Resource with id and etag set.
+  InstitutionTypeAttribute institution_type_attribute = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateInstitutionTypeAttributeResponse {
+  InstitutionTypeAttribute institution_type_attribute = 1;
+}
+
+message DeleteInstitutionTypeAttributeRequest {
+  // InstitutionType id (UUID).
+  string institution_type_id = 1;
+  // InstitutionTypeAttribute id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteInstitutionTypeAttributeResponse {
+}
+
+message ListHolidaysRequest {
+  // Page size (1-500, default 50).
+  int32 page_size = 1;
+  // Cursor from next_page_token.
+  string page_token = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // Ordering, e.g. "create_time desc".
+  string order_by = 4;
+}
+message ListHolidaysResponse {
+  repeated Holiday items = 1;
+  // Cursor for the next page; empty on the last page.
+  string next_page_token = 2;
+  // Total matching items.
+  int32 total_size = 3;
+}
+
+message GetHolidayRequest {
+  // Holiday id (UUID).
+  string id = 1;
+}
+message GetHolidayResponse {
+  Holiday holiday = 1;
+}
+
+message CreateHolidayRequest {
+  Holiday holiday = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateHolidayResponse {
+  Holiday holiday = 1;
+}
+
+message UpdateHolidayRequest {
+  // Resource with id and etag set.
+  Holiday holiday = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateHolidayResponse {
+  Holiday holiday = 1;
+}
+
+message DeleteHolidayRequest {
+  // Holiday id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteHolidayResponse {
+}
+
+message FindInstitutionsRequest {
+  // Name or code (minimum 3 characters). Required.
+  string query = 1;
+  // ISO country.
+  optional string country_code = 2;
+  // Maximum items to return (1-500, default 50).
+  optional int32 page_size = 3;
+  // Cursor from next_page_token.
+  optional string page_token = 4;
+}
+message FindInstitutionsResponse {
+  repeated mysms.common.v1.InstitutionCard items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+message ActivateAcademicYearRequest {
+  // Path parameter academicYearId.
+  string academic_year_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ActivateAcademicYearResponse {
+  AcademicYear academic_year = 1;
+}
+
+message CloseAcademicYearRequest {
+  // Path parameter academicYearId.
+  string academic_year_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CloseAcademicYearResponse {
+  AcademicYear academic_year = 1;
+}
+
+message GenerateTermsRequest {
+  // Path parameter academicYearId.
+  string academic_year_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message GenerateTermsResponse {
+  repeated AcademicTerm items = 1;
+  // Cursor for the next page (paged queries).
+  string next_page_token = 2;
+}
+
+// A school, college, campus or training centre operated by a tenant. Institutions can be nested (group → campus).
+message Institution {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Parent institution for multi-campus groups. [UUID]
+  optional string parent_institution_id = 2;
+  // Institution code, unique within the tenant.
+  string code = 3;
+  // Institution name.
+  string name = 4;
+  // URL-safe name used for public pages and sub-domains.
+  optional string slug = 5;
+  // Kind of institution.
+  InstitutionType institution_type = 6;
+  // Official e-mail.
+  optional string email = 7;
+  // Official phone.
+  optional string phone = 8;
+  // Street address line 1.
+  optional string address_line1 = 9;
+  // Street address line 2.
+  optional string address_line2 = 10;
+  // City. [UUID]
+  optional string city_id = 11;
+  // State / province. [UUID]
+  optional string state_province_id = 12;
+  // Country. [UUID]
+  optional string country_id = 13;
+  // Postal / PIN code.
+  optional string postal_code = 14;
+  // Time zone if different from the tenant.
+  optional string timezone = 15;
+  // Operating currency if different from the tenant. [UUID]
+  optional string currency_id = 16;
+  // Logo image. [UUID]
+  optional string logo_file_id = 17;
+  // Authorised signatory's signature used on certificates. [UUID]
+  optional string signature_file_id = 18;
+  // Accreditation statement printed on certificates.
+  optional string accreditation = 19;
+  // Approving / affiliating authority.
+  optional string approval_authority = 20;
+  // Institution state.
+  Status status = 21;
+  // Configurable unit type (drives which attributes are captured). [UUID]
+  optional string institution_type_id = 27;
+  // Visual theme of the institution's portal and apps. [UUID]
+  optional string theme_id = 28;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 22;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 23;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 24;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 25;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 26;
+  // Allowed values of institution_type; REST/JSON uses the lowercase value shown in each comment.
+  enum InstitutionType {
+    INSTITUTION_TYPE_UNSPECIFIED = 0;
+    // "school"
+    INSTITUTION_TYPE_SCHOOL = 1;
+    // "college"
+    INSTITUTION_TYPE_COLLEGE = 2;
+    // "university"
+    INSTITUTION_TYPE_UNIVERSITY = 3;
+    // "coaching_centre"
+    INSTITUTION_TYPE_COACHING_CENTRE = 4;
+    // "training_centre"
+    INSTITUTION_TYPE_TRAINING_CENTRE = 5;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "inactive"
+    STATUS_INACTIVE = 2;
+  }
+}
+
+// Extensible key/value profile attributes of an institution (affiliation number, motto, social links...).
+message InstitutionAttribute {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID] Set from the parent path on create.
+  string institution_id = 2;
+  // Attribute key.
+  string attr_key = 3;
+  // Attribute value.
+  optional string attr_value = 4;
+  // Attribute definition (NULL = free key/value). [UUID]
+  optional string attribute_definition_id = 10;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// Academic or administrative department; hierarchical.
+message Department {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Parent department. [UUID]
+  optional string parent_department_id = 3;
+  // Department code.
+  string code = 4;
+  // Department name.
+  string name = 5;
+  // Whether in use.
+  bool is_active = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+}
+
+// Academic year of an institution.
+message AcademicYear {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Year label, e.g. 2026-27.
+  string name = 3;
+  // Notes.
+  optional string description = 4;
+  // First day. [ISO-8601 date (YYYY-MM-DD)]
+  string start_date = 5;
+  // Last day. [ISO-8601 date (YYYY-MM-DD)]
+  string end_date = 6;
+  // How the year is divided into terms.
+  optional TermStructure term_structure = 7;
+  // Year state. Changed only through the workflow operations. Output only.
+  Status status = 8;
+  // Current year for the institution (at most one).
+  bool is_current = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+  // Allowed values of term_structure; REST/JSON uses the lowercase value shown in each comment.
+  enum TermStructure {
+    TERM_STRUCTURE_UNSPECIFIED = 0;
+    // "two_semesters"
+    TERM_STRUCTURE_TWO_SEMESTERS = 1;
+    // "two_semesters_quarterly"
+    TERM_STRUCTURE_TWO_SEMESTERS_QUARTERLY = 2;
+    // "two_semesters_final"
+    TERM_STRUCTURE_TWO_SEMESTERS_FINAL = 3;
+    // "three_semesters"
+    TERM_STRUCTURE_THREE_SEMESTERS = 4;
+    // "four_quarters"
+    TERM_STRUCTURE_FOUR_QUARTERS = 5;
+    // "final_year"
+    TERM_STRUCTURE_FINAL_YEAR = 6;
+    // "other"
+    TERM_STRUCTURE_OTHER = 7;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "planned"
+    STATUS_PLANNED = 1;
+    // "active"
+    STATUS_ACTIVE = 2;
+    // "closed"
+    STATUS_CLOSED = 3;
+  }
+}
+
+// Term / semester / quarter inside an academic year; terms can nest.
+message AcademicTerm {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Academic year. [UUID] Set from the parent path on create.
+  string academic_year_id = 2;
+  // Parent term (e.g. quarter inside a semester). [UUID]
+  optional string parent_term_id = 3;
+  // Term name.
+  string name = 4;
+  // First day. [ISO-8601 date (YYYY-MM-DD)]
+  string start_date = 5;
+  // Last day. [ISO-8601 date (YYYY-MM-DD)]
+  string end_date = 6;
+  // Order within the year.
+  optional int32 sequence = 7;
+  // Short code (e.g. FA26).
+  optional string code = 13;
+  // Term can be used for new cohorts / registrations.
+  bool is_active = 14;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 8;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 9;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 10;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 11;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 12;
+}
+
+// Configurable kind of organisational unit (district, school, campus, department...) with its own attribute set.
+message InstitutionType {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Type name.
+  string name = 2;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 3;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 4;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 5;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 6;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 7;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 8;
+  // Display order.
+  optional int32 sort_order = 9;
+  // Whether offered for new picks.
+  optional bool is_active = 10;
+}
+
+// Definition of an extensible institution attribute (label, data type, order).
+message AttributeDefinition {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Attribute label.
+  string name = 2;
+  // Data type of the value.
+  DataType data_type = 3;
+  // Display order.
+  int32 sort_order = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+  // Allowed values of data_type; REST/JSON uses the lowercase value shown in each comment.
+  enum DataType {
+    DATA_TYPE_UNSPECIFIED = 0;
+    // "text"
+    DATA_TYPE_TEXT = 1;
+    // "number"
+    DATA_TYPE_NUMBER = 2;
+    // "date"
+    DATA_TYPE_DATE = 3;
+    // "boolean"
+    DATA_TYPE_BOOLEAN = 4;
+    // "email"
+    DATA_TYPE_EMAIL = 5;
+    // "url"
+    DATA_TYPE_URL = 6;
+    // "phone"
+    DATA_TYPE_PHONE = 7;
+    // "select"
+    DATA_TYPE_SELECT = 8;
+  }
+}
+
+// Attribute captured for institutions of a given type.
+message InstitutionTypeAttribute {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution type. [UUID] Set from the parent path on create.
+  string institution_type_id = 2;
+  // Attribute. [UUID]
+  string attribute_definition_id = 3;
+  // Value is mandatory.
+  bool is_required = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// Holiday or closure of an institution (applies to its calendar, cohorts and attendance).
+message Holiday {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution (NULL = every institution of the tenant). [UUID]
+  optional string institution_id = 2;
+  // Holiday name.
+  string title = 3;
+  // First day. [ISO-8601 date (YYYY-MM-DD)]
+  string start_date = 4;
+  // Last day. [ISO-8601 date (YYYY-MM-DD)]
+  string end_date = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+}
+

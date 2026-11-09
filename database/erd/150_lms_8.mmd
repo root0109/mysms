@@ -1,0 +1,122 @@
+erDiagram
+    lms__forum["lms.forum"] {
+        uuid id PK
+        uuid cohort_id FK "NN"
+        varchar(200) title "NN"
+        text description
+        timestamptz early_access_from
+        timestamptz opens_at
+        timestamptz closes_at
+        timestamptz late_access_until
+    }
+    lms__forum_section["lms.forum_section"] {
+        uuid id PK
+        uuid forum_id FK "NN"
+        varchar(200) title "NN"
+        text description
+        varchar(30) section_type "NN"
+        uuid cohort_group_id FK
+        integer sort_order "NN"
+    }
+    lms__forum_topic["lms.forum_topic"] {
+        uuid id PK
+        uuid forum_section_id FK
+        varchar(255) title "NN"
+        text description
+        varchar(30) topic_type "NN"
+        timestamptz opens_at
+        timestamptz closes_at
+        uuid content_item_id FK
+        uuid discussion_prompt_id FK
+        varchar(60) linked_entity_type
+        uuid linked_entity_id
+        uuid individual_user_id FK "→ iam.user_account (logical)"
+        boolean is_graded "NN"
+        numeric points_possible "8,2"
+        numeric grade_weight_percent "5,2"
+        timestamptz grading_due_at
+        boolean is_grading_completed "NN"
+        boolean is_hidden "NN"
+        boolean is_teacher_topic "NN"
+        boolean is_system_generated "NN"
+        uuid last_post_id FK
+    }
+    lms__forum_post["lms.forum_post"] {
+        uuid id PK
+        uuid forum_topic_id FK "NN"
+        uuid parent_post_id FK
+        varchar(255) title
+        text body
+        uuid author_user_id FK "NN · → iam.user_account (logical)"
+        timestamptz posted_at "NN"
+        boolean is_draft "NN"
+        boolean is_teacher_post "NN"
+        smallint substantive_flag
+        boolean is_hidden "NN"
+        boolean is_hidden_by_parent "NN"
+        boolean is_flagged "NN"
+        boolean show_signature "NN"
+        boolean uses_inline_authoring "NN"
+        boolean is_abusive "NN"
+        boolean abuse_reported "NN"
+        integer abuse_report_count "NN"
+        uuid abuse_confirmed_by FK "→ iam.user_account (logical)"
+        timestamptz abuse_confirmed_at
+        integer like_count "NN"
+    }
+    lms__forum_post_vote["lms.forum_post_vote"] {
+        uuid id PK
+        uuid forum_post_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        boolean is_like "NN"
+        timestamptz voted_at "NN"
+    }
+    lms__forum_report_category["lms.forum_report_category"] {
+        uuid id PK
+        varchar(120) title "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    lms__forum_post_report["lms.forum_post_report"] {
+        uuid id PK
+        uuid forum_post_id FK "NN"
+        uuid report_category_id FK
+        text description
+        uuid reported_by FK "NN · → iam.user_account (logical)"
+        timestamptz reported_at "NN"
+    }
+    lms__forum_read_state["lms.forum_read_state"] {
+        uuid id PK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        uuid forum_topic_id FK "NN"
+        uuid forum_post_id FK
+        timestamptz read_at "NN"
+        boolean is_flagged "NN"
+    }
+    lms__cohort["lms.cohort"] {
+        uuid id PK "drawn on: Cohorts, schedules & live classes"
+    }
+    lms__cohort_group["lms.cohort_group"] {
+        uuid id PK "drawn on: Cohorts, schedules & live classes"
+    }
+    lms__content_item["lms.content_item"] {
+        uuid id PK "drawn on: Outline, content delivery & progress"
+    }
+    lms__discussion_prompt["lms.discussion_prompt"] {
+        uuid id PK "drawn on: Repository resources & external tools"
+    }
+    lms__cohort ||--o{ lms__forum : "cohort_id"
+    lms__forum ||--o{ lms__forum_section : "forum_id"
+    lms__cohort_group |o--o{ lms__forum_section : "cohort_group_id"
+    lms__forum_section |o--o{ lms__forum_topic : "forum_section_id"
+    lms__content_item |o--o{ lms__forum_topic : "content_item_id"
+    lms__discussion_prompt |o--o{ lms__forum_topic : "discussion_prompt_id"
+    lms__forum_post |o--o{ lms__forum_topic : "last_post_id"
+    lms__forum_topic ||--o{ lms__forum_post : "forum_topic_id"
+    lms__forum_post |o--o{ lms__forum_post : "parent_post_id"
+    lms__forum_post ||--o{ lms__forum_post_vote : "forum_post_id"
+    lms__forum_post ||--o{ lms__forum_post_report : "forum_post_id"
+    lms__forum_report_category |o--o{ lms__forum_post_report : "report_category_id"
+    lms__forum_topic ||--o{ lms__forum_read_state : "forum_topic_id"
+    lms__forum_post |o--o{ lms__forum_read_state : "forum_post_id"

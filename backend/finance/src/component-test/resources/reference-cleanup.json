@@ -1,0 +1,137 @@
+{
+ "module": "finance",
+ "cleanup": [
+  {
+   "event": "academics.course.deleted",
+   "table": "finance.course_fee_default",
+   "column": "course_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "1f921757-83bd-55eb-aab2-fe49fff75191",
+   "rowId": "2924a4cc-f6f1-5a56-9211-421340b4c4a4",
+   "otherRowId": "b461c2c5-6f76-5c8a-9109-6067588e8503",
+   "fixtures": [
+    "INSERT INTO finance.fee_plan (tenant_id, institution_id, code, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C4CB52CFB', 't-name-aecf8e92', 1, '366b30ab-9302-5faa-9dd4-cd7f55793539') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO finance.course_fee_default (tenant_id, fee_plan_id, row_version, course_id, id) VALUES (:tenant, '366b30ab-9302-5faa-9dd4-cd7f55793539', 1, '1f921757-83bd-55eb-aab2-fe49fff75191', '2924a4cc-f6f1-5a56-9211-421340b4c4a4')",
+   "otherFixtures": [
+    "INSERT INTO finance.fee_plan (tenant_id, institution_id, code, name, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'C4CB52CFB', 't-name-aecf8e92', 1, 'd09b7519-ad0d-5916-bea9-3c2244498706') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO finance.course_fee_default (tenant_id, fee_plan_id, row_version, course_id, id) VALUES (:tenant, 'd09b7519-ad0d-5916-bea9-3c2244498706', 1, 'b154272c-e790-5eef-aece-44471601c8e6', 'b461c2c5-6f76-5c8a-9109-6067588e8503')",
+   "softDeletable": true
+  },
+  {
+   "event": "platform.file_object.deleted",
+   "table": "finance.invoice",
+   "column": "document_file_id",
+   "action": "null the column",
+   "ownerId": "88b71df2-e931-5a2f-b978-b244f8ee93f3",
+   "rowId": "bc3ab664-e3a3-5151-9c66-4825e310644c",
+   "otherRowId": "54e226da-57ba-56d9-b76b-62e2755804f5",
+   "fixtures": [],
+   "row": "INSERT INTO finance.invoice (tenant_id, institution_id, invoice_number, student_id, bill_to_name, invoice_date, currency_id, row_version, document_file_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-invoice-number-58d5c64b', '0196f000-0000-7000-8000-0000000575d1', 't-bill-to-name-1b7371ea', '2026-01-10', '517f0050-8eb5-5836-970f-be76398cf024', 1, '88b71df2-e931-5a2f-b978-b244f8ee93f3', 'bc3ab664-e3a3-5151-9c66-4825e310644c')",
+   "otherFixtures": [],
+   "other": "INSERT INTO finance.invoice (tenant_id, institution_id, invoice_number, student_id, bill_to_name, invoice_date, currency_id, row_version, document_file_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-invoice-number-23f27648', 'fe1bcc48-d009-517d-bca2-f91a970bf6f4', 't-bill-to-name-10d68450', '2026-01-10', 'b34d99cb-bd8f-5b1f-a031-10198f1f1d7f', 1, '88b71df2-e931-5a2f-b978-b244f8ee93f3', '54e226da-57ba-56d9-b76b-62e2755804f5')",
+   "softDeletable": true
+  },
+  {
+   "event": "people.person_address.deleted",
+   "table": "finance.payment",
+   "column": "billing_address_id",
+   "action": "null the column",
+   "ownerId": "dbc3c217-872e-5785-b68c-7dfa3da9104e",
+   "rowId": "0eaf756f-42e9-583b-b302-2ff9e35d3d82",
+   "otherRowId": "795aea16-f1fa-53ed-a276-ebfc053e0c4d",
+   "fixtures": [
+    "INSERT INTO finance.invoice (tenant_id, institution_id, invoice_number, student_id, bill_to_name, invoice_date, currency_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-invoice-number-45d86388', '0196f000-0000-7000-8000-0000000575d1', 't-bill-to-name-024729e0', '2026-01-10', 'a23e81ee-1e35-5366-a247-15511f555eb6', 1, 'c10434fe-3356-55fa-8059-119de5f7f1cd') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO finance.payment (tenant_id, institution_id, purpose, amount, currency_id, billing_name, row_version, invoice_id, payer_name, billing_address_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'invoice', 1, '6e0a6a59-b979-5455-92ff-2ea8a8e88703', 't-billing-name-0d63a260', 1, 'c10434fe-3356-55fa-8059-119de5f7f1cd', 'Cleanup payer', 'dbc3c217-872e-5785-b68c-7dfa3da9104e', '0eaf756f-42e9-583b-b302-2ff9e35d3d82')",
+   "otherFixtures": [
+    "INSERT INTO finance.invoice (tenant_id, institution_id, invoice_number, student_id, bill_to_name, invoice_date, currency_id, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 't-invoice-number-45d86388', 'fe1bcc48-d009-517d-bca2-f91a970bf6f4', 't-bill-to-name-024729e0', '2026-01-10', '71cbb9c0-bf67-5d6e-9087-34ed195cacec', 1, '865c3a8f-4b9d-599f-80a6-c8040e074229') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO finance.payment (tenant_id, institution_id, purpose, amount, currency_id, billing_name, row_version, invoice_id, payer_name, billing_address_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'invoice', 1, 'ddd78900-ad95-5bba-ba77-a94523c81bbb', 't-billing-name-513822d2', 1, '865c3a8f-4b9d-599f-80a6-c8040e074229', 'Cleanup payer', 'dbc3c217-872e-5785-b68c-7dfa3da9104e', '795aea16-f1fa-53ed-a276-ebfc053e0c4d')",
+   "softDeletable": true
+  },
+  {
+   "event": "sis.program_enrollment.deleted",
+   "table": "finance.program_enrollment_fee",
+   "column": "program_enrollment_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "e4f030c4-f6e5-52f1-bfed-6e73382b1b28",
+   "rowId": "18b9922f-7e4c-5619-9cc1-d0bc46762a28",
+   "otherRowId": "651c8e52-22a0-5b57-8b7c-00723bbee4f6",
+   "fixtures": [
+    "INSERT INTO finance.fee_plan (tenant_id, institution_id, code, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C4CB52CFB', 't-name-aecf8e92', 1, '366b30ab-9302-5faa-9dd4-cd7f55793539') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO finance.program_enrollment_fee (tenant_id, fee_plan_id, row_version, program_enrollment_id, id) VALUES (:tenant, '366b30ab-9302-5faa-9dd4-cd7f55793539', 1, 'e4f030c4-f6e5-52f1-bfed-6e73382b1b28', '18b9922f-7e4c-5619-9cc1-d0bc46762a28')",
+   "otherFixtures": [
+    "INSERT INTO finance.fee_plan (tenant_id, institution_id, code, name, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', 'C4CB52CFB', 't-name-aecf8e92', 1, 'd09b7519-ad0d-5916-bea9-3c2244498706') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO finance.program_enrollment_fee (tenant_id, fee_plan_id, row_version, program_enrollment_id, id) VALUES (:tenant, 'd09b7519-ad0d-5916-bea9-3c2244498706', 1, '98bdd810-9dad-5c54-8de4-b8cd856963e4', '651c8e52-22a0-5b57-8b7c-00723bbee4f6')",
+   "softDeletable": true
+  },
+  {
+   "event": "sis.program_enrollment.deleted",
+   "table": "finance.student_fee_due",
+   "column": "program_enrollment_id",
+   "action": "null the column",
+   "ownerId": "639f2b4c-f5b6-5412-a3a9-c7b9d199180a",
+   "rowId": "69122e48-a282-5227-9ea6-256c6f36653d",
+   "otherRowId": "d942763f-b5a3-5f88-aa75-43a0de13fc69",
+   "fixtures": [],
+   "row": "INSERT INTO finance.student_fee_due (tenant_id, institution_id, student_id, amount, currency_id, row_version, academic_year_id, program_enrollment_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'f93684b9-cbff-50f9-9948-eef2e2a4c74a', 1, 'e574ce44-e54e-5acb-b299-89a9bbd8e7f9', 1, 'fff2fb78-e5b3-5e2a-a686-7376a6839366', '639f2b4c-f5b6-5412-a3a9-c7b9d199180a', '69122e48-a282-5227-9ea6-256c6f36653d')",
+   "otherFixtures": [],
+   "other": "INSERT INTO finance.student_fee_due (tenant_id, institution_id, student_id, amount, currency_id, row_version, academic_year_id, program_enrollment_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', '862ecbdd-f7c2-5139-bdfa-0b9e29a3217a', 1, 'c7c7585e-3e6e-559d-9ed5-d73f5c8e1d86', 1, 'dd567708-1ea2-58cb-bd79-3de8975b70a3', '639f2b4c-f5b6-5412-a3a9-c7b9d199180a', 'd942763f-b5a3-5f88-aa75-43a0de13fc69')",
+   "softDeletable": true
+  },
+  {
+   "event": "sis.student_enrollment.deleted",
+   "table": "finance.student_fee_due",
+   "column": "student_enrollment_id",
+   "action": "null the column",
+   "ownerId": "4f8ad2e6-f61f-54f9-b754-8c14c2ef97eb",
+   "rowId": "8ee0047c-c65b-5a97-819c-ea1641f5f955",
+   "otherRowId": "0701c719-48a3-5362-9614-b7d5ea554d9e",
+   "fixtures": [],
+   "row": "INSERT INTO finance.student_fee_due (tenant_id, institution_id, student_id, amount, currency_id, row_version, academic_year_id, student_enrollment_id, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'dbe39d18-23d4-52dd-ae20-e5e076ca1e0d', 1, 'cf2df3c4-b218-5dc3-9a3e-78266d75602e', 1, '0d65ce17-a609-5173-b347-e6195d7c5770', '4f8ad2e6-f61f-54f9-b754-8c14c2ef97eb', '8ee0047c-c65b-5a97-819c-ea1641f5f955')",
+   "otherFixtures": [],
+   "other": "INSERT INTO finance.student_fee_due (tenant_id, institution_id, student_id, amount, currency_id, row_version, academic_year_id, student_enrollment_id, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', '684b0aeb-abc8-584a-8d2d-805035e7fc9c', 1, 'b909f36e-3418-58a2-b0e2-fd8ace38f5d5', 1, 'f2bc595c-5564-59d5-9d7e-7d56db9d0c76', '4f8ad2e6-f61f-54f9-b754-8c14c2ef97eb', '0701c719-48a3-5362-9614-b7d5ea554d9e')",
+   "softDeletable": true
+  },
+  {
+   "event": "lms.course.deleted",
+   "table": "finance.coupon_scope",
+   "column": "lms_course_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "cc7322b1-ef25-5e61-bce5-1abd07f0ed62",
+   "rowId": "fad81d93-25b9-545d-9956-fd280202468c",
+   "otherRowId": "589cff25-09ff-57e5-bc10-18f25343ad1a",
+   "fixtures": [
+    "INSERT INTO finance.coupon (tenant_id, code, discount_type, percentage_discount, row_version, id) VALUES (:tenant, 'CBE656F40', 'percentage', 10, 1, 'fa5ff850-4b89-5af2-a2b2-84b6b88b8162') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO finance.coupon_scope (tenant_id, coupon_id, row_version, lms_course_id, id) VALUES (:tenant, 'fa5ff850-4b89-5af2-a2b2-84b6b88b8162', 1, 'cc7322b1-ef25-5e61-bce5-1abd07f0ed62', 'fad81d93-25b9-545d-9956-fd280202468c')",
+   "otherFixtures": [
+    "INSERT INTO finance.coupon (tenant_id, code, discount_type, percentage_discount, row_version, id) VALUES (:tenant, 'CBE656F40', 'percentage', 10, 1, 'ba7496fb-ba73-5984-9875-88d623ed4b8c') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO finance.coupon_scope (tenant_id, coupon_id, row_version, lms_course_id, id) VALUES (:tenant, 'ba7496fb-ba73-5984-9875-88d623ed4b8c', 1, 'cc7322b1-ef25-5e61-bce5-1abd07f0ed62', '589cff25-09ff-57e5-bc10-18f25343ad1a')",
+   "softDeletable": true
+  },
+  {
+   "event": "lms.cohort.deleted",
+   "table": "finance.coupon_scope",
+   "column": "lms_cohort_id",
+   "action": "archive/delete the dependent row",
+   "ownerId": "3280db72-8395-5f55-9df6-0427e23426f3",
+   "rowId": "d999a69e-f516-5ee9-ba69-bbca99515f68",
+   "otherRowId": "c8bc35d3-26c3-5796-a19e-6ee935a851d2",
+   "fixtures": [
+    "INSERT INTO finance.coupon (tenant_id, code, discount_type, percentage_discount, row_version, id) VALUES (:tenant, 'CBE656F40', 'percentage', 10, 1, 'fa5ff850-4b89-5af2-a2b2-84b6b88b8162') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO finance.coupon_scope (tenant_id, coupon_id, row_version, lms_cohort_id, id) VALUES (:tenant, 'fa5ff850-4b89-5af2-a2b2-84b6b88b8162', 1, '3280db72-8395-5f55-9df6-0427e23426f3', 'd999a69e-f516-5ee9-ba69-bbca99515f68')",
+   "otherFixtures": [
+    "INSERT INTO finance.coupon (tenant_id, code, discount_type, percentage_discount, row_version, id) VALUES (:tenant, 'CBE656F40', 'percentage', 10, 1, 'ba7496fb-ba73-5984-9875-88d623ed4b8c') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO finance.coupon_scope (tenant_id, coupon_id, row_version, lms_cohort_id, id) VALUES (:tenant, 'ba7496fb-ba73-5984-9875-88d623ed4b8c', 1, '3280db72-8395-5f55-9df6-0427e23426f3', 'c8bc35d3-26c3-5796-a19e-6ee935a851d2')",
+   "softDeletable": true
+  }
+ ]
+}

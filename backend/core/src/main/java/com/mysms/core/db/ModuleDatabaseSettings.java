@@ -1,0 +1,46 @@
+package com.mysms.core.db;
+
+import java.time.Duration;
+
+/**
+ * `mysms.<module>.datasource.*`: where a module's schema lives. Every module binds its own, so moving a schema to its
+ * own PostgreSQL instance is a configuration change (JAVA-CODING-RULES §2).
+ *
+ * @param url              JDBC URL
+ * @param username         database role of this module
+ * @param password         its password (from the environment or a secret store; never committed)
+ * @param maximumPoolSize  connection pool size
+ * @param transactionTimeout upper bound for one transaction
+ * @param migrate          whether this process applies the module's Flyway migrations at startup
+ * @param migrateUsername  the schema owner Flyway runs as (database/README: `mysms_migrate`); the application role
+ *                         then only receives DML grants and can never alter tables or switch off row-level security.
+ *                         Blank = migrate as the application role (local development only; logged as a warning)
+ * @param migratePassword  its password
+ * @param relayUsername    the role the outbox relay reads every tenant's pending events as (database/README:
+ *                         `mysms_platform_admin`, BYPASSRLS). Blank = the application role, which works only when it
+ *                         bypasses row-level security itself (local development as a superuser)
+ * @param relayPassword    its password
+ */
+public record ModuleDatabaseSettings(String url, String username, String password, Integer maximumPoolSize,
+                                     Duration transactionTimeout, Boolean migrate, String migrateUsername,
+                                     String migratePassword, String relayUsername, String relayPassword) {
+
+    public ModuleDatabaseSettings {
+        if (url == null || url.isBlank()) {
+            throw new IllegalArgumentException("datasource url is required");
+        }
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("datasource username is required");
+        }
+        maximumPoolSize = maximumPoolSize == null ? Integer.valueOf(10) : maximumPoolSize;
+        transactionTimeout = transactionTimeout == null ? Duration.ofSeconds(30) : transactionTimeout;
+        migrate = migrate == null ? Boolean.TRUE : migrate;
+        migrateUsername = migrateUsername == null || migrateUsername.isBlank() ? null : migrateUsername;
+        relayUsername = relayUsername == null || relayUsername.isBlank() ? null : relayUsername;
+    }
+
+    /** True when migrations run as a separate schema-owner role. */
+    public boolean separateMigrationRole() {
+        return migrateUsername != null && !migrateUsername.equals(username);
+    }
+}

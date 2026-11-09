@@ -1,0 +1,3555 @@
+openapi: 3.1.0
+info:
+  title: MySMS API — Organisation & Calendar
+  version: 1.0.0
+  description: Institutions (schools, colleges, campuses), their departments, academic years and terms.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-MySMS
+  contact:
+    name: MySMS API team
+    email: api@mysms.example
+servers:
+- url: https://api.mysms.example
+  description: Production (replace with your domain)
+security:
+- bearerAuth: []
+tags:
+- name: AcademicYear
+  description: AcademicYear aggregate.
+- name: AttributeDefinition
+  description: AttributeDefinition aggregate.
+- name: Department
+  description: Department aggregate.
+- name: Holiday
+  description: Holiday aggregate.
+- name: Institution
+  description: Institution aggregate.
+- name: InstitutionType
+  description: InstitutionType aggregate.
+paths:
+  /v1/org/institutions:
+    get:
+      operationId: org.ListInstitutions
+      summary: List Institutions
+      description: List Institutions visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Institution
+      security:
+      - bearerAuth: []
+      x-permission: org.institution.read
+      x-grpc:
+        service: mysms.org.v1.InstitutionService
+        method: ListInstitutions
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: org.CreateInstitution
+      summary: Create Institution
+      description: Create a Institution. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Institution
+      security:
+      - bearerAuth: []
+      x-permission: org.institution.create
+      x-grpc:
+        service: mysms.org.v1.InstitutionService
+        method: CreateInstitution
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Institution'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Institution'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Institution'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/institutions/{institutionId}:
+    get:
+      operationId: org.GetInstitution
+      summary: Get Institution
+      description: Get one Institution by id. The ETag header carries the row version.
+      tags:
+      - Institution
+      security:
+      - bearerAuth: []
+      x-permission: org.institution.read
+      x-grpc:
+        service: mysms.org.v1.InstitutionService
+        method: GetInstitution
+      parameters:
+      - name: institutionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Institution id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Institution'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: org.UpdateInstitution
+      summary: Update Institution
+      description: Partially update a Institution (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Institution
+      security:
+      - bearerAuth: []
+      x-permission: org.institution.update
+      x-grpc:
+        service: mysms.org.v1.InstitutionService
+        method: UpdateInstitution
+      parameters:
+      - name: institutionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Institution id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstitutionUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Institution'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: org.DeleteInstitution
+      summary: Delete Institution
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Institution
+      security:
+      - bearerAuth: []
+      x-permission: org.institution.delete
+      x-grpc:
+        service: mysms.org.v1.InstitutionService
+        method: DeleteInstitution
+      parameters:
+      - name: institutionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Institution id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/institutions/{institutionId}/attributes:
+    get:
+      operationId: org.ListInstitutionAttributes
+      summary: List InstitutionAttributes
+      description: List InstitutionAttributes visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Institution
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_attribute.read
+      x-grpc:
+        service: mysms.org.v1.InstitutionService
+        method: ListInstitutionAttributes
+      parameters:
+      - name: institutionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Institution id.
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionAttributeList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: org.CreateInstitutionAttribute
+      summary: Create InstitutionAttribute
+      description: Create a InstitutionAttribute. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Institution
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_attribute.create
+      x-grpc:
+        service: mysms.org.v1.InstitutionService
+        method: CreateInstitutionAttribute
+      parameters:
+      - name: institutionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Institution id.
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstitutionAttribute'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionAttribute'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionAttribute'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/institutions/{institutionId}/attributes/{institutionAttributeId}:
+    get:
+      operationId: org.GetInstitutionAttribute
+      summary: Get InstitutionAttribute
+      description: Get one InstitutionAttribute by id. The ETag header carries the row version.
+      tags:
+      - Institution
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_attribute.read
+      x-grpc:
+        service: mysms.org.v1.InstitutionService
+        method: GetInstitutionAttribute
+      parameters:
+      - name: institutionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Institution id.
+      - name: institutionAttributeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionAttribute id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionAttribute'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: org.UpdateInstitutionAttribute
+      summary: Update InstitutionAttribute
+      description: Partially update a InstitutionAttribute (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Institution
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_attribute.update
+      x-grpc:
+        service: mysms.org.v1.InstitutionService
+        method: UpdateInstitutionAttribute
+      parameters:
+      - name: institutionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Institution id.
+      - name: institutionAttributeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionAttribute id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstitutionAttributeUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionAttribute'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: org.DeleteInstitutionAttribute
+      summary: Delete InstitutionAttribute
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Institution
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_attribute.delete
+      x-grpc:
+        service: mysms.org.v1.InstitutionService
+        method: DeleteInstitutionAttribute
+      parameters:
+      - name: institutionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Institution id.
+      - name: institutionAttributeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionAttribute id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/departments:
+    get:
+      operationId: org.ListDepartments
+      summary: List Departments
+      description: List Departments visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Department
+      security:
+      - bearerAuth: []
+      x-permission: org.department.read
+      x-grpc:
+        service: mysms.org.v1.DepartmentService
+        method: ListDepartments
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: org.CreateDepartment
+      summary: Create Department
+      description: Create a Department. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Department
+      security:
+      - bearerAuth: []
+      x-permission: org.department.create
+      x-grpc:
+        service: mysms.org.v1.DepartmentService
+        method: CreateDepartment
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Department'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/departments/{departmentId}:
+    get:
+      operationId: org.GetDepartment
+      summary: Get Department
+      description: Get one Department by id. The ETag header carries the row version.
+      tags:
+      - Department
+      security:
+      - bearerAuth: []
+      x-permission: org.department.read
+      x-grpc:
+        service: mysms.org.v1.DepartmentService
+        method: GetDepartment
+      parameters:
+      - name: departmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Department id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: org.UpdateDepartment
+      summary: Update Department
+      description: Partially update a Department (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Department
+      security:
+      - bearerAuth: []
+      x-permission: org.department.update
+      x-grpc:
+        service: mysms.org.v1.DepartmentService
+        method: UpdateDepartment
+      parameters:
+      - name: departmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Department id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: org.DeleteDepartment
+      summary: Delete Department
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Department
+      security:
+      - bearerAuth: []
+      x-permission: org.department.delete
+      x-grpc:
+        service: mysms.org.v1.DepartmentService
+        method: DeleteDepartment
+      parameters:
+      - name: departmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Department id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/academic-years:
+    get:
+      operationId: org.ListAcademicYears
+      summary: List AcademicYears
+      description: List AcademicYears visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - AcademicYear
+      security:
+      - bearerAuth: []
+      x-permission: org.academic_year.read
+      x-grpc:
+        service: mysms.org.v1.AcademicYearService
+        method: ListAcademicYears
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicYearList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: org.CreateAcademicYear
+      summary: Create AcademicYear
+      description: Create a AcademicYear. Supports Idempotency-Key and validateOnly.
+      tags:
+      - AcademicYear
+      security:
+      - bearerAuth: []
+      x-permission: org.academic_year.create
+      x-grpc:
+        service: mysms.org.v1.AcademicYearService
+        method: CreateAcademicYear
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcademicYear'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicYear'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicYear'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/academic-years/{academicYearId}:
+    get:
+      operationId: org.GetAcademicYear
+      summary: Get AcademicYear
+      description: Get one AcademicYear by id. The ETag header carries the row version.
+      tags:
+      - AcademicYear
+      security:
+      - bearerAuth: []
+      x-permission: org.academic_year.read
+      x-grpc:
+        service: mysms.org.v1.AcademicYearService
+        method: GetAcademicYear
+      parameters:
+      - name: academicYearId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AcademicYear id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicYear'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: org.UpdateAcademicYear
+      summary: Update AcademicYear
+      description: Partially update a AcademicYear (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - AcademicYear
+      security:
+      - bearerAuth: []
+      x-permission: org.academic_year.update
+      x-grpc:
+        service: mysms.org.v1.AcademicYearService
+        method: UpdateAcademicYear
+      parameters:
+      - name: academicYearId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AcademicYear id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcademicYearUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicYear'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: org.DeleteAcademicYear
+      summary: Delete AcademicYear
+      description: Soft delete (sets deleted_at).
+      tags:
+      - AcademicYear
+      security:
+      - bearerAuth: []
+      x-permission: org.academic_year.delete
+      x-grpc:
+        service: mysms.org.v1.AcademicYearService
+        method: DeleteAcademicYear
+      parameters:
+      - name: academicYearId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AcademicYear id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/academic-years/{academicYearId}/terms:
+    get:
+      operationId: org.ListAcademicTerms
+      summary: List AcademicTerms
+      description: List AcademicTerms visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - AcademicYear
+      security:
+      - bearerAuth: []
+      x-permission: org.academic_term.read
+      x-grpc:
+        service: mysms.org.v1.AcademicYearService
+        method: ListAcademicTerms
+      parameters:
+      - name: academicYearId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AcademicYear id.
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicTermList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: org.CreateAcademicTerm
+      summary: Create AcademicTerm
+      description: Create a AcademicTerm. Supports Idempotency-Key and validateOnly.
+      tags:
+      - AcademicYear
+      security:
+      - bearerAuth: []
+      x-permission: org.academic_term.create
+      x-grpc:
+        service: mysms.org.v1.AcademicYearService
+        method: CreateAcademicTerm
+      parameters:
+      - name: academicYearId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AcademicYear id.
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcademicTerm'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicTerm'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicTerm'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/academic-years/{academicYearId}/terms/{academicTermId}:
+    get:
+      operationId: org.GetAcademicTerm
+      summary: Get AcademicTerm
+      description: Get one AcademicTerm by id. The ETag header carries the row version.
+      tags:
+      - AcademicYear
+      security:
+      - bearerAuth: []
+      x-permission: org.academic_term.read
+      x-grpc:
+        service: mysms.org.v1.AcademicYearService
+        method: GetAcademicTerm
+      parameters:
+      - name: academicYearId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AcademicYear id.
+      - name: academicTermId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AcademicTerm id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicTerm'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: org.UpdateAcademicTerm
+      summary: Update AcademicTerm
+      description: Partially update a AcademicTerm (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - AcademicYear
+      security:
+      - bearerAuth: []
+      x-permission: org.academic_term.update
+      x-grpc:
+        service: mysms.org.v1.AcademicYearService
+        method: UpdateAcademicTerm
+      parameters:
+      - name: academicYearId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AcademicYear id.
+      - name: academicTermId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AcademicTerm id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcademicTermUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicTerm'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: org.DeleteAcademicTerm
+      summary: Delete AcademicTerm
+      description: Soft delete (sets deleted_at).
+      tags:
+      - AcademicYear
+      security:
+      - bearerAuth: []
+      x-permission: org.academic_term.delete
+      x-grpc:
+        service: mysms.org.v1.AcademicYearService
+        method: DeleteAcademicTerm
+      parameters:
+      - name: academicYearId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AcademicYear id.
+      - name: academicTermId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AcademicTerm id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/institution-types:
+    get:
+      operationId: org.ListInstitutionTypes
+      summary: List InstitutionTypes
+      description: List InstitutionTypes visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - InstitutionType
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_type.read
+      x-grpc:
+        service: mysms.org.v1.InstitutionTypeService
+        method: ListInstitutionTypes
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionTypeList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: org.CreateInstitutionType
+      summary: Create InstitutionType
+      description: Create a InstitutionType. Supports Idempotency-Key and validateOnly.
+      tags:
+      - InstitutionType
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_type.create
+      x-grpc:
+        service: mysms.org.v1.InstitutionTypeService
+        method: CreateInstitutionType
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstitutionType'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionType'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionType'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/institution-types/{institutionTypeId}:
+    get:
+      operationId: org.GetInstitutionType
+      summary: Get InstitutionType
+      description: Get one InstitutionType by id. The ETag header carries the row version.
+      tags:
+      - InstitutionType
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_type.read
+      x-grpc:
+        service: mysms.org.v1.InstitutionTypeService
+        method: GetInstitutionType
+      parameters:
+      - name: institutionTypeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionType id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionType'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: org.UpdateInstitutionType
+      summary: Update InstitutionType
+      description: Partially update a InstitutionType (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - InstitutionType
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_type.update
+      x-grpc:
+        service: mysms.org.v1.InstitutionTypeService
+        method: UpdateInstitutionType
+      parameters:
+      - name: institutionTypeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionType id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstitutionTypeUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionType'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: org.DeleteInstitutionType
+      summary: Delete InstitutionType
+      description: Soft delete (sets deleted_at).
+      tags:
+      - InstitutionType
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_type.delete
+      x-grpc:
+        service: mysms.org.v1.InstitutionTypeService
+        method: DeleteInstitutionType
+      parameters:
+      - name: institutionTypeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionType id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/attribute-definitions:
+    get:
+      operationId: org.ListAttributeDefinitions
+      summary: List AttributeDefinitions
+      description: List AttributeDefinitions visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - AttributeDefinition
+      security:
+      - bearerAuth: []
+      x-permission: org.attribute_definition.read
+      x-grpc:
+        service: mysms.org.v1.AttributeDefinitionService
+        method: ListAttributeDefinitions
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributeDefinitionList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: org.CreateAttributeDefinition
+      summary: Create AttributeDefinition
+      description: Create a AttributeDefinition. Supports Idempotency-Key and validateOnly.
+      tags:
+      - AttributeDefinition
+      security:
+      - bearerAuth: []
+      x-permission: org.attribute_definition.create
+      x-grpc:
+        service: mysms.org.v1.AttributeDefinitionService
+        method: CreateAttributeDefinition
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttributeDefinition'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributeDefinition'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributeDefinition'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/attribute-definitions/{attributeDefinitionId}:
+    get:
+      operationId: org.GetAttributeDefinition
+      summary: Get AttributeDefinition
+      description: Get one AttributeDefinition by id. The ETag header carries the row version.
+      tags:
+      - AttributeDefinition
+      security:
+      - bearerAuth: []
+      x-permission: org.attribute_definition.read
+      x-grpc:
+        service: mysms.org.v1.AttributeDefinitionService
+        method: GetAttributeDefinition
+      parameters:
+      - name: attributeDefinitionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AttributeDefinition id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributeDefinition'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: org.UpdateAttributeDefinition
+      summary: Update AttributeDefinition
+      description: Partially update a AttributeDefinition (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - AttributeDefinition
+      security:
+      - bearerAuth: []
+      x-permission: org.attribute_definition.update
+      x-grpc:
+        service: mysms.org.v1.AttributeDefinitionService
+        method: UpdateAttributeDefinition
+      parameters:
+      - name: attributeDefinitionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AttributeDefinition id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttributeDefinitionUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributeDefinition'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: org.DeleteAttributeDefinition
+      summary: Delete AttributeDefinition
+      description: Soft delete (sets deleted_at).
+      tags:
+      - AttributeDefinition
+      security:
+      - bearerAuth: []
+      x-permission: org.attribute_definition.delete
+      x-grpc:
+        service: mysms.org.v1.AttributeDefinitionService
+        method: DeleteAttributeDefinition
+      parameters:
+      - name: attributeDefinitionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: AttributeDefinition id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/institution-types/{institutionTypeId}/attributes:
+    get:
+      operationId: org.ListInstitutionTypeAttributes
+      summary: List InstitutionTypeAttributes
+      description: List InstitutionTypeAttributes visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - InstitutionType
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_type_attribute.read
+      x-grpc:
+        service: mysms.org.v1.InstitutionTypeService
+        method: ListInstitutionTypeAttributes
+      parameters:
+      - name: institutionTypeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionType id.
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionTypeAttributeList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: org.CreateInstitutionTypeAttribute
+      summary: Create InstitutionTypeAttribute
+      description: Create a InstitutionTypeAttribute. Supports Idempotency-Key and validateOnly.
+      tags:
+      - InstitutionType
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_type_attribute.create
+      x-grpc:
+        service: mysms.org.v1.InstitutionTypeService
+        method: CreateInstitutionTypeAttribute
+      parameters:
+      - name: institutionTypeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionType id.
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstitutionTypeAttribute'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionTypeAttribute'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionTypeAttribute'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/institution-types/{institutionTypeId}/attributes/{institutionTypeAttributeId}:
+    get:
+      operationId: org.GetInstitutionTypeAttribute
+      summary: Get InstitutionTypeAttribute
+      description: Get one InstitutionTypeAttribute by id. The ETag header carries the row version.
+      tags:
+      - InstitutionType
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_type_attribute.read
+      x-grpc:
+        service: mysms.org.v1.InstitutionTypeService
+        method: GetInstitutionTypeAttribute
+      parameters:
+      - name: institutionTypeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionType id.
+      - name: institutionTypeAttributeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionTypeAttribute id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionTypeAttribute'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: org.UpdateInstitutionTypeAttribute
+      summary: Update InstitutionTypeAttribute
+      description: Partially update a InstitutionTypeAttribute (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - InstitutionType
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_type_attribute.update
+      x-grpc:
+        service: mysms.org.v1.InstitutionTypeService
+        method: UpdateInstitutionTypeAttribute
+      parameters:
+      - name: institutionTypeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionType id.
+      - name: institutionTypeAttributeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionTypeAttribute id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstitutionTypeAttributeUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionTypeAttribute'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: org.DeleteInstitutionTypeAttribute
+      summary: Delete InstitutionTypeAttribute
+      description: Soft delete (sets deleted_at).
+      tags:
+      - InstitutionType
+      security:
+      - bearerAuth: []
+      x-permission: org.institution_type_attribute.delete
+      x-grpc:
+        service: mysms.org.v1.InstitutionTypeService
+        method: DeleteInstitutionTypeAttribute
+      parameters:
+      - name: institutionTypeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionType id.
+      - name: institutionTypeAttributeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: InstitutionTypeAttribute id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/holidays:
+    get:
+      operationId: org.ListHolidays
+      summary: List Holidays
+      description: List Holidays visible to the caller, with cursor pagination, filtering and ordering.
+      tags:
+      - Holiday
+      security:
+      - bearerAuth: []
+      x-permission: org.holiday.read
+      x-grpc:
+        service: mysms.org.v1.HolidayService
+        method: ListHolidays
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/PageSize
+      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Filter
+      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HolidayList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    post:
+      operationId: org.CreateHoliday
+      summary: Create Holiday
+      description: Create a Holiday. Supports Idempotency-Key and validateOnly.
+      tags:
+      - Holiday
+      security:
+      - bearerAuth: []
+      x-permission: org.holiday.create
+      x-grpc:
+        service: mysms.org.v1.HolidayService
+        method: CreateHoliday
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Holiday'
+      responses:
+        '200':
+          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holiday'
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+            Location:
+              description: URL of the new resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holiday'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/holidays/{holidayId}:
+    get:
+      operationId: org.GetHoliday
+      summary: Get Holiday
+      description: Get one Holiday by id. The ETag header carries the row version.
+      tags:
+      - Holiday
+      security:
+      - bearerAuth: []
+      x-permission: org.holiday.read
+      x-grpc:
+        service: mysms.org.v1.HolidayService
+        method: GetHoliday
+      parameters:
+      - name: holidayId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Holiday id.
+      - $ref: ./common.yaml#/components/parameters/ReadMask
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holiday'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    patch:
+      operationId: org.UpdateHoliday
+      summary: Update Holiday
+      description: Partially update a Holiday (updateMask). Requires If-Match with the current ETag.
+      tags:
+      - Holiday
+      security:
+      - bearerAuth: []
+      x-permission: org.holiday.update
+      x-grpc:
+        service: mysms.org.v1.HolidayService
+        method: UpdateHoliday
+      parameters:
+      - name: holidayId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Holiday id.
+      - $ref: ./common.yaml#/components/parameters/UpdateMask
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      - $ref: ./common.yaml#/components/parameters/ValidateOnly
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HolidayUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: ./common.yaml#/components/headers/ETag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holiday'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+    delete:
+      operationId: org.DeleteHoliday
+      summary: Delete Holiday
+      description: Soft delete (sets deleted_at).
+      tags:
+      - Holiday
+      security:
+      - bearerAuth: []
+      x-permission: org.holiday.delete
+      x-grpc:
+        service: mysms.org.v1.HolidayService
+        method: DeleteHoliday
+      parameters:
+      - name: holidayId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Holiday id.
+      - $ref: ./common.yaml#/components/parameters/IfMatch
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
+        '428':
+          $ref: ./common.yaml#/components/responses/428
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+  /v1/org/institutions:find:
+    get:
+      operationId: org.FindInstitutions
+      summary: Find a school / college to sign in to (mobile app school picker)
+      description: Find a school / college to sign in to (mobile app school picker). Public.
+      tags:
+      - Institution
+      security:
+      - {}
+      - bearerAuth: []
+      x-permission: org.institution.find_institutions
+      x-grpc:
+        service: mysms.org.v1.InstitutionService
+        method: FindInstitutions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/InstitutionCardList
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: query
+        in: query
+        required: true
+        description: Name or code (minimum 3 characters).
+        schema:
+          type: string
+      - name: countryCode
+        in: query
+        required: false
+        description: ISO country.
+        schema:
+          type: string
+      - name: pageSize
+        in: query
+        required: false
+        description: Maximum items to return (1-500, default 50).
+        schema:
+          type: integer
+          format: int32
+      - name: pageToken
+        in: query
+        required: false
+        description: Cursor from next_page_token.
+        schema:
+          type: string
+  /v1/org/academic-years/{academicYearId}:activate:
+    post:
+      operationId: org.ActivateAcademicYear
+      summary: Make the year active and current for its institution
+      description: Make the year active and current for its institution.
+      tags:
+      - AcademicYear
+      security:
+      - bearerAuth: []
+      x-permission: org.academic_year.activate_academic_year
+      x-grpc:
+        service: mysms.org.v1.AcademicYearService
+        method: ActivateAcademicYear
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicYear'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: academicYearId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateAcademicYearRequest'
+  /v1/org/academic-years/{academicYearId}:close:
+    post:
+      operationId: org.CloseAcademicYear
+      summary: Close the year (read-only afterwards)
+      description: Close the year (read-only afterwards).
+      tags:
+      - AcademicYear
+      security:
+      - bearerAuth: []
+      x-permission: org.academic_year.close_academic_year
+      x-grpc:
+        service: mysms.org.v1.AcademicYearService
+        method: CloseAcademicYear
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicYear'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: academicYearId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloseAcademicYearRequest'
+  /v1/org/academic-years/{academicYearId}:generateTerms:
+    post:
+      operationId: org.GenerateTerms
+      summary: Create terms from term_structure
+      description: Create terms from term_structure.
+      tags:
+      - AcademicYear
+      security:
+      - bearerAuth: []
+      x-permission: org.academic_year.generate_terms
+      x-grpc:
+        service: mysms.org.v1.AcademicYearService
+        method: GenerateTerms
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicTermList'
+        '400':
+          $ref: ./common.yaml#/components/responses/400
+        '401':
+          $ref: ./common.yaml#/components/responses/401
+        '403':
+          $ref: ./common.yaml#/components/responses/403
+        '404':
+          $ref: ./common.yaml#/components/responses/404
+        '409':
+          $ref: ./common.yaml#/components/responses/409
+        '422':
+          $ref: ./common.yaml#/components/responses/422
+        '429':
+          $ref: ./common.yaml#/components/responses/429
+        '500':
+          $ref: ./common.yaml#/components/responses/500
+      parameters:
+      - name: academicYearId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateTermsRequest'
+components:
+  schemas:
+    Institution:
+      type: object
+      description: A school, college, campus or training centre operated by a tenant. Institutions can be nested (group → campus).
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        parentInstitutionId:
+          type: string
+          format: uuid
+          description: Parent institution for multi-campus groups.
+        code:
+          type: string
+          maxLength: 30
+          description: Institution code, unique within the tenant.
+        name:
+          type: string
+          maxLength: 200
+          description: Institution name.
+        slug:
+          type: string
+          maxLength: 200
+          description: URL-safe name used for public pages and sub-domains.
+        institutionType:
+          type: string
+          enum:
+          - school
+          - college
+          - university
+          - coaching_centre
+          - training_centre
+          x-extensible-enum: true
+          description: Kind of institution.
+        email:
+          type: string
+          maxLength: 320
+          description: Official e-mail.
+        phone:
+          type: string
+          maxLength: 20
+          description: Official phone.
+        addressLine1:
+          type: string
+          maxLength: 255
+          description: Street address line 1.
+        addressLine2:
+          type: string
+          maxLength: 255
+          description: Street address line 2.
+        cityId:
+          type: string
+          format: uuid
+          description: City.
+        stateProvinceId:
+          type: string
+          format: uuid
+          description: State / province.
+        countryId:
+          type: string
+          format: uuid
+          description: Country.
+        postalCode:
+          type: string
+          maxLength: 12
+          description: Postal / PIN code.
+        timezone:
+          type: string
+          maxLength: 64
+          description: Time zone if different from the tenant.
+        currencyId:
+          type: string
+          format: uuid
+          description: Operating currency if different from the tenant.
+        logoFileId:
+          type: string
+          format: uuid
+          description: Logo image.
+        signatureFileId:
+          type: string
+          format: uuid
+          description: Authorised signatory's signature used on certificates.
+        accreditation:
+          type: string
+          description: Accreditation statement printed on certificates.
+        approvalAuthority:
+          type: string
+          description: Approving / affiliating authority.
+        status:
+          type: string
+          enum:
+          - active
+          - inactive
+          x-extensible-enum: true
+          description: Institution state.
+        institutionTypeId:
+          type: string
+          format: uuid
+          description: Configurable unit type (drives which attributes are captured).
+        themeId:
+          type: string
+          format: uuid
+          description: Visual theme of the institution's portal and apps.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - code
+      - name
+    InstitutionUpdate:
+      type: object
+      description: Fields of Institution that can be updated (partial update; see updateMask).
+      properties:
+        parentInstitutionId:
+          type: string
+          format: uuid
+          description: Parent institution for multi-campus groups.
+        code:
+          type: string
+          maxLength: 30
+          description: Institution code, unique within the tenant.
+        name:
+          type: string
+          maxLength: 200
+          description: Institution name.
+        slug:
+          type: string
+          maxLength: 200
+          description: URL-safe name used for public pages and sub-domains.
+        institutionType:
+          type: string
+          enum:
+          - school
+          - college
+          - university
+          - coaching_centre
+          - training_centre
+          x-extensible-enum: true
+          description: Kind of institution.
+        email:
+          type: string
+          maxLength: 320
+          description: Official e-mail.
+        phone:
+          type: string
+          maxLength: 20
+          description: Official phone.
+        addressLine1:
+          type: string
+          maxLength: 255
+          description: Street address line 1.
+        addressLine2:
+          type: string
+          maxLength: 255
+          description: Street address line 2.
+        cityId:
+          type: string
+          format: uuid
+          description: City.
+        stateProvinceId:
+          type: string
+          format: uuid
+          description: State / province.
+        countryId:
+          type: string
+          format: uuid
+          description: Country.
+        postalCode:
+          type: string
+          maxLength: 12
+          description: Postal / PIN code.
+        timezone:
+          type: string
+          maxLength: 64
+          description: Time zone if different from the tenant.
+        currencyId:
+          type: string
+          format: uuid
+          description: Operating currency if different from the tenant.
+        logoFileId:
+          type: string
+          format: uuid
+          description: Logo image.
+        signatureFileId:
+          type: string
+          format: uuid
+          description: Authorised signatory's signature used on certificates.
+        accreditation:
+          type: string
+          description: Accreditation statement printed on certificates.
+        approvalAuthority:
+          type: string
+          description: Approving / affiliating authority.
+        status:
+          type: string
+          enum:
+          - active
+          - inactive
+          x-extensible-enum: true
+          description: Institution state.
+        institutionTypeId:
+          type: string
+          format: uuid
+          description: Configurable unit type (drives which attributes are captured).
+        themeId:
+          type: string
+          format: uuid
+          description: Visual theme of the institution's portal and apps.
+    InstitutionList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Institution'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    InstitutionAttribute:
+      type: object
+      description: Extensible key/value profile attributes of an institution (affiliation number, motto, social links...).
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution.
+          readOnly: true
+        attrKey:
+          type: string
+          maxLength: 120
+          description: Attribute key.
+        attrValue:
+          type: string
+          description: Attribute value.
+        attributeDefinitionId:
+          type: string
+          format: uuid
+          description: Attribute definition (NULL = free key/value).
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - attrKey
+    InstitutionAttributeUpdate:
+      type: object
+      description: Fields of InstitutionAttribute that can be updated (partial update; see updateMask).
+      properties:
+        attrKey:
+          type: string
+          maxLength: 120
+          description: Attribute key.
+        attrValue:
+          type: string
+          description: Attribute value.
+        attributeDefinitionId:
+          type: string
+          format: uuid
+          description: Attribute definition (NULL = free key/value).
+    InstitutionAttributeList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstitutionAttribute'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    Department:
+      type: object
+      description: Academic or administrative department; hierarchical.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution.
+        parentDepartmentId:
+          type: string
+          format: uuid
+          description: Parent department.
+        code:
+          type: string
+          maxLength: 30
+          description: Department code.
+        name:
+          type: string
+          maxLength: 150
+          description: Department name.
+        isActive:
+          type: boolean
+          description: Whether in use.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - institutionId
+      - code
+      - name
+    DepartmentUpdate:
+      type: object
+      description: Fields of Department that can be updated (partial update; see updateMask).
+      properties:
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution.
+        parentDepartmentId:
+          type: string
+          format: uuid
+          description: Parent department.
+        code:
+          type: string
+          maxLength: 30
+          description: Department code.
+        name:
+          type: string
+          maxLength: 150
+          description: Department name.
+        isActive:
+          type: boolean
+          description: Whether in use.
+    DepartmentList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Department'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    AcademicYear:
+      type: object
+      description: Academic year of an institution.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution.
+        name:
+          type: string
+          maxLength: 60
+          description: Year label, e.g. 2026-27.
+        description:
+          type: string
+          description: Notes.
+        startDate:
+          type: string
+          format: date
+          description: First day.
+        endDate:
+          type: string
+          format: date
+          description: Last day.
+        termStructure:
+          type: string
+          enum:
+          - two_semesters
+          - two_semesters_quarterly
+          - two_semesters_final
+          - three_semesters
+          - four_quarters
+          - final_year
+          - other
+          x-extensible-enum: true
+          description: How the year is divided into terms.
+        status:
+          type: string
+          enum:
+          - planned
+          - active
+          - closed
+          x-extensible-enum: true
+          description: Year state. Changed only through the workflow operations.
+          readOnly: true
+        isCurrent:
+          type: boolean
+          description: Current year for the institution (at most one).
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - institutionId
+      - name
+      - startDate
+      - endDate
+    AcademicYearUpdate:
+      type: object
+      description: Fields of AcademicYear that can be updated (partial update; see updateMask).
+      properties:
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution.
+        name:
+          type: string
+          maxLength: 60
+          description: Year label, e.g. 2026-27.
+        description:
+          type: string
+          description: Notes.
+        startDate:
+          type: string
+          format: date
+          description: First day.
+        endDate:
+          type: string
+          format: date
+          description: Last day.
+        termStructure:
+          type: string
+          enum:
+          - two_semesters
+          - two_semesters_quarterly
+          - two_semesters_final
+          - three_semesters
+          - four_quarters
+          - final_year
+          - other
+          x-extensible-enum: true
+          description: How the year is divided into terms.
+        isCurrent:
+          type: boolean
+          description: Current year for the institution (at most one).
+    AcademicYearList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AcademicYear'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    AcademicTerm:
+      type: object
+      description: Term / semester / quarter inside an academic year; terms can nest.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        academicYearId:
+          type: string
+          format: uuid
+          description: Academic year.
+          readOnly: true
+        parentTermId:
+          type: string
+          format: uuid
+          description: Parent term (e.g. quarter inside a semester).
+        name:
+          type: string
+          maxLength: 60
+          description: Term name.
+        startDate:
+          type: string
+          format: date
+          description: First day.
+        endDate:
+          type: string
+          format: date
+          description: Last day.
+        sequence:
+          type: integer
+          format: int32
+          description: Order within the year.
+        code:
+          type: string
+          maxLength: 30
+          description: Short code (e.g. FA26).
+        isActive:
+          type: boolean
+          description: Term can be used for new cohorts / registrations.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - name
+      - startDate
+      - endDate
+    AcademicTermUpdate:
+      type: object
+      description: Fields of AcademicTerm that can be updated (partial update; see updateMask).
+      properties:
+        parentTermId:
+          type: string
+          format: uuid
+          description: Parent term (e.g. quarter inside a semester).
+        name:
+          type: string
+          maxLength: 60
+          description: Term name.
+        startDate:
+          type: string
+          format: date
+          description: First day.
+        endDate:
+          type: string
+          format: date
+          description: Last day.
+        sequence:
+          type: integer
+          format: int32
+          description: Order within the year.
+        code:
+          type: string
+          maxLength: 30
+          description: Short code (e.g. FA26).
+        isActive:
+          type: boolean
+          description: Term can be used for new cohorts / registrations.
+    AcademicTermList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AcademicTerm'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    InstitutionType:
+      type: object
+      description: Configurable kind of organisational unit (district, school, campus, department...) with its own attribute set.
+      properties:
+        code:
+          type: string
+          maxLength: 40
+          description: Stable key used by imports, integrations and seed scripts.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        isActive:
+          type: boolean
+          description: Whether offered for new picks.
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+          description: Type name.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - name
+    InstitutionTypeUpdate:
+      type: object
+      description: Fields of InstitutionType that can be updated (partial update; see updateMask).
+      properties:
+        code:
+          type: string
+          maxLength: 40
+          description: Stable key used by imports, integrations and seed scripts.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        isActive:
+          type: boolean
+          description: Whether offered for new picks.
+        name:
+          type: string
+          maxLength: 120
+          description: Type name.
+    InstitutionTypeList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstitutionType'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    AttributeDefinition:
+      type: object
+      description: Definition of an extensible institution attribute (label, data type, order).
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+          description: Attribute label.
+        dataType:
+          type: string
+          enum:
+          - text
+          - number
+          - date
+          - boolean
+          - email
+          - url
+          - phone
+          - select
+          x-extensible-enum: true
+          description: Data type of the value.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - name
+    AttributeDefinitionUpdate:
+      type: object
+      description: Fields of AttributeDefinition that can be updated (partial update; see updateMask).
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          description: Attribute label.
+        dataType:
+          type: string
+          enum:
+          - text
+          - number
+          - date
+          - boolean
+          - email
+          - url
+          - phone
+          - select
+          x-extensible-enum: true
+          description: Data type of the value.
+        sortOrder:
+          type: integer
+          format: int32
+          description: Display order.
+    AttributeDefinitionList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeDefinition'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    InstitutionTypeAttribute:
+      type: object
+      description: Attribute captured for institutions of a given type.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        institutionTypeId:
+          type: string
+          format: uuid
+          description: Institution type.
+          readOnly: true
+        attributeDefinitionId:
+          type: string
+          format: uuid
+          description: Attribute.
+        isRequired:
+          type: boolean
+          description: Value is mandatory.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - attributeDefinitionId
+    InstitutionTypeAttributeUpdate:
+      type: object
+      description: Fields of InstitutionTypeAttribute that can be updated (partial update; see updateMask).
+      properties:
+        attributeDefinitionId:
+          type: string
+          format: uuid
+          description: Attribute.
+        isRequired:
+          type: boolean
+          description: Value is mandatory.
+    InstitutionTypeAttributeList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstitutionTypeAttribute'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    Holiday:
+      type: object
+      description: Holiday or closure of an institution (applies to its calendar, cohorts and attendance).
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+          readOnly: true
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution (NULL = every institution of the tenant).
+        title:
+          type: string
+          maxLength: 200
+          description: Holiday name.
+        startDate:
+          type: string
+          format: date
+          description: First day.
+        endDate:
+          type: string
+          format: date
+          description: Last day.
+        createTime:
+          type: string
+          format: date-time
+          description: Row creation time.
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: User account that created the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          description: Last update time.
+          readOnly: true
+        updatedBy:
+          type: string
+          format: uuid
+          description: User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+          readOnly: true
+        etag:
+          type: string
+          readOnly: true
+          description: Entity tag (row version); send back in If-Match / etag.
+      required:
+      - title
+      - startDate
+      - endDate
+    HolidayUpdate:
+      type: object
+      description: Fields of Holiday that can be updated (partial update; see updateMask).
+      properties:
+        institutionId:
+          type: string
+          format: uuid
+          description: Institution (NULL = every institution of the tenant).
+        title:
+          type: string
+          maxLength: 200
+          description: Holiday name.
+        startDate:
+          type: string
+          format: date
+          description: First day.
+        endDate:
+          type: string
+          format: date
+          description: Last day.
+    HolidayList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Holiday'
+        nextPageToken:
+          type: string
+          description: Cursor for the next page; empty on the last page.
+        totalSize:
+          type: integer
+          format: int32
+          description: Total matching items (may be approximate for large sets).
+    ActivateAcademicYearRequest:
+      type: object
+      properties:
+        etag:
+          type: string
+          description: Concurrency token from the last read (optional but recommended).
+    CloseAcademicYearRequest:
+      type: object
+      properties:
+        etag:
+          type: string
+          description: Concurrency token from the last read (optional but recommended).
+    GenerateTermsRequest:
+      type: object
+      properties: {}
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: OAuth 2.0 / OIDC access token. Claims carry tenant_id, user_id, roles and an optional act-as (impersonation) subject.
+    platformAdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token of MySMS platform staff (audience mysms-platform-admin, MFA required). Only these operations may act across tenants; the target tenant is the resource being addressed.

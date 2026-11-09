@@ -1,0 +1,4 @@
+{
+  "extends": "@mysms/config/tsconfig.native.json",
+  "include": ["src", "index.ts"]
+}

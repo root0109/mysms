@@ -1,0 +1,232 @@
+erDiagram
+    people__honorific["people.honorific"] {
+        uuid id PK
+        varchar(40) name "NN"
+        varchar(10) shortcut
+        varchar(40) code "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    people__person["people.person"] {
+        uuid id PK
+        uuid honorific_id FK
+        varchar(100) first_name
+        varchar(100) middle_name
+        varchar(100) last_name
+        varchar(255) display_name "NN"
+        date date_of_birth
+        varchar(30) gender
+        varchar(30) blood_group
+        varchar(30) marital_status
+        varchar(120) birth_place
+        varchar(120) native_place
+        uuid nationality_country_id FK "→ master.country (logical)"
+        varchar(60) mother_tongue
+        varchar(60) religion
+        varchar(30) social_category
+        varchar(60) social_sub_category
+        varchar(30) national_id_type
+        text national_id_enc
+        varchar(100) visa_info
+        varchar(320) primary_email
+        varchar(20) primary_phone
+        varchar(20) alternate_phone
+        uuid photo_file_id FK "→ platform.file_object (logical)"
+        text remarks
+        varchar(30) work_phone
+        varchar(500) website_url
+        text about_me
+    }
+    people__person_address["people.person_address"] {
+        uuid id PK
+        uuid person_id FK "NN"
+        varchar(30) address_type "NN"
+        varchar(255) line1
+        varchar(255) line2
+        uuid city_id FK "→ master.city (logical)"
+        varchar(120) city_name
+        uuid state_province_id FK "→ master.state_province (logical)"
+        uuid country_id FK "→ master.country (logical)"
+        varchar(12) postal_code
+        boolean is_primary "NN"
+        varchar(100) state_name
+        integer sort_order "NN"
+    }
+    people__emergency_contact["people.emergency_contact"] {
+        uuid id PK
+        uuid person_id FK "NN"
+        uuid contact_person_id FK
+        varchar(150) contact_name
+        varchar(60) relationship
+        varchar(20) phone
+        smallint priority "NN"
+    }
+    people__qualification["people.qualification"] {
+        uuid id PK
+        varchar(120) name "NN"
+        varchar(30) level "NN"
+        boolean is_active "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+    }
+    people__education_history["people.education_history"] {
+        uuid id PK
+        uuid person_id FK "NN"
+        uuid qualification_id FK
+        varchar(200) institution_name "NN"
+        varchar(150) location
+        varchar(120) degree_type
+        varchar(120) major
+        varchar(30) grade_type
+        varchar(30) grade
+        date start_date
+        date end_date
+        varchar(200) certification
+        varchar(200) minor
+        varchar(30) study_mode
+        integer sort_order "NN"
+    }
+    people__work_experience["people.work_experience"] {
+        uuid id PK
+        uuid person_id FK "NN"
+        varchar(30) experience_type "NN"
+        varchar(150) title "NN"
+        varchar(200) company "NN"
+        varchar(150) location "NN"
+        date from_date "NN"
+        date to_date
+        boolean is_current "NN"
+        text description
+        varchar(500) company_website
+        varchar(150) industry
+        text responsibilities
+        integer sort_order "NN"
+    }
+    people__certification["people.certification"] {
+        uuid id PK
+        uuid person_id FK "NN"
+        varchar(200) name "NN"
+        varchar(200) issuing_organization "NN"
+        date issue_date "NN"
+        boolean expires "NN"
+        date expiration_date
+        text description
+    }
+    people__skill["people.skill"] {
+        uuid id PK
+        varchar(120) name "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    people__person_skill["people.person_skill"] {
+        uuid id PK
+        uuid person_id FK "NN"
+        uuid skill_id FK "NN"
+    }
+    people__person_document["people.person_document"] {
+        uuid id PK
+        uuid person_id FK "NN"
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(30) document_type "NN"
+        varchar(200) name "NN"
+        uuid file_id FK "NN · → platform.file_object (logical)"
+        integer document_version "NN"
+        varchar(30) status "NN"
+    }
+    people__public_profile["people.public_profile"] {
+        uuid id PK
+        uuid person_id FK "NN"
+        varchar(200) headline
+        varchar(120) profession
+        varchar(30) persona_category
+        uuid cover_image_file_id FK "→ platform.file_object (logical)"
+        varchar(120) city
+        uuid country_id FK "→ master.country (logical)"
+        varchar(200) college
+        varchar(120) branch
+        varchar(500) linkedin_url
+        varchar(500) github_url
+        varchar(500) twitter_url
+        varchar(500) medium_url
+        boolean hide_private_info "NN"
+    }
+    people__person_social_link["people.person_social_link"] {
+        uuid id PK
+        uuid person_id FK "NN"
+        varchar(30) network "NN"
+        varchar(255) handle "NN"
+        integer sort_order "NN"
+    }
+    people__consent_record["people.consent_record"] {
+        uuid id PK
+        uuid person_id FK "NN"
+        uuid given_by_person_id FK "NN"
+        varchar(30) purpose "NN"
+        varchar(30) policy_version "NN"
+        timestamptz granted_at "NN"
+        timestamptz withdrawn_at
+        varchar(30) channel "NN"
+        uuid recorded_by_user_id FK "→ iam.user_account (logical)"
+        uuid evidence_file_id FK "→ platform.file_object (logical)"
+        inet ip_address
+    }
+    people__outbox_event["people.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    people__inbox_event["people.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    people__idempotency_key["people.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    people__operation["people.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    people__honorific |o--o{ people__person : "honorific_id"
+    people__person ||--o{ people__person_address : "person_id"
+    people__person ||--o{ people__emergency_contact : "person_id"
+    people__person |o--o{ people__emergency_contact : "contact_person_id"
+    people__person ||--o{ people__education_history : "person_id"
+    people__qualification |o--o{ people__education_history : "qualification_id"
+    people__person ||--o{ people__work_experience : "person_id"
+    people__person ||--o{ people__certification : "person_id"
+    people__person ||--o{ people__person_skill : "person_id"
+    people__skill ||--o{ people__person_skill : "skill_id"
+    people__person ||--o{ people__person_document : "person_id"
+    people__person ||--o{ people__public_profile : "person_id"
+    people__person ||--o{ people__person_social_link : "person_id"
+    people__person ||--o{ people__consent_record : "person_id"
+    people__person ||--o{ people__consent_record : "given_by_person_id"

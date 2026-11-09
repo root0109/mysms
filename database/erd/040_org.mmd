@@ -1,0 +1,145 @@
+erDiagram
+    org__institution["org.institution"] {
+        uuid id PK
+        uuid parent_institution_id FK
+        varchar(30) code "NN"
+        varchar(200) name "NN"
+        varchar(200) slug
+        varchar(30) institution_type "NN"
+        varchar(320) email
+        varchar(20) phone
+        varchar(255) address_line1
+        varchar(255) address_line2
+        uuid city_id FK "→ master.city (logical)"
+        uuid state_province_id FK "→ master.state_province (logical)"
+        uuid country_id FK "→ master.country (logical)"
+        varchar(12) postal_code
+        varchar(64) timezone
+        uuid currency_id FK "→ master.currency (logical)"
+        uuid logo_file_id FK "→ platform.file_object (logical)"
+        uuid signature_file_id FK "→ platform.file_object (logical)"
+        text accreditation
+        text approval_authority
+        varchar(30) status "NN"
+        uuid institution_type_id FK
+        uuid theme_id FK "→ platform.theme (logical)"
+    }
+    org__institution_attribute["org.institution_attribute"] {
+        uuid id PK
+        uuid institution_id FK "NN"
+        varchar(120) attr_key "NN"
+        text attr_value
+        uuid attribute_definition_id FK
+    }
+    org__department["org.department"] {
+        uuid id PK
+        uuid institution_id FK "NN"
+        uuid parent_department_id FK
+        varchar(30) code "NN"
+        varchar(150) name "NN"
+        boolean is_active "NN"
+    }
+    org__academic_year["org.academic_year"] {
+        uuid id PK
+        uuid institution_id FK "NN"
+        varchar(60) name "NN"
+        text description
+        date start_date "NN"
+        date end_date "NN"
+        varchar(30) term_structure
+        varchar(30) status "NN"
+        boolean is_current "NN"
+    }
+    org__academic_term["org.academic_term"] {
+        uuid id PK
+        uuid academic_year_id FK "NN"
+        uuid parent_term_id FK
+        varchar(60) name "NN"
+        date start_date "NN"
+        date end_date "NN"
+        smallint sequence
+        varchar(30) code
+        boolean is_active "NN"
+    }
+    org__institution_type["org.institution_type"] {
+        uuid id PK
+        varchar(120) name "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    org__attribute_definition["org.attribute_definition"] {
+        uuid id PK
+        varchar(120) name "NN"
+        varchar(30) data_type "NN"
+        integer sort_order "NN"
+    }
+    org__institution_type_attribute["org.institution_type_attribute"] {
+        uuid id PK
+        uuid institution_type_id FK "NN"
+        uuid attribute_definition_id FK "NN"
+        boolean is_required "NN"
+    }
+    org__holiday["org.holiday"] {
+        uuid id PK
+        uuid institution_id FK
+        varchar(200) title "NN"
+        date start_date "NN"
+        date end_date "NN"
+    }
+    org__outbox_event["org.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    org__inbox_event["org.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    org__idempotency_key["org.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    org__operation["org.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    org__institution |o--o{ org__institution : "parent_institution_id"
+    org__institution_type |o--o{ org__institution : "institution_type_id"
+    org__institution ||--o{ org__institution_attribute : "institution_id"
+    org__attribute_definition |o--o{ org__institution_attribute : "attribute_definition_id"
+    org__institution ||--o{ org__department : "institution_id"
+    org__department |o--o{ org__department : "parent_department_id"
+    org__institution ||--o{ org__academic_year : "institution_id"
+    org__academic_year ||--o{ org__academic_term : "academic_year_id"
+    org__academic_term |o--o{ org__academic_term : "parent_term_id"
+    org__institution_type ||--o{ org__institution_type_attribute : "institution_type_id"
+    org__attribute_definition ||--o{ org__institution_type_attribute : "attribute_definition_id"
+    org__institution |o--o{ org__holiday : "institution_id"

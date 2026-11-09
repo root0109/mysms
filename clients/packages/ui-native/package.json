@@ -1,0 +1,28 @@
+{
+  "name": "@mysms/ui-native",
+  "version": "0.1.0",
+  "private": true,
+  "description": "React Native components with the same names and props as @mysms/ui-web where the platform allows (ui/04 §5).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint --max-warnings 0 src"
+  },
+  "dependencies": {
+    "@mysms/tokens": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.1.0",
+    "react-native": "^0.81.0"
+  },
+  "devDependencies": {
+    "@mysms/config": "workspace:*",
+    "@types/react": "19.1.17",
+    "react": "19.1.10",
+    "react-native": "0.81.6",
+    "typescript": "5.9.3"
+  }
+}

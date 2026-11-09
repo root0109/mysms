@@ -1,0 +1,246 @@
+erDiagram
+    platform__tenant["platform.tenant"] {
+        uuid id PK
+        varchar(50) code UK "NN"
+        varchar(200) name "NN"
+        varchar(200) legal_name
+        varchar(30) status "NN"
+        varchar(320) primary_email
+        varchar(20) primary_phone
+        uuid country_id FK "→ master.country (logical)"
+        uuid default_currency_id FK "→ master.currency (logical)"
+        varchar(64) timezone "NN"
+        varchar(10) locale "NN"
+    }
+    platform__saas_plan["platform.saas_plan"] {
+        uuid id PK
+        varchar(50) code UK "NN"
+        varchar(120) display_name "NN"
+        smallint billing_cycle_months "NN"
+        numeric price "12,2 · NN"
+        uuid currency_id FK "→ master.currency (logical)"
+        integer sort_order "NN"
+        boolean is_active "NN"
+        integer max_members
+        integer max_events
+        integer max_folders
+        integer max_files
+        integer max_videos
+        integer max_audios
+        integer max_bulletins
+        integer max_groups
+    }
+    platform__tenant_subscription["platform.tenant_subscription"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        uuid plan_id FK
+        uuid requested_by_user_id FK "NN · → iam.user_account (logical)"
+        varchar(30) status "NN"
+        date start_date
+        date end_date
+        integer max_members
+        integer max_events
+        integer max_folders
+        integer max_files
+        integer max_videos
+        integer max_audios
+        integer max_bulletins
+        integer max_groups
+        numeric price "14,2"
+        uuid currency_id FK "→ master.currency (logical)"
+        integer billing_cycle_months
+        varchar(60) gateway_name
+        varchar(120) gateway_txn_ref
+        numeric amount_paid "14,2"
+        varchar(30) payment_mode
+        varchar(40) gateway_status
+        varchar(300) gateway_error
+        timestamptz paid_at
+        varchar(200) payer_name
+        varchar(150) payer_email
+        varchar(20) payer_phone
+        text gateway_raw_response
+    }
+    platform__file_object["platform.file_object"] {
+        uuid id PK
+        varchar(50) storage_disk "NN"
+        text storage_key "NN"
+        varchar(255) file_name "NN"
+        varchar(255) original_name
+        varchar(150) mime_type
+        bigint size_bytes "NN"
+        char(64) checksum_sha256
+        varchar(80) owner_entity_type
+        uuid owner_entity_id
+        varchar(80) collection_name
+        integer sort_order
+        varchar(30) file_kind
+        boolean is_shared "NN"
+        varchar(30) processing_status "NN"
+        integer processing_attempts "NN"
+        text processing_error
+        varchar(20) status "NN"
+        timestamptz scanned_at
+        uuid uploaded_by_user_id FK "→ iam.user_account (logical)"
+    }
+    platform__entity_attachment["platform.entity_attachment"] {
+        uuid id PK
+        varchar(80) entity_type "NN"
+        uuid entity_id "NN"
+        uuid file_id FK "NN"
+        integer sort_order "NN"
+        varchar(30) purpose "NN"
+        varchar(255) title
+    }
+    platform__tag["platform.tag"] {
+        uuid id PK
+        varchar(50) tag_type "NN"
+        varchar(120) name "NN"
+        varchar(140) slug "NN"
+        integer sort_order
+        varchar(50) code
+    }
+    platform__tag_assignment["platform.tag_assignment"] {
+        uuid id PK
+        uuid tag_id FK "NN"
+        varchar(80) entity_type "NN"
+        uuid entity_id "NN"
+    }
+    platform__entity_note["platform.entity_note"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(80) entity_type "NN"
+        uuid entity_id "NN"
+        text note_text "NN"
+    }
+    platform__audit_log["platform.audit_log"] {
+        uuid id PK
+        varchar(100) log_name
+        text description "NN"
+        varchar(50) event
+        varchar(80) subject_type
+        uuid subject_id
+        varchar(80) causer_type
+        uuid causer_id
+        jsonb properties
+        uuid batch_id
+        inet ip_address
+        timestamptz occurred_at PK
+    }
+    platform__reserved_keyword["platform.reserved_keyword"] {
+        uuid id PK
+        varchar(120) keyword UK "NN"
+    }
+    platform__sales_enquiry["platform.sales_enquiry"] {
+        uuid id PK
+        varchar(150) contact_name "NN"
+        varchar(320) email "NN"
+        varchar(20) phone "NN"
+        varchar(200) organisation_name "NN"
+        varchar(120) designation "NN"
+        varchar(60) channel
+        text message
+        varchar(30) status "NN"
+    }
+    platform__system_setting["platform.system_setting"] {
+        uuid id PK
+        varchar(120) setting_key UK "NN"
+        varchar(150) name "NN"
+        text description
+        text value
+        varchar(50) input_type "NN"
+        boolean is_active "NN"
+    }
+    platform__theme["platform.theme"] {
+        uuid id PK
+        varchar(120) name "NN"
+        text description
+        uuid thumbnail_file_id FK
+        uuid thumbnail_alt_file_id FK
+    }
+    platform__upload_policy["platform.upload_policy"] {
+        uuid id PK
+        uuid role_id FK "→ iam.role (logical)"
+        varchar(60) module_code "NN"
+        varchar(60) operation_code
+        bigint max_size_bytes
+        varchar(500) allowed_extensions
+    }
+    platform__deletion_log["platform.deletion_log"] {
+        uuid id PK
+        varchar(80) entity_type "NN"
+        uuid entity_id "NN"
+        uuid cohort_id FK "→ lms.cohort (logical)"
+        timestamptz deleted_at_ts "NN"
+    }
+    platform__storage_quota["platform.storage_quota"] {
+        uuid id PK
+        uuid user_id FK "→ iam.user_account (logical)"
+        uuid institution_id FK "→ org.institution (logical)"
+        bigint quota_bytes "NN"
+        bigint used_bytes "NN"
+        boolean is_active "NN"
+    }
+    platform__theme_token["platform.theme_token"] {
+        uuid id PK
+        uuid theme_id FK "NN"
+        varchar(60) token_key "NN"
+        varchar(200) value "NN"
+    }
+    platform__tenant_domain["platform.tenant_domain"] {
+        uuid id PK
+        varchar(255) host UK "NN"
+        boolean is_primary "NN"
+        boolean is_verified "NN"
+        timestamptz verified_at
+    }
+    platform__operation["platform.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    platform__idempotency_key["platform.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    platform__outbox_event["platform.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    platform__inbox_event["platform.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    platform__saas_plan |o--o{ platform__tenant_subscription : "plan_id"
+    platform__file_object ||--o{ platform__entity_attachment : "file_id"
+    platform__tag ||--o{ platform__tag_assignment : "tag_id"
+    platform__file_object |o--o{ platform__theme : "thumbnail_file_id"
+    platform__file_object |o--o{ platform__theme : "thumbnail_alt_file_id"
+    platform__theme ||--o{ platform__theme_token : "theme_id"

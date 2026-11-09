@@ -1,0 +1,79 @@
+erDiagram
+    comms__page_category["comms.page_category"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        varchar(120) name "NN"
+        boolean is_active "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+    }
+    comms__class_page["comms.class_page"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        uuid page_category_id FK "NN"
+        varchar(150) name "NN"
+        text description "NN"
+        uuid cover_image_file_id FK "→ platform.file_object (logical)"
+        uuid owner_user_id FK "→ iam.user_account (logical)"
+        boolean is_active "NN"
+    }
+    comms__class_page_attachment["comms.class_page_attachment"] {
+        uuid id PK
+        uuid class_page_id FK "NN"
+        uuid file_id FK "NN · → platform.file_object (logical)"
+        boolean is_active "NN"
+    }
+    comms__class_page_member["comms.class_page_member"] {
+        uuid id PK
+        uuid class_page_id FK "NN"
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        boolean is_following "NN"
+        varchar(30) reaction
+        boolean is_active "NN"
+    }
+    comms__post["comms.post"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "NN · → org.academic_year (logical)"
+        uuid class_page_id FK
+        uuid author_user_id FK "NN · → iam.user_account (logical)"
+        text body "NN"
+        varchar(30) visibility "NN"
+        varchar(30) status "NN"
+        timestamptz scheduled_for
+        timestamptz posted_at
+    }
+    comms__post_audience_class["comms.post_audience_class"] {
+        uuid id PK
+        uuid post_id FK "NN"
+        uuid class_section_id FK "NN · → academics.class_section (logical)"
+    }
+    comms__reaction["comms.reaction"] {
+        uuid id PK
+        uuid post_id FK
+        uuid comment_id FK
+        uuid user_id FK "NN · → iam.user_account (logical)"
+        varchar(30) reaction
+        boolean is_saved "NN"
+        boolean is_active "NN"
+    }
+    comms__post_comment["comms.post_comment"] {
+        uuid id PK
+        uuid post_id FK "NN"
+        uuid parent_comment_id FK
+        uuid author_user_id FK "NN · → iam.user_account (logical)"
+        text body
+        uuid attachment_file_id FK "→ platform.file_object (logical)"
+        boolean is_active "NN"
+    }
+    comms__page_category ||--o{ comms__class_page : "page_category_id"
+    comms__class_page ||--o{ comms__class_page_attachment : "class_page_id"
+    comms__class_page ||--o{ comms__class_page_member : "class_page_id"
+    comms__class_page |o--o{ comms__post : "class_page_id"
+    comms__post ||--o{ comms__post_audience_class : "post_id"
+    comms__post ||--o{ comms__post_comment : "post_id"
+    comms__post_comment |o--o{ comms__post_comment : "parent_comment_id"
+    comms__post |o--o{ comms__reaction : "post_id"
+    comms__post_comment |o--o{ comms__reaction : "comment_id"

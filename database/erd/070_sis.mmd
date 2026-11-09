@@ -1,0 +1,262 @@
+erDiagram
+    sis__student_category["sis.student_category"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(30) code "NN"
+        varchar(120) name "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    sis__student["sis.student"] {
+        uuid id PK
+        uuid person_id FK "NN · → people.person (logical)"
+        uuid user_id FK "→ iam.user_account (logical)"
+        uuid institution_id FK "NN · → org.institution (logical)"
+        varchar(30) admission_number
+        date admission_date
+        date joining_date
+        uuid student_category_id FK
+        varchar(40) government_student_id
+        varchar(40) bonafide_certificate_number
+        varchar(30) status "NN"
+        date exit_date
+        text exit_reason
+    }
+    sis__guardian["sis.guardian"] {
+        uuid id PK
+        uuid person_id FK "NN · → people.person (logical)"
+        uuid user_id FK "→ iam.user_account (logical)"
+        varchar(30) profession
+        varchar(120) sub_occupation
+        varchar(120) designation
+        varchar(200) organization_name
+        numeric annual_income "14,2"
+        uuid qualification_id FK "→ people.qualification (logical)"
+        varchar(20) mobile
+        varchar(320) email
+    }
+    sis__relationship_type["sis.relationship_type"] {
+        uuid id PK
+        varchar(60) name "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+        boolean is_active "NN"
+    }
+    sis__student_guardian["sis.student_guardian"] {
+        uuid id PK
+        uuid student_id FK "NN"
+        uuid guardian_id FK "NN"
+        uuid relationship_type_id FK
+        boolean is_primary_contact "NN"
+        boolean receives_communication "NN"
+        boolean can_pick_up "NN"
+        varchar(30) status "NN"
+        boolean is_legal_guardian "NN"
+        boolean has_custody "NN"
+    }
+    sis__student_sibling["sis.student_sibling"] {
+        uuid id PK
+        uuid student_id FK "NN"
+        uuid sibling_student_id FK
+        varchar(150) sibling_name
+        text details
+    }
+    sis__student_enrollment["sis.student_enrollment"] {
+        uuid id PK
+        uuid student_id FK "NN"
+        uuid academic_year_id FK "NN · → org.academic_year (logical)"
+        uuid class_section_id FK "→ academics.class_section (logical)"
+        varchar(20) roll_number
+        varchar(40) id_card_number
+        varchar(40) board_registration_number
+        varchar(30) enrollment_status "NN"
+        varchar(30) result_status "NN"
+        date enrolled_on
+        date left_on
+        date effective_from
+        date effective_to
+        uuid previous_enrollment_id FK
+        varchar(30) change_reason "NN"
+    }
+    sis__program_enrollment["sis.program_enrollment"] {
+        uuid id PK
+        uuid student_id FK "NN"
+        uuid course_id FK "NN · → academics.course (logical)"
+        uuid batch_id FK "→ academics.batch (logical)"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        uuid academic_term_id FK "→ org.academic_term (logical)"
+        varchar(20) roll_number
+        varchar(30) status "NN"
+    }
+    sis__program_enrollment_subject["sis.program_enrollment_subject"] {
+        uuid id PK
+        uuid program_enrollment_id FK "NN"
+        uuid subject_id FK "NN · → academics.subject (logical)"
+    }
+    sis__subject_registration["sis.subject_registration"] {
+        uuid id PK
+        uuid student_id FK "NN"
+        uuid course_id FK "NN · → academics.course (logical)"
+        uuid batch_id FK "→ academics.batch (logical)"
+        varchar(40) reference_no
+        varchar(30) status "NN"
+        numeric min_unit_load "6,2"
+        numeric max_unit_load "6,2"
+        boolean read_by_student "NN"
+        boolean read_by_guardian "NN"
+        uuid academic_year_id FK "NN · → org.academic_year (logical)"
+        uuid academic_term_id FK "→ org.academic_term (logical)"
+        uuid program_enrollment_id FK "NN"
+    }
+    sis__subject_registration_line["sis.subject_registration_line"] {
+        uuid id PK
+        uuid subject_registration_id FK "NN"
+        uuid subject_id FK "NN · → academics.subject (logical)"
+        varchar(30) selection_type "NN"
+        uuid course_subject_id FK "NN · → academics.course_subject (logical)"
+    }
+    sis__promotion["sis.promotion"] {
+        uuid id PK
+        uuid student_id FK "NN"
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid from_academic_year_id FK "NN · → org.academic_year (logical)"
+        uuid from_grade_level_id FK "NN · → academics.grade_level (logical)"
+        uuid from_section_id FK "→ academics.section (logical)"
+        uuid to_academic_year_id FK "→ org.academic_year (logical)"
+        uuid to_grade_level_id FK "→ academics.grade_level (logical)"
+        uuid to_section_id FK "→ academics.section (logical)"
+        uuid based_on_exam_session_id FK "→ assessment.exam_session (logical)"
+        text remarks
+        varchar(30) status "NN"
+    }
+    sis__student_health_record["sis.student_health_record"] {
+        uuid id PK
+        uuid student_id FK "NN"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        numeric height_cm "5,2"
+        numeric weight_kg "5,2"
+        text medical_conditions
+        text medication_needs
+        text medication_allergies
+        text food_allergies
+        text other_allergies
+        text other_medical_info
+    }
+    sis__discipline_incident["sis.discipline_incident"] {
+        uuid id PK
+        uuid institution_id FK "NN · → org.institution (logical)"
+        uuid academic_year_id FK "NN · → org.academic_year (logical)"
+        uuid class_section_id FK "→ academics.class_section (logical)"
+        uuid student_id FK "NN"
+        timestamptz incident_at "NN"
+        uuid reported_by_user_id FK "NN · → iam.user_account (logical)"
+        varchar(30) incident_type "NN"
+        text details "NN"
+        text response
+        boolean action_taken "NN"
+        varchar(30) evidence_media_type
+        uuid evidence_file_id FK "→ platform.file_object (logical)"
+        boolean notify_guardians "NN"
+        boolean seen_by_guardian "NN"
+    }
+    sis__activity_type["sis.activity_type"] {
+        uuid id PK
+        varchar(120) name "NN"
+        boolean is_active "NN"
+        varchar(40) code "NN"
+        integer sort_order "NN"
+    }
+    sis__student_activity["sis.student_activity"] {
+        uuid id PK
+        uuid student_id FK "NN"
+        uuid staff_id FK "→ hr.staff (logical)"
+        uuid activity_type_id FK
+        date activity_date
+        text description
+    }
+    sis__student_leave_request["sis.student_leave_request"] {
+        uuid id PK
+        uuid student_id FK "NN"
+        uuid academic_year_id FK "→ org.academic_year (logical)"
+        date from_date "NN"
+        date to_date "NN"
+        varchar(20) day_part "NN"
+        varchar(500) reason
+        varchar(20) status "NN"
+        uuid requested_by_user_id FK "→ iam.user_account (logical)"
+        uuid decided_by_user_id FK "→ iam.user_account (logical)"
+        timestamptz decided_at
+        varchar(300) decision_note
+    }
+    sis__outbox_event["sis.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    sis__inbox_event["sis.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    sis__idempotency_key["sis.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    sis__operation["sis.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+    sis__number_sequence["sis.number_sequence"] {
+        uuid id PK
+        uuid institution_id FK "→ org.institution (logical)"
+        varchar(40) sequence_code "NN"
+        varchar(20) period_key "NN"
+        varchar(20) prefix
+        smallint padding "NN"
+        bigint next_value "NN"
+    }
+    sis__student_category |o--o{ sis__student : "student_category_id"
+    sis__student ||--o{ sis__student_guardian : "student_id"
+    sis__guardian ||--o{ sis__student_guardian : "guardian_id"
+    sis__relationship_type |o--o{ sis__student_guardian : "relationship_type_id"
+    sis__student ||--o{ sis__student_sibling : "student_id"
+    sis__student |o--o{ sis__student_sibling : "sibling_student_id"
+    sis__student ||--o{ sis__student_enrollment : "student_id"
+    sis__student ||--o{ sis__program_enrollment : "student_id"
+    sis__program_enrollment ||--o{ sis__program_enrollment_subject : "program_enrollment_id"
+    sis__student ||--o{ sis__subject_registration : "student_id"
+    sis__subject_registration ||--o{ sis__subject_registration_line : "subject_registration_id"
+    sis__student ||--o{ sis__promotion : "student_id"
+    sis__student ||--o{ sis__student_health_record : "student_id"
+    sis__student ||--o{ sis__discipline_incident : "student_id"
+    sis__student ||--o{ sis__student_activity : "student_id"
+    sis__activity_type |o--o{ sis__student_activity : "activity_type_id"
+    sis__student ||--o{ sis__student_leave_request : "student_id"
+    sis__program_enrollment ||--o{ sis__subject_registration : "program_enrollment_id"
+    sis__student_enrollment |o--o{ sis__student_enrollment : "previous_enrollment_id"

@@ -1,0 +1,248 @@
+.signin {
+  display: grid;
+  place-items: center;
+  min-block-size: 100vh;
+  padding: var(--sms-space-5);
+}
+.signin > .sms-card {
+  inline-size: min(420px, 100%);
+}
+.signin__trace {
+  display: block;
+  font: var(--sms-font-caption);
+}
+.shell-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sms-space-2);
+}
+.shell-nav a {
+  display: block;
+  padding: var(--sms-space-3) var(--sms-space-4);
+  border-radius: var(--sms-radius-sm);
+  color: var(--sms-color-text);
+  text-decoration: none;
+}
+.shell-nav a[aria-current='page'] {
+  background: var(--sms-color-primary-container);
+  font-weight: 600;
+}
+.shell-nav-group {
+  margin-block-start: var(--sms-space-4);
+}
+.shell-nav-group > summary {
+  cursor: pointer;
+  padding: var(--sms-space-2) var(--sms-space-4);
+  font: var(--sms-font-caption);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sms-color-text-muted);
+  border-radius: var(--sms-radius-sm);
+}
+.shell-nav-group > summary:focus-visible {
+  outline: 2px solid var(--sms-color-primary);
+  outline-offset: 2px;
+}
+.shell-nav-group[open] > summary {
+  color: var(--sms-color-text);
+}
+.shell-nav-group .shell-nav {
+  margin-block-start: var(--sms-space-2);
+}
+.shell-user {
+  margin-inline-end: var(--sms-space-4);
+  color: var(--sms-color-text-muted);
+}
+
+/* ---- Pages (profile, settings, administration) */
+.page {
+  display: grid;
+  gap: var(--sms-space-6);
+  max-inline-size: 1200px;
+}
+.page__header {
+  display: grid;
+  gap: var(--sms-space-2);
+}
+.page__title {
+  margin: 0;
+  font: var(--sms-font-h1);
+}
+.page__subtitle {
+  margin: 0;
+  color: var(--sms-color-text-muted);
+}
+.page__grid {
+  display: grid;
+  gap: var(--sms-space-6);
+  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+  align-items: start;
+}
+.page__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sms-space-4);
+  margin-block-start: var(--sms-space-6);
+}
+.hint {
+  margin: 0 0 var(--sms-space-5);
+  color: var(--sms-color-text-muted);
+  font: var(--sms-font-caption);
+}
+.sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* profile */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sms-space-6);
+}
+.profile-header__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 72px;
+  block-size: 72px;
+  border-radius: var(--sms-radius-full);
+  background: var(--sms-color-primary-container);
+  color: var(--sms-color-text);
+  font: var(--sms-font-h1);
+}
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sms-space-3);
+  margin: var(--sms-space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--sms-space-3) var(--sms-space-6);
+  margin: 0 0 var(--sms-space-5);
+}
+.facts dt {
+  color: var(--sms-color-text-muted);
+}
+.facts dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* settings */
+.settings-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.settings-list__row {
+  display: grid;
+  gap: var(--sms-space-3);
+  padding-block: var(--sms-space-5);
+  border-block-end: 1px solid var(--sms-color-border);
+}
+.settings-list__row:last-child {
+  border-block-end: none;
+}
+.settings-list__row .sms-field,
+.settings-list__row .sms-switch-field {
+  margin-block-end: 0;
+}
+.settings-list__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sms-space-4);
+}
+.settings-list__text {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: var(--sms-space-4);
+}
+.settings-preview__text {
+  margin: 0;
+  font: var(--sms-font-body-lg);
+}
+
+/* record actions (state transitions) */
+.record-actions {
+  display: grid;
+  gap: var(--sms-space-3);
+  margin: 0;
+  padding: var(--sms-space-4);
+  border: 1px solid var(--sms-color-border);
+  border-radius: var(--sms-radius-md);
+  background: var(--sms-color-surface-2);
+}
+.record-actions legend {
+  padding: 0 var(--sms-space-2);
+  color: var(--sms-color-text-muted);
+  font: var(--sms-font-h3);
+}
+.record-actions__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sms-space-2);
+}
+
+/* ---- Forms on account screens (ACC-08) */
+.form {
+  display: grid;
+  gap: var(--sms-space-4);
+  margin-block-start: var(--sms-space-4);
+  max-width: 40rem;
+}
+.form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sms-space-3);
+}
+.secret {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--sms-space-2) var(--sms-space-4);
+  margin: 0;
+}
+.secret dt {
+  color: var(--sms-color-text-muted);
+}
+.secret dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.codes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--sms-space-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Find a screen (ui/02 §2.1.2) */
+.shell-find {
+  margin: 0 0 var(--sms-space-2);
+}
+.shell-find-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--sms-space-2);
+}
+.shell-find-results {
+  margin-top: 0.25rem;
+}
