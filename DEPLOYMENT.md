@@ -13,7 +13,8 @@ What is served today is listed in [`backend/README.md`](backend/README.md#status
 | JDK | 17 | backend build and runtime (the build targets Java 17; a newer JDK also works) |
 | Maven | 3.9+ | backend build |
 | PostgreSQL | 16 | the database (no extensions needed) |
-| RabbitMQ | 4.1 (3.13+ works: quorum queues) | the event bus between modules (§5.7); `MYSMS_EVENTS_BUS=in-process` runs a single process without it |
+| RabbitMQ | 4.1 (3.13+ works: quorum queues) | default event bus between modules (§5.7) |
+| Google Cloud Pub/Sub | current | optional managed event bus; configure ADC and `MYSMS_EVENTS_BUS=google-pubsub` (§5.7) |
 | Node.js | 22.12+ | clients |
 | pnpm | 10 (`corepack enable`) | clients |
 | OpenSSL | any current | the token-signing key |
@@ -114,8 +115,11 @@ Everything comes from the environment; no secret is in the repository.
 | `MYSMS_PARTITIONS_RETENTION_MONTHS` | no | months kept before the current one; older monthly partitions are **dropped**. Default 0: nothing is ever dropped; otherwise at least 12 |
 | `MYSMS_PARTITIONS_INTERVAL` | no | how often the job runs after its run at startup, default `24h` |
 | `MYSMS_RABBITMQ_URI` | yes with the RabbitMQ bus | **secret**, `amqps://<user>:<password>@<host>:5671/<vhost>` (§5.7). A service refuses to start without it. |
-| `MYSMS_EVENTS_BUS` | no | `rabbitmq` (default), `in-process` (one JVM: the monolith without a broker) or `none` (nothing relayed or consumed: tests only) |
+| `MYSMS_EVENTS_BUS` | no | `rabbitmq` (default), `google-pubsub`, `in-process` (one JVM: the monolith without a broker) or `none` (nothing relayed or consumed: tests only) |
 | `MYSMS_RABBITMQ_PUBLISHER_USER` | no | the broker user events of a module must come from, `{module}` standing for the source module: default `mysms-{module}` for a service (§5.7), `self` for the monolith (this process's own user) |
+| `MYSMS_EVENTS_GCP_PROJECT_ID` | yes with Pub/Sub | Google Cloud project; falls back to `GOOGLE_CLOUD_PROJECT` or `GCLOUD_PROJECT` |
+| `PUBSUB_EMULATOR_HOST` | no | Pub/Sub emulator host such as `localhost:8085`; emulator mode disables Google credentials and defaults resource creation on |
+| `MYSMS_EVENTS_GCP_CREATE_RESOURCES` | no | create topics/subscriptions at startup; defaults to `false` in Google Cloud and `true` with the emulator |
 | `MYSMS_DB_RELAY_USER`, `MYSMS_DB_RELAY_PASSWORD` | yes in production | the outbox relay's role (`mysms_relay`, §2.1); without it the relay runs only when the application role bypasses row-level security (a local superuser), otherwise it logs an ERROR and events stay in the outbox |
 | `MYSMS_EVENTS_RELAY_INTERVAL` | no | pause between relay passes, default `500ms` |
 | `MYSMS_EVENTS_OUTBOX_RETENTION` | no | how long published outbox rows are kept for diagnosis, default `7d` |
@@ -237,13 +241,15 @@ hand after moving those rows out, because PostgreSQL cannot attach a month while
 for it. Old months are dropped only when `MYSMS_PARTITIONS_RETENTION_MONTHS` is set (12 or more); take a backup first. The job waits at most 5 seconds for a table lock and retries at its next run, so it never stalls requests behind a long query. Lists over
 these tables must name a date range (at most 366 days); the web app's Records screen asks for one.
 
-### 5.7 Events (RabbitMQ)
+### 5.7 Events
 
 Modules talk through events: a change writes its event into the module's own `outbox_event` in the same transaction;
 the module's relay publishes it to the bus and marks it published once the broker confirms; each consuming module
-records it in its `inbox_event` and handles it exactly once. The bus is MySMS's own interface (`core.events.EventBus`);
-RabbitMQ is the default implementation (module `messaging-rabbitmq`), and another broker would be another module
-behind the same interface, chosen with `MYSMS_EVENTS_BUS`.
+records it in its `inbox_event` and handles it exactly once. The bus is MySMS's own interface (`core.events.EventBus`).
+All adapters live in one runtime library, `messaging`: RabbitMQ is the default, Google Cloud Pub/Sub is the managed
+alternative, and `in-process` serves one JVM. Select the adapter with `MYSMS_EVENTS_BUS`.
+
+#### RabbitMQ (default)
 
 What the services create on RabbitMQ (they declare it themselves at startup):
 
@@ -325,6 +331,49 @@ What flows today: every module's audit records (`audit.recorded`) into the platf
 may audit only its own entities), and the reference cleanup of database/logical-references.md (an owner's `*.deleted`
 event clears or archives the rows that referenced it in other modules).
 
+#### Google Cloud Pub/Sub
+
+Set `MYSMS_EVENTS_BUS=google-pubsub`, `MYSMS_EVENTS_GCP_PROJECT_ID=<project>` (or `GOOGLE_CLOUD_PROJECT`) and use
+Application Default Credentials. In production, use a separate service account per microservice, preferably through
+Workload Identity. The adapter creates a topic for each source (`mysms-events-<source>`), a durable subscription for
+each consumer/source pair (`mysms-<consumer>-from-<source>`), and a consumer dead-letter topic/subscription
+(`mysms-events-<consumer>-dead`, `mysms-<consumer>-dead`). A source topic lets IAM confine each producer to its own
+event stream. Grant each producer `roles/pubsub.publisher` on its source topic. Grant each consumer
+`roles/pubsub.subscriber` on only its subscriptions and `roles/pubsub.publisher` on its own dead-letter topic;
+`RejectedEventException` is immediately copied there and the original is acknowledged only after Pub/Sub confirms that
+publish. Consumers verify the CloudEvent body, source/type attributes and source ownership before running a handler.
+
+Provision topics and subscriptions with infrastructure-as-code, then leave
+`MYSMS_EVENTS_GCP_CREATE_RESOURCES=false` (the production default). Setting it to `true` asks the running application
+to create resources and requires topic/subscription create, get, update and seek permissions. The Pub/Sub service
+agent (`service-<project-number>@gcp-sa-pubsub.iam.gserviceaccount.com`) also needs publisher on each dead-letter
+topic and subscriber on each source subscription for automatic forwarding after repeated handler failures. An
+unconfigured service-agent permission can prevent that forwarding. The delivery-attempt limit is best-effort, so
+monitor Pub/Sub's dead-letter metrics and alerts.
+
+Topics retain events for three days by default. A newly created production subscription seeks the topic's retained
+window so consumers that start later can receive recent events. Existing consumer subscriptions retain acknowledged
+events for the same window. Inbox idempotency makes replay safe. Pub/Sub uses best-effort exponential retries, with
+defaults of 10 seconds to 60 seconds and five delivery attempts. With resource creation enabled, the adapter validates
+existing subscription topology instead of silently adopting conflicting settings. Pub/Sub dead letters are available on the consumer's
+`*-dead` subscription. Explicit rejects include `mysmsDeadLetterConsumer` and `mysmsDeadLetterReason` attributes;
+automatic dead letters include Pub/Sub's forwarding metadata. The adapter does not automate dead-letter replay:
+inspect and republish through your Pub/Sub operations workflow after fixing the cause, preserving the original
+CloudEvent body and `eventType`/`sourceModule` attributes.
+
+For local development, start the emulator and point the service at it:
+
+```bash
+gcloud beta emulators pubsub start --project=mysms-local --host-port=0.0.0.0:8085
+export MYSMS_EVENTS_BUS=google-pubsub
+export MYSMS_EVENTS_GCP_PROJECT_ID=mysms-local
+export PUBSUB_EMULATOR_HOST=localhost:8085
+```
+
+The adapter uses plaintext gRPC and no Google credentials in emulator mode. Resource creation defaults on there.
+The emulator supports publish, receive, filters, retries and dead-letter forwarding, but does not support configurable
+topic retention or `UpdateTopic`; retention-window backfill therefore requires a real Pub/Sub project.
+
 ## 6. Production checklist
 
 - [ ] Three database roles as in §2.1; the application connects as `mysms_app`, migrations as `mysms_migrate`.
@@ -339,7 +388,7 @@ event clears or archives the rows that referenced it in other modules).
 - [ ] `database/verification/smoke.sql` run in CI against a scratch database, never against production.
 - [ ] Log shipping for the backend's standard output (requests carry the W3C `traceparent`).
 - [ ] An alert on the ERROR log line `partition … (DEFAULT) holds rows` (§5.6).
-- [ ] RabbitMQ over TLS (`amqps://`), one broker user per service with the permissions of §5.7, and an alert on messages in any `mysms.*.dead` queue and on `mysms.events.unrouted`.
+- [ ] For RabbitMQ, TLS (`amqps://`), one broker user per service with the permissions of §5.7, and alerts on `mysms.*.dead` and `mysms.events.unrouted`. For Pub/Sub, per-service identities and topic/subscription IAM as in §5.7, plus dead-letter metrics and delivery health.
 - [ ] `MYSMS_DB_RELAY_USER` set to `mysms_relay`: without it events stay in the outboxes (ERROR `has no relay-username`).
 - [ ] An alert on the ERROR log line `set outbox row … aside` and on `/actuator/health` component `events` DOWN.
 
@@ -422,7 +471,7 @@ mvn -pl iam -am verify           # one module and what it depends on
 ```
 
 - Unit tests (`src/test`) are the only place test doubles are allowed.
-- Component tests (`src/component-test`) boot the module over HTTP against real PostgreSQL as a non-owner role, so row-level security, grants and Flyway are exercised exactly as in production. Module tests run the events on the in-process bus (a real implementation of the bus interface); `messaging-rabbitmq` and the monolith's test run them on a real RabbitMQ.
+- Component tests (`src/component-test`) boot the module over HTTP against real PostgreSQL as a non-owner role, so row-level security, grants and Flyway are exercised exactly as in production. Module tests run the events on the in-process bus; `messaging` tests RabbitMQ and Google Pub/Sub against real brokers/emulator, and the monolith test runs against RabbitMQ.
 - Gates: Checkstyle, SpotBugs, JaCoCo (80 % line coverage per module). A failing gate fails the build.
 
 ### Clients

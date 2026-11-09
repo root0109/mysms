@@ -68,9 +68,12 @@ mysms:
       - frontoffice
       - careers
   events:
-    # rabbitmq (default) | in-process (one JVM) | none (tests only: nothing relayed or consumed)
+    # rabbitmq (default) | google-pubsub | in-process (one JVM) | none (tests only: nothing relayed or consumed)
     bus: ${MYSMS_EVENTS_BUS:rabbitmq}
     rabbitmq:
       uri: ${MYSMS_RABBITMQ_URI:}
       # one process publishes for every module, as its own broker user ("self")
       publisher-user: ${MYSMS_RABBITMQ_PUBLISHER_USER:self}
+    google-pubsub:
+      project-id: ${MYSMS_EVENTS_GCP_PROJECT_ID:${GOOGLE_CLOUD_PROJECT:}}
+      emulator-host: ${PUBSUB_EMULATOR_HOST:}

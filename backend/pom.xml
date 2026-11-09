@@ -29,7 +29,7 @@
     <module>contracts</module>
     <module>sdk</module>
     <module>auth-client</module>
-    <module>messaging-rabbitmq</module>
+    <module>messaging</module>
     <module>master</module>
     <module>platform</module>
     <module>iam</module>
@@ -76,6 +76,7 @@
     <spotbugs-maven-plugin.version>4.10.4.1</spotbugs-maven-plugin.version>
     <spotbugs.version>4.10.4</spotbugs.version>
     <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
+    <google-cloud-pubsub.version>1.157.0</google-cloud-pubsub.version>
     <!-- argon2id password hashing in iam (JAVA-CODING-RULES §16 security floor) -->
     <bouncycastle.version>1.86</bouncycastle.version>
 
@@ -127,8 +128,13 @@
       </dependency>
       <dependency>
         <groupId>com.mysms</groupId>
-        <artifactId>messaging-rabbitmq</artifactId>
+        <artifactId>messaging</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-pubsub</artifactId>
+        <version>${google-cloud-pubsub.version}</version>
       </dependency>
       <dependency>
         <groupId>org.mapstruct</groupId>

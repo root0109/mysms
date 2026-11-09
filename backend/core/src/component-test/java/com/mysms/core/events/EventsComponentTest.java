@@ -43,7 +43,7 @@ class EventsComponentTest {
     private static ModuleDatabase withoutRelay;
 
     private final List<EventEnvelope> received = new CopyOnWriteArrayList<>();
-    private InProcessEventBus bus;
+    private TestEventBus bus;
 
     @BeforeAll
     static void open() {
@@ -75,7 +75,7 @@ class EventsComponentTest {
 
     @BeforeEach
     void bus() {
-        bus = new InProcessEventBus();
+        bus = new TestEventBus();
         bus.subscribe("coretest", Set.of("coretest.item.deleted"), received::add);
         drain();
         received.clear();
@@ -133,7 +133,7 @@ class EventsComponentTest {
         write(TENANT, "coretest.item.deleted", aggregate);
         AtomicInteger attempts = new AtomicInteger();
         List<UUID> ids = new CopyOnWriteArrayList<>();
-        InProcessEventBus failing = new InProcessEventBus();
+        TestEventBus failing = new TestEventBus();
         failing.subscribe("coretest", Set.of("coretest.item.deleted"), e -> {
             ids.add(e.id());
             if (attempts.incrementAndGet() == 1) {
@@ -216,7 +216,7 @@ class EventsComponentTest {
                 return Map.of("coretest.item.deleted", handled::add);
             }
         };
-        InProcessEventBus own = new InProcessEventBus();
+        TestEventBus own = new TestEventBus();
         EventRuntime runtime = new EventRuntime(own,
                 List.of(OutboxRelay.of(db, own, JSON, Clock.systemUTC()).orElseThrow()),
                 List.of(subscriptions), List.of(new InboxProcessor(db, Clock.systemUTC())), Duration.ofMillis(50));
@@ -339,36 +339,6 @@ class EventsComponentTest {
         CallContextHolder.clear();
     }
 
-    @Test
-    void theInProcessBusParksAnEventAfterItsDeliveryLimitAndARejectedOneAtOnce() {
-        InProcessEventBus limited = new InProcessEventBus(2);
-        AtomicInteger tries = new AtomicInteger();
-        AtomicInteger other = new AtomicInteger();
-        limited.subscribe("coretest", Set.of("coretest.item.deleted"), e -> {
-            tries.incrementAndGet();
-            throw new IllegalStateException("always");
-        });
-        limited.subscribe("sis", Set.of("coretest.item.deleted"), e -> other.incrementAndGet());
-        EventEnvelope event = new EventEnvelope(UUID.randomUUID(), "coretest", "coretest.item.deleted",
-                Optional.of(TENANT), "coretest.item", UUID.randomUUID(), Instant.now(), "{}", Optional.empty());
-        assertThatThrownBy(() -> limited.publish(event)).isInstanceOf(IllegalStateException.class);
-        limited.publish(event); // the second failure reaches the limit: parked, the publish succeeds
-        limited.publish(event);
-        assertThat(tries.get()).as("not delivered to that consumer again").isEqualTo(2);
-        assertThat(other.get()).as("other consumers are unaffected").isEqualTo(3);
-        AtomicInteger rejected = new AtomicInteger();
-        limited.subscribe("hr", Set.of("coretest.item.created"), e -> {
-            rejected.incrementAndGet();
-            throw new RejectedEventException("not ours");
-        });
-        EventEnvelope created = new EventEnvelope(UUID.randomUUID(), "coretest", "coretest.item.created",
-                Optional.of(TENANT), "coretest.item", UUID.randomUUID(), Instant.now(), "{}", Optional.empty());
-        limited.publish(created);
-        limited.publish(created);
-        assertThat(rejected.get()).isOne();
-        assertThatThrownBy(() -> new InProcessEventBus(0)).isInstanceOf(IllegalArgumentException.class);
-    }
-
     private static EventSubscriptions subscriptionsOf(String module, Map<String, EventHandler> handlers) {
         return new EventSubscriptions() {
             @Override
@@ -387,7 +357,7 @@ class EventsComponentTest {
     void aModulesHandlersAreMergedOnceItRefusesForeignEventsAndItsHealthShowsAFailingRelay() {
         InboxProcessor inbox = new InboxProcessor(db, Clock.systemUTC());
         List<String> handled = new CopyOnWriteArrayList<>();
-        InProcessEventBus own = new InProcessEventBus();
+        TestEventBus own = new TestEventBus();
         EventRuntime runtime = new EventRuntime(own, List.of(), List.of(
                 subscriptionsOf("coretest", Map.of("coretest.item.deleted", e -> handled.add("deleted"))),
                 subscriptionsOf("coretest", Map.of("coretest.item.created", e -> handled.add("created")))),
@@ -411,7 +381,7 @@ class EventsComponentTest {
                 subscriptionsOf("coretest", Map.of("coretest.item.deleted", e -> { }))),
                 List.of(inbox), Duration.ofSeconds(1))).hasMessageContaining("two handlers");
 
-        InProcessEventBus broken = new InProcessEventBus(1_000);
+        TestEventBus broken = new TestEventBus();
         broken.subscribe("coretest", Set.of("coretest.item.deleted"), e -> {
             throw new IllegalStateException("broker down");
         });
@@ -424,7 +394,7 @@ class EventsComponentTest {
         }
         EventRuntime.Health health = failing.health();
         assertThat(health.up()).isFalse();
-        assertThat(health.details()).containsKey("relay.coretest").containsEntry("bus", "in-process");
+        assertThat(health.details()).containsKey("relay.coretest").containsEntry("bus", "test-bus");
         assertThat(new EventsHealthIndicator(failing).health().getStatus().getCode()).isEqualTo("DOWN");
         assertThat(new EventsHealthIndicator(EventRuntime.off()).health().getStatus().getCode()).isEqualTo("UP");
     }

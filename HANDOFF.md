@@ -13,7 +13,7 @@ Read this first, then [STATUS.md](STATUS.md) (what is served and verified) and
 | `database/` | Flyway migrations per schema (`migrations/<module>/`), `README.md` (conventions, roles, events, global tables), `data-dictionary.md`, `logical-references.md` (cross-module references and their cleanup), `erd/*.mmd`, `verification/smoke.sql` |
 | `api/` | OpenAPI contracts (`openapi/<module>.yaml`, 2,052 operations), gRPC protos (`proto/`), `README.md` (API rules), `operations-status.md` (generated), `state-machines.md`, `standard-resources.json` (generated; the clients build generic screens from it) |
 | `ui/` | UI specification: 186 screens, flows, design system, frontend architecture, rules (`ui/05` §13: mocking only in tests) |
-| `backend/` | The multi-module Maven project only (28 modules, flat): `core`, `contracts`, `sdk`, `auth-client`, `messaging-rabbitmq`, 21 domain modules (one per schema), `app` (the monolith). Each domain module also builds as its own microservice |
+| `backend/` | The multi-module Maven project only (27 child modules plus the parent reactor, flat): `core`, `contracts`, `sdk`, `auth-client`, unified `messaging`, 21 domain modules (one per schema), `app` (the monolith). Each domain module also builds as its own microservice |
 | `clients/` | pnpm monorepo: apps `web`, `platform-console`, `mobile`, `tablet`; packages `sdk` (OpenAPI Generator), `core`, `ui-web`, `ui-native`, `web-kit`, `native-kit`, `tokens`, `i18n`, `fixtures` (test-only), `config` |
 | `tools/backend/` | Generators and checks (Python): `crud/gen.py` (standard operations), `crud/gen_events.py` (reference cleanup), `crud/gen_operations.py`, `crud/specgen.py` (samples proven against a database), `gen_backend_modules.py` (poms, config), `conformance.py` (design rules), `operation_status.py` |
 
@@ -22,15 +22,17 @@ and removed at handoff.
 
 ## 2. State at handoff
 
-- **Backend:** 1,663 of 2,052 operations served; 389 answer `501 NOT_IMPLEMENTED` with their reason. `mvn install`
-  green in all 28 modules (tests against real PostgreSQL 16 and real RabbitMQ 4.1, Checkstyle, SpotBugs, JaCoCo ≥ 80 %).
+- **Backend baseline (before the messaging refactor):** 1,663 of 2,052 operations served; 389 answer `501 NOT_IMPLEMENTED`
+  with their reason. The last verified Maven build covered the earlier messaging layout (27 child modules, 28 reactor
+  projects including the parent) and real PostgreSQL/RabbitMQ; run the checks in §4 after messaging changes before
+  treating that result as current.
 - **Clients:** `pnpm verify` green; 76 of 186 inventory screens built in the web app (the rest are routed and show a
   placeholder naming the screen); console: master data, operations and jobs; phone and tablet: sign-in, profile,
   settings.
 - **Checks:** `conformance.py` 0 violations; `specgen.py` 327 specs, 0 failures; all 34 ER diagrams render.
-- **Events:** RabbitMQ behind MySMS's own `EventBus` (swappable by configuration), outbox relay, inbox, delayed
-  retries, dead-letter and unrouted queues with a replay command, one broker user per service checked by broker and
-  consumer. Hardened after an independent review (PRINCIPAL-REVIEW §6 "Events re-review").
+- **Events:** all adapters are in one `messaging` library: RabbitMQ (default), Google Cloud Pub/Sub, and in-process.
+  The outbox relay and inbox remain in `core`; RabbitMQ uses delayed retries, dead-letter/unrouted queues and replay,
+  while Pub/Sub uses source topics, IAM, retries and consumer dead-letter subscriptions.
 - The exact figures of the last verified build are in STATUS.md "How this was verified".
 
 ## 3. Rules and decisions that bind all further work
@@ -74,12 +76,14 @@ Stated by the project owner; do not relitigate them.
 
 ## 4. How to build and verify
 
-Prerequisites: JDK 17, Maven 3.9, PostgreSQL 16, Docker (Testcontainers) or a RabbitMQ 4.1, Node 22 + pnpm, Python 3.
+Prerequisites: JDK 17, Maven 3.9, PostgreSQL 16, Docker (Testcontainers) or PostgreSQL/RabbitMQ/Pub/Sub emulator,
+Node 22 + pnpm, Python 3.
 
 ```bash
-# backend: everything, with tests (component tests need PostgreSQL and RabbitMQ)
+# backend: everything, with tests (component tests use PostgreSQL, RabbitMQ and Pub/Sub emulator)
 export MYSMS_TEST_JDBC_URL=jdbc:postgresql://localhost:5432/postgres MYSMS_TEST_JDBC_USER=postgres MYSMS_TEST_JDBC_PASSWORD=...
 export MYSMS_TEST_AMQP_URI=amqp://guest:guest@localhost:5672      # or leave unset: Testcontainers starts one
+export MYSMS_TEST_PUBSUB_EMULATOR_HOST=localhost:8085            # or leave unset: Testcontainers starts one
 cd backend && mvn install
 
 # generators and checks, after a change to a contract, a migration or a generator
@@ -94,7 +98,7 @@ python3 tools/backend/gen_backend_modules.py      # poms and module configuratio
 cd clients && pnpm install && pnpm verify
 ```
 
-Running and deploying (monolith, microservices, roles, keys, RabbitMQ users, bootstrap): DEPLOYMENT.md.
+Running and deploying (monolith, microservices, roles, keys, RabbitMQ and Pub/Sub setup, bootstrap): DEPLOYMENT.md.
 
 Practical notes:
 - A full `mvn install` takes 30–45 minutes and about 6 GB of memory; on a 7 GB machine run nothing else alongside it.
@@ -200,7 +204,7 @@ Rules for the UI: beautiful, user friendly and configurable per user type and ro
   tenantless responses under a platform key (`FieldCipher` with a reserved tenant id) and drop the global branch in
   `CrudContract.create`.
 
-## Build state at the end of this session (verified)
+## Historical build state before the messaging refactor (verified 2026-11-08)
 
 - **Java 17 everywhere:** `java.version` 17 (`--release 17`) in the parent pom, Checkstyle 12.3.1 (13+ needs Java 21).
   `mvn clean install` on Temurin JDK 17.0.17: BUILD SUCCESS, 28 modules, 3,925 tests, all gates.

@@ -22,8 +22,9 @@ MySMS/
 | JDK | 17 (newer also works; the build targets 17) | backend build and run | `java -version` |
 | Maven | 3.9+ | backend build | `mvn -v` |
 | PostgreSQL | 16 | backend tests and running | `psql --version` |
-| RabbitMQ | 4.1 (3.13+ works) | event-bus tests; running several services | `rabbitmq-diagnostics ping` |
-| Docker | any current | *instead of* installing PostgreSQL and RabbitMQ yourself (Testcontainers or §2) | `docker info` |
+| RabbitMQ | 4.1 (3.13+ works) | default event bus; RabbitMQ component tests | `rabbitmq-diagnostics ping` |
+| Google Cloud CLI | current | optional Pub/Sub emulator for local development and component tests | `gcloud version` |
+| Docker | any current | *instead of* installing PostgreSQL, RabbitMQ and the Pub/Sub emulator yourself (Testcontainers or §2) | `docker info` |
 | Node.js | 22.12+ | clients | `node -v` |
 | pnpm | 10 (`corepack enable`) | clients | `pnpm -v` |
 | Python | 3.10+ | only when you re-run the generators or the conformance check in `tools/` | `python3 -V` |
@@ -35,27 +36,30 @@ machine with 8 GB or less** — the operating system kills Maven (exit 137) half
 
 Network: the first build downloads Maven and npm dependencies; later builds can run offline (`mvn -o`).
 
-## 2. Local PostgreSQL and RabbitMQ
+## 2. Local PostgreSQL and event brokers
 
-The backend tests need a PostgreSQL 16 superuser connection (they create throwaway databases and the MySMS roles)
-and, for the event-bus suites, a RabbitMQ broker. Pick one:
+The backend tests need a PostgreSQL 16 superuser connection (they create throwaway databases and the MySMS roles),
+and the messaging module's component tests use RabbitMQ and a Google Pub/Sub emulator. Pick Docker or provide the
+services yourself:
 
 **A. Let the tests start them (needs Docker).** Do nothing: without the variables below, the tests start
-PostgreSQL 16 and RabbitMQ through Testcontainers, one container per test JVM.
+PostgreSQL 16, RabbitMQ and the Pub/Sub emulator through Testcontainers, one container per test JVM.
 
 **B. Use servers you run yourself (faster, works without Docker in CI):**
 
 ```bash
 docker run -d --name mysms-pg  -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16
 docker run -d --name mysms-rmq -p 5672:5672 -p 15672:15672 rabbitmq:4.1-management
+gcloud beta emulators pubsub start --project=mysms-test --host-port=localhost:8085
 
 export MYSMS_TEST_JDBC_URL=jdbc:postgresql://localhost:5432/postgres
 export MYSMS_TEST_JDBC_USER=postgres
 export MYSMS_TEST_JDBC_PASSWORD=postgres
 export MYSMS_TEST_AMQP_URI=amqp://guest:guest@localhost:5672
+export MYSMS_TEST_PUBSUB_EMULATOR_HOST=localhost:8085
 ```
 
-(A natively installed PostgreSQL 16 / RabbitMQ works the same; the JDBC user must be a superuser.)
+(Natively installed PostgreSQL 16, RabbitMQ or a Pub/Sub emulator works the same; the JDBC user must be a superuser.)
 
 ## 3. Build everything
 
@@ -67,7 +71,8 @@ mvn install            # or `mvn verify`
 ```
 
 One command runs, for every module in order: contract and SDK generation from `api/`, compile, unit tests,
-component tests (real PostgreSQL with row-level security, real RabbitMQ), Checkstyle, SpotBugs and JaCoCo coverage
+component tests (real PostgreSQL with row-level security, real RabbitMQ and the Pub/Sub emulator), Checkstyle,
+SpotBugs and JaCoCo coverage
 gates. It ends with `BUILD SUCCESS`; any test failure, style or bug-pattern violation fails the build.
 
 Useful variants:
@@ -84,11 +89,11 @@ Outputs: `app/target/app-0.1.0-SNAPSHOT-exec.jar` (all modules in one process) a
 
 **In an IDE (Eclipse/STS with m2e, IntelliJ):**
 
-1. Run `mvn install -DskipTests` once on the command line (from `backend/`). This generates the contracts and SDK
-   sources and installs every module's jar in `~/.m2`, so the IDE can resolve modules such as `messaging-rabbitmq`
-   even before they are imported.
+1. If generated contracts or SDK sources are missing, run `mvn install -DskipTests -Djacoco.skip=true` once on the
+   command line (from `backend/`). This generates those sources and installs every module's jar in `~/.m2`, so the IDE
+   can resolve modules such as `messaging` even before they are imported. Run the full `mvn verify` afterwards.
 2. Import `backend/` as *Existing Maven Projects* and select **all** modules (the parent, core, contracts, sdk,
-   auth-client, messaging-rabbitmq, the 21 modules and app).
+   auth-client, messaging, the 21 modules and app).
 3. Right-click any project → *Maven → Update Project…* (Alt+F5), select all, tick *Force Update of Snapshots/Releases*.
    m2e takes the Java level (17) from the parent pom; make sure a JDK 17 or newer is installed in
    *Window → Preferences → Java → Installed JREs* and mapped to the JavaSE-17 execution environment.
@@ -97,6 +102,12 @@ The quality gates (Checkstyle, SpotBugs, JaCoCo) are switched off for the IDE's 
 `org.eclipse.m2e:lifecycle-mapping` entry in `backend/pom.xml`, plus `<?m2e ignore?>` for newer m2e). They run only
 on the command line (`mvn verify` / `mvn install`). If an old "Failed to execute mojo … spotbugs" marker stays, delete
 it from the *Problems* view and update the projects once more.
+
+If m2e reports `Could not find artifact com.mysms:messaging-rabbitmq` or `com.mysms:messaging`, its workspace still
+has an old/incomplete Maven project set. In Project Explorer, remove the obsolete `messaging-rabbitmq` project from
+the workspace **without deleting its contents**, then use *File → Import → Maven → Existing Maven Projects* and
+select `backend/`. Import the parent, `messaging`, and every module; then run *Maven → Update Project…* with all projects
+selected. All broker adapters now live in `backend/messaging`; `messaging-rabbitmq` is no longer a Maven artifact.
 
 Optional rule check (no build needed): `python3 tools/backend/conformance.py` — enforces
 [`JAVA-CODING-RULES.md`](JAVA-CODING-RULES.md) and must report 0 violations.

@@ -132,8 +132,8 @@ public final class TestDatabase implements AutoCloseable {
 
     /**
      * Points `mysms.<module>.datasource.*` of every given module at this database. Events run on the in-process bus
-     * (a real implementation of the bus interface; the RabbitMQ one is tested in messaging-rabbitmq and the
-     * monolith): each module's relay publishes and its subscriptions consume.
+     * (a real implementation of the bus interface; broker adapters are tested in messaging and the monolith): each
+     * module's relay publishes and its subscriptions consume.
      */
     public void register(DynamicPropertyRegistry registry, String... modules) {
         for (String module : modules) {

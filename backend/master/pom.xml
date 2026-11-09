@@ -43,10 +43,10 @@
       <artifactId>lombok</artifactId>
       <scope>provided</scope>
     </dependency>
-    <!-- the default event bus (RabbitMQ), runtime only: module code sees core's events API, never the broker -->
+    <!-- messaging adapters, runtime only: module code sees core's events API, never a broker -->
     <dependency>
       <groupId>com.mysms</groupId>
-      <artifactId>messaging-rabbitmq</artifactId>
+      <artifactId>messaging</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>

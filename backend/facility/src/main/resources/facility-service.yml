@@ -28,9 +28,12 @@ mysms:
     modules:
       - facility
   events:
-    # rabbitmq (default) | in-process (one JVM) | none (tests only: nothing relayed or consumed)
+    # rabbitmq (default) | google-pubsub | in-process (one JVM) | none (tests only: nothing relayed or consumed)
     bus: ${MYSMS_EVENTS_BUS:rabbitmq}
     rabbitmq:
       uri: ${MYSMS_RABBITMQ_URI:}
       # the broker user each module publishes as ({module} = the event's source); blank = mysms-{module}
       publisher-user: ${MYSMS_RABBITMQ_PUBLISHER_USER:}
+    google-pubsub:
+      project-id: ${MYSMS_EVENTS_GCP_PROJECT_ID:${GOOGLE_CLOUD_PROJECT:}}
+      emulator-host: ${PUBSUB_EMULATOR_HOST:}

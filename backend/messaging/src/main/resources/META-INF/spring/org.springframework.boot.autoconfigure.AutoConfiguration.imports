@@ -1,0 +1,3 @@
+com.mysms.messaging.rabbitmq.RabbitEventsAutoConfiguration
+com.mysms.messaging.pubsub.GooglePubSubEventsAutoConfiguration
+com.mysms.messaging.inprocess.InProcessEventsAutoConfiguration

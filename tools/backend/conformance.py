@@ -12,7 +12,7 @@ that a compiler, Checkstyle or SpotBugs do not already enforce, and prints every
   R2   SQL lives in repositories, as constants (no SQL text in controllers, services or mappers)
   B1   no Transactional annotation of any package / TransactionTemplate; no ORM import or dependency (JPA, Hibernate,
        Spring Data, MyBatis, jOOQ); no ArchUnit or Modulith
-  A1   a domain module depends only on core, contracts, sdk and auth-client (and a messaging-* bus at runtime
+  A1   a domain module depends only on core, contracts, sdk and auth-client (and messaging at runtime
        scope; no module code imports it)
   §3   packages are the layer roles of §3 only
   §5   every entity extends BaseEntity and names its TABLE
@@ -52,7 +52,8 @@ import tenant_sql  # noqa: E402
 
 BACKEND = os.path.normpath(HERE + '/../../backend')
 REPO = os.path.normpath(BACKEND + '/..')
-SHARED = ('core', 'contracts', 'sdk', 'auth-client', 'messaging-rabbitmq', 'app')
+SHARED = ('core', 'contracts', 'sdk', 'auth-client', 'messaging', 'app')
+ECLIPSE_MODULE_FILES = {'.classpath', '.factorypath', '.project', '.settings'}
 PACKAGES = {'controller', 'grpc', 'business', 'repository', 'domain', 'model', 'mapper', 'validation', 'errors',
             'events', 'config', 'constants'}
 EXEMPT_TABLES = {'iam.tenant_directory'}
@@ -90,7 +91,9 @@ def main():
         problems.append('%-4s %s: %s' % (rule, os.path.relpath(where, REPO), what))
 
     # M0: backend/ is the Maven multi-module project and nothing else (tooling lives in tools/ at the repository root)
-    allowed_top = {'pom.xml', 'README.md', '.gitignore', '.mvn', 'config', 'target'} | set(modules)
+    # Eclipse stores its local workspace cache here when the backend folder is selected as the workspace.
+    # It is ignored by Git and is not part of the Maven project.
+    allowed_top = {'pom.xml', 'README.md', '.gitignore', '.mvn', '.metadata', 'config', 'target'} | set(modules)
     for entry in sorted(os.listdir(BACKEND)):
         if entry not in allowed_top:
             bad('M0', BACKEND + '/' + entry, 'not part of the Maven project (move tooling to tools/)')
@@ -101,7 +104,7 @@ def main():
                     bad('M0', dirpath + '/' + f, 'not build configuration')
     for m in modules:
         for entry in sorted(os.listdir(BACKEND + '/' + m)):
-            if entry not in ('pom.xml', 'src', 'target', 'README.md'):
+            if entry not in ({'pom.xml', 'src', 'target', 'README.md'} | ECLIPSE_MODULE_FILES):
                 bad('M0', '%s/%s/%s' % (BACKEND, m, entry), 'not part of the Maven module')
         for dirpath, dirs, files in os.walk(BACKEND + '/' + m + '/src'):
             for f in files:
@@ -139,7 +142,8 @@ def main():
                     bad('T', f, 'mock or stub outside a unit test')
         for f in java(m):
             s = open(f).read()
-            layer = f.split('/com/mysms/%s/' % m)[-1].split('/')[0] if m not in SHARED else None
+            normalized = f.replace('\\', '/')
+            layer = normalized.split('/com/mysms/%s/' % m)[-1].split('/')[0] if m not in SHARED else None
             for q in re.findall(r'"""(.*?)"""', s, re.S):
                 text = ' '.join(q.split())
                 if not re.search(r'\b(SELECT|UPDATE|DELETE)\b', text):
@@ -164,14 +168,14 @@ def main():
                 continue
             d = name.group(1)
             # the event bus implementation is a runtime dependency only: no module code can import it
-            runtime_bus = d.startswith('messaging-') and '<scope>runtime</scope>' in block
+            runtime_bus = d == 'messaging' and '<scope>runtime</scope>' in block
             if d not in ('core', 'contracts', 'sdk', 'auth-client', 'mysms') and not runtime_bus:
                 bad('A1', '%s/%s/pom.xml' % (BACKEND, m), 'depends on ' + d)
         for f in glob.glob('%s/%s/src/main/java/**/*.java' % (BACKEND, m), recursive=True):
             if re.search(r'^import (com\.rabbitmq|com\.mysms\.messaging)\.', open(f).read(), re.M):
                 bad('A1', f, 'imports the bus implementation (use core.events)')
         for f in java(m):
-            rel = f.split('/com/mysms/%s/' % m)[-1]
+            rel = f.replace('\\', '/').split('/com/mysms/%s/' % m)[-1]
             if '/' in rel and rel.split('/')[0] not in PACKAGES:
                 bad('§3', f, 'package %s is not a layer role' % rel.split('/')[0])
         for f in glob.glob('%s/%s/src/main/java/com/mysms/%s/domain/*Entity.java' % (BACKEND, m, m)):
@@ -204,7 +208,7 @@ def main():
     for m in modules:
         for f in java(m):
             src = open(f).read()
-            rel = os.path.relpath(f, BACKEND)
+            rel = os.path.relpath(f, BACKEND).replace('\\', '/')
             if m != 'auth-client':
                 if re.search(TOKEN_LIBS, src, re.M) and rel not in TOKEN_ISSUERS:
                     bad('X1', f, 'imports a token library (only auth-client verifies tokens)')
@@ -212,15 +216,16 @@ def main():
                     bad('X1', f, 'password hashing outside iam')
                 if re.search(r'getHeader\(\s*("Authorization"|HttpHeaders\.AUTHORIZATION)', src):
                     bad('X1', f, 'reads the Authorization header (only auth-client does)')
-            if re.search(r'\.on(Creating|Updating|Deleting)Data\(', src) and '/business/' not in f \
-                    and not f.endswith('/core/entity/BaseEntity.java'):
+            normalized = f.replace('\\', '/')
+            if re.search(r'\.on(Creating|Updating|Deleting)Data\(', src) and '/business/' not in normalized \
+                    and not normalized.endswith('/core/entity/BaseEntity.java'):
                 bad('N1', f, 'lifecycle hook called outside a business service (§5.8)')
     for m in domain:
         pkg = '%s/%s/src/main/java/com/mysms/%s/' % (BACKEND, m, m)
         mcls = m[0].upper() + m[1:]
         for f in java(m):
             src = open(f).read()
-            if os.path.relpath(f, BACKEND) in INFRASTRUCTURE_CONTROLLERS:
+            if os.path.relpath(f, BACKEND).replace('\\', '/') in INFRASTRUCTURE_CONTROLLERS:
                 continue
             if re.search(r'@(?:[\w.]+\.)?(Request|Get|Post|Put|Patch|Delete)Mapping\b', src):
                 bad('C3', f, 'declares a mapping (controllers implement the generated interfaces)')
@@ -264,7 +269,7 @@ def main():
                 bad('R5', f, 'OFFSET paging (keyset only, §6)')
         for f in glob.glob(pkg + 'controller/*.java'):
             src = open(f).read()
-            if os.path.relpath(f, BACKEND) in INFRASTRUCTURE_CONTROLLERS:
+            if os.path.relpath(f, BACKEND).replace('\\', '/') in INFRASTRUCTURE_CONTROLLERS:
                 continue
             if not re.search(r'class \w+Controller implements \w+Api\b', src):
                 bad('C3', f, 'does not implement a generated contract interface')

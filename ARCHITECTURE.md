@@ -13,6 +13,7 @@ mysms/              (parent pom: Java 17, Spring Boot 4.1, dependency + plugin m
 ├── contracts/      (GENERATED from api/openapi + api/proto: server interfaces, DTOs, gRPC stubs)
 ├── sdk/            (GENERATED Java clients — the only way one module calls another)
 ├── auth-client/    (the only auth surface modules touch: AuthContext, token verification, permission filters)
+├── messaging/      (one library containing RabbitMQ [default], Google Cloud Pub/Sub and in-process EventBus adapters)
 ├── master/         (schema `master`: Master Data)
 ├── platform/       (schema `platform`: Platform & Tenancy)
 ├── iam/            (schema `iam`: Identity & Access — also the OAuth 2.0 / OIDC issuer)
@@ -39,7 +40,7 @@ mysms/              (parent pom: Java 17, Spring Boot 4.1, dependency + plugin m
 
 Each domain module has its own `@SpringBootApplication`, its own configuration namespace (`mysms.<module>.*`), its own DataSource and transaction manager, and its own Flyway folder; the build produces both a library jar (used by `app`) and an executable service jar.
 
-**Isolation is structural.** A domain module's Maven dependencies are exactly `core`, `contracts`, `sdk` and `auth-client` — never another domain module — so one module cannot compile against another's classes. The event bus implementation (`messaging-rabbitmq`) is added at runtime scope only. Package layout inside a module is defined in `JAVA-CODING-RULES.md` §3.
+**Isolation is structural.** A domain module's compile dependencies are exactly `core`, `contracts`, `sdk` and `auth-client` — never another domain module — so one module cannot compile against another's classes. The `messaging` library is added at runtime scope only and contains every `EventBus` implementation, so domain code sees only `core.events.EventBus`. RabbitMQ is the default; Google Cloud Pub/Sub and in-process are selected with `mysms.events.bus`. Package layout inside a module is defined in `JAVA-CODING-RULES.md` §3.
 
 **Cross-module rules** (these hold identically in one process or across many):
 

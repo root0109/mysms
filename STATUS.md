@@ -1,6 +1,6 @@
 # MySMS — project status
 
-The status of this build, verified on 2026-11-07. To continue the work, start with [HANDOFF.md](HANDOFF.md). The exact state of every API operation is in
+The application status was verified on 2026-11-07, before the messaging refactor. To continue the work, start with [HANDOFF.md](HANDOFF.md). The exact state of every API operation is in
 [api/operations-status.md](api/operations-status.md). That file is generated from the contracts and the controllers by
 `tools/backend/operation_status.py`, so it always matches the code.
 
@@ -10,7 +10,7 @@ The status of this build, verified on 2026-11-07. To continue the work, start wi
 |---|---|
 | Specifications | Done: database (21 schemas, Flyway), API (2,052 operations in 21 OpenAPI files, gRPC protos), UI (186 screens, flows, design system, frontend architecture), Java coding rules |
 | Backend operations | **1,663 of 2,052 served (81 %)**; the other **389 answer `501 NOT_IMPLEMENTED`** (listed with the reason in `api/operations-status.md`) |
-| Backend tests | **3,856 tests, 0 failures** across all 28 Maven modules (unit tests, plus component tests against real PostgreSQL 16 as a non-owner role with row-level security on, and real RabbitMQ 4.1). Every module also passes Checkstyle, SpotBugs and JaCoCo (≥ 80 % lines). |
+| Backend tests | Last verified baseline: **3,856 tests, 0 failures** across 28 reactor projects (the parent plus 27 child modules) in the earlier messaging layout. The unified messaging module and Pub/Sub adapter have not yet been verified with Maven in this environment. |
 | Clients | `pnpm verify` green: 39 tasks (prettier, SDK generation, typecheck, lint, tests, builds). Initial JS: web 222 KB and console 166 KB gzip, against a 300 KB budget. |
 | Web screens | Built (76 of the 186 inventory screens): sign-in (ACC-01), my profile (ACC-07), **security & sessions (ACC-08**: password change, authenticator app with one-time secret and recovery codes, turning a factor off, replacing recovery codes, ending sessions), my settings (ACC-14), records (ADM-11, a generic screen over all 327 record types), settings by scope (ADM-16), and **70 list-manager screens** — one per record type the inventory gives its own screen (students, guardians, admission cycles, institutions, departments, academic years, programs, class sections, periods, attendance registers and sheets, staff attendance with its date range, homework, exams, staff, leave, payroll, library, transport, front office, notices and events, LMS question bank and live classes…), each with its own route, heading, columns, status filter, create/edit/delete and the state transitions the role may use, grouped in the navigation as in ui/02 §2.1. Console: master data, operations and jobs. Phone and tablet: sign-in, profile, settings. The other screens are routed and show a placeholder naming the screen. |
 | Deployment | [DEPLOYMENT.md](DEPLOYMENT.md). Every step was rehearsed on a fresh database: roles, keys, bootstrap, the monolith and separate microservices, the web app against the real backend. |
@@ -147,7 +147,7 @@ The status of this build, verified on 2026-11-07. To continue the work, start wi
 
 ## How this was verified
 
-- **Backend.** `mvn install`: 3,856 tests, 0 failures, Checkstyle 0 violations, SpotBugs 0 bugs, JaCoCo thresholds met in all 28 modules (the RabbitMQ bus is a module of its own; its tests and the monolith's run on a real RabbitMQ).
+- **Backend baseline (2026-11-07, before messaging refactor).** `mvn install`: 3,856 tests, 0 failures, Checkstyle 0 violations, SpotBugs 0 bugs, JaCoCo thresholds met across 28 reactor projects (the parent plus 27 child modules). The current messaging changes still need a Maven build; this environment has Java but no `mvn` executable.
   - The contract tests are generated per resource, from samples that are first proven against a migrated database.
     Each state transition is tested the same way: the row is put into an allowed state, the step must answer 200 and
     set its values, a stale etag must answer 412, and a repeat must answer 409 when the new state does not allow it.
