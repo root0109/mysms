@@ -1,9 +1,9 @@
 package com.mysms.messaging.rabbitmq;
 
-import com.mysms.core.events.EventBus;
-import com.mysms.core.events.EventEnvelope;
-import com.mysms.core.events.EventHandler;
-import com.mysms.core.events.RejectedEventException;
+import com.mysms.messaging.events.EventBus;
+import com.mysms.messaging.events.EventEnvelope;
+import com.mysms.messaging.events.EventHandler;
+import com.mysms.messaging.events.RejectedEventException;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;

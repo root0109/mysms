@@ -3,8 +3,8 @@ package com.mysms.messaging.inprocess;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.mysms.core.events.EventEnvelope;
-import com.mysms.core.events.RejectedEventException;
+import com.mysms.messaging.events.EventEnvelope;
+import com.mysms.messaging.events.RejectedEventException;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;

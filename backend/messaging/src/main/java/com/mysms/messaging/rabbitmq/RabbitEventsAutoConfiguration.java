@@ -1,6 +1,6 @@
 package com.mysms.messaging.rabbitmq;
 
-import com.mysms.core.events.EventBus;
+import com.mysms.messaging.events.EventBus;
 import java.net.URI;
 import java.time.Duration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

@@ -245,7 +245,8 @@ these tables must name a date range (at most 366 days); the web app's Records sc
 
 Modules talk through events: a change writes its event into the module's own `outbox_event` in the same transaction;
 the module's relay publishes it to the bus and marks it published once the broker confirms; each consuming module
-records it in its `inbox_event` and handles it exactly once. The bus is MySMS's own interface (`core.events.EventBus`).
+records it in its `inbox_event` and handles it exactly once. The bus is MySMS's own interface
+(`com.mysms.messaging.events.EventBus`), packaged with its runtime and adapters in the `messaging` library.
 All adapters live in one runtime library, `messaging`: RabbitMQ is the default, Google Cloud Pub/Sub is the managed
 alternative, and `in-process` serves one JVM. Select the adapter with `MYSMS_EVENTS_BUS`.
 

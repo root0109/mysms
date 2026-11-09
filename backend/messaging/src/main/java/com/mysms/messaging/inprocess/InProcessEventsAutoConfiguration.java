@@ -1,6 +1,6 @@
 package com.mysms.messaging.inprocess;
 
-import com.mysms.core.events.EventBus;
+import com.mysms.messaging.events.EventBus;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

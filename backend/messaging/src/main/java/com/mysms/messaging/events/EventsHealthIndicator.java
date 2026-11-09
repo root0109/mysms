@@ -1,4 +1,4 @@
-package com.mysms.core.events;
+package com.mysms.messaging.events;
 
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;

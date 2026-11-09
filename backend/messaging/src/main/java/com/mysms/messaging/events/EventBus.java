@@ -1,4 +1,4 @@
-package com.mysms.core.events;
+package com.mysms.messaging.events;
 
 import java.util.Set;
 

@@ -19,3 +19,4 @@ MySMS is an education management system covering school administration, higher-e
 - Clients (React web, platform console, React Native phone and tablet apps): [clients/README.md](clients/README.md)
 - Developer tooling (code generators, design-conformance check), kept outside the Maven backend: [tools/backend/crud/README.md](tools/backend/crud/README.md)
 - Proposed enhancements for discussion: [ENHANCEMENTS.md](ENHANCEMENTS.md)
+- Maintainability, performance and scalability review (decisions proposed for approval): [docs/MAINTAINABILITY-REVIEW.md](docs/MAINTAINABILITY-REVIEW.md)

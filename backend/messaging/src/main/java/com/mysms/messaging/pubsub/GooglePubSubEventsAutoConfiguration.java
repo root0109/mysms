@@ -1,6 +1,6 @@
 package com.mysms.messaging.pubsub;
 
-import com.mysms.core.events.EventBus;
+import com.mysms.messaging.events.EventBus;
 import com.mysms.messaging.MessagingModules;
 import java.time.Duration;
 import java.util.Arrays;

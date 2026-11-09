@@ -1,7 +1,6 @@
 package com.mysms.core.outbox;
 
 import com.mysms.core.context.CallContextHolder;
-import com.mysms.core.events.EventEnvelope;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -16,6 +15,7 @@ import tools.jackson.databind.json.JsonMapper;
 public final class OutboxWriter {
 
     private static final Pattern SCHEMA = Pattern.compile("^[a-z]+$");
+    private static final String AUDIT_EVENT_TYPE = AuditWriter.EVENT_TYPE;
 
     private final JdbcClient jdbc;
     private final JsonMapper json;
@@ -38,11 +38,10 @@ public final class OutboxWriter {
      *
      * @param eventType     e.g. `master.country.created`
      * @param aggregateType e.g. `master.country`
-     * @throws IllegalArgumentException when the event or its aggregate is not the module's own: consumers refuse an
-     *                                  event its source does not own ({@code EventEnvelope.ownedBySource})
+     * @throws IllegalArgumentException when the event or its aggregate is not the module's own
      */
     public void publish(String eventType, String aggregateType, UUID aggregateId, Map<String, ?> payload) {
-        if (!(eventType.startsWith(prefix) || EventEnvelope.AUDIT_TYPE.equals(eventType))
+        if (!(eventType.startsWith(prefix) || AUDIT_EVENT_TYPE.equals(eventType))
                 || !aggregateType.startsWith(prefix)) {
             throw new IllegalArgumentException("module " + prefix + " cannot publish " + eventType + " of "
                     + aggregateType);

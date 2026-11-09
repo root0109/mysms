@@ -9,6 +9,7 @@ import com.google.api.gax.rpc.StatusCode;
 import com.google.api.gax.rpc.TransportChannelProvider;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.Publisher;
+import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.cloud.pubsub.v1.SubscriptionAdminSettings;
@@ -25,10 +26,10 @@ import com.google.pubsub.v1.TopicName;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.FieldMask;
 import com.google.protobuf.Timestamp;
-import com.mysms.core.events.EventBus;
-import com.mysms.core.events.EventEnvelope;
-import com.mysms.core.events.EventHandler;
-import com.mysms.core.events.RejectedEventException;
+import com.mysms.messaging.events.EventBus;
+import com.mysms.messaging.events.EventEnvelope;
+import com.mysms.messaging.events.EventHandler;
+import com.mysms.messaging.events.RejectedEventException;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.io.IOException;
@@ -238,8 +239,8 @@ public final class GooglePubSubEventBus implements EventBus {
     private Subscriber createSubscriber(String subscriptionId, String consumer, String source, Set<String> eventTypes,
                                         EventHandler handler) {
         String resource = SubscriptionName.of(settings.projectId(), subscriptionId).toString();
-        Subscriber.Builder builder = Subscriber.newBuilder(resource,
-                (message, reply) -> receive(consumer, source, eventTypes, handler, message, reply))
+        MessageReceiver receiver = (message, reply) -> receive(consumer, source, eventTypes, handler, message, reply);
+        Subscriber.Builder builder = Subscriber.newBuilder(resource, receiver)
                 .setFlowControlSettings(FlowControlSettings.newBuilder()
                         .setMaxOutstandingElementCount(settings.maxOutstandingMessages()).build());
         configureEmulator(builder);

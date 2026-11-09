@@ -60,14 +60,22 @@ EXTRA_TEST_PROPS = {
 """,
 }
 
+def messaging_dependency_scope(m):
+    """Only event consumers compile against messaging's event API; every module needs its runtime relay."""
+    source = pathlib.Path(ROOT, m, 'src', 'main', 'java')
+    uses_event_api = any('com.mysms.messaging.events.' in f.read_text(encoding='utf-8')
+                         for f in source.rglob('*.java'))
+    return '' if uses_event_api else '      <scope>runtime</scope>\n'
+
 def pom(m):
     title = TITLES[m].replace('&', 'and')
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <!-- {GEN} — edit the generator, not this file. -->
 <!--
   {m}: the {title} microservice, owner of database schema "{m}" (JAVA-CODING-RULES §2).
-  Depends only on core, contracts, sdk and auth-client. Produces a plain jar (assembled by `app`) and an executable
-  microservice jar (classifier exec). Its Flyway migrations are database/migrations/{m}, applied to its own schema only.
+  Depends on core, contracts, sdk, auth-client and the messaging runtime; only event consumers compile against the
+  narrow messaging API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
+  Its Flyway migrations are database/migrations/{m}, applied to its own schema only.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -107,12 +115,11 @@ def pom(m):
       <artifactId>lombok</artifactId>
       <scope>provided</scope>
     </dependency>
-{EXTRA_DEPS.get(m, '')}    <!-- messaging adapters, runtime only: module code sees core's events API, never a broker -->
+{EXTRA_DEPS.get(m, '')}    <!-- messaging runtime relay; event consumers compile against its narrow API -->
     <dependency>
       <groupId>com.mysms</groupId>
       <artifactId>messaging</artifactId>
-      <scope>runtime</scope>
-    </dependency>
+{messaging_dependency_scope(m)}    </dependency>
     <dependency>
       <groupId>com.mysms</groupId>
       <artifactId>core</artifactId>

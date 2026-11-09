@@ -1,12 +1,7 @@
-package com.mysms.core.config;
+package com.mysms.messaging.events;
 
+import com.mysms.core.config.CoreAutoConfiguration;
 import com.mysms.core.db.ModuleDatabase;
-import com.mysms.core.events.EventBus;
-import com.mysms.core.events.EventRuntime;
-import com.mysms.core.events.EventSubscriptions;
-import com.mysms.core.events.EventsHealthIndicator;
-import com.mysms.core.events.InboxProcessor;
-import com.mysms.core.events.OutboxRelay;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
@@ -22,8 +17,8 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * The event bus of this process (`mysms.events.bus`): `rabbitmq` (default), `google-pubsub`, `in-process` (one JVM),
  * or `none` (no relay and no consumers: events stay in the outboxes — for tests that do not exercise events). The
- * adapters live together in the `messaging` module. This configuration starts a relay per module database and an
- * inbox subscription per consuming module.
+ * API, runtime and adapters live together in the `messaging` module. This configuration starts a relay per module
+ * database and an inbox subscription per consuming module.
  */
 @AutoConfiguration(after = CoreAutoConfiguration.class,
         afterName = {"com.mysms.messaging.rabbitmq.RabbitEventsAutoConfiguration",
@@ -35,8 +30,8 @@ public class EventsAutoConfiguration {
 
     @Bean
     public EventRuntime eventRuntime(ObjectProvider<EventBus> bus, ObjectProvider<ModuleDatabase> databases,
-                                               ObjectProvider<EventSubscriptions> subscriptions, JsonMapper json,
-                                               Clock clock, Environment environment) {
+                                     ObjectProvider<EventSubscriptions> subscriptions, JsonMapper json, Clock clock,
+                                     Environment environment) {
         String mode = environment.getProperty(BUS, "rabbitmq");
         if ("none".equals(mode)) {
             return EventRuntime.off();

@@ -85,6 +85,7 @@
             <configuration>
               <includes>
                 <include>com/mysms/core/testkit/**</include>
+                <include>db/migration/coretest/**</include>
               </includes>
             </configuration>
           </execution>

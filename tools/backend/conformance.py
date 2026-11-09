@@ -12,8 +12,9 @@ that a compiler, Checkstyle or SpotBugs do not already enforce, and prints every
   R2   SQL lives in repositories, as constants (no SQL text in controllers, services or mappers)
   B1   no Transactional annotation of any package / TransactionTemplate; no ORM import or dependency (JPA, Hibernate,
        Spring Data, MyBatis, jOOQ); no ArchUnit or Modulith
-  A1   a domain module depends only on core, contracts, sdk and auth-client (and messaging at runtime
-       scope; no module code imports it)
+  A1   a domain module depends only on core, contracts, sdk, auth-client and messaging; messaging is runtime-only
+       except for modules that use its event API (EventEnvelope, EventHandler, EventSubscriptions, RejectedEventException);
+       modules do not import RabbitMQ, Google Cloud Pub/Sub, or messaging adapter/runtime types
   §3   packages are the layer roles of §3 only
   §5   every entity extends BaseEntity and names its TABLE
   N1   domain/ holds entities only (projections are records in repository/); entities carry exactly the Lombok set of
@@ -162,18 +163,31 @@ def main():
                 r1(f, lit)
     for m in domain:
         pom = open('%s/%s/pom.xml' % (BACKEND, m)).read()
+        sources = glob.glob('%s/%s/src/main/java/**/*.java' % (BACKEND, m), recursive=True)
+        event_api = re.compile(r'^import com\.mysms\.messaging\.events\.'
+                               r'(EventEnvelope|EventHandler|EventSubscriptions|RejectedEventException);', re.M)
+        uses_event_api = any(event_api.search(open(f).read()) for f in sources)
+        has_messaging_dependency = False
         for block in re.findall(r'<dependency>(.*?)</dependency>', pom, re.S):
             name = re.search(r'<groupId>com\.mysms</groupId>\s*<artifactId>([\w-]+)</artifactId>', block)
             if not name:
                 continue
             d = name.group(1)
-            # the event bus implementation is a runtime dependency only: no module code can import it
-            runtime_bus = d == 'messaging' and '<scope>runtime</scope>' in block
-            if d not in ('core', 'contracts', 'sdk', 'auth-client', 'mysms') and not runtime_bus:
+            runtime_messaging = d == 'messaging' and '<scope>runtime</scope>' in block
+            compile_event_api = d == 'messaging' and uses_event_api and not runtime_messaging
+            has_messaging_dependency |= d == 'messaging'
+            if d not in ('core', 'contracts', 'sdk', 'auth-client', 'mysms') and not (runtime_messaging
+                                                                                       or compile_event_api):
                 bad('A1', '%s/%s/pom.xml' % (BACKEND, m), 'depends on ' + d)
-        for f in glob.glob('%s/%s/src/main/java/**/*.java' % (BACKEND, m), recursive=True):
-            if re.search(r'^import (com\.rabbitmq|com\.mysms\.messaging)\.', open(f).read(), re.M):
-                bad('A1', f, 'imports the bus implementation (use core.events)')
+        if uses_event_api and not has_messaging_dependency:
+            bad('A1', '%s/%s/pom.xml' % (BACKEND, m), 'uses the messaging event API without a dependency')
+        for f in sources:
+            src = open(f).read()
+            if re.search(r'^import (?:static )?(?:com\.rabbitmq\.|com\.google\.cloud\.pubsub\.|com\.google\.pubsub\.|'
+                         r'com\.google\.api\.gax\.)', src, re.M) or re.search(
+                    r'^import (?:static )?com\.mysms\.messaging\.(?!events\.(?:EventEnvelope|EventHandler|EventSubscriptions|'
+                    r'RejectedEventException);)', src, re.M):
+                bad('A1', f, 'imports a broker/runtime type; modules may use only the messaging event API')
         for f in java(m):
             rel = f.replace('\\', '/').split('/com/mysms/%s/' % m)[-1]
             if '/' in rel and rel.split('/')[0] not in PACKAGES:

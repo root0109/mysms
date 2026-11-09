@@ -1,4 +1,4 @@
-package com.mysms.core.events;
+package com.mysms.messaging.events;
 
 /**
  * An event a consumer must never handle, however often it is delivered: unreadable, from a publisher that may not send

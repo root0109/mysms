@@ -1,10 +1,10 @@
 package com.mysms.iam.events;
 
 import com.mysms.core.db.ModuleDatabase;
-import com.mysms.core.events.EventEnvelope;
-import com.mysms.core.events.EventHandler;
-import com.mysms.core.events.EventSubscriptions;
-import com.mysms.core.events.RejectedEventException;
+import com.mysms.messaging.events.EventEnvelope;
+import com.mysms.messaging.events.EventHandler;
+import com.mysms.messaging.events.EventSubscriptions;
+import com.mysms.messaging.events.RejectedEventException;
 import com.mysms.iam.config.IamDatabaseConfig;
 import com.mysms.iam.repository.TenantDirectoryRepository;
 import java.time.Clock;

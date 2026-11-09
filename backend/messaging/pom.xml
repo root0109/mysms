@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  messaging: all implementations of core's EventBus in one module. RabbitMQ is the default; Google Cloud Pub/Sub
-  and the in-process adapter can be selected with mysms.events.bus. Domain modules depend on this module at runtime
-  only, so their code sees core's event API and cannot import a broker implementation.
+  messaging: the EventBus API, runtime and all adapters in one module. RabbitMQ is the default; Google Cloud Pub/Sub
+  and the in-process adapter can be selected with mysms.events.bus. Domain modules use the runtime; only event
+  consumers compile against the narrow API, and conformance checks prohibit broker/adapter imports in domain code.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -20,6 +20,12 @@
       <artifactId>core</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>com.rabbitmq</groupId>
       <artifactId>amqp-client</artifactId>
     </dependency>
@@ -30,6 +36,11 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-postgresql</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

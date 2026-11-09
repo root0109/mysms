@@ -3,8 +3,8 @@ package com.mysms.messaging.pubsub;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.mysms.core.events.EventBus;
-import com.mysms.core.events.EventEnvelope;
+import com.mysms.messaging.events.EventBus;
+import com.mysms.messaging.events.EventEnvelope;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;

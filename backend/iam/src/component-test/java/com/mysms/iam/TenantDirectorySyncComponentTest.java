@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.db.ModuleDatabase;
-import com.mysms.core.events.EventEnvelope;
-import com.mysms.core.events.InboxProcessor;
-import com.mysms.core.events.RejectedEventException;
+import com.mysms.messaging.events.EventEnvelope;
+import com.mysms.messaging.events.InboxProcessor;
+import com.mysms.messaging.events.RejectedEventException;
 import com.mysms.core.testkit.TestDatabase;
 import com.mysms.iam.config.IamDatabaseConfig;
 import com.mysms.iam.events.TenantDirectorySync;

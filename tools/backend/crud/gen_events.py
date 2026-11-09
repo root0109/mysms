@@ -185,9 +185,9 @@ public class ReferenceCleanupRepository {{
     cases[-1] = cases[-1].rstrip(',')
     cleanup = MARK + '''package com.mysms.{m}.events;
 
-import com.mysms.core.events.EventEnvelope;
-import com.mysms.core.events.EventHandler;
-import com.mysms.core.events.EventSubscriptions;
+import com.mysms.messaging.events.EventEnvelope;
+import com.mysms.messaging.events.EventHandler;
+import com.mysms.messaging.events.EventSubscriptions;
 import com.mysms.core.outbox.AuditWriter;
 import com.mysms.core.outbox.OutboxWriter;
 import com.mysms.{m}.config.{P}EventsConfig;
@@ -206,7 +206,7 @@ import org.springframework.stereotype.Component;
  * {m} keeps its logical references consistent when their owners are deleted (database/logical-references.md, "Events
  * drive cleanup"; references are not checked against the owner when written). For each owner's `.deleted` event it
  * clears the referencing column or soft-deletes the referencing row, audits each changed row and announces it on its
- * own outbox, inside the event's tenant (core's InboxProcessor: exactly once per event).
+ * own outbox, inside the event's tenant (messaging's InboxProcessor: exactly once per event).
  */
 @Component
 public class {P}ReferenceCleanup implements EventSubscriptions {{
@@ -279,8 +279,8 @@ import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.ModuleDatabase;
-import com.mysms.core.events.EventEnvelope;
-import com.mysms.core.events.InboxProcessor;
+import com.mysms.messaging.events.EventEnvelope;
+import com.mysms.messaging.events.InboxProcessor;
 import com.mysms.core.testkit.TestDatabase;
 import com.mysms.{m}.config.{P}DatabaseConfig;
 import com.mysms.{m}.events.{P}ReferenceCleanup;

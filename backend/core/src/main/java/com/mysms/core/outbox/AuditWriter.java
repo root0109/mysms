@@ -2,7 +2,6 @@ package com.mysms.core.outbox;
 
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
-import com.mysms.core.events.EventEnvelope;
 import java.time.Clock;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,7 +15,7 @@ import java.util.UUID;
  */
 public final class AuditWriter {
 
-    public static final String EVENT_TYPE = EventEnvelope.AUDIT_TYPE;
+    public static final String EVENT_TYPE = "audit.recorded";
 
     private final OutboxWriter outbox;
     private final Clock clock;

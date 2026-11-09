@@ -5,15 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.api.gax.core.NoCredentialsProvider;
 import com.google.api.gax.grpc.GrpcTransportChannel;
 import com.google.api.gax.rpc.FixedTransportChannelProvider;
+import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SubscriptionName;
 import com.google.pubsub.v1.TopicName;
 import com.google.protobuf.ByteString;
-import com.mysms.core.events.EventBus;
-import com.mysms.core.events.EventEnvelope;
-import com.mysms.core.events.RejectedEventException;
+import com.mysms.messaging.events.EventBus;
+import com.mysms.messaging.events.EventEnvelope;
+import com.mysms.messaging.events.RejectedEventException;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.time.Duration;
@@ -84,12 +85,13 @@ class GooglePubSubEventBusComponentTest {
             throw new RejectedEventException("not supported");
         });
         ManagedChannel channel = ManagedChannelBuilder.forTarget(PubSubTestEmulator.host()).usePlaintext().build();
+        MessageReceiver deadLetterReceiver = (message, reply) -> {
+            parked.add(message);
+            reply.ack();
+        };
         Subscriber deadLetterSubscriber = Subscriber.newBuilder(
                         SubscriptionName.of("mysms-test", bus.deadLetterSubscriptionId("componenttest")).toString(),
-                        (message, reply) -> {
-                            parked.add(message);
-                            reply.ack();
-                        })
+                        deadLetterReceiver)
                 .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
                 .setCredentialsProvider(NoCredentialsProvider.create()).build();
         try {

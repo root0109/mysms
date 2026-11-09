@@ -3,9 +3,9 @@ package com.mysms.messaging.rabbitmq;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.mysms.core.events.EventBus;
-import com.mysms.core.events.EventEnvelope;
-import com.mysms.core.events.RejectedEventException;
+import com.mysms.messaging.events.EventBus;
+import com.mysms.messaging.events.EventEnvelope;
+import com.mysms.messaging.events.RejectedEventException;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;

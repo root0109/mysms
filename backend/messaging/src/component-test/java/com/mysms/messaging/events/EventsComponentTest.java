@@ -1,4 +1,4 @@
-package com.mysms.core.events;
+package com.mysms.messaging.events;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -8,6 +8,7 @@ import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.outbox.OutboxWriter;
 import com.mysms.core.testkit.TestDatabase;
+import com.mysms.messaging.inprocess.InProcessEventBus;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -43,7 +44,7 @@ class EventsComponentTest {
     private static ModuleDatabase withoutRelay;
 
     private final List<EventEnvelope> received = new CopyOnWriteArrayList<>();
-    private TestEventBus bus;
+    private InProcessEventBus bus;
 
     @BeforeAll
     static void open() {
@@ -75,7 +76,7 @@ class EventsComponentTest {
 
     @BeforeEach
     void bus() {
-        bus = new TestEventBus();
+        bus = new InProcessEventBus();
         bus.subscribe("coretest", Set.of("coretest.item.deleted"), received::add);
         drain();
         received.clear();
@@ -133,7 +134,7 @@ class EventsComponentTest {
         write(TENANT, "coretest.item.deleted", aggregate);
         AtomicInteger attempts = new AtomicInteger();
         List<UUID> ids = new CopyOnWriteArrayList<>();
-        TestEventBus failing = new TestEventBus();
+        InProcessEventBus failing = new InProcessEventBus();
         failing.subscribe("coretest", Set.of("coretest.item.deleted"), e -> {
             ids.add(e.id());
             if (attempts.incrementAndGet() == 1) {
@@ -216,7 +217,7 @@ class EventsComponentTest {
                 return Map.of("coretest.item.deleted", handled::add);
             }
         };
-        TestEventBus own = new TestEventBus();
+        InProcessEventBus own = new InProcessEventBus();
         EventRuntime runtime = new EventRuntime(own,
                 List.of(OutboxRelay.of(db, own, JSON, Clock.systemUTC()).orElseThrow()),
                 List.of(subscriptions), List.of(new InboxProcessor(db, Clock.systemUTC())), Duration.ofMillis(50));
@@ -357,7 +358,7 @@ class EventsComponentTest {
     void aModulesHandlersAreMergedOnceItRefusesForeignEventsAndItsHealthShowsAFailingRelay() {
         InboxProcessor inbox = new InboxProcessor(db, Clock.systemUTC());
         List<String> handled = new CopyOnWriteArrayList<>();
-        TestEventBus own = new TestEventBus();
+        InProcessEventBus own = new InProcessEventBus();
         EventRuntime runtime = new EventRuntime(own, List.of(), List.of(
                 subscriptionsOf("coretest", Map.of("coretest.item.deleted", e -> handled.add("deleted"))),
                 subscriptionsOf("coretest", Map.of("coretest.item.created", e -> handled.add("created")))),
@@ -381,7 +382,7 @@ class EventsComponentTest {
                 subscriptionsOf("coretest", Map.of("coretest.item.deleted", e -> { }))),
                 List.of(inbox), Duration.ofSeconds(1))).hasMessageContaining("two handlers");
 
-        TestEventBus broken = new TestEventBus();
+        InProcessEventBus broken = new InProcessEventBus();
         broken.subscribe("coretest", Set.of("coretest.item.deleted"), e -> {
             throw new IllegalStateException("broker down");
         });
