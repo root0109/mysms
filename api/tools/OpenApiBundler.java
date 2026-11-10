@@ -38,7 +38,7 @@ import org.yaml.snakeyaml.LoaderOptions;
 
 public final class OpenApiBundler {
 
-    private static final Set<String> NOT_MODULES = Set.of("common.yaml", "mysms-api.yaml", "redocly.yaml");
+    private static final Set<String> NOT_MODULES = Set.of("common.yaml", "redocly.yaml");
     private static final Set<String> VERBS = Set.of("get", "put", "post", "delete", "patch");
     private static final Pattern EXTERNAL =
             Pattern.compile("^(?:\\./)?([a-z]+\\.yaml)#/components/([A-Za-z]+)/([A-Za-z0-9_.-]+)$");

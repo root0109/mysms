@@ -1,7 +1,7 @@
 package com.mysms.messaging.events;
 
 import com.mysms.core.db.ModuleDatabase;
-import com.mysms.core.tx.TenantTransactionExecutor;
+import com.mysms.core.tx.Transactions;
 import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Duration;
@@ -18,6 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -84,7 +88,8 @@ public final class OutboxRelay {
     private final Clock clock;
     private final Settings settings;
     private final JdbcClient jdbc;
-    private final TenantTransactionExecutor tx;
+    private final PlatformTransactionManager transactions;
+    private final TransactionDefinition writeDefinition;
     private final String pending;
     private final String markPublished;
     private final String setAside;
@@ -102,8 +107,12 @@ public final class OutboxRelay {
         this.clock = clock;
         this.settings = settings;
         this.jdbc = JdbcClient.create(relayDataSource);
-        this.tx = new TenantTransactionExecutor(new DataSourceTransactionManager(relayDataSource), jdbc, false,
-                TRANSACTION_TIMEOUT);
+        // the relay role reads every tenant's outbox (BYPASSRLS), so its transactions bind no tenant
+        this.transactions = new DataSourceTransactionManager(relayDataSource);
+        DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
+        definition.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
+        definition.setTimeout(Math.toIntExact(TRANSACTION_TIMEOUT.toSeconds()));
+        this.writeDefinition = definition;
         this.pending = """
                 SELECT id, tenant_id, event_type, aggregate_type, aggregate_id, payload, occurred_at
                   FROM {schema}.outbox_event
@@ -164,7 +173,16 @@ public final class OutboxRelay {
     public Pass runOnce() {
         OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC);
         long deadline = System.nanoTime() + settings.maxBatchTime().toNanos();
-        int[] taken = tx.writeWithoutTenant(() -> {
+        int[] taken = publishBatch(now, deadline);
+        int pruned = prune(prune, now.minus(settings.outboxRetention()));
+        int inboxPruned = prune(pruneInbox, now.minus(settings.inboxRetention()));
+        return new Pass(taken[0], taken[1], pruned, inboxPruned);
+    }
+
+    /** Publishes pending events in one transaction until the batch or its time runs out: {published, set aside}. */
+    private int[] publishBatch(OffsetDateTime now, long deadline) {
+        TransactionStatus transaction = transactions.getTransaction(writeDefinition);
+        try {
             List<Map<String, Object>> rows = jdbc.sql(pending).param("limit", settings.batchSize()).query()
                     .listOfRows();
             int published = 0;
@@ -193,12 +211,25 @@ public final class OutboxRelay {
                 published++;
             }
             return new int[] {published, asides};
-        });
-        int pruned = tx.writeWithoutTenant(() -> jdbc.sql(prune).param("before", now.minus(settings.outboxRetention()))
-                .update());
-        int inboxPruned = tx.writeWithoutTenant(() -> jdbc.sql(pruneInbox)
-                .param("before", now.minus(settings.inboxRetention())).update());
-        return new Pass(taken[0], taken[1], pruned, inboxPruned);
+        } catch (RuntimeException | Error failure) {
+            Transactions.rollback(transactions, transaction, failure);
+            throw failure;
+        } finally {
+            Transactions.commit(transactions, transaction);
+        }
+    }
+
+    /** Deletes the rows a pruning statement selects as older than {@code before}, in its own transaction. */
+    private int prune(String statement, OffsetDateTime before) {
+        TransactionStatus transaction = transactions.getTransaction(writeDefinition);
+        try {
+            return jdbc.sql(statement).param("before", before).update();
+        } catch (RuntimeException | Error failure) {
+            Transactions.rollback(transactions, transaction, failure);
+            throw failure;
+        } finally {
+            Transactions.commit(transactions, transaction);
+        }
     }
 
     private void setAside(Map<String, Object> row, String reason) {

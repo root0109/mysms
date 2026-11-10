@@ -43,7 +43,7 @@ paths:
     get:
       operationId: academics.ListProgramLevels
       summary: List ProgramLevels
-      description: List ProgramLevels visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ProgramLevels visible to the caller, page by page, with filtering and sorting.
       tags:
       - ProgramLevel
       security:
@@ -53,10 +53,11 @@ paths:
         service: mysms.academics.v1.ProgramLevelService
         method: ListProgramLevels
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -64,7 +65,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProgramLevelList'
+                $ref: '#/components/schemas/PagingInfoProgramLevel'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -283,7 +284,7 @@ paths:
     get:
       operationId: academics.ListPrograms
       summary: List Programs
-      description: List Programs visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Programs visible to the caller, page by page, with filtering and sorting.
       tags:
       - Program
       security:
@@ -293,10 +294,11 @@ paths:
         service: mysms.academics.v1.ProgramService
         method: ListPrograms
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -304,7 +306,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProgramList'
+                $ref: '#/components/schemas/PagingInfoProgram'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -523,7 +525,7 @@ paths:
     get:
       operationId: academics.ListCourses
       summary: List Courses
-      description: List Courses visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Courses visible to the caller, page by page, with filtering and sorting.
       tags:
       - Course
       security:
@@ -533,10 +535,11 @@ paths:
         service: mysms.academics.v1.CourseService
         method: ListCourses
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -544,7 +547,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CourseList'
+                $ref: '#/components/schemas/PagingInfoCourse'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -763,7 +766,7 @@ paths:
     get:
       operationId: academics.ListBatches
       summary: List Batches
-      description: List Batches visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Batches visible to the caller, page by page, with filtering and sorting.
       tags:
       - Batch
       security:
@@ -773,10 +776,11 @@ paths:
         service: mysms.academics.v1.BatchService
         method: ListBatches
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -784,7 +788,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BatchList'
+                $ref: '#/components/schemas/PagingInfoBatch'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1003,7 +1007,7 @@ paths:
     get:
       operationId: academics.ListGradeLevels
       summary: List GradeLevels
-      description: List GradeLevels visible to the caller, with cursor pagination, filtering and ordering.
+      description: List GradeLevels visible to the caller, page by page, with filtering and sorting.
       tags:
       - GradeLevel
       security:
@@ -1013,10 +1017,11 @@ paths:
         service: mysms.academics.v1.GradeLevelService
         method: ListGradeLevels
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1024,7 +1029,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GradeLevelList'
+                $ref: '#/components/schemas/PagingInfoGradeLevel'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1243,7 +1248,7 @@ paths:
     get:
       operationId: academics.ListSections
       summary: List Sections
-      description: List Sections visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Sections visible to the caller, page by page, with filtering and sorting.
       tags:
       - Section
       security:
@@ -1253,10 +1258,11 @@ paths:
         service: mysms.academics.v1.SectionService
         method: ListSections
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1264,7 +1270,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SectionList'
+                $ref: '#/components/schemas/PagingInfoSection'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1483,7 +1489,7 @@ paths:
     get:
       operationId: academics.ListClassSections
       summary: List ClassSections
-      description: List ClassSections visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ClassSections visible to the caller, page by page, with filtering and sorting.
       tags:
       - ClassSection
       security:
@@ -1493,10 +1499,11 @@ paths:
         service: mysms.academics.v1.ClassSectionService
         method: ListClassSections
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1504,7 +1511,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClassSectionList'
+                $ref: '#/components/schemas/PagingInfoClassSection'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1723,7 +1730,7 @@ paths:
     get:
       operationId: academics.ListSubjects
       summary: List Subjects
-      description: List Subjects visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Subjects visible to the caller, page by page, with filtering and sorting.
       tags:
       - Subject
       security:
@@ -1733,10 +1740,11 @@ paths:
         service: mysms.academics.v1.SubjectService
         method: ListSubjects
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1744,7 +1752,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SubjectList'
+                $ref: '#/components/schemas/PagingInfoSubject'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1963,7 +1971,7 @@ paths:
     get:
       operationId: academics.ListCourseSubjects
       summary: List CourseSubjects
-      description: List CourseSubjects visible to the caller, with cursor pagination, filtering and ordering.
+      description: List CourseSubjects visible to the caller, page by page, with filtering and sorting.
       tags:
       - Course
       security:
@@ -1980,10 +1988,11 @@ paths:
           type: string
           format: uuid
         description: Course id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1991,7 +2000,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CourseSubjectList'
+                $ref: '#/components/schemas/PagingInfoCourseSubject'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2238,7 +2247,7 @@ paths:
     get:
       operationId: academics.ListClassSubjects
       summary: List ClassSubjects
-      description: List ClassSubjects visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ClassSubjects visible to the caller, page by page, with filtering and sorting.
       tags:
       - ClassSection
       security:
@@ -2255,10 +2264,11 @@ paths:
           type: string
           format: uuid
         description: ClassSection id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2266,7 +2276,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClassSubjectList'
+                $ref: '#/components/schemas/PagingInfoClassSubject'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2513,7 +2523,7 @@ paths:
     get:
       operationId: academics.ListTeachingAssignments
       summary: List TeachingAssignments
-      description: List TeachingAssignments visible to the caller, with cursor pagination, filtering and ordering.
+      description: List TeachingAssignments visible to the caller, page by page, with filtering and sorting.
       tags:
       - TeachingAssignment
       security:
@@ -2523,10 +2533,11 @@ paths:
         service: mysms.academics.v1.TeachingAssignmentService
         method: ListTeachingAssignments
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2534,7 +2545,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TeachingAssignmentList'
+                $ref: '#/components/schemas/PagingInfoTeachingAssignment'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2753,7 +2764,7 @@ paths:
     get:
       operationId: academics.ListCurriculumUnits
       summary: List CurriculumUnits
-      description: List CurriculumUnits visible to the caller, with cursor pagination, filtering and ordering.
+      description: List CurriculumUnits visible to the caller, page by page, with filtering and sorting.
       tags:
       - CurriculumUnit
       security:
@@ -2763,10 +2774,11 @@ paths:
         service: mysms.academics.v1.CurriculumUnitService
         method: ListCurriculumUnits
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2774,7 +2786,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CurriculumUnitList'
+                $ref: '#/components/schemas/PagingInfoCurriculumUnit'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2993,7 +3005,7 @@ paths:
     get:
       operationId: academics.ListLessonPlans
       summary: List LessonPlans
-      description: List LessonPlans visible to the caller, with cursor pagination, filtering and ordering.
+      description: List LessonPlans visible to the caller, page by page, with filtering and sorting.
       tags:
       - LessonPlan
       security:
@@ -3003,10 +3015,11 @@ paths:
         service: mysms.academics.v1.LessonPlanService
         method: ListLessonPlans
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3014,7 +3027,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LessonPlanList'
+                $ref: '#/components/schemas/PagingInfoLessonPlan'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3233,7 +3246,7 @@ paths:
     get:
       operationId: academics.ListLessonPlanApprovals
       summary: List LessonPlanApprovals
-      description: List LessonPlanApprovals visible to the caller, with cursor pagination, filtering and ordering.
+      description: List LessonPlanApprovals visible to the caller, page by page, with filtering and sorting.
       tags:
       - LessonPlan
       security:
@@ -3250,10 +3263,11 @@ paths:
           type: string
           format: uuid
         description: LessonPlan id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3261,7 +3275,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LessonPlanApprovalList'
+                $ref: '#/components/schemas/PagingInfoLessonPlanApproval'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3825,22 +3839,20 @@ components:
           type: string
           maxLength: 80
           description: Level name.
-    ProgramLevelList:
+    PagingInfoProgramLevel:
       type: object
+      description: A page of ProgramLevel, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ProgramLevel'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Program:
       type: object
       description: Program of study (e.g. B.Sc Computer Science).
@@ -3957,22 +3969,20 @@ components:
         isActive:
           type: boolean
           description: Whether offered.
-    ProgramList:
+    PagingInfoProgram:
       type: object
+      description: A page of Program, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Program'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Course:
       type: object
       description: Course of study inside a program (higher-education / coaching registration unit); may nest under a parent course.
@@ -4106,22 +4116,20 @@ components:
         isActive:
           type: boolean
           description: Whether offered.
-    CourseList:
+    PagingInfoCourse:
       type: object
+      description: A page of Course, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Course'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Batch:
       type: object
       description: Intake cohort of a course with its own dates (e.g. B.Sc CS 2026-29).
@@ -4211,22 +4219,20 @@ components:
         isActive:
           type: boolean
           description: Whether running.
-    BatchList:
+    PagingInfoBatch:
       type: object
+      description: A page of Batch, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Batch'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     GradeLevel:
       type: object
       description: Grade / standard / class level of a school (Nursery, Grade 1 ... Grade 12).
@@ -4306,22 +4312,20 @@ components:
         isActive:
           type: boolean
           description: Whether offered.
-    GradeLevelList:
+    PagingInfoGradeLevel:
       type: object
+      description: A page of GradeLevel, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/GradeLevel'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Section:
       type: object
       description: Section label reused across grades (A, B, C, Rose...).
@@ -4400,22 +4404,20 @@ components:
         isActive:
           type: boolean
           description: Whether used.
-    SectionList:
+    PagingInfoSection:
       type: object
+      description: A page of Section, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Section'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ClassSection:
       type: object
       description: A grade + section running in an academic year (the homeroom class, e.g. Grade 5-A 2026-27).
@@ -4520,22 +4522,20 @@ components:
         isActive:
           type: boolean
           description: Whether running.
-    ClassSectionList:
+    PagingInfoClassSection:
       type: object
+      description: A page of ClassSection, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ClassSection'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Subject:
       type: object
       description: Subject catalogue entry.
@@ -4656,22 +4656,20 @@ components:
         isActive:
           type: boolean
           description: Whether offered.
-    SubjectList:
+    PagingInfoSubject:
       type: object
+      description: A page of Subject, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Subject'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     CourseSubject:
       type: object
       description: Subjects that make up a course.
@@ -4760,22 +4758,20 @@ components:
           type: string
           format: uuid
           description: Subject.
-    CourseSubjectList:
+    PagingInfoCourseSubject:
       type: object
+      description: A page of CourseSubject, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/CourseSubject'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ClassSubject:
       type: object
       description: Subject offered to a class section in its academic year.
@@ -4850,22 +4846,20 @@ components:
         isActive:
           type: boolean
           description: Whether active.
-    ClassSubjectList:
+    PagingInfoClassSubject:
       type: object
+      description: A page of ClassSubject, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ClassSubject'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     TeachingAssignment:
       type: object
       description: Staff member assigned to teach a class subject, with period allocation.
@@ -4952,22 +4946,20 @@ components:
         isActive:
           type: boolean
           description: Whether current.
-    TeachingAssignmentList:
+    PagingInfoTeachingAssignment:
       type: object
+      description: A page of TeachingAssignment, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/TeachingAssignment'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     CurriculumUnit:
       type: object
       description: Chapter / unit of a class subject's syllabus.
@@ -5046,22 +5038,20 @@ components:
           - inactive
           x-extensible-enum: true
           description: Whether in use.
-    CurriculumUnitList:
+    PagingInfoCurriculumUnit:
       type: object
+      description: A page of CurriculumUnit, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/CurriculumUnit'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     LessonPlan:
       type: object
       description: Teacher's plan for teaching a unit.
@@ -5245,22 +5235,20 @@ components:
           type: string
           format: date
           description: Planned end.
-    LessonPlanList:
+    PagingInfoLessonPlan:
       type: object
+      description: A page of LessonPlan, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/LessonPlan'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     LessonPlanApproval:
       type: object
       description: Review decision on a lesson plan.
@@ -5343,22 +5331,20 @@ components:
           type: string
           format: date-time
           description: Decision time.
-    LessonPlanApprovalList:
+    PagingInfoLessonPlanApproval:
       type: object
+      description: A page of LessonPlanApproval, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/LessonPlanApproval'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     SubmitLessonPlanRequest:
       type: object
       properties:

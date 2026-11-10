@@ -1,8 +1,10 @@
 package com.mysms.iam.controller;
 
-import com.mysms.contracts.iam.api.SettingDefinitionApi;
-import com.mysms.contracts.iam.model.SettingDefinition;
-import com.mysms.contracts.iam.model.SettingDefinitionList;
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.iam.api.SettingDefinitionApi;
+import com.mysms.iam.api.model.SettingDefinition;
 import com.mysms.core.web.ReadMask;
 import com.mysms.iam.business.SettingDefinitionService;
 import java.util.UUID;
@@ -20,10 +22,10 @@ public class SettingDefinitionController implements SettingDefinitionApi {
     }
 
     @Override
-    public ResponseEntity<SettingDefinitionList> listSettingDefinitions(Integer pageSize, String pageToken, String filter,
-                                                                        String orderBy, String fields) {
-        SettingDefinitionList list = service.list(pageSize, pageToken, filter, orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<SettingDefinition>> listSettingDefinitions(Integer page, Integer size,
+            String cursor, String filter, List<String> sort, String fields) {
+        PagingInfo<SettingDefinition> list = PagingUtil.pagingInfo(service.list(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 

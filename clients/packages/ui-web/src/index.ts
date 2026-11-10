@@ -5,6 +5,11 @@ export { Card, type CardProps } from './components/Card';
 export { DataTable, type Column, type DataTableProps } from './components/DataTable';
 export { Dialog, type DialogProps } from './components/Dialog';
 export { ProgressBar, type ProgressBarProps } from './components/ProgressBar';
+export {
+  SegmentedControl,
+  type SegmentedControlProps,
+  type SegmentedOption,
+} from './components/SegmentedControl';
 export { SelectField, type SelectFieldProps, type SelectOption } from './components/SelectField';
 export { Skeleton, type SkeletonProps } from './components/Skeleton';
 export { StatusChip, type StatusChipProps } from './components/StatusChip';

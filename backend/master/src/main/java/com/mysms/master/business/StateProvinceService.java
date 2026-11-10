@@ -1,9 +1,9 @@
 package com.mysms.master.business;
 
-import com.mysms.contracts.master.model.StateProvince;
-import com.mysms.contracts.master.model.StateProvinceList;
-import com.mysms.contracts.master.model.StateProvinceUpdate;
+import com.mysms.master.api.model.StateProvince;
+import com.mysms.master.api.model.StateProvinceUpdate;
 import com.mysms.core.context.Actor;
+import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.DuplicateResourceException;
 import com.mysms.core.error.FieldError;
@@ -34,13 +34,14 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of master.state_province (JAVA-CODING-RULES §4): one plain class, explicit methods, programmatic
- * transactions through the module's executor, audit + domain event in the same transaction as every change.
+ * Business service of master.state_province (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
+ * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change.
  */
 @Service
-public class StateProvinceService {
+public class StateProvinceService extends AppTransactionManager {
 
     public static final String AGGREGATE = StateProvinceEntity.TABLE;
     /** The contract's StateProvinceUpdate fields, in apply order. */
@@ -49,7 +50,6 @@ public class StateProvinceService {
     private final StateProvinceRepository repository;
     private final CountryRepository countries;
     private final StateProvinceMapper mapper;
-    private final ModuleDatabase database;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
@@ -57,12 +57,14 @@ public class StateProvinceService {
 
     public StateProvinceService(StateProvinceRepository repository, CountryRepository countries, StateProvinceMapper mapper,
                      @Qualifier(MasterDatabaseConfig.DATABASE) ModuleDatabase database,
+            @Qualifier(MasterDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
                      @Qualifier(MasterEventsConfig.OUTBOX) OutboxWriter outbox,
                      @Qualifier(MasterEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator, Clock clock) {
+
+        super(database, transactions);
         this.repository = repository;
         this.countries = countries;
         this.mapper = mapper;
-        this.database = database;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -70,19 +72,20 @@ public class StateProvinceService {
     }
 
     public StateProvince getStateProvince(UUID id) {
-        return database.tx().read(() -> mapper.toDto(load(id)));
+        return doInReadTransaction(() -> {
+            return mapper.toDto(load(id));
+        });
     }
 
-    public StateProvinceList listStateProvinces(Integer pageSize, String pageToken, String filter, String orderBy) {
-        SortSpec sort = SortSpec.parse(orderBy, StateProvinceRepository.SORT_FIELDS, StateProvinceRepository.DEFAULT_ORDER,
+    public Page<StateProvince> listStateProvinces(Integer pageNumber, Integer pageSize, String cursor, String filter,
+            List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, StateProvinceRepository.SORT_FIELDS, StateProvinceRepository.DEFAULT_ORDER,
                 StateProvinceRepository.ID_COLUMN);
         SqlFragment where = FilterParser.parse(filter, StateProvinceRepository.FILTER_FIELDS);
-        PageRequest page = PageRequest.of(pageSize, pageToken, sort, filter, clock);
-        return database.tx().read(() -> {
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+        return doInReadTransaction(() -> {
             Page<StateProvinceEntity> rows = repository.list(page, where);
-            return new StateProvinceList(rows.items().stream().map(mapper::toDto).toList())
-                    .nextPageToken(rows.nextPageToken())
-                    .totalSize(repository.count(where));
+            return rows.map(mapper::toDto);
         });
     }
 
@@ -92,7 +95,7 @@ public class StateProvinceService {
         StateProvinceEntity entity = mapper.toEntity(request);
         entity.onCreatingData(Actor.current(), clock);
         normalize(entity);
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             assertValid(entity);
             assertUnique(entity);
             if (!validateOnly) {
@@ -113,7 +116,7 @@ public class StateProvinceService {
             boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
         List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             StateProvinceEntity entity = load(id);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -139,7 +142,7 @@ public class StateProvinceService {
     /** Soft delete under If-Match. */
     public void deleteStateProvince(UUID id, String ifMatch) {
         int expected = Etags.expectedVersion(ifMatch);
-        database.tx().write(() -> {
+        runInWriteTransaction(() -> {
             StateProvinceEntity entity = load(id);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -153,7 +156,6 @@ public class StateProvinceService {
             }
             audit.recordDelete(AGGREGATE, id);
             outbox.publish(AGGREGATE + MasterEvents.DELETED, AGGREGATE, id, MasterEvents.payload(id));
-            return null;
         });
     }
 

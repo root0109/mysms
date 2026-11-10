@@ -1,0 +1,780 @@
+// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+package com.mysms.lms.api.model;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.lang.Nullable;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+
+
+import java.util.*;
+
+/**
+ * Student&#39;s highlight, note, link, media or bookmark on a document or e-book page, optionally shared or linked to a discussion.
+ */
+
+public class Annotation {
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID id;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private UUID userId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID contentItemId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID cohortId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID ebookId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID fileId;
+
+  /**
+   * Annotation type.
+   */
+  public enum AnnotationTypeEnum {
+    HIGHLIGHT("highlight"),
+    
+    NOTE("note"),
+    
+    LINK("link"),
+    
+    MEDIA("media"),
+    
+    EMBED("embed"),
+    
+    BOOKMARK("bookmark"),
+    
+    QUESTION("question");
+
+    private final String value;
+
+    AnnotationTypeEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static AnnotationTypeEnum fromValue(String value) {
+      for (AnnotationTypeEnum b : AnnotationTypeEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private AnnotationTypeEnum annotationType;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String annotationSubtype;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String pageNumber;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String startCharPos;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String charCount;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String location;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String annotatedText;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String title;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String description;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String embedCode;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String url;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID mediaFileId;
+
+  /**
+   * Who can see it.
+   */
+  public enum VisibilityEnum {
+    PRIVATE("private"),
+    
+    SHARED_WITH_USERS("shared_with_users"),
+    
+    COHORT("cohort");
+
+    private final String value;
+
+    VisibilityEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static VisibilityEnum fromValue(String value) {
+      for (VisibilityEnum b : VisibilityEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable VisibilityEnum visibility;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID forumTopicId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private @Nullable OffsetDateTime createTime;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID createdBy;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private @Nullable OffsetDateTime updateTime;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID updatedBy;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String etag;
+
+  public Annotation() {
+    super();
+  }
+
+  /**
+   * Constructor with only required parameters
+   */
+  public Annotation(UUID userId, AnnotationTypeEnum annotationType) {
+    this.userId = userId;
+    this.annotationType = annotationType;
+  }
+
+  public Annotation id(@Nullable UUID id) {
+    this.id = id;
+    return this;
+  }
+
+  /**
+   * Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+   * @return id
+   */
+  @Valid 
+  @JsonProperty("id")
+  public @Nullable UUID getId() {
+    return id;
+  }
+
+  @JsonProperty("id")
+  public void setId(@Nullable UUID id) {
+    this.id = id;
+  }
+
+  public Annotation userId(UUID userId) {
+    this.userId = userId;
+    return this;
+  }
+
+  /**
+   * Author.
+   * @return userId
+   */
+  @NotNull @Valid 
+  @JsonProperty("userId")
+  public UUID getUserId() {
+    return userId;
+  }
+
+  @JsonProperty("userId")
+  public void setUserId(UUID userId) {
+    this.userId = userId;
+  }
+
+  public Annotation contentItemId(@Nullable UUID contentItemId) {
+    this.contentItemId = contentItemId;
+    return this;
+  }
+
+  /**
+   * Item annotated.
+   * @return contentItemId
+   */
+  @Valid 
+  @JsonProperty("contentItemId")
+  public @Nullable UUID getContentItemId() {
+    return contentItemId;
+  }
+
+  @JsonProperty("contentItemId")
+  public void setContentItemId(@Nullable UUID contentItemId) {
+    this.contentItemId = contentItemId;
+  }
+
+  public Annotation cohortId(@Nullable UUID cohortId) {
+    this.cohortId = cohortId;
+    return this;
+  }
+
+  /**
+   * Cohort.
+   * @return cohortId
+   */
+  @Valid 
+  @JsonProperty("cohortId")
+  public @Nullable UUID getCohortId() {
+    return cohortId;
+  }
+
+  @JsonProperty("cohortId")
+  public void setCohortId(@Nullable UUID cohortId) {
+    this.cohortId = cohortId;
+  }
+
+  public Annotation ebookId(@Nullable UUID ebookId) {
+    this.ebookId = ebookId;
+    return this;
+  }
+
+  /**
+   * E-book.
+   * @return ebookId
+   */
+  @Valid 
+  @JsonProperty("ebookId")
+  public @Nullable UUID getEbookId() {
+    return ebookId;
+  }
+
+  @JsonProperty("ebookId")
+  public void setEbookId(@Nullable UUID ebookId) {
+    this.ebookId = ebookId;
+  }
+
+  public Annotation fileId(@Nullable UUID fileId) {
+    this.fileId = fileId;
+    return this;
+  }
+
+  /**
+   * Document annotated.
+   * @return fileId
+   */
+  @Valid 
+  @JsonProperty("fileId")
+  public @Nullable UUID getFileId() {
+    return fileId;
+  }
+
+  @JsonProperty("fileId")
+  public void setFileId(@Nullable UUID fileId) {
+    this.fileId = fileId;
+  }
+
+  public Annotation annotationType(AnnotationTypeEnum annotationType) {
+    this.annotationType = annotationType;
+    return this;
+  }
+
+  /**
+   * Annotation type.
+   * @return annotationType
+   */
+  @NotNull 
+  @JsonProperty("annotationType")
+  public AnnotationTypeEnum getAnnotationType() {
+    return annotationType;
+  }
+
+  @JsonProperty("annotationType")
+  public void setAnnotationType(AnnotationTypeEnum annotationType) {
+    this.annotationType = annotationType;
+  }
+
+  public Annotation annotationSubtype(@Nullable String annotationSubtype) {
+    this.annotationSubtype = annotationSubtype;
+    return this;
+  }
+
+  /**
+   * Sub-type (e.g. colour or media kind).
+   * @return annotationSubtype
+   */
+  @Size(max = 40) 
+  @JsonProperty("annotationSubtype")
+  public @Nullable String getAnnotationSubtype() {
+    return annotationSubtype;
+  }
+
+  @JsonProperty("annotationSubtype")
+  public void setAnnotationSubtype(@Nullable String annotationSubtype) {
+    this.annotationSubtype = annotationSubtype;
+  }
+
+  public Annotation pageNumber(@Nullable String pageNumber) {
+    this.pageNumber = pageNumber;
+    return this;
+  }
+
+  /**
+   * Page.
+   * @return pageNumber
+   */
+  @Size(max = 20) 
+  @JsonProperty("pageNumber")
+  public @Nullable String getPageNumber() {
+    return pageNumber;
+  }
+
+  @JsonProperty("pageNumber")
+  public void setPageNumber(@Nullable String pageNumber) {
+    this.pageNumber = pageNumber;
+  }
+
+  public Annotation startCharPos(@Nullable String startCharPos) {
+    this.startCharPos = startCharPos;
+    return this;
+  }
+
+  /**
+   * Start position of the selection.
+   * @return startCharPos
+   */
+  @Size(max = 40) 
+  @JsonProperty("startCharPos")
+  public @Nullable String getStartCharPos() {
+    return startCharPos;
+  }
+
+  @JsonProperty("startCharPos")
+  public void setStartCharPos(@Nullable String startCharPos) {
+    this.startCharPos = startCharPos;
+  }
+
+  public Annotation charCount(@Nullable String charCount) {
+    this.charCount = charCount;
+    return this;
+  }
+
+  /**
+   * Length of the selection.
+   * @return charCount
+   */
+  @Size(max = 40) 
+  @JsonProperty("charCount")
+  public @Nullable String getCharCount() {
+    return charCount;
+  }
+
+  @JsonProperty("charCount")
+  public void setCharCount(@Nullable String charCount) {
+    this.charCount = charCount;
+  }
+
+  public Annotation location(@Nullable String location) {
+    this.location = location;
+    return this;
+  }
+
+  /**
+   * Location descriptor inside the document (range / CFI).
+   * @return location
+   */
+  
+  @JsonProperty("location")
+  public @Nullable String getLocation() {
+    return location;
+  }
+
+  @JsonProperty("location")
+  public void setLocation(@Nullable String location) {
+    this.location = location;
+  }
+
+  public Annotation annotatedText(@Nullable String annotatedText) {
+    this.annotatedText = annotatedText;
+    return this;
+  }
+
+  /**
+   * Selected text.
+   * @return annotatedText
+   */
+  
+  @JsonProperty("annotatedText")
+  public @Nullable String getAnnotatedText() {
+    return annotatedText;
+  }
+
+  @JsonProperty("annotatedText")
+  public void setAnnotatedText(@Nullable String annotatedText) {
+    this.annotatedText = annotatedText;
+  }
+
+  public Annotation title(@Nullable String title) {
+    this.title = title;
+    return this;
+  }
+
+  /**
+   * Title.
+   * @return title
+   */
+  @Size(max = 255) 
+  @JsonProperty("title")
+  public @Nullable String getTitle() {
+    return title;
+  }
+
+  @JsonProperty("title")
+  public void setTitle(@Nullable String title) {
+    this.title = title;
+  }
+
+  public Annotation description(@Nullable String description) {
+    this.description = description;
+    return this;
+  }
+
+  /**
+   * Note text.
+   * @return description
+   */
+  
+  @JsonProperty("description")
+  public @Nullable String getDescription() {
+    return description;
+  }
+
+  @JsonProperty("description")
+  public void setDescription(@Nullable String description) {
+    this.description = description;
+  }
+
+  public Annotation embedCode(@Nullable String embedCode) {
+    this.embedCode = embedCode;
+    return this;
+  }
+
+  /**
+   * Embedded media code.
+   * @return embedCode
+   */
+  
+  @JsonProperty("embedCode")
+  public @Nullable String getEmbedCode() {
+    return embedCode;
+  }
+
+  @JsonProperty("embedCode")
+  public void setEmbedCode(@Nullable String embedCode) {
+    this.embedCode = embedCode;
+  }
+
+  public Annotation url(@Nullable String url) {
+    this.url = url;
+    return this;
+  }
+
+  /**
+   * Linked URL.
+   * @return url
+   */
+  @Size(max = 1000) 
+  @JsonProperty("url")
+  public @Nullable String getUrl() {
+    return url;
+  }
+
+  @JsonProperty("url")
+  public void setUrl(@Nullable String url) {
+    this.url = url;
+  }
+
+  public Annotation mediaFileId(@Nullable UUID mediaFileId) {
+    this.mediaFileId = mediaFileId;
+    return this;
+  }
+
+  /**
+   * Attached media.
+   * @return mediaFileId
+   */
+  @Valid 
+  @JsonProperty("mediaFileId")
+  public @Nullable UUID getMediaFileId() {
+    return mediaFileId;
+  }
+
+  @JsonProperty("mediaFileId")
+  public void setMediaFileId(@Nullable UUID mediaFileId) {
+    this.mediaFileId = mediaFileId;
+  }
+
+  public Annotation visibility(@Nullable VisibilityEnum visibility) {
+    this.visibility = visibility;
+    return this;
+  }
+
+  /**
+   * Who can see it.
+   * @return visibility
+   */
+  
+  @JsonProperty("visibility")
+  public @Nullable VisibilityEnum getVisibility() {
+    return visibility;
+  }
+
+  @JsonProperty("visibility")
+  public void setVisibility(@Nullable VisibilityEnum visibility) {
+    this.visibility = visibility;
+  }
+
+  public Annotation forumTopicId(@Nullable UUID forumTopicId) {
+    this.forumTopicId = forumTopicId;
+    return this;
+  }
+
+  /**
+   * Discussion started from the annotation.
+   * @return forumTopicId
+   */
+  @Valid 
+  @JsonProperty("forumTopicId")
+  public @Nullable UUID getForumTopicId() {
+    return forumTopicId;
+  }
+
+  @JsonProperty("forumTopicId")
+  public void setForumTopicId(@Nullable UUID forumTopicId) {
+    this.forumTopicId = forumTopicId;
+  }
+
+  public Annotation createTime(@Nullable OffsetDateTime createTime) {
+    this.createTime = createTime;
+    return this;
+  }
+
+  /**
+   * Row creation time.
+   * @return createTime
+   */
+  @Valid 
+  @JsonProperty("createTime")
+  public @Nullable OffsetDateTime getCreateTime() {
+    return createTime;
+  }
+
+  @JsonProperty("createTime")
+  public void setCreateTime(@Nullable OffsetDateTime createTime) {
+    this.createTime = createTime;
+  }
+
+  public Annotation createdBy(@Nullable UUID createdBy) {
+    this.createdBy = createdBy;
+    return this;
+  }
+
+  /**
+   * User account that created the row (audit reference to iam.user_account; not FK-constrained).
+   * @return createdBy
+   */
+  @Valid 
+  @JsonProperty("createdBy")
+  public @Nullable UUID getCreatedBy() {
+    return createdBy;
+  }
+
+  @JsonProperty("createdBy")
+  public void setCreatedBy(@Nullable UUID createdBy) {
+    this.createdBy = createdBy;
+  }
+
+  public Annotation updateTime(@Nullable OffsetDateTime updateTime) {
+    this.updateTime = updateTime;
+    return this;
+  }
+
+  /**
+   * Last update time.
+   * @return updateTime
+   */
+  @Valid 
+  @JsonProperty("updateTime")
+  public @Nullable OffsetDateTime getUpdateTime() {
+    return updateTime;
+  }
+
+  @JsonProperty("updateTime")
+  public void setUpdateTime(@Nullable OffsetDateTime updateTime) {
+    this.updateTime = updateTime;
+  }
+
+  public Annotation updatedBy(@Nullable UUID updatedBy) {
+    this.updatedBy = updatedBy;
+    return this;
+  }
+
+  /**
+   * User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+   * @return updatedBy
+   */
+  @Valid 
+  @JsonProperty("updatedBy")
+  public @Nullable UUID getUpdatedBy() {
+    return updatedBy;
+  }
+
+  @JsonProperty("updatedBy")
+  public void setUpdatedBy(@Nullable UUID updatedBy) {
+    this.updatedBy = updatedBy;
+  }
+
+  public Annotation etag(@Nullable String etag) {
+    this.etag = etag;
+    return this;
+  }
+
+  /**
+   * Entity tag (row version); send back in If-Match / etag.
+   * @return etag
+   */
+  
+  @JsonProperty("etag")
+  public @Nullable String getEtag() {
+    return etag;
+  }
+
+  @JsonProperty("etag")
+  public void setEtag(@Nullable String etag) {
+    this.etag = etag;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Annotation annotation = (Annotation) o;
+    return Objects.equals(this.id, annotation.id) &&
+        Objects.equals(this.userId, annotation.userId) &&
+        Objects.equals(this.contentItemId, annotation.contentItemId) &&
+        Objects.equals(this.cohortId, annotation.cohortId) &&
+        Objects.equals(this.ebookId, annotation.ebookId) &&
+        Objects.equals(this.fileId, annotation.fileId) &&
+        Objects.equals(this.annotationType, annotation.annotationType) &&
+        Objects.equals(this.annotationSubtype, annotation.annotationSubtype) &&
+        Objects.equals(this.pageNumber, annotation.pageNumber) &&
+        Objects.equals(this.startCharPos, annotation.startCharPos) &&
+        Objects.equals(this.charCount, annotation.charCount) &&
+        Objects.equals(this.location, annotation.location) &&
+        Objects.equals(this.annotatedText, annotation.annotatedText) &&
+        Objects.equals(this.title, annotation.title) &&
+        Objects.equals(this.description, annotation.description) &&
+        Objects.equals(this.embedCode, annotation.embedCode) &&
+        Objects.equals(this.url, annotation.url) &&
+        Objects.equals(this.mediaFileId, annotation.mediaFileId) &&
+        Objects.equals(this.visibility, annotation.visibility) &&
+        Objects.equals(this.forumTopicId, annotation.forumTopicId) &&
+        Objects.equals(this.createTime, annotation.createTime) &&
+        Objects.equals(this.createdBy, annotation.createdBy) &&
+        Objects.equals(this.updateTime, annotation.updateTime) &&
+        Objects.equals(this.updatedBy, annotation.updatedBy) &&
+        Objects.equals(this.etag, annotation.etag);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, userId, contentItemId, cohortId, ebookId, fileId, annotationType, annotationSubtype, pageNumber, startCharPos, charCount, location, annotatedText, title, description, embedCode, url, mediaFileId, visibility, forumTopicId, createTime, createdBy, updateTime, updatedBy, etag);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("class Annotation {\n");
+    sb.append("    id: ").append(toIndentedString(id)).append("\n");
+    sb.append("    userId: ").append(toIndentedString(userId)).append("\n");
+    sb.append("    contentItemId: ").append(toIndentedString(contentItemId)).append("\n");
+    sb.append("    cohortId: ").append(toIndentedString(cohortId)).append("\n");
+    sb.append("    ebookId: ").append(toIndentedString(ebookId)).append("\n");
+    sb.append("    fileId: ").append(toIndentedString(fileId)).append("\n");
+    sb.append("    annotationType: ").append(toIndentedString(annotationType)).append("\n");
+    sb.append("    annotationSubtype: ").append(toIndentedString(annotationSubtype)).append("\n");
+    sb.append("    pageNumber: ").append(toIndentedString(pageNumber)).append("\n");
+    sb.append("    startCharPos: ").append(toIndentedString(startCharPos)).append("\n");
+    sb.append("    charCount: ").append(toIndentedString(charCount)).append("\n");
+    sb.append("    location: ").append(toIndentedString(location)).append("\n");
+    sb.append("    annotatedText: ").append(toIndentedString(annotatedText)).append("\n");
+    sb.append("    title: ").append(toIndentedString(title)).append("\n");
+    sb.append("    description: ").append(toIndentedString(description)).append("\n");
+    sb.append("    embedCode: ").append(toIndentedString(embedCode)).append("\n");
+    sb.append("    url: ").append(toIndentedString(url)).append("\n");
+    sb.append("    mediaFileId: ").append(toIndentedString(mediaFileId)).append("\n");
+    sb.append("    visibility: ").append(toIndentedString(visibility)).append("\n");
+    sb.append("    forumTopicId: ").append(toIndentedString(forumTopicId)).append("\n");
+    sb.append("    createTime: ").append(toIndentedString(createTime)).append("\n");
+    sb.append("    createdBy: ").append(toIndentedString(createdBy)).append("\n");
+    sb.append("    updateTime: ").append(toIndentedString(updateTime)).append("\n");
+    sb.append("    updatedBy: ").append(toIndentedString(updatedBy)).append("\n");
+    sb.append("    etag: ").append(toIndentedString(etag)).append("\n");
+    sb.append("}");
+    return sb.toString();
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(@Nullable Object o) {
+    return o == null ? "null" : o.toString().replace("\n", "\n    ");
+  }
+}
+

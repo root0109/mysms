@@ -1,9 +1,9 @@
 package com.mysms.app;
 
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.FullyQualifiedAnnotationBeanNameGenerator;
@@ -11,7 +11,8 @@ import org.springframework.context.annotation.FullyQualifiedAnnotationBeanNameGe
 /**
  * The monolith: every module's components in one process (JAVA-CODING-RULES §2). The modules' own
  * {@code @SpringBootApplication} classes are excluded — this class is the only application — and each module still
- * opens its own database from its own mysms-&lt;module&gt;.yml. Components are named by their fully qualified class
+ * opens its own database: core configures every module whose package this class scans. Components are named
+ * by their fully qualified class
  * name, so two modules may each have, say, a PersonMapper without colliding.
  */
 @SpringBootConfiguration
@@ -42,12 +43,10 @@ import org.springframework.context.annotation.FullyQualifiedAnnotationBeanNameGe
         nameGenerator = FullyQualifiedAnnotationBeanNameGenerator.class)
 public class MySmsApplication {
 
-    public static final String CONFIG_NAME = "mysms";
-
     protected MySmsApplication() {
     }
 
     public static void main(String[] args) {
-        new SpringApplicationBuilder(MySmsApplication.class).properties("spring.config.name=" + CONFIG_NAME).run(args);
+        SpringApplication.run(MySmsApplication.class, args);
     }
 }

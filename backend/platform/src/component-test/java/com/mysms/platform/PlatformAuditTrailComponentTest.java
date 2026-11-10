@@ -7,10 +7,11 @@ import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.testkit.TestDatabase;
+import com.mysms.core.testkit.TestTransactions;
 import com.mysms.messaging.events.EventEnvelope;
 import com.mysms.messaging.events.InboxProcessor;
 import com.mysms.messaging.events.RejectedEventException;
-import com.mysms.core.testkit.TestDatabase;
 import com.mysms.platform.config.PlatformDatabaseConfig;
 import com.mysms.platform.events.PlatformAuditTrail;
 import com.mysms.platform.events.PlatformReferenceCleanup;
@@ -32,8 +33,7 @@ import org.springframework.test.context.DynamicPropertySource;
  * Real PostgreSQL: the platform turns the modules' `audit.recorded` events into platform.audit_log rows of the
  * event's tenant, once, and its own changes reach the trail through its outbox, relay and inbox.
  */
-@SpringBootTest(classes = PlatformApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.config.name=" + PlatformApplication.CONFIG_NAME)
+@SpringBootTest(classes = PlatformApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class PlatformAuditTrailComponentTest {
 
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
@@ -61,13 +61,15 @@ class PlatformAuditTrailComponentTest {
 
     private <T> T as(UUID tenant, Supplier<T> work) {
         return CallContextHolder.callAs(CallContext.anonymous(TRACE).withIdentity(tenant, null),
-                () -> database.tx().read(work::get));
+                () -> TestTransactions.of(database).read(work::get));
     }
 
     private void tenant(UUID tenant) {
-        CallContextHolder.callAs(CallContext.anonymous(TRACE).withIdentity(tenant, null), () -> database.tx().write(
-                () -> database.jdbc().sql("INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, "
-                        + "'t' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING")
+        CallContextHolder.callAs(CallContext.anonymous(TRACE).withIdentity(tenant, null),
+                () -> TestTransactions.of(database).write(() -> database.jdbc()
+                        .sql("INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, "
+                                + "'t' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') "
+                                + "ON CONFLICT (id) DO NOTHING")
                         .param("tenant", tenant).update()));
     }
 

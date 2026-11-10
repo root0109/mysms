@@ -786,7 +786,7 @@ Platform & Tenancy: SaaS tenancy, subscription plans, shared files, tags, notes,
 
 Identity & Access: Login accounts, roles, permissions, scoped role grants, tokens and devices. A person (people.person) may own one account per tenant.
 
-20 tables: [`auth_token`](#iamauth_token), [`idempotency_key`](#iamidempotency_key), [`inbox_event`](#iaminbox_event), [`legacy_credential`](#iamlegacy_credential), [`mfa_credential`](#iammfa_credential), [`operation`](#iamoperation), [`outbox_event`](#iamoutbox_event), [`permission`](#iampermission), [`role`](#iamrole), [`role_permission`](#iamrole_permission), [`setting_definition`](#iamsetting_definition), [`setting_value`](#iamsetting_value), [`tenant_directory`](#iamtenant_directory), [`user_account`](#iamuser_account), [`user_department_access`](#iamuser_department_access), [`user_device`](#iamuser_device), [`user_permission`](#iamuser_permission), [`user_preference`](#iamuser_preference), [`user_role`](#iamuser_role), [`user_session`](#iamuser_session)
+21 tables: [`auth_token`](#iamauth_token), [`idempotency_key`](#iamidempotency_key), [`inbox_event`](#iaminbox_event), [`legacy_credential`](#iamlegacy_credential), [`member_record`](#iammember_record), [`mfa_credential`](#iammfa_credential), [`operation`](#iamoperation), [`outbox_event`](#iamoutbox_event), [`permission`](#iampermission), [`role`](#iamrole), [`role_permission`](#iamrole_permission), [`setting_definition`](#iamsetting_definition), [`setting_value`](#iamsetting_value), [`tenant_directory`](#iamtenant_directory), [`user_account`](#iamuser_account), [`user_department_access`](#iamuser_department_access), [`user_device`](#iamuser_device), [`user_permission`](#iamuser_permission), [`user_preference`](#iamuser_preference), [`user_role`](#iamuser_role), [`user_session`](#iamuser_session)
 
 <a id="iamauth_token"></a>
 ### iam.auth_token
@@ -877,6 +877,28 @@ Identity & Access: Login accounts, roles, permissions, scoped role grants, token
 **Checks**
 
 - `ck_legacy_credential_algorithm`: algorithm IN ('md5', 'sha1', 'sha256', 'bcrypt', 'phpass')
+
+<a id="iammember_record"></a>
+### iam.member_record
+
+Staff and student records of login accounts and persons, kept from `hr.staff` and `sis.student` events so `iam.GetMe` can name them (`Me.staffIds`, `Me.studentIds`) from its own schema.
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `tenant_id` | uuid | Y |  | PK | Owning tenant. Row-level security key. |
+| 2 | `record_id` | uuid | Y |  | PK | `hr.staff.id` or `sis.student.id` (kept from their events) |
+| 3 | `record_type` | varchar(20) | Y |  |  | staff or student |
+| 4 | `user_id` | uuid |  |  |  | Login account of the record |
+| 5 | `person_id` | uuid |  |  |  | Person of the record |
+| 6 | `institution_id` | uuid |  |  |  | Institution of the record |
+| 7 | `is_deleted` | bool | Y | false |  | Deleted in its module; kept so a late event cannot restore it |
+| 8 | `source_version` | int4 | Y |  |  | Source row version this entry reflects; older events are ignored |
+| 9 | `synced_at` | timestamptz | Y |  |  | When an event last changed the row |
+
+**Checks**
+
+- `ck_member_record_record_type`: record_type IN ('staff', 'student')
+- `ck_member_record_source_version`: source_version >= 1
 
 <a id="iammfa_credential"></a>
 ### iam.mfa_credential
@@ -5174,6 +5196,7 @@ Attendance: Attendance registers, sheets (one per register/session/date) and per
 - UNIQUE (`id`, `attendance_date`)
 - UNIQUE (`id`, `tenant_id`)
 - unique index `ix_attendance_sheet_1` (`register_id`, `attendance_date`, `day_part`, `COALESCE(timetable_session_id, CAST('00000000-0000-0000-0000-000000000000' AS uuid))`) WHERE deleted_at IS NULL
+- unique index `uq_attendance_sheet_session` (`tenant_id`, `timetable_session_id`) WHERE deleted_at IS NULL AND timetable_session_id IS NOT NULL — one sheet per timetable session
 
 **Checks**
 
@@ -5735,6 +5758,7 @@ Timetable: Period definitions and scheduled teaching sessions.
 - `ck_session_status`: status IN ('draft', 'confirmed', 'done', 'cancelled')
 - `ck_session_1`: end_at > start_at
 - `ck_session_2`: class_section_id IS NOT NULL OR (course_id IS NOT NULL AND batch_id IS NOT NULL)
+- indexes `ix_session_staff_start`, `ix_session_class_section_start`, `ix_session_batch_start`, `ix_session_room_start` (`tenant_id`, the subject, `start_at`) WHERE deleted_at IS NULL AND the subject IS NOT NULL — the timetable view of a teacher, class, batch or room over a range of days
 
 **Relationships**
 
@@ -6229,7 +6253,8 @@ Assessment & Results: Homework, assignments, exams, grading schemes, marksheets 
 
 **Checks**
 
-- `ck_homework_status`: status IN ('draft', 'published')
+- `ck_homework_status`: status IN ('draft', 'pending', 'published')
+- index `ix_homework_pending` (`tenant_id`, `institution_id`) WHERE status = 'pending' AND deleted_at IS NULL — the approval queue
 
 **Relationships**
 
@@ -6258,6 +6283,7 @@ Assessment & Results: Homework, assignments, exams, grading schemes, marksheets 
 **Checks**
 
 - `ck_homework_approval_decision`: decision IN ('pending', 'approved', 'rejected')
+- unique index `uq_homework_approval_pending` (`homework_id`) WHERE decision = 'pending' AND deleted_at IS NULL — one open review per homework
 
 <a id="assessmenthomework_submission"></a>
 ### assessment.homework_submission

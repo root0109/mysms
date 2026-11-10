@@ -4,14 +4,18 @@ import com.mysms.core.crypto.FieldCipher;
 import com.mysms.core.db.IdempotencyStore;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.db.PartitionMaintenanceJob;
+import com.mysms.core.error.ConstraintMapper;
 import com.mysms.core.error.GlobalExceptionHandler;
+import com.mysms.core.error.MessageUtil;
 import com.mysms.core.error.ProblemResponseWriter;
+import com.mysms.core.json.JsonMappers;
 import com.mysms.core.sdk.SdkClientFactory;
 import com.mysms.core.sdk.TracePropagationInterceptor;
 import com.mysms.core.trace.TraceFilter;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.IdempotencyFilter;
 import jakarta.validation.Validator;
+import java.net.http.HttpClient;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
@@ -19,15 +23,22 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.json.JsonMapper;
 
 /** Cross-cutting infrastructure every module gets by having `core` on its classpath (JAVA-CODING-RULES §2). */
-@AutoConfiguration
+@AutoConfiguration(before = JacksonAutoConfiguration.class)
 public class CoreAutoConfiguration {
+
+    /** How long a call to another module may take to connect, and to answer, before it fails. */
+    private static final Duration SDK_CONNECT_TIMEOUT = Duration.ofSeconds(2);
+    private static final Duration SDK_READ_TIMEOUT = Duration.ofSeconds(10);
 
     @Bean
     @ConditionalOnMissingBean
@@ -35,14 +46,30 @@ public class CoreAutoConfiguration {
         return Clock.systemUTC();
     }
 
+    /**
+     * The JSON mapper of the process (MVC, the SDK clients, events): hand-built with the MySMS settings
+     * ({@link JsonMappers}), so Spring Boot's own Jackson configuration backs off.
+     */
+    @Bean
+    @Primary
+    public JsonMapper jsonMapper() {
+        return JsonMappers.create();
+    }
+
     @Bean
     public TraceFilter traceFilter() {
         return new TraceFilter();
     }
 
+    /** The catalogue of error sentences by code and language (messages/mysms*.properties). */
     @Bean
-    public GlobalExceptionHandler globalExceptionHandler() {
-        return new GlobalExceptionHandler();
+    public MessageUtil messageUtil() {
+        return MessageUtil.ofCatalogue();
+    }
+
+    @Bean
+    public GlobalExceptionHandler globalExceptionHandler(MessageUtil messages) {
+        return new GlobalExceptionHandler(new ConstraintMapper(messages));
     }
 
     @Bean
@@ -99,9 +126,19 @@ public class CoreAutoConfiguration {
         return new TracePropagationInterceptor();
     }
 
+    /**
+     * The factory of the clients one module calls another with. Their HTTP client never waits without limit and
+     * never follows a redirect: a call carries the caller's token, which must reach only the configured service.
+     */
     @Bean
     public SdkClientFactory sdkClientFactory(RestClient.Builder builder,
                                              ObjectProvider<ClientHttpRequestInterceptor> interceptors) {
-        return new SdkClientFactory(builder, interceptors.orderedStream().toList());
+        JdkClientHttpRequestFactory http = new JdkClientHttpRequestFactory(HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(SDK_CONNECT_TIMEOUT)
+                .followRedirects(HttpClient.Redirect.NEVER)
+                .build());
+        http.setReadTimeout(SDK_READ_TIMEOUT);
+        return new SdkClientFactory(builder.clone().requestFactory(http), interceptors.orderedStream().toList());
     }
 }

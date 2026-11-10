@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MySmsProvider } from '../react/context';
 import { useRuntime } from '../react/useRuntime';
 import { createRuntime, type Runtime } from '../runtime';
-import { fakeApi, json, type Handler } from '@mysms/fixtures';
+import { fakeApi, json, onePage, pageOf, type Handler } from '@mysms/fixtures';
 import { useCompleteMfa, useSignIn, useSignOut } from './auth';
 import {
   useCountries,
@@ -33,7 +33,7 @@ function setup(extra: Record<string, Handler> = {}) {
     'POST /v1/iam/mfa:complete': () => json({ tokens, user: ME.user }),
     'POST /v1/iam/auth:logout': () => new Response(null, { status: 204 }),
     'GET /v1/iam/me': () => json(ME),
-    'GET /v1/master/countries': () => json({ items: [COUNTRY] }),
+    'GET /v1/master/countries': (req) => onePage(req, [COUNTRY]),
     'GET /v1/master/countries/{countryId}': () => json(COUNTRY, { headers: { ETag: '"4"' } }),
     'POST /v1/master/countries': () => json(COUNTRY, { status: 201, headers: { ETag: '"1"' } }),
     'PATCH /v1/master/countries/{countryId}': () =>
@@ -82,7 +82,7 @@ describe('runtime and session hooks', () => {
     expect(result.current.status).toBe('signedIn');
     expect(result.current.canEdit).toBe(true);
     expect(result.current.canDelete).toBe(false);
-    runtime.queryClient.setQueryData(['master', 'countries'], { items: [COUNTRY] });
+    runtime.queryClient.setQueryData(['master', 'countries'], { data: [COUNTRY] });
     await act(() => result.current.signOut.mutateAsync());
     expect(result.current.status).toBe('signedOut');
     expect(runtime.queryClient.getQueryData(['master', 'countries'])).toBeUndefined();
@@ -121,7 +121,7 @@ describe('master data hooks (PLT-07)', () => {
     await signIn(runtime);
     const { result } = renderHook(
       () => ({
-        list: useCountries({ pageSize: 25 }),
+        list: useCountries({ size: 25 }),
         one: useCountry('c1'),
         none: useCountry(null),
         create: useCreateCountry(),
@@ -130,7 +130,7 @@ describe('master data hooks (PLT-07)', () => {
       }),
       { wrapper },
     );
-    await waitFor(() => expect(result.current.list.data?.items).toEqual([COUNTRY]));
+    await waitFor(() => expect(result.current.list.data?.data).toEqual([COUNTRY]));
     await waitFor(() => expect(result.current.one.data).toEqual({ data: COUNTRY, etag: '"4"' }));
     expect(result.current.none.fetchStatus).toBe('idle');
 
@@ -153,25 +153,23 @@ describe('master data hooks (PLT-07)', () => {
     ).toBe('Bearer a1');
   });
 
-  it('pages through nextPageToken', async () => {
+  it('pages through the next links, sending the page and its cursor', async () => {
     const { api, runtime, wrapper } = setup({
-      'GET /v1/master/countries': (req) => {
-        const token = new URL(req.url).searchParams.get('pageToken');
-        return token === 'p2'
-          ? json({ items: [{ ...COUNTRY, id: 'c2' }], nextPageToken: '' })
-          : json({ items: [COUNTRY], nextPageToken: 'p2' });
-      },
+      'GET /v1/master/countries': (req) => pageOf(req, [COUNTRY, { ...COUNTRY, id: 'c2' }]),
     });
     await signIn(runtime);
-    const { result } = renderHook(() => useInfiniteCountries({ pageSize: 1 }), { wrapper });
+    const { result } = renderHook(() => useInfiniteCountries({ size: 1 }), { wrapper });
     await waitFor(() => expect(result.current.data?.pages).toHaveLength(1));
     expect(result.current.hasNextPage).toBe(true);
     await act(() => result.current.fetchNextPage());
     await waitFor(() =>
-      expect(result.current.data?.pages.flatMap((p) => p.items).map((c) => c.id)).toEqual(['c1', 'c2']),
+      expect(result.current.data?.pages.flatMap((p) => p.data).map((c) => c.id)).toEqual(['c1', 'c2']),
     );
     expect(result.current.hasNextPage).toBe(false);
-    expect(api.calls.filter((c) => c.path === '/v1/master/countries')).toHaveLength(2);
+    const reads = api.calls.filter((c) => c.path === '/v1/master/countries');
+    expect(reads).toHaveLength(2);
+    expect(new URLSearchParams(reads[1]?.search).get('page')).toBe('2');
+    expect(new URLSearchParams(reads[1]?.search).get('cursor')).toBe('2:1');
   });
 
   it('sends the update mask', async () => {
@@ -223,15 +221,15 @@ describe('operation hooks', () => {
       createTime: 't',
     };
     const { api, runtime, wrapper } = setup({
-      'GET /v1/platform/operations': () => json({ items: [op] }),
+      'GET /v1/platform/operations': (req) => onePage(req, [op]),
       'POST /v1/payroll/operations/{operationId}:cancel': () => json({ ...op, status: 'cancelled' }),
     });
     await signIn(runtime);
     const { result } = renderHook(
-      () => ({ jobs: useJobCentre({ pageSize: 10 }), cancel: useCancelOperation() }),
+      () => ({ jobs: useJobCentre({ size: 10 }), cancel: useCancelOperation() }),
       { wrapper },
     );
-    await waitFor(() => expect(result.current.jobs.data?.items).toHaveLength(1));
+    await waitFor(() => expect(result.current.jobs.data?.data).toHaveLength(1));
     await act(() => result.current.cancel.mutateAsync(op));
     expect(runtime.queryClient.getQueryData(['payroll', 'operation', 'o2'])).toMatchObject({
       status: 'cancelled',

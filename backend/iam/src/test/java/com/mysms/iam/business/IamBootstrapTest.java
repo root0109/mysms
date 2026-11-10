@@ -11,7 +11,7 @@ class IamBootstrapTest {
 
     private static IamBootstrap bootstrap(String code, String password) {
         return new IamBootstrap(new IamProperties(null, null, new IamProperties.Bootstrap(code, "admin", password)),
-                null, null, null, null, null, null, Clock.systemUTC());
+                null, null, null, null, null, null, null, Clock.systemUTC());
     }
 
     @Test

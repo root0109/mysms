@@ -1,9 +1,11 @@
 package com.mysms.master.controller;
 
-import com.mysms.contracts.master.api.CurrencyApi;
-import com.mysms.contracts.master.model.Currency;
-import com.mysms.contracts.master.model.CurrencyList;
-import com.mysms.contracts.master.model.CurrencyUpdate;
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.master.api.CurrencyApi;
+import com.mysms.master.api.model.Currency;
+import com.mysms.master.api.model.CurrencyUpdate;
 import com.mysms.core.web.ReadMask;
 import com.mysms.master.business.CurrencyService;
 import java.net.URI;
@@ -28,10 +30,10 @@ public class CurrencyController implements CurrencyApi {
     }
 
     @Override
-    public ResponseEntity<CurrencyList> listCurrencies(Integer pageSize, String pageToken, String filter, String orderBy,
-                                              String fields) {
-        CurrencyList list = service.listCurrencies(pageSize, pageToken, filter, orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<Currency>> listCurrencies(Integer page, Integer size, String cursor, String filter,
+            List<String> sort, String fields) {
+        PagingInfo<Currency> list = PagingUtil.pagingInfo(service.listCurrencies(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 

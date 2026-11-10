@@ -34,7 +34,7 @@ paths:
     get:
       operationId: iam.ListUserAccounts
       summary: List UserAccounts
-      description: List UserAccounts visible to the caller, with cursor pagination, filtering and ordering.
+      description: List UserAccounts visible to the caller, page by page, with filtering and sorting.
       tags:
       - UserAccount
       security:
@@ -44,10 +44,11 @@ paths:
         service: mysms.iam.v1.UserAccountService
         method: ListUserAccounts
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -55,7 +56,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserAccountList'
+                $ref: '#/components/schemas/PagingInfoUserAccount'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -274,7 +275,7 @@ paths:
     get:
       operationId: iam.ListRoles
       summary: List Roles
-      description: List Roles visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Roles visible to the caller, page by page, with filtering and sorting.
       tags:
       - Role
       security:
@@ -284,10 +285,11 @@ paths:
         service: mysms.iam.v1.RoleService
         method: ListRoles
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -295,7 +297,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RoleList'
+                $ref: '#/components/schemas/PagingInfoRole'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -514,7 +516,7 @@ paths:
     get:
       operationId: iam.ListPermissions
       summary: List Permissions
-      description: List Permissions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Permissions visible to the caller, page by page, with filtering and sorting.
       tags:
       - Permission
       security:
@@ -524,10 +526,11 @@ paths:
         service: mysms.iam.v1.PermissionService
         method: ListPermissions
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -535,7 +538,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PermissionList'
+                $ref: '#/components/schemas/PagingInfoPermission'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -596,7 +599,7 @@ paths:
     get:
       operationId: iam.ListRolePermissions
       summary: List RolePermissions
-      description: List RolePermissions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List RolePermissions visible to the caller, page by page, with filtering and sorting.
       tags:
       - Role
       security:
@@ -613,10 +616,11 @@ paths:
           type: string
           format: uuid
         description: Role id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -624,7 +628,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RolePermissionList'
+                $ref: '#/components/schemas/PagingInfoRolePermission'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -871,7 +875,7 @@ paths:
     get:
       operationId: iam.ListUserRoles
       summary: List UserRoles
-      description: List UserRoles visible to the caller, with cursor pagination, filtering and ordering.
+      description: List UserRoles visible to the caller, page by page, with filtering and sorting.
       tags:
       - UserAccount
       security:
@@ -888,10 +892,11 @@ paths:
           type: string
           format: uuid
         description: UserAccount id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -899,7 +904,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserRoleList'
+                $ref: '#/components/schemas/PagingInfoUserRole'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1146,7 +1151,7 @@ paths:
     get:
       operationId: iam.ListUserPermissions
       summary: List UserPermissions
-      description: List UserPermissions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List UserPermissions visible to the caller, page by page, with filtering and sorting.
       tags:
       - UserAccount
       security:
@@ -1163,10 +1168,11 @@ paths:
           type: string
           format: uuid
         description: UserAccount id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1174,7 +1180,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserPermissionList'
+                $ref: '#/components/schemas/PagingInfoUserPermission'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1421,7 +1427,7 @@ paths:
     get:
       operationId: iam.ListUserDepartmentAccesses
       summary: List UserDepartmentAccesses
-      description: List UserDepartmentAccesses visible to the caller, with cursor pagination, filtering and ordering.
+      description: List UserDepartmentAccesses visible to the caller, page by page, with filtering and sorting.
       tags:
       - UserAccount
       security:
@@ -1438,10 +1444,11 @@ paths:
           type: string
           format: uuid
         description: UserAccount id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1449,7 +1456,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserDepartmentAccessList'
+                $ref: '#/components/schemas/PagingInfoUserDepartmentAccess'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1696,7 +1703,7 @@ paths:
     get:
       operationId: iam.ListAuthTokens
       summary: List AuthTokens
-      description: List AuthTokens visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AuthTokens visible to the caller, page by page, with filtering and sorting.
       tags:
       - UserAccount
       security:
@@ -1713,10 +1720,11 @@ paths:
           type: string
           format: uuid
         description: UserAccount id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1724,7 +1732,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthTokenList'
+                $ref: '#/components/schemas/PagingInfoAuthToken'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1791,7 +1799,7 @@ paths:
     get:
       operationId: iam.ListUserDevices
       summary: List UserDevices
-      description: List UserDevices visible to the caller, with cursor pagination, filtering and ordering.
+      description: List UserDevices visible to the caller, page by page, with filtering and sorting.
       tags:
       - UserAccount
       security:
@@ -1808,10 +1816,11 @@ paths:
           type: string
           format: uuid
         description: UserAccount id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1819,7 +1828,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserDeviceList'
+                $ref: '#/components/schemas/PagingInfoUserDevice'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2066,7 +2075,7 @@ paths:
     get:
       operationId: iam.ListUserPreferences
       summary: List UserPreferences
-      description: List UserPreferences visible to the caller, with cursor pagination, filtering and ordering.
+      description: List UserPreferences visible to the caller, page by page, with filtering and sorting.
       tags:
       - UserAccount
       security:
@@ -2083,10 +2092,11 @@ paths:
           type: string
           format: uuid
         description: UserAccount id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2094,7 +2104,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserPreferenceList'
+                $ref: '#/components/schemas/PagingInfoUserPreference'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2341,7 +2351,7 @@ paths:
     get:
       operationId: iam.ListUserSessions
       summary: List UserSessions
-      description: List UserSessions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List UserSessions visible to the caller, page by page, with filtering and sorting.
       tags:
       - UserAccount
       security:
@@ -2358,10 +2368,11 @@ paths:
           type: string
           format: uuid
         description: UserAccount id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2369,7 +2380,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserSessionList'
+                $ref: '#/components/schemas/PagingInfoUserSession'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3721,7 +3732,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./common.yaml#/components/schemas/OperationList
+                $ref: ./common.yaml#/components/schemas/PagingInfoOperation
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3745,19 +3756,9 @@ paths:
         description: Filter by kind.
         schema:
           type: string
-      - name: pageSize
-        in: query
-        required: false
-        description: Page size.
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Page token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/iam/operations/{operationId}:
     get:
       operationId: iam.GetOperation
@@ -3849,7 +3850,7 @@ paths:
     get:
       operationId: iam.ListSettingDefinitions
       summary: List SettingDefinitions
-      description: List SettingDefinitions visible to the caller, with cursor pagination, filtering and ordering. Definitions users may not change are listed only to callers who administer settings at one of their allowed scopes.
+      description: List SettingDefinitions visible to the caller, page by page, with filtering and sorting. Definitions users may not change are listed only to callers who administer settings at one of their allowed scopes.
       tags:
       - SettingDefinition
       security:
@@ -3859,10 +3860,11 @@ paths:
         service: mysms.iam.v1.SettingDefinitionService
         method: ListSettingDefinitions
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3870,7 +3872,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SettingDefinitionList'
+                $ref: '#/components/schemas/PagingInfoSettingDefinition'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3927,7 +3929,7 @@ paths:
     get:
       operationId: iam.ListSettingValues
       summary: List SettingValues
-      description: List SettingValues visible to the caller, with cursor pagination, filtering and ordering.
+      description: List SettingValues visible to the caller, page by page, with filtering and sorting.
       tags:
       - SettingValue
       security:
@@ -3937,10 +3939,11 @@ paths:
         service: mysms.iam.v1.SettingValueService
         method: ListSettingValues
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3948,7 +3951,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SettingValueList'
+                $ref: '#/components/schemas/PagingInfoSettingValue'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -4398,22 +4401,20 @@ components:
         isLocked:
           type: boolean
           description: Narrower scopes (and users) cannot override it.
-    SettingValueList:
+    PagingInfoSettingValue:
       type: object
+      description: A page of SettingValue, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/SettingValue'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     SettingDefinition:
       type: object
       description: 'A setting the product offers (theme, density, language...), with its type, allowed values, default, the scopes it may be set at and whether users may change it themselves. Product catalogue: read-only through the API.'
@@ -4511,22 +4512,20 @@ components:
       required:
       - settingKey
       - valueType
-    SettingDefinitionList:
+    PagingInfoSettingDefinition:
       type: object
+      description: A page of SettingDefinition, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/SettingDefinition'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     MfaCredential:
       type: object
       description: One enrolled second factor (no secret material).
@@ -4823,22 +4822,20 @@ components:
         useSignature:
           type: boolean
           description: Append the signature by default.
-    UserAccountList:
+    PagingInfoUserAccount:
       type: object
+      description: A page of UserAccount, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/UserAccount'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Role:
       type: object
       description: Named set of permissions. NULL tenant = platform-defined role available to every tenant.
@@ -4928,22 +4925,20 @@ components:
           type: string
           format: uuid
           description: Parent role (inherits its permissions).
-    RoleList:
+    PagingInfoRole:
       type: object
+      description: A page of Role, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Role'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Permission:
       type: object
       description: Atomic permission checked by the application.
@@ -5006,22 +5001,20 @@ components:
           description: Entity tag (row version); send back in If-Match / etag.
       required:
       - code
-    PermissionList:
+    PagingInfoPermission:
       type: object
+      description: A page of Permission, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Permission'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     RolePermission:
       type: object
       description: Permission granted to a role.
@@ -5074,22 +5067,20 @@ components:
           type: string
           format: uuid
           description: Permission.
-    RolePermissionList:
+    PagingInfoRolePermission:
       type: object
+      description: A page of RolePermission, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/RolePermission'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     UserRole:
       type: object
       description: Role granted to an account, optionally limited to a scope (institution, class section, department, LMS course...).
@@ -5198,6 +5189,7 @@ components:
           description: Grant currently in force (can be suspended without deleting).
     UserRoleList:
       type: object
+      description: The UserRole items an operation wrote, all in one response.
       required:
       - items
       properties:
@@ -5205,13 +5197,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserRole'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+    PagingInfoUserRole:
+      type: object
+      description: A page of UserRole, with the links to the other pages.
+      required:
+      - data
+      - paging
+      properties:
+        data:
+          type: array
+          description: Data retrieved in the paginated request.
+          items:
+            $ref: '#/components/schemas/UserRole'
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     UserPermission:
       type: object
       description: Direct per-user permission grant or denial overriding role permissions.
@@ -5278,22 +5277,20 @@ components:
           - deny
           x-extensible-enum: true
           description: Whether the permission is added or removed.
-    UserPermissionList:
+    PagingInfoUserPermission:
       type: object
+      description: A page of UserPermission, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/UserPermission'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     UserDepartmentAccess:
       type: object
       description: Departments whose data an account may access; one may be marked primary.
@@ -5352,22 +5349,20 @@ components:
         isPrimary:
           type: boolean
           description: Primary department of the account.
-    UserDepartmentAccessList:
+    PagingInfoUserDepartmentAccess:
       type: object
+      description: A page of UserDepartmentAccess, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/UserDepartmentAccess'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AuthToken:
       type: object
       description: 'Hashed credential tokens: API tokens, remember-me, one-time login, verification and password-reset tokens.'
@@ -5445,22 +5440,20 @@ components:
           description: Entity tag (row version); send back in If-Match / etag.
       required:
       - tokenType
-    AuthTokenList:
+    PagingInfoAuthToken:
       type: object
+      description: A page of AuthToken, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AuthToken'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     UserDevice:
       type: object
       description: Registered device / browser for push notifications.
@@ -5550,22 +5543,20 @@ components:
         isActive:
           type: boolean
           description: Whether pushes are sent to this device.
-    UserDeviceList:
+    PagingInfoUserDevice:
       type: object
+      description: A page of UserDevice, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/UserDevice'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     UserPreference:
       type: object
       description: Per-user key/value preference (UI and app settings).
@@ -5626,22 +5617,20 @@ components:
           type: string
           maxLength: 500
           description: Preference value.
-    UserPreferenceList:
+    PagingInfoUserPreference:
       type: object
+      description: A page of UserPreference, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/UserPreference'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     UserSession:
       type: object
       description: Signed-in session of a user on a web browser or mobile device.
@@ -5709,22 +5698,20 @@ components:
           description: Entity tag (row version); send back in If-Match / etag.
       required:
       - sessionRef
-    UserSessionList:
+    PagingInfoUserSession:
       type: object
+      description: A page of UserSession, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/UserSession'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     LoginRequest:
       type: object
       properties:

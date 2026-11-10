@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { master } from '@mysms/sdk';
 import { CountryApi } from '@mysms/sdk/master/apis/CountryApi';
+import { FIRST_PAGE, nextPage, pageQuery } from '../api/pages';
 import { call, callWithEtag, type WithEtag } from '../api/unwrap';
 import { queryKey } from '../query/keys';
 import { STALE_TIME } from '../query/queryClient';
@@ -11,11 +12,16 @@ export type CountryUpdate = master.CountryUpdate;
 /** The writable fields of a new country (output-only fields are set by the server). */
 export type CountryCreate = master.CountryApiCreateCountryRequest['country'];
 
+/** The parameters every list operation takes (api/README "Pagination"). */
 export interface ListParams {
-  pageSize?: number;
-  pageToken?: string;
+  /** One-based page number (default 1). */
+  page?: number;
+  size?: number;
+  /** The cursor of the previous page's next link. */
+  cursor?: string;
   filter?: string;
-  orderBy?: string;
+  /** Sort criteria `field,asc|desc`, in priority order. */
+  sort?: string[];
 }
 
 /** master.ListCountries — reference data, cached for 10 minutes (ui/05 §4). */
@@ -28,15 +34,15 @@ export function useCountries(params: ListParams = {}) {
   });
 }
 
-/** master.ListCountries as an infinite list: pages follow nextPageToken (ui/05 §4 list convention). */
-export function useInfiniteCountries(params: Omit<ListParams, 'pageToken'> = {}) {
+/** master.ListCountries as an infinite list: pages follow each response's next link (ui/05 §4 list convention). */
+export function useInfiniteCountries(params: Omit<ListParams, 'page' | 'cursor'> = {}) {
   const { api } = useRuntime();
   return useInfiniteQuery({
     queryKey: queryKey('master', 'countries', { ...params, infinite: true }),
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: FIRST_PAGE,
     queryFn: ({ pageParam }) =>
-      call(api.get(CountryApi).listCountries(pageParam ? { ...params, pageToken: pageParam } : params)),
-    getNextPageParam: (last) => last.nextPageToken || undefined,
+      call(api.get(CountryApi).listCountries({ ...params, ...pageQuery(pageParam) })),
+    getNextPageParam: (last) => nextPage(last.paging),
     staleTime: STALE_TIME.reference,
   });
 }

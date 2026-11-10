@@ -1,9 +1,9 @@
 package com.mysms.master.business;
 
-import com.mysms.contracts.master.model.Currency;
-import com.mysms.contracts.master.model.CurrencyList;
-import com.mysms.contracts.master.model.CurrencyUpdate;
+import com.mysms.master.api.model.Currency;
+import com.mysms.master.api.model.CurrencyUpdate;
 import com.mysms.core.context.Actor;
+import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.DuplicateResourceException;
 import com.mysms.core.error.FieldError;
@@ -33,13 +33,14 @@ import java.util.Locale;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of master.currency (JAVA-CODING-RULES §4): one plain class, explicit methods, programmatic
- * transactions through the module's executor, audit + domain event in the same transaction as every change.
+ * Business service of master.currency (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
+ * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change.
  */
 @Service
-public class CurrencyService {
+public class CurrencyService extends AppTransactionManager {
 
     public static final String AGGREGATE = CurrencyEntity.TABLE;
     /** The contract's CurrencyUpdate fields, in apply order. */
@@ -49,7 +50,6 @@ public class CurrencyService {
 
     private final CurrencyRepository repository;
     private final CurrencyMapper mapper;
-    private final ModuleDatabase database;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
@@ -57,11 +57,13 @@ public class CurrencyService {
 
     public CurrencyService(CurrencyRepository repository, CurrencyMapper mapper,
                      @Qualifier(MasterDatabaseConfig.DATABASE) ModuleDatabase database,
+            @Qualifier(MasterDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
                      @Qualifier(MasterEventsConfig.OUTBOX) OutboxWriter outbox,
                      @Qualifier(MasterEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator, Clock clock) {
+
+        super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
-        this.database = database;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -69,19 +71,20 @@ public class CurrencyService {
     }
 
     public Currency getCurrency(UUID id) {
-        return database.tx().read(() -> mapper.toDto(load(id)));
+        return doInReadTransaction(() -> {
+            return mapper.toDto(load(id));
+        });
     }
 
-    public CurrencyList listCurrencies(Integer pageSize, String pageToken, String filter, String orderBy) {
-        SortSpec sort = SortSpec.parse(orderBy, CurrencyRepository.SORT_FIELDS, CurrencyRepository.DEFAULT_ORDER,
+    public Page<Currency> listCurrencies(Integer pageNumber, Integer pageSize, String cursor, String filter,
+            List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, CurrencyRepository.SORT_FIELDS, CurrencyRepository.DEFAULT_ORDER,
                 CurrencyRepository.ID_COLUMN);
         SqlFragment where = FilterParser.parse(filter, CurrencyRepository.FILTER_FIELDS);
-        PageRequest page = PageRequest.of(pageSize, pageToken, sort, filter, clock);
-        return database.tx().read(() -> {
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+        return doInReadTransaction(() -> {
             Page<CurrencyEntity> rows = repository.list(page, where);
-            return new CurrencyList(rows.items().stream().map(mapper::toDto).toList())
-                    .nextPageToken(rows.nextPageToken())
-                    .totalSize(repository.count(where));
+            return rows.map(mapper::toDto);
         });
     }
 
@@ -91,7 +94,7 @@ public class CurrencyService {
         CurrencyEntity entity = mapper.toEntity(request);
         entity.onCreatingData(Actor.current(), clock);
         normalize(entity);
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             assertValid(entity);
             assertUnique(entity);
             if (!validateOnly) {
@@ -112,7 +115,7 @@ public class CurrencyService {
             boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
         List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             CurrencyEntity entity = load(id);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -138,7 +141,7 @@ public class CurrencyService {
     /** Soft delete under If-Match. */
     public void deleteCurrency(UUID id, String ifMatch) {
         int expected = Etags.expectedVersion(ifMatch);
-        database.tx().write(() -> {
+        runInWriteTransaction(() -> {
             CurrencyEntity entity = load(id);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -149,7 +152,6 @@ public class CurrencyService {
             }
             audit.recordDelete(AGGREGATE, id);
             outbox.publish(AGGREGATE + MasterEvents.DELETED, AGGREGATE, id, MasterEvents.payload(id));
-            return null;
         });
     }
 

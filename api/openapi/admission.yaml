@@ -26,7 +26,7 @@ paths:
     get:
       operationId: admission.ListAdmissionCycles
       summary: List AdmissionCycles
-      description: List AdmissionCycles visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AdmissionCycles visible to the caller, page by page, with filtering and sorting.
       tags:
       - AdmissionCycle
       security:
@@ -36,10 +36,11 @@ paths:
         service: mysms.admission.v1.AdmissionCycleService
         method: ListAdmissionCycles
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -47,7 +48,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdmissionCycleList'
+                $ref: '#/components/schemas/PagingInfoAdmissionCycle'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -266,7 +267,7 @@ paths:
     get:
       operationId: admission.ListAdmissionCycleFees
       summary: List AdmissionCycleFees
-      description: List AdmissionCycleFees visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AdmissionCycleFees visible to the caller, page by page, with filtering and sorting.
       tags:
       - AdmissionCycle
       security:
@@ -283,10 +284,11 @@ paths:
           type: string
           format: uuid
         description: AdmissionCycle id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -294,7 +296,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdmissionCycleFeeList'
+                $ref: '#/components/schemas/PagingInfoAdmissionCycleFee'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -541,7 +543,7 @@ paths:
     get:
       operationId: admission.ListApplications
       summary: List Applications
-      description: List Applications visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Applications visible to the caller, page by page, with filtering and sorting.
       tags:
       - Application
       security:
@@ -551,10 +553,11 @@ paths:
         service: mysms.admission.v1.ApplicationService
         method: ListApplications
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -562,7 +565,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApplicationList'
+                $ref: '#/components/schemas/PagingInfoApplication'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -781,7 +784,7 @@ paths:
     get:
       operationId: admission.ListApplicationGuardians
       summary: List ApplicationGuardians
-      description: List ApplicationGuardians visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ApplicationGuardians visible to the caller, page by page, with filtering and sorting.
       tags:
       - Application
       security:
@@ -798,10 +801,11 @@ paths:
           type: string
           format: uuid
         description: Application id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -809,7 +813,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApplicationGuardianList'
+                $ref: '#/components/schemas/PagingInfoApplicationGuardian'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1056,7 +1060,7 @@ paths:
     get:
       operationId: admission.ListApplicationEmergencyContacts
       summary: List ApplicationEmergencyContacts
-      description: List ApplicationEmergencyContacts visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ApplicationEmergencyContacts visible to the caller, page by page, with filtering and sorting.
       tags:
       - Application
       security:
@@ -1073,10 +1077,11 @@ paths:
           type: string
           format: uuid
         description: Application id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1084,7 +1089,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApplicationEmergencyContactList'
+                $ref: '#/components/schemas/PagingInfoApplicationEmergencyContact'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2096,7 +2101,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./common.yaml#/components/schemas/OperationList
+                $ref: ./common.yaml#/components/schemas/PagingInfoOperation
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2120,19 +2125,9 @@ paths:
         description: Filter by kind.
         schema:
           type: string
-      - name: pageSize
-        in: query
-        required: false
-        description: Page size.
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Page token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/admission/operations/{operationId}:
     get:
       operationId: admission.GetOperation
@@ -2410,22 +2405,20 @@ components:
           type: string
           format: uuid
           description: Fee head charged on application.
-    AdmissionCycleList:
+    PagingInfoAdmissionCycle:
       type: object
+      description: A page of AdmissionCycle, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AdmissionCycle'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AdmissionCycleFee:
       type: object
       description: Course fee head charged when admission is confirmed in a cycle.
@@ -2486,22 +2479,20 @@ components:
           type: string
           format: uuid
           description: Fee head.
-    AdmissionCycleFeeList:
+    PagingInfoAdmissionCycleFee:
       type: object
+      description: A page of AdmissionCycleFee, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AdmissionCycleFee'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Application:
       type: object
       description: Admission application with applicant details.
@@ -3144,22 +3135,20 @@ components:
           type: string
           maxLength: 120
           description: Free-text payment status from the payment desk when it does not fit payment_status.
-    ApplicationList:
+    PagingInfoApplication:
       type: object
+      description: A page of Application, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Application'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ApplicationGuardian:
       type: object
       description: Parent / guardian details captured on an application.
@@ -3307,22 +3296,20 @@ components:
           type: string
           format: uuid
           description: Photo.
-    ApplicationGuardianList:
+    PagingInfoApplicationGuardian:
       type: object
+      description: A page of ApplicationGuardian, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ApplicationGuardian'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ApplicationEmergencyContact:
       type: object
       description: Emergency contact given on an application.
@@ -3393,22 +3380,20 @@ components:
           type: string
           maxLength: 60
           description: Relationship to the applicant.
-    ApplicationEmergencyContactList:
+    PagingInfoApplicationEmergencyContact:
       type: object
+      description: A page of ApplicationEmergencyContact, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ApplicationEmergencyContact'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ConfirmAdmissionCycleRequest:
       type: object
       properties:

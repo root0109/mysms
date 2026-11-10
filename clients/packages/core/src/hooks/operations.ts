@@ -28,8 +28,9 @@ export function useOperation(op: Pick<Operation, 'module' | 'operationId'> | nul
 
 export interface JobCentreParams {
   kind?: string;
-  pageSize?: number;
-  pageToken?: string;
+  page?: number;
+  size?: number;
+  cursor?: string;
 }
 
 /** The job centre: the caller's operations across all modules (platform index; may lag the owner). */

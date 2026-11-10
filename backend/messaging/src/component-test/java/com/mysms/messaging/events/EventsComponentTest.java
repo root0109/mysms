@@ -8,6 +8,7 @@ import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.outbox.OutboxWriter;
 import com.mysms.core.testkit.TestDatabase;
+import com.mysms.core.testkit.TestTransactions;
 import com.mysms.messaging.inprocess.InProcessEventBus;
 import java.time.Clock;
 import java.time.Duration;
@@ -20,12 +21,12 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.mock.env.MockEnvironment;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -95,7 +96,7 @@ class EventsComponentTest {
     private static void write(UUID tenant, String type, UUID aggregate) {
         as(tenant);
         OutboxWriter outbox = new OutboxWriter("coretest", db.jdbc(), JSON);
-        db.tx().write(() -> {
+        TestTransactions.of(db).write(() -> {
             outbox.publish(type, "coretest.item", aggregate, Map.of("id", aggregate.toString(),
                     "traceId", "4bf92f3577b34da6a3ce929d0e0e4736"));
             return null;
@@ -161,7 +162,7 @@ class EventsComponentTest {
         OutboxRelay relay = OutboxRelay.of(db, bus, JSON, later).orElseThrow();
         assertThat(relay.runOnce().pruned()).isPositive();
         as(TENANT);
-        assertThat(db.tx().read(() -> db.jdbc().sql("SELECT count(*) FROM coretest.outbox_event "
+        assertThat(TestTransactions.of(db).read(() -> db.jdbc().sql("SELECT count(*) FROM coretest.outbox_event "
                 + "WHERE tenant_id = :tenantId AND published_at IS NOT NULL").query(Integer.class).single())).isZero();
     }
 
@@ -181,8 +182,9 @@ class EventsComponentTest {
         assertThat(tenants).containsExactly(Optional.of(TENANT));
         assertThat(CallContextHolder.current()).as("the caller's context is restored").isEmpty();
         as(TENANT);
-        assertThat(db.tx().read(() -> db.jdbc().sql("SELECT count(*) FROM coretest.item WHERE tenant_id = :tenantId "
-                + "AND name = 'from-event'").query(Integer.class).single())).isEqualTo(1);
+        assertThat(TestTransactions.of(db).read(() -> db.jdbc()
+                .sql("SELECT count(*) FROM coretest.item WHERE tenant_id = :tenantId AND name = 'from-event'")
+                .query(Integer.class).single())).isEqualTo(1);
         CallContextHolder.clear();
 
         EventEnvelope failing = new EventEnvelope(UUID.randomUUID(), "other", "other.thing.deleted",
@@ -193,11 +195,12 @@ class EventsComponentTest {
             throw new IllegalStateException("not yet");
         })).isInstanceOf(IllegalStateException.class);
         as(OTHER);
-        assertThat(db.tx().read(() -> db.jdbc().sql("SELECT processing_error FROM coretest.inbox_event "
+        assertThat(TestTransactions.of(db).read(() -> db.jdbc().sql("SELECT processing_error FROM coretest.inbox_event "
                 + "WHERE tenant_id = :tenantId AND event_id = :id").param("id", failing.id()).query(String.class)
                 .single())).contains("not yet");
-        assertThat(db.tx().read(() -> db.jdbc().sql("SELECT count(*) FROM coretest.item WHERE tenant_id = :tenantId "
-                + "AND name = 'half'").query(Integer.class).single())).as("the failed work rolled back").isZero();
+        assertThat(TestTransactions.of(db).read(() -> db.jdbc()
+                .sql("SELECT count(*) FROM coretest.item WHERE tenant_id = :tenantId AND name = 'half'")
+                .query(Integer.class).single())).as("the failed work rolled back").isZero();
         CallContextHolder.clear();
         assertThat(inbox.deliver(failing, handler)).as("the retry runs").isEqualTo(InboxProcessor.Outcome.PROCESSED);
         assertThat(inbox.deliver(failing, handler)).isEqualTo(InboxProcessor.Outcome.DUPLICATE);
@@ -246,8 +249,8 @@ class EventsComponentTest {
 
     private static void insertRaw(UUID tenant, String type, String aggregateType, String payload) {
         as(tenant);
-        db.tx().write(() -> db.jdbc().sql("INSERT INTO coretest.outbox_event (tenant_id, event_type, aggregate_type, "
-                + "aggregate_id, payload) VALUES (:tenantId, :type, :aggregateType, :id, :payload)")
+        TestTransactions.of(db).write(() -> db.jdbc().sql("INSERT INTO coretest.outbox_event (tenant_id, event_type, "
+                + "aggregate_type, aggregate_id, payload) VALUES (:tenantId, :type, :aggregateType, :id, :payload)")
                 .param("type", type).param("aggregateType", aggregateType).param("id", UUID.randomUUID())
                 .param("payload", payload).update());
         CallContextHolder.clear();
@@ -269,7 +272,7 @@ class EventsComponentTest {
         assertThat(EventEnvelope.fromJson(JSON, text.toJson(JSON))).as("a text payload travels as text")
                 .isEqualTo(text);
         as(TENANT);
-        assertThat(db.tx().read(() -> db.jdbc().sql("SELECT publish_error FROM coretest.outbox_event "
+        assertThat(TestTransactions.of(db).read(() -> db.jdbc().sql("SELECT publish_error FROM coretest.outbox_event "
                 + "WHERE tenant_id = :tenantId AND event_type = 'other.item.deleted'").query(String.class).single()))
                 .contains("not an event of module coretest");
         CallContextHolder.clear();
@@ -334,7 +337,7 @@ class EventsComponentTest {
         assertThat(OutboxRelay.of(db, bus, JSON, later).orElseThrow().runOnce().inboxPruned())
                 .isGreaterThanOrEqualTo(2);
         as(TENANT);
-        assertThat(db.tx().read(() -> db.jdbc().sql("SELECT count(*) FROM coretest.inbox_event "
+        assertThat(TestTransactions.of(db).read(() -> db.jdbc().sql("SELECT count(*) FROM coretest.inbox_event "
                 + "WHERE tenant_id = :tenantId AND event_id = :id").param("id", id).query(Integer.class).single()))
                 .isZero();
         CallContextHolder.clear();
@@ -395,7 +398,7 @@ class EventsComponentTest {
         }
         EventRuntime.Health health = failing.health();
         assertThat(health.up()).isFalse();
-        assertThat(health.details()).containsKey("relay.coretest").containsEntry("bus", "test-bus");
+        assertThat(health.details()).containsKey("relay.coretest").containsEntry("bus", "in-process");
         assertThat(new EventsHealthIndicator(failing).health().getStatus().getCode()).isEqualTo("DOWN");
         assertThat(new EventsHealthIndicator(EventRuntime.off()).health().getStatus().getCode()).isEqualTo("UP");
     }

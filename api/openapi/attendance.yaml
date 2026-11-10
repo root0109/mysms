@@ -30,7 +30,7 @@ paths:
     get:
       operationId: attendance.ListAttendanceTypes
       summary: List AttendanceTypes
-      description: List AttendanceTypes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AttendanceTypes visible to the caller, page by page, with filtering and sorting.
       tags:
       - AttendanceType
       security:
@@ -40,10 +40,11 @@ paths:
         service: mysms.attendance.v1.AttendanceTypeService
         method: ListAttendanceTypes
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -51,7 +52,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AttendanceTypeList'
+                $ref: '#/components/schemas/PagingInfoAttendanceType'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -270,7 +271,7 @@ paths:
     get:
       operationId: attendance.ListAbsenceReasons
       summary: List AbsenceReasons
-      description: List AbsenceReasons visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AbsenceReasons visible to the caller, page by page, with filtering and sorting.
       tags:
       - AbsenceReason
       security:
@@ -280,10 +281,11 @@ paths:
         service: mysms.attendance.v1.AbsenceReasonService
         method: ListAbsenceReasons
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -291,7 +293,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AbsenceReasonList'
+                $ref: '#/components/schemas/PagingInfoAbsenceReason'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -510,7 +512,7 @@ paths:
     get:
       operationId: attendance.ListAttendanceRegisters
       summary: List AttendanceRegisters
-      description: List AttendanceRegisters visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AttendanceRegisters visible to the caller, page by page, with filtering and sorting.
       tags:
       - AttendanceRegister
       security:
@@ -520,10 +522,11 @@ paths:
         service: mysms.attendance.v1.AttendanceRegisterService
         method: ListAttendanceRegisters
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -531,7 +534,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AttendanceRegisterList'
+                $ref: '#/components/schemas/PagingInfoAttendanceRegister'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -750,7 +753,7 @@ paths:
     get:
       operationId: attendance.ListAttendanceSheets
       summary: List AttendanceSheets
-      description: List AttendanceSheets visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AttendanceSheets visible to the caller, page by page, with filtering and sorting.
       tags:
       - AttendanceSheet
       security:
@@ -760,10 +763,11 @@ paths:
         service: mysms.attendance.v1.AttendanceSheetService
         method: ListAttendanceSheets
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -771,7 +775,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AttendanceSheetList'
+                $ref: '#/components/schemas/PagingInfoAttendanceSheet'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -990,7 +994,7 @@ paths:
     get:
       operationId: attendance.ListAttendanceRecords
       summary: List AttendanceRecords
-      description: List AttendanceRecords visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AttendanceRecords visible to the caller, page by page, with filtering and sorting.
       tags:
       - AttendanceSheet
       security:
@@ -1007,10 +1011,11 @@ paths:
           type: string
           format: uuid
         description: AttendanceSheet id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1018,7 +1023,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AttendanceRecordList'
+                $ref: '#/components/schemas/PagingInfoAttendanceRecord'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1312,6 +1317,8 @@ paths:
           $ref: ./common.yaml#/components/responses/404
         '409':
           $ref: ./common.yaml#/components/responses/409
+        '412':
+          $ref: ./common.yaml#/components/responses/412
         '422':
           $ref: ./common.yaml#/components/responses/422
         '429':
@@ -1368,6 +1375,8 @@ paths:
           $ref: ./common.yaml#/components/responses/429
         '500':
           $ref: ./common.yaml#/components/responses/500
+        '503':
+          $ref: ./common.yaml#/components/responses/503
       parameters:
       - $ref: ./common.yaml#/components/parameters/IdempotencyKey
       requestBody:
@@ -1395,7 +1404,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./common.yaml#/components/schemas/AttendanceSummaryList
+                $ref: ./common.yaml#/components/schemas/PagingInfoAttendanceSummary
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1459,24 +1468,14 @@ paths:
           - class_section
           - date
           x-extensible-enum: true
-      - name: pageSize
-        in: query
-        required: false
-        description: Maximum items to return (1-500, default 50).
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Cursor from next_page_token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/attendance/staff-attendance-days:
     get:
       operationId: attendance.ListStaffAttendances
       summary: List StaffAttendances
-      description: List StaffAttendances visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StaffAttendances visible to the caller, page by page, with filtering and sorting.
       tags:
       - StaffAttendance
       security:
@@ -1486,10 +1485,11 @@ paths:
         service: mysms.attendance.v1.StaffAttendanceService
         method: ListStaffAttendances
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1497,7 +1497,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StaffAttendanceList'
+                $ref: '#/components/schemas/PagingInfoStaffAttendance'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1789,22 +1789,20 @@ components:
           type: string
           maxLength: 300
           description: Free-text remark.
-    StaffAttendanceList:
+    PagingInfoStaffAttendance:
       type: object
+      description: A page of StaffAttendance, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StaffAttendance'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AttendanceType:
       type: object
       description: Configurable attendance mark (Present, Absent, Late, Excused, Medical...).
@@ -1907,22 +1905,20 @@ components:
         isActive:
           type: boolean
           description: Whether usable.
-    AttendanceTypeList:
+    PagingInfoAttendanceType:
       type: object
+      description: A page of AttendanceType, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AttendanceType'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AbsenceReason:
       type: object
       description: Reason category for an absence or staff leave.
@@ -1992,22 +1988,20 @@ components:
         isActive:
           type: boolean
           description: Whether usable.
-    AbsenceReasonList:
+    PagingInfoAbsenceReason:
       type: object
+      description: A page of AbsenceReason, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AbsenceReason'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AttendanceRegister:
       type: object
       description: 'Register in which attendance is taken: a class section (K-12), a course batch, or a subject.'
@@ -2130,22 +2124,20 @@ components:
         isActive:
           type: boolean
           description: Whether in use.
-    AttendanceRegisterList:
+    PagingInfoAttendanceRegister:
       type: object
+      description: A page of AttendanceRegister, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AttendanceRegister'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AttendanceSheet:
       type: object
       description: 'One attendance-taking occasion: a register on a date for a timetable session or part of day.'
@@ -2260,22 +2252,20 @@ components:
           type: string
           format: uuid
           description: Staff member taking attendance.
-    AttendanceSheetList:
+    PagingInfoAttendanceSheet:
       type: object
+      description: A page of AttendanceSheet, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AttendanceSheet'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AttendanceRecord:
       type: object
       description: Attendance of one student on one sheet.
@@ -2358,6 +2348,7 @@ components:
       - status
     AttendanceRecordList:
       type: object
+      description: The AttendanceRecord items an operation wrote, all in one response.
       required:
       - items
       properties:
@@ -2365,13 +2356,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AttendanceRecord'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+    PagingInfoAttendanceRecord:
+      type: object
+      description: A page of AttendanceRecord, with the links to the other pages.
+      required:
+      - data
+      - paging
+      properties:
+        data:
+          type: array
+          description: Data retrieved in the paginated request.
+          items:
+            $ref: '#/components/schemas/AttendanceRecord'
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StartAttendanceSheetRequest:
       type: object
       properties:
@@ -2410,6 +2408,9 @@ components:
         complete:
           type: boolean
           description: Also complete the sheet.
+        etag:
+          type: string
+          description: Concurrency token of the sheet from the last read (optional but recommended).
       required:
       - marks
     TakeAttendanceForSessionRequest:

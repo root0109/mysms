@@ -28,71 +28,150 @@ class PagingTest {
     record Row(UUID id, String name, long sortOrder) {
     }
 
-    private static SortSpec sort(String orderBy) {
-        return SortSpec.parse(orderBy, FIELDS, "name", "c.id");
+    private static SortSpec sort(String... sort) {
+        return SortSpec.parse(List.of(sort), FIELDS, "name", "c.id");
     }
 
     @Test
-    void parsesOrderByAgainstTheAllowlist() {
-        assertThat(sort(null).canonical()).isEqualTo("name");
-        assertThat(sort("sortOrder desc, name").orderByClause())
+    void parsesSortAgainstTheAllowlist() {
+        assertThat(sort().canonical()).isEqualTo("name,asc");
+        assertThat(SortSpec.parse(null, FIELDS, "sortOrder desc", "c.id").canonical()).isEqualTo("sortOrder,desc");
+        // one value is split at its commas by Spring, several are not: both read the same
+        assertThat(sort("sortOrder", "desc", "name").orderByClause())
                 .isEqualTo("COALESCE(c.sort_order, 2147483647) DESC, c.name ASC, c.id ASC");
-        assertThat(sort("name asc").canonical()).isEqualTo("name");
+        assertThat(sort("sortOrder,desc", "name,asc").canonical()).isEqualTo("sortOrder,desc;name,asc");
+        assertThat(sort("sortOrder,desc", "name,desc").orderByClause()).as("a descending order breaks ties descending")
+                .isEqualTo("COALESCE(c.sort_order, 2147483647) DESC, c.name DESC, c.id DESC");
+        assertThat(sort("sortOrder,DESC,name").canonical()).isEqualTo("sortOrder,desc;name,asc");
         assertThatThrownBy(() -> sort("secret")).isInstanceOf(InvalidArgumentException.class)
                 .hasMessageContaining("not sortable");
-        assertThatThrownBy(() -> sort("name sideways")).isInstanceOf(InvalidArgumentException.class);
-        assertThatThrownBy(() -> sort("name,name desc")).isInstanceOf(InvalidArgumentException.class);
-        assertThatThrownBy(() -> sort("name,")).isInstanceOf(InvalidArgumentException.class);
+        assertThatThrownBy(() -> sort("name", "sideways")).isInstanceOf(InvalidArgumentException.class);
+        assertThatThrownBy(() -> sort("name,asc,desc")).isInstanceOf(InvalidArgumentException.class);
+        assertThatThrownBy(() -> sort("desc")).isInstanceOf(InvalidArgumentException.class);
+        assertThatThrownBy(() -> sort("name", "name,desc")).isInstanceOf(InvalidArgumentException.class)
+                .hasMessageContaining("twice");
     }
 
     @Test
-    void validatesPageSize() {
-        assertThat(PageRequest.of(null, null, sort(null), "", CLOCK).pageSize()).isEqualTo(50);
-        assertThat(PageRequest.of(500, null, sort(null), "", CLOCK).limit()).isEqualTo(501);
-        assertThatThrownBy(() -> PageRequest.of(0, null, sort(null), "", CLOCK)).isInstanceOf(InvalidArgumentException.class);
-        assertThatThrownBy(() -> PageRequest.of(501, null, sort(null), "", CLOCK)).isInstanceOf(InvalidArgumentException.class);
-        assertThat(PageRequest.of(10, " ", sort(null), "", CLOCK).keysetPredicate()).isSameAs(SqlFragment.TRUE);
+    void validatesPageAndSize() {
+        PageRequest defaults = PageRequest.of(null, null, null, sort(), "", CLOCK);
+        assertThat(defaults.page()).isEqualTo(1);
+        assertThat(defaults.size()).isEqualTo(50);
+        assertThat(defaults.limitParams()).containsEntry("limit", 51).containsEntry("offset", 0L);
+        assertThat(defaults.limitClause()).isEqualTo(" LIMIT :limit OFFSET :offset");
+        assertThat(PageRequest.of(3, 500, " ", sort(), "", CLOCK).limitParams())
+                .containsEntry("limit", 501).containsEntry("offset", 1000L);
+        assertThat(PageRequest.of(10, 10, null, sort(), "", CLOCK).keysetPredicate()).isSameAs(SqlFragment.TRUE);
+        assertThatThrownBy(() -> PageRequest.of(0, null, null, sort(), "", CLOCK))
+                .isInstanceOf(InvalidArgumentException.class);
+        assertThatThrownBy(() -> PageRequest.of(1, 0, null, sort(), "", CLOCK))
+                .isInstanceOf(InvalidArgumentException.class);
+        assertThatThrownBy(() -> PageRequest.of(1, 501, null, sort(), "", CLOCK))
+                .isInstanceOf(InvalidArgumentException.class);
     }
 
     @Test
-    void issuesAndFollowsKeysetTokens() {
-        SortSpec sort = sort("sortOrder desc,name");
-        PageRequest first = PageRequest.of(2, null, sort, "isActive = true", CLOCK);
+    void capsOffsetPagesAndLeavesDeeperPagesToCursors() {
+        assertThat(PageRequest.of(201, 50, null, sort(), "", CLOCK).limitParams()).containsEntry("offset", 10_000L);
+        assertThatThrownBy(() -> PageRequest.of(202, 50, null, sort(), "", CLOCK))
+                .isInstanceOf(InvalidArgumentException.class).hasMessageContaining("follow the next links");
+        assertThatThrownBy(() -> PageRequest.of(Integer.MAX_VALUE, 500, null, sort(), "", CLOCK))
+                .isInstanceOf(InvalidArgumentException.class);
+        String deep = PageCursor.encode(5000, sort(), "", List.of("M"), ID, CLOCK);
+        PageRequest followed = PageRequest.of(5000, 50, deep, sort(), "", CLOCK);
+        assertThat(followed.limitParams()).containsEntry("offset", 0L);
+        assertThat(followed.keysetPredicate().params()).containsEntry("ks0", "M");
+    }
+
+    @Test
+    void issuesAndFollowsKeysetCursors() {
+        SortSpec sort = sort("sortOrder,desc", "name");
+        PageRequest first = PageRequest.of(null, 2, null, sort, "isActive = true", CLOCK);
         List<Row> fetched = List.of(new Row(ID, "A", 9), new Row(UUID.randomUUID(), "B", 9), new Row(UUID.randomUUID(), "C", 1));
         Page<Row> page = first.toPage(fetched, r -> List.of(r.sortOrder(), r.name()), Row::id);
         assertThat(page.items()).hasSize(2);
-        assertThat(page.nextPageToken()).isNotEmpty();
+        assertThat(page.page()).isEqualTo(1);
+        assertThat(page.hasNext()).isTrue();
 
-        PageRequest second = PageRequest.of(2, page.nextPageToken(), sort, "isActive = true", CLOCK);
+        PageRequest second = PageRequest.of(2, 2, page.nextCursor(), sort, "isActive = true", CLOCK);
         SqlFragment keyset = second.keysetPredicate();
         assertThat(keyset.sql()).isEqualTo("(COALESCE(c.sort_order, 2147483647) < :ks0) OR "
                 + "(COALESCE(c.sort_order, 2147483647) = :ks0 AND c.name > :ks1) OR "
                 + "(COALESCE(c.sort_order, 2147483647) = :ks0 AND c.name = :ks1 AND c.id > :ksid)");
         assertThat(keyset.params()).containsEntry("ks0", 9L).containsEntry("ks1", "B").containsKey("ksid");
+        assertThat(second.limitParams()).containsEntry("offset", 0L);
 
         Page<Row> last = second.toPage(List.of(new Row(ID, "C", 1)), r -> List.of(r.sortOrder(), r.name()), Row::id);
-        assertThat(last.nextPageToken()).isEmpty();
+        assertThat(last.hasNext()).isFalse();
+        assertThat(last.nextCursor()).isEmpty();
         assertThat(last.map(Row::name).items()).containsExactly("C");
+        assertThat(last.map(Row::name).page()).isEqualTo(2);
     }
 
     @Test
-    void rejectsTokensForAnotherQueryExpiredOrForged() {
+    void aUniformOrderContinuesWithOneRowComparison() {
+        String ascending = PageCursor.encode(2, sort("name"), "", List.of("B"), ID, CLOCK);
+        assertThat(PageRequest.of(2, 10, ascending, sort("name"), "", CLOCK).keysetPredicate().sql())
+                .isEqualTo("(c.name, c.id) > (:ks0, :ksid)");
+        SortSpec descending = sort("sortOrder,desc", "name,desc");
+        String cursor = PageCursor.encode(2, descending, "", List.of(3L, "B"), ID, CLOCK);
+        SqlFragment after = PageRequest.of(2, 10, cursor, descending, "", CLOCK).keysetPredicate();
+        assertThat(after.sql()).isEqualTo("(COALESCE(c.sort_order, 2147483647), c.name, c.id) < (:ks0, :ks1, :ksid)");
+        assertThat(after.params()).containsEntry("ks0", 3L).containsEntry("ks1", "B").containsEntry("ksid", ID);
+    }
+
+    @Test
+    void rejectsCursorsForAnotherQueryPageExpiredOrMalformed() {
         SortSpec sort = sort("name");
-        String token = PageToken.encode(sort, "", List.of("A"), ID, CLOCK);
-        assertThatThrownBy(() -> PageRequest.of(10, token, sort("sortOrder"), "", CLOCK))
+        String cursor = PageCursor.encode(2, sort, "", List.of("A"), ID, CLOCK);
+        assertThat(PageRequest.of(2, 10, cursor, sort, "", CLOCK).page()).isEqualTo(2);
+        assertThatThrownBy(() -> PageRequest.of(2, 10, cursor, sort("sortOrder"), "", CLOCK))
                 .isInstanceOf(InvalidArgumentException.class).hasMessageContaining("different");
-        assertThatThrownBy(() -> PageRequest.of(10, token, sort, "name = \"x\"", CLOCK))
+        assertThatThrownBy(() -> PageRequest.of(2, 10, cursor, sort("name,desc"), "", CLOCK))
                 .isInstanceOf(InvalidArgumentException.class).hasMessageContaining("different");
+        assertThatThrownBy(() -> PageRequest.of(2, 10, cursor, sort, "name = \"x\"", CLOCK))
+                .isInstanceOf(InvalidArgumentException.class).hasMessageContaining("different");
+        assertThatThrownBy(() -> PageRequest.of(3, 10, cursor, sort, "", CLOCK))
+                .isInstanceOf(InvalidArgumentException.class).hasMessageContaining("page 2");
         Clock later = Clock.offset(CLOCK, Duration.ofHours(25));
-        assertThatThrownBy(() -> PageRequest.of(10, token, sort, "", later))
+        assertThatThrownBy(() -> PageRequest.of(2, 10, cursor, sort, "", later))
                 .isInstanceOf(InvalidArgumentException.class).hasMessageContaining("expired");
-        assertThatThrownBy(() -> PageRequest.of(10, "not-a-token", sort, "", CLOCK))
+        assertThatThrownBy(() -> PageRequest.of(2, 10, "not-a-cursor", sort, "", CLOCK))
                 .isInstanceOf(InvalidArgumentException.class).hasMessageContaining("not valid");
-        String forged = Base64.getUrlEncoder().withoutPadding().encodeToString("{\"v\":2}".getBytes());
-        assertThatThrownBy(() -> PageRequest.of(10, forged, sort, "", CLOCK)).isInstanceOf(InvalidArgumentException.class);
-        String wrongArity = PageToken.encode(sort("sortOrder,name"), "", List.of(1L, "A"), ID, CLOCK);
-        assertThatThrownBy(() -> PageToken.decode(wrongArity, sort("name"), "", CLOCK))
+        String partial = Base64.getUrlEncoder().withoutPadding().encodeToString("{\"v\":2}".getBytes());
+        assertThatThrownBy(() -> PageRequest.of(2, 10, partial, sort, "", CLOCK)).isInstanceOf(InvalidArgumentException.class);
+        String version1 = Base64.getUrlEncoder().withoutPadding().encodeToString(
+                "{\"v\":1,\"p\":2,\"s\":\"name,asc\",\"t\":0,\"k\":[\"A\"],\"i\":\"x\"}".getBytes());
+        assertThatThrownBy(() -> PageRequest.of(2, 10, version1, sort, "", CLOCK))
+                .isInstanceOf(InvalidArgumentException.class).hasMessageContaining("not valid");
+        String wrongArity = PageCursor.encode(2, sort("sortOrder,name"), "", List.of(1L, "A"), ID, CLOCK);
+        assertThatThrownBy(() -> PageCursor.decode(wrongArity, 2, sort("name"), "", CLOCK))
                 .isInstanceOf(InvalidArgumentException.class);
+    }
+
+    @Test
+    void pagingInfoLinksKeepTheRequestAndReplaceOnlyPageSizeAndCursor() {
+        Page<String> middle = new Page<>(List.of("a", "b"), 3, 2, "Q1w-_");
+        PagingInfo<String> info = PagingUtil.pagingInfo(middle, "/v1/hr/staff",
+                "size=2&filter=name%20%3D%20%22A%26B%22&page=3&sort=name,desc&cursor=old&fields=id");
+        assertThat(info.data()).containsExactly("a", "b");
+        assertThat(info.paging()).isEqualTo(new NavigationInfo(3, 2,
+                "/v1/hr/staff?page=1&size=2&filter=name%20%3D%20%22A%26B%22&sort=name,desc&fields=id",
+                "/v1/hr/staff?page=2&size=2&filter=name%20%3D%20%22A%26B%22&sort=name,desc&fields=id",
+                "/v1/hr/staff?page=4&size=2&filter=name%20%3D%20%22A%26B%22&sort=name,desc&fields=id&cursor=Q1w-_"));
+
+        PagingInfo<String> only = PagingUtil.pagingInfo(new Page<>(List.of("a"), 1, 50, ""), "/v1/x", null);
+        assertThat(only.paging()).isEqualTo(new NavigationInfo(1, 1, "/v1/x?page=1&size=50", null, null));
+
+        // a page reached through cursors beyond the OFFSET cap has no previous link
+        PagingInfo<String> deep = PagingUtil.pagingInfo(new Page<>(List.of("a"), 300, 50, ""), "/v1/x", "%zz=1");
+        assertThat(deep.paging().previous()).isNull();
+        assertThat(deep.paging().first()).isEqualTo("/v1/x?page=1&size=50&%zz=1");
+
+        assertThat(PagingUtil.cursorOf(info.paging().next())).contains("Q1w-_");
+        assertThat(PagingUtil.cursorOf(info.paging().previous())).isEmpty();
+        assertThat(PagingUtil.cursorOf(null)).isEmpty();
+        assertThat(PagingUtil.cursorOf("/v1/x")).isEmpty();
     }
 
     @Test

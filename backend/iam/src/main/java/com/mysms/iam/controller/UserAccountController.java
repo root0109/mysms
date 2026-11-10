@@ -1,58 +1,55 @@
 package com.mysms.iam.controller;
 
-import com.mysms.contracts.iam.api.UserAccountApi;
-import com.mysms.contracts.iam.model.AcceptTermsRequest;
-import com.mysms.contracts.iam.model.ActivateUserRequest;
-import com.mysms.contracts.iam.model.ApiTokenCreated;
-import com.mysms.contracts.iam.model.AuthTokenList;
-import com.mysms.contracts.iam.model.Availability;
-import com.mysms.contracts.iam.model.ChangePasswordRequest;
-import com.mysms.contracts.iam.model.ConfirmVerificationRequest;
-import com.mysms.contracts.iam.model.CreateApiTokenRequest;
-import com.mysms.contracts.iam.model.DeactivateUserRequest;
-import com.mysms.contracts.iam.model.EffectiveSetting;
-import com.mysms.contracts.iam.model.EffectiveSettingList;
-import com.mysms.contracts.iam.model.ForcePasswordResetRequest;
-import com.mysms.contracts.iam.model.ImpersonationToken;
-import com.mysms.contracts.iam.model.ImportUsersRequest;
-import com.mysms.contracts.iam.model.LoginRequest;
-import com.mysms.contracts.iam.model.LoginResult;
-import com.mysms.contracts.iam.model.LogoutRequest;
-import com.mysms.contracts.iam.model.Me;
-import com.mysms.contracts.iam.model.Operation;
-import com.mysms.contracts.iam.model.RefreshTokenRequest;
-import com.mysms.contracts.iam.model.RequestPasswordResetRequest;
-import com.mysms.contracts.iam.model.RequestVerificationRequest;
-import com.mysms.contracts.iam.model.ResetPasswordRequest;
-import com.mysms.contracts.iam.model.SetMySettingRequest;
-import com.mysms.contracts.iam.model.SetUserCredentialsRequest;
-import com.mysms.contracts.iam.model.SetUserRolesRequest;
-import com.mysms.contracts.iam.model.SignUpRequest;
-import com.mysms.contracts.iam.model.StartImpersonationRequest;
-import com.mysms.contracts.iam.model.SwitchRoleRequest;
-import com.mysms.contracts.iam.model.SwitchRoleResult;
-import com.mysms.contracts.iam.model.TokenPair;
-import com.mysms.contracts.iam.model.UnlockUserRequest;
-import com.mysms.contracts.iam.model.UserAccount;
-import com.mysms.contracts.iam.model.UserAccountList;
-import com.mysms.contracts.iam.model.UserAccountUpdate;
-import com.mysms.contracts.iam.model.UserDepartmentAccess;
-import com.mysms.contracts.iam.model.UserDepartmentAccessList;
-import com.mysms.contracts.iam.model.UserDepartmentAccessUpdate;
-import com.mysms.contracts.iam.model.UserDevice;
-import com.mysms.contracts.iam.model.UserDeviceList;
-import com.mysms.contracts.iam.model.UserDeviceUpdate;
-import com.mysms.contracts.iam.model.UserPermission;
-import com.mysms.contracts.iam.model.UserPermissionList;
-import com.mysms.contracts.iam.model.UserPermissionUpdate;
-import com.mysms.contracts.iam.model.UserPreference;
-import com.mysms.contracts.iam.model.UserPreferenceList;
-import com.mysms.contracts.iam.model.UserPreferenceUpdate;
-import com.mysms.contracts.iam.model.UserRole;
-import com.mysms.contracts.iam.model.UserRoleList;
-import com.mysms.contracts.iam.model.UserRoleUpdate;
-import com.mysms.contracts.iam.model.UserSession;
-import com.mysms.contracts.iam.model.UserSessionList;
+import com.mysms.iam.api.model.AuthToken;
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.iam.api.UserAccountApi;
+import com.mysms.iam.api.model.AcceptTermsRequest;
+import com.mysms.iam.api.model.ActivateUserRequest;
+import com.mysms.iam.api.model.ApiTokenCreated;
+import com.mysms.iam.api.model.Availability;
+import com.mysms.iam.api.model.ChangePasswordRequest;
+import com.mysms.iam.api.model.ConfirmVerificationRequest;
+import com.mysms.iam.api.model.CreateApiTokenRequest;
+import com.mysms.iam.api.model.DeactivateUserRequest;
+import com.mysms.iam.api.model.EffectiveSetting;
+import com.mysms.iam.api.model.EffectiveSettingList;
+import com.mysms.iam.api.model.ForcePasswordResetRequest;
+import com.mysms.iam.api.model.ImpersonationToken;
+import com.mysms.iam.api.model.ImportUsersRequest;
+import com.mysms.iam.api.model.LoginRequest;
+import com.mysms.iam.api.model.LoginResult;
+import com.mysms.iam.api.model.LogoutRequest;
+import com.mysms.iam.api.model.Me;
+import com.mysms.iam.api.model.Operation;
+import com.mysms.iam.api.model.RefreshTokenRequest;
+import com.mysms.iam.api.model.RequestPasswordResetRequest;
+import com.mysms.iam.api.model.RequestVerificationRequest;
+import com.mysms.iam.api.model.ResetPasswordRequest;
+import com.mysms.iam.api.model.SetMySettingRequest;
+import com.mysms.iam.api.model.SetUserCredentialsRequest;
+import com.mysms.iam.api.model.SetUserRolesRequest;
+import com.mysms.iam.api.model.SignUpRequest;
+import com.mysms.iam.api.model.StartImpersonationRequest;
+import com.mysms.iam.api.model.SwitchRoleRequest;
+import com.mysms.iam.api.model.SwitchRoleResult;
+import com.mysms.iam.api.model.TokenPair;
+import com.mysms.iam.api.model.UnlockUserRequest;
+import com.mysms.iam.api.model.UserAccount;
+import com.mysms.iam.api.model.UserAccountUpdate;
+import com.mysms.iam.api.model.UserDepartmentAccess;
+import com.mysms.iam.api.model.UserDepartmentAccessUpdate;
+import com.mysms.iam.api.model.UserDevice;
+import com.mysms.iam.api.model.UserDeviceUpdate;
+import com.mysms.iam.api.model.UserPermission;
+import com.mysms.iam.api.model.UserPermissionUpdate;
+import com.mysms.iam.api.model.UserPreference;
+import com.mysms.iam.api.model.UserPreferenceUpdate;
+import com.mysms.iam.api.model.UserRole;
+import com.mysms.iam.api.model.UserRoleList;
+import com.mysms.iam.api.model.UserRoleUpdate;
+import com.mysms.iam.api.model.UserSession;
 import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.ReadMask;
@@ -61,12 +58,6 @@ import com.mysms.iam.business.MeService;
 import com.mysms.iam.business.MySettingsService;
 import com.mysms.iam.business.SignInService;
 import com.mysms.iam.business.UserAccountService;
-import com.mysms.iam.business.UserDepartmentAccessService;
-import com.mysms.iam.business.UserDeviceService;
-import com.mysms.iam.business.UserPermissionService;
-import com.mysms.iam.business.UserPreferenceService;
-import com.mysms.iam.business.UserRoleService;
-import com.mysms.iam.business.UserSessionService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.UUID;
@@ -79,9 +70,9 @@ import org.springframework.web.bind.annotation.RestController;
  * payloads
  * cannot drift from api/openapi/iam.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
  * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED. Standard operations follow the generated pattern (tools/backend/crud, merged by
- * merge_controllers.py); login, refreshToken, logout, getMe, listMySettings, setMySetting, resetMySetting,
- * changePassword, setUserCredentials, acceptTerms are hand-written.
+ * answer 501 NOT_IMPLEMENTED. Standard operations follow the module's resource pattern; login, refreshToken, logout,
+ * getMe, listMySettings, setMySetting, resetMySetting, changePassword, setUserCredentials and acceptTerms carry their
+ * own rules.
  */
 @RestController
 public class UserAccountController implements UserAccountApi {
@@ -93,19 +84,14 @@ public class UserAccountController implements UserAccountApi {
     private final DtoValidator validator;
     private final HttpServletRequest request;
     private final UserAccountService userAccountService;
-    private final UserDepartmentAccessService userDepartmentAccessService;
-    private final UserDeviceService userDeviceService;
-    private final UserPermissionService userPermissionService;
-    private final UserPreferenceService userPreferenceService;
-    private final UserRoleService userRoleService;
-    private final UserSessionService userSessionService;
 
-    public UserAccountController(SignInService signIn, AccountSecurityService accountSecurity, MeService me,
-            MySettingsService mySettings, DtoValidator validator, HttpServletRequest request,
-                    UserAccountService userAccountService,
-            UserDepartmentAccessService userDepartmentAccessService, UserDeviceService userDeviceService,
-            UserPermissionService userPermissionService, UserPreferenceService userPreferenceService,
-            UserRoleService userRoleService, UserSessionService userSessionService) {
+    public UserAccountController(SignInService signIn,
+            AccountSecurityService accountSecurity,
+            MeService me,
+            MySettingsService mySettings,
+            DtoValidator validator,
+            HttpServletRequest request,
+            UserAccountService userAccountService) {
         this.signIn = signIn;
         this.accountSecurity = accountSecurity;
         this.me = me;
@@ -113,12 +99,6 @@ public class UserAccountController implements UserAccountApi {
         this.validator = validator;
         this.request = request;
         this.userAccountService = userAccountService;
-        this.userDepartmentAccessService = userDepartmentAccessService;
-        this.userDeviceService = userDeviceService;
-        this.userPermissionService = userPermissionService;
-        this.userPreferenceService = userPreferenceService;
-        this.userRoleService = userRoleService;
-        this.userSessionService = userSessionService;
     }
 
     @Override
@@ -176,7 +156,7 @@ public class UserAccountController implements UserAccountApi {
             UserDepartmentAccess userDepartmentAccess, UUID idempotencyKey, Boolean validateOnly) {
         boolean dryRun = Boolean.TRUE.equals(validateOnly);
         UserDepartmentAccess created =
-                userDepartmentAccessService.createUserDepartmentAccess(userAccountId, userDepartmentAccess, dryRun);
+                userAccountService.createUserDepartmentAccess(userAccountId, userDepartmentAccess, dryRun);
         if (dryRun) {
             return ResponseEntity.ok(created);
         }
@@ -188,7 +168,7 @@ public class UserAccountController implements UserAccountApi {
     public ResponseEntity<UserDevice> createUserDevice(UUID userAccountId, UserDevice userDevice,
             UUID idempotencyKey, Boolean validateOnly) {
         boolean dryRun = Boolean.TRUE.equals(validateOnly);
-        UserDevice created = userDeviceService.createUserDevice(userAccountId, userDevice, dryRun);
+        UserDevice created = userAccountService.createUserDevice(userAccountId, userDevice, dryRun);
         if (dryRun) {
             return ResponseEntity.ok(created);
         }
@@ -200,7 +180,7 @@ public class UserAccountController implements UserAccountApi {
     public ResponseEntity<UserPermission> createUserPermission(UUID userAccountId,
             UserPermission userPermission, UUID idempotencyKey, Boolean validateOnly) {
         boolean dryRun = Boolean.TRUE.equals(validateOnly);
-        UserPermission created = userPermissionService.createUserPermission(userAccountId, userPermission, dryRun);
+        UserPermission created = userAccountService.createUserPermission(userAccountId, userPermission, dryRun);
         if (dryRun) {
             return ResponseEntity.ok(created);
         }
@@ -212,7 +192,7 @@ public class UserAccountController implements UserAccountApi {
     public ResponseEntity<UserPreference> createUserPreference(UUID userAccountId,
             UserPreference userPreference, UUID idempotencyKey, Boolean validateOnly) {
         boolean dryRun = Boolean.TRUE.equals(validateOnly);
-        UserPreference created = userPreferenceService.createUserPreference(userAccountId, userPreference, dryRun);
+        UserPreference created = userAccountService.createUserPreference(userAccountId, userPreference, dryRun);
         if (dryRun) {
             return ResponseEntity.ok(created);
         }
@@ -224,7 +204,7 @@ public class UserAccountController implements UserAccountApi {
     public ResponseEntity<UserRole> createUserRole(UUID userAccountId, UserRole userRole,
             UUID idempotencyKey, Boolean validateOnly) {
         boolean dryRun = Boolean.TRUE.equals(validateOnly);
-        UserRole created = userRoleService.createUserRole(userAccountId, userRole, dryRun);
+        UserRole created = userAccountService.createUserRole(userAccountId, userRole, dryRun);
         if (dryRun) {
             return ResponseEntity.ok(created);
         }
@@ -253,40 +233,40 @@ public class UserAccountController implements UserAccountApi {
     @Override
     public ResponseEntity<Void> deleteUserDepartmentAccess(UUID userAccountId,
             UUID userDepartmentAccessId, String ifMatch) {
-        userDepartmentAccessService.deleteUserDepartmentAccess(userAccountId, userDepartmentAccessId, ifMatch);
+        userAccountService.deleteUserDepartmentAccess(userAccountId, userDepartmentAccessId, ifMatch);
         return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<Void> deleteUserDevice(UUID userAccountId, UUID userDeviceId, String ifMatch) {
-        userDeviceService.deleteUserDevice(userAccountId, userDeviceId, ifMatch);
+        userAccountService.deleteUserDevice(userAccountId, userDeviceId, ifMatch);
         return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<Void> deleteUserPermission(UUID userAccountId, UUID userPermissionId,
             String ifMatch) {
-        userPermissionService.deleteUserPermission(userAccountId, userPermissionId, ifMatch);
+        userAccountService.deleteUserPermission(userAccountId, userPermissionId, ifMatch);
         return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<Void> deleteUserPreference(UUID userAccountId, UUID userPreferenceId,
             String ifMatch) {
-        userPreferenceService.deleteUserPreference(userAccountId, userPreferenceId, ifMatch);
+        userAccountService.deleteUserPreference(userAccountId, userPreferenceId, ifMatch);
         return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<Void> deleteUserRole(UUID userAccountId, UUID userRoleId, String ifMatch) {
-        userRoleService.deleteUserRole(userAccountId, userRoleId, ifMatch);
+        userAccountService.deleteUserRole(userAccountId, userRoleId, ifMatch);
         return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<Void> deleteUserSession(UUID userAccountId, UUID userSessionId,
             String ifMatch) {
-        userSessionService.deleteUserSession(userAccountId, userSessionId, ifMatch);
+        userAccountService.deleteUserSession(userAccountId, userSessionId, ifMatch);
         return ResponseEntity.noContent().build();
     }
 
@@ -311,41 +291,41 @@ public class UserAccountController implements UserAccountApi {
     public ResponseEntity<UserDepartmentAccess> getUserDepartmentAccess(UUID userAccountId,
             UUID userDepartmentAccessId, String fields) {
         UserDepartmentAccess found =
-                userDepartmentAccessService.getUserDepartmentAccess(userAccountId, userDepartmentAccessId);
+                userAccountService.getUserDepartmentAccess(userAccountId, userDepartmentAccessId);
         return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
     public ResponseEntity<UserDevice> getUserDevice(UUID userAccountId, UUID userDeviceId,
             String fields) {
-        UserDevice found = userDeviceService.getUserDevice(userAccountId, userDeviceId);
+        UserDevice found = userAccountService.getUserDevice(userAccountId, userDeviceId);
         return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
     public ResponseEntity<UserPermission> getUserPermission(UUID userAccountId, UUID userPermissionId,
             String fields) {
-        UserPermission found = userPermissionService.getUserPermission(userAccountId, userPermissionId);
+        UserPermission found = userAccountService.getUserPermission(userAccountId, userPermissionId);
         return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
     public ResponseEntity<UserPreference> getUserPreference(UUID userAccountId, UUID userPreferenceId,
             String fields) {
-        UserPreference found = userPreferenceService.getUserPreference(userAccountId, userPreferenceId);
+        UserPreference found = userAccountService.getUserPreference(userAccountId, userPreferenceId);
         return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
     public ResponseEntity<UserRole> getUserRole(UUID userAccountId, UUID userRoleId, String fields) {
-        UserRole found = userRoleService.getUserRole(userAccountId, userRoleId);
+        UserRole found = userAccountService.getUserRole(userAccountId, userRoleId);
         return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
     public ResponseEntity<UserSession> getUserSession(UUID userAccountId, UUID userSessionId,
             String fields) {
-        UserSession found = userSessionService.getUserSession(userAccountId, userSessionId);
+        UserSession found = userAccountService.getUserSession(userAccountId, userSessionId);
         return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
@@ -356,8 +336,8 @@ public class UserAccountController implements UserAccountApi {
     }
 
     @Override
-    public ResponseEntity<AuthTokenList> listAuthTokens(UUID userAccountId, Integer pageSize,
-            String pageToken, String filter, String orderBy, String fields) {
+    public ResponseEntity<PagingInfo<AuthToken>> listAuthTokens(UUID userAccountId, Integer page, Integer size,
+            String cursor, String filter, List<String> sort, String fields) {
         throw new NotImplementedException();
     }
 
@@ -367,62 +347,71 @@ public class UserAccountController implements UserAccountApi {
     }
 
     @Override
-    public ResponseEntity<UserAccountList> listUserAccounts(Integer pageSize, String pageToken,
-            String filter, String orderBy, String fields) {
-        UserAccountList list = userAccountService.listUserAccounts(pageSize, pageToken, filter, orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<UserAccount>> listUserAccounts(Integer page, Integer size, String cursor,
+            String filter, List<String> sort, String fields) {
+        PagingInfo<UserAccount> list =
+                PagingUtil.pagingInfo(userAccountService.listUserAccounts(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 
     @Override
-    public ResponseEntity<UserDepartmentAccessList> listUserDepartmentAccesses(UUID userAccountId,
-            Integer pageSize, String pageToken, String filter, String orderBy, String fields) {
-        UserDepartmentAccessList list =
-                userDepartmentAccessService.listUserDepartmentAccesss(userAccountId, pageSize, pageToken, filter,
-                        orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<UserDepartmentAccess>> listUserDepartmentAccesses(UUID userAccountId, Integer page,
+            Integer size, String cursor, String filter, List<String> sort, String fields) {
+        PagingInfo<UserDepartmentAccess> list =
+                PagingUtil.pagingInfo(userAccountService.listUserDepartmentAccesss(userAccountId, page, size, cursor,
+                        filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 
     @Override
-    public ResponseEntity<UserDeviceList> listUserDevices(UUID userAccountId, Integer pageSize,
-            String pageToken, String filter, String orderBy, String fields) {
-        UserDeviceList list = userDeviceService.listUserDevices(userAccountId, pageSize, pageToken, filter, orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<UserDevice>> listUserDevices(UUID userAccountId, Integer page, Integer size,
+            String cursor, String filter, List<String> sort, String fields) {
+        PagingInfo<UserDevice> list =
+                PagingUtil.pagingInfo(userAccountService.listUserDevices(userAccountId, page, size, cursor, filter,
+                        sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 
     @Override
-    public ResponseEntity<UserPermissionList> listUserPermissions(UUID userAccountId, Integer pageSize,
-            String pageToken, String filter, String orderBy, String fields) {
-        UserPermissionList list =
-                userPermissionService.listUserPermissions(userAccountId, pageSize, pageToken, filter, orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<UserPermission>> listUserPermissions(UUID userAccountId, Integer page,
+            Integer size, String cursor, String filter, List<String> sort, String fields) {
+        PagingInfo<UserPermission> list =
+                PagingUtil.pagingInfo(userAccountService.listUserPermissions(userAccountId, page, size, cursor, filter,
+                        sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 
     @Override
-    public ResponseEntity<UserPreferenceList> listUserPreferences(UUID userAccountId, Integer pageSize,
-            String pageToken, String filter, String orderBy, String fields) {
-        UserPreferenceList list =
-                userPreferenceService.listUserPreferences(userAccountId, pageSize, pageToken, filter, orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<UserPreference>> listUserPreferences(UUID userAccountId, Integer page,
+            Integer size, String cursor, String filter, List<String> sort, String fields) {
+        PagingInfo<UserPreference> list =
+                PagingUtil.pagingInfo(userAccountService.listUserPreferences(userAccountId, page, size, cursor, filter,
+                        sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 
     @Override
-    public ResponseEntity<UserRoleList> listUserRoles(UUID userAccountId, Integer pageSize,
-            String pageToken, String filter, String orderBy, String fields) {
-        UserRoleList list = userRoleService.listUserRoles(userAccountId, pageSize, pageToken, filter, orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<UserRole>> listUserRoles(UUID userAccountId, Integer page, Integer size,
+            String cursor, String filter, List<String> sort, String fields) {
+        PagingInfo<UserRole> list =
+                PagingUtil.pagingInfo(userAccountService.listUserRoles(userAccountId, page, size, cursor, filter,
+                        sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 
     @Override
-    public ResponseEntity<UserSessionList> listUserSessions(UUID userAccountId, Integer pageSize,
-            String pageToken, String filter, String orderBy, String fields) {
-        UserSessionList list = userSessionService.listUserSessions(userAccountId, pageSize, pageToken, filter, orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<UserSession>> listUserSessions(UUID userAccountId, Integer page, Integer size,
+            String cursor, String filter, List<String> sort, String fields) {
+        PagingInfo<UserSession> list =
+                PagingUtil.pagingInfo(userAccountService.listUserSessions(userAccountId, page, size, cursor, filter,
+                        sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 
@@ -530,7 +519,7 @@ public class UserAccountController implements UserAccountApi {
             UUID userDepartmentAccessId, String ifMatch, UserDepartmentAccessUpdate userDepartmentAccessUpdate,
             String updateMask, Boolean validateOnly) {
         UserDepartmentAccess updated =
-                userDepartmentAccessService.updateUserDepartmentAccess(userAccountId, userDepartmentAccessId, ifMatch,
+                userAccountService.updateUserDepartmentAccess(userAccountId, userDepartmentAccessId, ifMatch,
                         userDepartmentAccessUpdate, updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
@@ -540,7 +529,7 @@ public class UserAccountController implements UserAccountApi {
     public ResponseEntity<UserDevice> updateUserDevice(UUID userAccountId, UUID userDeviceId,
             String ifMatch, UserDeviceUpdate userDeviceUpdate, String updateMask, Boolean validateOnly) {
         UserDevice updated =
-                userDeviceService.updateUserDevice(userAccountId, userDeviceId, ifMatch, userDeviceUpdate, updateMask,
+                userAccountService.updateUserDevice(userAccountId, userDeviceId, ifMatch, userDeviceUpdate, updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
@@ -549,7 +538,7 @@ public class UserAccountController implements UserAccountApi {
     public ResponseEntity<UserPermission> updateUserPermission(UUID userAccountId, UUID userPermissionId,
             String ifMatch, UserPermissionUpdate userPermissionUpdate, String updateMask, Boolean validateOnly) {
         UserPermission updated =
-                userPermissionService.updateUserPermission(userAccountId, userPermissionId, ifMatch,
+                userAccountService.updateUserPermission(userAccountId, userPermissionId, ifMatch,
                         userPermissionUpdate, updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
@@ -559,7 +548,7 @@ public class UserAccountController implements UserAccountApi {
     public ResponseEntity<UserPreference> updateUserPreference(UUID userAccountId, UUID userPreferenceId,
             String ifMatch, UserPreferenceUpdate userPreferenceUpdate, String updateMask, Boolean validateOnly) {
         UserPreference updated =
-                userPreferenceService.updateUserPreference(userAccountId, userPreferenceId, ifMatch,
+                userAccountService.updateUserPreference(userAccountId, userPreferenceId, ifMatch,
                         userPreferenceUpdate, updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
@@ -569,7 +558,7 @@ public class UserAccountController implements UserAccountApi {
     public ResponseEntity<UserRole> updateUserRole(UUID userAccountId, UUID userRoleId, String ifMatch,
             UserRoleUpdate userRoleUpdate, String updateMask, Boolean validateOnly) {
         UserRole updated =
-                userRoleService.updateUserRole(userAccountId, userRoleId, ifMatch, userRoleUpdate, updateMask,
+                userAccountService.updateUserRole(userAccountId, userRoleId, ifMatch, userRoleUpdate, updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

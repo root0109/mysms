@@ -1,17 +1,17 @@
 package com.mysms.iam.config;
 
 import java.time.Duration;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * `mysms.iam.*` (mysms-iam.yml): the token issuer, where GetMe reads the caller's person record, and the one-time
- * bootstrap of a new installation. Secrets (the signing key, the bootstrap password) come only from the environment.
+ * `mysms.iam.*`: the token issuer, where GetMe reads the caller's person record, and the one-time bootstrap of a new
+ * installation. Secrets (the signing key, the bootstrap password) come only from the environment. Built by
+ * {@link IamSecurityConfig}, which reads each value from its property or, failing that, from the environment
+ * variable of DEPLOYMENT.md §3.
  *
  * @param token         the access/refresh token issuer
  * @param peopleBaseUrl base URL of the people service (or the monolith) for the person in iam.GetMe; empty = omitted
  * @param bootstrap     first tenant and administrator of a new installation
  */
-@ConfigurationProperties("mysms.iam")
 public record IamProperties(Token token, String peopleBaseUrl, Bootstrap bootstrap) {
 
     private static final Duration DEFAULT_ACCESS_TTL = Duration.ofMinutes(15);

@@ -32,7 +32,7 @@ paths:
     get:
       operationId: org.ListInstitutions
       summary: List Institutions
-      description: List Institutions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Institutions visible to the caller, page by page, with filtering and sorting.
       tags:
       - Institution
       security:
@@ -42,10 +42,11 @@ paths:
         service: mysms.org.v1.InstitutionService
         method: ListInstitutions
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -53,7 +54,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstitutionList'
+                $ref: '#/components/schemas/PagingInfoInstitution'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -272,7 +273,7 @@ paths:
     get:
       operationId: org.ListInstitutionAttributes
       summary: List InstitutionAttributes
-      description: List InstitutionAttributes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List InstitutionAttributes visible to the caller, page by page, with filtering and sorting.
       tags:
       - Institution
       security:
@@ -289,10 +290,11 @@ paths:
           type: string
           format: uuid
         description: Institution id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -300,7 +302,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstitutionAttributeList'
+                $ref: '#/components/schemas/PagingInfoInstitutionAttribute'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -547,7 +549,7 @@ paths:
     get:
       operationId: org.ListDepartments
       summary: List Departments
-      description: List Departments visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Departments visible to the caller, page by page, with filtering and sorting.
       tags:
       - Department
       security:
@@ -557,10 +559,11 @@ paths:
         service: mysms.org.v1.DepartmentService
         method: ListDepartments
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -568,7 +571,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DepartmentList'
+                $ref: '#/components/schemas/PagingInfoDepartment'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -787,7 +790,7 @@ paths:
     get:
       operationId: org.ListAcademicYears
       summary: List AcademicYears
-      description: List AcademicYears visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AcademicYears visible to the caller, page by page, with filtering and sorting.
       tags:
       - AcademicYear
       security:
@@ -797,10 +800,11 @@ paths:
         service: mysms.org.v1.AcademicYearService
         method: ListAcademicYears
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -808,7 +812,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AcademicYearList'
+                $ref: '#/components/schemas/PagingInfoAcademicYear'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1027,7 +1031,7 @@ paths:
     get:
       operationId: org.ListAcademicTerms
       summary: List AcademicTerms
-      description: List AcademicTerms visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AcademicTerms visible to the caller, page by page, with filtering and sorting.
       tags:
       - AcademicYear
       security:
@@ -1044,10 +1048,11 @@ paths:
           type: string
           format: uuid
         description: AcademicYear id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1055,7 +1060,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AcademicTermList'
+                $ref: '#/components/schemas/PagingInfoAcademicTerm'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1302,7 +1307,7 @@ paths:
     get:
       operationId: org.ListInstitutionTypes
       summary: List InstitutionTypes
-      description: List InstitutionTypes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List InstitutionTypes visible to the caller, page by page, with filtering and sorting.
       tags:
       - InstitutionType
       security:
@@ -1312,10 +1317,11 @@ paths:
         service: mysms.org.v1.InstitutionTypeService
         method: ListInstitutionTypes
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1323,7 +1329,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstitutionTypeList'
+                $ref: '#/components/schemas/PagingInfoInstitutionType'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1542,7 +1548,7 @@ paths:
     get:
       operationId: org.ListAttributeDefinitions
       summary: List AttributeDefinitions
-      description: List AttributeDefinitions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AttributeDefinitions visible to the caller, page by page, with filtering and sorting.
       tags:
       - AttributeDefinition
       security:
@@ -1552,10 +1558,11 @@ paths:
         service: mysms.org.v1.AttributeDefinitionService
         method: ListAttributeDefinitions
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1563,7 +1570,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AttributeDefinitionList'
+                $ref: '#/components/schemas/PagingInfoAttributeDefinition'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1782,7 +1789,7 @@ paths:
     get:
       operationId: org.ListInstitutionTypeAttributes
       summary: List InstitutionTypeAttributes
-      description: List InstitutionTypeAttributes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List InstitutionTypeAttributes visible to the caller, page by page, with filtering and sorting.
       tags:
       - InstitutionType
       security:
@@ -1799,10 +1806,11 @@ paths:
           type: string
           format: uuid
         description: InstitutionType id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1810,7 +1818,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstitutionTypeAttributeList'
+                $ref: '#/components/schemas/PagingInfoInstitutionTypeAttribute'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2057,7 +2065,7 @@ paths:
     get:
       operationId: org.ListHolidays
       summary: List Holidays
-      description: List Holidays visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Holidays visible to the caller, page by page, with filtering and sorting.
       tags:
       - Holiday
       security:
@@ -2067,10 +2075,11 @@ paths:
         service: mysms.org.v1.HolidayService
         method: ListHolidays
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2078,7 +2087,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HolidayList'
+                $ref: '#/components/schemas/PagingInfoHoliday'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2313,7 +2322,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./common.yaml#/components/schemas/InstitutionCardList
+                $ref: ./common.yaml#/components/schemas/PagingInfoInstitutionCard
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2343,19 +2352,9 @@ paths:
         description: ISO country.
         schema:
           type: string
-      - name: pageSize
-        in: query
-        required: false
-        description: Maximum items to return (1-500, default 50).
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Cursor from next_page_token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/org/academic-years/{academicYearId}:activate:
     post:
       operationId: org.ActivateAcademicYear
@@ -2738,22 +2737,20 @@ components:
           type: string
           format: uuid
           description: Visual theme of the institution's portal and apps.
-    InstitutionList:
+    PagingInfoInstitution:
       type: object
+      description: A page of Institution, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Institution'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     InstitutionAttribute:
       type: object
       description: Extensible key/value profile attributes of an institution (affiliation number, motto, social links...).
@@ -2820,22 +2817,20 @@ components:
           type: string
           format: uuid
           description: Attribute definition (NULL = free key/value).
-    InstitutionAttributeList:
+    PagingInfoInstitutionAttribute:
       type: object
+      description: A page of InstitutionAttribute, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/InstitutionAttribute'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Department:
       type: object
       description: Academic or administrative department; hierarchical.
@@ -2915,22 +2910,20 @@ components:
         isActive:
           type: boolean
           description: Whether in use.
-    DepartmentList:
+    PagingInfoDepartment:
       type: object
+      description: A page of Department, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Department'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AcademicYear:
       type: object
       description: Academic year of an institution.
@@ -3050,22 +3043,20 @@ components:
         isCurrent:
           type: boolean
           description: Current year for the institution (at most one).
-    AcademicYearList:
+    PagingInfoAcademicYear:
       type: object
+      description: A page of AcademicYear, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AcademicYear'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AcademicTerm:
       type: object
       description: Term / semester / quarter inside an academic year; terms can nest.
@@ -3168,6 +3159,7 @@ components:
           description: Term can be used for new cohorts / registrations.
     AcademicTermList:
       type: object
+      description: The AcademicTerm items an operation wrote, all in one response.
       required:
       - items
       properties:
@@ -3175,13 +3167,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AcademicTerm'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+    PagingInfoAcademicTerm:
+      type: object
+      description: A page of AcademicTerm, with the links to the other pages.
+      required:
+      - data
+      - paging
+      properties:
+        data:
+          type: array
+          description: Data retrieved in the paginated request.
+          items:
+            $ref: '#/components/schemas/AcademicTerm'
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     InstitutionType:
       type: object
       description: Configurable kind of organisational unit (district, school, campus, department...) with its own attribute set.
@@ -3251,22 +3250,20 @@ components:
           type: string
           maxLength: 120
           description: Type name.
-    InstitutionTypeList:
+    PagingInfoInstitutionType:
       type: object
+      description: A page of InstitutionType, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/InstitutionType'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AttributeDefinition:
       type: object
       description: Definition of an extensible institution attribute (label, data type, order).
@@ -3348,22 +3345,20 @@ components:
           type: integer
           format: int32
           description: Display order.
-    AttributeDefinitionList:
+    PagingInfoAttributeDefinition:
       type: object
+      description: A page of AttributeDefinition, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AttributeDefinition'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     InstitutionTypeAttribute:
       type: object
       description: Attribute captured for institutions of a given type.
@@ -3422,22 +3417,20 @@ components:
         isRequired:
           type: boolean
           description: Value is mandatory.
-    InstitutionTypeAttributeList:
+    PagingInfoInstitutionTypeAttribute:
       type: object
+      description: A page of InstitutionTypeAttribute, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/InstitutionTypeAttribute'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Holiday:
       type: object
       description: Holiday or closure of an institution (applies to its calendar, cohorts and attendance).
@@ -3511,22 +3504,20 @@ components:
           type: string
           format: date
           description: Last day.
-    HolidayList:
+    PagingInfoHoliday:
       type: object
+      description: A page of Holiday, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Holiday'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ActivateAcademicYearRequest:
       type: object
       properties:

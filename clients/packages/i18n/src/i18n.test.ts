@@ -64,8 +64,13 @@ describe('formatting', () => {
     expect(f.money('10', 'USD')).toBe('$10.00');
     expect(f.number(1234567)).toBe('12,34,567');
     expect(f.percent(0.42)).toBe('42%');
+    expect(f.percentExact(0.7456)).toBe('74.56%');
+    expect(f.percentExact(1)).toBe('100%');
     expect(f.date('2026-11-06T20:00:00Z')).toBe('7 Nov 2026');
     expect(f.dateTime(new Date('2026-11-06T04:30:00Z'))).toBe('6 Nov 2026, 10:00 am');
+    expect(f.time('2026-11-06T04:30:00Z')).toBe('10:00 am');
+    // a calendar day keeps its weekday whatever the viewer's zone
+    expect(f.weekday('2026-03-02')).toBe('Monday');
     expect(createFormatters('en-US').date('2026-01-15T12:00:00Z')).toBe('Jan 15, 2026');
   });
 });

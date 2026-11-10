@@ -28,7 +28,7 @@ paths:
     get:
       operationId: people.ListHonorifics
       summary: List Honorifics
-      description: List Honorifics visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Honorifics visible to the caller, page by page, with filtering and sorting.
       tags:
       - Honorific
       security:
@@ -38,10 +38,11 @@ paths:
         service: mysms.people.v1.HonorificService
         method: ListHonorifics
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -49,7 +50,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HonorificList'
+                $ref: '#/components/schemas/PagingInfoHonorific'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -268,7 +269,7 @@ paths:
     get:
       operationId: people.ListPersons
       summary: List Persons
-      description: List Persons visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Persons visible to the caller, page by page, with filtering and sorting.
       tags:
       - Person
       security:
@@ -278,10 +279,11 @@ paths:
         service: mysms.people.v1.PersonService
         method: ListPersons
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -289,7 +291,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PersonList'
+                $ref: '#/components/schemas/PagingInfoPerson'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -508,7 +510,7 @@ paths:
     get:
       operationId: people.ListPersonAddresses
       summary: List PersonAddresses
-      description: List PersonAddresses visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PersonAddresses visible to the caller, page by page, with filtering and sorting.
       tags:
       - Person
       security:
@@ -525,10 +527,11 @@ paths:
           type: string
           format: uuid
         description: Person id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -536,7 +539,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PersonAddressList'
+                $ref: '#/components/schemas/PagingInfoPersonAddress'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -783,7 +786,7 @@ paths:
     get:
       operationId: people.ListEmergencyContacts
       summary: List EmergencyContacts
-      description: List EmergencyContacts visible to the caller, with cursor pagination, filtering and ordering.
+      description: List EmergencyContacts visible to the caller, page by page, with filtering and sorting.
       tags:
       - Person
       security:
@@ -800,10 +803,11 @@ paths:
           type: string
           format: uuid
         description: Person id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -811,7 +815,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EmergencyContactList'
+                $ref: '#/components/schemas/PagingInfoEmergencyContact'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1058,7 +1062,7 @@ paths:
     get:
       operationId: people.ListQualifications
       summary: List Qualifications
-      description: List Qualifications visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Qualifications visible to the caller, page by page, with filtering and sorting.
       tags:
       - Qualification
       security:
@@ -1068,10 +1072,11 @@ paths:
         service: mysms.people.v1.QualificationService
         method: ListQualifications
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1079,7 +1084,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QualificationList'
+                $ref: '#/components/schemas/PagingInfoQualification'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1298,7 +1303,7 @@ paths:
     get:
       operationId: people.ListEducationHistory
       summary: List EducationHistory
-      description: List EducationHistory visible to the caller, with cursor pagination, filtering and ordering.
+      description: List EducationHistory visible to the caller, page by page, with filtering and sorting.
       tags:
       - Person
       security:
@@ -1315,10 +1320,11 @@ paths:
           type: string
           format: uuid
         description: Person id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1326,7 +1332,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EducationHistoryList'
+                $ref: '#/components/schemas/PagingInfoEducationHistory'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1573,7 +1579,7 @@ paths:
     get:
       operationId: people.ListWorkExperiences
       summary: List WorkExperiences
-      description: List WorkExperiences visible to the caller, with cursor pagination, filtering and ordering.
+      description: List WorkExperiences visible to the caller, page by page, with filtering and sorting.
       tags:
       - Person
       security:
@@ -1590,10 +1596,11 @@ paths:
           type: string
           format: uuid
         description: Person id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1601,7 +1608,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkExperienceList'
+                $ref: '#/components/schemas/PagingInfoWorkExperience'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1848,7 +1855,7 @@ paths:
     get:
       operationId: people.ListCertifications
       summary: List Certifications
-      description: List Certifications visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Certifications visible to the caller, page by page, with filtering and sorting.
       tags:
       - Person
       security:
@@ -1865,10 +1872,11 @@ paths:
           type: string
           format: uuid
         description: Person id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1876,7 +1884,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CertificationList'
+                $ref: '#/components/schemas/PagingInfoCertification'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2123,7 +2131,7 @@ paths:
     get:
       operationId: people.ListSkills
       summary: List Skills
-      description: List Skills visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Skills visible to the caller, page by page, with filtering and sorting.
       tags:
       - Skill
       security:
@@ -2133,10 +2141,11 @@ paths:
         service: mysms.people.v1.SkillService
         method: ListSkills
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2144,7 +2153,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SkillList'
+                $ref: '#/components/schemas/PagingInfoSkill'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2363,7 +2372,7 @@ paths:
     get:
       operationId: people.ListPersonSkills
       summary: List PersonSkills
-      description: List PersonSkills visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PersonSkills visible to the caller, page by page, with filtering and sorting.
       tags:
       - Person
       security:
@@ -2380,10 +2389,11 @@ paths:
           type: string
           format: uuid
         description: Person id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2391,7 +2401,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PersonSkillList'
+                $ref: '#/components/schemas/PagingInfoPersonSkill'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2638,7 +2648,7 @@ paths:
     get:
       operationId: people.ListPersonDocuments
       summary: List PersonDocuments
-      description: List PersonDocuments visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PersonDocuments visible to the caller, page by page, with filtering and sorting.
       tags:
       - Person
       security:
@@ -2655,10 +2665,11 @@ paths:
           type: string
           format: uuid
         description: Person id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2666,7 +2677,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PersonDocumentList'
+                $ref: '#/components/schemas/PagingInfoPersonDocument'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3144,7 +3155,7 @@ paths:
     get:
       operationId: people.ListPersonSocialLinks
       summary: List PersonSocialLinks
-      description: List PersonSocialLinks visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PersonSocialLinks visible to the caller, page by page, with filtering and sorting.
       tags:
       - Person
       security:
@@ -3161,10 +3172,11 @@ paths:
           type: string
           format: uuid
         description: Person id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3172,7 +3184,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PersonSocialLinkList'
+                $ref: '#/components/schemas/PagingInfoPersonSocialLink'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3419,7 +3431,7 @@ paths:
     get:
       operationId: people.ListConsentRecords
       summary: List ConsentRecords
-      description: List ConsentRecords visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ConsentRecords visible to the caller, page by page, with filtering and sorting.
       tags:
       - Person
       security:
@@ -3436,10 +3448,11 @@ paths:
           type: string
           format: uuid
         description: Person id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3447,7 +3460,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConsentRecordList'
+                $ref: '#/components/schemas/PagingInfoConsentRecord'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3594,7 +3607,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./common.yaml#/components/schemas/BirthdayEntryList
+                $ref: ./common.yaml#/components/schemas/PagingInfoBirthdayEntry
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3655,19 +3668,9 @@ paths:
             description: student / staff / guardian.
         style: form
         explode: true
-      - name: pageSize
-        in: query
-        required: false
-        description: Maximum items to return (1-500, default 50).
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Cursor from next_page_token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/people/persons:sendGreetings:
     post:
       operationId: people.SendGreetings
@@ -3787,7 +3790,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConsentRecordList'
+                $ref: '#/components/schemas/PagingInfoConsentRecord'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3811,19 +3814,9 @@ paths:
         schema:
           type: string
           format: uuid
-      - name: pageSize
-        in: query
-        required: false
-        description: Maximum items to return (1-500, default 50).
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Cursor from next_page_token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/people/me:
     get:
       operationId: people.GetMyPerson
@@ -4023,22 +4016,20 @@ components:
           type: string
           maxLength: 10
           description: Abbreviation, e.g. Dr.
-    HonorificList:
+    PagingInfoHonorific:
       type: object
+      description: A page of Honorific, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Honorific'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Person:
       type: object
       description: A human being. Shared identity for student, guardian, staff, applicant and student roles.
@@ -4344,22 +4335,20 @@ components:
         aboutMe:
           type: string
           description: Short self-description shown on the profile.
-    PersonList:
+    PagingInfoPerson:
       type: object
+      description: A page of Person, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Person'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PersonAddress:
       type: object
       description: Postal address of a person, by purpose.
@@ -4502,22 +4491,20 @@ components:
           type: integer
           format: int32
           description: Display order.
-    PersonAddressList:
+    PagingInfoPersonAddress:
       type: object
+      description: A page of PersonAddress, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PersonAddress'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     EmergencyContact:
       type: object
       description: Person to call in an emergency for another person.
@@ -4600,22 +4587,20 @@ components:
           type: integer
           format: int32
           description: Call order (1 = first).
-    EmergencyContactList:
+    PagingInfoEmergencyContact:
       type: object
+      description: A page of EmergencyContact, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/EmergencyContact'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Qualification:
       type: object
       description: Academic / professional qualification catalogue (B.Ed, M.Sc, ...).
@@ -4709,22 +4694,20 @@ components:
         isActive:
           type: boolean
           description: Whether selectable.
-    QualificationList:
+    PagingInfoQualification:
       type: object
+      description: A page of Qualification, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Qualification'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     EducationHistory:
       type: object
       description: A person's education record (degree, school, grades).
@@ -4899,22 +4882,20 @@ components:
           type: integer
           format: int32
           description: Display order.
-    EducationHistoryList:
+    PagingInfoEducationHistory:
       type: object
+      description: A page of EducationHistory, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/EducationHistory'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     WorkExperience:
       type: object
       description: Job or internship held by a person.
@@ -5058,22 +5039,20 @@ components:
           type: integer
           format: int32
           description: Display order.
-    WorkExperienceList:
+    PagingInfoWorkExperience:
       type: object
+      description: A page of WorkExperience, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/WorkExperience'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Certification:
       type: object
       description: Professional certification held by a person.
@@ -5164,22 +5143,20 @@ components:
         description:
           type: string
           description: Details.
-    CertificationList:
+    PagingInfoCertification:
       type: object
+      description: A page of Certification, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Certification'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Skill:
       type: object
       description: Skill catalogue.
@@ -5249,22 +5226,20 @@ components:
           type: string
           maxLength: 120
           description: Skill name.
-    SkillList:
+    PagingInfoSkill:
       type: object
+      description: A page of Skill, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Skill'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PersonSkill:
       type: object
       description: Skill held by a person.
@@ -5317,22 +5292,20 @@ components:
           type: string
           format: uuid
           description: Skill.
-    PersonSkillList:
+    PagingInfoPersonSkill:
       type: object
+      description: A page of PersonSkill, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PersonSkill'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PersonDocument:
       type: object
       description: Document kept on file for a person (certificates, id proofs).
@@ -5441,22 +5414,20 @@ components:
           - archived
           x-extensible-enum: true
           description: Whether current.
-    PersonDocumentList:
+    PagingInfoPersonDocument:
       type: object
+      description: A page of PersonDocument, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PersonDocument'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PublicProfile:
       type: object
       description: Public student / alumni profile shown on portfolio and career pages.
@@ -5708,22 +5679,20 @@ components:
           type: integer
           format: int32
           description: Display order.
-    PersonSocialLinkList:
+    PagingInfoPersonSocialLink:
       type: object
+      description: A page of PersonSocialLink, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PersonSocialLink'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ConsentRecord:
       type: object
       description: Consent given (or withdrawn) for processing a person's data for one purpose; for minors the consent is given by a guardian. Current consent = latest row per person and purpose with withdrawn_at
@@ -5818,22 +5787,20 @@ components:
       - policyVersion
       - grantedAt
       - channel
-    ConsentRecordList:
+    PagingInfoConsentRecord:
       type: object
+      description: A page of ConsentRecord, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ConsentRecord'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     SendGreetingsRequest:
       type: object
       properties:

@@ -1,10 +1,10 @@
 package com.mysms.iam.business;
 
-import com.mysms.contracts.iam.model.SettingValue;
-import com.mysms.contracts.iam.model.SettingValueList;
-import com.mysms.contracts.iam.model.SettingValueUpdate;
+import com.mysms.iam.api.model.SettingValue;
+import com.mysms.iam.api.model.SettingValueUpdate;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
+import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.DuplicateResourceException;
 import com.mysms.core.error.FieldError;
@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * Administrators' setting values at tenant, institution, department, class-section or user scope (iam.*SettingValue).
@@ -46,7 +47,7 @@ import org.springframework.stereotype.Service;
  * read and 403 when written.
  */
 @Service
-public class SettingValueService {
+public class SettingValueService extends AppTransactionManager {
 
     public static final String AGGREGATE = SettingValueEntity.TABLE;
     static final List<String> WRITABLE = List.of("value", "isLocked");
@@ -60,7 +61,6 @@ public class SettingValueService {
     private final SettingDefinitionRepository definitions;
     private final SettingValueMapper mapper;
     private final SettingScopes scopes;
-    private final ModuleDatabase database;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
@@ -69,14 +69,16 @@ public class SettingValueService {
     public SettingValueService(SettingValueRepository repository, SettingDefinitionRepository definitions,
                                SettingValueMapper mapper, SettingScopes scopes,
                                @Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
+            @Qualifier(IamDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
                                @Qualifier(IamEventsConfig.OUTBOX) OutboxWriter outbox,
                                @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator,
                                Clock clock) {
+
+        super(database, transactions);
         this.repository = repository;
         this.definitions = definitions;
         this.mapper = mapper;
         this.scopes = scopes;
-        this.database = database;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -84,20 +86,21 @@ public class SettingValueService {
     }
 
     public SettingValue get(UUID id) {
-        return database.tx().read(() -> mapper.toDto(loadVisible(id, READ)));
+        return doInReadTransaction(() -> {
+            return mapper.toDto(loadVisible(id, READ));
+        });
     }
 
-    public SettingValueList list(Integer pageSize, String pageToken, String filter, String orderBy) {
-        SortSpec sort = SortSpec.parse(orderBy, SettingValueRepository.SORT_FIELDS, SettingValueRepository.DEFAULT_ORDER,
+    public Page<SettingValue> list(Integer pageNumber, Integer pageSize, String cursor, String filter,
+            List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, SettingValueRepository.SORT_FIELDS, SettingValueRepository.DEFAULT_ORDER,
                 SettingValueRepository.ID_COLUMN);
         SqlFragment parsed = FilterParser.parse(filter, SettingValueRepository.FILTER_FIELDS);
-        PageRequest page = PageRequest.of(pageSize, pageToken, sort, filter, clock);
-        return database.tx().read(() -> {
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+        return doInReadTransaction(() -> {
             SqlFragment where = parsed.and(scopes.readableFilter(READ));
             Page<SettingValueEntity> rows = repository.list(page, where);
-            return new SettingValueList(rows.items().stream().map(mapper::toDto).toList())
-                    .nextPageToken(rows.nextPageToken())
-                    .totalSize(repository.count(where));
+            return rows.map(mapper::toDto);
         });
     }
 
@@ -107,7 +110,7 @@ public class SettingValueService {
         SettingValueEntity entity = mapper.toEntity(request);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             assertValid(entity);
             if (!scopes.permitted(CREATE, entity.getScopeType(), entity.getScopeId())) {
                 throw new PermissionDeniedException("The scope is outside the caller's grants.");
@@ -130,7 +133,7 @@ public class SettingValueService {
         int expected = Etags.expectedVersion(ifMatch);
         validator.validate(changes);
         List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             SettingValueEntity entity = loadVisible(id, READ);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException(STALE);
@@ -162,7 +165,7 @@ public class SettingValueService {
     /** Soft delete under If-Match: the broader scopes apply again. */
     public void delete(UUID id, String ifMatch) {
         int expected = Etags.expectedVersion(ifMatch);
-        database.tx().write(() -> {
+        runInWriteTransaction(() -> {
             SettingValueEntity entity = loadVisible(id, READ);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException(STALE);
@@ -176,7 +179,6 @@ public class SettingValueService {
             }
             audit.recordDelete(AGGREGATE, id);
             outbox.publish(AGGREGATE + IamEvents.DELETED, AGGREGATE, id, IamEvents.payload(id));
-            return null;
         });
     }
 

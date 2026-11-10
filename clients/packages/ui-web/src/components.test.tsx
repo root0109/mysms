@@ -10,6 +10,7 @@ import {
   DataTable,
   Dialog,
   ProgressBar,
+  SegmentedControl,
   SelectField,
   Skeleton,
   StatusChip,
@@ -291,5 +292,43 @@ describe('TextArea', () => {
     expect(area).toHaveAttribute('rows', '4');
     expect(area).toHaveAttribute('aria-invalid', 'true');
     expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe('SegmentedControl', () => {
+  it('is a named radio group: one tap chooses, arrow keys move, a disabled group does not change', async () => {
+    function Harness({ disabled }: { disabled?: boolean }) {
+      const [value, setValue] = useState<'present' | 'absent' | undefined>(undefined);
+      return (
+        <SegmentedControl
+          label="Asha Rao"
+          value={value}
+          onChange={setValue}
+          disabled={disabled ?? false}
+          options={[
+            { value: 'present', label: 'Present', intent: 'success' },
+            { value: 'absent', label: 'Absent', intent: 'danger' },
+          ]}
+        />
+      );
+    }
+    const { container, rerender } = render(<Harness />);
+    const group = screen.getByRole('radiogroup', { name: 'Asha Rao' });
+    expect(group).toBeInTheDocument();
+    const present = screen.getByRole('radio', { name: 'Present' });
+    const absent = screen.getByRole('radio', { name: 'Absent' });
+    expect(present).not.toBeChecked();
+    expect(absent).not.toBeChecked();
+    await userEvent.click(absent);
+    expect(absent).toBeChecked();
+    expect(absent.closest('label')).toHaveClass('sms-segmented__option--danger');
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(present).toBeChecked();
+    expect(present.closest('label')).toHaveClass('sms-segmented__option--success');
+    expect(await axeViolations(container)).toEqual([]);
+    rerender(<Harness disabled />);
+    await userEvent.click(absent);
+    expect(present).toBeChecked();
+    expect(absent).toBeDisabled();
   });
 });

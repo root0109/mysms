@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
-import { fakeApi, json, problem, type Handler } from '@mysms/fixtures';
+import { fakeApi, json, onePage, pageOf, problem, type Handler } from '@mysms/fixtures';
 import { MySmsProvider } from '../react/context';
 import { createRuntime } from '../runtime';
 import { useI18n } from './i18n';
@@ -53,15 +53,12 @@ function setup(extra: Record<string, Handler> = {}) {
       theme = effective('ui.theme', 'system');
       return new Response(null, { status: 204 });
     },
-    'GET /v1/iam/setting-definitions': () =>
-      json({
-        items: [{ id: 'd1', settingKey: 'ui.theme', valueType: 'choice', allowedValues: ['system', 'dark'] }],
-      }),
-    'GET /v1/iam/setting-values': () =>
-      json({
-        items: [{ id: 'v1', scopeType: 'tenant', settingKey: 'ui.theme', value: 'dark' }],
-        totalSize: 1,
-      }),
+    'GET /v1/iam/setting-definitions': (req) =>
+      onePage(req, [
+        { id: 'd1', settingKey: 'ui.theme', valueType: 'choice', allowedValues: ['system', 'dark'] },
+      ]),
+    'GET /v1/iam/setting-values': (req) =>
+      onePage(req, [{ id: 'v1', scopeType: 'tenant', settingKey: 'ui.theme', value: 'dark' }]),
     'POST /v1/iam/setting-values': () =>
       json(
         { id: 'v2', scopeType: 'tenant', settingKey: 'ui.locale', value: 'hi' },
@@ -155,7 +152,7 @@ describe('setting values (ADM-16)', () => {
       }),
       { wrapper },
     );
-    await waitFor(() => expect(result.current.list.data?.totalSize).toBe(1));
+    await waitFor(() => expect(result.current.list.data?.data).toHaveLength(1));
     const created = await act(() =>
       result.current.create.mutateAsync({ scopeType: 'tenant', settingKey: 'ui.locale', value: 'hi' }),
     );
@@ -211,16 +208,13 @@ describe('paging and recovery', () => {
     let failSettings = true;
     const { runtime, wrapper } = setup({
       'GET /v1/iam/setting-values': (req) =>
-        json(
-          req.url.includes('pageToken=p2')
-            ? {
-                items: [{ id: 'v2', scopeType: 'tenant', settingKey: 'ui.locale', value: 'hi' }],
-                nextPageToken: '',
-              }
-            : {
-                items: [{ id: 'v1', scopeType: 'tenant', settingKey: 'ui.theme', value: 'dark' }],
-                nextPageToken: 'p2',
-              },
+        pageOf(
+          req,
+          [
+            { id: 'v1', scopeType: 'tenant', settingKey: 'ui.theme', value: 'dark' },
+            { id: 'v2', scopeType: 'tenant', settingKey: 'ui.locale', value: 'hi' },
+          ],
+          { maxSize: 1 },
         ),
       'GET /v1/iam/me/settings': () =>
         failSettings
@@ -235,7 +229,7 @@ describe('paging and recovery', () => {
     expect(result.current.settings).toBeNull();
     await waitFor(() => expect(result.current.pages.hasNextPage).toBe(true));
     await act(() => result.current.pages.fetchNextPage());
-    await waitFor(() => expect(result.current.pages.data?.pages.flatMap((p) => p.items)).toHaveLength(2));
+    await waitFor(() => expect(result.current.pages.data?.pages.flatMap((p) => p.data)).toHaveLength(2));
     expect(result.current.pages.hasNextPage).toBe(false);
     failSettings = false;
     await act(() => result.current.reload.mutateAsync());

@@ -40,7 +40,7 @@ Every screen is one of five shapes, so components and specs stay uniform:
 
 ### 1.5 Lists, filters, identity
 
-- Server pagination only (`pageSize`/`pageToken`); infinite scroll on phones, paged tables on W; `orderBy` and `filter` map to the declared filterable fields (PRINCIPAL-REVIEW P1-33).
+- Server pagination only (`page`/`size`, following each response's `paging.next` link, api/README "Pagination"); infinite scroll on phones, paged tables on W; `sort` and `filter` map to the declared sortable and filterable fields (PRINCIPAL-REVIEW P1-33).
 - Row identity everywhere is the UUID `id`; `etag` is kept with each fetched row for writes.
 - People render through the shared `PersonCard`/avatar component; money through `Money` (04 §5) — never raw strings.
 

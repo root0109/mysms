@@ -3,40 +3,29 @@ package com.mysms.authclient;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.InputStream;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.json.JsonMapper;
 
-/** Every one of the 2052 contract operations resolves to itself — and only to itself — from a concrete URL. */
+/**
+ * Loading and matching semantics of the operation table, on this module's own test fixtures
+ * (src/test/resources/META-INF/mysms/operations: a hand-written table plus frozen copies of master and org). The live
+ * tables are each domain module's own resource; the app module checks all of them against the contracts, and every
+ * module's service component test exercises its own at the real edge.
+ */
 class OperationTableTest {
 
-    private static final List<String> MODULES = List.of("academics", "admission", "assessment", "attendance", "careers",
-            "comms", "facility", "finance", "frontoffice", "hr", "iam", "library", "lms", "master", "org", "payroll", "people",
-            "platform", "sis", "timetable", "transport");
-
     @Test
-    void everyOperationMatchesItsOwnRule() throws Exception {
-        OperationTable table = OperationTable.load(MODULES);
-        assertThat(table.size()).isEqualTo(2052);
-        JsonMapper json = JsonMapper.builder().build();
-        int checked = 0;
-        for (String module : MODULES) {
-            String resource = "META-INF/mysms/operations/" + module + ".json";
-            try (InputStream in = getClass().getClassLoader().getResourceAsStream(resource)) {
-                for (JsonNode row : json.readTree(in)) {
-                    String concrete = row.get("path").asString().replaceAll("\\{[^}]+}", UUID.randomUUID().toString());
-                    OperationRule rule = table.match(row.get("method").asString(), concrete).orElseThrow(
-                            () -> new AssertionError("no match for " + row.get("operationId").asString()));
-                    assertThat(rule.operationId()).as(concrete).isEqualTo(row.get("operationId").asString());
-                    assertThat(rule.permission()).isEqualTo(row.get("permission").asString());
-                    checked++;
-                }
-            }
-        }
-        assertThat(checked).isEqualTo(2052);
+    void matchesTheConcreteUrlToItsOwnRule() {
+        OperationTable table = OperationTable.load(List.of("authtest"));
+        assertThat(table.size()).isEqualTo(3);
+        OperationRule create = table.match("POST", "/v1/authtest/widgets").orElseThrow();
+        assertThat(create.operationId()).isEqualTo("authtest.CreateWidget");
+        assertThat(create.permission()).isEqualTo("authtest.widget.create");
+        assertThat(create.schemes()).containsExactly("platformAdminAuth");
+        assertThat(create.idempotency()).isEqualTo("optional");
+        OperationRule get = table.match("GET", "/v1/authtest/widgets/6d5c9d41-9d1a-4f8e-9f93-1ad2cf6a1f55").orElseThrow();
+        assertThat(get.operationId()).isEqualTo("authtest.GetWidget");
+        assertThat(get.isPublic()).isFalse();
     }
 
     @Test

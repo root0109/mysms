@@ -1,8 +1,9 @@
-import { createRuntime } from '@mysms/core';
+import { createRuntime, RESOURCES, SCREENS } from '@mysms/core';
 import {
   countries,
   fakeApi,
   fakeBackend,
+  fakeRecords,
   operations,
   platformAdmin,
   problem,
@@ -11,10 +12,12 @@ import {
 } from '@mysms/fixtures';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { WebApp } from '@mysms/web-kit';
+import { en } from '@mysms/i18n';
+import { screenTitleKey, WebApp } from '@mysms/web-kit';
 import { createMemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { routes } from './routes';
+import { builtKey, CONSOLE_SCREENS } from './screens/globalScreens';
 
 const BASE = 'https://console.example.com';
 
@@ -48,8 +51,70 @@ describe('platform console shell', () => {
     const { router } = await signedIn('/app/master/states');
     expect(screen.getByText('Platform console')).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'PLT-07 · Master data' })).toBeInTheDocument();
-    await router.navigate('/app/platform/tenants');
-    expect(await screen.findByRole('heading', { name: 'PLT-01 · Tenants' })).toBeInTheDocument();
+    // notification channels belong to a tenant: the console does not manage them
+    await router.navigate('/app/comms/notification-channels');
+    expect(await screen.findByRole('heading', { name: 'PLT-04 · Global catalogues' })).toBeInTheDocument();
+  });
+});
+
+describe('PLT-01…05 global records', () => {
+  it('names a served global record type, a console screen and a heading for each list manager', () => {
+    const keys = new Set<string>();
+    for (const def of CONSOLE_SCREENS) {
+      expect(keys.has(builtKey(def)), builtKey(def)).toBe(false);
+      keys.add(builtKey(def));
+      const resource = RESOURCES.find((r) => r.key === def.resource);
+      expect(resource?.scope, def.resource).toBe('global');
+      const inventory = SCREENS.find((s) => s.id === def.id);
+      expect(inventory?.clients, def.id).toContain('C');
+      if (def.route) expect(inventory?.routes, def.id).toContain(def.route);
+      else expect(inventory?.routes, def.id).toHaveLength(1);
+      expect(en[screenTitleKey(def.id)], def.id).toBeTruthy();
+      for (const column of def.columns ?? [])
+        expect(
+          resource?.fields.map((f) => f.name),
+          def.id,
+        ).toContain(column);
+    }
+  });
+
+  it('lists tenants and edits one under If-Match', async () => {
+    const tenants = fakeRecords({
+      collection: '/v1/platform/tenants',
+      item: '/v1/platform/tenants/{tenantId}',
+      required: ['code', 'name'],
+      rows: [
+        {
+          code: 'greenfield',
+          name: 'Greenfield Schools',
+          status: 'active',
+          primaryEmail: 'office@greenfield.example',
+        },
+        { code: 'riverside', name: 'Riverside Academy', status: 'active' },
+      ],
+    });
+    const { api } = await signedIn('/app/platform/tenants', { overrides: tenants });
+    expect(await screen.findByRole('heading', { name: 'Tenants' })).toBeInTheDocument();
+    expect(screen.getByText(/shared by all tenants/)).toBeInTheDocument();
+    const table = await screen.findByRole('table', { name: '2 items' });
+    await userEvent.click(within(table).getByRole('row', { name: /Riverside Academy/ }));
+    const name = await screen.findByLabelText('Name');
+    await waitFor(() => expect(name).toHaveValue('Riverside Academy'));
+    await userEvent.clear(name);
+    await userEvent.type(name, 'Riverside Academies');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.calls.some((c) => c.method === 'PATCH')).toBe(true));
+    const patch = api.calls.find((c) => c.method === 'PATCH');
+    expect(patch?.headers.get('If-Match')).toBe('"1"');
+    expect(
+      await within(await screen.findByRole('table')).findByText('Riverside Academies'),
+    ).toBeInTheDocument();
+  });
+
+  it('tells an operator without the read permission instead of showing a broken list', async () => {
+    const countriesOnly = { ...platformAdmin, permissions: ['master.country.read'] };
+    await signedIn('/app/platform/system-settings', { me: countriesOnly });
+    expect(await screen.findByText('Your role may not list these records.')).toBeInTheDocument();
   });
 });
 

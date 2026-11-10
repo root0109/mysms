@@ -106,8 +106,11 @@ Everything comes from the environment; no secret is in the repository.
 | `MYSMS_DB_MIGRATE_USER`, `MYSMS_DB_MIGRATE_PASSWORD` | yes in production | the schema owner (`mysms_migrate`) Flyway runs as |
 | `MYSMS_<MODULE>_DB_URL`, `_DB_USER`, `_DB_PASSWORD`, `_DB_MIGRATE_USER`, `_DB_MIGRATE_PASSWORD` | no | per-module override (e.g. `MYSMS_FINANCE_DB_URL`) to give one module its own database |
 | `MYSMS_<MODULE>_DB_POOL_SIZE` | no | connection pool size per module, default 10. The monolith opens one pool per module: 21 × pool size must stay below PostgreSQL's `max_connections`. |
+| `MYSMS_DB_SLOW_STATEMENT`, `MYSMS_<MODULE>_DB_SLOW_STATEMENT` | no | a statement that takes longer is named in the log (its text with placeholders, never a value); default `200ms`, `0` switches the report off |
+| `MYSMS_DB_REPLICA_URL`, `MYSMS_<MODULE>_DB_REPLICA_URL` (with `_DB_REPLICA_USER`, `_DB_REPLICA_PASSWORD`) | no | a streaming replica of the primary that read-only transactions read from (the pool `<module>-replica`); every write, and every read inside a write, stays on the primary. Blank = every read on the primary. User and password default to the application role's. A read can lag the primary by the replication delay; updates carry the ETag they read, so a stale read is refused (412) instead of overwriting newer data. The replica is never migrated; health reports it as `replica` and is DOWN when it does not answer |
 | `MYSMS_AUTH_ISSUER` | yes | the token issuer, i.e. the public base URL of iam (or of the monolith). A service refuses to start without it. |
 | `MYSMS_AUTH_JWK_SET_URI` | yes | where the public keys are fetched: `<iam base URL>/oauth2/jwks` |
+| `MYSMS_API_DOCS` | no | `true` serves the OpenAPI document and Swagger UI without a token (`/v3/api-docs.yaml`, `/swagger-ui.html`). Off by default: the document maps every operation and permission, so open it only where that is acceptable (development, an internal network) |
 | `MYSMS_SECRETS_KEYS` | yes for every service except master, and for the monolith | **secret**, the field-encryption master key list from §3a |
 | `MYSMS_SECRETS_ACTIVE_KEY` | no | the key id new values are encrypted with; default the last one listed |
 | `MYSMS_PARTITIONS_ENABLED` | no | the partition-maintenance job (§5.6), default `true`; it connects as `MYSMS_DB_MIGRATE_USER` |
@@ -135,6 +138,7 @@ Everything comes from the environment; no secret is in the repository.
 | `MYSMS_IAM_PREVIOUS_PUBLIC_KEY` | no | the retiring public key during rotation |
 | `MYSMS_IAM_ACCESS_TOKEN_TTL`, `MYSMS_IAM_REFRESH_TOKEN_TTL` | no | ISO-8601 durations, default `PT15M` and `P30D` |
 | `MYSMS_PEOPLE_URL` | no | base URL of the people service (for the monolith: its own URL) so `GetMe` includes the person record |
+| `MYSMS_TIMETABLE_URL`, `MYSMS_SIS_URL`, `MYSMS_ORG_URL` | no | read by attendance: base URLs of the timetable, sis and org services (for the monolith: its own URL, three times). Without all three, `attendance.TakeAttendanceForSession` and a mark for a student a sheet has no record of yet answer 503; everything else in attendance works |
 | `MYSMS_IAM_BOOTSTRAP_TENANT_CODE`, `MYSMS_IAM_BOOTSTRAP_ADMIN_USERNAME`, `MYSMS_IAM_BOOTSTRAP_ADMIN_PASSWORD` | first start only | see §5.3 |
 
 ### 4.3 Web apps (build time)
@@ -178,6 +182,7 @@ export MYSMS_AUTH_JWK_SET_URI=http://localhost:8080/oauth2/jwks
 export MYSMS_IAM_SIGNING_KEY="$(cat /run/secrets/iam-signing.pem)"
 export MYSMS_SECRETS_KEYS="$(cat /run/secrets/mysms-secrets-keys)"
 export MYSMS_PEOPLE_URL=http://localhost:8080
+export MYSMS_TIMETABLE_URL=http://localhost:8080 MYSMS_SIS_URL=http://localhost:8080 MYSMS_ORG_URL=http://localhost:8080
 export MYSMS_DB_RELAY_USER=mysms_relay MYSMS_DB_RELAY_PASSWORD=<relay-password>
 export MYSMS_RABBITMQ_URI="$(cat /run/secrets/mysms-rabbitmq-uri)"   # or MYSMS_EVENTS_BUS=in-process for one process
 java -jar backend/app/target/app-0.1.0-SNAPSHOT-exec.jar
@@ -488,7 +493,7 @@ Web components are rendered in jsdom against the fake backend and each passes an
 ### Contracts and schema
 
 ```bash
-cd api/openapi && npx @redocly/cli lint mysms-api.yaml      # the joined OpenAPI contract
+cd api/openapi && npx @redocly/cli lint attendance.yaml     # any module's contract (one file per module)
 psql -v ON_ERROR_STOP=1 -d mysms_scratch -f database/verification/smoke.sql
 ```
 

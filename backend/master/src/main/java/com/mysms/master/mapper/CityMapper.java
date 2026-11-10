@@ -1,6 +1,6 @@
 package com.mysms.master.mapper;
 
-import com.mysms.contracts.master.model.City;
+import com.mysms.master.api.model.City;
 import com.mysms.core.web.Etags;
 import com.mysms.master.domain.CityEntity;
 import org.mapstruct.Mapper;

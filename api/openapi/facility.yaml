@@ -26,7 +26,7 @@ paths:
     get:
       operationId: facility.ListFacilities
       summary: List Facilities
-      description: List Facilities visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Facilities visible to the caller, page by page, with filtering and sorting.
       tags:
       - Facility
       security:
@@ -36,10 +36,11 @@ paths:
         service: mysms.facility.v1.FacilityService
         method: ListFacilities
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -47,7 +48,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FacilityList'
+                $ref: '#/components/schemas/PagingInfoFacility'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -266,7 +267,7 @@ paths:
     get:
       operationId: facility.ListRooms
       summary: List Rooms
-      description: List Rooms visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Rooms visible to the caller, page by page, with filtering and sorting.
       tags:
       - Room
       security:
@@ -276,10 +277,11 @@ paths:
         service: mysms.facility.v1.RoomService
         method: ListRooms
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -287,7 +289,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RoomList'
+                $ref: '#/components/schemas/PagingInfoRoom'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -506,7 +508,7 @@ paths:
     get:
       operationId: facility.ListRoomFacilities
       summary: List RoomFacilities
-      description: List RoomFacilities visible to the caller, with cursor pagination, filtering and ordering.
+      description: List RoomFacilities visible to the caller, page by page, with filtering and sorting.
       tags:
       - Room
       security:
@@ -523,10 +525,11 @@ paths:
           type: string
           format: uuid
         description: Room id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -534,7 +537,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RoomFacilityList'
+                $ref: '#/components/schemas/PagingInfoRoomFacility'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -781,7 +784,7 @@ paths:
     get:
       operationId: facility.ListAssetItems
       summary: List AssetItems
-      description: List AssetItems visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AssetItems visible to the caller, page by page, with filtering and sorting.
       tags:
       - AssetItem
       security:
@@ -791,10 +794,11 @@ paths:
         service: mysms.facility.v1.AssetItemService
         method: ListAssetItems
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -802,7 +806,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssetItemList'
+                $ref: '#/components/schemas/PagingInfoAssetItem'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1021,7 +1025,7 @@ paths:
     get:
       operationId: facility.ListRoomAssets
       summary: List RoomAssets
-      description: List RoomAssets visible to the caller, with cursor pagination, filtering and ordering.
+      description: List RoomAssets visible to the caller, page by page, with filtering and sorting.
       tags:
       - Room
       security:
@@ -1038,10 +1042,11 @@ paths:
           type: string
           format: uuid
         description: Room id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1049,7 +1054,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RoomAssetList'
+                $ref: '#/components/schemas/PagingInfoRoomAsset'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1373,22 +1378,20 @@ components:
         isActive:
           type: boolean
           description: Whether in use.
-    FacilityList:
+    PagingInfoFacility:
       type: object
+      description: A page of Facility, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Facility'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Room:
       type: object
       description: Room that can host sessions or exams.
@@ -1515,22 +1518,20 @@ components:
         isActive:
           type: boolean
           description: Whether usable.
-    RoomList:
+    PagingInfoRoom:
       type: object
+      description: A page of Room, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Room'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     RoomFacility:
       type: object
       description: Facility available in a room and its quantity.
@@ -1594,22 +1595,20 @@ components:
           format: decimal
           pattern: ^-?\d+(\.\d+)?$
           description: Quantity.
-    RoomFacilityList:
+    PagingInfoRoomFacility:
       type: object
+      description: A page of RoomFacility, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/RoomFacility'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AssetItem:
       type: object
       description: Catalogue of movable assets placed in rooms (desks, computers...).
@@ -1696,22 +1695,20 @@ components:
           type: string
           maxLength: 20
           description: Unit.
-    AssetItemList:
+    PagingInfoAssetItem:
       type: object
+      description: A page of AssetItem, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AssetItem'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     RoomAsset:
       type: object
       description: Asset held in a room.
@@ -1783,22 +1780,20 @@ components:
           format: decimal
           pattern: ^-?\d+(\.\d+)?$
           description: Quantity.
-    RoomAssetList:
+    PagingInfoRoomAsset:
       type: object
+      description: A page of RoomAsset, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/RoomAsset'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
   securitySchemes:
     bearerAuth:
       type: http

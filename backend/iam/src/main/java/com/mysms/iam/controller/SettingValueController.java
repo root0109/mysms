@@ -1,9 +1,11 @@
 package com.mysms.iam.controller;
 
-import com.mysms.contracts.iam.api.SettingValueApi;
-import com.mysms.contracts.iam.model.SettingValue;
-import com.mysms.contracts.iam.model.SettingValueList;
-import com.mysms.contracts.iam.model.SettingValueUpdate;
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.iam.api.SettingValueApi;
+import com.mysms.iam.api.model.SettingValue;
+import com.mysms.iam.api.model.SettingValueUpdate;
 import com.mysms.core.web.ReadMask;
 import com.mysms.iam.business.SettingValueService;
 import java.net.URI;
@@ -24,10 +26,10 @@ public class SettingValueController implements SettingValueApi {
     }
 
     @Override
-    public ResponseEntity<SettingValueList> listSettingValues(Integer pageSize, String pageToken, String filter,
-                                                              String orderBy, String fields) {
-        SettingValueList list = service.list(pageSize, pageToken, filter, orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<SettingValue>> listSettingValues(Integer page, Integer size, String cursor,
+            String filter, List<String> sort, String fields) {
+        PagingInfo<SettingValue> list = PagingUtil.pagingInfo(service.list(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 

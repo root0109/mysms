@@ -2,6 +2,7 @@ package com.mysms.iam.business;
 
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
+import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.id.UuidV7;
 import com.mysms.core.outbox.AuditWriter;
@@ -9,9 +10,9 @@ import com.mysms.iam.config.IamDatabaseConfig;
 import com.mysms.iam.config.IamEventsConfig;
 import com.mysms.iam.config.IamProperties;
 import com.mysms.iam.domain.MeAccountEntity;
+import com.mysms.iam.repository.AccountRepository;
 import com.mysms.iam.repository.RoleSeedRepository;
 import com.mysms.iam.repository.TenantDirectoryRepository;
-import com.mysms.iam.repository.AccountRepository;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * First start of a new installation: when mysms.iam.bootstrap.* are all set, makes sure the tenant code exists in the
@@ -33,7 +35,7 @@ import org.springframework.stereotype.Component;
  * password is never overwritten). The password comes from the environment and must be at least 12 characters.
  */
 @Component
-public class IamBootstrap implements ApplicationRunner {
+public class IamBootstrap extends AppTransactionManager implements ApplicationRunner {
 
     public static final String ADMIN_ROLE = "administrator";
     static final int MIN_PASSWORD = 12;
@@ -41,7 +43,6 @@ public class IamBootstrap implements ApplicationRunner {
     private static final Logger LOG = LoggerFactory.getLogger(IamBootstrap.class);
 
     private final IamProperties.Bootstrap settings;
-    private final ModuleDatabase database;
     private final TenantDirectoryRepository tenants;
     private final RoleSeedRepository roles;
     private final AccountRepository users;
@@ -50,10 +51,12 @@ public class IamBootstrap implements ApplicationRunner {
     private final Clock clock;
 
     public IamBootstrap(IamProperties properties, @Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
+            @Qualifier(IamDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
                         TenantDirectoryRepository tenants, RoleSeedRepository roles, AccountRepository users,
                         PasswordHasher passwords, @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, Clock clock) {
+
+        super(database, transactions);
         this.settings = properties.bootstrap();
-        this.database = database;
         this.tenants = tenants;
         this.roles = roles;
         this.users = users;
@@ -80,11 +83,25 @@ public class IamBootstrap implements ApplicationRunner {
                     + " characters");
         }
         CallContext system = CallContext.anonymous(UUID.randomUUID().toString().replace("-", ""));
-        UUID tenant = CallContextHolder.callAs(system, () -> database.tx().readWithoutTenant(() -> tenants.findTenant(code)))
-                .orElseGet(() -> UuidV7.next(clock));
+        UUID tenant = CallContextHolder.callAs(system, () -> existingTenant(code)).orElseGet(() -> UuidV7.next(clock));
         String username = settings.adminUsername().trim();
         String hash = passwords.hash(settings.adminPassword());
-        CallContextHolder.callAs(system.withIdentity(tenant, null), () -> database.tx().write(() -> {
+        CallContextHolder.callAs(system.withIdentity(tenant, null), () -> {
+            provision(tenant, code, username, hash);
+            return null;
+        });
+    }
+
+    /** The tenant's id in the global directory, read before any tenant is bound. */
+    private Optional<UUID> existingTenant(String code) {
+        return doInGlobalPrimaryReadTransaction(() -> {
+            return tenants.findTenant(code);
+        });
+    }
+
+    /** The tenant, its administrator role with every permission and the administrator, in one tenant transaction. */
+    private void provision(UUID tenant, String code, String username, String hash) {
+        runInWriteTransaction(() -> {
             OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
                     .truncatedTo(ChronoUnit.MICROS);
             if (tenants.findTenant(code).isEmpty()) {
@@ -106,7 +123,6 @@ public class IamBootstrap implements ApplicationRunner {
                 LOG.info("bootstrap: administrator account created in tenant {}", tenant);
             }
             LOG.info("bootstrap: tenant {} ready ({} permissions added to the administrator role)", tenant, granted);
-            return null;
-        }));
+        });
     }
 }

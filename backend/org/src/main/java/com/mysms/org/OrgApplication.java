@@ -1,22 +1,20 @@
 package com.mysms.org;
 
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
 
 /**
  * The Organisation & Calendar microservice: owns schema "org" and serves the org contract.
- * Its configuration is org-service.yml, which imports the module's own mysms-org.yml;
+ * Core configures it from this class: the package it scans names the module (ModuleDefaultsEnvironmentPostProcessor);
  * in the monolith the same module runs inside `app`.
  */
 @SpringBootApplication
 public class OrgApplication {
 
-    public static final String CONFIG_NAME = "org-service";
-
     protected OrgApplication() {
     }
 
     public static void main(String[] args) {
-        new SpringApplicationBuilder(OrgApplication.class).properties("spring.config.name=" + CONFIG_NAME).run(args);
+        SpringApplication.run(OrgApplication.class, args);
     }
 }

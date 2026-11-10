@@ -1,10 +1,11 @@
 package com.mysms.iam.business;
 
 import com.mysms.authclient.AuthContext;
-import com.mysms.contracts.iam.model.EffectiveSetting;
-import com.mysms.contracts.iam.model.EffectiveSettingList;
-import com.mysms.contracts.iam.model.SetMySettingRequest;
+import com.mysms.iam.api.model.EffectiveSetting;
+import com.mysms.iam.api.model.EffectiveSettingList;
+import com.mysms.iam.api.model.SetMySettingRequest;
 import com.mysms.core.context.Actor;
+import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.ConflictException;
 import com.mysms.core.error.FieldError;
@@ -31,6 +32,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * The caller's own settings (iam.ListMySettings, iam.SetMySetting, iam.ResetMySetting). The chain is built from the
@@ -41,7 +43,7 @@ import org.springframework.stereotype.Service;
  * ({@value SettingRules#ADMINISTER}).
  */
 @Service
-public class MySettingsService {
+public class MySettingsService extends AppTransactionManager {
 
     public static final String SETTING_LOCKED = "SETTING_LOCKED";
     private static final String AGGREGATE = SettingValueEntity.TABLE;
@@ -50,7 +52,6 @@ public class MySettingsService {
     private final SettingValueRepository values;
     private final GrantRepository grants;
     private final SettingScopes scopes;
-    private final ModuleDatabase database;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
@@ -59,14 +60,16 @@ public class MySettingsService {
     public MySettingsService(SettingDefinitionRepository definitions, SettingValueRepository values,
                              GrantRepository grants, SettingScopes scopes,
                              @Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
+            @Qualifier(IamDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
                              @Qualifier(IamEventsConfig.OUTBOX) OutboxWriter outbox,
                              @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator,
                              Clock clock) {
+
+        super(database, transactions);
         this.definitions = definitions;
         this.values = values;
         this.grants = grants;
         this.scopes = scopes;
-        this.database = database;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -74,7 +77,7 @@ public class MySettingsService {
     }
 
     public EffectiveSettingList list() {
-        return database.tx().read(() -> {
+        return doInReadTransaction(() -> {
             SettingResolver.Chain chain = chain();
             List<SettingValueEntity> found = values.findForChain(chain.institution(), chain.department(),
                     chain.classSection(), chain.user());
@@ -90,7 +93,7 @@ public class MySettingsService {
     /** Sets the caller's user-level value: 404 unknown key, 422 not user-editable or invalid, 409 locked above. */
     public EffectiveSetting set(String key, SetMySettingRequest request) {
         validator.validate(request);
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             SettingDefinitionEntity definition = definition(key);
             if (!SettingRules.userEditable(definition)) {
                 throw new ValidationFailedException(List.of(
@@ -137,7 +140,7 @@ public class MySettingsService {
 
     /** Removes the caller's user-level value, if any (idempotent); 404 for a key not in the catalogue. */
     public void reset(String key) {
-        database.tx().write(() -> {
+        runInWriteTransaction(() -> {
             definition(key);
             UUID user = AuthContext.require().userId();
             values.findAtScope(SettingRules.USER, user, key).ifPresent(own -> {
@@ -149,7 +152,6 @@ public class MySettingsService {
                 audit.recordDelete(AGGREGATE, own.getId());
                 outbox.publish(AGGREGATE + IamEvents.DELETED, AGGREGATE, own.getId(), IamEvents.payload(own.getId()));
             });
-            return null;
         });
     }
 

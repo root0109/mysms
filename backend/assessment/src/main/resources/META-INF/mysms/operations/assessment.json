@@ -1,0 +1,979 @@
+[ {
+  "operationId" : "assessment.AcceptAssignmentSubmission",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignment-submissions/{assignmentSubmissionId}:accept",
+  "permission" : "assessment.assignment_submission.accept_assignment_submission",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.AllocateExamRooms",
+  "method" : "POST",
+  "path" : "/v1/assessment/exams/{examId}:allocateRooms",
+  "permission" : "assessment.exam.allocate_exam_rooms",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.ApproveAssignment",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignments/{assignmentId}:approve",
+  "permission" : "assessment.assignment.approve_assignment",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.ApproveHomework",
+  "method" : "POST",
+  "path" : "/v1/assessment/homeworks/{homeworkId}:approve",
+  "permission" : "assessment.homework.approve_homework",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CancelAssignment",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignments/{assignmentId}:cancel",
+  "permission" : "assessment.assignment.cancel_assignment",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CancelExam",
+  "method" : "POST",
+  "path" : "/v1/assessment/exams/{examId}:cancel",
+  "permission" : "assessment.exam.cancel_exam",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CancelExamSession",
+  "method" : "POST",
+  "path" : "/v1/assessment/exam-sessions/{examSessionId}:cancel",
+  "permission" : "assessment.exam_session.cancel_exam_session",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CancelMarksheet",
+  "method" : "POST",
+  "path" : "/v1/assessment/marksheets/{marksheetId}:cancel",
+  "permission" : "assessment.marksheet.cancel_marksheet",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CancelOperation",
+  "method" : "POST",
+  "path" : "/v1/assessment/operations/{operationId}:cancel",
+  "permission" : "assessment.operation.cancel_operation",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CheckHomeworkSubmission",
+  "method" : "POST",
+  "path" : "/v1/assessment/homework-submissions/{homeworkSubmissionId}:check",
+  "permission" : "assessment.homework_submission.check_homework_submission",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CompleteExam",
+  "method" : "POST",
+  "path" : "/v1/assessment/exams/{examId}:complete",
+  "permission" : "assessment.exam.complete_exam",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CompleteExamSession",
+  "method" : "POST",
+  "path" : "/v1/assessment/exam-sessions/{examSessionId}:complete",
+  "permission" : "assessment.exam_session.complete_exam_session",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateAssignment",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignments",
+  "permission" : "assessment.assignment.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateAssignmentAllocation",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignments/{assignmentId}/allocations",
+  "permission" : "assessment.assignment_allocation.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateAssignmentApproval",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignments/{assignmentId}/approvals",
+  "permission" : "assessment.assignment_approval.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateAssignmentSubject",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignments/{assignmentId}/subjects",
+  "permission" : "assessment.assignment_subject.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateAssignmentSubmission",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignment-submissions",
+  "permission" : "assessment.assignment_submission.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateAssignmentType",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignment-types",
+  "permission" : "assessment.assignment_type.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateExam",
+  "method" : "POST",
+  "path" : "/v1/assessment/exams",
+  "permission" : "assessment.exam.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateExamInvigilator",
+  "method" : "POST",
+  "path" : "/v1/assessment/exams/{examId}/invigilators",
+  "permission" : "assessment.exam_invigilator.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateExamSession",
+  "method" : "POST",
+  "path" : "/v1/assessment/exam-sessions",
+  "permission" : "assessment.exam_session.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateExamType",
+  "method" : "POST",
+  "path" : "/v1/assessment/exam-types",
+  "permission" : "assessment.exam_type.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateGradingBand",
+  "method" : "POST",
+  "path" : "/v1/assessment/grading-bands",
+  "permission" : "assessment.grading_band.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateGradingScheme",
+  "method" : "POST",
+  "path" : "/v1/assessment/grading-schemes",
+  "permission" : "assessment.grading_scheme.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateHomework",
+  "method" : "POST",
+  "path" : "/v1/assessment/homeworks",
+  "permission" : "assessment.homework.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateHomeworkSubmission",
+  "method" : "POST",
+  "path" : "/v1/assessment/homework-submissions",
+  "permission" : "assessment.homework_submission.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateMarksheet",
+  "method" : "POST",
+  "path" : "/v1/assessment/marksheets",
+  "permission" : "assessment.marksheet.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateResultTemplate",
+  "method" : "POST",
+  "path" : "/v1/assessment/result-templates",
+  "permission" : "assessment.result_template.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.CreateResultTemplateBand",
+  "method" : "POST",
+  "path" : "/v1/assessment/result-templates/{resultTemplateId}/result-template-bands",
+  "permission" : "assessment.result_template_band.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.DeleteAssignment",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/assignments/{assignmentId}",
+  "permission" : "assessment.assignment.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteAssignmentAllocation",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/assignments/{assignmentId}/allocations/{assignmentAllocationId}",
+  "permission" : "assessment.assignment_allocation.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteAssignmentApproval",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/assignments/{assignmentId}/approvals/{assignmentApprovalId}",
+  "permission" : "assessment.assignment_approval.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteAssignmentSubject",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/assignments/{assignmentId}/subjects/{assignmentSubjectId}",
+  "permission" : "assessment.assignment_subject.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteAssignmentSubmission",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/assignment-submissions/{assignmentSubmissionId}",
+  "permission" : "assessment.assignment_submission.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteAssignmentType",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/assignment-types/{assignmentTypeId}",
+  "permission" : "assessment.assignment_type.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteExam",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/exams/{examId}",
+  "permission" : "assessment.exam.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteExamInvigilator",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/exams/{examId}/invigilators/{examInvigilatorId}",
+  "permission" : "assessment.exam_invigilator.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteExamSession",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/exam-sessions/{examSessionId}",
+  "permission" : "assessment.exam_session.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteExamType",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/exam-types/{examTypeId}",
+  "permission" : "assessment.exam_type.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteGradingBand",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/grading-bands/{gradingBandId}",
+  "permission" : "assessment.grading_band.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteGradingScheme",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/grading-schemes/{gradingSchemeId}",
+  "permission" : "assessment.grading_scheme.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteHomework",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/homeworks/{homeworkId}",
+  "permission" : "assessment.homework.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteHomeworkSubmission",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/homework-submissions/{homeworkSubmissionId}",
+  "permission" : "assessment.homework_submission.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteMarksheet",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/marksheets/{marksheetId}",
+  "permission" : "assessment.marksheet.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteResultTemplate",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/result-templates/{resultTemplateId}",
+  "permission" : "assessment.result_template.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.DeleteResultTemplateBand",
+  "method" : "DELETE",
+  "path" : "/v1/assessment/result-templates/{resultTemplateId}/result-template-bands/{resultTemplateBandId}",
+  "permission" : "assessment.result_template_band.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.FinishAssignment",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignments/{assignmentId}:finish",
+  "permission" : "assessment.assignment.finish_assignment",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.GenerateResults",
+  "method" : "POST",
+  "path" : "/v1/assessment/result-templates/{resultTemplateId}:generateResults",
+  "permission" : "assessment.result_template.generate_results",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.GetAssignment",
+  "method" : "GET",
+  "path" : "/v1/assessment/assignments/{assignmentId}",
+  "permission" : "assessment.assignment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetAssignmentAllocation",
+  "method" : "GET",
+  "path" : "/v1/assessment/assignments/{assignmentId}/allocations/{assignmentAllocationId}",
+  "permission" : "assessment.assignment_allocation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetAssignmentApproval",
+  "method" : "GET",
+  "path" : "/v1/assessment/assignments/{assignmentId}/approvals/{assignmentApprovalId}",
+  "permission" : "assessment.assignment_approval.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetAssignmentSubject",
+  "method" : "GET",
+  "path" : "/v1/assessment/assignments/{assignmentId}/subjects/{assignmentSubjectId}",
+  "permission" : "assessment.assignment_subject.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetAssignmentSubmission",
+  "method" : "GET",
+  "path" : "/v1/assessment/assignment-submissions/{assignmentSubmissionId}",
+  "permission" : "assessment.assignment_submission.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetAssignmentType",
+  "method" : "GET",
+  "path" : "/v1/assessment/assignment-types/{assignmentTypeId}",
+  "permission" : "assessment.assignment_type.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetExam",
+  "method" : "GET",
+  "path" : "/v1/assessment/exams/{examId}",
+  "permission" : "assessment.exam.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetExamInvigilator",
+  "method" : "GET",
+  "path" : "/v1/assessment/exams/{examId}/invigilators/{examInvigilatorId}",
+  "permission" : "assessment.exam_invigilator.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetExamResult",
+  "method" : "GET",
+  "path" : "/v1/assessment/exam-results/{examResultId}",
+  "permission" : "assessment.exam_result.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetExamSession",
+  "method" : "GET",
+  "path" : "/v1/assessment/exam-sessions/{examSessionId}",
+  "permission" : "assessment.exam_session.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetExamType",
+  "method" : "GET",
+  "path" : "/v1/assessment/exam-types/{examTypeId}",
+  "permission" : "assessment.exam_type.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetGradingBand",
+  "method" : "GET",
+  "path" : "/v1/assessment/grading-bands/{gradingBandId}",
+  "permission" : "assessment.grading_band.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetGradingScheme",
+  "method" : "GET",
+  "path" : "/v1/assessment/grading-schemes/{gradingSchemeId}",
+  "permission" : "assessment.grading_scheme.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetHomework",
+  "method" : "GET",
+  "path" : "/v1/assessment/homeworks/{homeworkId}",
+  "permission" : "assessment.homework.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetHomeworkApproval",
+  "method" : "GET",
+  "path" : "/v1/assessment/homeworks/{homeworkId}/approvals/{homeworkApprovalId}",
+  "permission" : "assessment.homework_approval.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetHomeworkSubmission",
+  "method" : "GET",
+  "path" : "/v1/assessment/homework-submissions/{homeworkSubmissionId}",
+  "permission" : "assessment.homework_submission.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetMarksheet",
+  "method" : "GET",
+  "path" : "/v1/assessment/marksheets/{marksheetId}",
+  "permission" : "assessment.marksheet.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetMarksheetLine",
+  "method" : "GET",
+  "path" : "/v1/assessment/marksheet-lines/{marksheetLineId}",
+  "permission" : "assessment.marksheet_line.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetOperation",
+  "method" : "GET",
+  "path" : "/v1/assessment/operations/{operationId}",
+  "permission" : "assessment.operation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetResultTemplate",
+  "method" : "GET",
+  "path" : "/v1/assessment/result-templates/{resultTemplateId}",
+  "permission" : "assessment.result_template.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetResultTemplateBand",
+  "method" : "GET",
+  "path" : "/v1/assessment/result-templates/{resultTemplateId}/result-template-bands/{resultTemplateBandId}",
+  "permission" : "assessment.result_template_band.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GetStudentResults",
+  "method" : "GET",
+  "path" : "/v1/assessment/students/{studentId}/results",
+  "permission" : "assessment.marksheet_line.get_student_results",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.GradeAssignmentSubmission",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignment-submissions/{assignmentSubmissionId}:grade",
+  "permission" : "assessment.assignment_submission.grade_assignment_submission",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.ListAssignmentAllocations",
+  "method" : "GET",
+  "path" : "/v1/assessment/assignments/{assignmentId}/allocations",
+  "permission" : "assessment.assignment_allocation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListAssignmentApprovals",
+  "method" : "GET",
+  "path" : "/v1/assessment/assignments/{assignmentId}/approvals",
+  "permission" : "assessment.assignment_approval.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListAssignmentSubjects",
+  "method" : "GET",
+  "path" : "/v1/assessment/assignments/{assignmentId}/subjects",
+  "permission" : "assessment.assignment_subject.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListAssignmentSubmissions",
+  "method" : "GET",
+  "path" : "/v1/assessment/assignment-submissions",
+  "permission" : "assessment.assignment_submission.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListAssignmentTypes",
+  "method" : "GET",
+  "path" : "/v1/assessment/assignment-types",
+  "permission" : "assessment.assignment_type.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListAssignments",
+  "method" : "GET",
+  "path" : "/v1/assessment/assignments",
+  "permission" : "assessment.assignment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListExamInvigilators",
+  "method" : "GET",
+  "path" : "/v1/assessment/exams/{examId}/invigilators",
+  "permission" : "assessment.exam_invigilator.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListExamResults",
+  "method" : "GET",
+  "path" : "/v1/assessment/exam-results",
+  "permission" : "assessment.exam_result.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListExamSessions",
+  "method" : "GET",
+  "path" : "/v1/assessment/exam-sessions",
+  "permission" : "assessment.exam_session.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListExamTypes",
+  "method" : "GET",
+  "path" : "/v1/assessment/exam-types",
+  "permission" : "assessment.exam_type.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListExams",
+  "method" : "GET",
+  "path" : "/v1/assessment/exams",
+  "permission" : "assessment.exam.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListGradingBands",
+  "method" : "GET",
+  "path" : "/v1/assessment/grading-bands",
+  "permission" : "assessment.grading_band.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListGradingSchemes",
+  "method" : "GET",
+  "path" : "/v1/assessment/grading-schemes",
+  "permission" : "assessment.grading_scheme.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListHomeworkApprovals",
+  "method" : "GET",
+  "path" : "/v1/assessment/homeworks/{homeworkId}/approvals",
+  "permission" : "assessment.homework_approval.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListHomeworkSubmissions",
+  "method" : "GET",
+  "path" : "/v1/assessment/homework-submissions",
+  "permission" : "assessment.homework_submission.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListHomeworks",
+  "method" : "GET",
+  "path" : "/v1/assessment/homeworks",
+  "permission" : "assessment.homework.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListMarksheetLines",
+  "method" : "GET",
+  "path" : "/v1/assessment/marksheet-lines",
+  "permission" : "assessment.marksheet_line.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListMarksheets",
+  "method" : "GET",
+  "path" : "/v1/assessment/marksheets",
+  "permission" : "assessment.marksheet.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListOperations",
+  "method" : "GET",
+  "path" : "/v1/assessment/operations",
+  "permission" : "assessment.operation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListResultTemplateBands",
+  "method" : "GET",
+  "path" : "/v1/assessment/result-templates/{resultTemplateId}/result-template-bands",
+  "permission" : "assessment.result_template_band.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ListResultTemplates",
+  "method" : "GET",
+  "path" : "/v1/assessment/result-templates",
+  "permission" : "assessment.result_template.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.MarkExamHeld",
+  "method" : "POST",
+  "path" : "/v1/assessment/exams/{examId}:markHeld",
+  "permission" : "assessment.exam.mark_exam_held",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.MarkExamResultsUpdated",
+  "method" : "POST",
+  "path" : "/v1/assessment/exams/{examId}:markResultsUpdated",
+  "permission" : "assessment.exam.mark_exam_results_updated",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.MarkExamSessionHeld",
+  "method" : "POST",
+  "path" : "/v1/assessment/exam-sessions/{examSessionId}:markHeld",
+  "permission" : "assessment.exam_session.mark_exam_session_held",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.PopulateExamResults",
+  "method" : "POST",
+  "path" : "/v1/assessment/exams/{examId}:populateResults",
+  "permission" : "assessment.exam.populate_exam_results",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.PublishAssignment",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignments/{assignmentId}:publish",
+  "permission" : "assessment.assignment.publish_assignment",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.PublishHomework",
+  "method" : "POST",
+  "path" : "/v1/assessment/homeworks/{homeworkId}:publish",
+  "permission" : "assessment.homework.publish_homework",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.PublishMarksheet",
+  "method" : "POST",
+  "path" : "/v1/assessment/marksheets/{marksheetId}:publish",
+  "permission" : "assessment.marksheet.publish",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.RecordExamMarks",
+  "method" : "POST",
+  "path" : "/v1/assessment/exams/{examId}:recordMarks",
+  "permission" : "assessment.exam.record_exam_marks",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.RejectAssignment",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignments/{assignmentId}:reject",
+  "permission" : "assessment.assignment.reject_assignment",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.RejectAssignmentSubmission",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignment-submissions/{assignmentSubmissionId}:reject",
+  "permission" : "assessment.assignment_submission.reject_assignment_submission",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.RejectHomework",
+  "method" : "POST",
+  "path" : "/v1/assessment/homeworks/{homeworkId}:reject",
+  "permission" : "assessment.homework.reject_homework",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.ReplyToHomeworkFeedback",
+  "method" : "POST",
+  "path" : "/v1/assessment/homework-submissions/{homeworkSubmissionId}:reply",
+  "permission" : "assessment.homework_submission.reply_to_homework_feedback",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.RequestSubmissionChanges",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignment-submissions/{assignmentSubmissionId}:requestChanges",
+  "permission" : "assessment.assignment_submission.request_submission_changes",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.ResetAssignment",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignments/{assignmentId}:resetToDraft",
+  "permission" : "assessment.assignment.reset_assignment",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.ResetAssignmentSubmission",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignment-submissions/{assignmentSubmissionId}:resetToDraft",
+  "permission" : "assessment.assignment_submission.reset_assignment_submission",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.ResetExam",
+  "method" : "POST",
+  "path" : "/v1/assessment/exams/{examId}:resetToDraft",
+  "permission" : "assessment.exam.reset_exam",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.ResetExamSession",
+  "method" : "POST",
+  "path" : "/v1/assessment/exam-sessions/{examSessionId}:resetToDraft",
+  "permission" : "assessment.exam_session.reset_exam_session",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.ResetMarksheet",
+  "method" : "POST",
+  "path" : "/v1/assessment/marksheets/{marksheetId}:resetToDraft",
+  "permission" : "assessment.marksheet.reset_marksheet",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.ScheduleExam",
+  "method" : "POST",
+  "path" : "/v1/assessment/exams/{examId}:schedule",
+  "permission" : "assessment.exam.schedule_exam",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.ScheduleExamSession",
+  "method" : "POST",
+  "path" : "/v1/assessment/exam-sessions/{examSessionId}:schedule",
+  "permission" : "assessment.exam_session.schedule_exam_session",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.SubmitAssignmentSubmission",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignment-submissions/{assignmentSubmissionId}:submit",
+  "permission" : "assessment.assignment_submission.submit_assignment_submission",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "assessment.UpdateAssignment",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/assignments/{assignmentId}",
+  "permission" : "assessment.assignment.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateAssignmentAllocation",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/assignments/{assignmentId}/allocations/{assignmentAllocationId}",
+  "permission" : "assessment.assignment_allocation.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateAssignmentApproval",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/assignments/{assignmentId}/approvals/{assignmentApprovalId}",
+  "permission" : "assessment.assignment_approval.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateAssignmentSubject",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/assignments/{assignmentId}/subjects/{assignmentSubjectId}",
+  "permission" : "assessment.assignment_subject.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateAssignmentSubmission",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/assignment-submissions/{assignmentSubmissionId}",
+  "permission" : "assessment.assignment_submission.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateAssignmentType",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/assignment-types/{assignmentTypeId}",
+  "permission" : "assessment.assignment_type.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateExam",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/exams/{examId}",
+  "permission" : "assessment.exam.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateExamInvigilator",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/exams/{examId}/invigilators/{examInvigilatorId}",
+  "permission" : "assessment.exam_invigilator.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateExamResult",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/exam-results/{examResultId}",
+  "permission" : "assessment.exam_result.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateExamSession",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/exam-sessions/{examSessionId}",
+  "permission" : "assessment.exam_session.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateExamType",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/exam-types/{examTypeId}",
+  "permission" : "assessment.exam_type.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateGradingBand",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/grading-bands/{gradingBandId}",
+  "permission" : "assessment.grading_band.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateGradingScheme",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/grading-schemes/{gradingSchemeId}",
+  "permission" : "assessment.grading_scheme.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateHomework",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/homeworks/{homeworkId}",
+  "permission" : "assessment.homework.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateHomeworkSubmission",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/homework-submissions/{homeworkSubmissionId}",
+  "permission" : "assessment.homework_submission.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateMarksheet",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/marksheets/{marksheetId}",
+  "permission" : "assessment.marksheet.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateResultTemplate",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/result-templates/{resultTemplateId}",
+  "permission" : "assessment.result_template.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.UpdateResultTemplateBand",
+  "method" : "PATCH",
+  "path" : "/v1/assessment/result-templates/{resultTemplateId}/result-template-bands/{resultTemplateBandId}",
+  "permission" : "assessment.result_template_band.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "assessment.ValidateMarksheet",
+  "method" : "POST",
+  "path" : "/v1/assessment/marksheets/{marksheetId}:validate",
+  "permission" : "assessment.marksheet.validate_marksheet",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+} ]

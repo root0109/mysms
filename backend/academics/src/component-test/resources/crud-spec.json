@@ -243,6 +243,28 @@
      "ifMatch": false
     },
     {
+     "operation": "academics.ApproveLessonPlan",
+     "path": "/v1/academics/lesson-plans/{id}:approve",
+     "permission": "academics.lesson_plan.approve_lesson_plan",
+     "guard": {
+      "status": [
+       "pending"
+      ]
+     },
+     "prepare": [
+      "UPDATE academics.lesson_plan SET status = 'pending' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "approved"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
      "operation": "academics.RejectLessonPlan",
      "path": "/v1/academics/lesson-plans/{id}:reject",
      "permission": "academics.lesson_plan.reject_lesson_plan",
@@ -311,21 +333,21 @@
      "etag": true,
      "ifMatch": false
     }
+   ],
+   "beforeDelete": [
+    "UPDATE academics.lesson_plan_approval SET deleted_at = now() WHERE lesson_plan_id = '{id}'"
    ]
   },
   {
    "name": "LessonPlanApproval",
    "table": "academics.lesson_plan_approval",
    "ops": [
-    "Create",
-    "Delete",
     "Get",
-    "List",
-    "Update"
+    "List"
    ],
    "collection": "/v1/academics/lesson-plans/ced3a14a-5c52-5dcb-8d11-abfed1170060/approvals",
    "item": "/v1/academics/lesson-plans/ced3a14a-5c52-5dcb-8d11-abfed1170060/approvals/{id}",
-   "scope": "tenant",
+   "scope": "chain",
    "fixtures": [
     "INSERT INTO academics.grade_level (tenant_id, institution_id, name, slug, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-45279694', 't-slug-f6edcbee', 1, 'dfed4eca-e255-5aff-80eb-9b1a5b6475d0') ON CONFLICT (id) DO NOTHING",
     "INSERT INTO academics.section (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-9f9ae37a', 1, 'C0A7B1C81', '80aeda47-ae55-554e-a134-d2ce7d9053b1') ON CONFLICT (id) DO NOTHING",
@@ -335,14 +357,11 @@
     "INSERT INTO academics.teaching_assignment (tenant_id, class_subject_id, staff_id, row_version, id) VALUES (:tenant, '5519de7f-12a1-5d8e-aebb-822bce47ea16', '729b2944-2c6b-5239-9a94-f617ff0c2e6f', 1, 'd20b87ba-d3da-5ea9-90bc-fa5c0a1e6f9d') ON CONFLICT (id) DO NOTHING",
     "INSERT INTO academics.lesson_plan (tenant_id, teaching_assignment_id, unit_no, unit_name, title, planned_duration_minutes, description, row_version, id) VALUES (:tenant, 'd20b87ba-d3da-5ea9-90bc-fa5c0a1e6f9d', 't-unit-no-ba545081', 't-unit-name-23e8204c', 't-title-f323d36a', 1, 't-description-81bdc38b', 1, 'ced3a14a-5c52-5dcb-8d11-abfed1170060') ON CONFLICT (id) DO NOTHING"
    ],
-   "create": {
-    "lessonPlanId": "ced3a14a-5c52-5dcb-8d11-abfed1170060",
-    "comments": "t-comments-5bcf026e"
-   },
-   "update": {
-    "comments": "Updated comments"
-   },
-   "duplicateConflicts": false
+   "duplicateConflicts": false,
+   "seedId": "0196f000-0000-7000-8000-0000000ac0df",
+   "seed": [
+    "INSERT INTO academics.lesson_plan_approval (lesson_plan_id, decision, comments, tenant_id, row_version, id) VALUES ('ced3a14a-5c52-5dcb-8d11-abfed1170060', 'approved', 'Seeded review', :tenant, 1, '0196f000-0000-7000-8000-0000000ac0df')"
+   ]
   },
   {
    "name": "Program",

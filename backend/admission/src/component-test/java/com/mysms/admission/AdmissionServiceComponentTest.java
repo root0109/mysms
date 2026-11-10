@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.testkit.ModuleChecks;
+import com.mysms.core.testkit.OpenApiDocuments;
 import com.mysms.core.testkit.TestDatabase;
 import com.mysms.admission.config.AdmissionDatabaseConfig;
 import java.io.InputStream;
@@ -29,8 +30,7 @@ import tools.jackson.databind.json.JsonMapper;
  * and its edge refuses undeclared routes and missing tokens.
  */
 @SpringBootTest(classes = AdmissionApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"spring.config.name=" + AdmissionApplication.CONFIG_NAME,
-                "management.endpoint.health.show-components=always"})
+        properties = "management.endpoint.health.show-components=always")
 class AdmissionServiceComponentTest {
 
     /** CREATE TABLE statements in database/migrations/admission (partitions included). */
@@ -49,6 +49,7 @@ class AdmissionServiceComponentTest {
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         DATABASE.register(registry, "admission");
+        registry.add("mysms.auth.api-docs", () -> true);
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
     }
@@ -112,5 +113,14 @@ class AdmissionServiceComponentTest {
             }
         }
         throw new IllegalStateException("admission has no operation that requires a token");
+    }
+
+    /** The OpenAPI document is written from the contract interfaces by springdoc and kept as a build artifact. */
+    @Test
+    void writesItsOpenApiDocumentFromTheCode() throws Exception {
+        HttpResponse<String> doc = send("GET", "/v3/api-docs.yaml", null);
+        assertThat(doc.statusCode()).isEqualTo(200);
+        String document = OpenApiDocuments.write("admission", doc.body());
+        assertThat(document).contains("operationId: admission.ApproveApplication").contains("x-permission:");
     }
 }

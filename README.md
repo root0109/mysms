@@ -17,6 +17,6 @@ MySMS is an education management system covering school administration, higher-e
 - Java coding rules (Maven multi-module layout, plain Spring JDBC, MapStruct, programmatic transactions, testing, review checklist): [JAVA-CODING-RULES.md](JAVA-CODING-RULES.md)
 - Backend (Java 17, Spring Boot 4.1; 21 microservices + monolith): [backend/README.md](backend/README.md)
 - Clients (React web, platform console, React Native phone and tablet apps): [clients/README.md](clients/README.md)
-- Developer tooling (code generators, design-conformance check), kept outside the Maven backend: [tools/backend/crud/README.md](tools/backend/crud/README.md)
+- Design-conformance check: the `conformance` Maven module (`backend/conformance`), run by every `mvn verify`
 - Proposed enhancements for discussion: [ENHANCEMENTS.md](ENHANCEMENTS.md)
 - Maintainability, performance and scalability review (decisions proposed for approval): [docs/MAINTAINABILITY-REVIEW.md](docs/MAINTAINABILITY-REVIEW.md)

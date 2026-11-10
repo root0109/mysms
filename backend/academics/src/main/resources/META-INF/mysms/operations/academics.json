@@ -1,0 +1,545 @@
+[ {
+  "operationId" : "academics.ApproveLessonPlan",
+  "method" : "POST",
+  "path" : "/v1/academics/lesson-plans/{lessonPlanId}:approve",
+  "permission" : "academics.lesson_plan.approve_lesson_plan",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.ArchiveLessonPlan",
+  "method" : "POST",
+  "path" : "/v1/academics/lesson-plans/{lessonPlanId}:archive",
+  "permission" : "academics.lesson_plan.archive_lesson_plan",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateBatch",
+  "method" : "POST",
+  "path" : "/v1/academics/batches",
+  "permission" : "academics.batch.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateClassSection",
+  "method" : "POST",
+  "path" : "/v1/academics/class-sections",
+  "permission" : "academics.class_section.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateClassSubject",
+  "method" : "POST",
+  "path" : "/v1/academics/class-sections/{classSectionId}/subjects",
+  "permission" : "academics.class_subject.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateCourse",
+  "method" : "POST",
+  "path" : "/v1/academics/courses",
+  "permission" : "academics.course.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateCourseSubject",
+  "method" : "POST",
+  "path" : "/v1/academics/courses/{courseId}/subjects",
+  "permission" : "academics.course_subject.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateCurriculumUnit",
+  "method" : "POST",
+  "path" : "/v1/academics/curriculum-units",
+  "permission" : "academics.curriculum_unit.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateGradeLevel",
+  "method" : "POST",
+  "path" : "/v1/academics/grade-levels",
+  "permission" : "academics.grade_level.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateLessonPlan",
+  "method" : "POST",
+  "path" : "/v1/academics/lesson-plans",
+  "permission" : "academics.lesson_plan.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateLessonPlanApproval",
+  "method" : "POST",
+  "path" : "/v1/academics/lesson-plans/{lessonPlanId}/approvals",
+  "permission" : "academics.lesson_plan_approval.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateProgram",
+  "method" : "POST",
+  "path" : "/v1/academics/programs",
+  "permission" : "academics.program.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateProgramLevel",
+  "method" : "POST",
+  "path" : "/v1/academics/program-levels",
+  "permission" : "academics.program_level.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateSection",
+  "method" : "POST",
+  "path" : "/v1/academics/sections",
+  "permission" : "academics.section.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateSubject",
+  "method" : "POST",
+  "path" : "/v1/academics/subjects",
+  "permission" : "academics.subject.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.CreateTeachingAssignment",
+  "method" : "POST",
+  "path" : "/v1/academics/teaching-assignments",
+  "permission" : "academics.teaching_assignment.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.DeleteBatch",
+  "method" : "DELETE",
+  "path" : "/v1/academics/batches/{batchId}",
+  "permission" : "academics.batch.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.DeleteClassSection",
+  "method" : "DELETE",
+  "path" : "/v1/academics/class-sections/{classSectionId}",
+  "permission" : "academics.class_section.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.DeleteClassSubject",
+  "method" : "DELETE",
+  "path" : "/v1/academics/class-sections/{classSectionId}/subjects/{classSubjectId}",
+  "permission" : "academics.class_subject.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.DeleteCourse",
+  "method" : "DELETE",
+  "path" : "/v1/academics/courses/{courseId}",
+  "permission" : "academics.course.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.DeleteCourseSubject",
+  "method" : "DELETE",
+  "path" : "/v1/academics/courses/{courseId}/subjects/{courseSubjectId}",
+  "permission" : "academics.course_subject.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.DeleteCurriculumUnit",
+  "method" : "DELETE",
+  "path" : "/v1/academics/curriculum-units/{curriculumUnitId}",
+  "permission" : "academics.curriculum_unit.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.DeleteGradeLevel",
+  "method" : "DELETE",
+  "path" : "/v1/academics/grade-levels/{gradeLevelId}",
+  "permission" : "academics.grade_level.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.DeleteLessonPlan",
+  "method" : "DELETE",
+  "path" : "/v1/academics/lesson-plans/{lessonPlanId}",
+  "permission" : "academics.lesson_plan.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.DeleteLessonPlanApproval",
+  "method" : "DELETE",
+  "path" : "/v1/academics/lesson-plans/{lessonPlanId}/approvals/{lessonPlanApprovalId}",
+  "permission" : "academics.lesson_plan_approval.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.DeleteProgram",
+  "method" : "DELETE",
+  "path" : "/v1/academics/programs/{programId}",
+  "permission" : "academics.program.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.DeleteProgramLevel",
+  "method" : "DELETE",
+  "path" : "/v1/academics/program-levels/{programLevelId}",
+  "permission" : "academics.program_level.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.DeleteSection",
+  "method" : "DELETE",
+  "path" : "/v1/academics/sections/{sectionId}",
+  "permission" : "academics.section.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.DeleteSubject",
+  "method" : "DELETE",
+  "path" : "/v1/academics/subjects/{subjectId}",
+  "permission" : "academics.subject.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.DeleteTeachingAssignment",
+  "method" : "DELETE",
+  "path" : "/v1/academics/teaching-assignments/{teachingAssignmentId}",
+  "permission" : "academics.teaching_assignment.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetBatch",
+  "method" : "GET",
+  "path" : "/v1/academics/batches/{batchId}",
+  "permission" : "academics.batch.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetClassSection",
+  "method" : "GET",
+  "path" : "/v1/academics/class-sections/{classSectionId}",
+  "permission" : "academics.class_section.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetClassSubject",
+  "method" : "GET",
+  "path" : "/v1/academics/class-sections/{classSectionId}/subjects/{classSubjectId}",
+  "permission" : "academics.class_subject.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetCourse",
+  "method" : "GET",
+  "path" : "/v1/academics/courses/{courseId}",
+  "permission" : "academics.course.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetCourseSubject",
+  "method" : "GET",
+  "path" : "/v1/academics/courses/{courseId}/subjects/{courseSubjectId}",
+  "permission" : "academics.course_subject.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetCurriculumUnit",
+  "method" : "GET",
+  "path" : "/v1/academics/curriculum-units/{curriculumUnitId}",
+  "permission" : "academics.curriculum_unit.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetGradeLevel",
+  "method" : "GET",
+  "path" : "/v1/academics/grade-levels/{gradeLevelId}",
+  "permission" : "academics.grade_level.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetLessonPlan",
+  "method" : "GET",
+  "path" : "/v1/academics/lesson-plans/{lessonPlanId}",
+  "permission" : "academics.lesson_plan.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetLessonPlanApproval",
+  "method" : "GET",
+  "path" : "/v1/academics/lesson-plans/{lessonPlanId}/approvals/{lessonPlanApprovalId}",
+  "permission" : "academics.lesson_plan_approval.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetProgram",
+  "method" : "GET",
+  "path" : "/v1/academics/programs/{programId}",
+  "permission" : "academics.program.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetProgramLevel",
+  "method" : "GET",
+  "path" : "/v1/academics/program-levels/{programLevelId}",
+  "permission" : "academics.program_level.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetSection",
+  "method" : "GET",
+  "path" : "/v1/academics/sections/{sectionId}",
+  "permission" : "academics.section.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetSubject",
+  "method" : "GET",
+  "path" : "/v1/academics/subjects/{subjectId}",
+  "permission" : "academics.subject.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.GetTeachingAssignment",
+  "method" : "GET",
+  "path" : "/v1/academics/teaching-assignments/{teachingAssignmentId}",
+  "permission" : "academics.teaching_assignment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListBatches",
+  "method" : "GET",
+  "path" : "/v1/academics/batches",
+  "permission" : "academics.batch.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListClassSections",
+  "method" : "GET",
+  "path" : "/v1/academics/class-sections",
+  "permission" : "academics.class_section.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListClassSubjects",
+  "method" : "GET",
+  "path" : "/v1/academics/class-sections/{classSectionId}/subjects",
+  "permission" : "academics.class_subject.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListCourseSubjects",
+  "method" : "GET",
+  "path" : "/v1/academics/courses/{courseId}/subjects",
+  "permission" : "academics.course_subject.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListCourses",
+  "method" : "GET",
+  "path" : "/v1/academics/courses",
+  "permission" : "academics.course.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListCurriculumUnits",
+  "method" : "GET",
+  "path" : "/v1/academics/curriculum-units",
+  "permission" : "academics.curriculum_unit.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListGradeLevels",
+  "method" : "GET",
+  "path" : "/v1/academics/grade-levels",
+  "permission" : "academics.grade_level.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListLessonPlanApprovals",
+  "method" : "GET",
+  "path" : "/v1/academics/lesson-plans/{lessonPlanId}/approvals",
+  "permission" : "academics.lesson_plan_approval.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListLessonPlans",
+  "method" : "GET",
+  "path" : "/v1/academics/lesson-plans",
+  "permission" : "academics.lesson_plan.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListProgramLevels",
+  "method" : "GET",
+  "path" : "/v1/academics/program-levels",
+  "permission" : "academics.program_level.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListPrograms",
+  "method" : "GET",
+  "path" : "/v1/academics/programs",
+  "permission" : "academics.program.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListSections",
+  "method" : "GET",
+  "path" : "/v1/academics/sections",
+  "permission" : "academics.section.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListSubjects",
+  "method" : "GET",
+  "path" : "/v1/academics/subjects",
+  "permission" : "academics.subject.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.ListTeachingAssignments",
+  "method" : "GET",
+  "path" : "/v1/academics/teaching-assignments",
+  "permission" : "academics.teaching_assignment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.PublishLessonPlan",
+  "method" : "POST",
+  "path" : "/v1/academics/lesson-plans/{lessonPlanId}:publish",
+  "permission" : "academics.lesson_plan.publish_lesson_plan",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.RejectLessonPlan",
+  "method" : "POST",
+  "path" : "/v1/academics/lesson-plans/{lessonPlanId}:reject",
+  "permission" : "academics.lesson_plan.reject_lesson_plan",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.SubmitLessonPlan",
+  "method" : "POST",
+  "path" : "/v1/academics/lesson-plans/{lessonPlanId}:submit",
+  "permission" : "academics.lesson_plan.submit_lesson_plan",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "academics.UpdateBatch",
+  "method" : "PATCH",
+  "path" : "/v1/academics/batches/{batchId}",
+  "permission" : "academics.batch.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.UpdateClassSection",
+  "method" : "PATCH",
+  "path" : "/v1/academics/class-sections/{classSectionId}",
+  "permission" : "academics.class_section.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.UpdateClassSubject",
+  "method" : "PATCH",
+  "path" : "/v1/academics/class-sections/{classSectionId}/subjects/{classSubjectId}",
+  "permission" : "academics.class_subject.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.UpdateCourse",
+  "method" : "PATCH",
+  "path" : "/v1/academics/courses/{courseId}",
+  "permission" : "academics.course.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.UpdateCourseSubject",
+  "method" : "PATCH",
+  "path" : "/v1/academics/courses/{courseId}/subjects/{courseSubjectId}",
+  "permission" : "academics.course_subject.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.UpdateCurriculumUnit",
+  "method" : "PATCH",
+  "path" : "/v1/academics/curriculum-units/{curriculumUnitId}",
+  "permission" : "academics.curriculum_unit.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.UpdateGradeLevel",
+  "method" : "PATCH",
+  "path" : "/v1/academics/grade-levels/{gradeLevelId}",
+  "permission" : "academics.grade_level.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.UpdateLessonPlan",
+  "method" : "PATCH",
+  "path" : "/v1/academics/lesson-plans/{lessonPlanId}",
+  "permission" : "academics.lesson_plan.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.UpdateLessonPlanApproval",
+  "method" : "PATCH",
+  "path" : "/v1/academics/lesson-plans/{lessonPlanId}/approvals/{lessonPlanApprovalId}",
+  "permission" : "academics.lesson_plan_approval.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.UpdateProgram",
+  "method" : "PATCH",
+  "path" : "/v1/academics/programs/{programId}",
+  "permission" : "academics.program.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.UpdateProgramLevel",
+  "method" : "PATCH",
+  "path" : "/v1/academics/program-levels/{programLevelId}",
+  "permission" : "academics.program_level.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.UpdateSection",
+  "method" : "PATCH",
+  "path" : "/v1/academics/sections/{sectionId}",
+  "permission" : "academics.section.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.UpdateSubject",
+  "method" : "PATCH",
+  "path" : "/v1/academics/subjects/{subjectId}",
+  "permission" : "academics.subject.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "academics.UpdateTeachingAssignment",
+  "method" : "PATCH",
+  "path" : "/v1/academics/teaching-assignments/{teachingAssignmentId}",
+  "permission" : "academics.teaching_assignment.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+} ]

@@ -158,11 +158,12 @@ describe('generic record operations', () => {
     const client = runtime.api;
     const page = await listRecords(client, NOTES, {
       parentId: PARENT,
-      pageSize: 10,
+      size: 10,
       filter: 'title : "Fi"',
-      orderBy: 'title',
+      sort: ['title'],
     });
-    expect(page.items.map((r) => r.id)).toEqual(['n1']);
+    expect(page.data.map((r) => r.id)).toEqual(['n1']);
+    expect(page.paging).toMatchObject({ page: 1, size: 1 });
     const listed = api.calls.find((c) => c.method === 'GET' && c.path.endsWith('/notes'));
     expect(listed?.headers.get('Authorization')).toBe('Bearer a1');
     const one = await getRecord(client, NOTES, 'n1', PARENT);
@@ -207,11 +208,11 @@ describe('generic record operations', () => {
       }),
       { wrapper },
     );
-    await waitFor(() => expect(result.current.list.data?.pages[0]?.items).toHaveLength(1));
+    await waitFor(() => expect(result.current.list.data?.pages[0]?.data).toHaveLength(1));
     expect(result.current.idle.fetchStatus).toBe('idle');
     await waitFor(() => expect(result.current.one.data?.etag).toBe('"1"'));
     await act(() => result.current.create.mutateAsync({ values: { title: 'New' }, parentId: PARENT }));
-    await waitFor(() => expect(result.current.list.data?.pages[0]?.items).toHaveLength(2));
+    await waitFor(() => expect(result.current.list.data?.pages[0]?.data).toHaveLength(2));
     await act(() =>
       result.current.update.mutateAsync({
         id: 'n1',
@@ -222,6 +223,6 @@ describe('generic record operations', () => {
     );
     await waitFor(() => expect(result.current.one.data?.etag).toBe('"2"'));
     await act(() => result.current.remove.mutateAsync({ id: 'n1', etag: '"2"', parentId: PARENT }));
-    await waitFor(() => expect(result.current.list.data?.pages[0]?.items).toHaveLength(1));
+    await waitFor(() => expect(result.current.list.data?.pages[0]?.data).toHaveLength(1));
   });
 });

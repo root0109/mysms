@@ -100,21 +100,23 @@ service LeaveApplicationService {
 }
 
 message ListDesignationsRequest {
-  // Page size (1-500, default 50).
-  int32 page_size = 1;
-  // Cursor from next_page_token.
-  string page_token = 2;
   // Filter expression (AIP-160 subset).
   string filter = 3;
-  // Ordering, e.g. "create_time desc".
-  string order_by = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
 }
 message ListDesignationsResponse {
   repeated Designation items = 1;
-  // Cursor for the next page; empty on the last page.
-  string next_page_token = 2;
-  // Total matching items.
-  int32 total_size = 3;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
 }
 
 message GetDesignationRequest {
@@ -158,21 +160,23 @@ message DeleteDesignationResponse {
 }
 
 message ListStaffRequest {
-  // Page size (1-500, default 50).
-  int32 page_size = 1;
-  // Cursor from next_page_token.
-  string page_token = 2;
   // Filter expression (AIP-160 subset).
   string filter = 3;
-  // Ordering, e.g. "create_time desc".
-  string order_by = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
 }
 message ListStaffResponse {
   repeated Staff items = 1;
-  // Cursor for the next page; empty on the last page.
-  string next_page_token = 2;
-  // Total matching items.
-  int32 total_size = 3;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
 }
 
 message GetStaffRequest {
@@ -218,21 +222,23 @@ message DeleteStaffResponse {
 message ListStaffDepartmentsRequest {
   // Staff id (UUID).
   string staff_id = 1;
-  // Page size (1-500, default 50).
-  int32 page_size = 2;
-  // Cursor from next_page_token.
-  string page_token = 3;
   // Filter expression (AIP-160 subset).
   string filter = 4;
-  // Ordering, e.g. "create_time desc".
-  string order_by = 5;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
 }
 message ListStaffDepartmentsResponse {
   repeated StaffDepartment items = 1;
-  // Cursor for the next page; empty on the last page.
-  string next_page_token = 2;
-  // Total matching items.
-  int32 total_size = 3;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
 }
 
 message GetStaffDepartmentRequest {
@@ -286,21 +292,23 @@ message DeleteStaffDepartmentResponse {
 message ListStaffSubjectsRequest {
   // Staff id (UUID).
   string staff_id = 1;
-  // Page size (1-500, default 50).
-  int32 page_size = 2;
-  // Cursor from next_page_token.
-  string page_token = 3;
   // Filter expression (AIP-160 subset).
   string filter = 4;
-  // Ordering, e.g. "create_time desc".
-  string order_by = 5;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
 }
 message ListStaffSubjectsResponse {
   repeated StaffSubject items = 1;
-  // Cursor for the next page; empty on the last page.
-  string next_page_token = 2;
-  // Total matching items.
-  int32 total_size = 3;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
 }
 
 message GetStaffSubjectRequest {
@@ -352,21 +360,23 @@ message DeleteStaffSubjectResponse {
 }
 
 message ListLeaveTypesRequest {
-  // Page size (1-500, default 50).
-  int32 page_size = 1;
-  // Cursor from next_page_token.
-  string page_token = 2;
   // Filter expression (AIP-160 subset).
   string filter = 3;
-  // Ordering, e.g. "create_time desc".
-  string order_by = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
 }
 message ListLeaveTypesResponse {
   repeated LeaveType items = 1;
-  // Cursor for the next page; empty on the last page.
-  string next_page_token = 2;
-  // Total matching items.
-  int32 total_size = 3;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
 }
 
 message GetLeaveTypeRequest {
@@ -410,21 +420,23 @@ message DeleteLeaveTypeResponse {
 }
 
 message ListLeaveApplicationsRequest {
-  // Page size (1-500, default 50).
-  int32 page_size = 1;
-  // Cursor from next_page_token.
-  string page_token = 2;
   // Filter expression (AIP-160 subset).
   string filter = 3;
-  // Ordering, e.g. "create_time desc".
-  string order_by = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
 }
 message ListLeaveApplicationsResponse {
   repeated LeaveApplication items = 1;
-  // Cursor for the next page; empty on the last page.
-  string next_page_token = 2;
-  // Total matching items.
-  int32 total_size = 3;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
 }
 
 message GetLeaveApplicationRequest {
@@ -508,15 +520,21 @@ message GetStaffLeaveBalanceRequest {
   string staff_id = 1;
   // Year (default current).
   optional string academic_year_id = 2;
-  // Maximum items to return (1-500, default 50).
-  optional int32 page_size = 3;
-  // Cursor from next_page_token.
-  optional string page_token = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 3 (page_size), 4 (page_token) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 3, 4;
+  reserved "page_size", "page_token";
 }
 message GetStaffLeaveBalanceResponse {
   repeated mysms.common.v1.LeaveBalanceSummary items = 1;
-  // Cursor for the next page (paged queries).
-  string next_page_token = 2;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 3;
+  // Fields 2 (next_page_token) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2;
+  reserved "next_page_token";
 }
 
 message ApproveLeaveRequest {
@@ -832,21 +850,23 @@ message LeaveBalance {
 }
 
 message ListLeaveBalancesRequest {
-  // Page size (1-500, default 50).
-  int32 page_size = 1;
-  // Cursor from next_page_token.
-  string page_token = 2;
   // Filter expression (AIP-160 subset).
   string filter = 3;
-  // Ordering, e.g. "create_time desc".
-  string order_by = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
 }
 message ListLeaveBalancesResponse {
   repeated LeaveBalance items = 1;
-  // Cursor for the next page; empty on the last page.
-  string next_page_token = 2;
-  // Total matching items.
-  int32 total_size = 3;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
 }
 
 message GetLeaveBalanceRequest {

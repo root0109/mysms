@@ -64,7 +64,7 @@ paths:
     get:
       operationId: comms.ListMessageTemplates
       summary: List MessageTemplates
-      description: List MessageTemplates visible to the caller, with cursor pagination, filtering and ordering.
+      description: List MessageTemplates visible to the caller, page by page, with filtering and sorting.
       tags:
       - MessageTemplate
       security:
@@ -74,10 +74,11 @@ paths:
         service: mysms.comms.v1.MessageTemplateService
         method: ListMessageTemplates
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -85,7 +86,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageTemplateList'
+                $ref: '#/components/schemas/PagingInfoMessageTemplate'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -304,7 +305,7 @@ paths:
     get:
       operationId: comms.ListOutboundMessages
       summary: List OutboundMessages
-      description: List OutboundMessages visible to the caller, with cursor pagination, filtering and ordering.
+      description: List OutboundMessages visible to the caller, page by page, with filtering and sorting.
       tags:
       - OutboundMessage
       security:
@@ -314,10 +315,11 @@ paths:
         service: mysms.comms.v1.OutboundMessageService
         method: ListOutboundMessages
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -325,7 +327,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OutboundMessageList'
+                $ref: '#/components/schemas/PagingInfoOutboundMessage'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -386,7 +388,7 @@ paths:
     get:
       operationId: comms.ListMailboxMessages
       summary: List MailboxMessages
-      description: List MailboxMessages visible to the caller, with cursor pagination, filtering and ordering.
+      description: List MailboxMessages visible to the caller, page by page, with filtering and sorting.
       tags:
       - MailboxMessage
       security:
@@ -396,10 +398,11 @@ paths:
         service: mysms.comms.v1.MailboxMessageService
         method: ListMailboxMessages
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -407,7 +410,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MailboxMessageList'
+                $ref: '#/components/schemas/PagingInfoMailboxMessage'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -510,7 +513,7 @@ paths:
     get:
       operationId: comms.ListInAppNotifications
       summary: List InAppNotifications
-      description: List InAppNotifications visible to the caller, with cursor pagination, filtering and ordering.
+      description: List InAppNotifications visible to the caller, page by page, with filtering and sorting.
       tags:
       - InAppNotification
       security:
@@ -520,10 +523,11 @@ paths:
         service: mysms.comms.v1.InAppNotificationService
         method: ListInAppNotifications
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -531,7 +535,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InAppNotificationList'
+                $ref: '#/components/schemas/PagingInfoInAppNotification'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -592,7 +596,7 @@ paths:
     get:
       operationId: comms.ListNoticeBackgrounds
       summary: List NoticeBackgrounds
-      description: List NoticeBackgrounds visible to the caller, with cursor pagination, filtering and ordering.
+      description: List NoticeBackgrounds visible to the caller, page by page, with filtering and sorting.
       tags:
       - NoticeBackground
       security:
@@ -602,10 +606,11 @@ paths:
         service: mysms.comms.v1.NoticeBackgroundService
         method: ListNoticeBackgrounds
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -613,7 +618,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NoticeBackgroundList'
+                $ref: '#/components/schemas/PagingInfoNoticeBackground'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -832,7 +837,7 @@ paths:
     get:
       operationId: comms.ListNotices
       summary: List Notices
-      description: List Notices visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Notices visible to the caller, page by page, with filtering and sorting.
       tags:
       - Notice
       security:
@@ -842,10 +847,11 @@ paths:
         service: mysms.comms.v1.NoticeService
         method: ListNotices
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -853,7 +859,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NoticeList'
+                $ref: '#/components/schemas/PagingInfoNotice'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1072,7 +1078,7 @@ paths:
     get:
       operationId: comms.ListEvents
       summary: List Events
-      description: List Events visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Events visible to the caller, page by page, with filtering and sorting.
       tags:
       - Event
       security:
@@ -1082,10 +1088,11 @@ paths:
         service: mysms.comms.v1.EventService
         method: ListEvents
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1093,7 +1100,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventList'
+                $ref: '#/components/schemas/PagingInfoEvent'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1312,7 +1319,7 @@ paths:
     get:
       operationId: comms.ListEventGalleryItems
       summary: List EventGalleryItems
-      description: List EventGalleryItems visible to the caller, with cursor pagination, filtering and ordering.
+      description: List EventGalleryItems visible to the caller, page by page, with filtering and sorting.
       tags:
       - Event
       security:
@@ -1329,10 +1336,11 @@ paths:
           type: string
           format: uuid
         description: Event id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1340,7 +1348,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventGalleryItemList'
+                $ref: '#/components/schemas/PagingInfoEventGalleryItem'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1587,7 +1595,7 @@ paths:
     get:
       operationId: comms.ListMagazines
       summary: List Magazines
-      description: List Magazines visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Magazines visible to the caller, page by page, with filtering and sorting.
       tags:
       - Magazine
       security:
@@ -1597,10 +1605,11 @@ paths:
         service: mysms.comms.v1.MagazineService
         method: ListMagazines
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1608,7 +1617,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MagazineList'
+                $ref: '#/components/schemas/PagingInfoMagazine'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1827,7 +1836,7 @@ paths:
     get:
       operationId: comms.ListConversations
       summary: List Conversations
-      description: List Conversations visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Conversations visible to the caller, page by page, with filtering and sorting.
       tags:
       - Conversation
       security:
@@ -1837,10 +1846,11 @@ paths:
         service: mysms.comms.v1.ConversationService
         method: ListConversations
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1848,7 +1858,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConversationList'
+                $ref: '#/components/schemas/PagingInfoConversation'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2067,7 +2077,7 @@ paths:
     get:
       operationId: comms.ListConversationParticipants
       summary: List ConversationParticipants
-      description: List ConversationParticipants visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ConversationParticipants visible to the caller, page by page, with filtering and sorting.
       tags:
       - Conversation
       security:
@@ -2084,10 +2094,11 @@ paths:
           type: string
           format: uuid
         description: Conversation id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2095,7 +2106,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConversationParticipantList'
+                $ref: '#/components/schemas/PagingInfoConversationParticipant'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2342,7 +2353,7 @@ paths:
     get:
       operationId: comms.ListConversationMessages
       summary: List ConversationMessages
-      description: List ConversationMessages visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ConversationMessages visible to the caller, page by page, with filtering and sorting.
       tags:
       - Conversation
       security:
@@ -2359,10 +2370,11 @@ paths:
           type: string
           format: uuid
         description: Conversation id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2370,7 +2382,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConversationMessageList'
+                $ref: '#/components/schemas/PagingInfoConversationMessage'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2617,7 +2629,7 @@ paths:
     get:
       operationId: comms.ListFeedbackThreads
       summary: List FeedbackThreads
-      description: List FeedbackThreads visible to the caller, with cursor pagination, filtering and ordering.
+      description: List FeedbackThreads visible to the caller, page by page, with filtering and sorting.
       tags:
       - FeedbackThread
       security:
@@ -2627,10 +2639,11 @@ paths:
         service: mysms.comms.v1.FeedbackThreadService
         method: ListFeedbackThreads
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2638,7 +2651,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FeedbackThreadList'
+                $ref: '#/components/schemas/PagingInfoFeedbackThread'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2857,7 +2870,7 @@ paths:
     get:
       operationId: comms.ListFeedbackMessages
       summary: List FeedbackMessages
-      description: List FeedbackMessages visible to the caller, with cursor pagination, filtering and ordering.
+      description: List FeedbackMessages visible to the caller, page by page, with filtering and sorting.
       tags:
       - FeedbackThread
       security:
@@ -2874,10 +2887,11 @@ paths:
           type: string
           format: uuid
         description: FeedbackThread id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2885,7 +2899,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FeedbackMessageList'
+                $ref: '#/components/schemas/PagingInfoFeedbackMessage'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3132,7 +3146,7 @@ paths:
     get:
       operationId: comms.ListAudienceGroups
       summary: List AudienceGroups
-      description: List AudienceGroups visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AudienceGroups visible to the caller, page by page, with filtering and sorting.
       tags:
       - AudienceGroup
       security:
@@ -3142,10 +3156,11 @@ paths:
         service: mysms.comms.v1.AudienceGroupService
         method: ListAudienceGroups
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3153,7 +3168,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AudienceGroupList'
+                $ref: '#/components/schemas/PagingInfoAudienceGroup'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3372,7 +3387,7 @@ paths:
     get:
       operationId: comms.ListAudienceGroupMembers
       summary: List AudienceGroupMembers
-      description: List AudienceGroupMembers visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AudienceGroupMembers visible to the caller, page by page, with filtering and sorting.
       tags:
       - AudienceGroup
       security:
@@ -3389,10 +3404,11 @@ paths:
           type: string
           format: uuid
         description: AudienceGroup id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3400,7 +3416,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AudienceGroupMemberList'
+                $ref: '#/components/schemas/PagingInfoAudienceGroupMember'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3647,7 +3663,7 @@ paths:
     get:
       operationId: comms.ListTasks
       summary: List Tasks
-      description: List Tasks visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Tasks visible to the caller, page by page, with filtering and sorting.
       tags:
       - Task
       security:
@@ -3657,10 +3673,11 @@ paths:
         service: mysms.comms.v1.TaskService
         method: ListTasks
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3668,7 +3685,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskList'
+                $ref: '#/components/schemas/PagingInfoTask'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3887,7 +3904,7 @@ paths:
     get:
       operationId: comms.ListTaskAssignees
       summary: List TaskAssignees
-      description: List TaskAssignees visible to the caller, with cursor pagination, filtering and ordering.
+      description: List TaskAssignees visible to the caller, page by page, with filtering and sorting.
       tags:
       - Task
       security:
@@ -3904,10 +3921,11 @@ paths:
           type: string
           format: uuid
         description: Task id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3915,7 +3933,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaskAssigneeList'
+                $ref: '#/components/schemas/PagingInfoTaskAssignee'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -4162,7 +4180,7 @@ paths:
     get:
       operationId: comms.ListContentViews
       summary: List ContentViews
-      description: List ContentViews visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ContentViews visible to the caller, page by page, with filtering and sorting.
       tags:
       - ContentView
       security:
@@ -4172,10 +4190,11 @@ paths:
         service: mysms.comms.v1.ContentViewService
         method: ListContentViews
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -4183,7 +4202,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContentViewList'
+                $ref: '#/components/schemas/PagingInfoContentView'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -4402,7 +4421,7 @@ paths:
     get:
       operationId: comms.ListPageCategories
       summary: List PageCategories
-      description: List PageCategories visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PageCategories visible to the caller, page by page, with filtering and sorting.
       tags:
       - PageCategory
       security:
@@ -4412,10 +4431,11 @@ paths:
         service: mysms.comms.v1.PageCategoryService
         method: ListPageCategories
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -4423,7 +4443,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageCategoryList'
+                $ref: '#/components/schemas/PagingInfoPageCategory'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -4642,7 +4662,7 @@ paths:
     get:
       operationId: comms.ListClassPages
       summary: List ClassPages
-      description: List ClassPages visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ClassPages visible to the caller, page by page, with filtering and sorting.
       tags:
       - ClassPage
       security:
@@ -4652,10 +4672,11 @@ paths:
         service: mysms.comms.v1.ClassPageService
         method: ListClassPages
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -4663,7 +4684,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClassPageList'
+                $ref: '#/components/schemas/PagingInfoClassPage'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -4882,7 +4903,7 @@ paths:
     get:
       operationId: comms.ListClassPageAttachments
       summary: List ClassPageAttachments
-      description: List ClassPageAttachments visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ClassPageAttachments visible to the caller, page by page, with filtering and sorting.
       tags:
       - ClassPage
       security:
@@ -4899,10 +4920,11 @@ paths:
           type: string
           format: uuid
         description: ClassPage id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -4910,7 +4932,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClassPageAttachmentList'
+                $ref: '#/components/schemas/PagingInfoClassPageAttachment'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -5157,7 +5179,7 @@ paths:
     get:
       operationId: comms.ListClassPageMembers
       summary: List ClassPageMembers
-      description: List ClassPageMembers visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ClassPageMembers visible to the caller, page by page, with filtering and sorting.
       tags:
       - ClassPage
       security:
@@ -5174,10 +5196,11 @@ paths:
           type: string
           format: uuid
         description: ClassPage id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -5185,7 +5208,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClassPageMemberList'
+                $ref: '#/components/schemas/PagingInfoClassPageMember'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -5432,7 +5455,7 @@ paths:
     get:
       operationId: comms.ListPosts
       summary: List Posts
-      description: List Posts visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Posts visible to the caller, page by page, with filtering and sorting.
       tags:
       - Post
       security:
@@ -5442,10 +5465,11 @@ paths:
         service: mysms.comms.v1.PostService
         method: ListPosts
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -5453,7 +5477,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PostList'
+                $ref: '#/components/schemas/PagingInfoPost'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -5672,7 +5696,7 @@ paths:
     get:
       operationId: comms.ListPostAudienceClasses
       summary: List PostAudienceClasses
-      description: List PostAudienceClasses visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PostAudienceClasses visible to the caller, page by page, with filtering and sorting.
       tags:
       - Post
       security:
@@ -5689,10 +5713,11 @@ paths:
           type: string
           format: uuid
         description: Post id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -5700,7 +5725,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PostAudienceClassList'
+                $ref: '#/components/schemas/PagingInfoPostAudienceClass'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -5947,7 +5972,7 @@ paths:
     get:
       operationId: comms.ListPostReactions
       summary: List PostReactions
-      description: List PostReactions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PostReactions visible to the caller, page by page, with filtering and sorting.
       tags:
       - Post
       security:
@@ -5964,10 +5989,11 @@ paths:
           type: string
           format: uuid
         description: Post id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -5975,7 +6001,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PostReactionList'
+                $ref: '#/components/schemas/PagingInfoPostReaction'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -6222,7 +6248,7 @@ paths:
     get:
       operationId: comms.ListPostComments
       summary: List PostComments
-      description: List PostComments visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PostComments visible to the caller, page by page, with filtering and sorting.
       tags:
       - Post
       security:
@@ -6239,10 +6265,11 @@ paths:
           type: string
           format: uuid
         description: Post id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -6250,7 +6277,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PostCommentList'
+                $ref: '#/components/schemas/PagingInfoPostComment'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -6497,7 +6524,7 @@ paths:
     get:
       operationId: comms.ListCommentReactions
       summary: List CommentReactions
-      description: List CommentReactions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List CommentReactions visible to the caller, page by page, with filtering and sorting.
       tags:
       - CommentReaction
       security:
@@ -6507,10 +6534,11 @@ paths:
         service: mysms.comms.v1.CommentReactionService
         method: ListCommentReactions
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -6518,7 +6546,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CommentReactionList'
+                $ref: '#/components/schemas/PagingInfoCommentReaction'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -6737,7 +6765,7 @@ paths:
     get:
       operationId: comms.ListNoticeAudiences
       summary: List NoticeAudiences
-      description: List NoticeAudiences visible to the caller, with cursor pagination, filtering and ordering.
+      description: List NoticeAudiences visible to the caller, page by page, with filtering and sorting.
       tags:
       - Notice
       security:
@@ -6754,10 +6782,11 @@ paths:
           type: string
           format: uuid
         description: Notice id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -6765,7 +6794,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NoticeAudienceList'
+                $ref: '#/components/schemas/PagingInfoNoticeAudience'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -7012,7 +7041,7 @@ paths:
     get:
       operationId: comms.ListNoticeVersions
       summary: List NoticeVersions
-      description: List NoticeVersions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List NoticeVersions visible to the caller, page by page, with filtering and sorting.
       tags:
       - Notice
       security:
@@ -7029,10 +7058,11 @@ paths:
           type: string
           format: uuid
         description: Notice id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -7040,7 +7070,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NoticeVersionList'
+                $ref: '#/components/schemas/PagingInfoNoticeVersion'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -7108,7 +7138,7 @@ paths:
     get:
       operationId: comms.ListEventInstitutions
       summary: List EventInstitutions
-      description: List EventInstitutions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List EventInstitutions visible to the caller, page by page, with filtering and sorting.
       tags:
       - Event
       security:
@@ -7125,10 +7155,11 @@ paths:
           type: string
           format: uuid
         description: Event id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -7136,7 +7167,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventInstitutionList'
+                $ref: '#/components/schemas/PagingInfoEventInstitution'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -7383,7 +7414,7 @@ paths:
     get:
       operationId: comms.ListEventOccurrences
       summary: List EventOccurrences
-      description: List EventOccurrences visible to the caller, with cursor pagination, filtering and ordering.
+      description: List EventOccurrences visible to the caller, page by page, with filtering and sorting.
       tags:
       - Event
       security:
@@ -7400,10 +7431,11 @@ paths:
           type: string
           format: uuid
         description: Event id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -7411,7 +7443,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventOccurrenceList'
+                $ref: '#/components/schemas/PagingInfoEventOccurrence'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -7658,7 +7690,7 @@ paths:
     get:
       operationId: comms.ListEventAttendees
       summary: List EventAttendees
-      description: List EventAttendees visible to the caller, with cursor pagination, filtering and ordering.
+      description: List EventAttendees visible to the caller, page by page, with filtering and sorting.
       tags:
       - Event
       security:
@@ -7675,10 +7707,11 @@ paths:
           type: string
           format: uuid
         description: Event id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -7686,7 +7719,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventAttendeeList'
+                $ref: '#/components/schemas/PagingInfoEventAttendee'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -7933,7 +7966,7 @@ paths:
     get:
       operationId: comms.ListCalendarExports
       summary: List CalendarExports
-      description: List CalendarExports visible to the caller, with cursor pagination, filtering and ordering.
+      description: List CalendarExports visible to the caller, page by page, with filtering and sorting.
       tags:
       - CalendarExport
       security:
@@ -7943,10 +7976,11 @@ paths:
         service: mysms.comms.v1.CalendarExportService
         method: ListCalendarExports
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -7954,7 +7988,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CalendarExportList'
+                $ref: '#/components/schemas/PagingInfoCalendarExport'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -8057,7 +8091,7 @@ paths:
     get:
       operationId: comms.ListNotificationTypes
       summary: List NotificationTypes
-      description: List NotificationTypes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List NotificationTypes visible to the caller, page by page, with filtering and sorting.
       tags:
       - NotificationType
       security:
@@ -8068,10 +8102,11 @@ paths:
         service: mysms.comms.v1.NotificationTypeService
         method: ListNotificationTypes
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -8079,7 +8114,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotificationTypeList'
+                $ref: '#/components/schemas/PagingInfoNotificationType'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -8299,7 +8334,7 @@ paths:
     get:
       operationId: comms.ListNotificationTypeProperties
       summary: List NotificationTypeProperties
-      description: List NotificationTypeProperties visible to the caller, with cursor pagination, filtering and ordering.
+      description: List NotificationTypeProperties visible to the caller, page by page, with filtering and sorting.
       tags:
       - NotificationType
       security:
@@ -8317,10 +8352,11 @@ paths:
           type: string
           format: uuid
         description: NotificationType id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -8328,7 +8364,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotificationTypePropertyList'
+                $ref: '#/components/schemas/PagingInfoNotificationTypeProperty'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -8576,7 +8612,7 @@ paths:
     get:
       operationId: comms.ListNotificationRules
       summary: List NotificationRules
-      description: List NotificationRules visible to the caller, with cursor pagination, filtering and ordering.
+      description: List NotificationRules visible to the caller, page by page, with filtering and sorting.
       tags:
       - NotificationType
       security:
@@ -8593,10 +8629,11 @@ paths:
           type: string
           format: uuid
         description: NotificationType id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -8604,7 +8641,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotificationRuleList'
+                $ref: '#/components/schemas/PagingInfoNotificationRule'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -8851,7 +8888,7 @@ paths:
     get:
       operationId: comms.ListNotificationCohortSettings
       summary: List NotificationCohortSettings
-      description: List NotificationCohortSettings visible to the caller, with cursor pagination, filtering and ordering.
+      description: List NotificationCohortSettings visible to the caller, page by page, with filtering and sorting.
       tags:
       - NotificationType
       security:
@@ -8868,10 +8905,11 @@ paths:
           type: string
           format: uuid
         description: NotificationType id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -8879,7 +8917,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotificationCohortSettingList'
+                $ref: '#/components/schemas/PagingInfoNotificationCohortSetting'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -9126,7 +9164,7 @@ paths:
     get:
       operationId: comms.ListNotificationChannels
       summary: List NotificationChannels
-      description: List NotificationChannels visible to the caller, with cursor pagination, filtering and ordering.
+      description: List NotificationChannels visible to the caller, page by page, with filtering and sorting.
       tags:
       - NotificationChannel
       security:
@@ -9136,10 +9174,11 @@ paths:
         service: mysms.comms.v1.NotificationChannelService
         method: ListNotificationChannels
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -9147,7 +9186,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotificationChannelList'
+                $ref: '#/components/schemas/PagingInfoNotificationChannel'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -9366,7 +9405,7 @@ paths:
     get:
       operationId: comms.ListNotificationChannelProperties
       summary: List NotificationChannelProperties
-      description: List NotificationChannelProperties visible to the caller, with cursor pagination, filtering and ordering.
+      description: List NotificationChannelProperties visible to the caller, page by page, with filtering and sorting.
       tags:
       - NotificationChannel
       security:
@@ -9383,10 +9422,11 @@ paths:
           type: string
           format: uuid
         description: NotificationChannel id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -9394,7 +9434,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotificationChannelPropertyList'
+                $ref: '#/components/schemas/PagingInfoNotificationChannelProperty'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -9641,7 +9681,7 @@ paths:
     get:
       operationId: comms.ListNotificationPreferenceSets
       summary: List NotificationPreferenceSets
-      description: List NotificationPreferenceSets visible to the caller, with cursor pagination, filtering and ordering.
+      description: List NotificationPreferenceSets visible to the caller, page by page, with filtering and sorting.
       tags:
       - NotificationPreferenceSet
       security:
@@ -9651,10 +9691,11 @@ paths:
         service: mysms.comms.v1.NotificationPreferenceSetService
         method: ListNotificationPreferenceSets
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -9662,7 +9703,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotificationPreferenceSetList'
+                $ref: '#/components/schemas/PagingInfoNotificationPreferenceSet'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -9881,7 +9922,7 @@ paths:
     get:
       operationId: comms.ListNotificationPreferences
       summary: List NotificationPreferences
-      description: List NotificationPreferences visible to the caller, with cursor pagination, filtering and ordering.
+      description: List NotificationPreferences visible to the caller, page by page, with filtering and sorting.
       tags:
       - NotificationPreferenceSet
       security:
@@ -9898,10 +9939,11 @@ paths:
           type: string
           format: uuid
         description: NotificationPreferenceSet id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -9909,7 +9951,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotificationPreferenceList'
+                $ref: '#/components/schemas/PagingInfoNotificationPreference'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -11341,7 +11383,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PostList'
+                $ref: '#/components/schemas/PagingInfoPost'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -11379,19 +11421,9 @@ paths:
         description: Saved posts.
         schema:
           type: boolean
-      - name: pageSize
-        in: query
-        required: false
-        description: Page size.
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Page token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/comms/class-pages/{classPageId}:follow:
     post:
       operationId: comms.FollowClassPage
@@ -11611,7 +11643,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./common.yaml#/components/schemas/CalendarItemList
+                $ref: ./common.yaml#/components/schemas/PagingInfoCalendarItem
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -11661,19 +11693,9 @@ paths:
             description: Filter kinds.
         style: form
         explode: true
-      - name: pageSize
-        in: query
-        required: false
-        description: Maximum items to return (1-500, default 50).
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Cursor from next_page_token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}:cancel:
     post:
       operationId: comms.CancelEventOccurrence
@@ -11935,7 +11957,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./common.yaml#/components/schemas/OperationList
+                $ref: ./common.yaml#/components/schemas/PagingInfoOperation
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -11959,19 +11981,9 @@ paths:
         description: Filter by kind.
         schema:
           type: string
-      - name: pageSize
-        in: query
-        required: false
-        description: Page size.
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Page token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/comms/operations/{operationId}:
     get:
       operationId: comms.GetOperation
@@ -12169,22 +12181,20 @@ components:
         isActive:
           type: boolean
           description: Whether usable.
-    MessageTemplateList:
+    PagingInfoMessageTemplate:
       type: object
+      description: A page of MessageTemplate, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/MessageTemplate'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     OutboundMessage:
       type: object
       description: Queued SMS / e-mail / push message (notifications, reminders, broadcasts) and its delivery state.
@@ -12312,22 +12322,20 @@ components:
       - sender
       - recipient
       - body
-    OutboundMessageList:
+    PagingInfoOutboundMessage:
       type: object
+      description: A page of OutboundMessage, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/OutboundMessage'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     MailboxMessage:
       type: object
       description: Internal mail between users (inbox / sent / outbox). Attachments via platform.entity_attachment.
@@ -12432,22 +12440,20 @@ components:
       required:
       - institutionId
       - folder
-    MailboxMessageList:
+    PagingInfoMailboxMessage:
       type: object
+      description: A page of MailboxMessage, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/MailboxMessage'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     InAppNotification:
       type: object
       description: Notification shown in a user's in-app inbox.
@@ -12547,22 +12553,20 @@ components:
           description: Entity tag (row version); send back in If-Match / etag.
       required:
       - recipientUserId
-    InAppNotificationList:
+    PagingInfoInAppNotification:
       type: object
+      description: A page of InAppNotification, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/InAppNotification'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     NoticeBackground:
       type: object
       description: Background image for notices / event cards.
@@ -12633,22 +12637,20 @@ components:
           type: string
           format: uuid
           description: Image.
-    NoticeBackgroundList:
+    PagingInfoNoticeBackground:
       type: object
+      description: A page of NoticeBackground, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/NoticeBackground'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Notice:
       type: object
       description: Notice-board item for the school, a class or teachers.
@@ -12830,22 +12832,20 @@ components:
         authorComment:
           type: string
           description: Author's note on the latest change.
-    NoticeList:
+    PagingInfoNotice:
       type: object
+      description: A page of Notice, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Notice'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Event:
       type: object
       description: Calendar event (school event, holiday, exam, meeting, live class).
@@ -13129,22 +13129,20 @@ components:
           - low
           x-extensible-enum: true
           description: Importance of a personal event.
-    EventList:
+    PagingInfoEvent:
       type: object
+      description: A page of Event, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Event'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     EventGalleryItem:
       type: object
       description: Photo / video in an event gallery.
@@ -13205,22 +13203,20 @@ components:
           type: integer
           format: int32
           description: Order.
-    EventGalleryItemList:
+    PagingInfoEventGalleryItem:
       type: object
+      description: A page of EventGalleryItem, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/EventGalleryItem'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Magazine:
       type: object
       description: School magazine / bulletin issue.
@@ -13309,22 +13305,20 @@ components:
           type: string
           format: uuid
           description: Magazine file.
-    MagazineList:
+    PagingInfoMagazine:
       type: object
+      description: A page of Magazine, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Magazine'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Conversation:
       type: object
       description: Chat conversation (direct 1:1 or group).
@@ -13408,22 +13402,20 @@ components:
         isActive:
           type: boolean
           description: Open.
-    ConversationList:
+    PagingInfoConversation:
       type: object
+      description: A page of Conversation, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Conversation'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ConversationParticipant:
       type: object
       description: Member of a conversation.
@@ -13484,22 +13476,20 @@ components:
           type: string
           format: date-time
           description: Read up to.
-    ConversationParticipantList:
+    PagingInfoConversationParticipant:
       type: object
+      description: A page of ConversationParticipant, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ConversationParticipant'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ConversationMessage:
       type: object
       description: Message in a conversation.
@@ -13565,22 +13555,20 @@ components:
         deletedBySender:
           type: boolean
           description: Hidden for the sender.
-    ConversationMessageList:
+    PagingInfoConversationMessage:
       type: object
+      description: A page of ConversationMessage, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ConversationMessage'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     FeedbackThread:
       type: object
       description: Feedback / complaint thread between a guardian and the school about a student.
@@ -13663,22 +13651,20 @@ components:
           type: string
           format: uuid
           description: Staff handling it.
-    FeedbackThreadList:
+    PagingInfoFeedbackThread:
       type: object
+      description: A page of FeedbackThread, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/FeedbackThread'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     FeedbackMessage:
       type: object
       description: Message in a feedback thread.
@@ -13795,22 +13781,20 @@ components:
         deletedByReceiver:
           type: boolean
           description: Hidden for the receiver.
-    FeedbackMessageList:
+    PagingInfoFeedbackMessage:
       type: object
+      description: A page of FeedbackMessage, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/FeedbackMessage'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AudienceGroup:
       type: object
       description: Named group of users for messaging and tasks (tenant-wide, school-wide or class-scoped).
@@ -13894,22 +13878,20 @@ components:
         isActive:
           type: boolean
           description: Active.
-    AudienceGroupList:
+    PagingInfoAudienceGroup:
       type: object
+      description: A page of AudienceGroup, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AudienceGroup'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AudienceGroupMember:
       type: object
       description: Member of a group.
@@ -13980,6 +13962,7 @@ components:
           description: Member type.
     AudienceGroupMemberList:
       type: object
+      description: The AudienceGroupMember items an operation wrote, all in one response.
       required:
       - items
       properties:
@@ -13987,13 +13970,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AudienceGroupMember'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+    PagingInfoAudienceGroupMember:
+      type: object
+      description: A page of AudienceGroupMember, with the links to the other pages.
+      required:
+      - data
+      - paging
+      properties:
+        data:
+          type: array
+          description: Data retrieved in the paginated request.
+          items:
+            $ref: '#/components/schemas/AudienceGroupMember'
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Task:
       type: object
       description: To-do / task created by a user for self or others.
@@ -14173,22 +14163,20 @@ components:
           - open
           x-extensible-enum: true
           description: Individual, shared or open-to-claim.
-    TaskList:
+    PagingInfoTask:
       type: object
+      description: A page of Task, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Task'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     TaskAssignee:
       type: object
       description: Person, class or group a task is assigned to.
@@ -14295,6 +14283,7 @@ components:
           description: State.
     TaskAssigneeList:
       type: object
+      description: The TaskAssignee items an operation wrote, all in one response.
       required:
       - items
       properties:
@@ -14302,13 +14291,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaskAssignee'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+    PagingInfoTaskAssignee:
+      type: object
+      description: A page of TaskAssignee, with the links to the other pages.
+      required:
+      - data
+      - paging
+      properties:
+        data:
+          type: array
+          description: Data retrieved in the paginated request.
+          items:
+            $ref: '#/components/schemas/TaskAssignee'
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ContentView:
       type: object
       description: Guardian's view receipt of a student's homework, assignment or media.
@@ -14408,22 +14404,20 @@ components:
           type: string
           format: date-time
           description: When viewed.
-    ContentViewList:
+    PagingInfoContentView:
       type: object
+      description: A page of ContentView, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ContentView'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PageCategory:
       type: object
       description: Category of class pages.
@@ -14510,22 +14504,20 @@ components:
         isActive:
           type: boolean
           description: Active.
-    PageCategoryList:
+    PagingInfoPageCategory:
       type: object
+      description: A page of PageCategory, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PageCategory'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ClassPage:
       type: object
       description: Class / club page that members follow and post to.
@@ -14628,22 +14620,20 @@ components:
         isActive:
           type: boolean
           description: Active.
-    ClassPageList:
+    PagingInfoClassPage:
       type: object
+      description: A page of ClassPage, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ClassPage'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ClassPageAttachment:
       type: object
       description: File attached to a class page.
@@ -14702,22 +14692,20 @@ components:
         isActive:
           type: boolean
           description: Visible.
-    ClassPageAttachmentList:
+    PagingInfoClassPageAttachment:
       type: object
+      description: A page of ClassPageAttachment, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ClassPageAttachment'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ClassPageMember:
       type: object
       description: User's follow / reaction state on a class page.
@@ -14796,22 +14784,20 @@ components:
         isActive:
           type: boolean
           description: Active.
-    ClassPageMemberList:
+    PagingInfoClassPageMember:
       type: object
+      description: A page of ClassPageMember, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ClassPageMember'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Post:
       type: object
       description: Social post on a class page or to classes. Attachments via platform.entity_attachment; tags via platform.tag_assignment.
@@ -14931,22 +14917,20 @@ components:
           type: string
           format: date-time
           description: Scheduled publish time.
-    PostList:
+    PagingInfoPost:
       type: object
+      description: A page of Post, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Post'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PostAudienceClass:
       type: object
       description: Class a post is visible to (visibility = selected_classes).
@@ -14999,22 +14983,20 @@ components:
           type: string
           format: uuid
           description: Class.
-    PostAudienceClassList:
+    PagingInfoPostAudienceClass:
       type: object
+      description: A page of PostAudienceClass, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PostAudienceClass'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PostReaction:
       type: object
       description: User's like / unlike / save on a post.
@@ -15093,22 +15075,20 @@ components:
         isActive:
           type: boolean
           description: Active.
-    PostReactionList:
+    PagingInfoPostReaction:
       type: object
+      description: A page of PostReaction, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PostReaction'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PostComment:
       type: object
       description: Comment on a post, or reply to another comment.
@@ -15189,22 +15169,20 @@ components:
         isActive:
           type: boolean
           description: Visible.
-    PostCommentList:
+    PagingInfoPostComment:
       type: object
+      description: A page of PostComment, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PostComment'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     CommentReaction:
       type: object
       description: User's like / unlike on a comment.
@@ -15281,22 +15259,20 @@ components:
         isActive:
           type: boolean
           description: Active.
-    CommentReactionList:
+    PagingInfoCommentReaction:
       type: object
+      description: A page of CommentReaction, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/CommentReaction'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     NoticeAudience:
       type: object
       description: Institution and role a notice is published to (several rows = several audiences).
@@ -15355,22 +15331,20 @@ components:
           type: string
           format: uuid
           description: Role (NULL = every role).
-    NoticeAudienceList:
+    PagingInfoNoticeAudience:
       type: object
+      description: A page of NoticeAudience, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/NoticeAudience'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     NoticeVersion:
       type: object
       description: Earlier version of a notice, kept when it is edited after publication.
@@ -15443,22 +15417,20 @@ components:
           description: Entity tag (row version); send back in If-Match / etag.
       required:
       - versionedAt
-    NoticeVersionList:
+    PagingInfoNoticeVersion:
       type: object
+      description: A page of NoticeVersion, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/NoticeVersion'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     EventInstitution:
       type: object
       description: Institution an event is shared with (tenant-level events shown in several institutions).
@@ -15511,22 +15483,20 @@ components:
           type: string
           format: uuid
           description: Institution.
-    EventInstitutionList:
+    PagingInfoEventInstitution:
       type: object
+      description: A page of EventInstitution, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/EventInstitution'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     EventOccurrence:
       type: object
       description: One occurrence of an event (generated from its recurrence or a one-off), which can be edited or cancelled individually.
@@ -15667,22 +15637,20 @@ components:
           - low
           x-extensible-enum: true
           description: Importance (personal events).
-    EventOccurrenceList:
+    PagingInfoEventOccurrence:
       type: object
+      description: A page of EventOccurrence, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/EventOccurrence'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     EventAttendee:
       type: object
       description: User invited to a cohort event that is not for all members.
@@ -15735,22 +15703,20 @@ components:
           type: string
           format: uuid
           description: Invited user.
-    EventAttendeeList:
+    PagingInfoEventAttendee:
       type: object
+      description: A page of EventAttendee, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/EventAttendee'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     CalendarExport:
       type: object
       description: Record of an item pushed to a user's external calendar (Google / Microsoft), for updates and deletions.
@@ -15828,22 +15794,20 @@ components:
       - provider
       - entityType
       - entityId
-    CalendarExportList:
+    PagingInfoCalendarExport:
       type: object
+      description: A page of CalendarExport, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/CalendarExport'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     NotificationType:
       type: object
       description: Kind of notification raised by the application (e.g. reply to my post, grade published), with defaults.
@@ -15941,22 +15905,20 @@ components:
           type: string
           maxLength: 500
           description: Placeholders the message may use.
-    NotificationTypeList:
+    PagingInfoNotificationType:
       type: object
+      description: A page of NotificationType, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/NotificationType'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     NotificationTypeProperty:
       type: object
       description: Additional property of a notification type for a module (e.g. frequency).
@@ -16017,22 +15979,20 @@ components:
           type: string
           maxLength: 500
           description: Property value.
-    NotificationTypePropertyList:
+    PagingInfoNotificationTypeProperty:
       type: object
+      description: A page of NotificationTypeProperty, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/NotificationTypeProperty'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     NotificationRule:
       type: object
       description: 'Tenant rule: which notification a role receives for an operation, and its e-mail / SMS templates.'
@@ -16117,22 +16077,20 @@ components:
         smsTemplate:
           type: string
           description: SMS template.
-    NotificationRuleList:
+    PagingInfoNotificationRule:
       type: object
+      description: A page of NotificationRule, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/NotificationRule'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     NotificationCohortSetting:
       type: object
       description: Cohort-level override of a notification type.
@@ -16191,22 +16149,20 @@ components:
         popupEnabled:
           type: boolean
           description: Show as popup in this cohort.
-    NotificationCohortSettingList:
+    PagingInfoNotificationCohortSetting:
       type: object
+      description: A page of NotificationCohortSetting, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/NotificationCohortSetting'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     NotificationChannel:
       type: object
       description: Delivery channel configuration (e-mail, SMS, popup) and whether it is enabled. NULL tenant = platform default.
@@ -16276,22 +16232,20 @@ components:
           type: integer
           format: int32
           description: Display order.
-    NotificationChannelList:
+    PagingInfoNotificationChannel:
       type: object
+      description: A page of NotificationChannel, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/NotificationChannel'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     NotificationChannelProperty:
       type: object
       description: Setting of a delivery channel (SMTP host, port, sender, frequency...). Secrets are stored encrypted.
@@ -16376,25 +16330,26 @@ components:
         isMandatory:
           type: boolean
           description: Value must be set for the channel to work.
-    NotificationChannelPropertyList:
+    PagingInfoNotificationChannelProperty:
       type: object
+      description: A page of NotificationChannelProperty, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/NotificationChannelProperty'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     NotificationPreferenceSet:
       type: object
       description: A user's notification preferences for one of their roles.
+      x-owner-field: userId
+      required:
+      - userId
       properties:
         id:
           type: string
@@ -16433,8 +16388,6 @@ components:
           type: string
           readOnly: true
           description: Entity tag (row version); send back in If-Match / etag.
-      required:
-      - userId
     NotificationPreferenceSetUpdate:
       type: object
       description: Fields of NotificationPreferenceSet that can be updated (partial update; see updateMask).
@@ -16447,22 +16400,20 @@ components:
           type: string
           format: uuid
           description: Role the preferences apply to (NULL = all roles).
-    NotificationPreferenceSetList:
+    PagingInfoNotificationPreferenceSet:
       type: object
+      description: A page of NotificationPreferenceSet, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/NotificationPreferenceSet'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     NotificationPreference:
       type: object
       description: One preference value (channel on/off, frequency) for a notification type.
@@ -16531,22 +16482,20 @@ components:
           type: string
           maxLength: 200
           description: Value.
-    NotificationPreferenceList:
+    PagingInfoNotificationPreference:
       type: object
+      description: A page of NotificationPreference, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/NotificationPreference'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PublishNoticeRequest:
       type: object
       properties:

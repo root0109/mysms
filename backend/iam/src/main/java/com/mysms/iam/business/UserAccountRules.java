@@ -7,6 +7,7 @@ import com.mysms.iam.domain.UserAccountEntity;
 import com.mysms.iam.repository.AccountCleanupRepository;
 import com.mysms.iam.repository.AccountRepository;
 import com.mysms.iam.repository.AuthTokenRepository;
+import com.mysms.iam.repository.MemberRecordRepository;
 import com.mysms.iam.repository.SignInSessionRepository;
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -21,14 +22,16 @@ public class UserAccountRules {
     private final SignInSessionRepository sessions;
     private final AccountCleanupRepository owned;
     private final AccountRepository accounts;
+    private final MemberRecordRepository members;
     private final Clock clock;
 
     public UserAccountRules(AuthTokenRepository refreshTokens, SignInSessionRepository sessions,
-            AccountCleanupRepository owned, AccountRepository accounts, Clock clock) {
+            AccountCleanupRepository owned, AccountRepository accounts, MemberRecordRepository members, Clock clock) {
         this.refreshTokens = refreshTokens;
         this.sessions = sessions;
         this.owned = owned;
         this.accounts = accounts;
+        this.members = members;
         this.clock = clock;
     }
 
@@ -57,7 +60,9 @@ public class UserAccountRules {
 
     /**
      * In the same transaction: every refresh token revoked, every session ended, the account's devices and preferences
-     * retired (these rows belong to the account and never block its deletion; role grants and direct permissions do).
+     * retired (these rows belong to the account and never block its deletion; role grants and direct permissions do),
+     * and the account taken off the staff and student records iam keeps for it (hr and sis clear their own column
+     * from the deletion event, and announce only the row id, which iam.member_record cannot apply).
      */
     public void afterDelete(UserAccountEntity deleted) {
         OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC);
@@ -65,5 +70,6 @@ public class UserAccountRules {
         refreshTokens.revokeOneTime(deleted.getId(), now);
         sessions.endAll(deleted.getId(), now);
         owned.retireOwnedRows(deleted.getId(), AuthContext.require().userId(), now);
+        members.forgetAccount(deleted.getId(), now);
     }
 }

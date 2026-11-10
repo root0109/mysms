@@ -1,6 +1,12 @@
 import {
+  AttendanceSheetScreen,
+  AttendanceSummaryScreen,
+  MyTimetableScreen,
+  StaffLeaveScreen,
   buildAppRoutes,
+  HomeworkCheckScreen,
   HomeScreen,
+  NotificationPreferencesScreen,
   ProfileScreen,
   RecordsScreen,
   RESOURCE_SCREENS,
@@ -9,6 +15,7 @@ import {
   SettingsScreen,
   SettingValuesScreen,
   SignInScreen,
+  StudentAttendanceScreen,
 } from '@mysms/web-kit';
 import { createElement, type ReactNode } from 'react';
 import { appConfig } from './config';
@@ -29,7 +36,14 @@ export const routes = buildAppRoutes({
     'ACC-01': createElement(SignInScreen, { defaultTenantCode: appConfig.tenantCode }),
     'ACC-07': createElement(ProfileScreen),
     'ACC-08': createElement(SecurityScreen),
+    'ACC-10': createElement(NotificationPreferencesScreen),
     'ACC-14': createElement(SettingsScreen),
+    'ASM-03': createElement(HomeworkCheckScreen),
+    'ATT-03': createElement(AttendanceSheetScreen),
+    'ATT-04': createElement(StudentAttendanceScreen),
+    'ATT-05': createElement(AttendanceSummaryScreen),
+    'TT-03': createElement(MyTimetableScreen),
+    'HR-04': createElement(StaffLeaveScreen),
     'ADM-11': createElement(RecordsScreen),
     'ADM-16': createElement(SettingValuesScreen),
   },

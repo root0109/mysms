@@ -26,7 +26,6 @@
 
   <modules>
     <module>core</module>
-    <module>contracts</module>
     <module>sdk</module>
     <module>auth-client</module>
     <module>messaging</module>
@@ -52,6 +51,7 @@
     <module>frontoffice</module>
     <module>careers</module>
     <module>app</module>
+    <module>conformance</module>
   </modules>
 
   <properties>
@@ -60,14 +60,18 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <!-- the contracts every generated artifact and every domain module is built from -->
+    <!-- the API contracts live inside each module (com.mysms.<module>.api); api/ keeps the OpenAPI snapshot -->
     <mysms.api.dir>${maven.multiModuleProjectDirectory}/../api</mysms.api.dir>
     <mysms.migrations.dir>${maven.multiModuleProjectDirectory}/../database/migrations</mysms.migrations.dir>
     <mysms.config.dir>${maven.multiModuleProjectDirectory}/config</mysms.config.dir>
 
     <!-- versions not managed by Spring Boot (Spring Boot 4.1.2 manages Spring, Jackson, Flyway, PostgreSQL,
-         HikariCP, gRPC, protobuf, Testcontainers, JUnit, Lombok and the standard Maven plugins) -->
+         HikariCP, Testcontainers, JUnit, Lombok and the standard Maven plugins; Spring Boot's parent manages the gRPC and protobuf versions) -->
     <openapi-generator.version>7.26.0</openapi-generator.version>
+    <!-- gRPC stub generation, the reference service's mechanism: protoc + protoc-gen-grpc-java resolved by OS -->
+    <xolstice-protobuf-maven-plugin.version>0.6.1</xolstice-protobuf-maven-plugin.version>
+    <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
+    <springdoc.version>3.2.0</springdoc.version>
     <mapstruct.version>1.6.3</mapstruct.version>
     <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
     <exec-maven-plugin.version>3.6.4</exec-maven-plugin.version>
@@ -107,13 +111,13 @@
       </dependency>
       <dependency>
         <groupId>com.mysms</groupId>
-        <artifactId>contracts</artifactId>
+        <artifactId>sdk</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.mysms</groupId>
-        <artifactId>sdk</artifactId>
-        <version>${project.version}</version>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        <version>${springdoc.version}</version>
       </dependency>
       <dependency>
         <groupId>com.mysms</groupId>
@@ -189,6 +193,20 @@
                     <versionRange>[0,)</versionRange>
                     <goals>
                       <goal>check</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore/>
+                  </action>
+                </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.xolstice.maven.plugins</groupId>
+                    <artifactId>protobuf-maven-plugin</artifactId>
+                    <versionRange>[0,)</versionRange>
+                    <goals>
+                      <goal>compile</goal>
+                      <goal>compile-custom</goal>
                     </goals>
                   </pluginExecutionFilter>
                   <action>
@@ -393,6 +411,8 @@
           <excludes>
             <!-- generated code is excluded from coverage (§13) -->
             <exclude>**/*MapperImpl.class</exclude>
+            <!-- the contract layer: declarative DTOs and interfaces; behaviour is covered through the controllers -->
+            <exclude>com/mysms/*/api/**</exclude>
             <!-- main(): starts a server; every module's wiring is covered by its component test instead -->
             <exclude>**/*Application.class</exclude>
           </excludes>

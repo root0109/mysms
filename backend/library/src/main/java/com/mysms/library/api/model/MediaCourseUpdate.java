@@ -1,0 +1,81 @@
+// Owned API contract of library (JAVA-CODING-RULES §7); first materialized from api/openapi/library.yaml on 2026-11-10.
+package com.mysms.library.api.model;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import java.util.UUID;
+import org.springframework.lang.Nullable;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+
+
+import java.util.*;
+
+/**
+ * Fields of MediaCourse that can be updated (partial update; see updateMask).
+ */
+
+public class MediaCourseUpdate {
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID courseId;
+
+  public MediaCourseUpdate courseId(@Nullable UUID courseId) {
+    this.courseId = courseId;
+    return this;
+  }
+
+  /**
+   * Course.
+   * @return courseId
+   */
+  @Valid 
+  @JsonProperty("courseId")
+  public @Nullable UUID getCourseId() {
+    return courseId;
+  }
+
+  @JsonProperty("courseId")
+  public void setCourseId(@Nullable UUID courseId) {
+    this.courseId = courseId;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    MediaCourseUpdate mediaCourseUpdate = (MediaCourseUpdate) o;
+    return Objects.equals(this.courseId, mediaCourseUpdate.courseId);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(courseId);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("class MediaCourseUpdate {\n");
+    sb.append("    courseId: ").append(toIndentedString(courseId)).append("\n");
+    sb.append("}");
+    return sb.toString();
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(@Nullable Object o) {
+    return o == null ? "null" : o.toString().replace("\n", "\n    ");
+  }
+}
+

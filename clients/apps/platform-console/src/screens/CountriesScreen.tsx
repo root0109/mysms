@@ -62,11 +62,11 @@ function applyServerErrors<T extends FieldValues>(form: UseFormReturn<T>, error:
 /** PLT-07 Master data — countries: paged list, create, edit under If-Match, delete. */
 export function CountriesScreen() {
   const { t } = useI18n();
-  const list = useInfiniteCountries({ pageSize: 25 });
+  const list = useInfiniteCountries({ size: 25 });
   const [editing, setEditing] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const rows = list.data?.pages.flatMap((p) => p.items) ?? [];
+  const rows = list.data?.pages.flatMap((p) => p.data) ?? [];
   const columns: Column<Country>[] = [
     { key: 'iso2', header: t('master.countries.iso2'), render: (c) => c.iso2 },
     { key: 'iso3', header: t('master.countries.iso3'), render: (c) => c.iso3 },

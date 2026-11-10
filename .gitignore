@@ -9,11 +9,28 @@
 **/__pycache__/
 *.tsbuildinfo
 
-# Local IDE state
+# Local IDE state (each developer's IDE generates these from the Maven and pnpm projects)
 **/.metadata/
+**/.classpath
+**/.project
+**/.factorypath
+**/.settings/
+**/.apt_generated/
+**/.apt_generated_tests/
+**/.springBeans
+**/.sts4-cache/
+**/bin/
 **/.idea/
 **/.vscode/
 *.iml
+*.iws
+*.ipr
+**/.expo/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
 
 # Local configuration and credentials
 .env

@@ -32,6 +32,27 @@ public final class CallContextHolder {
         CURRENT.remove();
     }
 
+    /** The binding opened by {@link #withoutTenant()}; closing it restores the context bound before. */
+    public interface Scope extends AutoCloseable {
+
+        @Override
+        void close();
+    }
+
+    /**
+     * Binds the current context without its tenant (user and trace kept) until the returned scope is closed, for a
+     * write to global tables: the events and audit records it writes are then global ones, even when a signed-in
+     * tenant user triggered it (a public form, say). Without a context, or without a tenant in it, nothing changes.
+     */
+    public static Scope withoutTenant() {
+        CallContext before = CURRENT.get();
+        if (before == null || before.tenantId().isEmpty()) {
+            return () -> { };
+        }
+        CURRENT.set(new CallContext(Optional.empty(), before.userId(), before.traceId()));
+        return () -> CURRENT.set(before);
+    }
+
     /**
      * Runs work with {@code context} bound and restores whatever was bound before, also on failure. For the few
      * flows that establish identity themselves instead of receiving it from the edge: sign-in and token refresh (the

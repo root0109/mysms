@@ -1,6 +1,6 @@
 package com.mysms.iam.mapper;
 
-import com.mysms.contracts.iam.model.Person;
+import com.mysms.iam.api.model.Person;
 import org.mapstruct.Mapper;
 
 /** The people service's Person (SDK) → the Person embedded in iam's Me (same contract schema, generated twice). */

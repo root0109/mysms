@@ -6,10 +6,14 @@ import type { ActionDef, FieldDef, RecordPage, RecordRow, ResourceDef } from './
 export interface RecordListParams {
   /** The parent row's id, for nested resources. */
   parentId?: string;
-  pageSize?: number;
-  pageToken?: string;
+  /** One-based page number (default 1). */
+  page?: number;
+  size?: number;
+  /** The cursor of the previous page's next link. */
+  cursor?: string;
   filter?: string;
-  orderBy?: string;
+  /** Sort criteria `field,asc|desc`, in priority order. */
+  sort?: string[];
 }
 
 function path(template: string, parentId: string | undefined, id?: string): string {
@@ -112,10 +116,11 @@ export async function listRecords(api: ApiClient, def: ResourceDef, params: Reco
   const add = (name: string, value: string | number | undefined) => {
     if (value !== undefined && value !== '') parts.push(`${name}=${encodeURIComponent(String(value))}`);
   };
-  add('pageSize', params.pageSize);
-  add('pageToken', params.pageToken);
+  add('page', params.page);
+  add('size', params.size);
+  add('cursor', params.cursor);
   add('filter', params.filter);
-  add('orderBy', params.orderBy);
+  for (const criterion of params.sort ?? []) add('sort', criterion);
   const qs = parts.join('&');
   const response = await send(api, 'GET', path(op(def, 'List').path, params.parentId) + (qs ? `?${qs}` : ''));
   return (await response.json()) as RecordPage;

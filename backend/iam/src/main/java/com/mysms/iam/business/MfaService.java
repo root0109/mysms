@@ -1,14 +1,15 @@
 package com.mysms.iam.business;
 
 import com.mysms.authclient.AuthContext;
-import com.mysms.contracts.iam.model.DisableMfaRequest;
-import com.mysms.contracts.iam.model.EnrollMfaRequest;
-import com.mysms.contracts.iam.model.MfaCredential;
-import com.mysms.contracts.iam.model.MfaCredentialList;
-import com.mysms.contracts.iam.model.MfaEnrollment;
-import com.mysms.contracts.iam.model.RecoveryCodes;
-import com.mysms.contracts.iam.model.RegenerateRecoveryCodesRequest;
+import com.mysms.iam.api.model.DisableMfaRequest;
+import com.mysms.iam.api.model.EnrollMfaRequest;
+import com.mysms.iam.api.model.MfaCredential;
+import com.mysms.iam.api.model.MfaCredentialList;
+import com.mysms.iam.api.model.MfaEnrollment;
+import com.mysms.iam.api.model.RecoveryCodes;
+import com.mysms.iam.api.model.RegenerateRecoveryCodesRequest;
 import com.mysms.core.crypto.FieldCipher;
+import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.ConflictException;
 import com.mysms.core.error.FieldError;
@@ -25,8 +26,8 @@ import com.mysms.iam.domain.MeAccountEntity;
 import com.mysms.iam.events.IamEvents;
 import com.mysms.iam.repository.AccountRepository;
 import com.mysms.iam.repository.AuthTokenRepository;
-import com.mysms.iam.repository.MfaRepository;
 import com.mysms.iam.repository.MfaRepository.Credential;
+import com.mysms.iam.repository.MfaRepository;
 import com.mysms.iam.repository.SignInAccount;
 import java.time.Clock;
 import java.time.Duration;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * Second factors (iam.EnrollMfa, iam.CompleteMfa's code check, iam.DisableMfa, iam.RegenerateRecoveryCodes,
@@ -61,7 +63,7 @@ import org.springframework.stereotype.Service;
  * SMS and e-mail factors need message delivery, which this release does not have: enrolling one answers 501.
  */
 @Service
-public class MfaService implements InitializingBean {
+public class MfaService extends AppTransactionManager implements InitializingBean {
 
     /** The one-time step a sign-in waits on. */
     public static final String SIGN_IN_STEP = "mfa";
@@ -72,8 +74,6 @@ public class MfaService implements InitializingBean {
     private static final String COLUMN = "iam.mfa_credential.secret_enc";
     private static final String ISSUER = "MySMS";
     private static final Logger LOG = LoggerFactory.getLogger(MfaService.class);
-
-    private final ModuleDatabase database;
     private final MfaRepository credentials;
     private final AuthTokenRepository tokens;
     private final AccountRepository users;
@@ -82,10 +82,12 @@ public class MfaService implements InitializingBean {
     private final DtoValidator validator;
     private final Clock clock;
 
-    public MfaService(@Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database, MfaRepository credentials,
+    public MfaService(@Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
+            @Qualifier(IamDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions, MfaRepository credentials,
                       AuthTokenRepository tokens, AccountRepository users, FieldCipher cipher,
                       @Qualifier(IamEventsConfig.OUTBOX) OutboxWriter outbox, DtoValidator validator, Clock clock) {
-        this.database = database;
+
+        super(database, transactions);
         this.credentials = credentials;
         this.tokens = tokens;
         this.users = users;
@@ -104,7 +106,8 @@ public class MfaService implements InitializingBean {
     /** iam.ListMfaCredentials: the caller's factors (type, label, state); never a secret. */
     public MfaCredentialList list() {
         UUID user = AuthContext.require().userId();
-        return database.tx().read(() -> new MfaCredentialList(credentials.list(user).stream().map(c -> {
+        return doInReadTransaction(() -> {
+            return new MfaCredentialList(credentials.list(user).stream().map(c -> {
             MfaCredential dto = new MfaCredential();
             dto.setId(c.id());
             dto.setCredentialType(MfaCredential.CredentialTypeEnum.fromValue(c.type()));
@@ -113,7 +116,8 @@ public class MfaService implements InitializingBean {
             dto.setLastUsedAt(c.lastUsedAt().orElse(null));
             dto.setIsActive(c.active());
             return dto;
-        }).toList()));
+        }).toList());
+        });
     }
 
     /**
@@ -130,7 +134,7 @@ public class MfaService implements InitializingBean {
         UUID user = caller.userId();
         UUID tenant = caller.tenantId().orElseThrow();
         OffsetDateTime now = now();
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             credentials.retirePending(user, now);
             List<Credential> live = credentials.forUpdate(user);
             if (live.stream().anyMatch(c -> MfaRepository.TOTP.equals(c.type()) && c.usable())
@@ -169,7 +173,15 @@ public class MfaService implements InitializingBean {
         AuthContext caller = AuthContext.require();
         UUID user = caller.userId();
         OffsetDateTime now = now();
-        boolean accepted = database.tx().write(() -> {
+        if (!retireFactor(caller, request, now)) {
+            throw wrongCode(user, now);
+        }
+    }
+
+    /** Retires the factor in one transaction when the code is accepted; false (nothing changed) when it is not. */
+    private boolean retireFactor(AuthContext caller, DisableMfaRequest request, OffsetDateTime now) {
+        UUID user = caller.userId();
+        return doInWriteTransaction(() -> {
             requireNotLocked(user, now);
             List<Credential> live = credentials.forUpdate(user);
             Credential target = live.stream().filter(c -> c.id().equals(request.getMfaCredentialId())).findFirst()
@@ -189,9 +201,6 @@ public class MfaService implements InitializingBean {
             outbox.publish(IamEvents.MFA_DISABLED, IamEvents.USER_ACCOUNT, user, IamEvents.payload(user));
             return true;
         });
-        if (!accepted) {
-            throw wrongCode(user, now);
-        }
     }
 
     /** iam.RegenerateRecoveryCodes: a fresh set (shown once) replaces every earlier code, given a current code. */
@@ -200,7 +209,15 @@ public class MfaService implements InitializingBean {
         AuthContext caller = AuthContext.require();
         UUID user = caller.userId();
         OffsetDateTime now = now();
-        Optional<List<String>> fresh = database.tx().write(() -> {
+        Optional<List<String>> fresh = replaceRecoveryCodes(caller, request, now);
+        return new RecoveryCodes().recoveryCodes(fresh.orElseThrow(() -> wrongCode(user, now)));
+    }
+
+    /** A fresh set of recovery codes in one transaction when the code is accepted; empty when it is not. */
+    private Optional<List<String>> replaceRecoveryCodes(AuthContext caller, RegenerateRecoveryCodesRequest request,
+                                                        OffsetDateTime now) {
+        UUID user = caller.userId();
+        return doInWriteTransaction(() -> {
             requireNotLocked(user, now);
             List<Credential> live = credentials.forUpdate(user);
             if (live.stream().noneMatch(c -> MfaRepository.TOTP.equals(c.type()) && c.usable())) {
@@ -217,7 +234,6 @@ public class MfaService implements InitializingBean {
                     IamEvents.payload(user));
             return Optional.of(codes);
         });
-        return new RecoveryCodes().recoveryCodes(fresh.orElseThrow(() -> wrongCode(user, now)));
     }
 
     /**
@@ -324,10 +340,9 @@ public class MfaService implements InitializingBean {
 
     /** For changes to the factors themselves: a wrong code counts towards the lockout (own transaction), 422. */
     private ValidationFailedException wrongCode(UUID user, OffsetDateTime now) {
-        database.tx().write(() -> {
+        runInWriteTransaction(() -> {
             users.recordFailure(user, now, SignInService.LOCK_THRESHOLD, SignInService.MAX_LOCK_MINUTES);
             outbox.publish(IamEvents.SIGN_IN_FAILED, IamEvents.USER_ACCOUNT, user, IamEvents.payload(user));
-            return null;
         });
         return new ValidationFailedException(List.of(new FieldError("code", "is not a valid current code",
                 "INVALID_CODE")));

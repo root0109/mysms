@@ -22,7 +22,7 @@ final class PubSubTestEmulator {
                         .withExposedPorts(8085)
                         .withCommand("gcloud", "beta", "emulators", "pubsub", "start", "--project=mysms-test",
                                 "--host-port=0.0.0.0:8085")
-                        .waitingFor(Wait.forLogMessage(".*Server started, listening on port 8085.*", 1));
+                        .waitingFor(Wait.forLogMessage(".*Server started, listening on (port )?8085.*", 1));
                 emulator.start();
                 host = emulator.getHost() + ":" + emulator.getMappedPort(8085);
             }

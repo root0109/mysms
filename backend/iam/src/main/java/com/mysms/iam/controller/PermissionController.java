@@ -1,8 +1,10 @@
 package com.mysms.iam.controller;
 
-import com.mysms.contracts.iam.api.PermissionApi;
-import com.mysms.contracts.iam.model.Permission;
-import com.mysms.contracts.iam.model.PermissionList;
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.iam.api.PermissionApi;
+import com.mysms.iam.api.model.Permission;
 import com.mysms.core.web.ReadMask;
 import com.mysms.iam.business.PermissionCatalogService;
 import java.util.UUID;
@@ -20,10 +22,10 @@ public class PermissionController implements PermissionApi {
     }
 
     @Override
-    public ResponseEntity<PermissionList> listPermissions(Integer pageSize, String pageToken, String filter,
-            String orderBy, String fields) {
-        PermissionList list = service.list(pageSize, pageToken, filter, orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<Permission>> listPermissions(Integer page, Integer size, String cursor,
+            String filter, List<String> sort, String fields) {
+        PagingInfo<Permission> list = PagingUtil.pagingInfo(service.list(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 

@@ -2,10 +2,11 @@ package com.mysms.iam.business;
 
 import com.mysms.authclient.AuthContext;
 import com.mysms.authclient.DataScope;
-import com.mysms.contracts.iam.model.AcceptTermsRequest;
-import com.mysms.contracts.iam.model.ChangePasswordRequest;
-import com.mysms.contracts.iam.model.SetUserCredentialsRequest;
-import com.mysms.contracts.iam.model.UserAccount;
+import com.mysms.iam.api.model.AcceptTermsRequest;
+import com.mysms.iam.api.model.ChangePasswordRequest;
+import com.mysms.iam.api.model.SetUserCredentialsRequest;
+import com.mysms.iam.api.model.UserAccount;
+import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.DuplicateResourceException;
 import com.mysms.core.error.FieldError;
@@ -35,6 +36,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * The account's own credentials and an administrator's reset of them (iam.ChangePassword, iam.SetUserCredentials,
@@ -49,13 +51,11 @@ import org.springframework.stereotype.Service;
  * </ul>
  */
 @Service
-public class AccountSecurityService {
+public class AccountSecurityService extends AppTransactionManager {
 
     static final int MIN_PASSWORD = 12;
     static final int MAX_PASSWORD = 1024;
     private static final String PERMISSION_SET_CREDENTIALS = "iam.user_account.set_user_credentials";
-
-    private final ModuleDatabase database;
     private final AccountRepository accounts;
     private final UserAccountRepository rows;
     private final UserAccountMapper mapper;
@@ -70,13 +70,15 @@ public class AccountSecurityService {
     private final Clock clock;
 
     public AccountSecurityService(@Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
+            @Qualifier(IamDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
                                   AccountRepository accounts, UserAccountRepository rows, UserAccountMapper mapper,
                                   AuthTokenRepository tokens, SignInSessionRepository sessions, GrantRepository grants,
                                   AccessRules rules, PasswordHasher passwords,
                                   @Qualifier(IamEventsConfig.OUTBOX) OutboxWriter outbox,
                                   @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator,
                                   Clock clock) {
-        this.database = database;
+
+        super(database, transactions);
         this.accounts = accounts;
         this.rows = rows;
         this.mapper = mapper;
@@ -91,6 +93,21 @@ public class AccountSecurityService {
         this.clock = clock;
     }
 
+    /** The caller's sign-in state (password hash, lockout), read in its own transaction. */
+    private Optional<SignInAccount> signInAccount(UUID user) {
+        return doInPrimaryReadTransaction(() -> {
+            return accounts.findSignInById(user);
+        });
+    }
+
+    /** A wrong current password counts towards the lockout, in its own transaction so it stays when the call fails. */
+    private void recordFailure(UUID user, OffsetDateTime now) {
+        runInWriteTransaction(() -> {
+            accounts.recordFailure(user, now, SignInService.LOCK_THRESHOLD, SignInService.MAX_LOCK_MINUTES);
+            outbox.publish(IamEvents.SIGN_IN_FAILED, IamEvents.USER_ACCOUNT, user, IamEvents.payload(user));
+        });
+    }
+
     /** iam.ChangePassword: the caller's own password, given the current one. */
     public void changePassword(ChangePasswordRequest request) {
         validator.validate(request);
@@ -98,7 +115,7 @@ public class AccountSecurityService {
         AuthContext caller = AuthContext.require();
         UUID user = caller.userId();
         OffsetDateTime now = now();
-        Optional<SignInAccount> account = database.tx().read(() -> accounts.findSignInById(user));
+        Optional<SignInAccount> account = signInAccount(user);
         if (account.isPresent() && !account.get().canSignInAt(now)) {
             throw new PermissionDeniedException("Too many failed attempts; try again later.");
         }
@@ -106,16 +123,12 @@ public class AccountSecurityService {
         boolean matches = account.isPresent() && current.length() <= MAX_PASSWORD
                 && passwords.matches(current, account.get().passwordHash());
         if (!matches) {
-            database.tx().write(() -> {
-                accounts.recordFailure(user, now, SignInService.LOCK_THRESHOLD, SignInService.MAX_LOCK_MINUTES);
-                outbox.publish(IamEvents.SIGN_IN_FAILED, IamEvents.USER_ACCOUNT, user, IamEvents.payload(user));
-                return null;
-            });
+            recordFailure(user, now);
             throw new ValidationFailedException(List.of(new FieldError("currentPassword", "does not match",
                     "INVALID_PASSWORD")));
         }
         String hash = passwords.hash(request.getNewPassword());
-        database.tx().write(() -> {
+        runInWriteTransaction(() -> {
             if (accounts.setCredentials(user, hash, null, false, now, user) == 0) {
                 throw new ResourceNotFoundException(IamEvents.USER_ACCOUNT, user);
             }
@@ -130,7 +143,6 @@ public class AccountSecurityService {
             }
             audit.recordUpdate(IamEvents.USER_ACCOUNT, user, List.of("password"));
             outbox.publish(IamEvents.PASSWORD_CHANGED, IamEvents.USER_ACCOUNT, user, IamEvents.payload(user));
-            return null;
         });
     }
 
@@ -150,7 +162,7 @@ public class AccountSecurityService {
         String hash = passwords.hash(request.getTemporaryPassword());
         UUID actor = AuthContext.require().userId();
         OffsetDateTime now = now();
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             rows.findById(userId).orElseThrow(() -> new ResourceNotFoundException(IamEvents.USER_ACCOUNT, userId));
             // user accounts are tenant-level rows: changing their credentials needs the permission tenant-wide
             scope.requireWritable(Optional.empty());
@@ -183,7 +195,7 @@ public class AccountSecurityService {
         }
         UUID user = AuthContext.require().userId();
         OffsetDateTime now = now();
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             if (accounts.acceptTerms(user, now) == 0) {
                 throw new ResourceNotFoundException(IamEvents.USER_ACCOUNT, user);
             }

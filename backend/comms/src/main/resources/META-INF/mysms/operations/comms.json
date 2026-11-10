@@ -1,0 +1,1717 @@
+[ {
+  "operationId" : "comms.ActivateEvent",
+  "method" : "POST",
+  "path" : "/v1/comms/events/{eventId}:activate",
+  "permission" : "comms.event.activate_event",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.AddGroupMembers",
+  "method" : "POST",
+  "path" : "/v1/comms/audience-groups/{audienceGroupId}:addMembers",
+  "permission" : "comms.audience_group.add_group_members",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.ApprovePost",
+  "method" : "POST",
+  "path" : "/v1/comms/posts/{postId}:approve",
+  "permission" : "comms.post.approve_post",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.ArchiveNotifications",
+  "method" : "POST",
+  "path" : "/v1/comms/notifications:archive",
+  "permission" : "comms.in_app_notification.archive_notifications",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CancelEventOccurrence",
+  "method" : "POST",
+  "path" : "/v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}:cancel",
+  "permission" : "comms.event_occurrence.cancel_event_occurrence",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CancelOperation",
+  "method" : "POST",
+  "path" : "/v1/comms/operations/{operationId}:cancel",
+  "permission" : "comms.operation.cancel_operation",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CancelOutboundMessage",
+  "method" : "POST",
+  "path" : "/v1/comms/outbound-messages/{outboundMessageId}:cancel",
+  "permission" : "comms.outbound_message.cancel_outbound_message",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CancelPost",
+  "method" : "POST",
+  "path" : "/v1/comms/posts/{postId}:cancel",
+  "permission" : "comms.post.cancel_post",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.ClaimTask",
+  "method" : "POST",
+  "path" : "/v1/comms/tasks/{taskId}:claim",
+  "permission" : "comms.task.claim_task",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CloseFeedbackThread",
+  "method" : "POST",
+  "path" : "/v1/comms/feedback-threads/{feedbackThreadId}:close",
+  "permission" : "comms.feedback_thread.close_feedback_thread",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CloseNoticeReplies",
+  "method" : "POST",
+  "path" : "/v1/comms/notices/{noticeId}:closeReplies",
+  "permission" : "comms.notice.close_notice_replies",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CompletePersonalEvent",
+  "method" : "POST",
+  "path" : "/v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}:complete",
+  "permission" : "comms.event_occurrence.complete_personal_event",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CompleteTask",
+  "method" : "POST",
+  "path" : "/v1/comms/tasks/{taskId}:complete",
+  "permission" : "comms.task.complete_task",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.ComposeMail",
+  "method" : "POST",
+  "path" : "/v1/comms/mailbox-messages:compose",
+  "permission" : "comms.mailbox_message.compose_mail",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateAudienceGroup",
+  "method" : "POST",
+  "path" : "/v1/comms/audience-groups",
+  "permission" : "comms.audience_group.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateAudienceGroupMember",
+  "method" : "POST",
+  "path" : "/v1/comms/audience-groups/{audienceGroupId}/members",
+  "permission" : "comms.audience_group_member.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateClassPage",
+  "method" : "POST",
+  "path" : "/v1/comms/class-pages",
+  "permission" : "comms.class_page.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateClassPageAttachment",
+  "method" : "POST",
+  "path" : "/v1/comms/class-pages/{classPageId}/attachments",
+  "permission" : "comms.class_page_attachment.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateClassPageMember",
+  "method" : "POST",
+  "path" : "/v1/comms/class-pages/{classPageId}/members",
+  "permission" : "comms.class_page_member.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateCommentReaction",
+  "method" : "POST",
+  "path" : "/v1/comms/comment-reactions",
+  "permission" : "comms.comment_reaction.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateContentView",
+  "method" : "POST",
+  "path" : "/v1/comms/content-views",
+  "permission" : "comms.content_view.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateConversation",
+  "method" : "POST",
+  "path" : "/v1/comms/conversations",
+  "permission" : "comms.conversation.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateConversationMessage",
+  "method" : "POST",
+  "path" : "/v1/comms/conversations/{conversationId}/messages",
+  "permission" : "comms.conversation_message.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateConversationParticipant",
+  "method" : "POST",
+  "path" : "/v1/comms/conversations/{conversationId}/participants",
+  "permission" : "comms.conversation_participant.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateEvent",
+  "method" : "POST",
+  "path" : "/v1/comms/events",
+  "permission" : "comms.event.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateEventAttendee",
+  "method" : "POST",
+  "path" : "/v1/comms/events/{eventId}/attendees",
+  "permission" : "comms.event_attendee.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateEventGalleryItem",
+  "method" : "POST",
+  "path" : "/v1/comms/events/{eventId}/gallery-items",
+  "permission" : "comms.event_gallery_item.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateEventInstitution",
+  "method" : "POST",
+  "path" : "/v1/comms/events/{eventId}/institutions",
+  "permission" : "comms.event_institution.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateEventOccurrence",
+  "method" : "POST",
+  "path" : "/v1/comms/events/{eventId}/occurrences",
+  "permission" : "comms.event_occurrence.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateFeedbackMessage",
+  "method" : "POST",
+  "path" : "/v1/comms/feedback-threads/{feedbackThreadId}/messages",
+  "permission" : "comms.feedback_message.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateFeedbackThread",
+  "method" : "POST",
+  "path" : "/v1/comms/feedback-threads",
+  "permission" : "comms.feedback_thread.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateMagazine",
+  "method" : "POST",
+  "path" : "/v1/comms/magazines",
+  "permission" : "comms.magazine.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateMessageTemplate",
+  "method" : "POST",
+  "path" : "/v1/comms/message-templates",
+  "permission" : "comms.message_template.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateNotice",
+  "method" : "POST",
+  "path" : "/v1/comms/notices",
+  "permission" : "comms.notice.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateNoticeAudience",
+  "method" : "POST",
+  "path" : "/v1/comms/notices/{noticeId}/audiences",
+  "permission" : "comms.notice_audience.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateNoticeBackground",
+  "method" : "POST",
+  "path" : "/v1/comms/notice-backgrounds",
+  "permission" : "comms.notice_background.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateNotificationChannel",
+  "method" : "POST",
+  "path" : "/v1/comms/notification-channels",
+  "permission" : "comms.notification_channel.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateNotificationChannelProperty",
+  "method" : "POST",
+  "path" : "/v1/comms/notification-channels/{notificationChannelId}/properties",
+  "permission" : "comms.notification_channel_property.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateNotificationCohortSetting",
+  "method" : "POST",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/cohort-settings",
+  "permission" : "comms.notification_cohort_setting.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateNotificationPreference",
+  "method" : "POST",
+  "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences",
+  "permission" : "comms.notification_preference.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateNotificationPreferenceSet",
+  "method" : "POST",
+  "path" : "/v1/comms/notification-preference-sets",
+  "permission" : "comms.notification_preference_set.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateNotificationRule",
+  "method" : "POST",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/rules",
+  "permission" : "comms.notification_rule.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateNotificationType",
+  "method" : "POST",
+  "path" : "/v1/comms/notification-types",
+  "permission" : "comms.notification_type.create",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateNotificationTypeProperty",
+  "method" : "POST",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/properties",
+  "permission" : "comms.notification_type_property.create",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreatePageCategory",
+  "method" : "POST",
+  "path" : "/v1/comms/page-categories",
+  "permission" : "comms.page_category.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreatePost",
+  "method" : "POST",
+  "path" : "/v1/comms/posts",
+  "permission" : "comms.post.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreatePostAudienceClass",
+  "method" : "POST",
+  "path" : "/v1/comms/posts/{postId}/audience-classes",
+  "permission" : "comms.post_audience_class.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreatePostComment",
+  "method" : "POST",
+  "path" : "/v1/comms/posts/{postId}/comments",
+  "permission" : "comms.post_comment.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreatePostReaction",
+  "method" : "POST",
+  "path" : "/v1/comms/posts/{postId}/reactions",
+  "permission" : "comms.post_reaction.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateTask",
+  "method" : "POST",
+  "path" : "/v1/comms/tasks",
+  "permission" : "comms.task.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.CreateTaskAssignee",
+  "method" : "POST",
+  "path" : "/v1/comms/tasks/{taskId}/assignees",
+  "permission" : "comms.task_assignee.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.DeactivateEvent",
+  "method" : "POST",
+  "path" : "/v1/comms/events/{eventId}:deactivate",
+  "permission" : "comms.event.deactivate_event",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.DeactivateNotice",
+  "method" : "POST",
+  "path" : "/v1/comms/notices/{noticeId}:deactivate",
+  "permission" : "comms.notice.deactivate_notice",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.DeleteAudienceGroup",
+  "method" : "DELETE",
+  "path" : "/v1/comms/audience-groups/{audienceGroupId}",
+  "permission" : "comms.audience_group.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteAudienceGroupMember",
+  "method" : "DELETE",
+  "path" : "/v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}",
+  "permission" : "comms.audience_group_member.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteCalendarExport",
+  "method" : "DELETE",
+  "path" : "/v1/comms/calendar-exports/{calendarExportId}",
+  "permission" : "comms.calendar_export.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteClassPage",
+  "method" : "DELETE",
+  "path" : "/v1/comms/class-pages/{classPageId}",
+  "permission" : "comms.class_page.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteClassPageAttachment",
+  "method" : "DELETE",
+  "path" : "/v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}",
+  "permission" : "comms.class_page_attachment.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteClassPageMember",
+  "method" : "DELETE",
+  "path" : "/v1/comms/class-pages/{classPageId}/members/{classPageMemberId}",
+  "permission" : "comms.class_page_member.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteCommentReaction",
+  "method" : "DELETE",
+  "path" : "/v1/comms/comment-reactions/{commentReactionId}",
+  "permission" : "comms.comment_reaction.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteContentView",
+  "method" : "DELETE",
+  "path" : "/v1/comms/content-views/{contentViewId}",
+  "permission" : "comms.content_view.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteConversation",
+  "method" : "DELETE",
+  "path" : "/v1/comms/conversations/{conversationId}",
+  "permission" : "comms.conversation.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteConversationMessage",
+  "method" : "DELETE",
+  "path" : "/v1/comms/conversations/{conversationId}/messages/{conversationMessageId}",
+  "permission" : "comms.conversation_message.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteConversationParticipant",
+  "method" : "DELETE",
+  "path" : "/v1/comms/conversations/{conversationId}/participants/{conversationParticipantId}",
+  "permission" : "comms.conversation_participant.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteEvent",
+  "method" : "DELETE",
+  "path" : "/v1/comms/events/{eventId}",
+  "permission" : "comms.event.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteEventAttendee",
+  "method" : "DELETE",
+  "path" : "/v1/comms/events/{eventId}/attendees/{eventAttendeeId}",
+  "permission" : "comms.event_attendee.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteEventGalleryItem",
+  "method" : "DELETE",
+  "path" : "/v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}",
+  "permission" : "comms.event_gallery_item.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteEventInstitution",
+  "method" : "DELETE",
+  "path" : "/v1/comms/events/{eventId}/institutions/{eventInstitutionId}",
+  "permission" : "comms.event_institution.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteEventOccurrence",
+  "method" : "DELETE",
+  "path" : "/v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}",
+  "permission" : "comms.event_occurrence.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteFeedbackMessage",
+  "method" : "DELETE",
+  "path" : "/v1/comms/feedback-threads/{feedbackThreadId}/messages/{feedbackMessageId}",
+  "permission" : "comms.feedback_message.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteFeedbackThread",
+  "method" : "DELETE",
+  "path" : "/v1/comms/feedback-threads/{feedbackThreadId}",
+  "permission" : "comms.feedback_thread.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteMagazine",
+  "method" : "DELETE",
+  "path" : "/v1/comms/magazines/{magazineId}",
+  "permission" : "comms.magazine.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteMailboxMessage",
+  "method" : "DELETE",
+  "path" : "/v1/comms/mailbox-messages/{mailboxMessageId}",
+  "permission" : "comms.mailbox_message.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteMessageTemplate",
+  "method" : "DELETE",
+  "path" : "/v1/comms/message-templates/{messageTemplateId}",
+  "permission" : "comms.message_template.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteNotice",
+  "method" : "DELETE",
+  "path" : "/v1/comms/notices/{noticeId}",
+  "permission" : "comms.notice.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteNoticeAudience",
+  "method" : "DELETE",
+  "path" : "/v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}",
+  "permission" : "comms.notice_audience.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteNoticeBackground",
+  "method" : "DELETE",
+  "path" : "/v1/comms/notice-backgrounds/{noticeBackgroundId}",
+  "permission" : "comms.notice_background.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteNotificationChannel",
+  "method" : "DELETE",
+  "path" : "/v1/comms/notification-channels/{notificationChannelId}",
+  "permission" : "comms.notification_channel.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteNotificationChannelProperty",
+  "method" : "DELETE",
+  "path" : "/v1/comms/notification-channels/{notificationChannelId}/properties/{notificationChannelPropertyId}",
+  "permission" : "comms.notification_channel_property.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteNotificationCohortSetting",
+  "method" : "DELETE",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId}",
+  "permission" : "comms.notification_cohort_setting.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteNotificationPreference",
+  "method" : "DELETE",
+  "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences/{notificationPreferenceId}",
+  "permission" : "comms.notification_preference.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteNotificationPreferenceSet",
+  "method" : "DELETE",
+  "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}",
+  "permission" : "comms.notification_preference_set.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteNotificationRule",
+  "method" : "DELETE",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId}",
+  "permission" : "comms.notification_rule.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteNotificationType",
+  "method" : "DELETE",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}",
+  "permission" : "comms.notification_type.delete",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteNotificationTypeProperty",
+  "method" : "DELETE",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId}",
+  "permission" : "comms.notification_type_property.delete",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeletePageCategory",
+  "method" : "DELETE",
+  "path" : "/v1/comms/page-categories/{pageCategoryId}",
+  "permission" : "comms.page_category.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeletePost",
+  "method" : "DELETE",
+  "path" : "/v1/comms/posts/{postId}",
+  "permission" : "comms.post.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeletePostAudienceClass",
+  "method" : "DELETE",
+  "path" : "/v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}",
+  "permission" : "comms.post_audience_class.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeletePostComment",
+  "method" : "DELETE",
+  "path" : "/v1/comms/posts/{postId}/comments/{postCommentId}",
+  "permission" : "comms.post_comment.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeletePostReaction",
+  "method" : "DELETE",
+  "path" : "/v1/comms/posts/{postId}/reactions/{postReactionId}",
+  "permission" : "comms.post_reaction.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteTask",
+  "method" : "DELETE",
+  "path" : "/v1/comms/tasks/{taskId}",
+  "permission" : "comms.task.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.DeleteTaskAssignee",
+  "method" : "DELETE",
+  "path" : "/v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}",
+  "permission" : "comms.task_assignee.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ExportCalendar",
+  "method" : "POST",
+  "path" : "/v1/comms/me/calendar:export",
+  "permission" : "comms.calendar_export.export_calendar",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.FollowClassPage",
+  "method" : "POST",
+  "path" : "/v1/comms/class-pages/{classPageId}:follow",
+  "permission" : "comms.class_page.follow_class_page",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.GetAudienceGroup",
+  "method" : "GET",
+  "path" : "/v1/comms/audience-groups/{audienceGroupId}",
+  "permission" : "comms.audience_group.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetAudienceGroupMember",
+  "method" : "GET",
+  "path" : "/v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}",
+  "permission" : "comms.audience_group_member.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetCalendarExport",
+  "method" : "GET",
+  "path" : "/v1/comms/calendar-exports/{calendarExportId}",
+  "permission" : "comms.calendar_export.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetClassPage",
+  "method" : "GET",
+  "path" : "/v1/comms/class-pages/{classPageId}",
+  "permission" : "comms.class_page.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetClassPageAttachment",
+  "method" : "GET",
+  "path" : "/v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}",
+  "permission" : "comms.class_page_attachment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetClassPageMember",
+  "method" : "GET",
+  "path" : "/v1/comms/class-pages/{classPageId}/members/{classPageMemberId}",
+  "permission" : "comms.class_page_member.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetCommentReaction",
+  "method" : "GET",
+  "path" : "/v1/comms/comment-reactions/{commentReactionId}",
+  "permission" : "comms.comment_reaction.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetContentView",
+  "method" : "GET",
+  "path" : "/v1/comms/content-views/{contentViewId}",
+  "permission" : "comms.content_view.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetConversation",
+  "method" : "GET",
+  "path" : "/v1/comms/conversations/{conversationId}",
+  "permission" : "comms.conversation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetConversationMessage",
+  "method" : "GET",
+  "path" : "/v1/comms/conversations/{conversationId}/messages/{conversationMessageId}",
+  "permission" : "comms.conversation_message.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetConversationParticipant",
+  "method" : "GET",
+  "path" : "/v1/comms/conversations/{conversationId}/participants/{conversationParticipantId}",
+  "permission" : "comms.conversation_participant.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetEvent",
+  "method" : "GET",
+  "path" : "/v1/comms/events/{eventId}",
+  "permission" : "comms.event.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetEventAttendee",
+  "method" : "GET",
+  "path" : "/v1/comms/events/{eventId}/attendees/{eventAttendeeId}",
+  "permission" : "comms.event_attendee.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetEventGalleryItem",
+  "method" : "GET",
+  "path" : "/v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}",
+  "permission" : "comms.event_gallery_item.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetEventInstitution",
+  "method" : "GET",
+  "path" : "/v1/comms/events/{eventId}/institutions/{eventInstitutionId}",
+  "permission" : "comms.event_institution.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetEventOccurrence",
+  "method" : "GET",
+  "path" : "/v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}",
+  "permission" : "comms.event_occurrence.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetFeed",
+  "method" : "GET",
+  "path" : "/v1/comms/posts:feed",
+  "permission" : "comms.post.get_feed",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetFeedbackMessage",
+  "method" : "GET",
+  "path" : "/v1/comms/feedback-threads/{feedbackThreadId}/messages/{feedbackMessageId}",
+  "permission" : "comms.feedback_message.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetFeedbackThread",
+  "method" : "GET",
+  "path" : "/v1/comms/feedback-threads/{feedbackThreadId}",
+  "permission" : "comms.feedback_thread.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetInAppNotification",
+  "method" : "GET",
+  "path" : "/v1/comms/notifications/{inAppNotificationId}",
+  "permission" : "comms.in_app_notification.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetMagazine",
+  "method" : "GET",
+  "path" : "/v1/comms/magazines/{magazineId}",
+  "permission" : "comms.magazine.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetMailboxMessage",
+  "method" : "GET",
+  "path" : "/v1/comms/mailbox-messages/{mailboxMessageId}",
+  "permission" : "comms.mailbox_message.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetMessageTemplate",
+  "method" : "GET",
+  "path" : "/v1/comms/message-templates/{messageTemplateId}",
+  "permission" : "comms.message_template.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetMyCalendar",
+  "method" : "GET",
+  "path" : "/v1/comms/me/calendar",
+  "permission" : "comms.event.get_my_calendar",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetNotice",
+  "method" : "GET",
+  "path" : "/v1/comms/notices/{noticeId}",
+  "permission" : "comms.notice.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetNoticeAudience",
+  "method" : "GET",
+  "path" : "/v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}",
+  "permission" : "comms.notice_audience.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetNoticeBackground",
+  "method" : "GET",
+  "path" : "/v1/comms/notice-backgrounds/{noticeBackgroundId}",
+  "permission" : "comms.notice_background.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetNoticeVersion",
+  "method" : "GET",
+  "path" : "/v1/comms/notices/{noticeId}/versions/{noticeVersionId}",
+  "permission" : "comms.notice_version.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetNotificationChannel",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-channels/{notificationChannelId}",
+  "permission" : "comms.notification_channel.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetNotificationChannelProperty",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-channels/{notificationChannelId}/properties/{notificationChannelPropertyId}",
+  "permission" : "comms.notification_channel_property.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetNotificationCohortSetting",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId}",
+  "permission" : "comms.notification_cohort_setting.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetNotificationPreference",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences/{notificationPreferenceId}",
+  "permission" : "comms.notification_preference.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetNotificationPreferenceSet",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}",
+  "permission" : "comms.notification_preference_set.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetNotificationRule",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId}",
+  "permission" : "comms.notification_rule.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetNotificationType",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}",
+  "permission" : "comms.notification_type.read",
+  "schemes" : [ "bearerAuth", "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetNotificationTypeProperty",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId}",
+  "permission" : "comms.notification_type_property.read",
+  "schemes" : [ "bearerAuth", "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetOperation",
+  "method" : "GET",
+  "path" : "/v1/comms/operations/{operationId}",
+  "permission" : "comms.operation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetOutboundMessage",
+  "method" : "GET",
+  "path" : "/v1/comms/outbound-messages/{outboundMessageId}",
+  "permission" : "comms.outbound_message.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetPageCategory",
+  "method" : "GET",
+  "path" : "/v1/comms/page-categories/{pageCategoryId}",
+  "permission" : "comms.page_category.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetPost",
+  "method" : "GET",
+  "path" : "/v1/comms/posts/{postId}",
+  "permission" : "comms.post.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetPostAudienceClass",
+  "method" : "GET",
+  "path" : "/v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}",
+  "permission" : "comms.post_audience_class.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetPostComment",
+  "method" : "GET",
+  "path" : "/v1/comms/posts/{postId}/comments/{postCommentId}",
+  "permission" : "comms.post_comment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetPostReaction",
+  "method" : "GET",
+  "path" : "/v1/comms/posts/{postId}/reactions/{postReactionId}",
+  "permission" : "comms.post_reaction.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetTask",
+  "method" : "GET",
+  "path" : "/v1/comms/tasks/{taskId}",
+  "permission" : "comms.task.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.GetTaskAssignee",
+  "method" : "GET",
+  "path" : "/v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}",
+  "permission" : "comms.task_assignee.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.HideMessageForMe",
+  "method" : "POST",
+  "path" : "/v1/comms/messages/{messageId}:hideForMe",
+  "permission" : "comms.conversation_message.hide_message_for_me",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.ListAudienceGroupMembers",
+  "method" : "GET",
+  "path" : "/v1/comms/audience-groups/{audienceGroupId}/members",
+  "permission" : "comms.audience_group_member.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListAudienceGroups",
+  "method" : "GET",
+  "path" : "/v1/comms/audience-groups",
+  "permission" : "comms.audience_group.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListCalendarExports",
+  "method" : "GET",
+  "path" : "/v1/comms/calendar-exports",
+  "permission" : "comms.calendar_export.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListClassPageAttachments",
+  "method" : "GET",
+  "path" : "/v1/comms/class-pages/{classPageId}/attachments",
+  "permission" : "comms.class_page_attachment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListClassPageMembers",
+  "method" : "GET",
+  "path" : "/v1/comms/class-pages/{classPageId}/members",
+  "permission" : "comms.class_page_member.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListClassPages",
+  "method" : "GET",
+  "path" : "/v1/comms/class-pages",
+  "permission" : "comms.class_page.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListCommentReactions",
+  "method" : "GET",
+  "path" : "/v1/comms/comment-reactions",
+  "permission" : "comms.comment_reaction.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListContentViews",
+  "method" : "GET",
+  "path" : "/v1/comms/content-views",
+  "permission" : "comms.content_view.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListConversationMessages",
+  "method" : "GET",
+  "path" : "/v1/comms/conversations/{conversationId}/messages",
+  "permission" : "comms.conversation_message.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListConversationParticipants",
+  "method" : "GET",
+  "path" : "/v1/comms/conversations/{conversationId}/participants",
+  "permission" : "comms.conversation_participant.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListConversations",
+  "method" : "GET",
+  "path" : "/v1/comms/conversations",
+  "permission" : "comms.conversation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListEventAttendees",
+  "method" : "GET",
+  "path" : "/v1/comms/events/{eventId}/attendees",
+  "permission" : "comms.event_attendee.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListEventGalleryItems",
+  "method" : "GET",
+  "path" : "/v1/comms/events/{eventId}/gallery-items",
+  "permission" : "comms.event_gallery_item.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListEventInstitutions",
+  "method" : "GET",
+  "path" : "/v1/comms/events/{eventId}/institutions",
+  "permission" : "comms.event_institution.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListEventOccurrences",
+  "method" : "GET",
+  "path" : "/v1/comms/events/{eventId}/occurrences",
+  "permission" : "comms.event_occurrence.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListEvents",
+  "method" : "GET",
+  "path" : "/v1/comms/events",
+  "permission" : "comms.event.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListFeedbackMessages",
+  "method" : "GET",
+  "path" : "/v1/comms/feedback-threads/{feedbackThreadId}/messages",
+  "permission" : "comms.feedback_message.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListFeedbackThreads",
+  "method" : "GET",
+  "path" : "/v1/comms/feedback-threads",
+  "permission" : "comms.feedback_thread.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListInAppNotifications",
+  "method" : "GET",
+  "path" : "/v1/comms/notifications",
+  "permission" : "comms.in_app_notification.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListMagazines",
+  "method" : "GET",
+  "path" : "/v1/comms/magazines",
+  "permission" : "comms.magazine.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListMailboxMessages",
+  "method" : "GET",
+  "path" : "/v1/comms/mailbox-messages",
+  "permission" : "comms.mailbox_message.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListMessageTemplates",
+  "method" : "GET",
+  "path" : "/v1/comms/message-templates",
+  "permission" : "comms.message_template.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListNoticeAudiences",
+  "method" : "GET",
+  "path" : "/v1/comms/notices/{noticeId}/audiences",
+  "permission" : "comms.notice_audience.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListNoticeBackgrounds",
+  "method" : "GET",
+  "path" : "/v1/comms/notice-backgrounds",
+  "permission" : "comms.notice_background.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListNoticeVersions",
+  "method" : "GET",
+  "path" : "/v1/comms/notices/{noticeId}/versions",
+  "permission" : "comms.notice_version.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListNotices",
+  "method" : "GET",
+  "path" : "/v1/comms/notices",
+  "permission" : "comms.notice.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListNotificationChannelProperties",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-channels/{notificationChannelId}/properties",
+  "permission" : "comms.notification_channel_property.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListNotificationChannels",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-channels",
+  "permission" : "comms.notification_channel.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListNotificationCohortSettings",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/cohort-settings",
+  "permission" : "comms.notification_cohort_setting.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListNotificationPreferenceSets",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-preference-sets",
+  "permission" : "comms.notification_preference_set.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListNotificationPreferences",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences",
+  "permission" : "comms.notification_preference.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListNotificationRules",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/rules",
+  "permission" : "comms.notification_rule.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListNotificationTypeProperties",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/properties",
+  "permission" : "comms.notification_type_property.read",
+  "schemes" : [ "bearerAuth", "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListNotificationTypes",
+  "method" : "GET",
+  "path" : "/v1/comms/notification-types",
+  "permission" : "comms.notification_type.read",
+  "schemes" : [ "bearerAuth", "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListOperations",
+  "method" : "GET",
+  "path" : "/v1/comms/operations",
+  "permission" : "comms.operation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListOutboundMessages",
+  "method" : "GET",
+  "path" : "/v1/comms/outbound-messages",
+  "permission" : "comms.outbound_message.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListPageCategories",
+  "method" : "GET",
+  "path" : "/v1/comms/page-categories",
+  "permission" : "comms.page_category.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListPostAudienceClasses",
+  "method" : "GET",
+  "path" : "/v1/comms/posts/{postId}/audience-classes",
+  "permission" : "comms.post_audience_class.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListPostComments",
+  "method" : "GET",
+  "path" : "/v1/comms/posts/{postId}/comments",
+  "permission" : "comms.post_comment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListPostReactions",
+  "method" : "GET",
+  "path" : "/v1/comms/posts/{postId}/reactions",
+  "permission" : "comms.post_reaction.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListPosts",
+  "method" : "GET",
+  "path" : "/v1/comms/posts",
+  "permission" : "comms.post.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListTaskAssignees",
+  "method" : "GET",
+  "path" : "/v1/comms/tasks/{taskId}/assignees",
+  "permission" : "comms.task_assignee.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.ListTasks",
+  "method" : "GET",
+  "path" : "/v1/comms/tasks",
+  "permission" : "comms.task.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.MarkAllNotificationsRead",
+  "method" : "POST",
+  "path" : "/v1/comms/notifications:markAllRead",
+  "permission" : "comms.in_app_notification.mark_all_notifications_read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.MarkConversationRead",
+  "method" : "POST",
+  "path" : "/v1/comms/conversations/{conversationId}:markRead",
+  "permission" : "comms.conversation.mark_conversation_read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.MarkFeedbackMessage",
+  "method" : "POST",
+  "path" : "/v1/comms/feedback-messages/{messageId}:markReviewStatus",
+  "permission" : "comms.feedback_message.mark_feedback_message",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.MarkMailRead",
+  "method" : "POST",
+  "path" : "/v1/comms/mailbox-messages/{mailboxMessageId}:markRead",
+  "permission" : "comms.mailbox_message.mark_mail_read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.MarkNotificationRead",
+  "method" : "POST",
+  "path" : "/v1/comms/notifications/{inAppNotificationId}:markRead",
+  "permission" : "comms.in_app_notification.mark_notification_read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.PublishNotice",
+  "method" : "POST",
+  "path" : "/v1/comms/notices/{noticeId}:publish",
+  "permission" : "comms.notice.publish_notice",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.ReactivateNotice",
+  "method" : "POST",
+  "path" : "/v1/comms/notices/{noticeId}:reactivate",
+  "permission" : "comms.notice.reactivate_notice",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.ReopenFeedbackThread",
+  "method" : "POST",
+  "path" : "/v1/comms/feedback-threads/{feedbackThreadId}:reopen",
+  "permission" : "comms.feedback_thread.reopen_feedback_thread",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.ReopenTask",
+  "method" : "POST",
+  "path" : "/v1/comms/tasks/{taskId}:reopen",
+  "permission" : "comms.task.reopen_task",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.RetryOutboundMessage",
+  "method" : "POST",
+  "path" : "/v1/comms/outbound-messages/{outboundMessageId}:retry",
+  "permission" : "comms.outbound_message.retry_outbound_message",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.SendMessage",
+  "method" : "POST",
+  "path" : "/v1/comms/outbound-messages:send",
+  "permission" : "comms.outbound_message.send_message",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "required"
+}, {
+  "operationId" : "comms.SendTestMessage",
+  "method" : "POST",
+  "path" : "/v1/comms/notification-channels/{notificationChannelId}:sendTest",
+  "permission" : "comms.notification_channel.send_test_message",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.SnoozeTask",
+  "method" : "POST",
+  "path" : "/v1/comms/tasks/{taskId}:snooze",
+  "permission" : "comms.task.snooze_task",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.SubmitPost",
+  "method" : "POST",
+  "path" : "/v1/comms/posts/{postId}:submit",
+  "permission" : "comms.post.submit_post",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.UnpublishNotice",
+  "method" : "POST",
+  "path" : "/v1/comms/notices/{noticeId}:unpublish",
+  "permission" : "comms.notice.unpublish_notice",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "comms.UpdateAudienceGroup",
+  "method" : "PATCH",
+  "path" : "/v1/comms/audience-groups/{audienceGroupId}",
+  "permission" : "comms.audience_group.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateAudienceGroupMember",
+  "method" : "PATCH",
+  "path" : "/v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}",
+  "permission" : "comms.audience_group_member.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateClassPage",
+  "method" : "PATCH",
+  "path" : "/v1/comms/class-pages/{classPageId}",
+  "permission" : "comms.class_page.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateClassPageAttachment",
+  "method" : "PATCH",
+  "path" : "/v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}",
+  "permission" : "comms.class_page_attachment.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateClassPageMember",
+  "method" : "PATCH",
+  "path" : "/v1/comms/class-pages/{classPageId}/members/{classPageMemberId}",
+  "permission" : "comms.class_page_member.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateCommentReaction",
+  "method" : "PATCH",
+  "path" : "/v1/comms/comment-reactions/{commentReactionId}",
+  "permission" : "comms.comment_reaction.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateContentView",
+  "method" : "PATCH",
+  "path" : "/v1/comms/content-views/{contentViewId}",
+  "permission" : "comms.content_view.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateConversation",
+  "method" : "PATCH",
+  "path" : "/v1/comms/conversations/{conversationId}",
+  "permission" : "comms.conversation.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateConversationMessage",
+  "method" : "PATCH",
+  "path" : "/v1/comms/conversations/{conversationId}/messages/{conversationMessageId}",
+  "permission" : "comms.conversation_message.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateConversationParticipant",
+  "method" : "PATCH",
+  "path" : "/v1/comms/conversations/{conversationId}/participants/{conversationParticipantId}",
+  "permission" : "comms.conversation_participant.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateEvent",
+  "method" : "PATCH",
+  "path" : "/v1/comms/events/{eventId}",
+  "permission" : "comms.event.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateEventAttendee",
+  "method" : "PATCH",
+  "path" : "/v1/comms/events/{eventId}/attendees/{eventAttendeeId}",
+  "permission" : "comms.event_attendee.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateEventGalleryItem",
+  "method" : "PATCH",
+  "path" : "/v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}",
+  "permission" : "comms.event_gallery_item.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateEventInstitution",
+  "method" : "PATCH",
+  "path" : "/v1/comms/events/{eventId}/institutions/{eventInstitutionId}",
+  "permission" : "comms.event_institution.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateEventOccurrence",
+  "method" : "PATCH",
+  "path" : "/v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}",
+  "permission" : "comms.event_occurrence.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateFeedbackMessage",
+  "method" : "PATCH",
+  "path" : "/v1/comms/feedback-threads/{feedbackThreadId}/messages/{feedbackMessageId}",
+  "permission" : "comms.feedback_message.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateFeedbackThread",
+  "method" : "PATCH",
+  "path" : "/v1/comms/feedback-threads/{feedbackThreadId}",
+  "permission" : "comms.feedback_thread.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateMagazine",
+  "method" : "PATCH",
+  "path" : "/v1/comms/magazines/{magazineId}",
+  "permission" : "comms.magazine.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateMessageTemplate",
+  "method" : "PATCH",
+  "path" : "/v1/comms/message-templates/{messageTemplateId}",
+  "permission" : "comms.message_template.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateNotice",
+  "method" : "PATCH",
+  "path" : "/v1/comms/notices/{noticeId}",
+  "permission" : "comms.notice.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateNoticeAudience",
+  "method" : "PATCH",
+  "path" : "/v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}",
+  "permission" : "comms.notice_audience.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateNoticeBackground",
+  "method" : "PATCH",
+  "path" : "/v1/comms/notice-backgrounds/{noticeBackgroundId}",
+  "permission" : "comms.notice_background.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateNotificationChannel",
+  "method" : "PATCH",
+  "path" : "/v1/comms/notification-channels/{notificationChannelId}",
+  "permission" : "comms.notification_channel.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateNotificationChannelProperty",
+  "method" : "PATCH",
+  "path" : "/v1/comms/notification-channels/{notificationChannelId}/properties/{notificationChannelPropertyId}",
+  "permission" : "comms.notification_channel_property.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateNotificationCohortSetting",
+  "method" : "PATCH",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId}",
+  "permission" : "comms.notification_cohort_setting.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateNotificationPreference",
+  "method" : "PATCH",
+  "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences/{notificationPreferenceId}",
+  "permission" : "comms.notification_preference.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateNotificationPreferenceSet",
+  "method" : "PATCH",
+  "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}",
+  "permission" : "comms.notification_preference_set.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateNotificationRule",
+  "method" : "PATCH",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId}",
+  "permission" : "comms.notification_rule.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateNotificationType",
+  "method" : "PATCH",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}",
+  "permission" : "comms.notification_type.update",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateNotificationTypeProperty",
+  "method" : "PATCH",
+  "path" : "/v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId}",
+  "permission" : "comms.notification_type_property.update",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdatePageCategory",
+  "method" : "PATCH",
+  "path" : "/v1/comms/page-categories/{pageCategoryId}",
+  "permission" : "comms.page_category.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdatePost",
+  "method" : "PATCH",
+  "path" : "/v1/comms/posts/{postId}",
+  "permission" : "comms.post.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdatePostAudienceClass",
+  "method" : "PATCH",
+  "path" : "/v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}",
+  "permission" : "comms.post_audience_class.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdatePostComment",
+  "method" : "PATCH",
+  "path" : "/v1/comms/posts/{postId}/comments/{postCommentId}",
+  "permission" : "comms.post_comment.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdatePostReaction",
+  "method" : "PATCH",
+  "path" : "/v1/comms/posts/{postId}/reactions/{postReactionId}",
+  "permission" : "comms.post_reaction.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateTask",
+  "method" : "PATCH",
+  "path" : "/v1/comms/tasks/{taskId}",
+  "permission" : "comms.task.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "comms.UpdateTaskAssignee",
+  "method" : "PATCH",
+  "path" : "/v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}",
+  "permission" : "comms.task_assignee.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+} ]

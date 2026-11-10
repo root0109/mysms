@@ -1,6 +1,6 @@
 package com.mysms.master.mapper;
 
-import com.mysms.contracts.master.model.Country;
+import com.mysms.master.api.model.Country;
 import com.mysms.core.web.Etags;
 import com.mysms.master.domain.CountryEntity;
 import org.mapstruct.Mapper;

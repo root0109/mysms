@@ -1,9 +1,9 @@
 package com.mysms.messaging.rabbitmq;
 
+import com.mysms.core.json.JsonMappers;
 import java.io.PrintStream;
 import java.net.URI;
 import java.util.Map;
-import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Operator commands for the events on RabbitMQ (DEPLOYMENT.md "Events"), run from any service jar:
@@ -41,7 +41,7 @@ public final class EventsAdmin {
         }
         String exchange = environment.getOrDefault("MYSMS_RABBITMQ_EXCHANGE", "mysms.events");
         try (RabbitEventBus bus = new RabbitEventBus(RabbitEventBus.Settings.of(URI.create(uri), exchange,
-                RabbitEventBus.SELF), JsonMapper.builder().build(), "mysms-events-admin")) {
+                RabbitEventBus.SELF), JsonMappers.create(), "mysms-events-admin")) {
             switch (args[0]) {
                 case "replay-dead" -> {
                     if (args.length < 2) {

@@ -27,11 +27,6 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-oauth2-jose</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>contracts</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>

@@ -23,7 +23,7 @@ const STATUS_INTENT: Record<string, Intent> = {
 /** PLT-06 Operations & jobs: the cross-module job centre; cancellation goes to the module that owns the job. */
 export function JobCentreScreen() {
   const { t, format } = useI18n();
-  const jobs = useJobCentre({ pageSize: 50 });
+  const jobs = useJobCentre({ size: 50 });
   const cancel = useCancelOperation();
   const permissions = useSession((s) => s.me?.permissions);
   const [notice, setNotice] = useState<string | null>(null);
@@ -77,9 +77,9 @@ export function JobCentreScreen() {
       {notice ? <Banner intent="success">{notice}</Banner> : null}
       {jobs.isError || cancel.isError ? <Banner intent="danger">{t('common.error.generic')}</Banner> : null}
       <DataTable
-        caption={t('common.list.count', { count: jobs.data?.items.length ?? 0 })}
+        caption={t('common.list.count', { count: jobs.data?.data.length ?? 0 })}
         columns={columns}
-        rows={jobs.data?.items}
+        rows={jobs.data?.data}
         rowKey={(op) => op.operationId}
         loading={jobs.isPending}
         loadingLabel={t('common.state.loading')}

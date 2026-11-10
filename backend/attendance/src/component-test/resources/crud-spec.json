@@ -150,7 +150,8 @@
      "permission": "attendance.attendance_sheet.reset_attendance_sheet",
      "guard": {
       "status": [
-       "cancelled"
+       "cancelled",
+       "done"
       ]
      },
      "prepare": [

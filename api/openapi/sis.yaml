@@ -48,7 +48,7 @@ paths:
     get:
       operationId: sis.ListStudentCategories
       summary: List StudentCategories
-      description: List StudentCategories visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StudentCategories visible to the caller, page by page, with filtering and sorting.
       tags:
       - StudentCategory
       security:
@@ -58,10 +58,11 @@ paths:
         service: mysms.sis.v1.StudentCategoryService
         method: ListStudentCategories
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -69,7 +70,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StudentCategoryList'
+                $ref: '#/components/schemas/PagingInfoStudentCategory'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -288,7 +289,7 @@ paths:
     get:
       operationId: sis.ListStudents
       summary: List Students
-      description: List Students visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Students visible to the caller, page by page, with filtering and sorting.
       tags:
       - Student
       security:
@@ -298,10 +299,11 @@ paths:
         service: mysms.sis.v1.StudentService
         method: ListStudents
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -309,7 +311,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StudentList'
+                $ref: '#/components/schemas/PagingInfoStudent'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -528,7 +530,7 @@ paths:
     get:
       operationId: sis.ListGuardians
       summary: List Guardians
-      description: List Guardians visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Guardians visible to the caller, page by page, with filtering and sorting.
       tags:
       - Guardian
       security:
@@ -538,10 +540,11 @@ paths:
         service: mysms.sis.v1.GuardianService
         method: ListGuardians
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -549,7 +552,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GuardianList'
+                $ref: '#/components/schemas/PagingInfoGuardian'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -768,7 +771,7 @@ paths:
     get:
       operationId: sis.ListRelationshipTypes
       summary: List RelationshipTypes
-      description: List RelationshipTypes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List RelationshipTypes visible to the caller, page by page, with filtering and sorting.
       tags:
       - RelationshipType
       security:
@@ -778,10 +781,11 @@ paths:
         service: mysms.sis.v1.RelationshipTypeService
         method: ListRelationshipTypes
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -789,7 +793,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RelationshipTypeList'
+                $ref: '#/components/schemas/PagingInfoRelationshipType'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1008,7 +1012,7 @@ paths:
     get:
       operationId: sis.ListStudentGuardians
       summary: List StudentGuardians
-      description: List StudentGuardians visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StudentGuardians visible to the caller, page by page, with filtering and sorting.
       tags:
       - Student
       security:
@@ -1025,10 +1029,11 @@ paths:
           type: string
           format: uuid
         description: Student id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1036,7 +1041,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StudentGuardianList'
+                $ref: '#/components/schemas/PagingInfoStudentGuardian'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1283,7 +1288,7 @@ paths:
     get:
       operationId: sis.ListStudentSiblings
       summary: List StudentSiblings
-      description: List StudentSiblings visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StudentSiblings visible to the caller, page by page, with filtering and sorting.
       tags:
       - Student
       security:
@@ -1300,10 +1305,11 @@ paths:
           type: string
           format: uuid
         description: Student id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1311,7 +1317,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StudentSiblingList'
+                $ref: '#/components/schemas/PagingInfoStudentSibling'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1558,7 +1564,7 @@ paths:
     get:
       operationId: sis.ListStudentEnrollments
       summary: List StudentEnrollments
-      description: List StudentEnrollments visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StudentEnrollments visible to the caller, page by page, with filtering and sorting.
       tags:
       - StudentEnrollment
       security:
@@ -1568,10 +1574,11 @@ paths:
         service: mysms.sis.v1.StudentEnrollmentService
         method: ListStudentEnrollments
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1579,7 +1586,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StudentEnrollmentList'
+                $ref: '#/components/schemas/PagingInfoStudentEnrollment'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1798,7 +1805,7 @@ paths:
     get:
       operationId: sis.ListProgramEnrollments
       summary: List ProgramEnrollments
-      description: List ProgramEnrollments visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ProgramEnrollments visible to the caller, page by page, with filtering and sorting.
       tags:
       - ProgramEnrollment
       security:
@@ -1808,10 +1815,11 @@ paths:
         service: mysms.sis.v1.ProgramEnrollmentService
         method: ListProgramEnrollments
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1819,7 +1827,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProgramEnrollmentList'
+                $ref: '#/components/schemas/PagingInfoProgramEnrollment'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2038,7 +2046,7 @@ paths:
     get:
       operationId: sis.ListProgramEnrollmentSubjects
       summary: List ProgramEnrollmentSubjects
-      description: List ProgramEnrollmentSubjects visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ProgramEnrollmentSubjects visible to the caller, page by page, with filtering and sorting.
       tags:
       - ProgramEnrollment
       security:
@@ -2055,10 +2063,11 @@ paths:
           type: string
           format: uuid
         description: ProgramEnrollment id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2066,7 +2075,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProgramEnrollmentSubjectList'
+                $ref: '#/components/schemas/PagingInfoProgramEnrollmentSubject'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2313,7 +2322,7 @@ paths:
     get:
       operationId: sis.ListSubjectRegistrations
       summary: List SubjectRegistrations
-      description: List SubjectRegistrations visible to the caller, with cursor pagination, filtering and ordering.
+      description: List SubjectRegistrations visible to the caller, page by page, with filtering and sorting.
       tags:
       - SubjectRegistration
       security:
@@ -2323,10 +2332,11 @@ paths:
         service: mysms.sis.v1.SubjectRegistrationService
         method: ListSubjectRegistrations
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2334,7 +2344,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SubjectRegistrationList'
+                $ref: '#/components/schemas/PagingInfoSubjectRegistration'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2553,7 +2563,7 @@ paths:
     get:
       operationId: sis.ListSubjectRegistrationLines
       summary: List SubjectRegistrationLines
-      description: List SubjectRegistrationLines visible to the caller, with cursor pagination, filtering and ordering.
+      description: List SubjectRegistrationLines visible to the caller, page by page, with filtering and sorting.
       tags:
       - SubjectRegistration
       security:
@@ -2570,10 +2580,11 @@ paths:
           type: string
           format: uuid
         description: SubjectRegistration id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2581,7 +2592,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SubjectRegistrationLineList'
+                $ref: '#/components/schemas/PagingInfoSubjectRegistrationLine'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2828,7 +2839,7 @@ paths:
     get:
       operationId: sis.ListPromotions
       summary: List Promotions
-      description: List Promotions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Promotions visible to the caller, page by page, with filtering and sorting.
       tags:
       - Promotion
       security:
@@ -2838,10 +2849,11 @@ paths:
         service: mysms.sis.v1.PromotionService
         method: ListPromotions
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2849,7 +2861,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PromotionList'
+                $ref: '#/components/schemas/PagingInfoPromotion'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3068,7 +3080,7 @@ paths:
     get:
       operationId: sis.ListStudentHealthRecords
       summary: List StudentHealthRecords
-      description: List StudentHealthRecords visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StudentHealthRecords visible to the caller, page by page, with filtering and sorting.
       tags:
       - StudentHealthRecord
       security:
@@ -3078,10 +3090,11 @@ paths:
         service: mysms.sis.v1.StudentHealthRecordService
         method: ListStudentHealthRecords
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3089,7 +3102,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StudentHealthRecordList'
+                $ref: '#/components/schemas/PagingInfoStudentHealthRecord'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3308,7 +3321,7 @@ paths:
     get:
       operationId: sis.ListDisciplineIncidents
       summary: List DisciplineIncidents
-      description: List DisciplineIncidents visible to the caller, with cursor pagination, filtering and ordering.
+      description: List DisciplineIncidents visible to the caller, page by page, with filtering and sorting.
       tags:
       - DisciplineIncident
       security:
@@ -3318,10 +3331,11 @@ paths:
         service: mysms.sis.v1.DisciplineIncidentService
         method: ListDisciplineIncidents
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3329,7 +3343,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DisciplineIncidentList'
+                $ref: '#/components/schemas/PagingInfoDisciplineIncident'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3548,7 +3562,7 @@ paths:
     get:
       operationId: sis.ListActivityTypes
       summary: List ActivityTypes
-      description: List ActivityTypes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ActivityTypes visible to the caller, page by page, with filtering and sorting.
       tags:
       - ActivityType
       security:
@@ -3558,10 +3572,11 @@ paths:
         service: mysms.sis.v1.ActivityTypeService
         method: ListActivityTypes
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3569,7 +3584,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ActivityTypeList'
+                $ref: '#/components/schemas/PagingInfoActivityType'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3788,7 +3803,7 @@ paths:
     get:
       operationId: sis.ListStudentActivities
       summary: List StudentActivities
-      description: List StudentActivities visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StudentActivities visible to the caller, page by page, with filtering and sorting.
       tags:
       - StudentActivity
       security:
@@ -3798,10 +3813,11 @@ paths:
         service: mysms.sis.v1.StudentActivityService
         method: ListStudentActivities
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3809,7 +3825,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StudentActivityList'
+                $ref: '#/components/schemas/PagingInfoStudentActivity'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -4293,7 +4309,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChildCardList'
+                $ref: '#/components/schemas/PagingInfoChildCard'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -4311,19 +4327,9 @@ paths:
         '500':
           $ref: ./common.yaml#/components/responses/500
       parameters:
-      - name: pageSize
-        in: query
-        required: false
-        description: Maximum items to return (1-500, default 50).
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Cursor from next_page_token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/sis/promotions:propose:
     post:
       operationId: sis.ProposePromotions
@@ -4881,7 +4887,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StudentEnrollmentList'
+                $ref: '#/components/schemas/PagingInfoStudentEnrollment'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -4905,24 +4911,14 @@ paths:
         schema:
           type: string
           format: uuid
-      - name: pageSize
-        in: query
-        required: false
-        description: Maximum items to return (1-500, default 50).
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Cursor from next_page_token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/sis/student-leave-requests:
     get:
       operationId: sis.ListStudentLeaveRequests
       summary: List StudentLeaveRequests
-      description: List StudentLeaveRequests visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StudentLeaveRequests visible to the caller, page by page, with filtering and sorting.
       tags:
       - StudentLeaveRequest
       security:
@@ -4932,10 +4928,11 @@ paths:
         service: mysms.sis.v1.StudentLeaveRequestService
         method: ListStudentLeaveRequests
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -4943,7 +4940,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StudentLeaveRequestList'
+                $ref: '#/components/schemas/PagingInfoStudentLeaveRequest'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -5287,7 +5284,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./common.yaml#/components/schemas/OperationList
+                $ref: ./common.yaml#/components/schemas/PagingInfoOperation
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -5311,19 +5308,9 @@ paths:
         description: Filter by kind.
         schema:
           type: string
-      - name: pageSize
-        in: query
-        required: false
-        description: Page size.
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Page token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/sis/operations/{operationId}:
     get:
       operationId: sis.GetOperation
@@ -5540,22 +5527,20 @@ components:
           type: string
           maxLength: 500
           description: Stated reason.
-    StudentLeaveRequestList:
+    PagingInfoStudentLeaveRequest:
       type: object
+      description: A page of StudentLeaveRequest, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StudentLeaveRequest'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StudentCategory:
       type: object
       description: Student category for fees/quotas (e.g. General, Staff Ward, Scholarship).
@@ -5635,22 +5620,20 @@ components:
           type: string
           maxLength: 120
           description: Category name.
-    StudentCategoryList:
+    PagingInfoStudentCategory:
       type: object
+      description: A page of StudentCategory, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StudentCategory'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Student:
       type: object
       description: A student of an institution. One row per person per institution.
@@ -5789,22 +5772,20 @@ components:
         exitReason:
           type: string
           description: Reason for leaving.
-    StudentList:
+    PagingInfoStudent:
       type: object
+      description: A page of Student, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Student'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Guardian:
       type: object
       description: Parent or guardian. Independent of institution so one guardian can follow children across institutions.
@@ -5946,22 +5927,20 @@ components:
           type: string
           maxLength: 320
           description: Contact e-mail used for school communication.
-    GuardianList:
+    PagingInfoGuardian:
       type: object
+      description: A page of Guardian, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Guardian'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     RelationshipType:
       type: object
       description: Guardian-to-student relationship (Father, Mother, Guardian, Grandparent...).
@@ -6031,22 +6010,20 @@ components:
           type: string
           maxLength: 60
           description: Relationship name.
-    RelationshipTypeList:
+    PagingInfoRelationshipType:
       type: object
+      description: A page of RelationshipType, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/RelationshipType'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StudentGuardian:
       type: object
       description: Links a student to a guardian. A link alone does not grant data access; access is granted by iam.user_role.
@@ -6151,22 +6128,20 @@ components:
           - inactive
           x-extensible-enum: true
           description: Link state.
-    StudentGuardianList:
+    PagingInfoStudentGuardian:
       type: object
+      description: A page of StudentGuardian, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StudentGuardian'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StudentSibling:
       type: object
       description: Sibling recorded for a student (enrolled or not).
@@ -6231,22 +6206,20 @@ components:
         details:
           type: string
           description: Notes (school, grade).
-    StudentSiblingList:
+    PagingInfoStudentSibling:
       type: object
+      description: A page of StudentSibling, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StudentSibling'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StudentEnrollment:
       type: object
       description: Student's placement in a class section for an academic year (K-12 placement).
@@ -6406,22 +6379,20 @@ components:
           type: string
           format: date
           description: Date the placement ended.
-    StudentEnrollmentList:
+    PagingInfoStudentEnrollment:
       type: object
+      description: A page of StudentEnrollment, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StudentEnrollment'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ProgramEnrollment:
       type: object
       description: Student registration on a course/batch (higher-education / coaching registration).
@@ -6526,22 +6497,20 @@ components:
           - dropped
           x-extensible-enum: true
           description: Registration state.
-    ProgramEnrollmentList:
+    PagingInfoProgramEnrollment:
       type: object
+      description: A page of ProgramEnrollment, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ProgramEnrollment'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ProgramEnrollmentSubject:
       type: object
       description: Subjects a registration covers.
@@ -6594,22 +6563,20 @@ components:
           type: string
           format: uuid
           description: Subject.
-    ProgramEnrollmentSubjectList:
+    PagingInfoProgramEnrollmentSubject:
       type: object
+      description: A page of ProgramEnrollmentSubject, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ProgramEnrollmentSubject'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     SubjectRegistration:
       type: object
       description: Student request to register compulsory and elective subjects for a course/batch.
@@ -6736,22 +6703,20 @@ components:
         readByGuardian:
           type: boolean
           description: Guardian has seen the decision.
-    SubjectRegistrationList:
+    PagingInfoSubjectRegistration:
       type: object
+      description: A page of SubjectRegistration, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/SubjectRegistration'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     SubjectRegistrationLine:
       type: object
       description: Subject requested in a subject registration.
@@ -6823,22 +6788,20 @@ components:
           - elective
           x-extensible-enum: true
           description: Compulsory or elective.
-    SubjectRegistrationLineList:
+    PagingInfoSubjectRegistrationLine:
       type: object
+      description: A page of SubjectRegistrationLine, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/SubjectRegistrationLine'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Promotion:
       type: object
       description: Promotion / detention decision moving a student to the next year's grade and section.
@@ -6971,6 +6934,7 @@ components:
           description: Comments.
     PromotionList:
       type: object
+      description: The Promotion items an operation wrote, all in one response.
       required:
       - items
       properties:
@@ -6978,13 +6942,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Promotion'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+    PagingInfoPromotion:
+      type: object
+      description: A page of Promotion, with the links to the other pages.
+      required:
+      - data
+      - paging
+      properties:
+        data:
+          type: array
+          description: Data retrieved in the paginated request.
+          items:
+            $ref: '#/components/schemas/Promotion'
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StudentHealthRecord:
       type: object
       description: Student's health data for an academic year.
@@ -7096,22 +7067,20 @@ components:
         otherMedicalInfo:
           type: string
           description: Other medical information.
-    StudentHealthRecordList:
+    PagingInfoStudentHealthRecord:
       type: object
+      description: A page of StudentHealthRecord, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StudentHealthRecord'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     DisciplineIncident:
       type: object
       description: Behaviour / performance incident recorded against a student.
@@ -7274,22 +7243,20 @@ components:
         seenByGuardian:
           type: boolean
           description: Guardian has viewed it.
-    DisciplineIncidentList:
+    PagingInfoDisciplineIncident:
       type: object
+      description: A page of DisciplineIncident, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/DisciplineIncident'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ActivityType:
       type: object
       description: Type of co-curricular / student activity.
@@ -7359,22 +7326,20 @@ components:
         isActive:
           type: boolean
           description: Whether in use.
-    ActivityTypeList:
+    PagingInfoActivityType:
       type: object
+      description: A page of ActivityType, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ActivityType'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StudentActivity:
       type: object
       description: Co-curricular activity / achievement logged for a student.
@@ -7452,22 +7417,20 @@ components:
         description:
           type: string
           description: Description.
-    StudentActivityList:
+    PagingInfoStudentActivity:
       type: object
+      description: A page of StudentActivity, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StudentActivity'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ChangeStudentStatusRequest:
       type: object
       properties:
@@ -7674,19 +7637,20 @@ components:
       required:
       - student
       - person
-    ChildCardList:
+    PagingInfoChildCard:
       type: object
-      description: A page of ChildCard.
+      description: A page of ChildCard, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ChildCard'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StudentLeaveDecisionRequest:
       type: object
       properties:

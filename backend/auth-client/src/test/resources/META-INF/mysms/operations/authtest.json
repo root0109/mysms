@@ -1,0 +1,23 @@
+[ {
+  "operationId" : "authtest.CreateWidget",
+  "method" : "POST",
+  "path" : "/v1/authtest/widgets",
+  "permission" : "authtest.widget.create",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "authtest.GetWidget",
+  "method" : "GET",
+  "path" : "/v1/authtest/widgets/{widgetId}",
+  "permission" : "authtest.widget.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "authtest.ListWidgets",
+  "method" : "GET",
+  "path" : "/v1/authtest/widgets",
+  "permission" : "authtest.widget.read",
+  "schemes" : [ ],
+  "anonymous" : true
+} ]

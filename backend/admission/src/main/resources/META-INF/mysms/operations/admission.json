@@ -1,0 +1,323 @@
+[ {
+  "operationId" : "admission.ApproveApplication",
+  "method" : "POST",
+  "path" : "/v1/admission/applications/{applicationId}:approve",
+  "permission" : "admission.application.approve_application",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.CancelAdmissionCycle",
+  "method" : "POST",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}:cancel",
+  "permission" : "admission.admission_cycle.cancel_admission_cycle",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.CancelApplication",
+  "method" : "POST",
+  "path" : "/v1/admission/applications/{applicationId}:cancel",
+  "permission" : "admission.application.cancel_application",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.CancelOperation",
+  "method" : "POST",
+  "path" : "/v1/admission/operations/{operationId}:cancel",
+  "permission" : "admission.operation.cancel_operation",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.CloseAdmissionCycle",
+  "method" : "POST",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}:close",
+  "permission" : "admission.admission_cycle.close_admission_cycle",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.ConfirmAdmission",
+  "method" : "POST",
+  "path" : "/v1/admission/applications/{applicationId}:confirmAdmission",
+  "permission" : "admission.application.confirm_admission",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.ConfirmAdmissionCycle",
+  "method" : "POST",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}:confirm",
+  "permission" : "admission.admission_cycle.confirm_admission_cycle",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.ConfirmApplication",
+  "method" : "POST",
+  "path" : "/v1/admission/applications/{applicationId}:confirm",
+  "permission" : "admission.application.confirm_application",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.CreateAdmissionCycle",
+  "method" : "POST",
+  "path" : "/v1/admission/admission-cycles",
+  "permission" : "admission.admission_cycle.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.CreateAdmissionCycleFee",
+  "method" : "POST",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}/fees",
+  "permission" : "admission.admission_cycle_fee.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.CreateApplication",
+  "method" : "POST",
+  "path" : "/v1/admission/applications",
+  "permission" : "admission.application.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.CreateApplicationEmergencyContact",
+  "method" : "POST",
+  "path" : "/v1/admission/applications/{applicationId}/emergency-contacts",
+  "permission" : "admission.application_emergency_contact.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.CreateApplicationGuardian",
+  "method" : "POST",
+  "path" : "/v1/admission/applications/{applicationId}/guardians",
+  "permission" : "admission.application_guardian.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.DeleteAdmissionCycle",
+  "method" : "DELETE",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}",
+  "permission" : "admission.admission_cycle.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.DeleteAdmissionCycleFee",
+  "method" : "DELETE",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}/fees/{admissionCycleFeeId}",
+  "permission" : "admission.admission_cycle_fee.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.DeleteApplication",
+  "method" : "DELETE",
+  "path" : "/v1/admission/applications/{applicationId}",
+  "permission" : "admission.application.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.DeleteApplicationEmergencyContact",
+  "method" : "DELETE",
+  "path" : "/v1/admission/applications/{applicationId}/emergency-contacts/{applicationEmergencyContactId}",
+  "permission" : "admission.application_emergency_contact.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.DeleteApplicationGuardian",
+  "method" : "DELETE",
+  "path" : "/v1/admission/applications/{applicationId}/guardians/{applicationGuardianId}",
+  "permission" : "admission.application_guardian.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.EnrollApplicant",
+  "method" : "POST",
+  "path" : "/v1/admission/applications/{applicationId}:enroll",
+  "permission" : "admission.application.enroll_applicant",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "required"
+}, {
+  "operationId" : "admission.GetAdmissionCycle",
+  "method" : "GET",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}",
+  "permission" : "admission.admission_cycle.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.GetAdmissionCycleFee",
+  "method" : "GET",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}/fees/{admissionCycleFeeId}",
+  "permission" : "admission.admission_cycle_fee.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.GetApplication",
+  "method" : "GET",
+  "path" : "/v1/admission/applications/{applicationId}",
+  "permission" : "admission.application.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.GetApplicationEmergencyContact",
+  "method" : "GET",
+  "path" : "/v1/admission/applications/{applicationId}/emergency-contacts/{applicationEmergencyContactId}",
+  "permission" : "admission.application_emergency_contact.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.GetApplicationGuardian",
+  "method" : "GET",
+  "path" : "/v1/admission/applications/{applicationId}/guardians/{applicationGuardianId}",
+  "permission" : "admission.application_guardian.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.GetOperation",
+  "method" : "GET",
+  "path" : "/v1/admission/operations/{operationId}",
+  "permission" : "admission.operation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.ListAdmissionCycleFees",
+  "method" : "GET",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}/fees",
+  "permission" : "admission.admission_cycle_fee.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.ListAdmissionCycles",
+  "method" : "GET",
+  "path" : "/v1/admission/admission-cycles",
+  "permission" : "admission.admission_cycle.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.ListApplicationEmergencyContacts",
+  "method" : "GET",
+  "path" : "/v1/admission/applications/{applicationId}/emergency-contacts",
+  "permission" : "admission.application_emergency_contact.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.ListApplicationGuardians",
+  "method" : "GET",
+  "path" : "/v1/admission/applications/{applicationId}/guardians",
+  "permission" : "admission.application_guardian.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.ListApplications",
+  "method" : "GET",
+  "path" : "/v1/admission/applications",
+  "permission" : "admission.application.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.ListOperations",
+  "method" : "GET",
+  "path" : "/v1/admission/operations",
+  "permission" : "admission.operation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.MarkApplicationPending",
+  "method" : "POST",
+  "path" : "/v1/admission/applications/{applicationId}:markPending",
+  "permission" : "admission.application.mark_application_pending",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.OpenApplications",
+  "method" : "POST",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}:openApplications",
+  "permission" : "admission.admission_cycle.open_applications",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.RejectApplication",
+  "method" : "POST",
+  "path" : "/v1/admission/applications/{applicationId}:reject",
+  "permission" : "admission.application.reject_application",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.ResetAdmissionCycle",
+  "method" : "POST",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}:resetToDraft",
+  "permission" : "admission.admission_cycle.reset_admission_cycle",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.ResetApplication",
+  "method" : "POST",
+  "path" : "/v1/admission/applications/{applicationId}:resetToDraft",
+  "permission" : "admission.application.reset_application",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.StartAdmission",
+  "method" : "POST",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}:startAdmission",
+  "permission" : "admission.admission_cycle.start_admission",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.SubmitApplication",
+  "method" : "POST",
+  "path" : "/v1/admission/applications/{applicationId}:submit",
+  "permission" : "admission.application.submit_application",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "admission.UpdateAdmissionCycle",
+  "method" : "PATCH",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}",
+  "permission" : "admission.admission_cycle.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.UpdateAdmissionCycleFee",
+  "method" : "PATCH",
+  "path" : "/v1/admission/admission-cycles/{admissionCycleId}/fees/{admissionCycleFeeId}",
+  "permission" : "admission.admission_cycle_fee.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.UpdateApplication",
+  "method" : "PATCH",
+  "path" : "/v1/admission/applications/{applicationId}",
+  "permission" : "admission.application.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.UpdateApplicationEmergencyContact",
+  "method" : "PATCH",
+  "path" : "/v1/admission/applications/{applicationId}/emergency-contacts/{applicationEmergencyContactId}",
+  "permission" : "admission.application_emergency_contact.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "admission.UpdateApplicationGuardian",
+  "method" : "PATCH",
+  "path" : "/v1/admission/applications/{applicationId}/guardians/{applicationGuardianId}",
+  "permission" : "admission.application_guardian.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+} ]

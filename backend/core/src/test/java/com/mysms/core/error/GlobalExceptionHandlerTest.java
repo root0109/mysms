@@ -96,7 +96,7 @@ class GlobalExceptionHandlerTest {
                 new org.springframework.validation.beanvalidation.LocalValidatorFactoryBean();
         validator.afterPropertiesSet();
         mvc = MockMvcBuilders.standaloneSetup(new Probe())
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(new ConstraintMapper(MessageUtil.ofCatalogue())))
                 .setValidator(validator)
                 .build();
     }

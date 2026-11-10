@@ -1,6 +1,6 @@
 package com.mysms.iam.mapper;
 
-import com.mysms.contracts.iam.model.UserAccount;
+import com.mysms.iam.api.model.UserAccount;
 import com.mysms.core.web.Etags;
 import com.mysms.iam.domain.MeAccountEntity;
 import org.mapstruct.Mapper;

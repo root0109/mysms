@@ -1,6 +1,6 @@
 package com.mysms.iam.mapper;
 
-import com.mysms.contracts.iam.model.Permission;
+import com.mysms.iam.api.model.Permission;
 import com.mysms.core.web.Etags;
 import com.mysms.iam.domain.PermissionEntity;
 import org.mapstruct.Mapper;

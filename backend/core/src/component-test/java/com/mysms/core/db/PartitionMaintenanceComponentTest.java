@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.testkit.TestDatabase;
+import com.mysms.core.testkit.TestTransactions;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -81,7 +82,7 @@ class PartitionMaintenanceComponentTest {
 
         // a timestamp at the very start of a UTC month lands in that month, whatever the session's time zone
         CallContextHolder.set(CallContext.anonymous("4bf92f3577b34da6a3ce929d0e0e4736").withIdentity(TENANT, TENANT));
-        db.tx().write(() -> db.jdbc().sql("INSERT INTO parttest.event_log (tenant_id, created_at) "
+        TestTransactions.of(db).write(() -> db.jdbc().sql("INSERT INTO parttest.event_log (tenant_id, created_at) "
                 + "VALUES (:tenantId, CAST('2026-12-01T00:00:00Z' AS timestamptz))").update());
         assertThat(JdbcClient.create(db.ownerDataSource()).sql(
                 "SELECT pg_relation_size('parttest.event_log_2026_12') > 0").query(Boolean.class).single()).isTrue();
@@ -91,7 +92,7 @@ class PartitionMaintenanceComponentTest {
     @Order(2)
     void reportsRowsInTheDefaultPartitionAndCannotAttachTheirMonth() {
         CallContextHolder.set(CallContext.anonymous("4bf92f3577b34da6a3ce929d0e0e4736").withIdentity(TENANT, TENANT));
-        db.tx().write(() -> db.jdbc().sql("INSERT INTO parttest.daily_row (tenant_id, happened_on) "
+        TestTransactions.of(db).write(() -> db.jdbc().sql("INSERT INTO parttest.daily_row (tenant_id, happened_on) "
                 + "VALUES (:tenantId, DATE '2030-01-05')").update());
         PartitionMaintenance.Report report = PartitionMaintenance.run("parttest", db.ownerDataSource(),
                 LocalDate.parse("2029-12-20"), 1, 0);

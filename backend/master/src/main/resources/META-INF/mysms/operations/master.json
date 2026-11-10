@@ -1,0 +1,141 @@
+[ {
+  "operationId" : "master.CreateCity",
+  "method" : "POST",
+  "path" : "/v1/master/cities",
+  "permission" : "master.city.create",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "master.CreateCountry",
+  "method" : "POST",
+  "path" : "/v1/master/countries",
+  "permission" : "master.country.create",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "master.CreateCurrency",
+  "method" : "POST",
+  "path" : "/v1/master/currencies",
+  "permission" : "master.currency.create",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "master.CreateStateProvince",
+  "method" : "POST",
+  "path" : "/v1/master/states",
+  "permission" : "master.state_province.create",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "master.DeleteCity",
+  "method" : "DELETE",
+  "path" : "/v1/master/cities/{cityId}",
+  "permission" : "master.city.delete",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "master.DeleteCountry",
+  "method" : "DELETE",
+  "path" : "/v1/master/countries/{countryId}",
+  "permission" : "master.country.delete",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "master.DeleteCurrency",
+  "method" : "DELETE",
+  "path" : "/v1/master/currencies/{currencyId}",
+  "permission" : "master.currency.delete",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "master.DeleteStateProvince",
+  "method" : "DELETE",
+  "path" : "/v1/master/states/{stateProvinceId}",
+  "permission" : "master.state_province.delete",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "master.GetCity",
+  "method" : "GET",
+  "path" : "/v1/master/cities/{cityId}",
+  "permission" : "master.city.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "master.GetCountry",
+  "method" : "GET",
+  "path" : "/v1/master/countries/{countryId}",
+  "permission" : "master.country.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "master.GetCurrency",
+  "method" : "GET",
+  "path" : "/v1/master/currencies/{currencyId}",
+  "permission" : "master.currency.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "master.GetStateProvince",
+  "method" : "GET",
+  "path" : "/v1/master/states/{stateProvinceId}",
+  "permission" : "master.state_province.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "master.ListCities",
+  "method" : "GET",
+  "path" : "/v1/master/cities",
+  "permission" : "master.city.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "master.ListCountries",
+  "method" : "GET",
+  "path" : "/v1/master/countries",
+  "permission" : "master.country.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "master.ListCurrencies",
+  "method" : "GET",
+  "path" : "/v1/master/currencies",
+  "permission" : "master.currency.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "master.ListStateProvinces",
+  "method" : "GET",
+  "path" : "/v1/master/states",
+  "permission" : "master.state_province.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "master.UpdateCity",
+  "method" : "PATCH",
+  "path" : "/v1/master/cities/{cityId}",
+  "permission" : "master.city.update",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "master.UpdateCountry",
+  "method" : "PATCH",
+  "path" : "/v1/master/countries/{countryId}",
+  "permission" : "master.country.update",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "master.UpdateCurrency",
+  "method" : "PATCH",
+  "path" : "/v1/master/currencies/{currencyId}",
+  "permission" : "master.currency.update",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "master.UpdateStateProvince",
+  "method" : "PATCH",
+  "path" : "/v1/master/states/{stateProvinceId}",
+  "permission" : "master.state_province.update",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false
+} ]

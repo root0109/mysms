@@ -8,6 +8,7 @@ import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.crypto.FieldCipher;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.testkit.TestDatabase;
+import com.mysms.core.testkit.TestTransactions;
 import com.mysms.people.config.PeopleDatabaseConfig;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -37,8 +38,7 @@ import tools.jackson.databind.json.JsonMapper;
  * only contact fields change, internal remarks and the national id never leave, ETags guard updates, row-level
  * security keeps tenants apart.
  */
-@SpringBootTest(classes = PeopleApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.config.name=" + PeopleApplication.CONFIG_NAME)
+@SpringBootTest(classes = PeopleApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class PeopleApiComponentTest {
 
@@ -104,7 +104,7 @@ class PeopleApiComponentTest {
 
     private void person(UUID tenant, UUID id, String name) {
         CallContext context = CallContext.anonymous("4bf92f3577b34da6a3ce929d0e0e4736").withIdentity(tenant, null);
-        CallContextHolder.callAs(context, () -> database.tx().write(() -> database.jdbc().sql("""
+        CallContextHolder.callAs(context, () -> TestTransactions.of(database).write(() -> database.jdbc().sql("""
                 INSERT INTO people.person (id, tenant_id, display_name, first_name, remarks, national_id_type,
                                            national_id_enc, primary_email, row_version)
                 VALUES (:id, :tenant, :name, :name, 'internal note', 'PASSPORT', :nationalId, 'old@example.org', 1)
@@ -177,8 +177,8 @@ class PeopleApiComponentTest {
                 "{\"aboutMe\":\"x\"}", "If-Match", cleared.etag()).status()).isEqualTo(403);
         List<String> events = CallContextHolder.callAs(
                 CallContext.anonymous("4bf92f3577b34da6a3ce929d0e0e4736").withIdentity(TENANT, null),
-                () -> database.tx().read(() -> database.jdbc().sql("SELECT event_type FROM people.outbox_event ORDER BY id")
-                        .query(String.class).list()));
+                () -> TestTransactions.of(database).read(() -> database.jdbc()
+                        .sql("SELECT event_type FROM people.outbox_event ORDER BY id").query(String.class).list()));
         assertThat(events).contains("people.person.updated", "audit.recorded");
     }
 
@@ -189,7 +189,7 @@ class PeopleApiComponentTest {
         Reply listed = call("GET", "/v1/people/persons?filter=" + URLEncoder.encode("id = \"" + PERSON + "\"",
                 StandardCharsets.UTF_8), token(TENANT, PERSON, "people.person.read"), null);
         assertThat(listed.status()).as(listed.raw().body()).isEqualTo(200);
-        assertThat(listed.body().path("items").get(0).path("nationalIdMasked").asString()).isEqualTo("••••7890");
+        assertThat(listed.body().path("data").get(0).path("nationalIdMasked").asString()).isEqualTo("••••7890");
         assertThat(listed.raw().body()).doesNotContain(NATIONAL_ID).doesNotContain("v1.test.");
         Reply greetings = call("POST", "/v1/people/persons:sendGreetings", token(TENANT, PERSON,
                 "people.person.send_greetings"), "{\"personIds\":[\"" + PERSON + "\"],\"templateId\":\"" + PERSON

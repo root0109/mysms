@@ -1,9 +1,9 @@
 package com.mysms.master.business;
 
-import com.mysms.contracts.master.model.City;
-import com.mysms.contracts.master.model.CityList;
-import com.mysms.contracts.master.model.CityUpdate;
+import com.mysms.master.api.model.City;
+import com.mysms.master.api.model.CityUpdate;
 import com.mysms.core.context.Actor;
+import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.FieldError;
 import com.mysms.core.error.PreconditionFailedException;
@@ -22,12 +22,12 @@ import com.mysms.core.web.UpdateMask;
 import com.mysms.master.config.MasterDatabaseConfig;
 import com.mysms.master.config.MasterEventsConfig;
 import com.mysms.master.domain.CityEntity;
+import com.mysms.master.domain.StateProvinceEntity;
 import com.mysms.master.events.MasterEvents;
 import com.mysms.master.mapper.CityMapper;
-import com.mysms.master.repository.CountryRepository;
-import com.mysms.master.domain.StateProvinceEntity;
-import com.mysms.master.repository.StateProvinceRepository;
 import com.mysms.master.repository.CityRepository;
+import com.mysms.master.repository.CountryRepository;
+import com.mysms.master.repository.StateProvinceRepository;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,13 +35,14 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of master.city (JAVA-CODING-RULES §4): one plain class, explicit methods, programmatic
- * transactions through the module's executor, audit + domain event in the same transaction as every change.
+ * Business service of master.city (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
+ * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change.
  */
 @Service
-public class CityService {
+public class CityService extends AppTransactionManager {
 
     public static final String AGGREGATE = CityEntity.TABLE;
     /** The contract's CityUpdate fields, in apply order. */
@@ -51,7 +52,6 @@ public class CityService {
     private final CountryRepository countries;
     private final StateProvinceRepository states;
     private final CityMapper mapper;
-    private final ModuleDatabase database;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
@@ -59,13 +59,15 @@ public class CityService {
 
     public CityService(CityRepository repository, CountryRepository countries, StateProvinceRepository states, CityMapper mapper,
                      @Qualifier(MasterDatabaseConfig.DATABASE) ModuleDatabase database,
+            @Qualifier(MasterDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
                      @Qualifier(MasterEventsConfig.OUTBOX) OutboxWriter outbox,
                      @Qualifier(MasterEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator, Clock clock) {
+
+        super(database, transactions);
         this.repository = repository;
         this.countries = countries;
         this.states = states;
         this.mapper = mapper;
-        this.database = database;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -73,19 +75,20 @@ public class CityService {
     }
 
     public City getCity(UUID id) {
-        return database.tx().read(() -> mapper.toDto(load(id)));
+        return doInReadTransaction(() -> {
+            return mapper.toDto(load(id));
+        });
     }
 
-    public CityList listCities(Integer pageSize, String pageToken, String filter, String orderBy) {
-        SortSpec sort = SortSpec.parse(orderBy, CityRepository.SORT_FIELDS, CityRepository.DEFAULT_ORDER,
+    public Page<City> listCities(Integer pageNumber, Integer pageSize, String cursor, String filter,
+            List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, CityRepository.SORT_FIELDS, CityRepository.DEFAULT_ORDER,
                 CityRepository.ID_COLUMN);
         SqlFragment where = FilterParser.parse(filter, CityRepository.FILTER_FIELDS);
-        PageRequest page = PageRequest.of(pageSize, pageToken, sort, filter, clock);
-        return database.tx().read(() -> {
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+        return doInReadTransaction(() -> {
             Page<CityEntity> rows = repository.list(page, where);
-            return new CityList(rows.items().stream().map(mapper::toDto).toList())
-                    .nextPageToken(rows.nextPageToken())
-                    .totalSize(repository.count(where));
+            return rows.map(mapper::toDto);
         });
     }
 
@@ -95,7 +98,7 @@ public class CityService {
         CityEntity entity = mapper.toEntity(request);
         entity.onCreatingData(Actor.current(), clock);
         normalize(entity);
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             assertValid(entity);
             assertUnique(entity);
             if (!validateOnly) {
@@ -116,7 +119,7 @@ public class CityService {
             boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
         List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             CityEntity entity = load(id);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -142,7 +145,7 @@ public class CityService {
     /** Soft delete under If-Match. */
     public void deleteCity(UUID id, String ifMatch) {
         int expected = Etags.expectedVersion(ifMatch);
-        database.tx().write(() -> {
+        runInWriteTransaction(() -> {
             CityEntity entity = load(id);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -153,7 +156,6 @@ public class CityService {
             }
             audit.recordDelete(AGGREGATE, id);
             outbox.publish(AGGREGATE + MasterEvents.DELETED, AGGREGATE, id, MasterEvents.payload(id));
-            return null;
         });
     }
 

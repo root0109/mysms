@@ -46,7 +46,7 @@ paths:
     get:
       operationId: finance.ListFeeHeads
       summary: List FeeHeads
-      description: List FeeHeads visible to the caller, with cursor pagination, filtering and ordering.
+      description: List FeeHeads visible to the caller, page by page, with filtering and sorting.
       tags:
       - FeeHead
       security:
@@ -56,10 +56,11 @@ paths:
         service: mysms.finance.v1.FeeHeadService
         method: ListFeeHeads
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -67,7 +68,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FeeHeadList'
+                $ref: '#/components/schemas/PagingInfoFeeHead'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -286,7 +287,7 @@ paths:
     get:
       operationId: finance.ListFeePlans
       summary: List FeePlans
-      description: List FeePlans visible to the caller, with cursor pagination, filtering and ordering.
+      description: List FeePlans visible to the caller, page by page, with filtering and sorting.
       tags:
       - FeePlan
       security:
@@ -296,10 +297,11 @@ paths:
         service: mysms.finance.v1.FeePlanService
         method: ListFeePlans
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -307,7 +309,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FeePlanList'
+                $ref: '#/components/schemas/PagingInfoFeePlan'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -526,7 +528,7 @@ paths:
     get:
       operationId: finance.ListFeePlanInstallments
       summary: List FeePlanInstallments
-      description: List FeePlanInstallments visible to the caller, with cursor pagination, filtering and ordering.
+      description: List FeePlanInstallments visible to the caller, page by page, with filtering and sorting.
       tags:
       - FeePlan
       security:
@@ -543,10 +545,11 @@ paths:
           type: string
           format: uuid
         description: FeePlan id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -554,7 +557,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FeePlanInstallmentList'
+                $ref: '#/components/schemas/PagingInfoFeePlanInstallment'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -801,7 +804,7 @@ paths:
     get:
       operationId: finance.ListFeePlanInstallmentComponents
       summary: List FeePlanInstallmentComponents
-      description: List FeePlanInstallmentComponents visible to the caller, with cursor pagination, filtering and ordering.
+      description: List FeePlanInstallmentComponents visible to the caller, page by page, with filtering and sorting.
       tags:
       - FeePlanInstallmentComponent
       security:
@@ -811,10 +814,11 @@ paths:
         service: mysms.finance.v1.FeePlanInstallmentComponentService
         method: ListFeePlanInstallmentComponents
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -822,7 +826,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FeePlanInstallmentComponentList'
+                $ref: '#/components/schemas/PagingInfoFeePlanInstallmentComponent'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1041,7 +1045,7 @@ paths:
     get:
       operationId: finance.ListStudentFeeDues
       summary: List StudentFeeDues
-      description: List StudentFeeDues visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StudentFeeDues visible to the caller, page by page, with filtering and sorting.
       tags:
       - StudentFeeDue
       security:
@@ -1051,10 +1055,11 @@ paths:
         service: mysms.finance.v1.StudentFeeDueService
         method: ListStudentFeeDues
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1062,7 +1067,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StudentFeeDueList'
+                $ref: '#/components/schemas/PagingInfoStudentFeeDue'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1182,7 +1187,7 @@ paths:
     get:
       operationId: finance.ListInvoices
       summary: List Invoices
-      description: List Invoices visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Invoices visible to the caller, page by page, with filtering and sorting.
       tags:
       - Invoice
       security:
@@ -1192,10 +1197,11 @@ paths:
         service: mysms.finance.v1.InvoiceService
         method: ListInvoices
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1203,7 +1209,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvoiceList'
+                $ref: '#/components/schemas/PagingInfoInvoice'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1380,7 +1386,7 @@ paths:
     get:
       operationId: finance.ListInvoiceLines
       summary: List InvoiceLines
-      description: List InvoiceLines visible to the caller, with cursor pagination, filtering and ordering.
+      description: List InvoiceLines visible to the caller, page by page, with filtering and sorting.
       tags:
       - Invoice
       security:
@@ -1397,10 +1403,11 @@ paths:
           type: string
           format: uuid
         description: Invoice id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1408,7 +1415,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvoiceLineList'
+                $ref: '#/components/schemas/PagingInfoInvoiceLine'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1476,7 +1483,7 @@ paths:
     get:
       operationId: finance.ListCoupons
       summary: List Coupons
-      description: List Coupons visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Coupons visible to the caller, page by page, with filtering and sorting.
       tags:
       - Coupon
       security:
@@ -1486,10 +1493,11 @@ paths:
         service: mysms.finance.v1.CouponService
         method: ListCoupons
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1497,7 +1505,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CouponList'
+                $ref: '#/components/schemas/PagingInfoCoupon'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1716,7 +1724,7 @@ paths:
     get:
       operationId: finance.ListCouponScopes
       summary: List CouponScopes
-      description: List CouponScopes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List CouponScopes visible to the caller, page by page, with filtering and sorting.
       tags:
       - Coupon
       security:
@@ -1733,10 +1741,11 @@ paths:
           type: string
           format: uuid
         description: Coupon id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1744,7 +1753,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CouponScopeList'
+                $ref: '#/components/schemas/PagingInfoCouponScope'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1991,7 +2000,7 @@ paths:
     get:
       operationId: finance.ListPayments
       summary: List Payments
-      description: List Payments visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Payments visible to the caller, page by page, with filtering and sorting.
       tags:
       - Payment
       security:
@@ -2001,10 +2010,11 @@ paths:
         service: mysms.finance.v1.PaymentService
         method: ListPayments
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2012,7 +2022,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentList'
+                $ref: '#/components/schemas/PagingInfoPayment'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2542,7 +2552,7 @@ paths:
     get:
       operationId: finance.ListAcquisitionSources
       summary: List AcquisitionSources
-      description: List AcquisitionSources visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AcquisitionSources visible to the caller, page by page, with filtering and sorting.
       tags:
       - AcquisitionSource
       security:
@@ -2552,10 +2562,11 @@ paths:
         service: mysms.finance.v1.AcquisitionSourceService
         method: ListAcquisitionSources
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2563,7 +2574,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AcquisitionSourceList'
+                $ref: '#/components/schemas/PagingInfoAcquisitionSource'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2782,7 +2793,7 @@ paths:
     get:
       operationId: finance.ListFeeStructures
       summary: List FeeStructures
-      description: List FeeStructures visible to the caller, with cursor pagination, filtering and ordering.
+      description: List FeeStructures visible to the caller, page by page, with filtering and sorting.
       tags:
       - FeeStructure
       security:
@@ -2792,10 +2803,11 @@ paths:
         service: mysms.finance.v1.FeeStructureService
         method: ListFeeStructures
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2803,7 +2815,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FeeStructureList'
+                $ref: '#/components/schemas/PagingInfoFeeStructure'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3066,7 +3078,7 @@ paths:
     get:
       operationId: finance.ListFeeConcessions
       summary: List FeeConcessions
-      description: List FeeConcessions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List FeeConcessions visible to the caller, page by page, with filtering and sorting.
       tags:
       - FeeConcession
       security:
@@ -3076,10 +3088,11 @@ paths:
         service: mysms.finance.v1.FeeConcessionService
         method: ListFeeConcessions
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3087,7 +3100,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FeeConcessionList'
+                $ref: '#/components/schemas/PagingInfoFeeConcession'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3350,7 +3363,7 @@ paths:
     get:
       operationId: finance.ListRefunds
       summary: List Refunds
-      description: List Refunds visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Refunds visible to the caller, page by page, with filtering and sorting.
       tags:
       - Refund
       security:
@@ -3360,10 +3373,11 @@ paths:
         service: mysms.finance.v1.RefundService
         method: ListRefunds
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3371,7 +3385,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RefundList'
+                $ref: '#/components/schemas/PagingInfoRefund'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3428,7 +3442,7 @@ paths:
     get:
       operationId: finance.ListPaymentGatewayAccounts
       summary: List PaymentGatewayAccounts
-      description: List PaymentGatewayAccounts visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PaymentGatewayAccounts visible to the caller, page by page, with filtering and sorting.
       tags:
       - PaymentGatewayAccount
       security:
@@ -3438,10 +3452,11 @@ paths:
         service: mysms.finance.v1.PaymentGatewayAccountService
         method: ListPaymentGatewayAccounts
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3449,7 +3464,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentGatewayAccountList'
+                $ref: '#/components/schemas/PagingInfoPaymentGatewayAccount'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3719,7 +3734,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./common.yaml#/components/schemas/OperationList
+                $ref: ./common.yaml#/components/schemas/PagingInfoOperation
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3743,19 +3758,9 @@ paths:
         description: Filter by kind.
         schema:
           type: string
-      - name: pageSize
-        in: query
-        required: false
-        description: Page size.
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Page token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/finance/operations/{operationId}:
     get:
       operationId: finance.GetOperation
@@ -3994,22 +3999,20 @@ components:
         isActive:
           type: boolean
           description: Whether usable for new payments.
-    PaymentGatewayAccountList:
+    PagingInfoPaymentGatewayAccount:
       type: object
+      description: A page of PaymentGatewayAccount, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PaymentGatewayAccount'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Refund:
       type: object
       description: Refund against a payment (full or partial). Created by RefundPayment; gateway refunds complete asynchronously via the gateway webhook.
@@ -4098,22 +4101,20 @@ components:
       required:
       - paymentId
       - amount
-    RefundList:
+    PagingInfoRefund:
       type: object
+      description: A page of Refund, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Refund'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     RecordPaymentRequest:
       type: object
       description: An offline/counter payment and how it settles invoices and dues.
@@ -4331,22 +4332,20 @@ components:
           type: string
           format: date
           description: End of validity (NULL = whole year).
-    FeeConcessionList:
+    PagingInfoFeeConcession:
       type: object
+      description: A page of FeeConcession, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/FeeConcession'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     FeeStructure:
       type: object
       description: 'What a class/program costs in an academic year: binds a fee plan to the year and the class or program. Publishing generates student fee dues.'
@@ -4445,22 +4444,20 @@ components:
           type: string
           maxLength: 150
           description: Admin-facing name.
-    FeeStructureList:
+    PagingInfoFeeStructure:
       type: object
+      description: A page of FeeStructure, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/FeeStructure'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AcquisitionSource:
       type: object
       description: Marketing source a student came from (referral, campaign...).
@@ -4511,22 +4508,20 @@ components:
           description: Entity tag (row version); send back in If-Match / etag.
       required:
       - name
-    AcquisitionSourceList:
+    PagingInfoAcquisitionSource:
       type: object
+      description: A page of AcquisitionSource, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AcquisitionSource'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AcquisitionSourceUpdate:
       type: object
       description: Fields of AcquisitionSource that can be updated (partial update; see updateMask).
@@ -4648,22 +4643,20 @@ components:
         isActive:
           type: boolean
           description: Whether billable.
-    FeeHeadList:
+    PagingInfoFeeHead:
       type: object
+      description: A page of FeeHead, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/FeeHead'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     FeePlan:
       type: object
       description: Fee plan (payment terms) defining installments.
@@ -4787,22 +4780,20 @@ components:
         isActive:
           type: boolean
           description: Whether usable.
-    FeePlanList:
+    PagingInfoFeePlan:
       type: object
+      description: A page of FeePlan, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/FeePlan'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     FeePlanInstallment:
       type: object
       description: Installment of a fee plan.
@@ -4882,22 +4873,20 @@ components:
           format: decimal
           pattern: ^-?\d+(\.\d+)?$
           description: Share of the total fee due in this installment.
-    FeePlanInstallmentList:
+    PagingInfoFeePlanInstallment:
       type: object
+      description: A page of FeePlanInstallment, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/FeePlanInstallment'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     FeePlanInstallmentComponent:
       type: object
       description: Fee head included in an installment and its share.
@@ -4973,22 +4962,20 @@ components:
           format: decimal
           pattern: ^-?\d+(\.\d+)?$
           description: Share of the installment amount.
-    FeePlanInstallmentComponentList:
+    PagingInfoFeePlanInstallmentComponent:
       type: object
+      description: A page of FeePlanInstallmentComponent, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/FeePlanInstallmentComponent'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StudentFeeDue:
       type: object
       description: Fee amount due from a student for an installment / fee head.
@@ -5128,22 +5115,20 @@ components:
           type: string
           format: date
           description: Due date.
-    StudentFeeDueList:
+    PagingInfoStudentFeeDue:
       type: object
+      description: A page of StudentFeeDue, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StudentFeeDue'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Invoice:
       type: object
       description: Invoice raised to a student / guardian / user (fees, library fines, purchases).
@@ -5302,22 +5287,20 @@ components:
           type: string
           format: date
           description: Due date.
-    InvoiceList:
+    PagingInfoInvoice:
       type: object
+      description: A page of Invoice, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Invoice'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     InvoiceLine:
       type: object
       description: Line of an invoice.
@@ -5403,22 +5386,20 @@ components:
       - description
       - unitPrice
       - lineTotal
-    InvoiceLineList:
+    PagingInfoInvoiceLine:
       type: object
+      description: A page of InvoiceLine, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/InvoiceLine'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Coupon:
       type: object
       description: Discount coupon for LMS courses / cohorts.
@@ -5531,22 +5512,20 @@ components:
         isEnabled:
           type: boolean
           description: Whether active.
-    CouponList:
+    PagingInfoCoupon:
       type: object
+      description: A page of Coupon, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Coupon'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     CouponScope:
       type: object
       description: Course or cohort a coupon applies to.
@@ -5605,22 +5584,20 @@ components:
           type: string
           format: uuid
           description: Cohort.
-    CouponScopeList:
+    PagingInfoCouponScope:
       type: object
+      description: A page of CouponScope, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/CouponScope'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Payment:
       type: object
       description: 'Money received: fees, LMS course / cohort / certificate purchases, admission fees.'
@@ -5835,22 +5812,20 @@ components:
       - amount
       - currencyId
       - billingName
-    PaymentList:
+    PagingInfoPayment:
       type: object
+      description: A page of Payment, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Payment'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     GenerateFeeDuesRequest:
       type: object
       properties:

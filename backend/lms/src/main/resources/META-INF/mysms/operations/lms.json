@@ -1,0 +1,5186 @@
+[ {
+  "operationId" : "lms.AcceptGroupRequest",
+  "method" : "POST",
+  "path" : "/v1/lms/assignment-group-members/{assignmentGroupMemberId}:accept",
+  "permission" : "lms.assignment_group_member.accept_group_request",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ActivateCohort",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:activate",
+  "permission" : "lms.cohort.activate_cohort",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ActivateExternalTool",
+  "method" : "POST",
+  "path" : "/v1/lms/external-tools/{externalToolId}:activate",
+  "permission" : "lms.external_tool.activate_external_tool",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.AddFromRepository",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items:addFromRepository",
+  "permission" : "lms.content_item.add_from_repository",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ApplyTimetableTemplate",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:applyTimetableTemplate",
+  "permission" : "lms.cohort.apply_timetable_template",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ApproveCourse",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:approve",
+  "permission" : "lms.course.approve_course",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ApproveEnrollmentRequest",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}/enrollment-requests/{enrollmentRequestId}:approve",
+  "permission" : "lms.enrollment_request.approve_enrollment_request",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ArchiveCohort",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:archive",
+  "permission" : "lms.cohort.archive_cohort",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.AwardBadge",
+  "method" : "POST",
+  "path" : "/v1/lms/badges/{badgeId}:award",
+  "permission" : "lms.badge.award_badge",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.BatchEnrollInCohort",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:batchEnroll",
+  "permission" : "lms.cohort.batch_enroll_in_cohort",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "required"
+}, {
+  "operationId" : "lms.BatchEnrollInCourse",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:batchEnroll",
+  "permission" : "lms.course.batch_enroll_in_course",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "required"
+}, {
+  "operationId" : "lms.BatchGradeEntries",
+  "method" : "POST",
+  "path" : "/v1/lms/gradebook-entries:batchGrade",
+  "permission" : "lms.gradebook_entry.batch_grade_entries",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CancelCertificateRequest",
+  "method" : "POST",
+  "path" : "/v1/lms/certificate-requests/{certificateRequestId}:cancel",
+  "permission" : "lms.certificate_request.cancel_certificate_request",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CancelImportExportJob",
+  "method" : "POST",
+  "path" : "/v1/lms/import-export-jobs/{importExportJobId}:cancel",
+  "permission" : "lms.import_export_job.cancel_import_export_job",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CancelOperation",
+  "method" : "POST",
+  "path" : "/v1/lms/operations/{operationId}:cancel",
+  "permission" : "lms.operation.cancel_operation",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CheckCourseDependencies",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}:dependencies",
+  "permission" : "lms.course.check_course_dependencies",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.CheckQuizAnswer",
+  "method" : "POST",
+  "path" : "/v1/lms/quizzes/{quizId}:checkAnswer",
+  "permission" : "lms.quiz.check_quiz_answer",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CompareCourses",
+  "method" : "GET",
+  "path" : "/v1/lms/catalog:compare",
+  "permission" : "lms.course.compare_courses",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ConfirmPostAbuse",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}/posts/{forumPostId}:confirmAbuse",
+  "permission" : "lms.forum_post.confirm_post_abuse",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ConnectEvaluatorCalendar",
+  "method" : "POST",
+  "path" : "/v1/lms/evaluators/{evaluatorId}:connectCalendar",
+  "permission" : "lms.evaluator.connect_evaluator_calendar",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ConvertEbook",
+  "method" : "POST",
+  "path" : "/v1/lms/ebooks/{ebookId}:convert",
+  "permission" : "lms.ebook.convert_ebook",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CopyContentItem",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}:copy",
+  "permission" : "lms.content_item.copy_content_item",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CopyCourseOutlineToCohort",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:copyCourseOutline",
+  "permission" : "lms.cohort.copy_course_outline_to_cohort",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CopyReleaseRule",
+  "method" : "POST",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}:copyTo",
+  "permission" : "lms.release_rule.copy_release_rule",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateAnnotation",
+  "method" : "POST",
+  "path" : "/v1/lms/annotations",
+  "permission" : "lms.annotation.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateAnnotationShare",
+  "method" : "POST",
+  "path" : "/v1/lms/annotations/{annotationId}/shares",
+  "permission" : "lms.annotation_share.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateAssignmentGroup",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}/groups",
+  "permission" : "lms.assignment_group.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateAssignmentGroupMember",
+  "method" : "POST",
+  "path" : "/v1/lms/assignment-group-members",
+  "permission" : "lms.assignment_group_member.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateBadge",
+  "method" : "POST",
+  "path" : "/v1/lms/badges",
+  "permission" : "lms.badge.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateBookmark",
+  "method" : "POST",
+  "path" : "/v1/lms/bookmarks",
+  "permission" : "lms.bookmark.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCatalogBanner",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}/banners",
+  "permission" : "lms.catalog_banner.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCategory",
+  "method" : "POST",
+  "path" : "/v1/lms/categories",
+  "permission" : "lms.category.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCertificateEvaluation",
+  "method" : "POST",
+  "path" : "/v1/lms/certificate-evaluations",
+  "permission" : "lms.certificate_evaluation.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCertificateRequest",
+  "method" : "POST",
+  "path" : "/v1/lms/certificate-requests",
+  "permission" : "lms.certificate_request.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateChapter",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}/chapters",
+  "permission" : "lms.chapter.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCohort",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts",
+  "permission" : "lms.cohort.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCohortActivity",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}/activities",
+  "permission" : "lms.cohort_activity.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCohortCourse",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}/courses",
+  "permission" : "lms.cohort_course.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCohortFeedback",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}/feedback",
+  "permission" : "lms.cohort_feedback.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCohortGroup",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}/groups",
+  "permission" : "lms.cohort_group.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCohortHoliday",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}/holidays",
+  "permission" : "lms.cohort_holiday.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCohortScheduleSlot",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}/schedule-slots",
+  "permission" : "lms.cohort_schedule_slot.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCohortSession",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}/sessions",
+  "permission" : "lms.cohort_session.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCohortTeacher",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}/teachers",
+  "permission" : "lms.cohort_teacher.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateConferencingAccount",
+  "method" : "POST",
+  "path" : "/v1/lms/conferencing-accounts",
+  "permission" : "lms.conferencing_account.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateContentAuthor",
+  "method" : "POST",
+  "path" : "/v1/lms/content-authors",
+  "permission" : "lms.content_author.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateContentItem",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items",
+  "permission" : "lms.content_item.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateContentItemRating",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}/ratings",
+  "permission" : "lms.content_item_rating.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateContentViewSession",
+  "method" : "POST",
+  "path" : "/v1/lms/content-view-sessions",
+  "permission" : "lms.content_view_session.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCourseAuthorProfile",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}/author-profiles",
+  "permission" : "lms.course_author_profile.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCourseInterest",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}/interests",
+  "permission" : "lms.course_interest.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCourseMentor",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}/mentors",
+  "permission" : "lms.course_mentor.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCoursePreview",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}/previews",
+  "permission" : "lms.course_preview.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCourseReview",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}/reviews",
+  "permission" : "lms.course_review.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCourseTeacher",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}/teachers",
+  "permission" : "lms.course_teacher.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCourseTestimonial",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}/testimonials",
+  "permission" : "lms.course_testimonial.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateCourseVersion",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:createVersion",
+  "permission" : "lms.course.create_course_version",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateDiscussionPrompt",
+  "method" : "POST",
+  "path" : "/v1/lms/discussion-prompts",
+  "permission" : "lms.discussion_prompt.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateDriveItem",
+  "method" : "POST",
+  "path" : "/v1/lms/drive-items",
+  "permission" : "lms.drive_item.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateDriveItemShare",
+  "method" : "POST",
+  "path" : "/v1/lms/drive-items/{driveItemId}/shares",
+  "permission" : "lms.drive_item_share.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateEbook",
+  "method" : "POST",
+  "path" : "/v1/lms/ebooks",
+  "permission" : "lms.ebook.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateEnrollmentRequest",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}/enrollment-requests",
+  "permission" : "lms.enrollment_request.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateEvaluator",
+  "method" : "POST",
+  "path" : "/v1/lms/evaluators",
+  "permission" : "lms.evaluator.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateEvaluatorAvailability",
+  "method" : "POST",
+  "path" : "/v1/lms/evaluators/{evaluatorId}/availability",
+  "permission" : "lms.evaluator_availability.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateExerciseTestCase",
+  "method" : "POST",
+  "path" : "/v1/lms/programming-exercises/{programmingExerciseId}/test-cases",
+  "permission" : "lms.exercise_test_case.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateExternalTool",
+  "method" : "POST",
+  "path" : "/v1/lms/external-tools",
+  "permission" : "lms.external_tool.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateExternalToolInstitution",
+  "method" : "POST",
+  "path" : "/v1/lms/external-tools/{externalToolId}/institutions",
+  "permission" : "lms.external_tool_institution.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateExternalToolLink",
+  "method" : "POST",
+  "path" : "/v1/lms/external-tool-resources/{externalToolResourceId}/links",
+  "permission" : "lms.external_tool_link.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateExternalToolOption",
+  "method" : "POST",
+  "path" : "/v1/lms/external-tools/{externalToolId}/options",
+  "permission" : "lms.external_tool_option.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateExternalToolResource",
+  "method" : "POST",
+  "path" : "/v1/lms/external-tool-resources",
+  "permission" : "lms.external_tool_resource.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateExternalToolRole",
+  "method" : "POST",
+  "path" : "/v1/lms/external-tools/{externalToolId}/roles",
+  "permission" : "lms.external_tool_role.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateExternalToolSetting",
+  "method" : "POST",
+  "path" : "/v1/lms/external-tools/{externalToolId}/settings",
+  "permission" : "lms.external_tool_setting.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateForum",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}/forums",
+  "permission" : "lms.forum.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateForumPost",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}/posts",
+  "permission" : "lms.forum_post.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateForumPostReport",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-post-reports",
+  "permission" : "lms.forum_post_report.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateForumPostVote",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-post-votes",
+  "permission" : "lms.forum_post_vote.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateForumReportCategory",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-report-categories",
+  "permission" : "lms.forum_report_category.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateForumSection",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-sections",
+  "permission" : "lms.forum_section.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateForumTopic",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-topics",
+  "permission" : "lms.forum_topic.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateGradingCategory",
+  "method" : "POST",
+  "path" : "/v1/lms/grading-categories",
+  "permission" : "lms.grading_category.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateImportExportJob",
+  "method" : "POST",
+  "path" : "/v1/lms/import-export-jobs",
+  "permission" : "lms.import_export_job.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateItemOverride",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}/overrides",
+  "permission" : "lms.item_override.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateLearningObjective",
+  "method" : "POST",
+  "path" : "/v1/lms/learning-objectives",
+  "permission" : "lms.learning_objective.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateLearningProgram",
+  "method" : "POST",
+  "path" : "/v1/lms/learning-programs",
+  "permission" : "lms.learning_program.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateLearningProgramCourse",
+  "method" : "POST",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}/courses",
+  "permission" : "lms.learning_program_course.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateLearningProgramMember",
+  "method" : "POST",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}/members",
+  "permission" : "lms.learning_program_member.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateLesson",
+  "method" : "POST",
+  "path" : "/v1/lms/lessons",
+  "permission" : "lms.lesson.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateLessonActivity",
+  "method" : "POST",
+  "path" : "/v1/lms/lessons/{lessonId}/activities",
+  "permission" : "lms.lesson_activity.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateLessonNote",
+  "method" : "POST",
+  "path" : "/v1/lms/lessons/{lessonId}/notes",
+  "permission" : "lms.lesson_note.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateLiveClass",
+  "method" : "POST",
+  "path" : "/v1/lms/live-classes",
+  "permission" : "lms.live_class.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateLmsAssignment",
+  "method" : "POST",
+  "path" : "/v1/lms/assignments",
+  "permission" : "lms.assignment.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateLmsAssignmentSubmission",
+  "method" : "POST",
+  "path" : "/v1/lms/assignment-submissions",
+  "permission" : "lms.assignment_submission.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateLmsCourse",
+  "method" : "POST",
+  "path" : "/v1/lms/courses",
+  "permission" : "lms.course.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateMentorship",
+  "method" : "POST",
+  "path" : "/v1/lms/mentorships",
+  "permission" : "lms.mentorship.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateParticipationActivity",
+  "method" : "POST",
+  "path" : "/v1/lms/participation-activities",
+  "permission" : "lms.participation_activity.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreatePeerReview",
+  "method" : "POST",
+  "path" : "/v1/lms/peer-reviews",
+  "permission" : "lms.peer_review.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreatePlagiarismAccount",
+  "method" : "POST",
+  "path" : "/v1/lms/plagiarism-accounts",
+  "permission" : "lms.plagiarism_account.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreatePlagiarismCohortLink",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}/plagiarism-links",
+  "permission" : "lms.plagiarism_cohort_link.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreatePlagiarismUserLink",
+  "method" : "POST",
+  "path" : "/v1/lms/plagiarism-accounts/{plagiarismAccountId}/user-links",
+  "permission" : "lms.plagiarism_user_link.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateProgrammingExercise",
+  "method" : "POST",
+  "path" : "/v1/lms/programming-exercises",
+  "permission" : "lms.programming_exercise.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateQuestion",
+  "method" : "POST",
+  "path" : "/v1/lms/questions",
+  "permission" : "lms.question.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateQuestionAcceptedAnswer",
+  "method" : "POST",
+  "path" : "/v1/lms/questions/{questionId}/accepted-answers",
+  "permission" : "lms.question_accepted_answer.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateQuestionBlank",
+  "method" : "POST",
+  "path" : "/v1/lms/questions/{questionId}/blanks",
+  "permission" : "lms.question_blank.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateQuestionBlankAnswer",
+  "method" : "POST",
+  "path" : "/v1/lms/question-blank-answers",
+  "permission" : "lms.question_blank_answer.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateQuestionHotspot",
+  "method" : "POST",
+  "path" : "/v1/lms/questions/{questionId}/hotspots",
+  "permission" : "lms.question_hotspot.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateQuestionHotspotRegion",
+  "method" : "POST",
+  "path" : "/v1/lms/question-hotspot-regions",
+  "permission" : "lms.question_hotspot_region.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateQuestionMatchPair",
+  "method" : "POST",
+  "path" : "/v1/lms/questions/{questionId}/match-pairs",
+  "permission" : "lms.question_match_pair.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateQuestionOption",
+  "method" : "POST",
+  "path" : "/v1/lms/questions/{questionId}/options",
+  "permission" : "lms.question_option.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateQuestionPattern",
+  "method" : "POST",
+  "path" : "/v1/lms/questions/{questionId}/patterns",
+  "permission" : "lms.question_pattern.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateQuestionPool",
+  "method" : "POST",
+  "path" : "/v1/lms/question-pools",
+  "permission" : "lms.question_pool.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateQuestionPoolItem",
+  "method" : "POST",
+  "path" : "/v1/lms/question-pools/{questionPoolId}/items",
+  "permission" : "lms.question_pool_item.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateQuiz",
+  "method" : "POST",
+  "path" : "/v1/lms/quizzes",
+  "permission" : "lms.quiz.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateQuizQuestion",
+  "method" : "POST",
+  "path" : "/v1/lms/quizzes/{quizId}/questions",
+  "permission" : "lms.quiz_question.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateRelatedCourse",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}/related-courses",
+  "permission" : "lms.related_course.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateRelatedMaterial",
+  "method" : "POST",
+  "path" : "/v1/lms/ebooks/{ebookId}/related-materials",
+  "permission" : "lms.related_material.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateReleaseRule",
+  "method" : "POST",
+  "path" : "/v1/lms/release-rules",
+  "permission" : "lms.release_rule.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateReleaseRuleCondition",
+  "method" : "POST",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}/release-rule-conditions",
+  "permission" : "lms.release_rule_condition.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateReleaseRuleTarget",
+  "method" : "POST",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}/release-rule-targets",
+  "permission" : "lms.release_rule_target.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateResourceCategory",
+  "method" : "POST",
+  "path" : "/v1/lms/resource-categories",
+  "permission" : "lms.resource_category.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateRubric",
+  "method" : "POST",
+  "path" : "/v1/lms/rubrics",
+  "permission" : "lms.rubric.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateRubricAssessment",
+  "method" : "POST",
+  "path" : "/v1/lms/rubric-assessments",
+  "permission" : "lms.rubric_assessment.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateRubricCell",
+  "method" : "POST",
+  "path" : "/v1/lms/rubrics/{rubricId}/cells",
+  "permission" : "lms.rubric_cell.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateRubricCriterion",
+  "method" : "POST",
+  "path" : "/v1/lms/rubrics/{rubricId}/criteria",
+  "permission" : "lms.rubric_criterion.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateRubricLevel",
+  "method" : "POST",
+  "path" : "/v1/lms/rubrics/{rubricId}/levels",
+  "permission" : "lms.rubric_level.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateSettingsPrimaryCountry",
+  "method" : "POST",
+  "path" : "/v1/lms/settings/{settingsId}/primary-countries",
+  "permission" : "lms.settings_primary_country.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateSettingsSidebarItem",
+  "method" : "POST",
+  "path" : "/v1/lms/settings/{settingsId}/sidebar-items",
+  "permission" : "lms.settings_sidebar_item.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateStudentAlert",
+  "method" : "POST",
+  "path" : "/v1/lms/student-alerts",
+  "permission" : "lms.student_alert.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateTimetableEntry",
+  "method" : "POST",
+  "path" : "/v1/lms/timetable-entries",
+  "permission" : "lms.timetable_entry.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateTimetableLegend",
+  "method" : "POST",
+  "path" : "/v1/lms/timetable-legends",
+  "permission" : "lms.timetable_legend.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateTimetableTemplate",
+  "method" : "POST",
+  "path" : "/v1/lms/timetable-templates",
+  "permission" : "lms.timetable_template.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.CreateWebResource",
+  "method" : "POST",
+  "path" : "/v1/lms/web-resources",
+  "permission" : "lms.web_resource.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.DeactivateCohort",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:deactivate",
+  "permission" : "lms.cohort.deactivate_cohort",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.DeactivateCourse",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:deactivate",
+  "permission" : "lms.course.deactivate_course",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.DeleteAnnotation",
+  "method" : "DELETE",
+  "path" : "/v1/lms/annotations/{annotationId}",
+  "permission" : "lms.annotation.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteAnnotationShare",
+  "method" : "DELETE",
+  "path" : "/v1/lms/annotations/{annotationId}/shares/{annotationShareId}",
+  "permission" : "lms.annotation_share.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteAssignmentGroup",
+  "method" : "DELETE",
+  "path" : "/v1/lms/content-items/{contentItemId}/groups/{assignmentGroupId}",
+  "permission" : "lms.assignment_group.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteAssignmentGroupMember",
+  "method" : "DELETE",
+  "path" : "/v1/lms/assignment-group-members/{assignmentGroupMemberId}",
+  "permission" : "lms.assignment_group_member.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteBadge",
+  "method" : "DELETE",
+  "path" : "/v1/lms/badges/{badgeId}",
+  "permission" : "lms.badge.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteBookmark",
+  "method" : "DELETE",
+  "path" : "/v1/lms/bookmarks/{bookmarkId}",
+  "permission" : "lms.bookmark.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCatalogBanner",
+  "method" : "DELETE",
+  "path" : "/v1/lms/courses/{courseId}/banners/{catalogBannerId}",
+  "permission" : "lms.catalog_banner.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCategory",
+  "method" : "DELETE",
+  "path" : "/v1/lms/categories/{categoryId}",
+  "permission" : "lms.category.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCertificateEvaluation",
+  "method" : "DELETE",
+  "path" : "/v1/lms/certificate-evaluations/{certificateEvaluationId}",
+  "permission" : "lms.certificate_evaluation.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCertificateRequest",
+  "method" : "DELETE",
+  "path" : "/v1/lms/certificate-requests/{certificateRequestId}",
+  "permission" : "lms.certificate_request.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteChapter",
+  "method" : "DELETE",
+  "path" : "/v1/lms/courses/{courseId}/chapters/{chapterId}",
+  "permission" : "lms.chapter.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCohort",
+  "method" : "DELETE",
+  "path" : "/v1/lms/cohorts/{cohortId}",
+  "permission" : "lms.cohort.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCohortActivity",
+  "method" : "DELETE",
+  "path" : "/v1/lms/cohorts/{cohortId}/activities/{cohortActivityId}",
+  "permission" : "lms.cohort_activity.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCohortCourse",
+  "method" : "DELETE",
+  "path" : "/v1/lms/cohorts/{cohortId}/courses/{cohortCourseId}",
+  "permission" : "lms.cohort_course.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCohortEnrollment",
+  "method" : "DELETE",
+  "path" : "/v1/lms/cohort-enrollments/{cohortEnrollmentId}",
+  "permission" : "lms.cohort_enrollment.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCohortFeedback",
+  "method" : "DELETE",
+  "path" : "/v1/lms/cohorts/{cohortId}/feedback/{cohortFeedbackId}",
+  "permission" : "lms.cohort_feedback.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCohortGroup",
+  "method" : "DELETE",
+  "path" : "/v1/lms/cohorts/{cohortId}/groups/{cohortGroupId}",
+  "permission" : "lms.cohort_group.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCohortHoliday",
+  "method" : "DELETE",
+  "path" : "/v1/lms/cohorts/{cohortId}/holidays/{cohortHolidayId}",
+  "permission" : "lms.cohort_holiday.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCohortScheduleSlot",
+  "method" : "DELETE",
+  "path" : "/v1/lms/cohorts/{cohortId}/schedule-slots/{cohortScheduleSlotId}",
+  "permission" : "lms.cohort_schedule_slot.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCohortSession",
+  "method" : "DELETE",
+  "path" : "/v1/lms/cohorts/{cohortId}/sessions/{cohortSessionId}",
+  "permission" : "lms.cohort_session.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCohortTeacher",
+  "method" : "DELETE",
+  "path" : "/v1/lms/cohorts/{cohortId}/teachers/{cohortTeacherId}",
+  "permission" : "lms.cohort_teacher.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteConferencingAccount",
+  "method" : "DELETE",
+  "path" : "/v1/lms/conferencing-accounts/{conferencingAccountId}",
+  "permission" : "lms.conferencing_account.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteContentAuthor",
+  "method" : "DELETE",
+  "path" : "/v1/lms/content-authors/{contentAuthorId}",
+  "permission" : "lms.content_author.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteContentItem",
+  "method" : "DELETE",
+  "path" : "/v1/lms/content-items/{contentItemId}",
+  "permission" : "lms.content_item.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteContentItemRating",
+  "method" : "DELETE",
+  "path" : "/v1/lms/content-items/{contentItemId}/ratings/{contentItemRatingId}",
+  "permission" : "lms.content_item_rating.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCourseAuthorProfile",
+  "method" : "DELETE",
+  "path" : "/v1/lms/courses/{courseId}/author-profiles/{courseAuthorProfileId}",
+  "permission" : "lms.course_author_profile.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCourseInterest",
+  "method" : "DELETE",
+  "path" : "/v1/lms/courses/{courseId}/interests/{courseInterestId}",
+  "permission" : "lms.course_interest.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCourseMentor",
+  "method" : "DELETE",
+  "path" : "/v1/lms/courses/{courseId}/mentors/{courseMentorId}",
+  "permission" : "lms.course_mentor.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCoursePreview",
+  "method" : "DELETE",
+  "path" : "/v1/lms/courses/{courseId}/previews/{coursePreviewId}",
+  "permission" : "lms.course_preview.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCourseReview",
+  "method" : "DELETE",
+  "path" : "/v1/lms/courses/{courseId}/reviews/{courseReviewId}",
+  "permission" : "lms.course_review.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCourseTeacher",
+  "method" : "DELETE",
+  "path" : "/v1/lms/courses/{courseId}/teachers/{courseTeacherId}",
+  "permission" : "lms.course_teacher.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteCourseTestimonial",
+  "method" : "DELETE",
+  "path" : "/v1/lms/courses/{courseId}/testimonials/{courseTestimonialId}",
+  "permission" : "lms.course_testimonial.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteDiscussionPrompt",
+  "method" : "DELETE",
+  "path" : "/v1/lms/discussion-prompts/{discussionPromptId}",
+  "permission" : "lms.discussion_prompt.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteDriveItem",
+  "method" : "DELETE",
+  "path" : "/v1/lms/drive-items/{driveItemId}",
+  "permission" : "lms.drive_item.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteDriveItemShare",
+  "method" : "DELETE",
+  "path" : "/v1/lms/drive-items/{driveItemId}/shares/{driveItemShareId}",
+  "permission" : "lms.drive_item_share.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteEbook",
+  "method" : "DELETE",
+  "path" : "/v1/lms/ebooks/{ebookId}",
+  "permission" : "lms.ebook.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteEnrollment",
+  "method" : "DELETE",
+  "path" : "/v1/lms/enrollments/{enrollmentId}",
+  "permission" : "lms.enrollment.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteEnrollmentRequest",
+  "method" : "DELETE",
+  "path" : "/v1/lms/courses/{courseId}/enrollment-requests/{enrollmentRequestId}",
+  "permission" : "lms.enrollment_request.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteEvaluator",
+  "method" : "DELETE",
+  "path" : "/v1/lms/evaluators/{evaluatorId}",
+  "permission" : "lms.evaluator.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteEvaluatorAvailability",
+  "method" : "DELETE",
+  "path" : "/v1/lms/evaluators/{evaluatorId}/availability/{evaluatorAvailabilityId}",
+  "permission" : "lms.evaluator_availability.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteExerciseTestCase",
+  "method" : "DELETE",
+  "path" : "/v1/lms/programming-exercises/{programmingExerciseId}/test-cases/{exerciseTestCaseId}",
+  "permission" : "lms.exercise_test_case.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteExternalTool",
+  "method" : "DELETE",
+  "path" : "/v1/lms/external-tools/{externalToolId}",
+  "permission" : "lms.external_tool.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteExternalToolInstitution",
+  "method" : "DELETE",
+  "path" : "/v1/lms/external-tools/{externalToolId}/institutions/{externalToolInstitutionId}",
+  "permission" : "lms.external_tool_institution.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteExternalToolLink",
+  "method" : "DELETE",
+  "path" : "/v1/lms/external-tool-resources/{externalToolResourceId}/links/{externalToolLinkId}",
+  "permission" : "lms.external_tool_link.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteExternalToolOption",
+  "method" : "DELETE",
+  "path" : "/v1/lms/external-tools/{externalToolId}/options/{externalToolOptionId}",
+  "permission" : "lms.external_tool_option.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteExternalToolResource",
+  "method" : "DELETE",
+  "path" : "/v1/lms/external-tool-resources/{externalToolResourceId}",
+  "permission" : "lms.external_tool_resource.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteExternalToolRole",
+  "method" : "DELETE",
+  "path" : "/v1/lms/external-tools/{externalToolId}/roles/{externalToolRoleId}",
+  "permission" : "lms.external_tool_role.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteExternalToolSetting",
+  "method" : "DELETE",
+  "path" : "/v1/lms/external-tools/{externalToolId}/settings/{externalToolSettingId}",
+  "permission" : "lms.external_tool_setting.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteForum",
+  "method" : "DELETE",
+  "path" : "/v1/lms/cohorts/{cohortId}/forums/{forumId}",
+  "permission" : "lms.forum.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteForumPost",
+  "method" : "DELETE",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}/posts/{forumPostId}",
+  "permission" : "lms.forum_post.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteForumPostReport",
+  "method" : "DELETE",
+  "path" : "/v1/lms/forum-post-reports/{forumPostReportId}",
+  "permission" : "lms.forum_post_report.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteForumPostVote",
+  "method" : "DELETE",
+  "path" : "/v1/lms/forum-post-votes/{forumPostVoteId}",
+  "permission" : "lms.forum_post_vote.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteForumReportCategory",
+  "method" : "DELETE",
+  "path" : "/v1/lms/forum-report-categories/{forumReportCategoryId}",
+  "permission" : "lms.forum_report_category.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteForumSection",
+  "method" : "DELETE",
+  "path" : "/v1/lms/forum-sections/{forumSectionId}",
+  "permission" : "lms.forum_section.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteForumTopic",
+  "method" : "DELETE",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}",
+  "permission" : "lms.forum_topic.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteGradingCategory",
+  "method" : "DELETE",
+  "path" : "/v1/lms/grading-categories/{gradingCategoryId}",
+  "permission" : "lms.grading_category.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteItemOverride",
+  "method" : "DELETE",
+  "path" : "/v1/lms/content-items/{contentItemId}/overrides/{itemOverrideId}",
+  "permission" : "lms.item_override.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteLearningObjective",
+  "method" : "DELETE",
+  "path" : "/v1/lms/learning-objectives/{learningObjectiveId}",
+  "permission" : "lms.learning_objective.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteLearningProgram",
+  "method" : "DELETE",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}",
+  "permission" : "lms.learning_program.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteLearningProgramCourse",
+  "method" : "DELETE",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}/courses/{learningProgramCourseId}",
+  "permission" : "lms.learning_program_course.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteLearningProgramMember",
+  "method" : "DELETE",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}/members/{learningProgramMemberId}",
+  "permission" : "lms.learning_program_member.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteLesson",
+  "method" : "DELETE",
+  "path" : "/v1/lms/lessons/{lessonId}",
+  "permission" : "lms.lesson.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteLessonActivity",
+  "method" : "DELETE",
+  "path" : "/v1/lms/lessons/{lessonId}/activities/{lessonActivityId}",
+  "permission" : "lms.lesson_activity.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteLessonNote",
+  "method" : "DELETE",
+  "path" : "/v1/lms/lessons/{lessonId}/notes/{lessonNoteId}",
+  "permission" : "lms.lesson_note.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteLiveClass",
+  "method" : "DELETE",
+  "path" : "/v1/lms/live-classes/{liveClassId}",
+  "permission" : "lms.live_class.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteLmsAssignment",
+  "method" : "DELETE",
+  "path" : "/v1/lms/assignments/{assignmentId}",
+  "permission" : "lms.assignment.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteLmsAssignmentSubmission",
+  "method" : "DELETE",
+  "path" : "/v1/lms/assignment-submissions/{assignmentSubmissionId}",
+  "permission" : "lms.assignment_submission.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteLmsCourse",
+  "method" : "DELETE",
+  "path" : "/v1/lms/courses/{courseId}",
+  "permission" : "lms.course.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteMentorship",
+  "method" : "DELETE",
+  "path" : "/v1/lms/mentorships/{mentorshipId}",
+  "permission" : "lms.mentorship.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteParticipationActivity",
+  "method" : "DELETE",
+  "path" : "/v1/lms/participation-activities/{participationActivityId}",
+  "permission" : "lms.participation_activity.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeletePeerReview",
+  "method" : "DELETE",
+  "path" : "/v1/lms/peer-reviews/{peerReviewId}",
+  "permission" : "lms.peer_review.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeletePlagiarismAccount",
+  "method" : "DELETE",
+  "path" : "/v1/lms/plagiarism-accounts/{plagiarismAccountId}",
+  "permission" : "lms.plagiarism_account.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeletePlagiarismCohortLink",
+  "method" : "DELETE",
+  "path" : "/v1/lms/cohorts/{cohortId}/plagiarism-links/{plagiarismCohortLinkId}",
+  "permission" : "lms.plagiarism_cohort_link.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeletePlagiarismUserLink",
+  "method" : "DELETE",
+  "path" : "/v1/lms/plagiarism-accounts/{plagiarismAccountId}/user-links/{plagiarismUserLinkId}",
+  "permission" : "lms.plagiarism_user_link.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteProgrammingExercise",
+  "method" : "DELETE",
+  "path" : "/v1/lms/programming-exercises/{programmingExerciseId}",
+  "permission" : "lms.programming_exercise.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteQuestion",
+  "method" : "DELETE",
+  "path" : "/v1/lms/questions/{questionId}",
+  "permission" : "lms.question.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteQuestionAcceptedAnswer",
+  "method" : "DELETE",
+  "path" : "/v1/lms/questions/{questionId}/accepted-answers/{questionAcceptedAnswerId}",
+  "permission" : "lms.question_accepted_answer.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteQuestionBlank",
+  "method" : "DELETE",
+  "path" : "/v1/lms/questions/{questionId}/blanks/{questionBlankId}",
+  "permission" : "lms.question_blank.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteQuestionBlankAnswer",
+  "method" : "DELETE",
+  "path" : "/v1/lms/question-blank-answers/{questionBlankAnswerId}",
+  "permission" : "lms.question_blank_answer.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteQuestionHotspot",
+  "method" : "DELETE",
+  "path" : "/v1/lms/questions/{questionId}/hotspots/{questionHotspotId}",
+  "permission" : "lms.question_hotspot.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteQuestionHotspotRegion",
+  "method" : "DELETE",
+  "path" : "/v1/lms/question-hotspot-regions/{questionHotspotRegionId}",
+  "permission" : "lms.question_hotspot_region.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteQuestionMatchPair",
+  "method" : "DELETE",
+  "path" : "/v1/lms/questions/{questionId}/match-pairs/{questionMatchPairId}",
+  "permission" : "lms.question_match_pair.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteQuestionOption",
+  "method" : "DELETE",
+  "path" : "/v1/lms/questions/{questionId}/options/{questionOptionId}",
+  "permission" : "lms.question_option.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteQuestionPattern",
+  "method" : "DELETE",
+  "path" : "/v1/lms/questions/{questionId}/patterns/{questionPatternId}",
+  "permission" : "lms.question_pattern.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteQuestionPool",
+  "method" : "DELETE",
+  "path" : "/v1/lms/question-pools/{questionPoolId}",
+  "permission" : "lms.question_pool.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteQuestionPoolItem",
+  "method" : "DELETE",
+  "path" : "/v1/lms/question-pools/{questionPoolId}/items/{questionPoolItemId}",
+  "permission" : "lms.question_pool_item.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteQuiz",
+  "method" : "DELETE",
+  "path" : "/v1/lms/quizzes/{quizId}",
+  "permission" : "lms.quiz.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteQuizQuestion",
+  "method" : "DELETE",
+  "path" : "/v1/lms/quizzes/{quizId}/questions/{quizQuestionId}",
+  "permission" : "lms.quiz_question.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteRelatedCourse",
+  "method" : "DELETE",
+  "path" : "/v1/lms/courses/{courseId}/related-courses/{relatedCourseId}",
+  "permission" : "lms.related_course.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteRelatedMaterial",
+  "method" : "DELETE",
+  "path" : "/v1/lms/ebooks/{ebookId}/related-materials/{relatedMaterialId}",
+  "permission" : "lms.related_material.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteReleaseGrant",
+  "method" : "DELETE",
+  "path" : "/v1/lms/content-items/{contentItemId}/release-grants/{releaseGrantId}",
+  "permission" : "lms.release_grant.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteReleaseRule",
+  "method" : "DELETE",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}",
+  "permission" : "lms.release_rule.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteReleaseRuleCondition",
+  "method" : "DELETE",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}/release-rule-conditions/{releaseRuleConditionId}",
+  "permission" : "lms.release_rule_condition.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteReleaseRuleTarget",
+  "method" : "DELETE",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}/release-rule-targets/{releaseRuleTargetId}",
+  "permission" : "lms.release_rule_target.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteResourceCategory",
+  "method" : "DELETE",
+  "path" : "/v1/lms/resource-categories/{resourceCategoryId}",
+  "permission" : "lms.resource_category.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteRubric",
+  "method" : "DELETE",
+  "path" : "/v1/lms/rubrics/{rubricId}",
+  "permission" : "lms.rubric.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteRubricAssessment",
+  "method" : "DELETE",
+  "path" : "/v1/lms/rubric-assessments/{rubricAssessmentId}",
+  "permission" : "lms.rubric_assessment.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteRubricCell",
+  "method" : "DELETE",
+  "path" : "/v1/lms/rubrics/{rubricId}/cells/{rubricCellId}",
+  "permission" : "lms.rubric_cell.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteRubricCriterion",
+  "method" : "DELETE",
+  "path" : "/v1/lms/rubrics/{rubricId}/criteria/{rubricCriterionId}",
+  "permission" : "lms.rubric_criterion.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteRubricLevel",
+  "method" : "DELETE",
+  "path" : "/v1/lms/rubrics/{rubricId}/levels/{rubricLevelId}",
+  "permission" : "lms.rubric_level.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteSettingsPrimaryCountry",
+  "method" : "DELETE",
+  "path" : "/v1/lms/settings/{settingsId}/primary-countries/{settingsPrimaryCountryId}",
+  "permission" : "lms.settings_primary_country.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteSettingsSidebarItem",
+  "method" : "DELETE",
+  "path" : "/v1/lms/settings/{settingsId}/sidebar-items/{settingsSidebarItemId}",
+  "permission" : "lms.settings_sidebar_item.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteStudentAlert",
+  "method" : "DELETE",
+  "path" : "/v1/lms/student-alerts/{studentAlertId}",
+  "permission" : "lms.student_alert.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteTimetableEntry",
+  "method" : "DELETE",
+  "path" : "/v1/lms/timetable-entries/{timetableEntryId}",
+  "permission" : "lms.timetable_entry.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteTimetableLegend",
+  "method" : "DELETE",
+  "path" : "/v1/lms/timetable-legends/{timetableLegendId}",
+  "permission" : "lms.timetable_legend.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteTimetableTemplate",
+  "method" : "DELETE",
+  "path" : "/v1/lms/timetable-templates/{timetableTemplateId}",
+  "permission" : "lms.timetable_template.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DeleteWebResource",
+  "method" : "DELETE",
+  "path" : "/v1/lms/web-resources/{webResourceId}",
+  "permission" : "lms.web_resource.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DisableReleaseRule",
+  "method" : "POST",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}:disable",
+  "permission" : "lms.release_rule.disable_release_rule",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.DisconnectEvaluatorCalendar",
+  "method" : "POST",
+  "path" : "/v1/lms/evaluators/{evaluatorId}:disconnectCalendar",
+  "permission" : "lms.evaluator.disconnect_evaluator_calendar",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.DownloadCertificate",
+  "method" : "GET",
+  "path" : "/v1/lms/certificates/{certificateId}:download",
+  "permission" : "lms.certificate.download_certificate",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.DownloadSubmissions",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}:downloadSubmissions",
+  "permission" : "lms.content_item.download_submissions",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.EnableReleaseRule",
+  "method" : "POST",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}:enable",
+  "permission" : "lms.release_rule.enable_release_rule",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.EndLiveClass",
+  "method" : "POST",
+  "path" : "/v1/lms/live-classes/{liveClassId}:end",
+  "permission" : "lms.live_class.end_live_class",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.EnrollInCohort",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:enroll",
+  "permission" : "lms.cohort.enroll_in_cohort",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.EnrollInCourse",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:enroll",
+  "permission" : "lms.course.enroll_in_course",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.EnrollInLearningProgram",
+  "method" : "POST",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}:enroll",
+  "permission" : "lms.learning_program.enroll_in_learning_program",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.EvaluateReleaseRules",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:evaluateReleaseRules",
+  "permission" : "lms.cohort.evaluate_release_rules",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ExportCourse",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:export",
+  "permission" : "lms.course.export_course",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ExportGrades",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:exportGrades",
+  "permission" : "lms.cohort.export_grades",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.FinalizePeerReview",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}/groups/{assignmentGroupId}:finalizePeerReview",
+  "permission" : "lms.assignment_group.finalize_peer_review",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.FinalizeSubmission",
+  "method" : "POST",
+  "path" : "/v1/lms/assignment-submissions/{assignmentSubmissionId}:finalize",
+  "permission" : "lms.assignment_submission.finalize_submission",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.FlagForumPost",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}/posts/{forumPostId}:flag",
+  "permission" : "lms.forum_post.flag_forum_post",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.GenerateCohortCertificates",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:generateCertificates",
+  "permission" : "lms.cohort.generate_cohort_certificates",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.GetAccessLog",
+  "method" : "GET",
+  "path" : "/v1/lms/access-logs/{accessLogId}",
+  "permission" : "lms.access_log.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetAnnotation",
+  "method" : "GET",
+  "path" : "/v1/lms/annotations/{annotationId}",
+  "permission" : "lms.annotation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetAnnotationShare",
+  "method" : "GET",
+  "path" : "/v1/lms/annotations/{annotationId}/shares/{annotationShareId}",
+  "permission" : "lms.annotation_share.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetAssignmentGroup",
+  "method" : "GET",
+  "path" : "/v1/lms/content-items/{contentItemId}/groups/{assignmentGroupId}",
+  "permission" : "lms.assignment_group.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetAssignmentGroupMember",
+  "method" : "GET",
+  "path" : "/v1/lms/assignment-group-members/{assignmentGroupMemberId}",
+  "permission" : "lms.assignment_group_member.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetBadge",
+  "method" : "GET",
+  "path" : "/v1/lms/badges/{badgeId}",
+  "permission" : "lms.badge.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetBadgeAward",
+  "method" : "GET",
+  "path" : "/v1/lms/badge-awards/{badgeAwardId}",
+  "permission" : "lms.badge_award.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetBookmark",
+  "method" : "GET",
+  "path" : "/v1/lms/bookmarks/{bookmarkId}",
+  "permission" : "lms.bookmark.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCatalogBanner",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/banners/{catalogBannerId}",
+  "permission" : "lms.catalog_banner.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCatalogHome",
+  "method" : "GET",
+  "path" : "/v1/lms/catalog",
+  "permission" : "lms.course.get_catalog_home",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.GetCategory",
+  "method" : "GET",
+  "path" : "/v1/lms/categories/{categoryId}",
+  "permission" : "lms.category.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.GetCertificate",
+  "method" : "GET",
+  "path" : "/v1/lms/certificates/{certificateId}",
+  "permission" : "lms.certificate.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCertificateEvaluation",
+  "method" : "GET",
+  "path" : "/v1/lms/certificate-evaluations/{certificateEvaluationId}",
+  "permission" : "lms.certificate_evaluation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCertificateRequest",
+  "method" : "GET",
+  "path" : "/v1/lms/certificate-requests/{certificateRequestId}",
+  "permission" : "lms.certificate_request.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetChapter",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/chapters/{chapterId}",
+  "permission" : "lms.chapter.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohort",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}",
+  "permission" : "lms.cohort.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.GetCohortActivity",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/activities/{cohortActivityId}",
+  "permission" : "lms.cohort_activity.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohortCourse",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/courses/{cohortCourseId}",
+  "permission" : "lms.cohort_course.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohortEnrollment",
+  "method" : "GET",
+  "path" : "/v1/lms/cohort-enrollments/{cohortEnrollmentId}",
+  "permission" : "lms.cohort_enrollment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohortFeedback",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/feedback/{cohortFeedbackId}",
+  "permission" : "lms.cohort_feedback.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohortGroup",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/groups/{cohortGroupId}",
+  "permission" : "lms.cohort_group.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohortHoliday",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/holidays/{cohortHolidayId}",
+  "permission" : "lms.cohort_holiday.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohortPerformance",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}:performance",
+  "permission" : "lms.cohort.get_cohort_performance",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohortProgress",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}:progress",
+  "permission" : "lms.cohort.get_cohort_progress",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohortRoster",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}:roster",
+  "permission" : "lms.cohort.get_cohort_roster",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohortScheduleSlot",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/schedule-slots/{cohortScheduleSlotId}",
+  "permission" : "lms.cohort_schedule_slot.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohortSession",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/sessions/{cohortSessionId}",
+  "permission" : "lms.cohort_session.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohortSyllabus",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}:syllabus",
+  "permission" : "lms.cohort.get_cohort_syllabus",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohortTeacher",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/teachers/{cohortTeacherId}",
+  "permission" : "lms.cohort_teacher.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCohortTimetable",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}:timetable",
+  "permission" : "lms.cohort.get_cohort_timetable",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetConferencingAccount",
+  "method" : "GET",
+  "path" : "/v1/lms/conferencing-accounts/{conferencingAccountId}",
+  "permission" : "lms.conferencing_account.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetContentAuthor",
+  "method" : "GET",
+  "path" : "/v1/lms/content-authors/{contentAuthorId}",
+  "permission" : "lms.content_author.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetContentItem",
+  "method" : "GET",
+  "path" : "/v1/lms/content-items/{contentItemId}",
+  "permission" : "lms.content_item.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetContentItemRating",
+  "method" : "GET",
+  "path" : "/v1/lms/content-items/{contentItemId}/ratings/{contentItemRatingId}",
+  "permission" : "lms.content_item_rating.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetContentViewSession",
+  "method" : "GET",
+  "path" : "/v1/lms/content-view-sessions/{contentViewSessionId}",
+  "permission" : "lms.content_view_session.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCourseAuthorProfile",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/author-profiles/{courseAuthorProfileId}",
+  "permission" : "lms.course_author_profile.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCourseInterest",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/interests/{courseInterestId}",
+  "permission" : "lms.course_interest.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCourseMentor",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/mentors/{courseMentorId}",
+  "permission" : "lms.course_mentor.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCourseOutline",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}:outline",
+  "permission" : "lms.course.get_course_outline",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.GetCoursePreview",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/previews/{coursePreviewId}",
+  "permission" : "lms.course_preview.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCourseProgressDistribution",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}:progressDistribution",
+  "permission" : "lms.course.get_course_progress_distribution",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCourseReview",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/reviews/{courseReviewId}",
+  "permission" : "lms.course_review.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCourseSyllabus",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}:syllabus",
+  "permission" : "lms.course.get_course_syllabus",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCourseTeacher",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/teachers/{courseTeacherId}",
+  "permission" : "lms.course_teacher.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetCourseTestimonial",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/testimonials/{courseTestimonialId}",
+  "permission" : "lms.course_testimonial.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetDiscussionPrompt",
+  "method" : "GET",
+  "path" : "/v1/lms/discussion-prompts/{discussionPromptId}",
+  "permission" : "lms.discussion_prompt.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetDriveItem",
+  "method" : "GET",
+  "path" : "/v1/lms/drive-items/{driveItemId}",
+  "permission" : "lms.drive_item.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetEbook",
+  "method" : "GET",
+  "path" : "/v1/lms/ebooks/{ebookId}",
+  "permission" : "lms.ebook.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetEnrollment",
+  "method" : "GET",
+  "path" : "/v1/lms/enrollments/{enrollmentId}",
+  "permission" : "lms.enrollment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetEnrollmentRequest",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/enrollment-requests/{enrollmentRequestId}",
+  "permission" : "lms.enrollment_request.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetEvaluator",
+  "method" : "GET",
+  "path" : "/v1/lms/evaluators/{evaluatorId}",
+  "permission" : "lms.evaluator.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetEvaluatorAvailability",
+  "method" : "GET",
+  "path" : "/v1/lms/evaluators/{evaluatorId}/availability/{evaluatorAvailabilityId}",
+  "permission" : "lms.evaluator_availability.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetEvaluatorSlots",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}:evaluatorSlots",
+  "permission" : "lms.course.get_evaluator_slots",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetExerciseSubmission",
+  "method" : "GET",
+  "path" : "/v1/lms/exercise-submissions/{exerciseSubmissionId}",
+  "permission" : "lms.exercise_submission.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetExerciseTestCase",
+  "method" : "GET",
+  "path" : "/v1/lms/programming-exercises/{programmingExerciseId}/test-cases/{exerciseTestCaseId}",
+  "permission" : "lms.exercise_test_case.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetExerciseTestResult",
+  "method" : "GET",
+  "path" : "/v1/lms/exercise-submissions/{exerciseSubmissionId}/test-results/{exerciseTestResultId}",
+  "permission" : "lms.exercise_test_result.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetExternalTool",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tools/{externalToolId}",
+  "permission" : "lms.external_tool.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetExternalToolInstitution",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tools/{externalToolId}/institutions/{externalToolInstitutionId}",
+  "permission" : "lms.external_tool_institution.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetExternalToolLink",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tool-resources/{externalToolResourceId}/links/{externalToolLinkId}",
+  "permission" : "lms.external_tool_link.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetExternalToolOption",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tools/{externalToolId}/options/{externalToolOptionId}",
+  "permission" : "lms.external_tool_option.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetExternalToolResource",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tool-resources/{externalToolResourceId}",
+  "permission" : "lms.external_tool_resource.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetExternalToolRole",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tools/{externalToolId}/roles/{externalToolRoleId}",
+  "permission" : "lms.external_tool_role.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetExternalToolSetting",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tools/{externalToolId}/settings/{externalToolSettingId}",
+  "permission" : "lms.external_tool_setting.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetForum",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/forums/{forumId}",
+  "permission" : "lms.forum.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetForumPost",
+  "method" : "GET",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}/posts/{forumPostId}",
+  "permission" : "lms.forum_post.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetForumPostReport",
+  "method" : "GET",
+  "path" : "/v1/lms/forum-post-reports/{forumPostReportId}",
+  "permission" : "lms.forum_post_report.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetForumReportCategory",
+  "method" : "GET",
+  "path" : "/v1/lms/forum-report-categories/{forumReportCategoryId}",
+  "permission" : "lms.forum_report_category.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetForumSection",
+  "method" : "GET",
+  "path" : "/v1/lms/forum-sections/{forumSectionId}",
+  "permission" : "lms.forum_section.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetForumTopic",
+  "method" : "GET",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}",
+  "permission" : "lms.forum_topic.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetGradeChangeLog",
+  "method" : "GET",
+  "path" : "/v1/lms/grade-change-logs/{gradeChangeLogId}",
+  "permission" : "lms.grade_change_log.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetGradebook",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}:gradebook",
+  "permission" : "lms.cohort.get_gradebook",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetGradebookEntry",
+  "method" : "GET",
+  "path" : "/v1/lms/gradebook-entries/{gradebookEntryId}",
+  "permission" : "lms.gradebook_entry.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetGradingCategory",
+  "method" : "GET",
+  "path" : "/v1/lms/grading-categories/{gradingCategoryId}",
+  "permission" : "lms.grading_category.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetImportExportJob",
+  "method" : "GET",
+  "path" : "/v1/lms/import-export-jobs/{importExportJobId}",
+  "permission" : "lms.import_export_job.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetItemOverride",
+  "method" : "GET",
+  "path" : "/v1/lms/content-items/{contentItemId}/overrides/{itemOverrideId}",
+  "permission" : "lms.item_override.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetJobPackage",
+  "method" : "GET",
+  "path" : "/v1/lms/import-export-jobs/{importExportJobId}:package",
+  "permission" : "lms.import_export_job.get_job_package",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetLearningObjective",
+  "method" : "GET",
+  "path" : "/v1/lms/learning-objectives/{learningObjectiveId}",
+  "permission" : "lms.learning_objective.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetLearningProgram",
+  "method" : "GET",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}",
+  "permission" : "lms.learning_program.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.GetLearningProgramCourse",
+  "method" : "GET",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}/courses/{learningProgramCourseId}",
+  "permission" : "lms.learning_program_course.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetLearningProgramMember",
+  "method" : "GET",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}/members/{learningProgramMemberId}",
+  "permission" : "lms.learning_program_member.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetLesson",
+  "method" : "GET",
+  "path" : "/v1/lms/lessons/{lessonId}",
+  "permission" : "lms.lesson.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetLessonActivity",
+  "method" : "GET",
+  "path" : "/v1/lms/lessons/{lessonId}/activities/{lessonActivityId}",
+  "permission" : "lms.lesson_activity.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetLessonContent",
+  "method" : "GET",
+  "path" : "/v1/lms/lessons/{lessonId}:content",
+  "permission" : "lms.lesson.get_lesson_content",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.GetLessonNote",
+  "method" : "GET",
+  "path" : "/v1/lms/lessons/{lessonId}/notes/{lessonNoteId}",
+  "permission" : "lms.lesson_note.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetLessonProgress",
+  "method" : "GET",
+  "path" : "/v1/lms/lesson-progress/{lessonProgressId}",
+  "permission" : "lms.lesson_progress.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetLiveClass",
+  "method" : "GET",
+  "path" : "/v1/lms/live-classes/{liveClassId}",
+  "permission" : "lms.live_class.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetLiveClassParticipant",
+  "method" : "GET",
+  "path" : "/v1/lms/live-classes/{liveClassId}/participants/{liveClassParticipantId}",
+  "permission" : "lms.live_class_participant.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetLiveClassStartUrl",
+  "method" : "GET",
+  "path" : "/v1/lms/live-classes/{liveClassId}:startUrl",
+  "permission" : "lms.live_class.get_live_class_start_url",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetLmsAssignment",
+  "method" : "GET",
+  "path" : "/v1/lms/assignments/{assignmentId}",
+  "permission" : "lms.assignment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetLmsAssignmentSubmission",
+  "method" : "GET",
+  "path" : "/v1/lms/assignment-submissions/{assignmentSubmissionId}",
+  "permission" : "lms.assignment_submission.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetLmsCourse",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}",
+  "permission" : "lms.course.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.GetLmsStatistics",
+  "method" : "GET",
+  "path" : "/v1/lms/statistics",
+  "permission" : "lms.enrollment.get_lms_statistics",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.GetMemberProfile",
+  "method" : "GET",
+  "path" : "/v1/lms/members/{userId}:profile",
+  "permission" : "lms.enrollment.get_member_profile",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.GetMentorship",
+  "method" : "GET",
+  "path" : "/v1/lms/mentorships/{mentorshipId}",
+  "permission" : "lms.mentorship.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetMyRelatedMaterials",
+  "method" : "GET",
+  "path" : "/v1/lms/ebooks/{ebookId}:myRelatedMaterials",
+  "permission" : "lms.ebook.get_my_related_materials",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetOperation",
+  "method" : "GET",
+  "path" : "/v1/lms/operations/{operationId}",
+  "permission" : "lms.operation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetParticipationActivity",
+  "method" : "GET",
+  "path" : "/v1/lms/participation-activities/{participationActivityId}",
+  "permission" : "lms.participation_activity.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetPeerReview",
+  "method" : "GET",
+  "path" : "/v1/lms/peer-reviews/{peerReviewId}",
+  "permission" : "lms.peer_review.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetPlagiarismAccount",
+  "method" : "GET",
+  "path" : "/v1/lms/plagiarism-accounts/{plagiarismAccountId}",
+  "permission" : "lms.plagiarism_account.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetPlagiarismCohortLink",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/plagiarism-links/{plagiarismCohortLinkId}",
+  "permission" : "lms.plagiarism_cohort_link.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetPlagiarismReport",
+  "method" : "GET",
+  "path" : "/v1/lms/plagiarism-reports/{plagiarismReportId}",
+  "permission" : "lms.plagiarism_report.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetPlagiarismReportLink",
+  "method" : "GET",
+  "path" : "/v1/lms/plagiarism-reports/{plagiarismReportId}:reportLink",
+  "permission" : "lms.plagiarism_report.get_plagiarism_report_link",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetPlagiarismUserLink",
+  "method" : "GET",
+  "path" : "/v1/lms/plagiarism-accounts/{plagiarismAccountId}/user-links/{plagiarismUserLinkId}",
+  "permission" : "lms.plagiarism_user_link.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetProgrammingExercise",
+  "method" : "GET",
+  "path" : "/v1/lms/programming-exercises/{programmingExerciseId}",
+  "permission" : "lms.programming_exercise.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetPublicSettings",
+  "method" : "GET",
+  "path" : "/v1/lms/public-settings",
+  "permission" : "lms.settings.get_public_settings",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.GetQuestion",
+  "method" : "GET",
+  "path" : "/v1/lms/questions/{questionId}",
+  "permission" : "lms.question.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuestionAcceptedAnswer",
+  "method" : "GET",
+  "path" : "/v1/lms/questions/{questionId}/accepted-answers/{questionAcceptedAnswerId}",
+  "permission" : "lms.question_accepted_answer.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuestionBlank",
+  "method" : "GET",
+  "path" : "/v1/lms/questions/{questionId}/blanks/{questionBlankId}",
+  "permission" : "lms.question_blank.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuestionBlankAnswer",
+  "method" : "GET",
+  "path" : "/v1/lms/question-blank-answers/{questionBlankAnswerId}",
+  "permission" : "lms.question_blank_answer.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuestionHotspot",
+  "method" : "GET",
+  "path" : "/v1/lms/questions/{questionId}/hotspots/{questionHotspotId}",
+  "permission" : "lms.question_hotspot.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuestionHotspotRegion",
+  "method" : "GET",
+  "path" : "/v1/lms/question-hotspot-regions/{questionHotspotRegionId}",
+  "permission" : "lms.question_hotspot_region.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuestionMatchPair",
+  "method" : "GET",
+  "path" : "/v1/lms/questions/{questionId}/match-pairs/{questionMatchPairId}",
+  "permission" : "lms.question_match_pair.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuestionOption",
+  "method" : "GET",
+  "path" : "/v1/lms/questions/{questionId}/options/{questionOptionId}",
+  "permission" : "lms.question_option.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuestionPattern",
+  "method" : "GET",
+  "path" : "/v1/lms/questions/{questionId}/patterns/{questionPatternId}",
+  "permission" : "lms.question_pattern.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuestionPool",
+  "method" : "GET",
+  "path" : "/v1/lms/question-pools/{questionPoolId}",
+  "permission" : "lms.question_pool.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuestionPoolItem",
+  "method" : "GET",
+  "path" : "/v1/lms/question-pools/{questionPoolId}/items/{questionPoolItemId}",
+  "permission" : "lms.question_pool_item.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuiz",
+  "method" : "GET",
+  "path" : "/v1/lms/quizzes/{quizId}",
+  "permission" : "lms.quiz.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuizAnswer",
+  "method" : "GET",
+  "path" : "/v1/lms/quiz-submissions/{quizSubmissionId}/answers/{quizAnswerId}",
+  "permission" : "lms.quiz_answer.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuizQuestion",
+  "method" : "GET",
+  "path" : "/v1/lms/quizzes/{quizId}/questions/{quizQuestionId}",
+  "permission" : "lms.quiz_question.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuizQuestionHistory",
+  "method" : "GET",
+  "path" : "/v1/lms/quizzes/{quizId}/question-history/{quizQuestionHistoryId}",
+  "permission" : "lms.quiz_question_history.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuizSubmission",
+  "method" : "GET",
+  "path" : "/v1/lms/quiz-submissions/{quizSubmissionId}",
+  "permission" : "lms.quiz_submission.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetQuizViolation",
+  "method" : "GET",
+  "path" : "/v1/lms/quiz-submissions/{quizSubmissionId}/violations/{quizViolationId}",
+  "permission" : "lms.quiz_violation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetReassignmentLog",
+  "method" : "GET",
+  "path" : "/v1/lms/reassignment-logs/{reassignmentLogId}",
+  "permission" : "lms.reassignment_log.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetRelatedCourse",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/related-courses/{relatedCourseId}",
+  "permission" : "lms.related_course.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetRelatedMaterial",
+  "method" : "GET",
+  "path" : "/v1/lms/ebooks/{ebookId}/related-materials/{relatedMaterialId}",
+  "permission" : "lms.related_material.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetRelatedMaterialRank",
+  "method" : "GET",
+  "path" : "/v1/lms/ebooks/{ebookId}/related-material-ranks/{relatedMaterialRankId}",
+  "permission" : "lms.related_material_rank.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetReleaseGrant",
+  "method" : "GET",
+  "path" : "/v1/lms/content-items/{contentItemId}/release-grants/{releaseGrantId}",
+  "permission" : "lms.release_grant.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetReleaseRule",
+  "method" : "GET",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}",
+  "permission" : "lms.release_rule.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetReleaseRuleCondition",
+  "method" : "GET",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}/release-rule-conditions/{releaseRuleConditionId}",
+  "permission" : "lms.release_rule_condition.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetReleaseRuleTarget",
+  "method" : "GET",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}/release-rule-targets/{releaseRuleTargetId}",
+  "permission" : "lms.release_rule_target.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetReleaseStatus",
+  "method" : "GET",
+  "path" : "/v1/lms/content-items/{contentItemId}:releaseStatus",
+  "permission" : "lms.content_item.get_release_status",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetResourceCategory",
+  "method" : "GET",
+  "path" : "/v1/lms/resource-categories/{resourceCategoryId}",
+  "permission" : "lms.resource_category.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetRubric",
+  "method" : "GET",
+  "path" : "/v1/lms/rubrics/{rubricId}",
+  "permission" : "lms.rubric.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetRubricAssessment",
+  "method" : "GET",
+  "path" : "/v1/lms/rubric-assessments/{rubricAssessmentId}",
+  "permission" : "lms.rubric_assessment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetRubricCell",
+  "method" : "GET",
+  "path" : "/v1/lms/rubrics/{rubricId}/cells/{rubricCellId}",
+  "permission" : "lms.rubric_cell.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetRubricCriterion",
+  "method" : "GET",
+  "path" : "/v1/lms/rubrics/{rubricId}/criteria/{rubricCriterionId}",
+  "permission" : "lms.rubric_criterion.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetRubricLevel",
+  "method" : "GET",
+  "path" : "/v1/lms/rubrics/{rubricId}/levels/{rubricLevelId}",
+  "permission" : "lms.rubric_level.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetScormLaunch",
+  "method" : "GET",
+  "path" : "/v1/lms/chapters/{chapterId}:scormLaunch",
+  "permission" : "lms.chapter.get_scorm_launch",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetSettings",
+  "method" : "GET",
+  "path" : "/v1/lms/settings",
+  "permission" : "lms.settings.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetSettingsPrimaryCountry",
+  "method" : "GET",
+  "path" : "/v1/lms/settings/{settingsId}/primary-countries/{settingsPrimaryCountryId}",
+  "permission" : "lms.settings_primary_country.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetSettingsSidebarItem",
+  "method" : "GET",
+  "path" : "/v1/lms/settings/{settingsId}/sidebar-items/{settingsSidebarItemId}",
+  "permission" : "lms.settings_sidebar_item.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetStudentAlert",
+  "method" : "GET",
+  "path" : "/v1/lms/student-alerts/{studentAlertId}",
+  "permission" : "lms.student_alert.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetStudentDashboard",
+  "method" : "GET",
+  "path" : "/v1/lms/me/dashboard",
+  "permission" : "lms.enrollment.get_student_dashboard",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetTeacherDashboard",
+  "method" : "GET",
+  "path" : "/v1/lms/me/teacher-dashboard",
+  "permission" : "lms.course.get_teacher_dashboard",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetTimetableEntry",
+  "method" : "GET",
+  "path" : "/v1/lms/timetable-entries/{timetableEntryId}",
+  "permission" : "lms.timetable_entry.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetTimetableLegend",
+  "method" : "GET",
+  "path" : "/v1/lms/timetable-legends/{timetableLegendId}",
+  "permission" : "lms.timetable_legend.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetTimetableTemplate",
+  "method" : "GET",
+  "path" : "/v1/lms/timetable-templates/{timetableTemplateId}",
+  "permission" : "lms.timetable_template.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetUnreadCounts",
+  "method" : "GET",
+  "path" : "/v1/lms/me/unread-counts",
+  "permission" : "lms.forum.get_unread_counts",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetVideoWatch",
+  "method" : "GET",
+  "path" : "/v1/lms/lessons/{lessonId}/video-watches/{videoWatchId}",
+  "permission" : "lms.video_watch.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetWebResource",
+  "method" : "GET",
+  "path" : "/v1/lms/web-resources/{webResourceId}",
+  "permission" : "lms.web_resource.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GetWebResourceLaunch",
+  "method" : "GET",
+  "path" : "/v1/lms/content-items/{contentItemId}:launch",
+  "permission" : "lms.content_item.get_web_resource_launch",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.GradeEntry",
+  "method" : "POST",
+  "path" : "/v1/lms/gradebook-entries:grade",
+  "permission" : "lms.gradebook_entry.grade_entry",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.GradeLearningSubmission",
+  "method" : "POST",
+  "path" : "/v1/lms/assignment-submissions/{assignmentSubmissionId}:grade",
+  "permission" : "lms.assignment_submission.grade_learning_submission",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.GradeQuizAnswers",
+  "method" : "POST",
+  "path" : "/v1/lms/quiz-submissions/{quizSubmissionId}:gradeAnswers",
+  "permission" : "lms.quiz_submission.grade_quiz_answers",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.GrantItemAccess",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}:grantAccess",
+  "permission" : "lms.content_item.grant_item_access",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.HideCatalogListing",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:hideCatalogListing",
+  "permission" : "lms.course.hide_catalog_listing",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.HideForumPost",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}/posts/{forumPostId}:hide",
+  "permission" : "lms.forum_post.hide_forum_post",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.HideForumTopic",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}:hide",
+  "permission" : "lms.forum_topic.hide_forum_topic",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ImportCohortMembers",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:importMembers",
+  "permission" : "lms.cohort.import_cohort_members",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ImportQuestions",
+  "method" : "POST",
+  "path" : "/v1/lms/questions:import",
+  "permission" : "lms.question.import_questions",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.IssueCertificateFromEvaluation",
+  "method" : "POST",
+  "path" : "/v1/lms/certificate-evaluations/{certificateEvaluationId}:issueCertificate",
+  "permission" : "lms.certificate_evaluation.issue_certificate_from_evaluation",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.IssueMyCertificate",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:issueMyCertificate",
+  "permission" : "lms.course.issue_my_certificate",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.JoinLiveClass",
+  "method" : "POST",
+  "path" : "/v1/lms/live-classes/{liveClassId}:join",
+  "permission" : "lms.live_class.join_live_class",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.LaunchExternalTool",
+  "method" : "POST",
+  "path" : "/v1/lms/external-tool-resources/{externalToolResourceId}/links/{externalToolLinkId}:launch",
+  "permission" : "lms.external_tool_link.launch_external_tool",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ListAccessLogs",
+  "method" : "GET",
+  "path" : "/v1/lms/access-logs",
+  "permission" : "lms.access_log.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListAnnotationShares",
+  "method" : "GET",
+  "path" : "/v1/lms/annotations/{annotationId}/shares",
+  "permission" : "lms.annotation_share.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListAnnotations",
+  "method" : "GET",
+  "path" : "/v1/lms/annotations",
+  "permission" : "lms.annotation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListAssignmentGroupMembers",
+  "method" : "GET",
+  "path" : "/v1/lms/assignment-group-members",
+  "permission" : "lms.assignment_group_member.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListAssignmentGroups",
+  "method" : "GET",
+  "path" : "/v1/lms/content-items/{contentItemId}/groups",
+  "permission" : "lms.assignment_group.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListBadgeAwards",
+  "method" : "GET",
+  "path" : "/v1/lms/badge-awards",
+  "permission" : "lms.badge_award.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListBadges",
+  "method" : "GET",
+  "path" : "/v1/lms/badges",
+  "permission" : "lms.badge.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListBookmarks",
+  "method" : "GET",
+  "path" : "/v1/lms/bookmarks",
+  "permission" : "lms.bookmark.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCatalogBanners",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/banners",
+  "permission" : "lms.catalog_banner.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ListCategories",
+  "method" : "GET",
+  "path" : "/v1/lms/categories",
+  "permission" : "lms.category.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ListCertificateEvaluations",
+  "method" : "GET",
+  "path" : "/v1/lms/certificate-evaluations",
+  "permission" : "lms.certificate_evaluation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCertificateRequests",
+  "method" : "GET",
+  "path" : "/v1/lms/certificate-requests",
+  "permission" : "lms.certificate_request.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCertificates",
+  "method" : "GET",
+  "path" : "/v1/lms/certificates",
+  "permission" : "lms.certificate.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListChapters",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/chapters",
+  "permission" : "lms.chapter.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCohortActivities",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/activities",
+  "permission" : "lms.cohort_activity.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCohortCourses",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/courses",
+  "permission" : "lms.cohort_course.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ListCohortEnrollments",
+  "method" : "GET",
+  "path" : "/v1/lms/cohort-enrollments",
+  "permission" : "lms.cohort_enrollment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCohortFeedback",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/feedback",
+  "permission" : "lms.cohort_feedback.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCohortGroups",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/groups",
+  "permission" : "lms.cohort_group.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCohortHolidays",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/holidays",
+  "permission" : "lms.cohort_holiday.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCohortScheduleSlots",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/schedule-slots",
+  "permission" : "lms.cohort_schedule_slot.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCohortSessions",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/sessions",
+  "permission" : "lms.cohort_session.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCohortTeachers",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/teachers",
+  "permission" : "lms.cohort_teacher.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCohorts",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts",
+  "permission" : "lms.cohort.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ListConferencingAccounts",
+  "method" : "GET",
+  "path" : "/v1/lms/conferencing-accounts",
+  "permission" : "lms.conferencing_account.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListContentAuthors",
+  "method" : "GET",
+  "path" : "/v1/lms/content-authors",
+  "permission" : "lms.content_author.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListContentItemRatings",
+  "method" : "GET",
+  "path" : "/v1/lms/content-items/{contentItemId}/ratings",
+  "permission" : "lms.content_item_rating.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListContentItems",
+  "method" : "GET",
+  "path" : "/v1/lms/content-items",
+  "permission" : "lms.content_item.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListContentViewSessions",
+  "method" : "GET",
+  "path" : "/v1/lms/content-view-sessions",
+  "permission" : "lms.content_view_session.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCourseAuthorProfiles",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/author-profiles",
+  "permission" : "lms.course_author_profile.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ListCourseInterests",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/interests",
+  "permission" : "lms.course_interest.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCourseMentors",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/mentors",
+  "permission" : "lms.course_mentor.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCoursePreviews",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/previews",
+  "permission" : "lms.course_preview.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ListCourseReviews",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/reviews",
+  "permission" : "lms.course_review.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ListCourseTeachers",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/teachers",
+  "permission" : "lms.course_teacher.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListCourseTestimonials",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/testimonials",
+  "permission" : "lms.course_testimonial.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ListDiscussionPrompts",
+  "method" : "GET",
+  "path" : "/v1/lms/discussion-prompts",
+  "permission" : "lms.discussion_prompt.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListDriveItemShares",
+  "method" : "GET",
+  "path" : "/v1/lms/drive-items/{driveItemId}/shares",
+  "permission" : "lms.drive_item_share.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListDriveItems",
+  "method" : "GET",
+  "path" : "/v1/lms/drive-items",
+  "permission" : "lms.drive_item.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListEbooks",
+  "method" : "GET",
+  "path" : "/v1/lms/ebooks",
+  "permission" : "lms.ebook.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListEnrollmentRequests",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/enrollment-requests",
+  "permission" : "lms.enrollment_request.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListEnrollments",
+  "method" : "GET",
+  "path" : "/v1/lms/enrollments",
+  "permission" : "lms.enrollment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListEvaluatorAvailabilities",
+  "method" : "GET",
+  "path" : "/v1/lms/evaluators/{evaluatorId}/availability",
+  "permission" : "lms.evaluator_availability.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListEvaluators",
+  "method" : "GET",
+  "path" : "/v1/lms/evaluators",
+  "permission" : "lms.evaluator.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListExerciseSubmissions",
+  "method" : "GET",
+  "path" : "/v1/lms/exercise-submissions",
+  "permission" : "lms.exercise_submission.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListExerciseTestCases",
+  "method" : "GET",
+  "path" : "/v1/lms/programming-exercises/{programmingExerciseId}/test-cases",
+  "permission" : "lms.exercise_test_case.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListExerciseTestResults",
+  "method" : "GET",
+  "path" : "/v1/lms/exercise-submissions/{exerciseSubmissionId}/test-results",
+  "permission" : "lms.exercise_test_result.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListExternalToolInstitutions",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tools/{externalToolId}/institutions",
+  "permission" : "lms.external_tool_institution.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListExternalToolLinks",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tool-resources/{externalToolResourceId}/links",
+  "permission" : "lms.external_tool_link.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListExternalToolOptions",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tools/{externalToolId}/options",
+  "permission" : "lms.external_tool_option.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListExternalToolResources",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tool-resources",
+  "permission" : "lms.external_tool_resource.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListExternalToolRoles",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tools/{externalToolId}/roles",
+  "permission" : "lms.external_tool_role.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListExternalToolSettings",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tools/{externalToolId}/settings",
+  "permission" : "lms.external_tool_setting.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListExternalTools",
+  "method" : "GET",
+  "path" : "/v1/lms/external-tools",
+  "permission" : "lms.external_tool.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListForumPostReports",
+  "method" : "GET",
+  "path" : "/v1/lms/forum-post-reports",
+  "permission" : "lms.forum_post_report.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListForumPostVotes",
+  "method" : "GET",
+  "path" : "/v1/lms/forum-post-votes",
+  "permission" : "lms.forum_post_vote.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListForumPosts",
+  "method" : "GET",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}/posts",
+  "permission" : "lms.forum_post.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListForumReadStates",
+  "method" : "GET",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}/read-states",
+  "permission" : "lms.forum_read_state.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListForumReportCategories",
+  "method" : "GET",
+  "path" : "/v1/lms/forum-report-categories",
+  "permission" : "lms.forum_report_category.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListForumSections",
+  "method" : "GET",
+  "path" : "/v1/lms/forum-sections",
+  "permission" : "lms.forum_section.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListForumTopics",
+  "method" : "GET",
+  "path" : "/v1/lms/forum-topics",
+  "permission" : "lms.forum_topic.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListForums",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/forums",
+  "permission" : "lms.forum.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListGradeChangeLogs",
+  "method" : "GET",
+  "path" : "/v1/lms/grade-change-logs",
+  "permission" : "lms.grade_change_log.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListGradebookEntries",
+  "method" : "GET",
+  "path" : "/v1/lms/gradebook-entries",
+  "permission" : "lms.gradebook_entry.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListGradingCategories",
+  "method" : "GET",
+  "path" : "/v1/lms/grading-categories",
+  "permission" : "lms.grading_category.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListImportExportJobs",
+  "method" : "GET",
+  "path" : "/v1/lms/import-export-jobs",
+  "permission" : "lms.import_export_job.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListItemOverrides",
+  "method" : "GET",
+  "path" : "/v1/lms/content-items/{contentItemId}/overrides",
+  "permission" : "lms.item_override.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListLearningObjectives",
+  "method" : "GET",
+  "path" : "/v1/lms/learning-objectives",
+  "permission" : "lms.learning_objective.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListLearningProgramCourses",
+  "method" : "GET",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}/courses",
+  "permission" : "lms.learning_program_course.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListLearningProgramMembers",
+  "method" : "GET",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}/members",
+  "permission" : "lms.learning_program_member.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListLearningPrograms",
+  "method" : "GET",
+  "path" : "/v1/lms/learning-programs",
+  "permission" : "lms.learning_program.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ListLessonActivities",
+  "method" : "GET",
+  "path" : "/v1/lms/lessons/{lessonId}/activities",
+  "permission" : "lms.lesson_activity.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListLessonNotes",
+  "method" : "GET",
+  "path" : "/v1/lms/lessons/{lessonId}/notes",
+  "permission" : "lms.lesson_note.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListLessonProgress",
+  "method" : "GET",
+  "path" : "/v1/lms/lesson-progress",
+  "permission" : "lms.lesson_progress.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListLessons",
+  "method" : "GET",
+  "path" : "/v1/lms/lessons",
+  "permission" : "lms.lesson.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListLiveClassParticipants",
+  "method" : "GET",
+  "path" : "/v1/lms/live-classes/{liveClassId}/participants",
+  "permission" : "lms.live_class_participant.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListLiveClasses",
+  "method" : "GET",
+  "path" : "/v1/lms/live-classes",
+  "permission" : "lms.live_class.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListLmsAssignmentSubmissions",
+  "method" : "GET",
+  "path" : "/v1/lms/assignment-submissions",
+  "permission" : "lms.assignment_submission.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListLmsAssignments",
+  "method" : "GET",
+  "path" : "/v1/lms/assignments",
+  "permission" : "lms.assignment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListLmsCourses",
+  "method" : "GET",
+  "path" : "/v1/lms/courses",
+  "permission" : "lms.course.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ListMentorships",
+  "method" : "GET",
+  "path" : "/v1/lms/mentorships",
+  "permission" : "lms.mentorship.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListOperations",
+  "method" : "GET",
+  "path" : "/v1/lms/operations",
+  "permission" : "lms.operation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListParticipationActivities",
+  "method" : "GET",
+  "path" : "/v1/lms/participation-activities",
+  "permission" : "lms.participation_activity.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListPeerReviews",
+  "method" : "GET",
+  "path" : "/v1/lms/peer-reviews",
+  "permission" : "lms.peer_review.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListPlagiarismAccounts",
+  "method" : "GET",
+  "path" : "/v1/lms/plagiarism-accounts",
+  "permission" : "lms.plagiarism_account.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListPlagiarismCohortLinks",
+  "method" : "GET",
+  "path" : "/v1/lms/cohorts/{cohortId}/plagiarism-links",
+  "permission" : "lms.plagiarism_cohort_link.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListPlagiarismReports",
+  "method" : "GET",
+  "path" : "/v1/lms/plagiarism-reports",
+  "permission" : "lms.plagiarism_report.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListPlagiarismUserLinks",
+  "method" : "GET",
+  "path" : "/v1/lms/plagiarism-accounts/{plagiarismAccountId}/user-links",
+  "permission" : "lms.plagiarism_user_link.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListProgrammingExercises",
+  "method" : "GET",
+  "path" : "/v1/lms/programming-exercises",
+  "permission" : "lms.programming_exercise.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuestionAcceptedAnswers",
+  "method" : "GET",
+  "path" : "/v1/lms/questions/{questionId}/accepted-answers",
+  "permission" : "lms.question_accepted_answer.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuestionBlankAnswers",
+  "method" : "GET",
+  "path" : "/v1/lms/question-blank-answers",
+  "permission" : "lms.question_blank_answer.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuestionBlanks",
+  "method" : "GET",
+  "path" : "/v1/lms/questions/{questionId}/blanks",
+  "permission" : "lms.question_blank.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuestionHotspotRegions",
+  "method" : "GET",
+  "path" : "/v1/lms/question-hotspot-regions",
+  "permission" : "lms.question_hotspot_region.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuestionHotspots",
+  "method" : "GET",
+  "path" : "/v1/lms/questions/{questionId}/hotspots",
+  "permission" : "lms.question_hotspot.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuestionMatchPairs",
+  "method" : "GET",
+  "path" : "/v1/lms/questions/{questionId}/match-pairs",
+  "permission" : "lms.question_match_pair.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuestionOptions",
+  "method" : "GET",
+  "path" : "/v1/lms/questions/{questionId}/options",
+  "permission" : "lms.question_option.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuestionPatterns",
+  "method" : "GET",
+  "path" : "/v1/lms/questions/{questionId}/patterns",
+  "permission" : "lms.question_pattern.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuestionPoolItems",
+  "method" : "GET",
+  "path" : "/v1/lms/question-pools/{questionPoolId}/items",
+  "permission" : "lms.question_pool_item.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuestionPools",
+  "method" : "GET",
+  "path" : "/v1/lms/question-pools",
+  "permission" : "lms.question_pool.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuestions",
+  "method" : "GET",
+  "path" : "/v1/lms/questions",
+  "permission" : "lms.question.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuizAnswers",
+  "method" : "GET",
+  "path" : "/v1/lms/quiz-submissions/{quizSubmissionId}/answers",
+  "permission" : "lms.quiz_answer.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuizQuestionHistory",
+  "method" : "GET",
+  "path" : "/v1/lms/quizzes/{quizId}/question-history",
+  "permission" : "lms.quiz_question_history.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuizQuestions",
+  "method" : "GET",
+  "path" : "/v1/lms/quizzes/{quizId}/questions",
+  "permission" : "lms.quiz_question.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuizSubmissions",
+  "method" : "GET",
+  "path" : "/v1/lms/quiz-submissions",
+  "permission" : "lms.quiz_submission.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuizViolations",
+  "method" : "GET",
+  "path" : "/v1/lms/quiz-submissions/{quizSubmissionId}/violations",
+  "permission" : "lms.quiz_violation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListQuizzes",
+  "method" : "GET",
+  "path" : "/v1/lms/quizzes",
+  "permission" : "lms.quiz.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListReassignmentLogs",
+  "method" : "GET",
+  "path" : "/v1/lms/reassignment-logs",
+  "permission" : "lms.reassignment_log.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListRelatedCourses",
+  "method" : "GET",
+  "path" : "/v1/lms/courses/{courseId}/related-courses",
+  "permission" : "lms.related_course.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ListRelatedMaterialRanks",
+  "method" : "GET",
+  "path" : "/v1/lms/ebooks/{ebookId}/related-material-ranks",
+  "permission" : "lms.related_material_rank.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListRelatedMaterials",
+  "method" : "GET",
+  "path" : "/v1/lms/ebooks/{ebookId}/related-materials",
+  "permission" : "lms.related_material.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListReleaseGrants",
+  "method" : "GET",
+  "path" : "/v1/lms/content-items/{contentItemId}/release-grants",
+  "permission" : "lms.release_grant.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListReleaseRuleConditions",
+  "method" : "GET",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}/release-rule-conditions",
+  "permission" : "lms.release_rule_condition.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListReleaseRuleTargets",
+  "method" : "GET",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}/release-rule-targets",
+  "permission" : "lms.release_rule_target.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListReleaseRules",
+  "method" : "GET",
+  "path" : "/v1/lms/release-rules",
+  "permission" : "lms.release_rule.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListResourceCategories",
+  "method" : "GET",
+  "path" : "/v1/lms/resource-categories",
+  "permission" : "lms.resource_category.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListRubricAssessments",
+  "method" : "GET",
+  "path" : "/v1/lms/rubric-assessments",
+  "permission" : "lms.rubric_assessment.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListRubricCells",
+  "method" : "GET",
+  "path" : "/v1/lms/rubrics/{rubricId}/cells",
+  "permission" : "lms.rubric_cell.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListRubricCriteria",
+  "method" : "GET",
+  "path" : "/v1/lms/rubrics/{rubricId}/criteria",
+  "permission" : "lms.rubric_criterion.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListRubricLevels",
+  "method" : "GET",
+  "path" : "/v1/lms/rubrics/{rubricId}/levels",
+  "permission" : "lms.rubric_level.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListRubrics",
+  "method" : "GET",
+  "path" : "/v1/lms/rubrics",
+  "permission" : "lms.rubric.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListSettingsPrimaryCountries",
+  "method" : "GET",
+  "path" : "/v1/lms/settings/{settingsId}/primary-countries",
+  "permission" : "lms.settings_primary_country.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListSettingsSidebarItems",
+  "method" : "GET",
+  "path" : "/v1/lms/settings/{settingsId}/sidebar-items",
+  "permission" : "lms.settings_sidebar_item.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListStudentAlerts",
+  "method" : "GET",
+  "path" : "/v1/lms/student-alerts",
+  "permission" : "lms.student_alert.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListTimetableEntries",
+  "method" : "GET",
+  "path" : "/v1/lms/timetable-entries",
+  "permission" : "lms.timetable_entry.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListTimetableLegends",
+  "method" : "GET",
+  "path" : "/v1/lms/timetable-legends",
+  "permission" : "lms.timetable_legend.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListTimetableTemplates",
+  "method" : "GET",
+  "path" : "/v1/lms/timetable-templates",
+  "permission" : "lms.timetable_template.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListVideoWatches",
+  "method" : "GET",
+  "path" : "/v1/lms/lessons/{lessonId}/video-watches",
+  "permission" : "lms.video_watch.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.ListWebResources",
+  "method" : "GET",
+  "path" : "/v1/lms/web-resources",
+  "permission" : "lms.web_resource.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.MarkLessonComplete",
+  "method" : "POST",
+  "path" : "/v1/lms/lessons/{lessonId}:markComplete",
+  "permission" : "lms.lesson.mark_lesson_complete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.MarkPostSubstantive",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}/posts/{forumPostId}:markSubstantive",
+  "permission" : "lms.forum_post.mark_post_substantive",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.MarkTopicRead",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}:markRead",
+  "permission" : "lms.forum_topic.mark_topic_read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.MoveChapter",
+  "method" : "POST",
+  "path" : "/v1/lms/chapters/{chapterId}:move",
+  "permission" : "lms.chapter.move_chapter",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.MoveContentItem",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}:move",
+  "permission" : "lms.content_item.move_content_item",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.MoveLesson",
+  "method" : "POST",
+  "path" : "/v1/lms/lessons/{lessonId}:move",
+  "permission" : "lms.lesson.move_lesson",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.PauseQuizAttempt",
+  "method" : "POST",
+  "path" : "/v1/lms/quiz-submissions/{quizSubmissionId}:pause",
+  "permission" : "lms.quiz_submission.pause_quiz_attempt",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.PublishCatalogListing",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:publishCatalogListing",
+  "permission" : "lms.course.publish_catalog_listing",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.PublishCohort",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:publish",
+  "permission" : "lms.cohort.publish_cohort",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.PublishCourse",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:publish",
+  "permission" : "lms.course.publish_course",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.PublishEbookCuration",
+  "method" : "POST",
+  "path" : "/v1/lms/ebooks/{ebookId}:publishCuration",
+  "permission" : "lms.ebook.publish_ebook_curation",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.PublishFinalGrades",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:publishFinalGrades",
+  "permission" : "lms.cohort.publish_final_grades",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.PublishItemGrades",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}:publishGrades",
+  "permission" : "lms.content_item.publish_item_grades",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ReactivateCourse",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:reactivate",
+  "permission" : "lms.course.reactivate_course",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ReassignItem",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}:reassign",
+  "permission" : "lms.content_item.reassign_item",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ReceiveConferencingWebhook",
+  "method" : "POST",
+  "path" : "/v1/lms/integrations/{provider}:webhook",
+  "permission" : "lms.webhook.receive",
+  "schemes" : [ ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ReceiveEbookConversion",
+  "method" : "POST",
+  "path" : "/v1/lms/integrations/conversion/{provider}:webhook",
+  "permission" : "lms.webhook.receive",
+  "schemes" : [ ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ReceivePlagiarismWebhook",
+  "method" : "POST",
+  "path" : "/v1/lms/integrations/plagiarism/{provider}:webhook",
+  "permission" : "lms.webhook.receive",
+  "schemes" : [ ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.ReceiveToolOutcome",
+  "method" : "POST",
+  "path" : "/v1/lms/integrations/lti:outcome",
+  "permission" : "lms.webhook.receive",
+  "schemes" : [ ],
+  "anonymous" : true
+}, {
+  "operationId" : "lms.RecordItemView",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}:recordView",
+  "permission" : "lms.content_item.record_item_view",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.RejectEnrollmentRequest",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}/enrollment-requests/{enrollmentRequestId}:reject",
+  "permission" : "lms.enrollment_request.reject_enrollment_request",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.RejectGroupRequest",
+  "method" : "POST",
+  "path" : "/v1/lms/assignment-group-members/{assignmentGroupMemberId}:reject",
+  "permission" : "lms.assignment_group_member.reject_group_request",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ReorderChapters",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:reorderChapters",
+  "permission" : "lms.course.reorder_chapters",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ReorderReleaseRules",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}:reorderReleaseRules",
+  "permission" : "lms.content_item.reorder_release_rules",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.RequestToJoinGroup",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}/groups/{assignmentGroupId}:requestToJoin",
+  "permission" : "lms.assignment_group.request_to_join_group",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.RestoreCohortArchive",
+  "method" : "POST",
+  "path" : "/v1/lms/import-export-jobs/{importExportJobId}:restore",
+  "permission" : "lms.import_export_job.restore_cohort_archive",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ResumeQuizAttempt",
+  "method" : "POST",
+  "path" : "/v1/lms/quiz-submissions/{quizSubmissionId}:resume",
+  "permission" : "lms.quiz_submission.resume_quiz_attempt",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.RetryLiveClassInvites",
+  "method" : "POST",
+  "path" : "/v1/lms/live-classes/{liveClassId}:retryInvites",
+  "permission" : "lms.live_class.retry_live_class_invites",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SaveQuizResponses",
+  "method" : "POST",
+  "path" : "/v1/lms/quiz-submissions/{quizSubmissionId}:saveResponses",
+  "permission" : "lms.quiz_submission.save_quiz_responses",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SaveScormProgress",
+  "method" : "POST",
+  "path" : "/v1/lms/chapters/{chapterId}:saveScormProgress",
+  "permission" : "lms.chapter.save_scorm_progress",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ScheduleLiveClass",
+  "method" : "POST",
+  "path" : "/v1/lms/live-classes:schedule",
+  "permission" : "lms.live_class.schedule_live_class",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SearchQuestionBank",
+  "method" : "GET",
+  "path" : "/v1/lms/questions:search",
+  "permission" : "lms.question.search_question_bank",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.SendCohortAnnouncement",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:sendAnnouncement",
+  "permission" : "lms.cohort.send_cohort_announcement",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SendContactMessage",
+  "method" : "POST",
+  "path" : "/v1/lms/contact",
+  "permission" : "lms.settings.send_contact_message",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SetCohortMembers",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:setMembers",
+  "permission" : "lms.cohort.set_cohort_members",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SetContentItemVisibility",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}:setVisibility",
+  "permission" : "lms.content_item.set_content_item_visibility",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SetGroupMembers",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}/groups/{assignmentGroupId}:setMembers",
+  "permission" : "lms.assignment_group.set_group_members",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SetQuizQuestions",
+  "method" : "POST",
+  "path" : "/v1/lms/quizzes/{quizId}:setQuestions",
+  "permission" : "lms.quiz.set_quiz_questions",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SetReleaseRulesEnabled",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}:setReleaseRulesEnabled",
+  "permission" : "lms.content_item.set_release_rules_enabled",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SetStudentAccess",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:setStudentAccess",
+  "permission" : "lms.cohort.set_student_access",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.ShareDriveItem",
+  "method" : "POST",
+  "path" : "/v1/lms/drive-items/{driveItemId}:share",
+  "permission" : "lms.drive_item.share_drive_item",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.StartEvaluation",
+  "method" : "POST",
+  "path" : "/v1/lms/certificate-requests/{certificateRequestId}:startEvaluation",
+  "permission" : "lms.certificate_request.start_evaluation",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.StartQuizAttempt",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}:startQuizAttempt",
+  "permission" : "lms.quiz.start_quiz_attempt",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SubmitCourseForReview",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:submitForReview",
+  "permission" : "lms.course.submit_course_for_review",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SubmitExercise",
+  "method" : "POST",
+  "path" : "/v1/lms/programming-exercises/{programmingExerciseId}:submit",
+  "permission" : "lms.programming_exercise.submit_exercise",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SubmitForPlagiarismCheck",
+  "method" : "POST",
+  "path" : "/v1/lms/plagiarism-reports:submit",
+  "permission" : "lms.plagiarism_report.submit_for_plagiarism_check",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SubmitPeerReview",
+  "method" : "POST",
+  "path" : "/v1/lms/content-items/{contentItemId}/groups/{assignmentGroupId}:submitPeerReview",
+  "permission" : "lms.assignment_group.submit_peer_review",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SubmitQuiz",
+  "method" : "POST",
+  "path" : "/v1/lms/quiz-submissions/{quizSubmissionId}:submit",
+  "permission" : "lms.quiz.submit_quiz",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.SyncLiveClassAttendance",
+  "method" : "POST",
+  "path" : "/v1/lms/live-classes/{liveClassId}:syncAttendance",
+  "permission" : "lms.live_class.sync_live_class_attendance",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.TrackVideoWatch",
+  "method" : "POST",
+  "path" : "/v1/lms/lessons/{lessonId}:trackVideoWatch",
+  "permission" : "lms.lesson.track_video_watch",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.UnhideForumPost",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}/posts/{forumPostId}:unhide",
+  "permission" : "lms.forum_post.unhide_forum_post",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.UnhideForumTopic",
+  "method" : "POST",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}:unhide",
+  "permission" : "lms.forum_topic.unhide_forum_topic",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.UnpublishCohort",
+  "method" : "POST",
+  "path" : "/v1/lms/cohorts/{cohortId}:unpublish",
+  "permission" : "lms.cohort.unpublish_cohort",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.UnpublishCourse",
+  "method" : "POST",
+  "path" : "/v1/lms/courses/{courseId}:unpublish",
+  "permission" : "lms.course.unpublish_course",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "lms.UpdateAnnotation",
+  "method" : "PATCH",
+  "path" : "/v1/lms/annotations/{annotationId}",
+  "permission" : "lms.annotation.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateAnnotationShare",
+  "method" : "PATCH",
+  "path" : "/v1/lms/annotations/{annotationId}/shares/{annotationShareId}",
+  "permission" : "lms.annotation_share.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateAssignmentGroup",
+  "method" : "PATCH",
+  "path" : "/v1/lms/content-items/{contentItemId}/groups/{assignmentGroupId}",
+  "permission" : "lms.assignment_group.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateAssignmentGroupMember",
+  "method" : "PATCH",
+  "path" : "/v1/lms/assignment-group-members/{assignmentGroupMemberId}",
+  "permission" : "lms.assignment_group_member.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateBadge",
+  "method" : "PATCH",
+  "path" : "/v1/lms/badges/{badgeId}",
+  "permission" : "lms.badge.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateBookmark",
+  "method" : "PATCH",
+  "path" : "/v1/lms/bookmarks/{bookmarkId}",
+  "permission" : "lms.bookmark.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCatalogBanner",
+  "method" : "PATCH",
+  "path" : "/v1/lms/courses/{courseId}/banners/{catalogBannerId}",
+  "permission" : "lms.catalog_banner.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCategory",
+  "method" : "PATCH",
+  "path" : "/v1/lms/categories/{categoryId}",
+  "permission" : "lms.category.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCertificateEvaluation",
+  "method" : "PATCH",
+  "path" : "/v1/lms/certificate-evaluations/{certificateEvaluationId}",
+  "permission" : "lms.certificate_evaluation.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCertificateRequest",
+  "method" : "PATCH",
+  "path" : "/v1/lms/certificate-requests/{certificateRequestId}",
+  "permission" : "lms.certificate_request.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateChapter",
+  "method" : "PATCH",
+  "path" : "/v1/lms/courses/{courseId}/chapters/{chapterId}",
+  "permission" : "lms.chapter.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCohort",
+  "method" : "PATCH",
+  "path" : "/v1/lms/cohorts/{cohortId}",
+  "permission" : "lms.cohort.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCohortActivity",
+  "method" : "PATCH",
+  "path" : "/v1/lms/cohorts/{cohortId}/activities/{cohortActivityId}",
+  "permission" : "lms.cohort_activity.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCohortCourse",
+  "method" : "PATCH",
+  "path" : "/v1/lms/cohorts/{cohortId}/courses/{cohortCourseId}",
+  "permission" : "lms.cohort_course.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCohortEnrollment",
+  "method" : "PATCH",
+  "path" : "/v1/lms/cohort-enrollments/{cohortEnrollmentId}",
+  "permission" : "lms.cohort_enrollment.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCohortFeedback",
+  "method" : "PATCH",
+  "path" : "/v1/lms/cohorts/{cohortId}/feedback/{cohortFeedbackId}",
+  "permission" : "lms.cohort_feedback.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCohortGroup",
+  "method" : "PATCH",
+  "path" : "/v1/lms/cohorts/{cohortId}/groups/{cohortGroupId}",
+  "permission" : "lms.cohort_group.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCohortHoliday",
+  "method" : "PATCH",
+  "path" : "/v1/lms/cohorts/{cohortId}/holidays/{cohortHolidayId}",
+  "permission" : "lms.cohort_holiday.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCohortScheduleSlot",
+  "method" : "PATCH",
+  "path" : "/v1/lms/cohorts/{cohortId}/schedule-slots/{cohortScheduleSlotId}",
+  "permission" : "lms.cohort_schedule_slot.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCohortSession",
+  "method" : "PATCH",
+  "path" : "/v1/lms/cohorts/{cohortId}/sessions/{cohortSessionId}",
+  "permission" : "lms.cohort_session.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCohortTeacher",
+  "method" : "PATCH",
+  "path" : "/v1/lms/cohorts/{cohortId}/teachers/{cohortTeacherId}",
+  "permission" : "lms.cohort_teacher.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateConferencingAccount",
+  "method" : "PATCH",
+  "path" : "/v1/lms/conferencing-accounts/{conferencingAccountId}",
+  "permission" : "lms.conferencing_account.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateContentAuthor",
+  "method" : "PATCH",
+  "path" : "/v1/lms/content-authors/{contentAuthorId}",
+  "permission" : "lms.content_author.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateContentItem",
+  "method" : "PATCH",
+  "path" : "/v1/lms/content-items/{contentItemId}",
+  "permission" : "lms.content_item.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateContentItemRating",
+  "method" : "PATCH",
+  "path" : "/v1/lms/content-items/{contentItemId}/ratings/{contentItemRatingId}",
+  "permission" : "lms.content_item_rating.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateContentViewSession",
+  "method" : "PATCH",
+  "path" : "/v1/lms/content-view-sessions/{contentViewSessionId}",
+  "permission" : "lms.content_view_session.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCourseAuthorProfile",
+  "method" : "PATCH",
+  "path" : "/v1/lms/courses/{courseId}/author-profiles/{courseAuthorProfileId}",
+  "permission" : "lms.course_author_profile.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCourseInterest",
+  "method" : "PATCH",
+  "path" : "/v1/lms/courses/{courseId}/interests/{courseInterestId}",
+  "permission" : "lms.course_interest.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCourseMentor",
+  "method" : "PATCH",
+  "path" : "/v1/lms/courses/{courseId}/mentors/{courseMentorId}",
+  "permission" : "lms.course_mentor.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCoursePreview",
+  "method" : "PATCH",
+  "path" : "/v1/lms/courses/{courseId}/previews/{coursePreviewId}",
+  "permission" : "lms.course_preview.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCourseReview",
+  "method" : "PATCH",
+  "path" : "/v1/lms/courses/{courseId}/reviews/{courseReviewId}",
+  "permission" : "lms.course_review.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCourseTeacher",
+  "method" : "PATCH",
+  "path" : "/v1/lms/courses/{courseId}/teachers/{courseTeacherId}",
+  "permission" : "lms.course_teacher.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateCourseTestimonial",
+  "method" : "PATCH",
+  "path" : "/v1/lms/courses/{courseId}/testimonials/{courseTestimonialId}",
+  "permission" : "lms.course_testimonial.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateDiscussionPrompt",
+  "method" : "PATCH",
+  "path" : "/v1/lms/discussion-prompts/{discussionPromptId}",
+  "permission" : "lms.discussion_prompt.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateDriveItem",
+  "method" : "PATCH",
+  "path" : "/v1/lms/drive-items/{driveItemId}",
+  "permission" : "lms.drive_item.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateDriveItemShare",
+  "method" : "PATCH",
+  "path" : "/v1/lms/drive-items/{driveItemId}/shares/{driveItemShareId}",
+  "permission" : "lms.drive_item_share.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateEbook",
+  "method" : "PATCH",
+  "path" : "/v1/lms/ebooks/{ebookId}",
+  "permission" : "lms.ebook.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateEnrollment",
+  "method" : "PATCH",
+  "path" : "/v1/lms/enrollments/{enrollmentId}",
+  "permission" : "lms.enrollment.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateEnrollmentRequest",
+  "method" : "PATCH",
+  "path" : "/v1/lms/courses/{courseId}/enrollment-requests/{enrollmentRequestId}",
+  "permission" : "lms.enrollment_request.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateEvaluator",
+  "method" : "PATCH",
+  "path" : "/v1/lms/evaluators/{evaluatorId}",
+  "permission" : "lms.evaluator.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateEvaluatorAvailability",
+  "method" : "PATCH",
+  "path" : "/v1/lms/evaluators/{evaluatorId}/availability/{evaluatorAvailabilityId}",
+  "permission" : "lms.evaluator_availability.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateExerciseTestCase",
+  "method" : "PATCH",
+  "path" : "/v1/lms/programming-exercises/{programmingExerciseId}/test-cases/{exerciseTestCaseId}",
+  "permission" : "lms.exercise_test_case.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateExternalTool",
+  "method" : "PATCH",
+  "path" : "/v1/lms/external-tools/{externalToolId}",
+  "permission" : "lms.external_tool.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateExternalToolInstitution",
+  "method" : "PATCH",
+  "path" : "/v1/lms/external-tools/{externalToolId}/institutions/{externalToolInstitutionId}",
+  "permission" : "lms.external_tool_institution.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateExternalToolLink",
+  "method" : "PATCH",
+  "path" : "/v1/lms/external-tool-resources/{externalToolResourceId}/links/{externalToolLinkId}",
+  "permission" : "lms.external_tool_link.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateExternalToolOption",
+  "method" : "PATCH",
+  "path" : "/v1/lms/external-tools/{externalToolId}/options/{externalToolOptionId}",
+  "permission" : "lms.external_tool_option.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateExternalToolResource",
+  "method" : "PATCH",
+  "path" : "/v1/lms/external-tool-resources/{externalToolResourceId}",
+  "permission" : "lms.external_tool_resource.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateExternalToolRole",
+  "method" : "PATCH",
+  "path" : "/v1/lms/external-tools/{externalToolId}/roles/{externalToolRoleId}",
+  "permission" : "lms.external_tool_role.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateExternalToolSetting",
+  "method" : "PATCH",
+  "path" : "/v1/lms/external-tools/{externalToolId}/settings/{externalToolSettingId}",
+  "permission" : "lms.external_tool_setting.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateForum",
+  "method" : "PATCH",
+  "path" : "/v1/lms/cohorts/{cohortId}/forums/{forumId}",
+  "permission" : "lms.forum.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateForumPost",
+  "method" : "PATCH",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}/posts/{forumPostId}",
+  "permission" : "lms.forum_post.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateForumPostReport",
+  "method" : "PATCH",
+  "path" : "/v1/lms/forum-post-reports/{forumPostReportId}",
+  "permission" : "lms.forum_post_report.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateForumPostVote",
+  "method" : "PATCH",
+  "path" : "/v1/lms/forum-post-votes/{forumPostVoteId}",
+  "permission" : "lms.forum_post_vote.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateForumReportCategory",
+  "method" : "PATCH",
+  "path" : "/v1/lms/forum-report-categories/{forumReportCategoryId}",
+  "permission" : "lms.forum_report_category.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateForumSection",
+  "method" : "PATCH",
+  "path" : "/v1/lms/forum-sections/{forumSectionId}",
+  "permission" : "lms.forum_section.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateForumTopic",
+  "method" : "PATCH",
+  "path" : "/v1/lms/forum-topics/{forumTopicId}",
+  "permission" : "lms.forum_topic.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateGradingCategory",
+  "method" : "PATCH",
+  "path" : "/v1/lms/grading-categories/{gradingCategoryId}",
+  "permission" : "lms.grading_category.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateItemOverride",
+  "method" : "PATCH",
+  "path" : "/v1/lms/content-items/{contentItemId}/overrides/{itemOverrideId}",
+  "permission" : "lms.item_override.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateLearningObjective",
+  "method" : "PATCH",
+  "path" : "/v1/lms/learning-objectives/{learningObjectiveId}",
+  "permission" : "lms.learning_objective.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateLearningProgram",
+  "method" : "PATCH",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}",
+  "permission" : "lms.learning_program.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateLearningProgramCourse",
+  "method" : "PATCH",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}/courses/{learningProgramCourseId}",
+  "permission" : "lms.learning_program_course.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateLearningProgramMember",
+  "method" : "PATCH",
+  "path" : "/v1/lms/learning-programs/{learningProgramId}/members/{learningProgramMemberId}",
+  "permission" : "lms.learning_program_member.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateLesson",
+  "method" : "PATCH",
+  "path" : "/v1/lms/lessons/{lessonId}",
+  "permission" : "lms.lesson.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateLessonActivity",
+  "method" : "PATCH",
+  "path" : "/v1/lms/lessons/{lessonId}/activities/{lessonActivityId}",
+  "permission" : "lms.lesson_activity.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateLessonNote",
+  "method" : "PATCH",
+  "path" : "/v1/lms/lessons/{lessonId}/notes/{lessonNoteId}",
+  "permission" : "lms.lesson_note.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateLiveClass",
+  "method" : "PATCH",
+  "path" : "/v1/lms/live-classes/{liveClassId}",
+  "permission" : "lms.live_class.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateLmsAssignment",
+  "method" : "PATCH",
+  "path" : "/v1/lms/assignments/{assignmentId}",
+  "permission" : "lms.assignment.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateLmsAssignmentSubmission",
+  "method" : "PATCH",
+  "path" : "/v1/lms/assignment-submissions/{assignmentSubmissionId}",
+  "permission" : "lms.assignment_submission.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateLmsCourse",
+  "method" : "PATCH",
+  "path" : "/v1/lms/courses/{courseId}",
+  "permission" : "lms.course.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateMentorship",
+  "method" : "PATCH",
+  "path" : "/v1/lms/mentorships/{mentorshipId}",
+  "permission" : "lms.mentorship.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateParticipationActivity",
+  "method" : "PATCH",
+  "path" : "/v1/lms/participation-activities/{participationActivityId}",
+  "permission" : "lms.participation_activity.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdatePeerReview",
+  "method" : "PATCH",
+  "path" : "/v1/lms/peer-reviews/{peerReviewId}",
+  "permission" : "lms.peer_review.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdatePlagiarismAccount",
+  "method" : "PATCH",
+  "path" : "/v1/lms/plagiarism-accounts/{plagiarismAccountId}",
+  "permission" : "lms.plagiarism_account.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdatePlagiarismCohortLink",
+  "method" : "PATCH",
+  "path" : "/v1/lms/cohorts/{cohortId}/plagiarism-links/{plagiarismCohortLinkId}",
+  "permission" : "lms.plagiarism_cohort_link.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdatePlagiarismUserLink",
+  "method" : "PATCH",
+  "path" : "/v1/lms/plagiarism-accounts/{plagiarismAccountId}/user-links/{plagiarismUserLinkId}",
+  "permission" : "lms.plagiarism_user_link.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateProgrammingExercise",
+  "method" : "PATCH",
+  "path" : "/v1/lms/programming-exercises/{programmingExerciseId}",
+  "permission" : "lms.programming_exercise.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateQuestion",
+  "method" : "PATCH",
+  "path" : "/v1/lms/questions/{questionId}",
+  "permission" : "lms.question.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateQuestionAcceptedAnswer",
+  "method" : "PATCH",
+  "path" : "/v1/lms/questions/{questionId}/accepted-answers/{questionAcceptedAnswerId}",
+  "permission" : "lms.question_accepted_answer.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateQuestionBlank",
+  "method" : "PATCH",
+  "path" : "/v1/lms/questions/{questionId}/blanks/{questionBlankId}",
+  "permission" : "lms.question_blank.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateQuestionBlankAnswer",
+  "method" : "PATCH",
+  "path" : "/v1/lms/question-blank-answers/{questionBlankAnswerId}",
+  "permission" : "lms.question_blank_answer.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateQuestionHotspot",
+  "method" : "PATCH",
+  "path" : "/v1/lms/questions/{questionId}/hotspots/{questionHotspotId}",
+  "permission" : "lms.question_hotspot.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateQuestionHotspotRegion",
+  "method" : "PATCH",
+  "path" : "/v1/lms/question-hotspot-regions/{questionHotspotRegionId}",
+  "permission" : "lms.question_hotspot_region.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateQuestionMatchPair",
+  "method" : "PATCH",
+  "path" : "/v1/lms/questions/{questionId}/match-pairs/{questionMatchPairId}",
+  "permission" : "lms.question_match_pair.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateQuestionOption",
+  "method" : "PATCH",
+  "path" : "/v1/lms/questions/{questionId}/options/{questionOptionId}",
+  "permission" : "lms.question_option.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateQuestionPattern",
+  "method" : "PATCH",
+  "path" : "/v1/lms/questions/{questionId}/patterns/{questionPatternId}",
+  "permission" : "lms.question_pattern.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateQuestionPool",
+  "method" : "PATCH",
+  "path" : "/v1/lms/question-pools/{questionPoolId}",
+  "permission" : "lms.question_pool.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateQuestionPoolItem",
+  "method" : "PATCH",
+  "path" : "/v1/lms/question-pools/{questionPoolId}/items/{questionPoolItemId}",
+  "permission" : "lms.question_pool_item.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateQuiz",
+  "method" : "PATCH",
+  "path" : "/v1/lms/quizzes/{quizId}",
+  "permission" : "lms.quiz.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateQuizQuestion",
+  "method" : "PATCH",
+  "path" : "/v1/lms/quizzes/{quizId}/questions/{quizQuestionId}",
+  "permission" : "lms.quiz_question.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateRelatedCourse",
+  "method" : "PATCH",
+  "path" : "/v1/lms/courses/{courseId}/related-courses/{relatedCourseId}",
+  "permission" : "lms.related_course.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateRelatedMaterial",
+  "method" : "PATCH",
+  "path" : "/v1/lms/ebooks/{ebookId}/related-materials/{relatedMaterialId}",
+  "permission" : "lms.related_material.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateReleaseRule",
+  "method" : "PATCH",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}",
+  "permission" : "lms.release_rule.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateReleaseRuleCondition",
+  "method" : "PATCH",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}/release-rule-conditions/{releaseRuleConditionId}",
+  "permission" : "lms.release_rule_condition.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateReleaseRuleTarget",
+  "method" : "PATCH",
+  "path" : "/v1/lms/release-rules/{releaseRuleId}/release-rule-targets/{releaseRuleTargetId}",
+  "permission" : "lms.release_rule_target.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateResourceCategory",
+  "method" : "PATCH",
+  "path" : "/v1/lms/resource-categories/{resourceCategoryId}",
+  "permission" : "lms.resource_category.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateRubric",
+  "method" : "PATCH",
+  "path" : "/v1/lms/rubrics/{rubricId}",
+  "permission" : "lms.rubric.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateRubricAssessment",
+  "method" : "PATCH",
+  "path" : "/v1/lms/rubric-assessments/{rubricAssessmentId}",
+  "permission" : "lms.rubric_assessment.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateRubricCell",
+  "method" : "PATCH",
+  "path" : "/v1/lms/rubrics/{rubricId}/cells/{rubricCellId}",
+  "permission" : "lms.rubric_cell.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateRubricCriterion",
+  "method" : "PATCH",
+  "path" : "/v1/lms/rubrics/{rubricId}/criteria/{rubricCriterionId}",
+  "permission" : "lms.rubric_criterion.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateRubricLevel",
+  "method" : "PATCH",
+  "path" : "/v1/lms/rubrics/{rubricId}/levels/{rubricLevelId}",
+  "permission" : "lms.rubric_level.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateSettings",
+  "method" : "PATCH",
+  "path" : "/v1/lms/settings",
+  "permission" : "lms.settings.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateSettingsPrimaryCountry",
+  "method" : "PATCH",
+  "path" : "/v1/lms/settings/{settingsId}/primary-countries/{settingsPrimaryCountryId}",
+  "permission" : "lms.settings_primary_country.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateSettingsSidebarItem",
+  "method" : "PATCH",
+  "path" : "/v1/lms/settings/{settingsId}/sidebar-items/{settingsSidebarItemId}",
+  "permission" : "lms.settings_sidebar_item.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateStudentAlert",
+  "method" : "PATCH",
+  "path" : "/v1/lms/student-alerts/{studentAlertId}",
+  "permission" : "lms.student_alert.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateTimetableEntry",
+  "method" : "PATCH",
+  "path" : "/v1/lms/timetable-entries/{timetableEntryId}",
+  "permission" : "lms.timetable_entry.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateTimetableLegend",
+  "method" : "PATCH",
+  "path" : "/v1/lms/timetable-legends/{timetableLegendId}",
+  "permission" : "lms.timetable_legend.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateTimetableTemplate",
+  "method" : "PATCH",
+  "path" : "/v1/lms/timetable-templates/{timetableTemplateId}",
+  "permission" : "lms.timetable_template.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.UpdateWebResource",
+  "method" : "PATCH",
+  "path" : "/v1/lms/web-resources/{webResourceId}",
+  "permission" : "lms.web_resource.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "lms.VerifyCertificate",
+  "method" : "GET",
+  "path" : "/v1/lms/certificates/{certificateId}:verify",
+  "permission" : "lms.certificate.verify_certificate",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+} ]

@@ -7,8 +7,9 @@ import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.testkit.TestDatabase;
-import com.mysms.iam.config.IamDatabaseConfig;
+import com.mysms.core.testkit.TestTransactions;
 import com.mysms.iam.business.PasswordHasher;
+import com.mysms.iam.config.IamDatabaseConfig;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -40,8 +41,7 @@ import tools.jackson.databind.json.JsonMapper;
  * the edge's own verifier, refresh rotation with reuse detection, sign-out, GetMe, the setting catalogue, administrators'
  * setting values with scope authorization, and the caller's effective settings through the whole hierarchy.
  */
-@SpringBootTest(classes = IamApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.config.name=" + IamApplication.CONFIG_NAME)
+@SpringBootTest(classes = IamApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class IamApiComponentTest {
 
@@ -131,7 +131,7 @@ class IamApiComponentTest {
     // ------------------------------------------------------------------ fixtures through the application role (RLS on)
 
     private UUID tenant() {
-        return as(null, () -> database.tx().readWithoutTenant(() -> database.jdbc()
+        return as(null, () -> TestTransactions.of(database).readWithoutTenant(() -> database.jdbc()
                 .sql("SELECT tenant_id FROM iam.tenant_directory WHERE tenant_code = :code").param("code", TENANT_CODE)
                 .query(UUID.class).single()));
     }
@@ -144,7 +144,7 @@ class IamApiComponentTest {
     private UUID user(String username, String status, UUID person) {
         UUID tenant = tenant();
         UUID id = UUID.randomUUID();
-        as(tenant, () -> database.tx().write(() -> database.jdbc().sql("""
+        as(tenant, () -> TestTransactions.of(database).write(() -> database.jdbc().sql("""
                 INSERT INTO iam.user_account (id, tenant_id, person_id, username, password_hash, status, user_type)
                 VALUES (:id, :tenant, :person, :username, :hash, :status, 'teacher')
                 """).param("id", id).param("tenant", tenant).param("person", person).param("username", username)
@@ -155,7 +155,7 @@ class IamApiComponentTest {
     private UUID role(String code, String... permissions) {
         UUID tenant = tenant();
         UUID id = UUID.randomUUID();
-        as(tenant, () -> database.tx().write(() -> {
+        as(tenant, () -> TestTransactions.of(database).write(() -> {
             database.jdbc().sql("INSERT INTO iam.role (id, tenant_id, code) VALUES (:id, :tenant, :code)")
                     .param("id", id).param("tenant", tenant).param("code", code).update();
             for (String permission : permissions) {
@@ -172,7 +172,7 @@ class IamApiComponentTest {
 
     private void grant(UUID user, UUID role, String scopeType, UUID scopeId, boolean primary) {
         UUID tenant = tenant();
-        as(tenant, () -> database.tx().write(() -> database.jdbc().sql("""
+        as(tenant, () -> TestTransactions.of(database).write(() -> database.jdbc().sql("""
                 INSERT INTO iam.user_role (id, tenant_id, user_id, role_id, scope_type, scope_id, is_primary)
                 VALUES (:id, :tenant, :user, :role, :type, :scope, :primary)
                 """).param("id", UUID.randomUUID()).param("tenant", tenant).param("user", user).param("role", role)
@@ -181,7 +181,7 @@ class IamApiComponentTest {
 
     private void sql(String statement, Object... params) {
         UUID tenant = tenant();
-        as(tenant, () -> database.tx().write(() -> {
+        as(tenant, () -> TestTransactions.of(database).write(() -> {
             var spec = database.jdbc().sql(statement);
             for (int i = 0; i < params.length; i += 2) {
                 spec = spec.param((String) params[i], params[i + 1]);
@@ -192,7 +192,7 @@ class IamApiComponentTest {
 
     private List<String> outboxTypes() {
         UUID tenant = tenant();
-        return as(tenant, () -> database.tx().read(() -> database.jdbc()
+        return as(tenant, () -> TestTransactions.of(database).read(() -> database.jdbc()
                 .sql("SELECT event_type FROM iam.outbox_event ORDER BY id").query(String.class).list()));
     }
 
@@ -333,7 +333,7 @@ class IamApiComponentTest {
                 """, "id", device, "tenant", tenant(), "user", teacher);
         assertThat(call("POST", "/v1/iam/auth:logout", stillOpen.body().path("accessToken").asString(),
                 "{\"allDevices\":true}").status()).isEqualTo(204);
-        Boolean deviceActive = as(tenant(), () -> database.tx().read(() -> database.jdbc()
+        Boolean deviceActive = as(tenant(), () -> TestTransactions.of(database).read(() -> database.jdbc()
                 .sql("SELECT is_active FROM iam.user_device WHERE id = :id").param("id", device).query(Boolean.class)
                 .single()));
         assertThat(deviceActive).as("sign-out everywhere unregisters push devices").isFalse();
@@ -350,7 +350,7 @@ class IamApiComponentTest {
             assertThat(signIn("locky", "wrong-" + i).status()).isEqualTo(401);
         }
         assertThat(signIn("locky", PASSWORD).status()).as("locked out, even with the right password").isEqualTo(401);
-        OffsetDateTime lockedUntil = as(tenant(), () -> database.tx().read(() -> database.jdbc()
+        OffsetDateTime lockedUntil = as(tenant(), () -> TestTransactions.of(database).read(() -> database.jdbc()
                 .sql("SELECT locked_until FROM iam.user_account WHERE id = :id").param("id", locky)
                 .query(OffsetDateTime.class).single()));
         assertThat(lockedUntil).isAfter(OffsetDateTime.now()).isBefore(OffsetDateTime.now().plusMinutes(2));
@@ -410,24 +410,24 @@ class IamApiComponentTest {
         String token = accessToken("admin", ADMIN_PASSWORD);
         Reply all = call("GET", "/v1/iam/setting-definitions", token, null);
         assertThat(all.status()).isEqualTo(200);
-        assertThat(all.body().path("items")).hasSize(10);
-        assertThat(all.body().path("totalSize").asInt()).isEqualTo(10);
-        assertThat(all.body().path("items").get(0).path("category").asString()).isEqualTo("appearance");
+        assertThat(all.body().path("data")).hasSize(10);
+        assertThat(all.body().path("paging").path("size").asInt()).isEqualTo(10);
+        assertThat(all.body().path("data").get(0).path("category").asString()).isEqualTo("appearance");
         Reply appearance = call("GET", "/v1/iam/setting-definitions?filter=" + q("category = \"appearance\""), token, null);
-        assertThat(appearance.body().path("items")).hasSize(4);
-        JsonNode theme = appearance.body().path("items").get(0);
+        assertThat(appearance.body().path("data")).hasSize(4);
+        JsonNode theme = appearance.body().path("data").get(0);
         assertThat(theme.path("settingKey").asString()).isEqualTo("ui.theme");
         assertThat(theme.path("allowedValues").toString()).contains("high_contrast");
         assertThat(theme.path("allowedScopes")).hasSize(5);
         Reply one = call("GET", "/v1/iam/setting-definitions/" + theme.path("id").asString(), token, null);
         assertThat(one.status()).isEqualTo(200);
         assertThat(one.etag()).isEqualTo("\"0\"");
-        Reply paged = call("GET", "/v1/iam/setting-definitions?pageSize=3", token, null);
-        assertThat(paged.body().path("items")).hasSize(3);
-        Reply page2 = call("GET", "/v1/iam/setting-definitions?pageSize=3&pageToken="
-                + q(paged.body().path("nextPageToken").asString()), token, null);
-        assertThat(page2.body().path("items").get(0).path("settingKey").asString())
-                .isNotEqualTo(paged.body().path("items").get(2).path("settingKey").asString());
+        Reply paged = call("GET", "/v1/iam/setting-definitions?size=3", token, null);
+        assertThat(paged.body().path("data")).hasSize(3);
+        Reply page2 = call("GET", paged.body().path("paging").path("next").asString(), token, null);
+        assertThat(page2.body().path("paging").path("page").asInt()).isEqualTo(2);
+        assertThat(page2.body().path("data").get(0).path("settingKey").asString())
+                .isNotEqualTo(paged.body().path("data").get(2).path("settingKey").asString());
         assertThat(call("GET", "/v1/iam/setting-definitions/" + UUID.randomUUID(), token, null).status()).isEqualTo(404);
     }
 
@@ -441,8 +441,8 @@ class IamApiComponentTest {
         assertThat(defaults.body().path("items")).as("administrator-only settings are not even listed").hasSize(9);
         assertThat(defaults.raw().body()).doesNotContain("security.sessionTimeoutMinutes");
         Reply catalogue = call("GET", "/v1/iam/setting-definitions", me, null);
-        assertThat(catalogue.body().path("items")).hasSize(9);
-        assertThat(catalogue.body().path("totalSize").asInt()).isEqualTo(9);
+        assertThat(catalogue.body().path("data")).hasSize(9);
+        assertThat(catalogue.body().path("paging").has("next")).isFalse();
         String timeoutId = adminDefinitionId(admin, "security.sessionTimeoutMinutes");
         assertThat(call("GET", "/v1/iam/setting-definitions/" + timeoutId, me, null).status()).isEqualTo(404);
         assertThat(call("GET", "/v1/iam/setting-definitions/" + timeoutId, admin, null).status()).isEqualTo(200);
@@ -503,7 +503,7 @@ class IamApiComponentTest {
     }
 
     private String adminDefinitionId(String admin, String key) throws Exception {
-        for (JsonNode item : call("GET", "/v1/iam/setting-definitions", admin, null).body().path("items")) {
+        for (JsonNode item : call("GET", "/v1/iam/setting-definitions", admin, null).body().path("data")) {
             if (key.equals(item.path("settingKey").asString())) {
                 return item.path("id").asString();
             }
@@ -572,7 +572,7 @@ class IamApiComponentTest {
         assertThat(masked.body().has("scopeType")).isFalse();
         assertThat(masked.body().path("value").asString()).isEqualTo("130");
         Reply list = call("GET", "/v1/iam/setting-values?filter=" + q("settingKey = \"ui.textScale\""), admin, null);
-        assertThat(list.body().path("items")).hasSize(1);
+        assertThat(list.body().path("data")).hasSize(1);
         assertThat(call("DELETE", path, admin, null, "If-Match", "\"1\"").status()).isEqualTo(412);
         assertThat(call("DELETE", path, admin, null, "If-Match", "\"2\"").status()).isEqualTo(204);
         assertThat(call("GET", path, admin, null).status()).isEqualTo(404);
@@ -591,7 +591,7 @@ class IamApiComponentTest {
         Reply headSettings = call("GET", "/v1/iam/me/settings", head, null);
         assertThat(headSettings.raw().body()).as("set only by tenant or institution administrators")
                 .doesNotContain("security.sessionTimeoutMinutes");
-        assertThat(call("GET", "/v1/iam/setting-definitions", head, null).body().path("items")).hasSize(9);
+        assertThat(call("GET", "/v1/iam/setting-definitions", head, null).body().path("data")).hasSize(9);
         Reply own = createValue(head, "department", DEPARTMENT, "ui.density", "comfortable", false);
         assertThat(own.status()).as(own.raw().body()).isEqualTo(201);
         assertThat(createValue(head, "department", OTHER_DEPARTMENT, "ui.density", "compact", false).status())
@@ -599,14 +599,14 @@ class IamApiComponentTest {
         assertThat(createValue(head, "tenant", null, "ui.dateFormat", "yyyy-MM-dd", false).status()).isEqualTo(403);
         Reply visible = call("GET", "/v1/iam/setting-values", head, null);
         assertThat(visible.status()).isEqualTo(200);
-        for (JsonNode item : visible.body().path("items")) {
+        for (JsonNode item : visible.body().path("data")) {
             assertThat(item.path("scopeId").asString()).isEqualTo(DEPARTMENT.toString());
         }
-        assertThat(visible.body().path("totalSize").asInt()).isEqualTo(2);
+        assertThat(visible.body().path("data")).hasSize(2);
         String admin = accessToken("admin", ADMIN_PASSWORD);
         Reply other = call("GET", "/v1/iam/setting-values?filter=" + q("scopeId = \"" + OTHER_DEPARTMENT + "\""), admin,
                 null);
-        String otherId = other.body().path("items").get(0).path("id").asString();
+        String otherId = other.body().path("data").get(0).path("id").asString();
         assertThat(call("GET", "/v1/iam/setting-values/" + otherId, head, null).status()).isEqualTo(404);
         assertThat(call("DELETE", "/v1/iam/setting-values/" + otherId, head, null, "If-Match", "\"1\"").status())
                 .isEqualTo(404);
@@ -631,7 +631,7 @@ class IamApiComponentTest {
         Reply session = signIn("teacher1", PASSWORD);
         String refresh = session.body().path("tokens").path("refreshToken").asString();
         UUID tenant = tenant();
-        as(tenant, () -> database.tx().write(() -> database.jdbc()
+        as(tenant, () -> TestTransactions.of(database).write(() -> database.jdbc()
                 .sql("UPDATE iam.tenant_directory SET status = 'suspended' WHERE tenant_code = :code")
                 .param("code", TENANT_CODE).update()));
         try {
@@ -639,7 +639,7 @@ class IamApiComponentTest {
                     .isEqualTo(401);
             assertThat(signIn("teacher1", PASSWORD).status()).isEqualTo(401);
         } finally {
-            as(tenant, () -> database.tx().write(() -> database.jdbc()
+            as(tenant, () -> TestTransactions.of(database).write(() -> database.jdbc()
                     .sql("UPDATE iam.tenant_directory SET status = 'active' WHERE tenant_code = :code")
                     .param("code", TENANT_CODE).update()));
         }
@@ -652,7 +652,7 @@ class IamApiComponentTest {
         assertThat(types).contains("iam.user_account.signed_in", "iam.user_account.sign_in_failed",
                 "iam.user_account.signed_out", "iam.setting_value.created", "iam.setting_value.updated",
                 "iam.setting_value.deleted", "audit.recorded");
-        String payloads = as(tenant(), () -> database.tx().read(() -> String.join("\n", database.jdbc()
+        String payloads = as(tenant(), () -> TestTransactions.of(database).read(() -> String.join("\n", database.jdbc()
                 .sql("SELECT payload FROM iam.outbox_event").query(String.class).list())));
         assertThat(payloads).doesNotContain("teacher1").doesNotContain(PASSWORD).doesNotContain("wrong-password")
                 .doesNotContain(ADMIN_PASSWORD);

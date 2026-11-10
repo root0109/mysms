@@ -13,10 +13,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param modules        the modules this process serves (one for a microservice, all 21 for the monolith)
  * @param infrastructurePaths non-contract paths served without a token (health, info, and the issuer's public keys,
  *                            which only iam serves)
+ * @param apiDocs        serve the OpenAPI document and Swagger UI without a token ({@code /v3/api-docs*},
+ *                       {@code /swagger-ui*}). Off by default: the document maps every operation and permission, so
+ *                       production keeps it closed (data security first); the component tests and local development
+ *                       turn it on (MYSMS_API_DOCS)
  */
 @ConfigurationProperties("mysms.auth")
 public record AuthClientProperties(String issuer, String jwkSetUri, String publicKey, List<String> audiences,
-                                   List<String> modules, List<String> infrastructurePaths) {
+                                   List<String> modules, List<String> infrastructurePaths, boolean apiDocs) {
+
+    /** The springdoc paths {@link #apiDocs} opens: the document and the Swagger UI it feeds. */
+    public static final List<String> API_DOC_PATHS = List.of("/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/**",
+            "/swagger-ui.html", "/swagger-ui/**");
 
     public static final String TENANT_AUDIENCE = "mysms";
     public static final String PLATFORM_AUDIENCE = "mysms-platform-admin";
@@ -28,8 +36,11 @@ public record AuthClientProperties(String issuer, String jwkSetUri, String publi
                 ? List.of(TENANT_AUDIENCE, PLATFORM_AUDIENCE)
                 : List.copyOf(audiences);
         modules = modules == null ? List.of() : List.copyOf(modules);
-        infrastructurePaths = infrastructurePaths == null
+        List<String> paths = infrastructurePaths == null
                 ? List.of("/actuator/health", "/actuator/health/**", "/actuator/info", JWKS_PATH)
                 : List.copyOf(infrastructurePaths);
+        infrastructurePaths = apiDocs
+                ? List.copyOf(java.util.stream.Stream.concat(paths.stream(), API_DOC_PATHS.stream()).toList())
+                : paths;
     }
 }

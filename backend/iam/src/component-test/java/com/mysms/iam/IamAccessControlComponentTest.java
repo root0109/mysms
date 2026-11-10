@@ -7,6 +7,7 @@ import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.testkit.TestDatabase;
+import com.mysms.core.testkit.TestTransactions;
 import com.mysms.iam.config.IamDatabaseConfig;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -37,8 +38,7 @@ import tools.jackson.databind.json.JsonMapper;
  * holding all its permissions at the grant's reach, nobody changes their own access, system roles are fixed, and a
  * deleted account is signed out everywhere in the same transaction.
  */
-@SpringBootTest(classes = IamApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.config.name=" + IamApplication.CONFIG_NAME)
+@SpringBootTest(classes = IamApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class IamAccessControlComponentTest {
 
@@ -107,7 +107,7 @@ class IamAccessControlComponentTest {
 
     private <T> T as(Supplier<T> work) {
         CallContext context = CallContext.anonymous("4bf92f3577b34da6a3ce929d0e0e4736").withIdentity(TENANT, null);
-        return CallContextHolder.callAs(context, () -> database.tx().write(work::get));
+        return CallContextHolder.callAs(context, () -> TestTransactions.of(database).write(work::get));
     }
 
     private String permissionId(String code) {
@@ -197,7 +197,7 @@ class IamAccessControlComponentTest {
                 .isEqualTo(409);
         for (String kind : List.of("roles", "permissions")) {
             for (JsonNode row : call("GET", "/v1/iam/users/" + targetUser + "/" + kind, admin(), null).body()
-                    .path("items")) {
+                    .path("data")) {
                 Reply removed = call("DELETE", "/v1/iam/users/" + targetUser + "/" + kind + "/" + row.path("id")
                         .asString(), admin(), null, "If-Match", row.path("etag").asString());
                 assertThat(removed.status()).as(removed.text()).isEqualTo(204);

@@ -62,8 +62,8 @@ export interface ActionDef extends OperationRef {
 /** A row as the API returns it. */
 export type RecordRow = Record<string, unknown> & { id: string; etag?: string };
 
+/** One page of a list as the API returns it (api/README "Pagination"). */
 export interface RecordPage {
-  items: RecordRow[];
-  nextPageToken?: string;
-  totalSize?: number;
+  data: RecordRow[];
+  paging: { page: number; size: number; first: string; previous?: string; next?: string };
 }

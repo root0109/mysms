@@ -30,7 +30,7 @@ paths:
     get:
       operationId: hr.ListDesignations
       summary: List Designations
-      description: List Designations visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Designations visible to the caller, page by page, with filtering and sorting.
       tags:
       - Designation
       security:
@@ -40,10 +40,11 @@ paths:
         service: mysms.hr.v1.DesignationService
         method: ListDesignations
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -51,7 +52,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DesignationList'
+                $ref: '#/components/schemas/PagingInfoDesignation'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -270,7 +271,7 @@ paths:
     get:
       operationId: hr.ListStaff
       summary: List Staff
-      description: List Staff visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Staff visible to the caller, page by page, with filtering and sorting.
       tags:
       - Staff
       security:
@@ -280,10 +281,11 @@ paths:
         service: mysms.hr.v1.StaffService
         method: ListStaff
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -291,7 +293,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StaffList'
+                $ref: '#/components/schemas/PagingInfoStaff'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -510,7 +512,7 @@ paths:
     get:
       operationId: hr.ListStaffDepartments
       summary: List StaffDepartments
-      description: List StaffDepartments visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StaffDepartments visible to the caller, page by page, with filtering and sorting.
       tags:
       - Staff
       security:
@@ -527,10 +529,11 @@ paths:
           type: string
           format: uuid
         description: Staff id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -538,7 +541,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StaffDepartmentList'
+                $ref: '#/components/schemas/PagingInfoStaffDepartment'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -785,7 +788,7 @@ paths:
     get:
       operationId: hr.ListStaffSubjects
       summary: List StaffSubjects
-      description: List StaffSubjects visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StaffSubjects visible to the caller, page by page, with filtering and sorting.
       tags:
       - Staff
       security:
@@ -802,10 +805,11 @@ paths:
           type: string
           format: uuid
         description: Staff id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -813,7 +817,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StaffSubjectList'
+                $ref: '#/components/schemas/PagingInfoStaffSubject'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1060,7 +1064,7 @@ paths:
     get:
       operationId: hr.ListLeaveTypes
       summary: List LeaveTypes
-      description: List LeaveTypes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List LeaveTypes visible to the caller, page by page, with filtering and sorting.
       tags:
       - LeaveType
       security:
@@ -1070,10 +1074,11 @@ paths:
         service: mysms.hr.v1.LeaveTypeService
         method: ListLeaveTypes
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1081,7 +1086,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LeaveTypeList'
+                $ref: '#/components/schemas/PagingInfoLeaveType'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1300,7 +1305,7 @@ paths:
     get:
       operationId: hr.ListLeaveApplications
       summary: List LeaveApplications
-      description: List LeaveApplications visible to the caller, with cursor pagination, filtering and ordering.
+      description: List LeaveApplications visible to the caller, page by page, with filtering and sorting.
       tags:
       - LeaveApplication
       security:
@@ -1310,10 +1315,11 @@ paths:
         service: mysms.hr.v1.LeaveApplicationService
         method: ListLeaveApplications
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1321,7 +1327,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LeaveApplicationList'
+                $ref: '#/components/schemas/PagingInfoLeaveApplication'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1655,7 +1661,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./common.yaml#/components/schemas/LeaveBalanceSummaryList
+                $ref: ./common.yaml#/components/schemas/PagingInfoLeaveBalanceSummary
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1681,24 +1687,14 @@ paths:
           format: uuid
       - name: academicYearId
         in: query
-        required: false
-        description: Year (default current).
+        required: true
+        description: Academic year of the position.
         schema:
           type: string
           format: uuid
-      - name: pageSize
-        in: query
-        required: false
-        description: Maximum items to return (1-500, default 50).
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Cursor from next_page_token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/hr/leave-applications/{leaveApplicationId}:approve:
     post:
       operationId: hr.ApproveLeave
@@ -1853,7 +1849,7 @@ paths:
     get:
       operationId: hr.ListLeaveBalances
       summary: List LeaveBalances
-      description: List LeaveBalances visible to the caller, with cursor pagination, filtering and ordering.
+      description: List LeaveBalances visible to the caller, page by page, with filtering and sorting.
       tags:
       - LeaveBalance
       security:
@@ -1863,10 +1859,11 @@ paths:
         service: mysms.hr.v1.LeaveBalanceService
         method: ListLeaveBalances
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1874,7 +1871,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LeaveBalanceList'
+                $ref: '#/components/schemas/PagingInfoLeaveBalance'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2140,22 +2137,20 @@ components:
           format: decimal
           pattern: ^-?\d+(\.\d+)?$
           description: Days carried in from the previous year.
-    LeaveBalanceList:
+    PagingInfoLeaveBalance:
       type: object
+      description: A page of LeaveBalance, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/LeaveBalance'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Designation:
       type: object
       description: Staff designation catalogue (Principal, Teacher, Accountant, Driver...).
@@ -2241,22 +2236,20 @@ components:
           - non_teaching
           x-extensible-enum: true
           description: Teaching or non-teaching.
-    DesignationList:
+    PagingInfoDesignation:
       type: object
+      description: A page of Designation, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Designation'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Staff:
       type: object
       description: Employee / faculty member of an institution.
@@ -2434,22 +2427,20 @@ components:
           type: integer
           format: int32
           description: Teaching-load ceiling in periods.
-    StaffList:
+    PagingInfoStaff:
       type: object
+      description: A page of Staff, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Staff'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StaffDepartment:
       type: object
       description: Departments a staff member may work in.
@@ -2502,22 +2493,20 @@ components:
           type: string
           format: uuid
           description: Department.
-    StaffDepartmentList:
+    PagingInfoStaffDepartment:
       type: object
+      description: A page of StaffDepartment, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StaffDepartment'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StaffSubject:
       type: object
       description: Subjects a staff member is competent to teach.
@@ -2570,22 +2559,20 @@ components:
           type: string
           format: uuid
           description: Subject.
-    StaffSubjectList:
+    PagingInfoStaffSubject:
       type: object
+      description: A page of StaffSubject, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StaffSubject'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     LeaveType:
       type: object
       description: Leave category with an annual entitlement.
@@ -2683,22 +2670,20 @@ components:
         isActive:
           type: boolean
           description: Whether usable.
-    LeaveTypeList:
+    PagingInfoLeaveType:
       type: object
+      description: A page of LeaveType, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/LeaveType'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     LeaveApplication:
       type: object
       description: Staff leave request and decision.
@@ -2774,7 +2759,8 @@ components:
           readOnly: true
         decisionComments:
           type: string
-          description: Approver comments.
+          description: Comment of who decided; set by the approve and reject operations.
+          readOnly: true
         createTime:
           type: string
           format: date-time
@@ -2852,25 +2838,20 @@ components:
         remarks:
           type: string
           description: Applicant remarks.
-        decisionComments:
-          type: string
-          description: Approver comments.
-    LeaveApplicationList:
+    PagingInfoLeaveApplication:
       type: object
+      description: A page of LeaveApplication, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/LeaveApplication'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ChangeStaffStatusRequest:
       type: object
       properties:

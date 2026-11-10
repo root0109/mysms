@@ -6,7 +6,7 @@ MySMS exposes every capability through two equivalent interfaces: a **REST/JSON 
 
 | Modules | Resource services | Operations (REST = gRPC) | Standard CRUD | Workflow / query / integration operations | Protobuf messages |
 |---:|---:|---:|---:|---:|---:|
-| 21 | 226 | 2052 | 1705 | 347 | 4552 |
+| 21 | 226 | 2049 | 1702 | 347 | 4546 |
 
 ## Files
 
@@ -16,12 +16,11 @@ MySMS exposes every capability through two equivalent interfaces: a **REST/JSON 
 | `operations.md` | Index of every operation: REST method and path, gRPC service and method, permission code. |
 | `openapi/<module>.yaml` | REST contract of one module (OpenAPI 3.1). |
 | `openapi/common.yaml` | Shared parameters, error responses, security scheme and shared schemas. |
-| `openapi/mysms-api.yaml` | All modules joined into one file (for API portals and single-SDK generation). |
 | `proto/mysms/<module>/v1/<module>.proto` | gRPC contract of one module (`package mysms.<module>.v1`). |
 | `proto/mysms/common/v1/common.proto` | Shared gRPC messages (Operation, upload/download targets, search hits...). |
 | `proto/buf.yaml`, `openapi/redocly.yaml` | Lint configuration used to validate the contracts. |
 | `proto/field-numbers.lock.json` | Assigned proto field / enum numbers (keeps the wire format stable across regenerations). |
-| `standard-resources.json` | Generated: the resources whose standard operations and state transitions the backend serves (read by the clients' record screens). |
+| `standard-resources.json` | Owned data, checked by the build (`OperationStatusReportTest`): the resources whose standard operations and state transitions the backend serves (read by the clients' record screens). |
 | `operations-status.md` | Generated: whether this build serves each operation, and why not when it answers 501. |
 | `state-machines.md` | Generated: the state transitions the backend serves, with the states each is allowed from and what it sets. |
 | `tools/OpenApiBundler.java` | Makes each module file self-contained for the code generators and writes its operation table (see *Code generation*). |
@@ -56,7 +55,7 @@ Everything about the API lives in this one folder; paths are relative to it.
 
 | Method | REST | gRPC | Notes |
 |---|---|---|---|
-| List | `GET /…/{plural}` | `List<Plural>` | `pageSize` (1-500, default 50), `pageToken`, `filter`, `orderBy`, `fields`; response `items`, `nextPageToken`, `totalSize`. |
+| List | `GET /…/{plural}` | `List<Plural>` | `page` (one-based, default 1), `size` (1-500, default 50), `cursor`, `filter`, `sort`, `fields`; response `PagingInfo` = `data` + `paging` (`NavigationInfo`). gRPC: `pageable` (`PageableRequest`) in, `items` + `pagination` out. |
 | Get | `GET /…/{id}` | `Get<Resource>` | `ETag` response header = row version. |
 | Create | `POST /…/{plural}` → 201 + `Location` | `Create<Resource>` | `Idempotency-Key` header / `request_id`; `validateOnly` (runs every check, persists nothing, answers 200 with the would-be resource). |
 | Update | `PATCH /…/{id}` | `Update<Resource>` | Partial update with `updateMask`; `If-Match` (REST) / `etag` field (gRPC) is mandatory → 412 on a stale version. |
@@ -81,11 +80,31 @@ Every schema separates four field classes, and the generated SDKs enforce them a
 
 ### Filtering and ordering
 
-`filter` uses a subset of the AIP-160 grammar over the resource's fields (JSON names): comparison `= != < <= > >=`, `:` (has / contains for strings and repeated fields), `AND`, `OR`, `NOT`, parentheses, quoted strings, `null`. Example: `status = "active" AND academicYearId = "0190…" AND createTime >= "2026-04-01T00:00:00Z"`. `orderBy` takes comma-separated fields with an optional ` desc`. Unsupported fields return 400 with `code = INVALID_FILTER`.
+`filter` uses a subset of the AIP-160 grammar over the resource's fields (JSON names): comparison `= != < <= > >=`, `:` (has / contains for strings and repeated fields), `AND`, `OR`, `NOT`, parentheses, quoted strings, `null`. Example: `status = "active" AND academicYearId = "0190…" AND createTime >= "2026-04-01T00:00:00Z"`. `sort` takes `field,asc|desc` (the direction is optional, ascending by default) and is repeated for several criteria in priority order (`sort=status&sort=createTime,desc`; one comma list `sort=status,asc,createTime,desc` reads the same). Each resource declares the fields it sorts on; the row id always breaks ties, so the order is total. Unsupported filter fields return 400 with `code = INVALID_FILTER`, unsupported sort fields 400.
 
 ### Pagination
 
-Cursor-based: the server returns an opaque `nextPageToken`, which is empty on the last page. Tokens encode the sort key and filter and expire after 24 h. Standard List responses also return `totalSize`, exact up to 10,000 and possibly an estimate above that. Custom query operations that return lists take `pageSize` / `pageToken` and return `nextPageToken`.
+Every operation that returns a list page by page (the standard List and the custom queries) answers the same shape, the owner's `PagingInfo`:
+
+```json
+{
+  "data": [ … ],
+  "paging": {
+    "page": 3,
+    "size": 50,
+    "first": "/v1/hr/staff?page=1&size=50&sort=name",
+    "previous": "/v1/hr/staff?page=2&size=50&sort=name",
+    "next": "/v1/hr/staff?page=4&size=50&sort=name&cursor=eyJ2Ijoy…"
+  }
+}
+```
+
+- `page` is one-based; `paging.size` is the number of items in this page. The links are relative and keep the request's filter, sort and field mask; a link that does not apply is absent (`previous` on page 1, `next` on the last page).
+- **`next` carries a cursor**: the sort keys of this page's last row, bound to the sort, the filter (and parent or query parameters) and the page it opens, valid for 24 hours. Following it reads the next page by keyset — an index seek, as fast on page 10,000 as on page 2, and stable while rows are added in front. A cursor presented for another page, sort or view, or after expiry, is 400.
+- **A page number without a cursor** (`first`, `previous`, a jump to page n) is read by offset, which reads and discards every skipped row; it is therefore limited to the first 10,000 rows (400 beyond, "follow the next links"). Deeper pages are reached by `next` links, and `previous` is omitted where it would lie beyond that limit.
+- Lists are not counted: there is no total (a count of a large table costs as much as reading it). `next` tells whether more rows exist.
+- gRPC: the request's `pageable` (`mysms.common.v1.PageableRequest`: `page`, `size`, repeated `sort`, `cursor`) and the response's `pagination` (`mysms.common.v1.Pagination`: `page`, `size`, `first`, `previous`, `next` as page numbers, 0 where absent, and `next_cursor`).
+- An operation that writes several items and returns them (`RecordAttendance`, `SetUserRoles`, `GenerateTerms`…) returns them all at once as `{"items": [...]}`; it is not a page of a list. So do the two bounded reads of the caller's own data, `iam.ListMySettings` and `iam.ListMfaCredentials`.
 
 ## Data types
 
@@ -114,6 +133,8 @@ Cursor-based: the server returns an opaque `nextPageToken`, which is empty on th
   - a guardian sees only their linked children;
   - a teacher sees only their class sections;
   - a student sees only their own submissions.
+  - personal resources marked with `x-owner-field` (such as notification preference sets) are always restricted to the
+    authenticated account, even when a tenant-wide permission is present; nested resources inherit that owner boundary.
 - **Platform administration:** operations that act across tenants are reserved to platform staff and use the separate `platformAdminAuth` scheme (audience `mysms-platform-admin`, MFA required). They cover tenant management, SaaS plans, system settings, user types, reserved keywords, sales-enquiry handling, reference-data maintenance and clearing demo data. A tenant user's token can never call them.
 - **Impersonation:** `iam.StartImpersonation` requires a reason and returns a single non-refreshable access token valid for at most 30 minutes. The target must have strictly lower privileges and lie within the administrator's institution scope. Every call carries both identities in the audit log, and `iam.StopImpersonation` ends the session.
 - **Role grants:** `iam.SetUserRoles` and user-role creation only grant roles whose permissions are a subset of the caller's own, within the caller's scopes, so no privilege escalation is possible.
@@ -156,7 +177,7 @@ REST errors use RFC 9457 `application/problem+json` with a stable `code`, a `tra
 - Limits are applied per token and per tenant; every operation declares a `429` response, and `429`s carry `Retry-After` plus `RateLimit-Limit`, `RateLimit-Remaining` and `RateLimit-Reset`.
 - The major version is in the path (`/v1`) and in the proto package (`.v1`). Additive changes (new fields, operations or enum values) do not change the version, so clients must ignore unknown fields and tolerate unknown enum values (every enum is marked `x-extensible-enum: true`; render unknown values neutrally). Breaking changes ship as `/v2` / `.v2`, with both versions served for at least 12 months. `buf breaking` and the OpenAPI diff run in CI to block accidental breaks.
 - Deprecated operations are marked `deprecated: true` and `option deprecated = true`, and responses include a `Sunset` header.
-- **Wire stability:** `proto/field-numbers.lock.json` records the field numbers of **every** message (4,552, map fields included), so any regeneration preserves the wire format.
+- **Wire stability:** `proto/field-numbers.lock.json` records the field numbers of **every** message (4,546, map fields included), so any regeneration preserves the wire format.
 
 ## Deep links
 
@@ -300,19 +321,34 @@ The custom operations, grouped by business process. Each runs in one transaction
 - **`comms.notification_channel`**: `SendTestMessage`
 - **`people.consent_record`**: `WithdrawConsent`
 
-## Code generation
+## The Java contracts, and what is generated
 
-All code is generated by [OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator) 7.26.0 (and protoc for gRPC), one run per module file. Each module file is first bundled by `tools/OpenApiBundler.java`, which copies every referenced `common.yaml` (or other module) schema into the module document under its own name; without it the generator's OpenAPI 3.1 parser inlines external schemas and names them after the first operation that uses them. The bundler also writes each module's operation table (method, path, `x-permission`, security schemes, token optional or not), which the backend's auth filter enforces.
+The server-side Java contracts are NOT generated: each backend module owns its API interfaces and DTOs
+(`com.mysms.<module>.api` / `.api.model`, materialized once from these files on 2026-11-10 and edited directly) and
+its edge operation table (`src/main/resources/META-INF/mysms/operations/<module>.json`: method, path, `x-permission`,
+security schemes, token optional or not, idempotency — enforced by the auth filter). springdoc writes each running
+service's OpenAPI document from that code (`/v3/api-docs.yaml`; core's `OpenApiConfiguration` restores the contract
+operationIds, `x-permission` and security), and every module's service component test keeps it as
+`target/openapi/<module>.yaml` on `mvn verify`. The conformance build fails when a module's operation table, the
+controllers or `operations-status.md` drift from the files here, so this directory and the code cannot diverge
+silently; a contract change edits the module's api package, its operation table and the module file here in one
+reviewed change.
+
+The clients are still generated from these files by [OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator)
+7.26.0, one run per module file. Each module file is first bundled by `tools/OpenApiBundler.java`, which copies every
+referenced `common.yaml` (or other module) schema into the module document under its own name.
 
 | Output | Where | How |
 |---|---|---|
-| Spring server interfaces + DTOs (`com.mysms.contracts.<module>.api` / `.model`) | `backend/contracts` | `openapi-generator-maven-plugin`, generator `spring`, `interfaceOnly`, Spring Boot 4, Jackson 3 |
-| gRPC stubs + protobuf messages (`com.mysms.<module>.v1`) | `backend/contracts` | `protobuf-maven-plugin` + `protoc-gen-grpc-java` |
 | Java clients for module-to-module calls (`com.mysms.sdk.<module>.api` / `.model`) | `backend/sdk` | generator `spring`, library `spring-http-interface` |
 | TypeScript clients for the React and React Native apps (`@mysms/sdk`, one namespace per module) | `clients/packages/sdk` | generator `typescript-fetch`, run by `pnpm generate` |
 
+The gRPC stubs and protobuf messages (`com.mysms.<module>.v1`) are compiled from `proto/` into `backend/sdk` in one
+protoc run (`protobuf-maven-plugin` with OS-resolved `protoc` and `protoc-gen-grpc-java`, the reference mechanism),
+so they sit on every module's classpath for the gRPC resolvers to come.
+
 ```bash
-cd backend && mvn -pl contracts,sdk -am install      # Java contracts and SDK
+cd backend && mvn -pl sdk -am install                # Java SDK
 cd clients && pnpm --filter @mysms/sdk generate      # TypeScript SDK
 ```
 
@@ -322,11 +358,11 @@ Every module schema except `master` has its own `idempotency_key` (backs the Ide
 
 ## Verification performed
 
-- **Proto compilation:** all 22 files compiled with `protoc` (grpcio-tools) into Python stubs: 226 services, 2052 RPCs, 4,552 messages, 0 errors; no existing field number changed.
-- **REST ↔ gRPC parity:** each of the 2052 REST operations maps through `x-grpc` to exactly one existing RPC and every RPC is reachable from REST (0 mismatches, checked mechanically).
-- **OpenAPI:** every module file parses and bundles with 0 unresolved references, and `redocly lint` of the joined `mysms-api.yaml` passes with **0 errors and 0 warnings**; the joined file is produced by `redocly join` from the module files and carries all 2052 operations.
+- **Proto compilation:** all 22 files compiled with `protoc` (grpcio-tools) into Python stubs: 226 services, 2049 RPCs, 4,546 messages, 0 errors; no existing field number changed.
+- **REST ↔ gRPC parity:** each of the 2049 REST operations maps through `x-grpc` to exactly one existing RPC and every RPC is reachable from REST (0 mismatches, checked mechanically).
+- **OpenAPI:** every module file parses and bundles with 0 unresolved references, and `redocly lint` of each module file passes. There is no joined all-modules file: it was a pre-built copy that drifted from the module files; a portal reads each service's own document (`/v3/api-docs.yaml`, written to `backend/<module>/target/openapi/<module>.yaml` by every build).
 - **Generator-ready schemas:** every JSON request and response body is a named schema (no inline objects; free-form webhook payloads excepted), and no schema name is defined in two files — both checked mechanically, so generated clients and servers get stable class names.
-- **Generated code compiles:** the Java server interfaces, DTOs, gRPC stubs and SDK clients of all 21 modules, and the TypeScript SDK, are generated from these files and compiled on every build (`backend/`, `clients/`).
-- **Wire stability:** `proto/field-numbers.lock.json` records the field numbers of **every** message (4,552, map fields included), so any regeneration preserves the wire format.
+- **Generated code compiles:** the Java and TypeScript SDK clients of all 21 modules are generated from these files and compiled on every build (`backend/`, `clients/`); the owned server contracts compile in their modules.
+- **Wire stability:** `proto/field-numbers.lock.json` records the field numbers of **every** message (4,546, map fields included), so any regeneration preserves the wire format.
 - **Terminology:** the contracts use *student* and *teacher* throughout — schema names, field names, paths, permissions and descriptions (each concept has exactly one name; the old synonyms are gone from every identifier and description).
 - **Database alignment:** resources removed with their tables (user types, app modules, localities, timezones, release condition types, result lines); resources renamed/moved with their tables (exam results; import/export jobs, access logs and drive to `lms`; acquisition sources to `finance`); new resources for new tables (fee structures + publish/archive, fee concessions, refunds, payment gateway accounts, payment allocations on Payment, staff bank accounts, student leave requests, staff attendance, leave balances, MFA credentials via the auth ops). A second review pass then locked down writable surfaces: MFA-challenge logins return no tokens or user object, encrypted links are write-only, tenant subscriptions are read-only to tenants (checkout is the only write), fee-due status and enrollment grade/certificate fields are workflow-only.

@@ -34,9 +34,17 @@ public class GlobalExceptionHandler {
     private static final Logger LOG = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     private static final String IF_MATCH = "If-Match";
 
+    private final ConstraintMapper constraints;
+
+    public GlobalExceptionHandler(ConstraintMapper constraints) {
+        this.constraints = constraints;
+    }
+
+    /** A typed exception as its problem; its field errors read in the caller's language where the catalogue can. */
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<Map<String, Object>> api(ApiException exception) {
-        return Problems.response(exception);
+        return Problems.response(exception.status(), exception.code(), exception.getMessage(),
+                exception.errors().stream().map(constraints::localized).toList());
     }
 
     /** Bean validation of a request body: 422 with one entry per field (contract: VALIDATION_FAILED). */
@@ -45,7 +53,7 @@ public class GlobalExceptionHandler {
         List<FieldError> errors = exception.getBindingResult().getFieldErrors().stream()
                 .map(e -> new FieldError(e.getField(), e.getDefaultMessage(), e.getCode()))
                 .toList();
-        return Problems.response(new ValidationFailedException(errors));
+        return api(new ValidationFailedException(errors));
     }
 
     /** Constraint violations on parameters (pageSize bounds, lengths...) are malformed requests: 400. */

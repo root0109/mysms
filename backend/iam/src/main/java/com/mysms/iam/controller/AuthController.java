@@ -1,14 +1,14 @@
 package com.mysms.iam.controller;
 
-import com.mysms.contracts.iam.api.AuthApi;
-import com.mysms.contracts.iam.model.CompleteMfaRequest;
-import com.mysms.contracts.iam.model.DisableMfaRequest;
-import com.mysms.contracts.iam.model.EnrollMfaRequest;
-import com.mysms.contracts.iam.model.LoginResult;
-import com.mysms.contracts.iam.model.MfaCredentialList;
-import com.mysms.contracts.iam.model.MfaEnrollment;
-import com.mysms.contracts.iam.model.RecoveryCodes;
-import com.mysms.contracts.iam.model.RegenerateRecoveryCodesRequest;
+import com.mysms.iam.api.AuthApi;
+import com.mysms.iam.api.model.CompleteMfaRequest;
+import com.mysms.iam.api.model.DisableMfaRequest;
+import com.mysms.iam.api.model.EnrollMfaRequest;
+import com.mysms.iam.api.model.LoginResult;
+import com.mysms.iam.api.model.MfaCredentialList;
+import com.mysms.iam.api.model.MfaEnrollment;
+import com.mysms.iam.api.model.RecoveryCodes;
+import com.mysms.iam.api.model.RegenerateRecoveryCodesRequest;
 import com.mysms.iam.business.MfaService;
 import com.mysms.iam.business.SignInService;
 import jakarta.servlet.http.HttpServletRequest;

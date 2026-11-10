@@ -1,0 +1,109 @@
+[ {
+  "operationId" : "transport.CreateRoute",
+  "method" : "POST",
+  "path" : "/v1/transport/routes",
+  "permission" : "transport.route.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "transport.CreateRouteStop",
+  "method" : "POST",
+  "path" : "/v1/transport/routes/{routeId}/stops",
+  "permission" : "transport.route_stop.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "transport.CreateStudentTransport",
+  "method" : "POST",
+  "path" : "/v1/transport/student-transports",
+  "permission" : "transport.student_transport.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "transport.DeleteRoute",
+  "method" : "DELETE",
+  "path" : "/v1/transport/routes/{routeId}",
+  "permission" : "transport.route.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "transport.DeleteRouteStop",
+  "method" : "DELETE",
+  "path" : "/v1/transport/routes/{routeId}/stops/{routeStopId}",
+  "permission" : "transport.route_stop.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "transport.DeleteStudentTransport",
+  "method" : "DELETE",
+  "path" : "/v1/transport/student-transports/{studentTransportId}",
+  "permission" : "transport.student_transport.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "transport.GetRoute",
+  "method" : "GET",
+  "path" : "/v1/transport/routes/{routeId}",
+  "permission" : "transport.route.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "transport.GetRouteStop",
+  "method" : "GET",
+  "path" : "/v1/transport/routes/{routeId}/stops/{routeStopId}",
+  "permission" : "transport.route_stop.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "transport.GetStudentTransport",
+  "method" : "GET",
+  "path" : "/v1/transport/student-transports/{studentTransportId}",
+  "permission" : "transport.student_transport.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "transport.ListRouteStops",
+  "method" : "GET",
+  "path" : "/v1/transport/routes/{routeId}/stops",
+  "permission" : "transport.route_stop.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "transport.ListRoutes",
+  "method" : "GET",
+  "path" : "/v1/transport/routes",
+  "permission" : "transport.route.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "transport.ListStudentTransports",
+  "method" : "GET",
+  "path" : "/v1/transport/student-transports",
+  "permission" : "transport.student_transport.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "transport.UpdateRoute",
+  "method" : "PATCH",
+  "path" : "/v1/transport/routes/{routeId}",
+  "permission" : "transport.route.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "transport.UpdateRouteStop",
+  "method" : "PATCH",
+  "path" : "/v1/transport/routes/{routeId}/stops/{routeStopId}",
+  "permission" : "transport.route_stop.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "transport.UpdateStudentTransport",
+  "method" : "PATCH",
+  "path" : "/v1/transport/student-transports/{studentTransportId}",
+  "permission" : "transport.student_transport.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+} ]

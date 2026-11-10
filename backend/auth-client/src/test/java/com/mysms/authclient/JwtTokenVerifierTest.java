@@ -19,7 +19,7 @@ class JwtTokenVerifierTest {
     private static final UUID SESSION = UUID.randomUUID();
     private final TestTokens tokens = new TestTokens();
     private final TokenVerifier verifier = JwtTokenVerifier.from(
-            new AuthClientProperties(TestTokens.ISSUER, null, tokens.publicKeyPem(), null, List.of("master"), null));
+            new AuthClientProperties(TestTokens.ISSUER, null, tokens.publicKeyPem(), null, List.of("master"), null, false));
 
     @Test
     void mapsTheMySmsClaims() {
@@ -82,19 +82,19 @@ class JwtTokenVerifierTest {
 
     @Test
     void requiresAnIssuerAndKeys() {
-        assertThatThrownBy(() -> JwtTokenVerifier.from(new AuthClientProperties(null, null, null, null, null, null)))
+        assertThatThrownBy(() -> JwtTokenVerifier.from(new AuthClientProperties(null, null, null, null, null, null, false)))
                 .isInstanceOf(IllegalStateException.class);
-        assertThatThrownBy(() -> JwtTokenVerifier.from(new AuthClientProperties("https://x", null, null, null, null, null)))
+        assertThatThrownBy(() -> JwtTokenVerifier.from(new AuthClientProperties("https://x", null, null, null, null, null, false)))
                 .isInstanceOf(IllegalStateException.class);
         for (String issuer : new String[] {"${MYSMS_AUTH_ISSUER}", "iam.example.com", "ftp://x", "https://", "http://a b"}) {
             assertThatThrownBy(() -> JwtTokenVerifier.from(new AuthClientProperties(issuer, "https://x/jwks", null, null,
-                    null, null))).isInstanceOf(IllegalStateException.class).hasMessageContaining("MYSMS_AUTH_ISSUER");
+                    null, null, false))).isInstanceOf(IllegalStateException.class).hasMessageContaining("MYSMS_AUTH_ISSUER");
         }
-        AuthClientProperties badKey = new AuthClientProperties("https://x", null, "not a key", null, null, null);
+        AuthClientProperties badKey = new AuthClientProperties("https://x", null, "not a key", null, null, null, false);
         assertThatThrownBy(() -> JwtTokenVerifier.from(badKey)).isInstanceOf(IllegalStateException.class);
-        assertThat(JwtTokenVerifier.from(new AuthClientProperties("https://x", "https://x/jwks", null, null, null, null)))
+        assertThat(JwtTokenVerifier.from(new AuthClientProperties("https://x", "https://x/jwks", null, null, null, null, false)))
                 .isNotNull();
-        AuthClientProperties defaults = new AuthClientProperties("https://x", null, null, null, null, null);
+        AuthClientProperties defaults = new AuthClientProperties("https://x", null, null, null, null, null, false);
         assertThat(defaults.audiences()).containsExactly("mysms", "mysms-platform-admin");
         assertThat(defaults.infrastructurePaths()).contains("/actuator/health");
         assertThat(defaults.modules()).isEmpty();

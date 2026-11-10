@@ -18,7 +18,7 @@ class CoreAutoConfigurationTest {
         CoreAutoConfiguration config = new CoreAutoConfiguration();
         assertThat(config.clock()).isEqualTo(Clock.systemUTC());
         assertThat(config.traceFilter()).isNotNull();
-        assertThat(config.globalExceptionHandler()).isNotNull();
+        assertThat(config.globalExceptionHandler(config.messageUtil())).isNotNull();
         assertThat(config.problemResponseWriter(JsonMapper.builder().build())).isNotNull();
         assertThat(config.tracePropagationInterceptor()).isNotNull();
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {

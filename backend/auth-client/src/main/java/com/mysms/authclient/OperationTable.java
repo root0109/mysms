@@ -1,7 +1,8 @@
 package com.mysms.authclient;
 
-import java.io.IOException;
+import com.mysms.core.json.JsonMappers;
 import java.io.InputStream;
+import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,8 +14,8 @@ import java.util.Set;
 import org.springframework.http.server.PathContainer;
 import org.springframework.web.util.pattern.PathPattern;
 import org.springframework.web.util.pattern.PathPatternParser;
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Every operation this process serves, from the contracts (META-INF/mysms/operations/&lt;module&gt;.json), matched by
@@ -40,7 +41,7 @@ public final class OperationTable {
         if (modules.isEmpty()) {
             throw new IllegalArgumentException("mysms.auth.modules must name the modules this process serves");
         }
-        JsonMapper json = JsonMapper.builder().build();
+        JsonMapper json = JsonMappers.create();
         PathPatternParser parser = new PathPatternParser();
         List<Entry> entries = new ArrayList<>();
         Set<String> seen = new HashSet<>();

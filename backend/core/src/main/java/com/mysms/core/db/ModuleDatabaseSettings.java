@@ -20,10 +20,18 @@ import java.time.Duration;
  *                         `mysms_platform_admin`, BYPASSRLS). Blank = the application role, which works only when it
  *                         bypasses row-level security itself (local development as a superuser)
  * @param relayPassword    its password
+ * @param slowStatement    how long a statement may take before it is named in the log (default 200 ms; zero or less
+ *                         switches the report off)
+ * @param replicaUrl       JDBC URL of a streaming replica that read-only transactions use; blank = none, every read
+ *                         goes to the primary. Never migrated: it follows the primary
+ * @param replicaUsername  role on the replica; blank = the application role
+ * @param replicaPassword  its password; blank = the application role's
  */
 public record ModuleDatabaseSettings(String url, String username, String password, Integer maximumPoolSize,
                                      Duration transactionTimeout, Boolean migrate, String migrateUsername,
-                                     String migratePassword, String relayUsername, String relayPassword) {
+                                     String migratePassword, String relayUsername, String relayPassword,
+                                     Duration slowStatement, String replicaUrl, String replicaUsername,
+                                     String replicaPassword) {
 
     public ModuleDatabaseSettings {
         if (url == null || url.isBlank()) {
@@ -35,8 +43,17 @@ public record ModuleDatabaseSettings(String url, String username, String passwor
         maximumPoolSize = maximumPoolSize == null ? Integer.valueOf(10) : maximumPoolSize;
         transactionTimeout = transactionTimeout == null ? Duration.ofSeconds(30) : transactionTimeout;
         migrate = migrate == null ? Boolean.TRUE : migrate;
+        slowStatement = slowStatement == null ? Duration.ofMillis(200) : slowStatement;
         migrateUsername = migrateUsername == null || migrateUsername.isBlank() ? null : migrateUsername;
         relayUsername = relayUsername == null || relayUsername.isBlank() ? null : relayUsername;
+        replicaUrl = replicaUrl == null || replicaUrl.isBlank() ? null : replicaUrl;
+        replicaUsername = replicaUsername == null || replicaUsername.isBlank() ? username : replicaUsername;
+        replicaPassword = replicaPassword == null || replicaPassword.isBlank() ? password : replicaPassword;
+    }
+
+    /** True when read-only transactions have a replica of their own. */
+    public boolean hasReplica() {
+        return replicaUrl != null;
     }
 
     /** True when migrations run as a separate schema-owner role. */

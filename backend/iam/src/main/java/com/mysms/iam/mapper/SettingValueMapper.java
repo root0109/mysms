@@ -1,6 +1,6 @@
 package com.mysms.iam.mapper;
 
-import com.mysms.contracts.iam.model.SettingValue;
+import com.mysms.iam.api.model.SettingValue;
 import com.mysms.core.web.Etags;
 import com.mysms.iam.domain.SettingValueEntity;
 import org.mapstruct.Mapper;

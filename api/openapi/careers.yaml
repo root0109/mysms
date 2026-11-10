@@ -28,7 +28,7 @@ paths:
     get:
       operationId: careers.ListFunctionAreas
       summary: List FunctionAreas
-      description: List FunctionAreas visible to the caller, with cursor pagination, filtering and ordering.
+      description: List FunctionAreas visible to the caller, page by page, with filtering and sorting.
       tags:
       - FunctionArea
       security:
@@ -38,10 +38,11 @@ paths:
         service: mysms.careers.v1.FunctionAreaService
         method: ListFunctionAreas
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -49,7 +50,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FunctionAreaList'
+                $ref: '#/components/schemas/PagingInfoFunctionArea'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -268,7 +269,7 @@ paths:
     get:
       operationId: careers.ListIndustries
       summary: List Industries
-      description: List Industries visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Industries visible to the caller, page by page, with filtering and sorting.
       tags:
       - Industry
       security:
@@ -278,10 +279,11 @@ paths:
         service: mysms.careers.v1.IndustryService
         method: ListIndustries
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -289,7 +291,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IndustryList'
+                $ref: '#/components/schemas/PagingInfoIndustry'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -508,7 +510,7 @@ paths:
     get:
       operationId: careers.ListJobOpenings
       summary: List JobOpenings
-      description: List JobOpenings visible to the caller, with cursor pagination, filtering and ordering. Guests (no token) receive published rows only, with internal fields omitted (guest projection).
+      description: List JobOpenings visible to the caller, page by page, with filtering and sorting. Guests (no token) receive published rows only, with internal fields omitted (guest projection).
       tags:
       - JobOpening
       security:
@@ -519,10 +521,11 @@ paths:
         service: mysms.careers.v1.JobOpeningService
         method: ListJobOpenings
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -530,7 +533,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JobOpeningList'
+                $ref: '#/components/schemas/PagingInfoJobOpening'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -750,7 +753,7 @@ paths:
     get:
       operationId: careers.ListJobApplications
       summary: List JobApplications
-      description: List JobApplications visible to the caller, with cursor pagination, filtering and ordering.
+      description: List JobApplications visible to the caller, page by page, with filtering and sorting.
       tags:
       - JobOpening
       security:
@@ -767,10 +770,11 @@ paths:
           type: string
           format: uuid
         description: JobOpening id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -778,7 +782,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JobApplicationList'
+                $ref: '#/components/schemas/PagingInfoJobApplication'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1025,7 +1029,7 @@ paths:
     get:
       operationId: careers.ListCandidatePreferences
       summary: List CandidatePreferences
-      description: List CandidatePreferences visible to the caller, with cursor pagination, filtering and ordering.
+      description: List CandidatePreferences visible to the caller, page by page, with filtering and sorting.
       tags:
       - CandidatePreference
       security:
@@ -1035,10 +1039,11 @@ paths:
         service: mysms.careers.v1.CandidatePreferenceService
         method: ListCandidatePreferences
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1046,7 +1051,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CandidatePreferenceList'
+                $ref: '#/components/schemas/PagingInfoCandidatePreference'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1265,7 +1270,7 @@ paths:
     get:
       operationId: careers.ListCandidatePreferredFunctions
       summary: List CandidatePreferredFunctions
-      description: List CandidatePreferredFunctions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List CandidatePreferredFunctions visible to the caller, page by page, with filtering and sorting.
       tags:
       - CandidatePreference
       security:
@@ -1282,10 +1287,11 @@ paths:
           type: string
           format: uuid
         description: CandidatePreference id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1293,7 +1299,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CandidatePreferredFunctionList'
+                $ref: '#/components/schemas/PagingInfoCandidatePreferredFunction'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1540,7 +1546,7 @@ paths:
     get:
       operationId: careers.ListCandidatePreferredIndustries
       summary: List CandidatePreferredIndustries
-      description: List CandidatePreferredIndustries visible to the caller, with cursor pagination, filtering and ordering.
+      description: List CandidatePreferredIndustries visible to the caller, page by page, with filtering and sorting.
       tags:
       - CandidatePreference
       security:
@@ -1557,10 +1563,11 @@ paths:
           type: string
           format: uuid
         description: CandidatePreference id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1568,7 +1575,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CandidatePreferredIndustryList'
+                $ref: '#/components/schemas/PagingInfoCandidatePreferredIndustry'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2130,22 +2137,20 @@ components:
           type: string
           maxLength: 120
           description: Function.
-    FunctionAreaList:
+    PagingInfoFunctionArea:
       type: object
+      description: A page of FunctionArea, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/FunctionArea'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Industry:
       type: object
       description: Industry catalogue.
@@ -2215,22 +2220,20 @@ components:
           type: string
           maxLength: 120
           description: Industry.
-    IndustryList:
+    PagingInfoIndustry:
       type: object
+      description: A page of Industry, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Industry'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     JobOpening:
       type: object
       description: Job posted on the job board.
@@ -2390,22 +2393,20 @@ components:
           type: string
           format: uuid
           description: Company logo.
-    JobOpeningList:
+    PagingInfoJobOpening:
       type: object
+      description: A page of JobOpening, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/JobOpening'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     JobApplication:
       type: object
       description: Application to a job opening.
@@ -2478,22 +2479,20 @@ components:
           type: string
           format: uuid
           description: Résumé.
-    JobApplicationList:
+    PagingInfoJobApplication:
       type: object
+      description: A page of JobApplication, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/JobApplication'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     CandidatePreference:
       type: object
       description: A person's job-search preferences.
@@ -2655,22 +2654,20 @@ components:
           - startup
           x-extensible-enum: true
           description: Company-type preference.
-    CandidatePreferenceList:
+    PagingInfoCandidatePreference:
       type: object
+      description: A page of CandidatePreference, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/CandidatePreference'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     CandidatePreferredFunction:
       type: object
       description: Job function a candidate prefers.
@@ -2723,22 +2720,20 @@ components:
           type: string
           format: uuid
           description: Function.
-    CandidatePreferredFunctionList:
+    PagingInfoCandidatePreferredFunction:
       type: object
+      description: A page of CandidatePreferredFunction, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/CandidatePreferredFunction'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     CandidatePreferredIndustry:
       type: object
       description: Industry a candidate prefers.
@@ -2791,22 +2786,20 @@ components:
           type: string
           format: uuid
           description: Industry.
-    CandidatePreferredIndustryList:
+    PagingInfoCandidatePreferredIndustry:
       type: object
+      description: A page of CandidatePreferredIndustry, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/CandidatePreferredIndustry'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     CloseJobOpeningRequest:
       type: object
       properties:

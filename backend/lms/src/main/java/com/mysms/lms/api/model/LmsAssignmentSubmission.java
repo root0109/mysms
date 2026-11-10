@@ -1,0 +1,730 @@
+// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+package com.mysms.lms.api.model;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.lang.Nullable;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+
+
+import java.util.*;
+
+/**
+ * Student&#39;s submission to a learning assignment.
+ */
+
+public class LmsAssignmentSubmission {
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID id;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private UUID assignmentId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private UUID userId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID lessonId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID courseId;
+
+  /**
+   * Type submitted.
+   */
+  public enum SubmissionTypeEnum {
+    DOCUMENT("document"),
+    
+    PDF("pdf"),
+    
+    URL("url"),
+    
+    IMAGE("image"),
+    
+    TEXT("text");
+
+    private final String value;
+
+    SubmissionTypeEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static SubmissionTypeEnum fromValue(String value) {
+      for (SubmissionTypeEnum b : SubmissionTypeEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable SubmissionTypeEnum submissionType;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String questionSnapshot;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String answer;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID attachmentFileId;
+
+  /**
+   * Evaluation result.
+   */
+  public enum StatusEnum {
+    NOT_GRADED("not_graded"),
+    
+    PASS("pass"),
+    
+    FAIL("fail"),
+    
+    NOT_APPLICABLE("not_applicable");
+
+    private final String value;
+
+    StatusEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static StatusEnum fromValue(String value) {
+      for (StatusEnum b : StatusEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable StatusEnum status;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID evaluatorUserId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String evaluatorComments;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID contentItemId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID groupId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String title;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private @Nullable OffsetDateTime submittedAt;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable Boolean isFinal;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private @Nullable OffsetDateTime finalizedAt;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private @Nullable OffsetDateTime createTime;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID createdBy;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private @Nullable OffsetDateTime updateTime;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID updatedBy;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String etag;
+
+  public LmsAssignmentSubmission() {
+    super();
+  }
+
+  /**
+   * Constructor with only required parameters
+   */
+  public LmsAssignmentSubmission(UUID assignmentId, UUID userId) {
+    this.assignmentId = assignmentId;
+    this.userId = userId;
+  }
+
+  public LmsAssignmentSubmission id(@Nullable UUID id) {
+    this.id = id;
+    return this;
+  }
+
+  /**
+   * Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback).
+   * @return id
+   */
+  @Valid 
+  @JsonProperty("id")
+  public @Nullable UUID getId() {
+    return id;
+  }
+
+  @JsonProperty("id")
+  public void setId(@Nullable UUID id) {
+    this.id = id;
+  }
+
+  public LmsAssignmentSubmission assignmentId(UUID assignmentId) {
+    this.assignmentId = assignmentId;
+    return this;
+  }
+
+  /**
+   * Assignment.
+   * @return assignmentId
+   */
+  @NotNull @Valid 
+  @JsonProperty("assignmentId")
+  public UUID getAssignmentId() {
+    return assignmentId;
+  }
+
+  @JsonProperty("assignmentId")
+  public void setAssignmentId(UUID assignmentId) {
+    this.assignmentId = assignmentId;
+  }
+
+  public LmsAssignmentSubmission userId(UUID userId) {
+    this.userId = userId;
+    return this;
+  }
+
+  /**
+   * Student.
+   * @return userId
+   */
+  @NotNull @Valid 
+  @JsonProperty("userId")
+  public UUID getUserId() {
+    return userId;
+  }
+
+  @JsonProperty("userId")
+  public void setUserId(UUID userId) {
+    this.userId = userId;
+  }
+
+  public LmsAssignmentSubmission lessonId(@Nullable UUID lessonId) {
+    this.lessonId = lessonId;
+    return this;
+  }
+
+  /**
+   * Lesson context.
+   * @return lessonId
+   */
+  @Valid 
+  @JsonProperty("lessonId")
+  public @Nullable UUID getLessonId() {
+    return lessonId;
+  }
+
+  @JsonProperty("lessonId")
+  public void setLessonId(@Nullable UUID lessonId) {
+    this.lessonId = lessonId;
+  }
+
+  public LmsAssignmentSubmission courseId(@Nullable UUID courseId) {
+    this.courseId = courseId;
+    return this;
+  }
+
+  /**
+   * Course context.
+   * @return courseId
+   */
+  @Valid 
+  @JsonProperty("courseId")
+  public @Nullable UUID getCourseId() {
+    return courseId;
+  }
+
+  @JsonProperty("courseId")
+  public void setCourseId(@Nullable UUID courseId) {
+    this.courseId = courseId;
+  }
+
+  public LmsAssignmentSubmission submissionType(@Nullable SubmissionTypeEnum submissionType) {
+    this.submissionType = submissionType;
+    return this;
+  }
+
+  /**
+   * Type submitted.
+   * @return submissionType
+   */
+  
+  @JsonProperty("submissionType")
+  public @Nullable SubmissionTypeEnum getSubmissionType() {
+    return submissionType;
+  }
+
+  @JsonProperty("submissionType")
+  public void setSubmissionType(@Nullable SubmissionTypeEnum submissionType) {
+    this.submissionType = submissionType;
+  }
+
+  public LmsAssignmentSubmission questionSnapshot(@Nullable String questionSnapshot) {
+    this.questionSnapshot = questionSnapshot;
+    return this;
+  }
+
+  /**
+   * Task statement at submission time.
+   * @return questionSnapshot
+   */
+  
+  @JsonProperty("questionSnapshot")
+  public @Nullable String getQuestionSnapshot() {
+    return questionSnapshot;
+  }
+
+  @JsonProperty("questionSnapshot")
+  public void setQuestionSnapshot(@Nullable String questionSnapshot) {
+    this.questionSnapshot = questionSnapshot;
+  }
+
+  public LmsAssignmentSubmission answer(@Nullable String answer) {
+    this.answer = answer;
+    return this;
+  }
+
+  /**
+   * Text / URL answer.
+   * @return answer
+   */
+  
+  @JsonProperty("answer")
+  public @Nullable String getAnswer() {
+    return answer;
+  }
+
+  @JsonProperty("answer")
+  public void setAnswer(@Nullable String answer) {
+    this.answer = answer;
+  }
+
+  public LmsAssignmentSubmission attachmentFileId(@Nullable UUID attachmentFileId) {
+    this.attachmentFileId = attachmentFileId;
+    return this;
+  }
+
+  /**
+   * Uploaded file.
+   * @return attachmentFileId
+   */
+  @Valid 
+  @JsonProperty("attachmentFileId")
+  public @Nullable UUID getAttachmentFileId() {
+    return attachmentFileId;
+  }
+
+  @JsonProperty("attachmentFileId")
+  public void setAttachmentFileId(@Nullable UUID attachmentFileId) {
+    this.attachmentFileId = attachmentFileId;
+  }
+
+  public LmsAssignmentSubmission status(@Nullable StatusEnum status) {
+    this.status = status;
+    return this;
+  }
+
+  /**
+   * Evaluation result.
+   * @return status
+   */
+  
+  @JsonProperty("status")
+  public @Nullable StatusEnum getStatus() {
+    return status;
+  }
+
+  @JsonProperty("status")
+  public void setStatus(@Nullable StatusEnum status) {
+    this.status = status;
+  }
+
+  public LmsAssignmentSubmission evaluatorUserId(@Nullable UUID evaluatorUserId) {
+    this.evaluatorUserId = evaluatorUserId;
+    return this;
+  }
+
+  /**
+   * Evaluator.
+   * @return evaluatorUserId
+   */
+  @Valid 
+  @JsonProperty("evaluatorUserId")
+  public @Nullable UUID getEvaluatorUserId() {
+    return evaluatorUserId;
+  }
+
+  @JsonProperty("evaluatorUserId")
+  public void setEvaluatorUserId(@Nullable UUID evaluatorUserId) {
+    this.evaluatorUserId = evaluatorUserId;
+  }
+
+  public LmsAssignmentSubmission evaluatorComments(@Nullable String evaluatorComments) {
+    this.evaluatorComments = evaluatorComments;
+    return this;
+  }
+
+  /**
+   * Feedback.
+   * @return evaluatorComments
+   */
+  
+  @JsonProperty("evaluatorComments")
+  public @Nullable String getEvaluatorComments() {
+    return evaluatorComments;
+  }
+
+  @JsonProperty("evaluatorComments")
+  public void setEvaluatorComments(@Nullable String evaluatorComments) {
+    this.evaluatorComments = evaluatorComments;
+  }
+
+  public LmsAssignmentSubmission contentItemId(@Nullable UUID contentItemId) {
+    this.contentItemId = contentItemId;
+    return this;
+  }
+
+  /**
+   * Placement of the assignment in a cohort.
+   * @return contentItemId
+   */
+  @Valid 
+  @JsonProperty("contentItemId")
+  public @Nullable UUID getContentItemId() {
+    return contentItemId;
+  }
+
+  @JsonProperty("contentItemId")
+  public void setContentItemId(@Nullable UUID contentItemId) {
+    this.contentItemId = contentItemId;
+  }
+
+  public LmsAssignmentSubmission groupId(@Nullable UUID groupId) {
+    this.groupId = groupId;
+    return this;
+  }
+
+  /**
+   * Group submitting (group assignments).
+   * @return groupId
+   */
+  @Valid 
+  @JsonProperty("groupId")
+  public @Nullable UUID getGroupId() {
+    return groupId;
+  }
+
+  @JsonProperty("groupId")
+  public void setGroupId(@Nullable UUID groupId) {
+    this.groupId = groupId;
+  }
+
+  public LmsAssignmentSubmission title(@Nullable String title) {
+    this.title = title;
+    return this;
+  }
+
+  /**
+   * Submission title.
+   * @return title
+   */
+  @Size(max = 255) 
+  @JsonProperty("title")
+  public @Nullable String getTitle() {
+    return title;
+  }
+
+  @JsonProperty("title")
+  public void setTitle(@Nullable String title) {
+    this.title = title;
+  }
+
+  public LmsAssignmentSubmission submittedAt(@Nullable OffsetDateTime submittedAt) {
+    this.submittedAt = submittedAt;
+    return this;
+  }
+
+  /**
+   * Submission time.
+   * @return submittedAt
+   */
+  @Valid 
+  @JsonProperty("submittedAt")
+  public @Nullable OffsetDateTime getSubmittedAt() {
+    return submittedAt;
+  }
+
+  @JsonProperty("submittedAt")
+  public void setSubmittedAt(@Nullable OffsetDateTime submittedAt) {
+    this.submittedAt = submittedAt;
+  }
+
+  public LmsAssignmentSubmission isFinal(@Nullable Boolean isFinal) {
+    this.isFinal = isFinal;
+    return this;
+  }
+
+  /**
+   * Final submission (false = draft that can still change).
+   * @return isFinal
+   */
+  
+  @JsonProperty("isFinal")
+  public @Nullable Boolean getIsFinal() {
+    return isFinal;
+  }
+
+  @JsonProperty("isFinal")
+  public void setIsFinal(@Nullable Boolean isFinal) {
+    this.isFinal = isFinal;
+  }
+
+  public LmsAssignmentSubmission finalizedAt(@Nullable OffsetDateTime finalizedAt) {
+    this.finalizedAt = finalizedAt;
+    return this;
+  }
+
+  /**
+   * When marked final.
+   * @return finalizedAt
+   */
+  @Valid 
+  @JsonProperty("finalizedAt")
+  public @Nullable OffsetDateTime getFinalizedAt() {
+    return finalizedAt;
+  }
+
+  @JsonProperty("finalizedAt")
+  public void setFinalizedAt(@Nullable OffsetDateTime finalizedAt) {
+    this.finalizedAt = finalizedAt;
+  }
+
+  public LmsAssignmentSubmission createTime(@Nullable OffsetDateTime createTime) {
+    this.createTime = createTime;
+    return this;
+  }
+
+  /**
+   * Row creation time.
+   * @return createTime
+   */
+  @Valid 
+  @JsonProperty("createTime")
+  public @Nullable OffsetDateTime getCreateTime() {
+    return createTime;
+  }
+
+  @JsonProperty("createTime")
+  public void setCreateTime(@Nullable OffsetDateTime createTime) {
+    this.createTime = createTime;
+  }
+
+  public LmsAssignmentSubmission createdBy(@Nullable UUID createdBy) {
+    this.createdBy = createdBy;
+    return this;
+  }
+
+  /**
+   * User account that created the row (audit reference to iam.user_account; not FK-constrained).
+   * @return createdBy
+   */
+  @Valid 
+  @JsonProperty("createdBy")
+  public @Nullable UUID getCreatedBy() {
+    return createdBy;
+  }
+
+  @JsonProperty("createdBy")
+  public void setCreatedBy(@Nullable UUID createdBy) {
+    this.createdBy = createdBy;
+  }
+
+  public LmsAssignmentSubmission updateTime(@Nullable OffsetDateTime updateTime) {
+    this.updateTime = updateTime;
+    return this;
+  }
+
+  /**
+   * Last update time.
+   * @return updateTime
+   */
+  @Valid 
+  @JsonProperty("updateTime")
+  public @Nullable OffsetDateTime getUpdateTime() {
+    return updateTime;
+  }
+
+  @JsonProperty("updateTime")
+  public void setUpdateTime(@Nullable OffsetDateTime updateTime) {
+    this.updateTime = updateTime;
+  }
+
+  public LmsAssignmentSubmission updatedBy(@Nullable UUID updatedBy) {
+    this.updatedBy = updatedBy;
+    return this;
+  }
+
+  /**
+   * User account that last updated the row (audit reference to iam.user_account; not FK-constrained).
+   * @return updatedBy
+   */
+  @Valid 
+  @JsonProperty("updatedBy")
+  public @Nullable UUID getUpdatedBy() {
+    return updatedBy;
+  }
+
+  @JsonProperty("updatedBy")
+  public void setUpdatedBy(@Nullable UUID updatedBy) {
+    this.updatedBy = updatedBy;
+  }
+
+  public LmsAssignmentSubmission etag(@Nullable String etag) {
+    this.etag = etag;
+    return this;
+  }
+
+  /**
+   * Entity tag (row version); send back in If-Match / etag.
+   * @return etag
+   */
+  
+  @JsonProperty("etag")
+  public @Nullable String getEtag() {
+    return etag;
+  }
+
+  @JsonProperty("etag")
+  public void setEtag(@Nullable String etag) {
+    this.etag = etag;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    LmsAssignmentSubmission lmsAssignmentSubmission = (LmsAssignmentSubmission) o;
+    return Objects.equals(this.id, lmsAssignmentSubmission.id) &&
+        Objects.equals(this.assignmentId, lmsAssignmentSubmission.assignmentId) &&
+        Objects.equals(this.userId, lmsAssignmentSubmission.userId) &&
+        Objects.equals(this.lessonId, lmsAssignmentSubmission.lessonId) &&
+        Objects.equals(this.courseId, lmsAssignmentSubmission.courseId) &&
+        Objects.equals(this.submissionType, lmsAssignmentSubmission.submissionType) &&
+        Objects.equals(this.questionSnapshot, lmsAssignmentSubmission.questionSnapshot) &&
+        Objects.equals(this.answer, lmsAssignmentSubmission.answer) &&
+        Objects.equals(this.attachmentFileId, lmsAssignmentSubmission.attachmentFileId) &&
+        Objects.equals(this.status, lmsAssignmentSubmission.status) &&
+        Objects.equals(this.evaluatorUserId, lmsAssignmentSubmission.evaluatorUserId) &&
+        Objects.equals(this.evaluatorComments, lmsAssignmentSubmission.evaluatorComments) &&
+        Objects.equals(this.contentItemId, lmsAssignmentSubmission.contentItemId) &&
+        Objects.equals(this.groupId, lmsAssignmentSubmission.groupId) &&
+        Objects.equals(this.title, lmsAssignmentSubmission.title) &&
+        Objects.equals(this.submittedAt, lmsAssignmentSubmission.submittedAt) &&
+        Objects.equals(this.isFinal, lmsAssignmentSubmission.isFinal) &&
+        Objects.equals(this.finalizedAt, lmsAssignmentSubmission.finalizedAt) &&
+        Objects.equals(this.createTime, lmsAssignmentSubmission.createTime) &&
+        Objects.equals(this.createdBy, lmsAssignmentSubmission.createdBy) &&
+        Objects.equals(this.updateTime, lmsAssignmentSubmission.updateTime) &&
+        Objects.equals(this.updatedBy, lmsAssignmentSubmission.updatedBy) &&
+        Objects.equals(this.etag, lmsAssignmentSubmission.etag);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, assignmentId, userId, lessonId, courseId, submissionType, questionSnapshot, answer, attachmentFileId, status, evaluatorUserId, evaluatorComments, contentItemId, groupId, title, submittedAt, isFinal, finalizedAt, createTime, createdBy, updateTime, updatedBy, etag);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("class LmsAssignmentSubmission {\n");
+    sb.append("    id: ").append(toIndentedString(id)).append("\n");
+    sb.append("    assignmentId: ").append(toIndentedString(assignmentId)).append("\n");
+    sb.append("    userId: ").append(toIndentedString(userId)).append("\n");
+    sb.append("    lessonId: ").append(toIndentedString(lessonId)).append("\n");
+    sb.append("    courseId: ").append(toIndentedString(courseId)).append("\n");
+    sb.append("    submissionType: ").append(toIndentedString(submissionType)).append("\n");
+    sb.append("    questionSnapshot: ").append(toIndentedString(questionSnapshot)).append("\n");
+    sb.append("    answer: ").append(toIndentedString(answer)).append("\n");
+    sb.append("    attachmentFileId: ").append(toIndentedString(attachmentFileId)).append("\n");
+    sb.append("    status: ").append(toIndentedString(status)).append("\n");
+    sb.append("    evaluatorUserId: ").append(toIndentedString(evaluatorUserId)).append("\n");
+    sb.append("    evaluatorComments: ").append(toIndentedString(evaluatorComments)).append("\n");
+    sb.append("    contentItemId: ").append(toIndentedString(contentItemId)).append("\n");
+    sb.append("    groupId: ").append(toIndentedString(groupId)).append("\n");
+    sb.append("    title: ").append(toIndentedString(title)).append("\n");
+    sb.append("    submittedAt: ").append(toIndentedString(submittedAt)).append("\n");
+    sb.append("    isFinal: ").append(toIndentedString(isFinal)).append("\n");
+    sb.append("    finalizedAt: ").append(toIndentedString(finalizedAt)).append("\n");
+    sb.append("    createTime: ").append(toIndentedString(createTime)).append("\n");
+    sb.append("    createdBy: ").append(toIndentedString(createdBy)).append("\n");
+    sb.append("    updateTime: ").append(toIndentedString(updateTime)).append("\n");
+    sb.append("    updatedBy: ").append(toIndentedString(updatedBy)).append("\n");
+    sb.append("    etag: ").append(toIndentedString(etag)).append("\n");
+    sb.append("}");
+    return sb.toString();
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(@Nullable Object o) {
+    return o == null ? "null" : o.toString().replace("\n", "\n    ");
+  }
+}
+

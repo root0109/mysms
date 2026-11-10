@@ -372,3 +372,78 @@ body {
   background: var(--sms-intent-special-container);
   color: var(--sms-intent-on-special-container);
 }
+
+/* ---- Segmented control: native radios drawn as adjoining segments */
+.sms-segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  border: 1px solid var(--sms-color-border);
+  border-radius: var(--sms-radius-sm);
+  overflow: hidden;
+}
+.sms-segmented__option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  padding-inline: var(--sms-space-4);
+  background: var(--sms-color-surface);
+  color: var(--sms-color-text);
+  font: var(--sms-font-caption);
+  cursor: pointer;
+}
+.sms-segmented__option + .sms-segmented__option {
+  border-inline-start: 1px solid var(--sms-color-border);
+}
+.sms-segmented__input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.sms-segmented__option:has(.sms-segmented__input:focus-visible) {
+  outline: 2px solid var(--sms-color-primary);
+  outline-offset: -2px;
+}
+.sms-segmented__option:has(.sms-segmented__input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+/* the chosen segment is marked by a ring as well as by its colour, so it survives forced colours */
+.sms-segmented__option--on {
+  font-weight: 600;
+  box-shadow: inset 0 0 0 2px currentColor;
+}
+@media (forced-colors: active) {
+  .sms-segmented__option--on {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+.sms-segmented__option--success {
+  background: var(--sms-intent-success-container);
+  color: var(--sms-intent-on-success-container);
+}
+.sms-segmented__option--warning {
+  background: var(--sms-intent-warning-container);
+  color: var(--sms-intent-on-warning-container);
+}
+.sms-segmented__option--danger {
+  background: var(--sms-intent-danger-container);
+  color: var(--sms-intent-on-danger-container);
+}
+.sms-segmented__option--info {
+  background: var(--sms-intent-info-container);
+  color: var(--sms-intent-on-info-container);
+}
+.sms-segmented__option--neutral {
+  background: var(--sms-intent-neutral-container);
+  color: var(--sms-intent-on-neutral-container);
+}
+.sms-segmented__option--special {
+  background: var(--sms-intent-special-container);
+  color: var(--sms-intent-on-special-container);
+}

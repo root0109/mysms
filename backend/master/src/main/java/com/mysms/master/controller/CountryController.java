@@ -1,9 +1,11 @@
 package com.mysms.master.controller;
 
-import com.mysms.contracts.master.api.CountryApi;
-import com.mysms.contracts.master.model.Country;
-import com.mysms.contracts.master.model.CountryList;
-import com.mysms.contracts.master.model.CountryUpdate;
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.master.api.CountryApi;
+import com.mysms.master.api.model.Country;
+import com.mysms.master.api.model.CountryUpdate;
 import com.mysms.core.web.ReadMask;
 import com.mysms.master.business.CountryService;
 import java.net.URI;
@@ -28,10 +30,10 @@ public class CountryController implements CountryApi {
     }
 
     @Override
-    public ResponseEntity<CountryList> listCountries(Integer pageSize, String pageToken, String filter, String orderBy,
-                                              String fields) {
-        CountryList list = service.listCountries(pageSize, pageToken, filter, orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<Country>> listCountries(Integer page, Integer size, String cursor, String filter,
+            List<String> sort, String fields) {
+        PagingInfo<Country> list = PagingUtil.pagingInfo(service.listCountries(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 

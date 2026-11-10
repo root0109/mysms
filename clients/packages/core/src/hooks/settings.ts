@@ -4,6 +4,7 @@ import { SettingDefinitionApi } from '@mysms/sdk/iam/apis/SettingDefinitionApi';
 import { SettingValueApi } from '@mysms/sdk/iam/apis/SettingValueApi';
 import { UserAccountApi } from '@mysms/sdk/iam/apis/UserAccountApi';
 import { useMemo } from 'react';
+import { FIRST_PAGE, allPages, nextPage, pageQuery } from '../api/pages';
 import { call, callWithEtag, type WithEtag } from '../api/unwrap';
 import { queryKey } from '../query/keys';
 import { STALE_TIME } from '../query/queryClient';
@@ -34,7 +35,10 @@ export function useSettingDefinitions() {
   const { api } = useRuntime();
   return useQuery({
     queryKey: queryKey('iam', 'setting-definitions'),
-    queryFn: () => call(api.get(SettingDefinitionApi).listSettingDefinitions({ pageSize: 500 })),
+    queryFn: () =>
+      allPages((page) =>
+        call(api.get(SettingDefinitionApi).listSettingDefinitions({ size: 500, ...pageQuery(page) })),
+      ),
     staleTime: STALE_TIME.reference,
   });
 }
@@ -76,17 +80,15 @@ export function useSettingValues(params: ListParams = {}) {
   });
 }
 
-/** iam.ListSettingValues page by page (nextPageToken), for the administration list. */
-export function useInfiniteSettingValues(params: Omit<ListParams, 'pageToken'> = {}) {
+/** iam.ListSettingValues page by page (each response's next link), for the administration list. */
+export function useInfiniteSettingValues(params: Omit<ListParams, 'page' | 'cursor'> = {}) {
   const { api } = useRuntime();
   return useInfiniteQuery({
     queryKey: queryKey('iam', 'setting-values', { ...params, infinite: true }),
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: FIRST_PAGE,
     queryFn: ({ pageParam }) =>
-      call(
-        api.get(SettingValueApi).listSettingValues(pageParam ? { ...params, pageToken: pageParam } : params),
-      ),
-    getNextPageParam: (last) => last.nextPageToken || undefined,
+      call(api.get(SettingValueApi).listSettingValues({ ...params, ...pageQuery(pageParam) })),
+    getNextPageParam: (last) => nextPage(last.paging),
     staleTime: STALE_TIME.list,
   });
 }

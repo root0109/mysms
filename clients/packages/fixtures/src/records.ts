@@ -1,4 +1,5 @@
 import { json, problem, type Handler } from './fakeApi';
+import { pageOf } from './paging';
 
 /** A record type of the generic record screens, as the fake backend serves it. */
 export interface FakeRecordType {
@@ -49,14 +50,7 @@ export function fakeRecords(type: FakeRecordType): Record<string, Handler> {
             .includes(text.toLowerCase()),
         );
       }
-      const size = Number(url.searchParams.get('pageSize') ?? 50);
-      const start = Number(url.searchParams.get('pageToken') ?? 0);
-      const items = all.slice(start, start + size);
-      return json({
-        items,
-        nextPageToken: start + size < all.length ? String(start + size) : '',
-        totalSize: all.length,
-      });
+      return pageOf(req, all);
     },
     [`POST ${type.collection}`]: async (req) => {
       const body = (await req.json()) as Record<string, unknown>;

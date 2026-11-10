@@ -1,6 +1,7 @@
 package com.mysms.iam.controller;
 
 import com.mysms.authclient.AuthClientProperties;
+import io.swagger.v3.oas.annotations.Hidden;
 import com.mysms.iam.business.TokenIssuer;
 import java.time.Duration;
 import java.util.Map;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
  * The issuer's public keys (RFC 7517 JSON Web Key Set) at /oauth2/jwks, which every module's verifier reads through
  * mysms.auth.jwk-set-uri. Infrastructure, not a contract operation: public keys only, served without a token.
  */
+@Hidden // infrastructure, not an API operation: keeps the OpenAPI document to the contract
 @RestController
 public class JwksController {
 

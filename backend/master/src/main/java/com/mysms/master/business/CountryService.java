@@ -1,9 +1,9 @@
 package com.mysms.master.business;
 
-import com.mysms.contracts.master.model.Country;
-import com.mysms.contracts.master.model.CountryList;
-import com.mysms.contracts.master.model.CountryUpdate;
+import com.mysms.master.api.model.Country;
+import com.mysms.master.api.model.CountryUpdate;
 import com.mysms.core.context.Actor;
+import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.DuplicateResourceException;
 import com.mysms.core.error.FieldError;
@@ -34,13 +34,14 @@ import java.util.Locale;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of master.country (JAVA-CODING-RULES §4): one plain class, explicit methods, programmatic
- * transactions through the module's executor, audit + domain event in the same transaction as every change.
+ * Business service of master.country (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
+ * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change.
  */
 @Service
-public class CountryService {
+public class CountryService extends AppTransactionManager {
 
     public static final String AGGREGATE = CountryEntity.TABLE;
     /** The contract's CountryUpdate fields, in apply order. */
@@ -48,7 +49,6 @@ public class CountryService {
 
     private final CountryRepository repository;
     private final CountryMapper mapper;
-    private final ModuleDatabase database;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
@@ -56,11 +56,13 @@ public class CountryService {
 
     public CountryService(CountryRepository repository, CountryMapper mapper,
                      @Qualifier(MasterDatabaseConfig.DATABASE) ModuleDatabase database,
+            @Qualifier(MasterDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
                      @Qualifier(MasterEventsConfig.OUTBOX) OutboxWriter outbox,
                      @Qualifier(MasterEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator, Clock clock) {
+
+        super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
-        this.database = database;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -68,19 +70,20 @@ public class CountryService {
     }
 
     public Country getCountry(UUID id) {
-        return database.tx().read(() -> mapper.toDto(load(id)));
+        return doInReadTransaction(() -> {
+            return mapper.toDto(load(id));
+        });
     }
 
-    public CountryList listCountries(Integer pageSize, String pageToken, String filter, String orderBy) {
-        SortSpec sort = SortSpec.parse(orderBy, CountryRepository.SORT_FIELDS, CountryRepository.DEFAULT_ORDER,
+    public Page<Country> listCountries(Integer pageNumber, Integer pageSize, String cursor, String filter,
+            List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, CountryRepository.SORT_FIELDS, CountryRepository.DEFAULT_ORDER,
                 CountryRepository.ID_COLUMN);
         SqlFragment where = FilterParser.parse(filter, CountryRepository.FILTER_FIELDS);
-        PageRequest page = PageRequest.of(pageSize, pageToken, sort, filter, clock);
-        return database.tx().read(() -> {
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+        return doInReadTransaction(() -> {
             Page<CountryEntity> rows = repository.list(page, where);
-            return new CountryList(rows.items().stream().map(mapper::toDto).toList())
-                    .nextPageToken(rows.nextPageToken())
-                    .totalSize(repository.count(where));
+            return rows.map(mapper::toDto);
         });
     }
 
@@ -90,7 +93,7 @@ public class CountryService {
         CountryEntity entity = mapper.toEntity(request);
         entity.onCreatingData(Actor.current(), clock);
         normalize(entity);
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             assertValid(entity);
             assertUnique(entity);
             if (!validateOnly) {
@@ -111,7 +114,7 @@ public class CountryService {
             boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
         List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             CountryEntity entity = load(id);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -137,7 +140,7 @@ public class CountryService {
     /** Soft delete under If-Match. */
     public void deleteCountry(UUID id, String ifMatch) {
         int expected = Etags.expectedVersion(ifMatch);
-        database.tx().write(() -> {
+        runInWriteTransaction(() -> {
             CountryEntity entity = load(id);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -151,7 +154,6 @@ public class CountryService {
             }
             audit.recordDelete(AGGREGATE, id);
             outbox.publish(AGGREGATE + MasterEvents.DELETED, AGGREGATE, id, MasterEvents.payload(id));
-            return null;
         });
     }
 

@@ -174,7 +174,10 @@ MySMS serves very different people — a platform operator, a school owner, a bu
 | Platform | Platform operators (C) | Product-wide defaults: the setting catalogue and each setting's default, plan → module availability, feature flags, master data | `iam.setting_definition` (catalogue, maintained by migrations), `platform.saas_plan`, `platform.tenant_subscription`, `platform.system_setting`, `master.*` |
 | Tenant, institution, department, class section | School owners, administrators, department heads (within their own units) | Any catalogue setting allowed at that scope — theme, density, text size, language, time zone, date format, landing screen, e-mail digest, session timeout — optionally **locked** so narrower scopes and users cannot override it; branding (§2.4); terminology per institution type | `iam.setting_value` (one value per setting and scope; screen ADM-16), `platform.theme` and `theme_token` |
 | Role / persona | Derived from permissions | Navigation, home dashboard and actions show only what the role can do (`PermissionGate`, 05 §5); each persona has its own default home (02 §1) | Computed from the token's permissions; no storage |
-| User | Each person | The user-editable catalogue settings (screen ACC-14); pinned navigation and shortcuts, saved table views, dashboard cards; notification preferences (ACC-10) | `iam.setting_value` at user scope; device-only items are labelled as such |
+| User | Each person | The user-editable catalogue settings (screen ACC-14); pinned navigation and shortcuts, saved table views and dashboard cards | `iam.setting_value` at user scope; device-only items are labelled as such |
+
+Notification delivery preferences are managed separately on ACC-10 in `comms.notification_preference_set` and
+`comms.notification_preference`. They are grouped by role set and must not be treated as general interface settings.
 
 Rules:
 

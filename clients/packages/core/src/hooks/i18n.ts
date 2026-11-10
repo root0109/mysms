@@ -11,7 +11,19 @@ export interface I18n {
   formatLocale: string;
   t: Translate;
   format: Formatters;
+  /** The time zone dates and times are shown in: the user's setting or account zone; undefined = the device's. */
+  timeZone: string | undefined;
 }
+
+const knownZone = (zone: string | undefined): boolean => {
+  if (!zone) return false;
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: zone });
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 const supported = (tag: string | null | undefined): tag is string => {
   if (!tag) return false;
@@ -32,13 +44,15 @@ export function useI18n(): I18n {
   const userLocale = useSession(
     (s) => explicitSetting(s.settings, 'ui.locale') ?? s.me?.user?.locale ?? null,
   );
-  const timeZone = useSession(
+  const storedZone = useSession(
     (s) =>
       explicitSetting(s.settings, 'ui.timezone') ??
       s.me?.user?.timezone ??
       settingValue(s.settings, 'ui.timezone') ??
       undefined,
   );
+  // a zone Intl does not know (a mistyped setting) must not take the screens down: the device's zone is used
+  const timeZone = knownZone(storedZone) ? storedZone : undefined;
   const locale = runtime.locale();
   const formatLocale = supported(userLocale) ? userLocale : locale;
   return useMemo(
@@ -47,6 +61,7 @@ export function useI18n(): I18n {
       formatLocale,
       t: createTranslator(locale),
       format: createFormatters(formatLocale, timeZone),
+      timeZone,
     }),
     [locale, formatLocale, timeZone],
   );

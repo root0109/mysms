@@ -47,22 +47,19 @@ describe('fake backend', () => {
     expect((await call('GET', '/v1/iam/me', { headers: auth })).status).toBe(200);
   });
 
-  it('pages countries', async () => {
+  it('pages countries the way the server does', async () => {
     const { call } = backend();
-    const first = (await (await call('GET', '/v1/master/countries?pageSize=3')).json()) as {
-      items: unknown[];
-      nextPageToken: string;
-      totalSize: number;
-    };
-    expect(first.items).toHaveLength(3);
-    expect(first.nextPageToken).toBe('3');
-    expect(first.totalSize).toBe(countries.length);
-    const second = (await (await call('GET', '/v1/master/countries?pageSize=3&pageToken=3')).json()) as {
-      items: unknown[];
-      nextPageToken: string;
-    };
-    expect(second.items).toHaveLength(1);
-    expect(second.nextPageToken).toBe('');
+    type Page = { data: unknown[]; paging: { page: number; size: number; previous?: string; next?: string } };
+    const first = (await (await call('GET', '/v1/master/countries?size=3')).json()) as Page;
+    expect(first.data).toHaveLength(3);
+    expect(first.paging).toMatchObject({ page: 1, size: 3 });
+    expect(first.paging.previous).toBeUndefined();
+    expect(first.paging.next).toBe('/v1/master/countries?page=2&size=3&cursor=2:3');
+    const second = (await (await call('GET', first.paging.next ?? '')).json()) as Page;
+    expect(second.data).toHaveLength(countries.length - 3);
+    expect(second.paging.next).toBeUndefined();
+    expect(second.paging.previous).toBe('/v1/master/countries?page=1&size=3');
+    expect((await call('GET', '/v1/master/countries?page=3&size=3&cursor=2:3')).status).toBe(400);
   });
 
   it('enforces If-Match on writes and bumps the ETag', async () => {
@@ -229,8 +226,8 @@ describe('fake backend: settings and profile', () => {
     const mine = await items(await get('/v1/iam/me/settings'));
     expect(find(mine, 'security.sessionTimeoutMinutes')).toBeUndefined();
     expect(mine.length).toBe(settingDefinitions.length - 1);
-    const catalogue = (await (await get('/v1/iam/setting-definitions')).json()) as { items: unknown[] };
-    expect(catalogue.items).toHaveLength(settingDefinitions.length - 1);
+    const catalogue = (await (await get('/v1/iam/setting-definitions')).json()) as { data: unknown[] };
+    expect(catalogue.data).toHaveLength(settingDefinitions.length - 1);
     const put = await api.fetch(
       new Request(`${BASE}/v1/iam/me/settings/security.sessionTimeoutMinutes`, {
         method: 'PUT',
@@ -272,8 +269,8 @@ describe('fake backend: settings and profile', () => {
         })
       ).status,
     ).toBe(409);
-    const list = (await (await call('GET', '/v1/iam/setting-values')).json()) as { items: unknown[] };
-    expect(list.items).toHaveLength(1);
+    const list = (await (await call('GET', '/v1/iam/setting-values')).json()) as { data: unknown[] };
+    expect(list.data).toHaveLength(1);
   });
 
   it('serves and updates the own person record under If-Match', async () => {

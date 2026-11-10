@@ -50,7 +50,7 @@ paths:
     get:
       operationId: assessment.ListHomeworks
       summary: List Homeworks
-      description: List Homeworks visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Homeworks visible to the caller, page by page, with filtering and sorting.
       tags:
       - Homework
       security:
@@ -60,10 +60,11 @@ paths:
         service: mysms.assessment.v1.HomeworkService
         method: ListHomeworks
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -71,7 +72,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HomeworkList'
+                $ref: '#/components/schemas/PagingInfoHomework'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -290,7 +291,7 @@ paths:
     get:
       operationId: assessment.ListHomeworkApprovals
       summary: List HomeworkApprovals
-      description: List HomeworkApprovals visible to the caller, with cursor pagination, filtering and ordering.
+      description: List HomeworkApprovals visible to the caller, page by page, with filtering and sorting.
       tags:
       - Homework
       security:
@@ -307,10 +308,11 @@ paths:
           type: string
           format: uuid
         description: Homework id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -318,7 +320,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HomeworkApprovalList'
+                $ref: '#/components/schemas/PagingInfoHomeworkApproval'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -327,70 +329,6 @@ paths:
           $ref: ./common.yaml#/components/responses/403
         '404':
           $ref: ./common.yaml#/components/responses/404
-        '429':
-          $ref: ./common.yaml#/components/responses/429
-        '500':
-          $ref: ./common.yaml#/components/responses/500
-    post:
-      operationId: assessment.CreateHomeworkApproval
-      summary: Create HomeworkApproval
-      description: Create a HomeworkApproval. Supports Idempotency-Key and validateOnly.
-      tags:
-      - Homework
-      security:
-      - bearerAuth: []
-      x-permission: assessment.homework_approval.create
-      x-grpc:
-        service: mysms.assessment.v1.HomeworkService
-        method: CreateHomeworkApproval
-      parameters:
-      - name: homeworkId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: Homework id.
-      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
-      - $ref: ./common.yaml#/components/parameters/ValidateOnly
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/HomeworkApproval'
-      responses:
-        '200':
-          description: validateOnly — every check ran and nothing was persisted; the would-be resource.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HomeworkApproval'
-        '201':
-          description: Created
-          headers:
-            ETag:
-              $ref: ./common.yaml#/components/headers/ETag
-            Location:
-              description: URL of the new resource.
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HomeworkApproval'
-        '400':
-          $ref: ./common.yaml#/components/responses/400
-        '401':
-          $ref: ./common.yaml#/components/responses/401
-        '403':
-          $ref: ./common.yaml#/components/responses/403
-        '404':
-          $ref: ./common.yaml#/components/responses/404
-        '409':
-          $ref: ./common.yaml#/components/responses/409
-        '422':
-          $ref: ./common.yaml#/components/responses/422
         '429':
           $ref: ./common.yaml#/components/responses/429
         '500':
@@ -446,126 +384,11 @@ paths:
           $ref: ./common.yaml#/components/responses/429
         '500':
           $ref: ./common.yaml#/components/responses/500
-    patch:
-      operationId: assessment.UpdateHomeworkApproval
-      summary: Update HomeworkApproval
-      description: Partially update a HomeworkApproval (updateMask). Requires If-Match with the current ETag.
-      tags:
-      - Homework
-      security:
-      - bearerAuth: []
-      x-permission: assessment.homework_approval.update
-      x-grpc:
-        service: mysms.assessment.v1.HomeworkService
-        method: UpdateHomeworkApproval
-      parameters:
-      - name: homeworkId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: Homework id.
-      - name: homeworkApprovalId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: HomeworkApproval id.
-      - $ref: ./common.yaml#/components/parameters/UpdateMask
-      - $ref: ./common.yaml#/components/parameters/IfMatch
-      - $ref: ./common.yaml#/components/parameters/ValidateOnly
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/HomeworkApprovalUpdate'
-      responses:
-        '200':
-          description: OK
-          headers:
-            ETag:
-              $ref: ./common.yaml#/components/headers/ETag
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HomeworkApproval'
-        '400':
-          $ref: ./common.yaml#/components/responses/400
-        '401':
-          $ref: ./common.yaml#/components/responses/401
-        '403':
-          $ref: ./common.yaml#/components/responses/403
-        '404':
-          $ref: ./common.yaml#/components/responses/404
-        '409':
-          $ref: ./common.yaml#/components/responses/409
-        '412':
-          $ref: ./common.yaml#/components/responses/412
-        '422':
-          $ref: ./common.yaml#/components/responses/422
-        '428':
-          $ref: ./common.yaml#/components/responses/428
-        '429':
-          $ref: ./common.yaml#/components/responses/429
-        '500':
-          $ref: ./common.yaml#/components/responses/500
-    delete:
-      operationId: assessment.DeleteHomeworkApproval
-      summary: Delete HomeworkApproval
-      description: Soft delete (sets deleted_at).
-      tags:
-      - Homework
-      security:
-      - bearerAuth: []
-      x-permission: assessment.homework_approval.delete
-      x-grpc:
-        service: mysms.assessment.v1.HomeworkService
-        method: DeleteHomeworkApproval
-      parameters:
-      - name: homeworkId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: Homework id.
-      - name: homeworkApprovalId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: HomeworkApproval id.
-      - $ref: ./common.yaml#/components/parameters/IfMatch
-      responses:
-        '204':
-          description: Deleted
-        '400':
-          $ref: ./common.yaml#/components/responses/400
-        '401':
-          $ref: ./common.yaml#/components/responses/401
-        '403':
-          $ref: ./common.yaml#/components/responses/403
-        '404':
-          $ref: ./common.yaml#/components/responses/404
-        '409':
-          $ref: ./common.yaml#/components/responses/409
-        '412':
-          $ref: ./common.yaml#/components/responses/412
-        '428':
-          $ref: ./common.yaml#/components/responses/428
-        '429':
-          $ref: ./common.yaml#/components/responses/429
-        '500':
-          $ref: ./common.yaml#/components/responses/500
   /v1/assessment/homework-submissions:
     get:
       operationId: assessment.ListHomeworkSubmissions
       summary: List HomeworkSubmissions
-      description: List HomeworkSubmissions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List HomeworkSubmissions visible to the caller, page by page, with filtering and sorting.
       tags:
       - HomeworkSubmission
       security:
@@ -575,10 +398,11 @@ paths:
         service: mysms.assessment.v1.HomeworkSubmissionService
         method: ListHomeworkSubmissions
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -586,7 +410,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HomeworkSubmissionList'
+                $ref: '#/components/schemas/PagingInfoHomeworkSubmission'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -805,7 +629,7 @@ paths:
     get:
       operationId: assessment.ListAssignmentTypes
       summary: List AssignmentTypes
-      description: List AssignmentTypes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AssignmentTypes visible to the caller, page by page, with filtering and sorting.
       tags:
       - AssignmentType
       security:
@@ -815,10 +639,11 @@ paths:
         service: mysms.assessment.v1.AssignmentTypeService
         method: ListAssignmentTypes
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -826,7 +651,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssignmentTypeList'
+                $ref: '#/components/schemas/PagingInfoAssignmentType'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1045,7 +870,7 @@ paths:
     get:
       operationId: assessment.ListAssignments
       summary: List Assignments
-      description: List Assignments visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Assignments visible to the caller, page by page, with filtering and sorting.
       tags:
       - Assignment
       security:
@@ -1055,10 +880,11 @@ paths:
         service: mysms.assessment.v1.AssignmentService
         method: ListAssignments
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1066,7 +892,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssignmentList'
+                $ref: '#/components/schemas/PagingInfoAssignment'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1285,7 +1111,7 @@ paths:
     get:
       operationId: assessment.ListAssignmentSubjects
       summary: List AssignmentSubjects
-      description: List AssignmentSubjects visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AssignmentSubjects visible to the caller, page by page, with filtering and sorting.
       tags:
       - Assignment
       security:
@@ -1302,10 +1128,11 @@ paths:
           type: string
           format: uuid
         description: Assignment id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1313,7 +1140,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssignmentSubjectList'
+                $ref: '#/components/schemas/PagingInfoAssignmentSubject'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1560,7 +1387,7 @@ paths:
     get:
       operationId: assessment.ListAssignmentAllocations
       summary: List AssignmentAllocations
-      description: List AssignmentAllocations visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AssignmentAllocations visible to the caller, page by page, with filtering and sorting.
       tags:
       - Assignment
       security:
@@ -1577,10 +1404,11 @@ paths:
           type: string
           format: uuid
         description: Assignment id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1588,7 +1416,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssignmentAllocationList'
+                $ref: '#/components/schemas/PagingInfoAssignmentAllocation'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1835,7 +1663,7 @@ paths:
     get:
       operationId: assessment.ListAssignmentApprovals
       summary: List AssignmentApprovals
-      description: List AssignmentApprovals visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AssignmentApprovals visible to the caller, page by page, with filtering and sorting.
       tags:
       - Assignment
       security:
@@ -1852,10 +1680,11 @@ paths:
           type: string
           format: uuid
         description: Assignment id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1863,7 +1692,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssignmentApprovalList'
+                $ref: '#/components/schemas/PagingInfoAssignmentApproval'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2110,7 +1939,7 @@ paths:
     get:
       operationId: assessment.ListAssignmentSubmissions
       summary: List AssignmentSubmissions
-      description: List AssignmentSubmissions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List AssignmentSubmissions visible to the caller, page by page, with filtering and sorting.
       tags:
       - AssignmentSubmission
       security:
@@ -2120,10 +1949,11 @@ paths:
         service: mysms.assessment.v1.AssignmentSubmissionService
         method: ListAssignmentSubmissions
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2131,7 +1961,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssignmentSubmissionList'
+                $ref: '#/components/schemas/PagingInfoAssignmentSubmission'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2350,7 +2180,7 @@ paths:
     get:
       operationId: assessment.ListGradingSchemes
       summary: List GradingSchemes
-      description: List GradingSchemes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List GradingSchemes visible to the caller, page by page, with filtering and sorting.
       tags:
       - GradingScheme
       security:
@@ -2360,10 +2190,11 @@ paths:
         service: mysms.assessment.v1.GradingSchemeService
         method: ListGradingSchemes
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2371,7 +2202,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GradingSchemeList'
+                $ref: '#/components/schemas/PagingInfoGradingScheme'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2590,7 +2421,7 @@ paths:
     get:
       operationId: assessment.ListGradingBands
       summary: List GradingBands
-      description: List GradingBands visible to the caller, with cursor pagination, filtering and ordering.
+      description: List GradingBands visible to the caller, page by page, with filtering and sorting.
       tags:
       - GradingBand
       security:
@@ -2600,10 +2431,11 @@ paths:
         service: mysms.assessment.v1.GradingBandService
         method: ListGradingBands
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2611,7 +2443,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GradingBandList'
+                $ref: '#/components/schemas/PagingInfoGradingBand'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2830,7 +2662,7 @@ paths:
     get:
       operationId: assessment.ListExamTypes
       summary: List ExamTypes
-      description: List ExamTypes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ExamTypes visible to the caller, page by page, with filtering and sorting.
       tags:
       - ExamType
       security:
@@ -2840,10 +2672,11 @@ paths:
         service: mysms.assessment.v1.ExamTypeService
         method: ListExamTypes
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2851,7 +2684,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExamTypeList'
+                $ref: '#/components/schemas/PagingInfoExamType'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3070,7 +2903,7 @@ paths:
     get:
       operationId: assessment.ListExamSessions
       summary: List ExamSessions
-      description: List ExamSessions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ExamSessions visible to the caller, page by page, with filtering and sorting.
       tags:
       - ExamSession
       security:
@@ -3080,10 +2913,11 @@ paths:
         service: mysms.assessment.v1.ExamSessionService
         method: ListExamSessions
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3091,7 +2925,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExamSessionList'
+                $ref: '#/components/schemas/PagingInfoExamSession'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3310,7 +3144,7 @@ paths:
     get:
       operationId: assessment.ListExams
       summary: List Exams
-      description: List Exams visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Exams visible to the caller, page by page, with filtering and sorting.
       tags:
       - Exam
       security:
@@ -3320,10 +3154,11 @@ paths:
         service: mysms.assessment.v1.ExamService
         method: ListExams
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3331,7 +3166,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExamList'
+                $ref: '#/components/schemas/PagingInfoExam'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3550,7 +3385,7 @@ paths:
     get:
       operationId: assessment.ListExamInvigilators
       summary: List ExamInvigilators
-      description: List ExamInvigilators visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ExamInvigilators visible to the caller, page by page, with filtering and sorting.
       tags:
       - Exam
       security:
@@ -3567,10 +3402,11 @@ paths:
           type: string
           format: uuid
         description: Exam id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3578,7 +3414,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExamInvigilatorList'
+                $ref: '#/components/schemas/PagingInfoExamInvigilator'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3825,7 +3661,7 @@ paths:
     get:
       operationId: assessment.ListExamResults
       summary: List ExamResults
-      description: List ExamResults visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ExamResults visible to the caller, page by page, with filtering and sorting.
       tags:
       - ExamResult
       security:
@@ -3835,10 +3671,11 @@ paths:
         service: mysms.assessment.v1.ExamResultService
         method: ListExamResults
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3846,7 +3683,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExamResultList'
+                $ref: '#/components/schemas/PagingInfoExamResult'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3966,7 +3803,7 @@ paths:
     get:
       operationId: assessment.ListResultTemplates
       summary: List ResultTemplates
-      description: List ResultTemplates visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ResultTemplates visible to the caller, page by page, with filtering and sorting.
       tags:
       - ResultTemplate
       security:
@@ -3976,10 +3813,11 @@ paths:
         service: mysms.assessment.v1.ResultTemplateService
         method: ListResultTemplates
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3987,7 +3825,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResultTemplateList'
+                $ref: '#/components/schemas/PagingInfoResultTemplate'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -4206,7 +4044,7 @@ paths:
     get:
       operationId: assessment.ListResultTemplateBands
       summary: List ResultTemplateBands
-      description: List ResultTemplateBands visible to the caller, with cursor pagination, filtering and ordering.
+      description: List ResultTemplateBands visible to the caller, page by page, with filtering and sorting.
       tags:
       - ResultTemplate
       security:
@@ -4223,10 +4061,11 @@ paths:
           type: string
           format: uuid
         description: ResultTemplate id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -4234,7 +4073,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResultTemplateBandList'
+                $ref: '#/components/schemas/PagingInfoResultTemplateBand'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -4481,7 +4320,7 @@ paths:
     get:
       operationId: assessment.ListMarksheets
       summary: List Marksheets
-      description: List Marksheets visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Marksheets visible to the caller, page by page, with filtering and sorting.
       tags:
       - Marksheet
       security:
@@ -4491,10 +4330,11 @@ paths:
         service: mysms.assessment.v1.MarksheetService
         method: ListMarksheets
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -4502,7 +4342,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MarksheetList'
+                $ref: '#/components/schemas/PagingInfoMarksheet'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -4721,7 +4561,7 @@ paths:
     get:
       operationId: assessment.ListMarksheetLines
       summary: List MarksheetLines
-      description: List MarksheetLines visible to the caller, with cursor pagination, filtering and ordering.
+      description: List MarksheetLines visible to the caller, page by page, with filtering and sorting.
       tags:
       - MarksheetLine
       security:
@@ -4731,10 +4571,11 @@ paths:
         service: mysms.assessment.v1.MarksheetLineService
         method: ListMarksheetLines
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -4742,7 +4583,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MarksheetLineList'
+                $ref: '#/components/schemas/PagingInfoMarksheetLine'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -6568,7 +6409,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResultCardList'
+                $ref: '#/components/schemas/PagingInfoResultCard'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -6606,19 +6447,9 @@ paths:
         schema:
           type: string
           format: uuid
-      - name: pageSize
-        in: query
-        required: false
-        description: Maximum items to return (1-500, default 50).
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Cursor from next_page_token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/assessment/marksheets/{marksheetId}:publish:
     post:
       operationId: assessment.PublishMarksheet
@@ -6693,7 +6524,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./common.yaml#/components/schemas/OperationList
+                $ref: ./common.yaml#/components/schemas/PagingInfoOperation
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -6717,19 +6548,9 @@ paths:
         description: Filter by kind.
         schema:
           type: string
-      - name: pageSize
-        in: query
-        required: false
-        description: Page size.
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Page token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/assessment/operations/{operationId}:
     get:
       operationId: assessment.GetOperation
@@ -6867,6 +6688,7 @@ components:
           type: string
           enum:
           - draft
+          - pending
           - published
           x-extensible-enum: true
           description: Publication state. Changed only through the workflow operations.
@@ -6938,22 +6760,20 @@ components:
           type: string
           format: date-time
           description: Submission deadline.
-    HomeworkList:
+    PagingInfoHomework:
       type: object
+      description: A page of Homework, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Homework'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     HomeworkApproval:
       type: object
       description: Review of homework before publication.
@@ -7011,45 +6831,20 @@ components:
           type: string
           readOnly: true
           description: Entity tag (row version); send back in If-Match / etag.
-    HomeworkApprovalUpdate:
+    PagingInfoHomeworkApproval:
       type: object
-      description: Fields of HomeworkApproval that can be updated (partial update; see updateMask).
-      properties:
-        decision:
-          type: string
-          enum:
-          - pending
-          - approved
-          - rejected
-          x-extensible-enum: true
-          description: Decision.
-        comments:
-          type: string
-          description: Comments.
-        decidedByUserId:
-          type: string
-          format: uuid
-          description: Reviewer.
-        decidedAt:
-          type: string
-          format: date-time
-          description: Decision time.
-    HomeworkApprovalList:
-      type: object
+      description: A page of HomeworkApproval, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/HomeworkApproval'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     HomeworkSubmission:
       type: object
       description: Student's homework submission and teacher check. Files are attached through platform.entity_attachment.
@@ -7082,17 +6877,21 @@ components:
         checkedByUserId:
           type: string
           format: uuid
-          description: Checker.
+          description: Checker; set by the check operation.
+          readOnly: true
         checkedOn:
           type: string
           format: date
-          description: Check date.
+          description: Check date; set by the check operation.
+          readOnly: true
         teacherComments:
           type: string
-          description: Teacher comments.
+          description: Teacher comments; set by the check operation.
+          readOnly: true
         studentReply:
           type: string
-          description: Student's reply to comments.
+          description: Student's reply to comments; set by the reply operation.
+          readOnly: true
         createTime:
           type: string
           format: date-time
@@ -7136,36 +6935,20 @@ components:
           type: string
           format: date
           description: Submission date.
-        checkedByUserId:
-          type: string
-          format: uuid
-          description: Checker.
-        checkedOn:
-          type: string
-          format: date
-          description: Check date.
-        teacherComments:
-          type: string
-          description: Teacher comments.
-        studentReply:
-          type: string
-          description: Student's reply to comments.
-    HomeworkSubmissionList:
+    PagingInfoHomeworkSubmission:
       type: object
+      description: A page of HomeworkSubmission, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/HomeworkSubmission'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AssignmentType:
       type: object
       description: Assignment category (project, lab record, attendance-based...).
@@ -7250,22 +7033,20 @@ components:
           - attendance
           x-extensible-enum: true
           description: How it is graded.
-    AssignmentTypeList:
+    PagingInfoAssignmentType:
       type: object
+      description: A page of AssignmentType, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AssignmentType'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Assignment:
       type: object
       description: Graded assignment for a class section or course batch.
@@ -7429,22 +7210,20 @@ components:
           type: string
           format: uuid
           description: Attachment.
-    AssignmentList:
+    PagingInfoAssignment:
       type: object
+      description: A page of Assignment, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Assignment'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AssignmentSubject:
       type: object
       description: Subject(s) an assignment assesses.
@@ -7497,22 +7276,20 @@ components:
           type: string
           format: uuid
           description: Subject.
-    AssignmentSubjectList:
+    PagingInfoAssignmentSubject:
       type: object
+      description: A page of AssignmentSubject, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AssignmentSubject'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AssignmentAllocation:
       type: object
       description: Students an assignment is allocated to (when not the whole class).
@@ -7565,22 +7342,20 @@ components:
           type: string
           format: uuid
           description: Student.
-    AssignmentAllocationList:
+    PagingInfoAssignmentAllocation:
       type: object
+      description: A page of AssignmentAllocation, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AssignmentAllocation'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AssignmentApproval:
       type: object
       description: Review of an assignment before publication.
@@ -7661,22 +7436,20 @@ components:
           type: string
           format: date-time
           description: Decision time.
-    AssignmentApprovalList:
+    PagingInfoAssignmentApproval:
       type: object
+      description: A page of AssignmentApproval, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AssignmentApproval'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     AssignmentSubmission:
       type: object
       description: Student's submission and grading. Files are attached through platform.entity_attachment.
@@ -7793,22 +7566,20 @@ components:
         feedback:
           type: string
           description: Feedback to the student.
-    AssignmentSubmissionList:
+    PagingInfoAssignmentSubmission:
       type: object
+      description: A page of AssignmentSubmission, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AssignmentSubmission'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     GradingScheme:
       type: object
       description: 'Grading scheme: scholastic (marks to grade) or co-scholastic (descriptive indicators).'
@@ -7922,22 +7693,20 @@ components:
         isTemplate:
           type: boolean
           description: Reusable template copied into courses and cohorts.
-    GradingSchemeList:
+    PagingInfoGradingScheme:
       type: object
+      description: A page of GradingScheme, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/GradingScheme'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     GradingBand:
       type: object
       description: Band of a grading scheme mapping a percentage range to a grade.
@@ -8037,22 +7806,20 @@ components:
         description:
           type: string
           description: Descriptor.
-    GradingBandList:
+    PagingInfoGradingBand:
       type: object
+      description: A page of GradingBand, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/GradingBand'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ExamType:
       type: object
       description: Exam category (unit test, mid-term, final...).
@@ -8123,22 +7890,20 @@ components:
           type: string
           maxLength: 120
           description: Name.
-    ExamTypeList:
+    PagingInfoExamType:
       type: object
+      description: A page of ExamType, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ExamType'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ExamSession:
       type: object
       description: Exam series for a class/course batch over a date range (e.g. Term-1 Exams).
@@ -8304,22 +8069,20 @@ components:
           type: string
           maxLength: 255
           description: Venue (when external).
-    ExamSessionList:
+    PagingInfoExamSession:
       type: object
+      description: A page of ExamSession, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ExamSession'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Exam:
       type: object
       description: One paper of an exam series for a subject.
@@ -8466,22 +8229,20 @@ components:
         notes:
           type: string
           description: Notes.
-    ExamList:
+    PagingInfoExam:
       type: object
+      description: A page of Exam, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Exam'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ExamInvigilator:
       type: object
       description: Staff responsible for a paper.
@@ -8534,22 +8295,20 @@ components:
           type: string
           format: uuid
           description: Invigilator / examiner.
-    ExamInvigilatorList:
+    PagingInfoExamInvigilator:
       type: object
+      description: A page of ExamInvigilator, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ExamInvigilator'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ExamResult:
       type: object
       description: Student sitting a paper, with room and marks.
@@ -8681,6 +8440,7 @@ components:
           description: Note.
     ExamResultList:
       type: object
+      description: The ExamResult items an operation wrote, all in one response.
       required:
       - items
       properties:
@@ -8688,13 +8448,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ExamResult'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+    PagingInfoExamResult:
+      type: object
+      description: A page of ExamResult, with the links to the other pages.
+      required:
+      - data
+      - paging
+      properties:
+        data:
+          type: array
+          description: Data retrieved in the paginated request.
+          items:
+            $ref: '#/components/schemas/ExamResult'
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ResultTemplate:
       type: object
       description: Rules for generating results of an exam series (grading scheme, result date).
@@ -8782,22 +8549,20 @@ components:
           - result_generated
           x-extensible-enum: true
           description: State.
-    ResultTemplateList:
+    PagingInfoResultTemplate:
       type: object
+      description: A page of ResultTemplate, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ResultTemplate'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ResultTemplateBand:
       type: object
       description: Specific grading band used by a result template (bands may be shared by several templates).
@@ -8850,22 +8615,20 @@ components:
           type: string
           format: uuid
           description: Band.
-    ResultTemplateBandList:
+    PagingInfoResultTemplateBand:
       type: object
+      description: A page of ResultTemplateBand, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ResultTemplateBand'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Marksheet:
       type: object
       description: Generated marksheet register for an exam series.
@@ -8990,22 +8753,20 @@ components:
           type: integer
           format: int32
           description: Number failed.
-    MarksheetList:
+    PagingInfoMarksheet:
       type: object
+      description: A page of Marksheet, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Marksheet'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     MarksheetLine:
       type: object
       description: One student's aggregate on a marksheet.
@@ -9110,22 +8871,20 @@ components:
       - marksheetId
       - studentId
       - generatedOn
-    MarksheetLineList:
+    PagingInfoMarksheetLine:
       type: object
+      description: A page of MarksheetLine, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/MarksheetLine'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PublishHomeworkRequest:
       type: object
       properties:
@@ -9410,19 +9169,20 @@ components:
         visibleToGuardians:
           type: boolean
           description: Whether guardians can see it.
-    ResultCardList:
+    PagingInfoResultCard:
       type: object
-      description: A page of ResultCard.
+      description: A page of ResultCard, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ResultCard'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
   securitySchemes:
     bearerAuth:
       type: http

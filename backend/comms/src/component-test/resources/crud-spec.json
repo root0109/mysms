@@ -876,6 +876,7 @@
    "update": {
     "propertyName": "Updated property_name"
    },
+   "ownerOnly": "3799f59b-5005-534f-a987-aaf4cd6bd866",
    "duplicateConflicts": false
   },
   {
@@ -896,6 +897,7 @@
     "userId": "472efc0e-5ae9-59fb-b98f-4b1553388edc"
    },
    "update": {},
+   "ownerOnly": "472efc0e-5ae9-59fb-b98f-4b1553388edc",
    "duplicateConflicts": false
   },
   {

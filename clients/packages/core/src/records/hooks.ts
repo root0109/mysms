@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { FIRST_PAGE, nextPage, pageQuery } from '../api/pages';
 import { STALE_TIME } from '../query/queryClient';
 import { queryKey } from '../query/keys';
 import { useRuntime } from '../react/useRuntime';
@@ -15,17 +16,17 @@ import type { ActionDef, ResourceDef } from './types';
 
 const KEY = 'records';
 
-/** The rows of one resource as an infinite list (pages follow nextPageToken, ui/05 §4). */
+/** The rows of one resource as an infinite list (pages follow each response's next link, ui/05 §4). */
 export function useInfiniteRecords(
   def: ResourceDef | undefined,
-  params: Omit<RecordListParams, 'pageToken'> = {},
+  params: Omit<RecordListParams, 'page' | 'cursor'> = {},
 ) {
   const { api } = useRuntime();
   return useInfiniteQuery({
     queryKey: queryKey(KEY, def?.key ?? '-', { ...params, infinite: true }),
-    initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) => listRecords(api, def as ResourceDef, { ...params, pageToken: pageParam }),
-    getNextPageParam: (last) => last.nextPageToken || undefined,
+    initialPageParam: FIRST_PAGE,
+    queryFn: ({ pageParam }) => listRecords(api, def as ResourceDef, { ...params, ...pageQuery(pageParam) }),
+    getNextPageParam: (last) => nextPage(last.paging),
     // a partitioned resource is listed only with its range (the server answers 400 without one)
     enabled:
       def !== undefined &&

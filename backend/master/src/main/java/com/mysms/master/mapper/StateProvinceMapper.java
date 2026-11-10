@@ -1,6 +1,6 @@
 package com.mysms.master.mapper;
 
-import com.mysms.contracts.master.model.StateProvince;
+import com.mysms.master.api.model.StateProvince;
 import com.mysms.core.web.Etags;
 import com.mysms.master.domain.StateProvinceEntity;
 import org.mapstruct.Mapper;

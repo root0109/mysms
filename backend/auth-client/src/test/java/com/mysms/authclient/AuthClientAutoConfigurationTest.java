@@ -14,7 +14,7 @@ class AuthClientAutoConfigurationTest {
     void wiresTheEdge() {
         AuthClientAutoConfiguration config = new AuthClientAutoConfiguration();
         AuthClientProperties properties = new AuthClientProperties(TestTokens.ISSUER, null,
-                new TestTokens().publicKeyPem(), null, List.of("master"), null);
+                new TestTokens().publicKeyPem(), null, List.of("master"), null, false);
         OperationTable table = config.operationTable(properties);
         assertThat(table.size()).isEqualTo(20);
         TokenVerifier verifier = config.tokenVerifier(properties);

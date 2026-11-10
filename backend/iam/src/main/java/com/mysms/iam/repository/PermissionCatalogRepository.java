@@ -51,7 +51,6 @@ public class PermissionCatalogRepository {
              WHERE p.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND p.id = :id";
-    private static final int COUNT_CAP = 10_001;
 
     private final JdbcClient jdbc;
 
@@ -65,16 +64,11 @@ public class PermissionCatalogRepository {
 
     public Page<PermissionEntity> list(PageRequest page, SqlFragment filter) {
         SqlFragment where = filter.and(page.keysetPredicate());
-        String sql = SELECT_LIVE + " AND (" + where.sql() + ") ORDER BY " + page.orderByClause() + " LIMIT :limit";
-        List<PermissionEntity> rows = jdbc.sql(sql).params(where.params()).param("limit", page.limit())
+        String sql = SELECT_LIVE + " AND (" + where.sql() + ") ORDER BY " + page.orderByClause() + page.limitClause();
+        List<PermissionEntity> rows = jdbc.sql(sql).params(where.params()).params(page.limitParams())
                 .query(PermissionCatalogRepository::map).list();
         return page.toPage(rows, e -> page.sort().orders().stream()
                 .map(o -> SORT_VALUES.get(o.field().name()).apply(e)).toList(), PermissionEntity::getId);
-    }
-
-    public int count(SqlFragment filter) {
-        String sql = "SELECT count(*) FROM (" + SELECT_LIVE + " AND (" + filter.sql() + ") LIMIT :cap) counted";
-        return jdbc.sql(sql).params(filter.params()).param("cap", COUNT_CAP).query(Integer.class).single();
     }
 
     private static PermissionEntity map(ResultSet rs, int row) throws SQLException {

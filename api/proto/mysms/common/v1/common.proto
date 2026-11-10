@@ -725,3 +725,49 @@ message Availability {
   optional string suggestion = 2;
 }
 
+// The page a list request reads (api/README "Pagination"): pages are one-based; a request without a cursor reads by
+// OFFSET (at most 10,000 rows deep), a request with the cursor of the previous response's pagination continues right
+// after that response's last item.
+message PageableRequest {
+  // One-based page number (default 1).
+  int32 page = 1;
+  // Page size (1-500, default 50).
+  int32 size = 2;
+  // Sort criteria in priority order (default: the resource's default order).
+  repeated Sort sort = 3;
+  // Opaque cursor from the previous response's pagination.next_cursor, sent with page = pagination.next.
+  string cursor = 4;
+}
+
+// Where a list response's page is and how to reach the others.
+message Pagination {
+  // Items in this page.
+  int32 size = 1;
+  // Number of the first page (always 1).
+  int32 first = 2;
+  // Number of the previous page; 0 on the first page and where the previous page lies beyond OFFSET reach.
+  int32 previous = 3;
+  // Number of the next page; 0 on the last page.
+  int32 next = 4;
+  // Number of this page.
+  int32 page = 5;
+  // Cursor to send with page = next; empty on the last page.
+  string next_cursor = 6;
+}
+
+// One sort criterion of a list request.
+message Sort {
+  // Direction of the sort.
+  enum Direction {
+    // Ascending (the default).
+    DIRECTION_UNSPECIFIED = 0;
+    // Ascending.
+    DIRECTION_ASC = 1;
+    // Descending.
+    DIRECTION_DESC = 2;
+  }
+  // The field to sort by (its JSON name). Required.
+  string field = 1;
+  // The direction of the sort.
+  Direction direction = 2;
+}

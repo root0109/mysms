@@ -24,7 +24,7 @@ paths:
     get:
       operationId: transport.ListRoutes
       summary: List Routes
-      description: List Routes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Routes visible to the caller, page by page, with filtering and sorting.
       tags:
       - Route
       security:
@@ -34,10 +34,11 @@ paths:
         service: mysms.transport.v1.RouteService
         method: ListRoutes
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -45,7 +46,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RouteList'
+                $ref: '#/components/schemas/PagingInfoRoute'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -264,7 +265,7 @@ paths:
     get:
       operationId: transport.ListRouteStops
       summary: List RouteStops
-      description: List RouteStops visible to the caller, with cursor pagination, filtering and ordering.
+      description: List RouteStops visible to the caller, page by page, with filtering and sorting.
       tags:
       - Route
       security:
@@ -281,10 +282,11 @@ paths:
           type: string
           format: uuid
         description: Route id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -292,7 +294,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RouteStopList'
+                $ref: '#/components/schemas/PagingInfoRouteStop'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -539,7 +541,7 @@ paths:
     get:
       operationId: transport.ListStudentTransports
       summary: List StudentTransports
-      description: List StudentTransports visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StudentTransports visible to the caller, page by page, with filtering and sorting.
       tags:
       - StudentTransport
       security:
@@ -549,10 +551,11 @@ paths:
         service: mysms.transport.v1.StudentTransportService
         method: ListStudentTransports
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -560,7 +563,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StudentTransportList'
+                $ref: '#/components/schemas/PagingInfoStudentTransport'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -878,22 +881,20 @@ components:
         isActive:
           type: boolean
           description: Whether running.
-    RouteList:
+    PagingInfoRoute:
       type: object
+      description: A page of Route, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Route'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     RouteStop:
       type: object
       description: Stop on a route.
@@ -975,22 +976,20 @@ components:
           format: time
           pattern: ^\d{2}:\d{2}(:\d{2})?$
           description: Evening drop time.
-    RouteStopList:
+    PagingInfoRouteStop:
       type: object
+      description: A page of RouteStop, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/RouteStop'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StudentTransport:
       type: object
       description: How a student travels in an academic year.
@@ -1102,22 +1101,20 @@ components:
         details:
           type: string
           description: Notes (driver contact, private van...).
-    StudentTransportList:
+    PagingInfoStudentTransport:
       type: object
+      description: A page of StudentTransport, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StudentTransport'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
   securitySchemes:
     bearerAuth:
       type: http

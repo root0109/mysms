@@ -662,11 +662,8 @@
    "name": "HomeworkApproval",
    "table": "assessment.homework_approval",
    "ops": [
-    "Create",
-    "Delete",
     "Get",
-    "List",
-    "Update"
+    "List"
    ],
    "collection": "/v1/assessment/homeworks/bcf4d48f-95da-5ea4-915c-cd971af1fca6/approvals",
    "item": "/v1/assessment/homeworks/bcf4d48f-95da-5ea4-915c-cd971af1fca6/approvals/{id}",
@@ -674,13 +671,11 @@
    "fixtures": [
     "INSERT INTO assessment.homework (tenant_id, institution_id, academic_year_id, class_section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'a41706c8-775a-5826-8e87-7dde00cc7313', 'af7b4589-b50c-5b80-ab27-4381397b6f24', 1, 'bcf4d48f-95da-5ea4-915c-cd971af1fca6') ON CONFLICT (id) DO NOTHING"
    ],
-   "create": {
-    "homeworkId": "bcf4d48f-95da-5ea4-915c-cd971af1fca6"
-   },
-   "update": {
-    "comments": "Updated comments"
-   },
-   "duplicateConflicts": false
+   "duplicateConflicts": false,
+   "seedId": "0196f000-0000-7000-8000-0000000ac0de",
+   "seed": [
+    "INSERT INTO assessment.homework_approval (homework_id, decision, tenant_id, row_version, id) VALUES ('bcf4d48f-95da-5ea4-915c-cd971af1fca6', 'approved', :tenant, 1, '0196f000-0000-7000-8000-0000000ac0de')"
+   ]
   },
   {
    "name": "HomeworkSubmission",
@@ -703,7 +698,7 @@
     "studentId": "df27d827-d7fe-591b-bed9-d8b659495d9d"
    },
    "update": {
-    "teacherComments": "Updated teacher_comments"
+    "submittedOn": "2026-03-02"
    },
    "duplicateConflicts": true
   },

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { iam } from '@mysms/sdk';
 import { AuthApi } from '@mysms/sdk/iam/apis/AuthApi';
 import { UserAccountApi } from '@mysms/sdk/iam/apis/UserAccountApi';
+import { allPages, pageQuery } from '../api/pages';
 import { call } from '../api/unwrap';
 import { queryKey } from '../query/keys';
 import { STALE_TIME } from '../query/queryClient';
@@ -89,7 +90,13 @@ export function useMySessions(enabled: boolean) {
   return useQuery({
     queryKey: queryKey('iam', 'me', { part: 'sessions', userId }),
     queryFn: () =>
-      call(api.get(UserAccountApi).listUserSessions({ userAccountId: userId as string, pageSize: 50 })),
+      allPages((page) =>
+        call(
+          api
+            .get(UserAccountApi)
+            .listUserSessions({ userAccountId: userId as string, size: 100, ...pageQuery(page) }),
+        ),
+      ),
     enabled: enabled && Boolean(userId),
     staleTime: STALE_TIME.list,
   });

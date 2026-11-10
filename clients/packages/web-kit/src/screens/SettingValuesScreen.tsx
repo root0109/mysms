@@ -28,8 +28,7 @@ import {
   type Column,
 } from '@mysms/ui-web';
 import { useState } from 'react';
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { UUID } from './ids';
 
 /** The value control for one definition: a list for choices and booleans, text otherwise. */
 function ValueField({
@@ -99,14 +98,14 @@ const problemText = (t: ReturnType<typeof useI18n>['t'], error: unknown): string
  */
 export function SettingValuesScreen() {
   const { t } = useI18n();
-  const values = useInfiniteSettingValues({ pageSize: 100 });
+  const values = useInfiniteSettingValues({ size: 100 });
   const definitions = useSettingDefinitions();
   const [editing, setEditing] = useState<SettingValue | null>(null);
   const [creating, setCreating] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const canUpdate = useCan('iam.setting_value.update');
   const byKey = new Map((definitions.data?.items ?? []).map((d) => [d.settingKey, d]));
-  const rows = values.data?.pages.flatMap((p) => p.items) ?? [];
+  const rows = values.data?.pages.flatMap((p) => p.data) ?? [];
   const columns: Column<SettingValue>[] = [
     {
       key: 'setting',

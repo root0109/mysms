@@ -30,11 +30,13 @@ import {
   TextInput,
   type Column,
 } from '@mysms/ui-web';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { Link, useSearchParams } from 'react-router';
+import { isoDay } from './dates';
+import { UUID } from './ids';
 
 type Translate = ReturnType<typeof useI18n>['t'];
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SEARCH_FIELDS = ['name', 'title', 'code', 'displayName', 'subject'];
 
 /** The record types the caller may list: the edge would answer 403 for the others. */
@@ -150,6 +152,10 @@ interface RecordsOfProps {
   columns?: readonly string[];
   /** An enum field offered as a filter above the list. */
   filterField?: string;
+  /** Where a row's own screen is, when the record type has one; adds an "Open" link to every row. */
+  rowLink?: ((row: RecordRow) => string) | undefined;
+  /** Something a row can start besides its editor (e.g. taking attendance for a session); its own column. */
+  rowTool?: ((row: RecordRow) => ReactNode) | undefined;
   parentId: string;
   setParentId: (v: string) => void;
   search: string;
@@ -165,10 +171,25 @@ interface RecordsOfProps {
 export function RecordsOf(p: RecordsOfProps) {
   const { t, format } = useI18n();
   const { def } = p;
-  const [filterValue, setFilterValue] = useState('');
   const filterDef = p.filterField
     ? def.fields.find((f) => f.name === p.filterField && f.kind === 'enum')
     : undefined;
+  // the chosen filter lives in the address (?status=pending): a link or a reload opens the same list
+  const [query, setQuery] = useSearchParams();
+  const asked = filterDef ? (query.get(filterDef.name) ?? '') : '';
+  const filterValue = filterDef?.values?.includes(asked) ? asked : '';
+  const setFilterValue = (value: string) => {
+    if (!filterDef) return;
+    setQuery(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        if (value) next.set(filterDef.name, value);
+        else next.delete(filterDef.name);
+        return next;
+      },
+      { replace: true },
+    );
+  };
   const permissions = useSession((s) => s.me?.permissions) ?? [];
   const may = (kind: keyof ResourceDef['ops']) => {
     const code = def.ops[kind]?.permission;
@@ -188,11 +209,11 @@ export function RecordsOf(p: RecordsOfProps) {
   const chosen = filterDef && filterValue ? `${filterDef.name} = "${filterValue}"` : undefined;
   const filter = allOf(search, chosen, rangeOk ? rangeFilter(def, from, to) : undefined);
   const rows = useInfiniteRecords(def, {
-    pageSize: 50,
+    size: 50,
     parentId: parentOk && def.parent ? p.parentId.trim() : undefined,
     filter,
   });
-  const items = rows.data?.pages.flatMap((page) => page.items) ?? [];
+  const items = rows.data?.pages.flatMap((page) => page.data) ?? [];
   const displayable = def.fields.filter((f) => f.kind !== 'id' && !f.writeOnly);
   const picked = (p.columns ?? [])
     .map((name) => def.fields.find((f) => f.name === name && !f.writeOnly))
@@ -208,6 +229,38 @@ export function RecordsOf(p: RecordsOfProps) {
         display(t, field, row[field.name], format)
       ),
   }));
+  const { rowLink } = p;
+  const nameField = shown[0];
+  if (rowLink)
+    columns.push({
+      key: 'open',
+      header: t('adm.resource.open'),
+      render: (row) => (
+        // the row itself opens the editor: the link keeps its own click and key presses
+        <Link
+          to={rowLink(row)}
+          aria-label={t('adm.resource.openRow', {
+            name: nameField ? display(t, nameField, row[nameField.name], format) : def.label,
+          })}
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
+          {t('adm.resource.open')}
+        </Link>
+      ),
+    });
+  const { rowTool } = p;
+  if (rowTool)
+    columns.push({
+      key: 'tool',
+      header: t('adm.resource.rowActions'),
+      render: (row) => (
+        // the row itself opens the editor: what the tool does must not also do that
+        <span onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
+          {rowTool(row)}
+        </span>
+      ),
+    });
   const done = (message: string) => {
     p.setNotice(message);
     p.setEditing(null);
@@ -602,11 +655,4 @@ function FieldInput({
       onChange={(e) => onChange(e.target.value)}
     />
   );
-}
-
-/** Today plus `offset` days as `YYYY-MM-DD` (local calendar). */
-function isoDay(offset: number): string {
-  const day = new Date();
-  day.setDate(day.getDate() + offset);
-  return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
 }

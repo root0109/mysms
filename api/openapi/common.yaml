@@ -28,20 +28,29 @@ components:
       bearerFormat: JWT
       description: Access token of MySMS platform staff (audience mysms-platform-admin, MFA required). Only these operations may act across tenants; the target tenant is the resource being addressed.
   parameters:
-    PageSize:
-      name: pageSize
+    Page:
+      name: page
       in: query
-      description: Maximum items to return (1-500, default 50).
+      description: One-based page number (default 1). Pages without a cursor are read by offset, at most 10,000 rows deep.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 1
+    Size:
+      name: size
+      in: query
+      description: Page size (1-500, default 50).
       schema:
         type: integer
         format: int32
         minimum: 1
         maximum: 500
         default: 50
-    PageToken:
-      name: pageToken
+    Cursor:
+      name: cursor
       in: query
-      description: Opaque cursor from nextPageToken.
+      description: Opaque cursor carried by the next link of the previous page; continues right after its last item.
       schema:
         type: string
     Filter:
@@ -51,13 +60,16 @@ components:
       schema:
         type: string
         maxLength: 2000
-    OrderBy:
-      name: orderBy
+    Sort:
+      name: sort
       in: query
-      description: Comma-separated fields, optional " desc", e.g. `createTime desc`.
+      description: Sort criteria `field,asc|desc` (direction optional, ascending by default); repeat the parameter for several, in priority order.
+      style: form
+      explode: true
       schema:
-        type: string
-        maxLength: 500
+        type: array
+        items:
+          type: string
     ReadMask:
       name: fields
       in: query
@@ -196,6 +208,33 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    NavigationInfo:
+      type: object
+      description: Where a page is and the links to the other pages (relative URLs that keep the request's filter, sort and field mask). A link that does not apply is absent.
+      required:
+      - page
+      - size
+      - first
+      properties:
+        page:
+          type: integer
+          format: int32
+          description: The current page number (one-based).
+          example: 3
+        size:
+          type: integer
+          format: int32
+          description: The count of items in the current page.
+          example: 10
+        first:
+          type: string
+          description: URL of the first page.
+        previous:
+          type: string
+          description: URL of the previous page; absent on the first page and beyond the offset limit.
+        next:
+          type: string
+          description: URL of the next page, carrying its cursor; absent on the last page.
     Problem:
       type: object
       description: RFC 9457 problem details.
@@ -1703,22 +1742,23 @@ components:
           description: A free alternative when not available.
       required:
       - available
-    AttendanceSummaryList:
+    PagingInfoAttendanceSummary:
       type: object
-      description: A page of AttendanceSummary.
+      description: A page of AttendanceSummary, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/AttendanceSummary'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'
     BatchEnrollPreviewList:
       type: object
-      description: A page of BatchEnrollPreview.
+      description: The BatchEnrollPreview items of one response, all at once.
       required:
       - items
       properties:
@@ -1726,142 +1766,149 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BatchEnrollPreview'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-    BirthdayEntryList:
+    PagingInfoBirthdayEntry:
       type: object
-      description: A page of BirthdayEntry.
+      description: A page of BirthdayEntry, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/BirthdayEntry'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-    CalendarItemList:
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'
+    PagingInfoCalendarItem:
       type: object
-      description: A page of CalendarItem.
+      description: A page of CalendarItem, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/CalendarItem'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-    CohortPerformanceList:
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'
+    PagingInfoCohortPerformance:
       type: object
-      description: A page of CohortPerformance.
+      description: A page of CohortPerformance, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/CohortPerformance'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-    CohortStudentProgressList:
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'
+    PagingInfoCohortStudentProgress:
       type: object
-      description: A page of CohortStudentProgress.
+      description: A page of CohortStudentProgress, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/CohortStudentProgress'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-    EvaluatorSlotList:
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'
+    PagingInfoEvaluatorSlot:
       type: object
-      description: A page of EvaluatorSlot.
+      description: A page of EvaluatorSlot, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/EvaluatorSlot'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-    InstitutionCardList:
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'
+    PagingInfoInstitutionCard:
       type: object
-      description: A page of InstitutionCard.
+      description: A page of InstitutionCard, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/InstitutionCard'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-    LeaveBalanceSummaryList:
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'
+    PagingInfoLeaveBalanceSummary:
       type: object
-      description: A page of LeaveBalanceSummary.
+      description: A page of LeaveBalanceSummary, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/LeaveBalanceSummary'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-    OperationList:
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'
+    PagingInfoOperation:
       type: object
-      description: A page of Operation.
+      description: A page of Operation, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Operation'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-    ProgressBucketList:
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'
+    PagingInfoProgressBucket:
       type: object
-      description: A page of ProgressBucket.
+      description: A page of ProgressBucket, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ProgressBucket'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-    ReportDefinitionList:
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'
+    PagingInfoReportDefinition:
       type: object
-      description: A page of ReportDefinition.
+      description: A page of ReportDefinition, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/ReportDefinition'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'
     RosterEntryList:
       type: object
-      description: A page of RosterEntry.
+      description: The RosterEntry items an operation wrote, all in one response.
       required:
       - items
       properties:
@@ -1869,32 +1916,45 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RosterEntry'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-    SearchHitList:
+    PagingInfoRosterEntry:
       type: object
-      description: A page of SearchHit.
+      description: A page of RosterEntry, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
+          items:
+            $ref: '#/components/schemas/RosterEntry'
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'
+    PagingInfoSearchHit:
+      type: object
+      description: A page of SearchHit, with the links to the other pages.
+      required:
+      - data
+      - paging
+      properties:
+        data:
+          type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/SearchHit'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-    StockImageList:
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'
+    PagingInfoStockImage:
       type: object
-      description: A page of StockImage.
+      description: A page of StockImage, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StockImage'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
+        paging:
+          $ref: '#/components/schemas/NavigationInfo'

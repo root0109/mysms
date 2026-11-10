@@ -1,0 +1,153 @@
+[ {
+  "operationId" : "frontoffice.CheckOutVisitor",
+  "method" : "POST",
+  "path" : "/v1/frontoffice/visitor-logs/{visitorLogId}:checkOut",
+  "permission" : "frontoffice.visitor_log.check_out_visitor",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "frontoffice.CreateCallLog",
+  "method" : "POST",
+  "path" : "/v1/frontoffice/call-logs",
+  "permission" : "frontoffice.call_log.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "frontoffice.CreateDirectoryContact",
+  "method" : "POST",
+  "path" : "/v1/frontoffice/directory-contacts",
+  "permission" : "frontoffice.directory_contact.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "frontoffice.CreatePostalRecord",
+  "method" : "POST",
+  "path" : "/v1/frontoffice/postal-records",
+  "permission" : "frontoffice.postal_record.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "frontoffice.CreateVisitorLog",
+  "method" : "POST",
+  "path" : "/v1/frontoffice/visitor-logs",
+  "permission" : "frontoffice.visitor_log.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "frontoffice.DeleteCallLog",
+  "method" : "DELETE",
+  "path" : "/v1/frontoffice/call-logs/{callLogId}",
+  "permission" : "frontoffice.call_log.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.DeleteDirectoryContact",
+  "method" : "DELETE",
+  "path" : "/v1/frontoffice/directory-contacts/{directoryContactId}",
+  "permission" : "frontoffice.directory_contact.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.DeletePostalRecord",
+  "method" : "DELETE",
+  "path" : "/v1/frontoffice/postal-records/{postalRecordId}",
+  "permission" : "frontoffice.postal_record.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.DeleteVisitorLog",
+  "method" : "DELETE",
+  "path" : "/v1/frontoffice/visitor-logs/{visitorLogId}",
+  "permission" : "frontoffice.visitor_log.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.GetCallLog",
+  "method" : "GET",
+  "path" : "/v1/frontoffice/call-logs/{callLogId}",
+  "permission" : "frontoffice.call_log.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.GetDirectoryContact",
+  "method" : "GET",
+  "path" : "/v1/frontoffice/directory-contacts/{directoryContactId}",
+  "permission" : "frontoffice.directory_contact.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.GetPostalRecord",
+  "method" : "GET",
+  "path" : "/v1/frontoffice/postal-records/{postalRecordId}",
+  "permission" : "frontoffice.postal_record.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.GetVisitorLog",
+  "method" : "GET",
+  "path" : "/v1/frontoffice/visitor-logs/{visitorLogId}",
+  "permission" : "frontoffice.visitor_log.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.ListCallLogs",
+  "method" : "GET",
+  "path" : "/v1/frontoffice/call-logs",
+  "permission" : "frontoffice.call_log.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.ListDirectoryContacts",
+  "method" : "GET",
+  "path" : "/v1/frontoffice/directory-contacts",
+  "permission" : "frontoffice.directory_contact.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.ListPostalRecords",
+  "method" : "GET",
+  "path" : "/v1/frontoffice/postal-records",
+  "permission" : "frontoffice.postal_record.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.ListVisitorLogs",
+  "method" : "GET",
+  "path" : "/v1/frontoffice/visitor-logs",
+  "permission" : "frontoffice.visitor_log.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.UpdateCallLog",
+  "method" : "PATCH",
+  "path" : "/v1/frontoffice/call-logs/{callLogId}",
+  "permission" : "frontoffice.call_log.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.UpdateDirectoryContact",
+  "method" : "PATCH",
+  "path" : "/v1/frontoffice/directory-contacts/{directoryContactId}",
+  "permission" : "frontoffice.directory_contact.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.UpdatePostalRecord",
+  "method" : "PATCH",
+  "path" : "/v1/frontoffice/postal-records/{postalRecordId}",
+  "permission" : "frontoffice.postal_record.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "frontoffice.UpdateVisitorLog",
+  "method" : "PATCH",
+  "path" : "/v1/frontoffice/visitor-logs/{visitorLogId}",
+  "permission" : "frontoffice.visitor_log.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+} ]

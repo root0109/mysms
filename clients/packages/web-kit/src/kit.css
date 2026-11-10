@@ -246,3 +246,142 @@
 .shell-find-results {
   margin-top: 0.25rem;
 }
+
+/* ---- Attendance: the roster grid (ATT-03) and the month calendar (ATT-04) */
+.attendance-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.attendance-grid__row {
+  display: grid;
+  grid-template-columns: minmax(12ch, 1fr) auto;
+  align-items: center;
+  gap: var(--sms-space-3) var(--sms-space-5);
+  padding-block: var(--sms-space-4);
+  border-block-end: 1px solid var(--sms-color-border);
+}
+.attendance-grid__who {
+  display: grid;
+  gap: var(--sms-space-1);
+}
+.attendance-grid__name {
+  font-weight: 600;
+}
+.attendance-grid__roll,
+.attendance-grid__note,
+.attendance-grid__pending {
+  margin: 0;
+  color: var(--sms-color-text-muted);
+  font: var(--sms-font-caption);
+}
+.attendance-grid__detail {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: var(--sms-space-4);
+}
+.attendance-grid__detail > .sms-field {
+  margin-block-end: 0;
+}
+.attendance-grid__note,
+.attendance-grid__row > .sms-field__error {
+  grid-column: 1 / -1;
+}
+.attendance-grid__pending {
+  align-self: center;
+  margin-inline-end: auto;
+}
+@media (max-width: 640px) {
+  .attendance-grid__row {
+    grid-template-columns: 1fr;
+  }
+}
+.attendance-month {
+  display: grid;
+  gap: var(--sms-space-2);
+  overflow-x: auto;
+}
+.attendance-month__week,
+.attendance-month__days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(84px, 1fr));
+  gap: var(--sms-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.attendance-month__weekday {
+  color: var(--sms-color-text-muted);
+  font: var(--sms-font-caption);
+}
+.attendance-month__day {
+  display: grid;
+  align-content: start;
+  gap: var(--sms-space-2);
+  min-block-size: 64px;
+  padding: var(--sms-space-3);
+  border: 1px solid var(--sms-color-border);
+  border-radius: var(--sms-radius-sm);
+}
+.attendance-month__number {
+  font: var(--sms-font-caption);
+  font-weight: 600;
+}
+
+/* ---- Homework: text a teacher or student wrote keeps its line breaks */
+.homework-text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* TT-03: one day of a timetable — time, what and where, state */
+.timetable-day {
+  display: grid;
+  gap: var(--sms-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.timetable-day__session {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sms-space-3);
+}
+.timetable-day__time {
+  flex: 0 0 11rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--sms-color-text-muted);
+}
+.timetable-day__what {
+  flex: 1 1 12rem;
+  overflow-wrap: anywhere;
+}
+.timetable-day__what .hint {
+  margin: 0;
+}
+
+/* HR-04: applications for leave — who or what, when and how long, then its state and what can be done */
+.leave-list {
+  display: grid;
+  gap: var(--sms-space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.leave-list__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sms-space-3);
+}
+.leave-list__what {
+  flex: 1 1 16rem;
+  overflow-wrap: anywhere;
+}
+.leave-list__what .hint {
+  display: block;
+  margin: 0;
+}

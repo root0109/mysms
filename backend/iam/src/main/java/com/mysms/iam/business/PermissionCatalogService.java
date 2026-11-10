@@ -1,7 +1,8 @@
 package com.mysms.iam.business;
 
-import com.mysms.contracts.iam.model.Permission;
-import com.mysms.contracts.iam.model.PermissionList;
+import java.util.List;
+import com.mysms.iam.api.model.Permission;
+import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.filter.FilterParser;
@@ -17,39 +18,42 @@ import java.time.Clock;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /** iam.ListPermissions / iam.GetPermission: the permission catalogue administrators compose roles from. */
 @Service
-public class PermissionCatalogService {
+public class PermissionCatalogService extends AppTransactionManager {
 
     private final PermissionCatalogRepository repository;
     private final PermissionMapper mapper;
-    private final ModuleDatabase database;
     private final Clock clock;
 
     public PermissionCatalogService(PermissionCatalogRepository repository, PermissionMapper mapper,
-            @Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database, Clock clock) {
+            @Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
+            @Qualifier(IamDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions, Clock clock) {
+
+        super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
-        this.database = database;
         this.clock = clock;
     }
 
     public Permission get(UUID id) {
-        return database.tx().read(() -> repository.findById(id).map(mapper::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException(PermissionEntity.TABLE, id)));
+        return doInReadTransaction(() -> {
+            return repository.findById(id).map(mapper::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException(PermissionEntity.TABLE, id));
+        });
     }
 
-    public PermissionList list(Integer pageSize, String pageToken, String filter, String orderBy) {
-        SortSpec sort = SortSpec.parse(orderBy, PermissionCatalogRepository.SORT_FIELDS,
+    public Page<Permission> list(Integer pageNumber, Integer pageSize, String cursor, String filter,
+            List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, PermissionCatalogRepository.SORT_FIELDS,
                 PermissionCatalogRepository.DEFAULT_ORDER, PermissionCatalogRepository.ID_COLUMN);
         SqlFragment where = FilterParser.parse(filter, PermissionCatalogRepository.FILTER_FIELDS);
-        PageRequest page = PageRequest.of(pageSize, pageToken, sort, filter, clock);
-        return database.tx().read(() -> {
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+        return doInReadTransaction(() -> {
             Page<PermissionEntity> rows = repository.list(page, where);
-            return new PermissionList(rows.items().stream().map(mapper::toDto).toList())
-                    .nextPageToken(rows.nextPageToken())
-                    .totalSize(repository.count(where));
+            return rows.map(mapper::toDto);
         });
     }
 }

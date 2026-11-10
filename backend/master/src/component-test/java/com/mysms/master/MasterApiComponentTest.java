@@ -30,8 +30,7 @@ import tools.jackson.databind.json.JsonMapper;
  * The master contract end to end over HTTP against real PostgreSQL: auth at the edge, validation, uniqueness,
  * ETag/If-Match, update masks, keyset paging, filters, read masks, soft delete, audit + events in the outbox.
  */
-@SpringBootTest(classes = MasterApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.config.name=" + MasterApplication.CONFIG_NAME)
+@SpringBootTest(classes = MasterApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MasterApiComponentTest {
 
@@ -97,8 +96,9 @@ class MasterApiComponentTest {
     void createsAndReadsCountries() throws Exception {
         Reply empty = call("GET", "/v1/master/countries", null, null);
         assertThat(empty.status()).isEqualTo(200);
-        assertThat(empty.body().path("items")).isEmpty();
-        assertThat(empty.body().path("totalSize").asInt()).isZero();
+        assertThat(empty.body().path("data")).isEmpty();
+        assertThat(empty.body().path("paging").path("size").asInt()).isZero();
+        assertThat(empty.body().path("paging").has("next")).isFalse();
 
         Reply created = call("POST", "/v1/master/countries", OPERATOR,
                 "{\"iso2\":\"in\",\"iso3\":\"ind\",\"name\":\"India\",\"shortName\":\"IN\",\"phonePrefix\":\"+91\","
@@ -139,7 +139,7 @@ class MasterApiComponentTest {
         assertThat(call("POST", "/v1/master/countries", OPERATOR, "{nope").status()).isEqualTo(400);
         Reply dryRun = call("POST", "/v1/master/countries?validateOnly=true", OPERATOR, "{\"iso2\":\"ZZ\",\"name\":\"Dry\"}");
         assertThat(dryRun.status()).isEqualTo(200);
-        assertThat(call("GET", "/v1/master/countries?filter=" + q("iso2 = \"ZZ\""), null, null).body().path("items")).isEmpty();
+        assertThat(call("GET", "/v1/master/countries?filter=" + q("iso2 = \"ZZ\""), null, null).body().path("data")).isEmpty();
     }
 
     @Test
@@ -160,7 +160,7 @@ class MasterApiComponentTest {
     @Order(4)
     void updatesUnderIfMatchWithMasks() throws Exception {
         String id = call("GET", "/v1/master/countries?filter=" + q("iso2 = \"IN\""), null, null)
-                .body().path("items").get(0).path("id").asString();
+                .body().path("data").get(0).path("id").asString();
         String path = "/v1/master/countries/" + id;
         assertThat(call("PATCH", path, OPERATOR, "{\"name\":\"Bharat\"}").status()).isEqualTo(428);
         Reply stale = call("PATCH", path, OPERATOR, "{\"name\":\"Bharat\"}", "If-Match", "\"7\"");
@@ -188,35 +188,54 @@ class MasterApiComponentTest {
         createCountry("FR", "France");
         createCountry("DE", "Germany");
         createCountry("JP", "Japan");
-        Reply first = call("GET", "/v1/master/countries?pageSize=2&orderBy=" + q("name desc"), null, null);
+        Reply first = call("GET", "/v1/master/countries?size=2&sort=name,desc", null, null);
         assertThat(first.status()).isEqualTo(200);
-        assertThat(first.body().path("items")).extracting(n -> n.path("name").asString()).containsExactly("Japan", "Germany");
-        assertThat(first.body().path("totalSize").asInt()).isEqualTo(4);
-        String token = first.body().path("nextPageToken").asString();
-        Reply second = call("GET", "/v1/master/countries?pageSize=2&orderBy=" + q("name desc") + "&pageToken=" + q(token),
-                null, null);
-        assertThat(second.body().path("items")).extracting(n -> n.path("name").asString()).containsExactly("France", "Bharat");
-        JsonNode next = second.body().path("nextPageToken");
-        assertThat(next.isMissingNode() || next.asString().isEmpty()).isTrue();
-        assertThat(call("GET", "/v1/master/countries?pageSize=2&pageToken=" + q(token), null, null).status()).isEqualTo(400);
+        assertThat(first.body().path("data")).extracting(n -> n.path("name").asString()).containsExactly("Japan", "Germany");
+        JsonNode firstPaging = first.body().path("paging");
+        assertThat(firstPaging.path("page").asInt()).isEqualTo(1);
+        assertThat(firstPaging.path("size").asInt()).isEqualTo(2);
+        assertThat(firstPaging.path("first").asString()).isEqualTo("/v1/master/countries?page=1&size=2&sort=name,desc");
+        assertThat(firstPaging.has("previous")).isFalse();
+        String nextLink = firstPaging.path("next").asString();
+        assertThat(nextLink).startsWith("/v1/master/countries?page=2&size=2&sort=name,desc&cursor=");
+        // the next link continues by cursor (keyset) after Germany
+        Reply second = call("GET", nextLink, null, null);
+        assertThat(second.body().path("data")).extracting(n -> n.path("name").asString()).containsExactly("France", "Bharat");
+        assertThat(second.body().path("paging").has("next")).isFalse();
+        assertThat(second.body().path("paging").path("previous").asString())
+                .isEqualTo("/v1/master/countries?page=1&size=2&sort=name,desc");
+        // a page number without a cursor reads by offset: the same rows
+        Reply byOffset = call("GET", "/v1/master/countries?page=2&size=2&sort=name,desc", null, null);
+        assertThat(byOffset.body().path("data")).extracting(n -> n.path("name").asString())
+                .containsExactly("France", "Bharat");
+        // the cursor belongs to its sort and page
+        String cursor = nextLink.substring(nextLink.indexOf("cursor=") + "cursor=".length());
+        assertThat(call("GET", "/v1/master/countries?page=2&size=2&cursor=" + cursor, null, null).status()).isEqualTo(400);
+        assertThat(call("GET", "/v1/master/countries?page=3&size=2&sort=name,desc&cursor=" + cursor, null, null)
+                .status()).isEqualTo(400);
+        // several sort criteria: repeated parameters or one comma list read the same
+        Reply repeated = call("GET", "/v1/master/countries?sort=sortOrder,desc&sort=name", null, null);
+        Reply joined = call("GET", "/v1/master/countries?sort=sortOrder,desc,name,asc", null, null);
+        assertThat(repeated.status()).as(repeated.raw().body()).isEqualTo(200);
+        assertThat(repeated.body().path("data")).isEqualTo(joined.body().path("data"));
         Reply filtered = call("GET", "/v1/master/countries?filter=" + q("name : \"an\" AND isActive = true"), null, null);
-        assertThat(filtered.body().path("items")).extracting(n -> n.path("name").asString())
+        assertThat(filtered.body().path("data")).extracting(n -> n.path("name").asString())
                 .containsExactlyInAnyOrder("France", "Germany", "Japan");
         Reply badFilter = call("GET", "/v1/master/countries?filter=" + q("secret = 1"), null, null);
         assertThat(badFilter.status()).isEqualTo(400);
         assertThat(badFilter.body().path("code").asString()).isEqualTo("INVALID_FILTER");
-        assertThat(call("GET", "/v1/master/countries?orderBy=phonePrefix", null, null).status()).isEqualTo(400);
-        assertThat(call("GET", "/v1/master/countries?pageSize=0", null, null).status()).isEqualTo(400);
-        assertThat(call("GET", "/v1/master/countries?pageSize=501", null, null).status()).isEqualTo(400);
+        assertThat(call("GET", "/v1/master/countries?sort=phonePrefix", null, null).status()).isEqualTo(400);
+        assertThat(call("GET", "/v1/master/countries?size=0", null, null).status()).isEqualTo(400);
+        assertThat(call("GET", "/v1/master/countries?size=501", null, null).status()).isEqualTo(400);
     }
 
     @Test
     @Order(6)
     void statesAndCitiesKeepTheirCountry() throws Exception {
         String india = call("GET", "/v1/master/countries?filter=" + q("iso2 = \"IN\""), null, null)
-                .body().path("items").get(0).path("id").asString();
+                .body().path("data").get(0).path("id").asString();
         String france = call("GET", "/v1/master/countries?filter=" + q("iso2 = \"FR\""), null, null)
-                .body().path("items").get(0).path("id").asString();
+                .body().path("data").get(0).path("id").asString();
         Reply orphan = call("POST", "/v1/master/states", OPERATOR,
                 "{\"countryId\":\"" + UUID.randomUUID() + "\",\"name\":\"Nowhere\"}");
         assertThat(orphan.status()).isEqualTo(422);
@@ -236,7 +255,7 @@ class MasterApiComponentTest {
                 "{\"countryId\":\"" + india + "\",\"stateProvinceId\":\"" + stateId + "\",\"name\":\"Bengaluru\"}");
         assertThat(city.status()).isEqualTo(201);
         assertThat(call("GET", "/v1/master/cities?filter=" + q("countryId = \"" + india + "\""), null, null)
-                .body().path("items")).hasSize(1);
+                .body().path("data")).hasSize(1);
 
         Reply countryNow = call("GET", "/v1/master/countries/" + india, null, null);
         Reply blocked = call("DELETE", "/v1/master/countries/" + india, OPERATOR, null, "If-Match", countryNow.etag());
@@ -257,7 +276,7 @@ class MasterApiComponentTest {
         Reply stateRenamed = call("PATCH", "/v1/master/states/" + stateId, OPERATOR, "{\"code\":\"kar\"}", "If-Match",
                 stateRead.etag());
         assertThat(stateRenamed.status()).isEqualTo(200);
-        assertThat(call("GET", "/v1/master/states?orderBy=" + q("createTime desc"), null, null).status()).isEqualTo(200);
+        assertThat(call("GET", "/v1/master/states?sort=createTime,desc", null, null).status()).isEqualTo(200);
         assertThat(call("DELETE", "/v1/master/states/" + stateId, OPERATOR, null, "If-Match", stateRenamed.etag()).status())
                 .isEqualTo(204);
         assertThat(call("DELETE", "/v1/master/countries/" + india, OPERATOR, null, "If-Match", countryNow.etag()).status())
@@ -285,7 +304,7 @@ class MasterApiComponentTest {
                 "If-Match", inr.etag());
         assertThat(updated.status()).isEqualTo(200);
         assertThat(updated.body().path("isActive").asBoolean()).isFalse();
-        assertThat(call("GET", "/v1/master/currencies?orderBy=code", null, null).body().path("items")).hasSize(1);
+        assertThat(call("GET", "/v1/master/currencies?sort=code", null, null).body().path("data")).hasSize(1);
         assertThat(call("DELETE", "/v1/master/currencies/" + id, OPERATOR, null, "If-Match", updated.etag()).status())
                 .isEqualTo(204);
     }

@@ -26,7 +26,7 @@ paths:
     get:
       operationId: timetable.ListPeriods
       summary: List Periods
-      description: List Periods visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Periods visible to the caller, page by page, with filtering and sorting.
       tags:
       - Period
       security:
@@ -36,10 +36,11 @@ paths:
         service: mysms.timetable.v1.PeriodService
         method: ListPeriods
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -47,7 +48,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PeriodList'
+                $ref: '#/components/schemas/PagingInfoPeriod'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -266,7 +267,7 @@ paths:
     get:
       operationId: timetable.ListSessions
       summary: List Sessions
-      description: List Sessions visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Sessions visible to the caller, page by page, with filtering and sorting.
       tags:
       - Session
       security:
@@ -276,10 +277,11 @@ paths:
         service: mysms.timetable.v1.SessionService
         method: ListSessions
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -287,7 +289,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SessionList'
+                $ref: '#/components/schemas/PagingInfoSession'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -506,7 +508,7 @@ paths:
     get:
       operationId: timetable.ListSessionStudents
       summary: List SessionStudents
-      description: List SessionStudents visible to the caller, with cursor pagination, filtering and ordering.
+      description: List SessionStudents visible to the caller, page by page, with filtering and sorting.
       tags:
       - Session
       security:
@@ -523,10 +525,11 @@ paths:
           type: string
           format: uuid
         description: Session id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -534,7 +537,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SessionStudentList'
+                $ref: '#/components/schemas/PagingInfoSessionStudent'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1084,7 +1087,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TimetableViewList'
+                $ref: '#/components/schemas/PagingInfoTimetableView'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1151,19 +1154,9 @@ paths:
         schema:
           type: string
           format: uuid
-      - name: pageSize
-        in: query
-        required: false
-        description: Maximum items to return (1-500, default 50).
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Cursor from next_page_token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/timetable/operations:
     get:
       operationId: timetable.ListOperations
@@ -1183,7 +1176,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./common.yaml#/components/schemas/OperationList
+                $ref: ./common.yaml#/components/schemas/PagingInfoOperation
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1207,19 +1200,9 @@ paths:
         description: Filter by kind.
         schema:
           type: string
-      - name: pageSize
-        in: query
-        required: false
-        description: Page size.
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Page token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/timetable/operations/{operationId}:
     get:
       operationId: timetable.GetOperation
@@ -1394,22 +1377,20 @@ components:
           type: integer
           format: int32
           description: Order in the day.
-    PeriodList:
+    PagingInfoPeriod:
       type: object
+      description: A page of Period, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Period'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Session:
       type: object
       description: Scheduled teaching session (one class meeting).
@@ -1577,6 +1558,7 @@ components:
           description: Calendar colour index.
     SessionList:
       type: object
+      description: The Session items an operation wrote, all in one response.
       required:
       - items
       properties:
@@ -1584,13 +1566,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Session'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+    PagingInfoSession:
+      type: object
+      description: A page of Session, with the links to the other pages.
+      required:
+      - data
+      - paging
+      properties:
+        data:
+          type: array
+          description: Data retrieved in the paginated request.
+          items:
+            $ref: '#/components/schemas/Session'
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     SessionStudent:
       type: object
       description: Students expected in a session (for split groups / electives).
@@ -1643,22 +1632,20 @@ components:
           type: string
           format: uuid
           description: Student.
-    SessionStudentList:
+    PagingInfoSessionStudent:
       type: object
+      description: A page of SessionStudent, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/SessionStudent'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     ConfirmSessionRequest:
       type: object
       properties:
@@ -1751,19 +1738,20 @@ components:
           description: Room name.
       required:
       - session
-    TimetableViewList:
+    PagingInfoTimetableView:
       type: object
-      description: A page of TimetableView.
+      description: A page of TimetableView, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/TimetableView'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
   securitySchemes:
     bearerAuth:
       type: http

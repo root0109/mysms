@@ -40,7 +40,7 @@ paths:
     get:
       operationId: library.ListMediaTypes
       summary: List MediaTypes
-      description: List MediaTypes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List MediaTypes visible to the caller, page by page, with filtering and sorting.
       tags:
       - MediaType
       security:
@@ -50,10 +50,11 @@ paths:
         service: mysms.library.v1.MediaTypeService
         method: ListMediaTypes
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -61,7 +62,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MediaTypeList'
+                $ref: '#/components/schemas/PagingInfoMediaType'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -280,7 +281,7 @@ paths:
     get:
       operationId: library.ListMediaCategories
       summary: List MediaCategories
-      description: List MediaCategories visible to the caller, with cursor pagination, filtering and ordering.
+      description: List MediaCategories visible to the caller, page by page, with filtering and sorting.
       tags:
       - MediaCategory
       security:
@@ -290,10 +291,11 @@ paths:
         service: mysms.library.v1.MediaCategoryService
         method: ListMediaCategories
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -301,7 +303,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MediaCategoryList'
+                $ref: '#/components/schemas/PagingInfoMediaCategory'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -520,7 +522,7 @@ paths:
     get:
       operationId: library.ListAuthors
       summary: List Authors
-      description: List Authors visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Authors visible to the caller, page by page, with filtering and sorting.
       tags:
       - Author
       security:
@@ -530,10 +532,11 @@ paths:
         service: mysms.library.v1.AuthorService
         method: ListAuthors
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -541,7 +544,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthorList'
+                $ref: '#/components/schemas/PagingInfoAuthor'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -760,7 +763,7 @@ paths:
     get:
       operationId: library.ListPublishers
       summary: List Publishers
-      description: List Publishers visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Publishers visible to the caller, page by page, with filtering and sorting.
       tags:
       - Publisher
       security:
@@ -770,10 +773,11 @@ paths:
         service: mysms.library.v1.PublisherService
         method: ListPublishers
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -781,7 +785,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PublisherList'
+                $ref: '#/components/schemas/PagingInfoPublisher'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1000,7 +1004,7 @@ paths:
     get:
       operationId: library.ListMedia
       summary: List Media
-      description: List Media visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Media visible to the caller, page by page, with filtering and sorting.
       tags:
       - Media
       security:
@@ -1010,10 +1014,11 @@ paths:
         service: mysms.library.v1.MediaService
         method: ListMedia
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1021,7 +1026,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MediaList'
+                $ref: '#/components/schemas/PagingInfoMedia'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1240,7 +1245,7 @@ paths:
     get:
       operationId: library.ListMediaAuthors
       summary: List MediaAuthors
-      description: List MediaAuthors visible to the caller, with cursor pagination, filtering and ordering.
+      description: List MediaAuthors visible to the caller, page by page, with filtering and sorting.
       tags:
       - Media
       security:
@@ -1257,10 +1262,11 @@ paths:
           type: string
           format: uuid
         description: Media id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1268,7 +1274,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MediaAuthorList'
+                $ref: '#/components/schemas/PagingInfoMediaAuthor'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1515,7 +1521,7 @@ paths:
     get:
       operationId: library.ListMediaPublishers
       summary: List MediaPublishers
-      description: List MediaPublishers visible to the caller, with cursor pagination, filtering and ordering.
+      description: List MediaPublishers visible to the caller, page by page, with filtering and sorting.
       tags:
       - Media
       security:
@@ -1532,10 +1538,11 @@ paths:
           type: string
           format: uuid
         description: Media id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1543,7 +1550,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MediaPublisherList'
+                $ref: '#/components/schemas/PagingInfoMediaPublisher'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1790,7 +1797,7 @@ paths:
     get:
       operationId: library.ListMediaCourses
       summary: List MediaCourses
-      description: List MediaCourses visible to the caller, with cursor pagination, filtering and ordering.
+      description: List MediaCourses visible to the caller, page by page, with filtering and sorting.
       tags:
       - Media
       security:
@@ -1807,10 +1814,11 @@ paths:
           type: string
           format: uuid
         description: Media id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1818,7 +1826,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MediaCourseList'
+                $ref: '#/components/schemas/PagingInfoMediaCourse'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2065,7 +2073,7 @@ paths:
     get:
       operationId: library.ListMediaSubjects
       summary: List MediaSubjects
-      description: List MediaSubjects visible to the caller, with cursor pagination, filtering and ordering.
+      description: List MediaSubjects visible to the caller, page by page, with filtering and sorting.
       tags:
       - Media
       security:
@@ -2082,10 +2090,11 @@ paths:
           type: string
           format: uuid
         description: Media id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2093,7 +2102,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MediaSubjectList'
+                $ref: '#/components/schemas/PagingInfoMediaSubject'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2340,7 +2349,7 @@ paths:
     get:
       operationId: library.ListMediaUnits
       summary: List MediaUnits
-      description: List MediaUnits visible to the caller, with cursor pagination, filtering and ordering.
+      description: List MediaUnits visible to the caller, page by page, with filtering and sorting.
       tags:
       - Media
       security:
@@ -2357,10 +2366,11 @@ paths:
           type: string
           format: uuid
         description: Media id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2368,7 +2378,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MediaUnitList'
+                $ref: '#/components/schemas/PagingInfoMediaUnit'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2615,7 +2625,7 @@ paths:
     get:
       operationId: library.ListLibraryCardTypes
       summary: List LibraryCardTypes
-      description: List LibraryCardTypes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List LibraryCardTypes visible to the caller, page by page, with filtering and sorting.
       tags:
       - LibraryCardType
       security:
@@ -2625,10 +2635,11 @@ paths:
         service: mysms.library.v1.LibraryCardTypeService
         method: ListLibraryCardTypes
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2636,7 +2647,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LibraryCardTypeList'
+                $ref: '#/components/schemas/PagingInfoLibraryCardType'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2855,7 +2866,7 @@ paths:
     get:
       operationId: library.ListLibraryCards
       summary: List LibraryCards
-      description: List LibraryCards visible to the caller, with cursor pagination, filtering and ordering.
+      description: List LibraryCards visible to the caller, page by page, with filtering and sorting.
       tags:
       - LibraryCard
       security:
@@ -2865,10 +2876,11 @@ paths:
         service: mysms.library.v1.LibraryCardService
         method: ListLibraryCards
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2876,7 +2888,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LibraryCardList'
+                $ref: '#/components/schemas/PagingInfoLibraryCard'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3095,7 +3107,7 @@ paths:
     get:
       operationId: library.ListLoans
       summary: List Loans
-      description: List Loans visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Loans visible to the caller, page by page, with filtering and sorting.
       tags:
       - Loan
       security:
@@ -3105,10 +3117,11 @@ paths:
         service: mysms.library.v1.LoanService
         method: ListLoans
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3116,7 +3129,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoanList'
+                $ref: '#/components/schemas/PagingInfoLoan'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3335,7 +3348,7 @@ paths:
     get:
       operationId: library.ListReservations
       summary: List Reservations
-      description: List Reservations visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Reservations visible to the caller, page by page, with filtering and sorting.
       tags:
       - Reservation
       security:
@@ -3345,10 +3358,11 @@ paths:
         service: mysms.library.v1.ReservationService
         method: ListReservations
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3356,7 +3370,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReservationList'
+                $ref: '#/components/schemas/PagingInfoReservation'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3575,7 +3589,7 @@ paths:
     get:
       operationId: library.ListPurchaseRequests
       summary: List PurchaseRequests
-      description: List PurchaseRequests visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PurchaseRequests visible to the caller, page by page, with filtering and sorting.
       tags:
       - PurchaseRequest
       security:
@@ -3585,10 +3599,11 @@ paths:
         service: mysms.library.v1.PurchaseRequestService
         method: ListPurchaseRequests
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3596,7 +3611,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PurchaseRequestList'
+                $ref: '#/components/schemas/PagingInfoPurchaseRequest'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -3815,7 +3830,7 @@ paths:
     get:
       operationId: library.ListPurchaseRequestCourses
       summary: List PurchaseRequestCourses
-      description: List PurchaseRequestCourses visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PurchaseRequestCourses visible to the caller, page by page, with filtering and sorting.
       tags:
       - PurchaseRequest
       security:
@@ -3832,10 +3847,11 @@ paths:
           type: string
           format: uuid
         description: PurchaseRequest id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -3843,7 +3859,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PurchaseRequestCourseList'
+                $ref: '#/components/schemas/PagingInfoPurchaseRequestCourse'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -4090,7 +4106,7 @@ paths:
     get:
       operationId: library.ListPurchaseRequestSubjects
       summary: List PurchaseRequestSubjects
-      description: List PurchaseRequestSubjects visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PurchaseRequestSubjects visible to the caller, page by page, with filtering and sorting.
       tags:
       - PurchaseRequest
       security:
@@ -4107,10 +4123,11 @@ paths:
           type: string
           format: uuid
         description: PurchaseRequest id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -4118,7 +4135,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PurchaseRequestSubjectList'
+                $ref: '#/components/schemas/PagingInfoPurchaseRequestSubject'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -4933,22 +4950,20 @@ components:
           type: string
           maxLength: 120
           description: Name.
-    MediaTypeList:
+    PagingInfoMediaType:
       type: object
+      description: A page of MediaType, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/MediaType'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     MediaCategory:
       type: object
       description: Subject category of library items.
@@ -5027,22 +5042,20 @@ components:
           type: string
           maxLength: 120
           description: Category.
-    MediaCategoryList:
+    PagingInfoMediaCategory:
       type: object
+      description: A page of MediaCategory, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/MediaCategory'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Author:
       type: object
       description: Author.
@@ -5090,22 +5103,20 @@ components:
           type: string
           maxLength: 200
           description: Author name.
-    AuthorList:
+    PagingInfoAuthor:
       type: object
+      description: A page of Author, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Author'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Publisher:
       type: object
       description: Publisher.
@@ -5153,22 +5164,20 @@ components:
           type: string
           maxLength: 200
           description: Publisher name.
-    PublisherList:
+    PagingInfoPublisher:
       type: object
+      description: A page of Publisher, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Publisher'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Media:
       type: object
       description: Catalogue title (one bibliographic record; copies are media_unit).
@@ -5293,22 +5302,20 @@ components:
         isActive:
           type: boolean
           description: Whether in circulation.
-    MediaList:
+    PagingInfoMedia:
       type: object
+      description: A page of Media, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Media'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     MediaAuthor:
       type: object
       description: Author of a title.
@@ -5369,22 +5376,20 @@ components:
           type: integer
           format: int32
           description: Author order.
-    MediaAuthorList:
+    PagingInfoMediaAuthor:
       type: object
+      description: A page of MediaAuthor, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/MediaAuthor'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     MediaPublisher:
       type: object
       description: Publisher of a title.
@@ -5437,22 +5442,20 @@ components:
           type: string
           format: uuid
           description: Publisher.
-    MediaPublisherList:
+    PagingInfoMediaPublisher:
       type: object
+      description: A page of MediaPublisher, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/MediaPublisher'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     MediaCourse:
       type: object
       description: Course a title is recommended for.
@@ -5505,22 +5508,20 @@ components:
           type: string
           format: uuid
           description: Course.
-    MediaCourseList:
+    PagingInfoMediaCourse:
       type: object
+      description: A page of MediaCourse, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/MediaCourse'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     MediaSubject:
       type: object
       description: Subject a title supports.
@@ -5573,22 +5574,20 @@ components:
           type: string
           format: uuid
           description: Subject.
-    MediaSubjectList:
+    PagingInfoMediaSubject:
       type: object
+      description: A page of MediaSubject, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/MediaSubject'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     MediaUnit:
       type: object
       description: Physical copy of a title.
@@ -5671,22 +5670,20 @@ components:
           - withdrawn
           x-extensible-enum: true
           description: Copy state.
-    MediaUnitList:
+    PagingInfoMediaUnit:
       type: object
+      description: A page of MediaUnit, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/MediaUnit'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     LibraryCardType:
       type: object
       description: Card type with borrowing rules.
@@ -5784,22 +5781,20 @@ components:
           format: decimal
           pattern: ^-?\d+(\.\d+)?$
           description: Overdue fine per day.
-    LibraryCardTypeList:
+    PagingInfoLibraryCardType:
       type: object
+      description: A page of LibraryCardType, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/LibraryCardType'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     LibraryCard:
       type: object
       description: Library membership card of a student or staff member.
@@ -5948,22 +5943,20 @@ components:
           - lost
           x-extensible-enum: true
           description: State.
-    LibraryCardList:
+    PagingInfoLibraryCard:
       type: object
+      description: A page of LibraryCard, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/LibraryCard'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Loan:
       type: object
       description: Issue and return of a copy against a library card, with fines.
@@ -6100,22 +6093,20 @@ components:
           type: string
           format: uuid
           description: Librarian.
-    LoanList:
+    PagingInfoLoan:
       type: object
+      description: A page of Loan, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Loan'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Reservation:
       type: object
       description: Request to borrow a title when it becomes available.
@@ -6216,22 +6207,20 @@ components:
           type: string
           format: date
           description: Wanted until.
-    ReservationList:
+    PagingInfoReservation:
       type: object
+      description: A page of Reservation, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Reservation'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PurchaseRequest:
       type: object
       description: Request to acquire a new title.
@@ -6346,22 +6335,20 @@ components:
           type: string
           format: date
           description: Request date.
-    PurchaseRequestList:
+    PagingInfoPurchaseRequest:
       type: object
+      description: A page of PurchaseRequest, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PurchaseRequest'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PurchaseRequestCourse:
       type: object
       description: Course a purchase request is for.
@@ -6414,22 +6401,20 @@ components:
           type: string
           format: uuid
           description: Course.
-    PurchaseRequestCourseList:
+    PagingInfoPurchaseRequestCourse:
       type: object
+      description: A page of PurchaseRequestCourse, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PurchaseRequestCourse'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PurchaseRequestSubject:
       type: object
       description: Subject a purchase request is for.
@@ -6482,22 +6467,20 @@ components:
           type: string
           format: uuid
           description: Subject.
-    PurchaseRequestSubjectList:
+    PagingInfoPurchaseRequestSubject:
       type: object
+      description: A page of PurchaseRequestSubject, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PurchaseRequestSubject'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     RequestLoanReturnRequest:
       type: object
       properties:

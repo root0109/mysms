@@ -8,10 +8,11 @@ MySMS is a set of **21 independently deployable services**, one per PostgreSQL s
 
 ```text
 mysms/              (parent pom: Java 17, Spring Boot 4.1, dependency + plugin management, quality gates)
-├── core/           (plain library: base classes, tenancy, errors, paging, ids, transaction executor,
+├── core/           (plain library: base classes, tenancy, errors, paging, ids, transaction helpers,
 │                    cross-cutting auto-configuration — no schema, no Flyway, no datasource of its own)
-├── contracts/      (GENERATED from api/openapi + api/proto: server interfaces, DTOs, gRPC stubs)
-├── sdk/            (GENERATED Java clients — the only way one module calls another)
+├── sdk/            (GENERATED: the Java clients modules call each other with, and the gRPC stubs of every
+│                    module compiled from api/proto; each module's own contract interfaces and DTOs live
+│                    inside the module itself, in com.mysms.<module>.api)
 ├── auth-client/    (the only auth surface modules touch: AuthContext, token verification, permission filters)
 ├── messaging/      (event API, runtime, and RabbitMQ [default], Google Cloud Pub/Sub, and in-process adapters)
 ├── master/         (schema `master`: Master Data)
@@ -38,9 +39,9 @@ mysms/              (parent pom: Java 17, Spring Boot 4.1, dependency + plugin m
 └── app/            (assembly only: runs every module in one process; no business code)
 ```
 
-Each domain module has its own `@SpringBootApplication`, its own configuration namespace (`mysms.<module>.*`), its own DataSource and transaction manager, and its own Flyway folder; the build produces both a library jar (used by `app`) and an executable service jar.
+Each domain module has its own `@SpringBootApplication`, its own configuration namespace (`mysms.<module>.*`), its own DataSource (core's `RoutingDataSource`: read transactions on the module's replica pool when one is configured, write transactions on the primary) and transaction manager, and its own Flyway folder; the build produces both a library jar (used by `app`) and an executable service jar.
 
-**Isolation is structural.** A domain module depends on `core`, `contracts`, `sdk`, `auth-client` and the `messaging` runtime — never another domain module — so one module cannot compile against another's classes. A module that declares event handlers also gets `messaging` at compile scope for the narrow `com.mysms.messaging.events` API; modules that only publish through core's outbox keep the dependency runtime-only. Maven exposes adapter dependencies transitively, so the dependency boundary is enforced by the POM policy and conformance check: domain code may use the event API, but not RabbitMQ, Google Pub/Sub or adapter/runtime packages. RabbitMQ is the default; Google Cloud Pub/Sub and in-process are selected with `mysms.events.bus`. Package layout inside a module is defined in `JAVA-CODING-RULES.md` §3.
+**Isolation is structural.** A domain module depends on `core`, `sdk`, `auth-client` and the `messaging` runtime — never another domain module — so one module cannot compile against another's classes. A module that declares event handlers also gets `messaging` at compile scope for the narrow `com.mysms.messaging.events` API; modules that only publish through core's outbox keep the dependency runtime-only. Maven exposes adapter dependencies transitively, so the dependency boundary is enforced by the POM policy and conformance check: domain code may use the event API, but not RabbitMQ, Google Pub/Sub or adapter/runtime packages. RabbitMQ is the default; Google Cloud Pub/Sub and in-process are selected with `mysms.events.bus`. Package layout inside a module is defined in `JAVA-CODING-RULES.md` §3.
 
 **Cross-module rules** (these hold identically in one process or across many):
 
@@ -89,13 +90,13 @@ A module may call (through `sdk`) only the modules whose data it references. The
 - Rows map through explicit `RowMapper`s into entities; entities never leave the module (`JAVA-CODING-RULES.md` §5–§7).
 - Every read adds `tenant_id = :tenantId` and, unless deleted rows are wanted, `deleted_at IS NULL`. Every write sets `created_by` / `updated_by` / timestamps. Updates use optimistic locking: `… SET …, row_version = row_version + 1 WHERE id = :id AND row_version = :expected`; 0 rows updated → **412 Precondition Failed** / `ABORTED` with the current row version, matching the API's `If-Match` contract (409 stays for duplicates and state-transition conflicts).
 - Ids are UUIDv7 generated in Java. Enums are stored as `varchar` (`Enum.name()` / `valueOf`). `jsonb` is read and written as text through Jackson with a `CAST(:json AS jsonb)` in the SQL.
-- **Transactions are programmatic**: `core`'s `TenantTransactionExecutor` drives `PlatformTransactionManager` directly (begin → `SET LOCAL app.tenant_id` → work → commit / rollback). `@Transactional` and `TransactionTemplate` are not used.
+- **Transactions are programmatic**: every module declares its `PlatformTransactionManager` as a Spring bean, and each service extends core's `AppTransactionManager`, which drives it (begin → bind the tenant with the transaction-local `app.tenant_id` → the service's work → commit / rollback). `@Transactional` and `TransactionTemplate` are not used.
 - Partitioned tables (see the database README) are always queried with their time range or date so PostgreSQL reads only the needed months.
 - Flyway is the only thing that creates or changes the schema. Integration tests run every repository against a Testcontainers PostgreSQL migrated with the module's own migrations, so SQL that drifts from the schema fails the build.
 
 ### Tenant isolation at the database
 
-Every tenant-owned table has `FORCE ROW LEVEL SECURITY` with the policy `tenant_id = current_setting('app.tenant_id', true)::uuid`. The module's transaction executor (`core`) issues `SET LOCAL app.tenant_id = :tenantId` before the first statement of every transaction. Four database roles: `mysms_migrate` owns the schemas and runs Flyway; `mysms_app` is the application login (not the owner, so RLS binds it); `mysms_relay` (BYPASSRLS) is the outbox relay's, granted each module's outbox and inbox only; `mysms_platform_admin` (BYPASSRLS) is used only by the platform console service. The tenant predicate in SQL (`tenant_id = :tenantId`) remains as the first layer; RLS is the backstop that turns a missed predicate into an empty result instead of a data breach.
+Every tenant-owned table has `FORCE ROW LEVEL SECURITY` with the policy `tenant_id = current_setting('app.tenant_id', true)::uuid`. Every service binds the tenant right after it begins a transaction (`ModuleDatabase.bindTenant()`: `set_config('app.tenant_id', …, true)`, transaction-local) before its first statement. Four database roles: `mysms_migrate` owns the schemas and runs Flyway; `mysms_app` is the application login (not the owner, so RLS binds it); `mysms_relay` (BYPASSRLS) is the outbox relay's, granted each module's outbox and inbox only; `mysms_platform_admin` (BYPASSRLS) is used only by the platform console service. The tenant predicate in SQL (`tenant_id = :tenantId`) remains as the first layer; RLS is the backstop that turns a missed predicate into an empty result instead of a data breach.
 
 ### Published content is versioned
 

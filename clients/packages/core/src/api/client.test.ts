@@ -18,10 +18,12 @@ function tokens(initial: string | null, refreshTo: string | null) {
   };
 }
 
+const EMPTY_PAGE = { data: [], paging: { page: 1, size: 0, first: '/v1/master/countries?page=1&size=20' } };
+
 describe('createApiClient', () => {
   it('sends the standard headers, bearer token and an Idempotency-Key on POST', async () => {
     const api = fakeApi({
-      'GET /v1/master/countries': () => json({ items: [] }),
+      'GET /v1/master/countries': () => json(EMPTY_PAGE),
       'POST /v1/master/countries': () => json({ id: 'c1', iso2: 'IN', name: 'India' }, { status: 201 }),
     });
     const client = createApiClient({
@@ -32,7 +34,7 @@ describe('createApiClient', () => {
       fetch: api.fetch,
     });
     const countries = client.get(master.CountryApi);
-    await expect(call(countries.listCountries({ pageSize: 20 }))).resolves.toEqual({ items: [] });
+    await expect(call(countries.listCountries({ size: 20 }))).resolves.toEqual(EMPTY_PAGE);
     await call(countries.createCountry({ country: { iso2: 'IN', iso3: 'IND', name: 'India' } }));
     const [get, post] = api.calls;
     expect(get?.path).toBe('/v1/master/countries');

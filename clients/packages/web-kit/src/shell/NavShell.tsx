@@ -1,8 +1,17 @@
-import { can, useI18n, useSession, useSignOut, type PermissionCode } from '@mysms/core';
+import {
+  can,
+  parseQuery,
+  pathOf,
+  searchOf,
+  useI18n,
+  useSession,
+  useSignOut,
+  type PermissionCode,
+} from '@mysms/core';
 import type { MessageKey } from '@mysms/i18n';
 import { AppShell, Button } from '@mysms/ui-web';
 import { useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 
 export interface NavItem {
   to: string;
@@ -21,9 +30,28 @@ export interface NavGroup {
   items: readonly NavItem[];
 }
 
-/** Whether a navigation entry is the page being shown (or a page below it). */
-const isActive = (item: NavItem, path: string) =>
-  item.end ? path === item.to : path === item.to || path.startsWith(item.to + '/');
+/** Whether a navigation entry leads to the page being shown (or a page below it), by path alone. */
+const isActive = (item: NavItem, path: string) => {
+  const to = pathOf(item.to);
+  return item.end ? path === to : path === to || path.startsWith(to + '/');
+};
+
+/**
+ * The one entry that is the page being shown. Two screens can share a path and differ by query (the homework board
+ * and its approval queue): the entry whose query the address carries wins, then the longest path.
+ */
+function currentEntry(items: readonly NavItem[], path: string, search: string): string | null {
+  const query = parseQuery(search);
+  let best: { to: string; rank: number } | null = null;
+  for (const item of items) {
+    if (!isActive(item, path)) continue;
+    const wanted = [...new URLSearchParams(searchOf(item.to))];
+    if (!wanted.every(([key, value]) => query.get(key) === value)) continue;
+    const rank = wanted.length * 10_000 + pathOf(item.to).length;
+    if (!best || rank > best.rank) best = { to: item.to, rank };
+  }
+  return best?.to ?? null;
+}
 
 /**
  * The signed-in web shell: navigation, user, sign-out and an optional environment band (ui/02 §1.2). A group opens
@@ -51,7 +79,13 @@ export function NavShell({
     .filter((group) => group.items.length > 0);
   const signOut = useSignOut();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search: locationSearch } = useLocation();
+  const current = currentEntry(
+    [...visible, ...visibleGroups.flatMap((group) => group.items)],
+    pathname,
+    locationSearch,
+  );
+  const mark = (item: NavItem) => (item.to === current ? ('page' as const) : undefined);
   const [query, setQuery] = useState('');
   const search = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -105,9 +139,9 @@ export function NavShell({
                 {matches.length === 0 && <li className="hint">{t('shell.find.none')}</li>}
                 {matches.map((item) => (
                   <li key={item.to}>
-                    <NavLink to={item.to} end={item.end ?? false} onClick={() => setQuery('')}>
+                    <Link to={item.to} aria-current={mark(item)} onClick={() => setQuery('')}>
                       {t(item.label)}
-                    </NavLink>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -116,9 +150,9 @@ export function NavShell({
           <ul className="shell-nav">
             {visible.map((item) => (
               <li key={item.to}>
-                <NavLink to={item.to} end={item.end ?? false}>
+                <Link to={item.to} aria-current={mark(item)}>
                   {t(item.label)}
-                </NavLink>
+                </Link>
               </li>
             ))}
           </ul>
@@ -126,15 +160,15 @@ export function NavShell({
             <details
               key={group.label}
               className="shell-nav-group"
-              open={group.items.some((item) => isActive(item, pathname)) || undefined}
+              open={group.items.some((item) => item.to === current) || undefined}
             >
               <summary>{t(group.label)}</summary>
               <ul className="shell-nav">
                 {group.items.map((item) => (
                   <li key={item.to}>
-                    <NavLink to={item.to} end={item.end ?? false}>
+                    <Link to={item.to} aria-current={mark(item)}>
                       {t(item.label)}
-                    </NavLink>
+                    </Link>
                   </li>
                 ))}
               </ul>

@@ -1,22 +1,20 @@
 package com.mysms.careers;
 
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
 
 /**
  * The Careers microservice: owns schema "careers" and serves the careers contract.
- * Its configuration is careers-service.yml, which imports the module's own mysms-careers.yml;
+ * Core configures it from this class: the package it scans names the module (ModuleDefaultsEnvironmentPostProcessor);
  * in the monolith the same module runs inside `app`.
  */
 @SpringBootApplication
 public class CareersApplication {
 
-    public static final String CONFIG_NAME = "careers-service";
-
     protected CareersApplication() {
     }
 
     public static void main(String[] args) {
-        new SpringApplicationBuilder(CareersApplication.class).properties("spring.config.name=" + CONFIG_NAME).run(args);
+        SpringApplication.run(CareersApplication.class, args);
     }
 }

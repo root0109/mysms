@@ -8,4 +8,10 @@
   <suppress id="noSecurityTypes" files="[\\/]iam[\\/]src[\\/]main[\\/]"/>
   <!-- the checkstyle rule that bans @Transactional has to name it in its own unit test -->
   <suppress id="noTransactionalAnnotation" files="[\\/]core[\\/]src[\\/]test[\\/].*ModuleChecksTest\.java"/>
+  <!-- the conformance check bans @Transactional and TransactionTemplate itself, so it has to name them -->
+  <suppress id="noTransactionalAnnotation" files="[\\/]conformance[\\/]src[\\/]"/>
+  <!-- the contract layer (com.mysms.<module>.api): declarative interfaces and DTOs materialized from the retired
+       generated module on 2026-11-10; kept in the generator's shape (wildcard imports, long javadoc lines), so the
+       style rules for hand-written code do not apply to it -->
+  <suppress checks=".*" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]mysms[\\/][a-z]+[\\/]api[\\/]"/>
 </suppressions>

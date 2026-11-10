@@ -11,6 +11,7 @@ import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.ProblemResponseWriter;
 import com.mysms.core.error.Problems;
 import com.mysms.core.testkit.TestDatabase;
+import com.mysms.core.testkit.TestTransactions;
 import com.mysms.core.trace.TraceFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletResponse;
@@ -125,7 +126,7 @@ class IdempotencyFilterComponentTest {
         assertThat(again.getHeader("Location")).isEqualTo("/v1/coretest/items/1");
         assertThat(again.getHeader("ETag")).isEqualTo("\"1\"");
         assertThat(again.getHeader("Idempotent-Replayed")).isEqualTo("true");
-        String stored = db.tx().read(() -> db.jdbc().sql("SELECT response_body FROM coretest.idempotency_key "
+        String stored = TestTransactions.of(db).read(() -> db.jdbc().sql("SELECT response_body FROM coretest.idempotency_key "
                 + "WHERE tenant_id = :tenantId AND idempotency_key = :key").param("key", UUID.fromString(key))
                 .query(String.class).single());
         assertThat(stored).as("kept only encrypted").startsWith("v1.k1.").doesNotContain("echo");
@@ -202,10 +203,12 @@ class IdempotencyFilterComponentTest {
         assertThat(replay.getContentAsByteArray()).as("only status and headers are kept").isEmpty();
 
         // a key past its 24 hours is removed when the tenant claims another key
-        db.tx().write(() -> db.jdbc().sql("UPDATE coretest.idempotency_key SET expires_at = now() - interval '1 hour' "
-                + "WHERE tenant_id = :tenantId AND idempotency_key = :key").param("key", UUID.fromString(key)).update());
+        TestTransactions.of(db).write(() -> db.jdbc()
+                .sql("UPDATE coretest.idempotency_key SET expires_at = now() - interval '1 hour' "
+                        + "WHERE tenant_id = :tenantId AND idempotency_key = :key")
+                .param("key", UUID.fromString(key)).update());
         send(post(UUID.randomUUID().toString(), "{}"), created(201));
-        assertThat(db.tx().read(() -> db.jdbc().sql("SELECT count(*) FROM coretest.idempotency_key "
+        assertThat(TestTransactions.of(db).read(() -> db.jdbc().sql("SELECT count(*) FROM coretest.idempotency_key "
                 + "WHERE tenant_id = :tenantId AND idempotency_key = :key").param("key", UUID.fromString(key))
                 .query(Integer.class).single())).isZero();
     }

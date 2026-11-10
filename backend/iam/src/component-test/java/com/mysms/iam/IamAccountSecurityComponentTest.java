@@ -7,9 +7,10 @@ import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.testkit.TestDatabase;
-import com.mysms.iam.config.IamDatabaseConfig;
+import com.mysms.core.testkit.TestTransactions;
 import com.mysms.iam.business.PasswordHasher;
 import com.mysms.iam.business.Totp;
+import com.mysms.iam.config.IamDatabaseConfig;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -44,8 +45,7 @@ import tools.jackson.databind.json.JsonMapper;
  * secret stored only encrypted; changing one's password (current one required, other sessions signed out), an
  * administrator setting another account's credentials without escalation, and accepting the terms.
  */
-@SpringBootTest(classes = IamApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.config.name=" + IamApplication.CONFIG_NAME)
+@SpringBootTest(classes = IamApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class IamAccountSecurityComponentTest {
 
@@ -149,13 +149,13 @@ class IamAccountSecurityComponentTest {
     }
 
     private UUID tenant() {
-        return as(null, () -> database.tx().readWithoutTenant(() -> database.jdbc()
+        return as(null, () -> TestTransactions.of(database).readWithoutTenant(() -> database.jdbc()
                 .sql("SELECT tenant_id FROM iam.tenant_directory WHERE tenant_code = :code").param("code", TENANT_CODE)
                 .query(UUID.class).single()));
     }
 
     private <T> T sql(Supplier<T> work) {
-        return as(tenant(), () -> database.tx().write(work::get));
+        return as(tenant(), () -> TestTransactions.of(database).write(work::get));
     }
 
     /** An active account with a password and a tenant-wide role holding the given permissions. */

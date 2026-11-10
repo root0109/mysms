@@ -9,9 +9,12 @@ import {
 import { Screen, Text, ThemeProvider } from '@mysms/ui-native';
 import { useEffect, useState, type ReactNode } from 'react';
 import { HomeScreen } from './HomeScreen';
+import { LeaveScreen } from './LeaveScreen';
+import { NotificationPreferencesScreen } from './NotificationPreferencesScreen';
 import { ProfileScreen } from './ProfileScreen';
 import { SettingsScreen } from './SettingsScreen';
 import { SignInScreen } from './SignInScreen';
+import { TimetableScreen } from './TimetableScreen';
 import { useDeepLinks } from './useDeepLinks';
 
 export interface NativeAppProps {
@@ -22,9 +25,15 @@ export interface NativeAppProps {
   tablet?: boolean;
 }
 
-export type Page = 'home' | 'profile' | 'settings';
-/** Deep-linked screens this kit renders itself (ui/02: ACC-07 profile, ACC-14 settings). */
-const PAGE_OF_SCREEN: Readonly<Record<string, Page>> = { 'ACC-07': 'profile', 'ACC-14': 'settings' };
+export type Page = 'home' | 'profile' | 'settings' | 'notifications' | 'timetable' | 'leave';
+/** Deep-linked screens this kit renders itself (ui/02: ACC-07 profile, ACC-14 settings, TT-03 my timetable). */
+const PAGE_OF_SCREEN: Readonly<Record<string, Page>> = {
+  'ACC-07': 'profile',
+  'ACC-10': 'notifications',
+  'ACC-14': 'settings',
+  'TT-03': 'timetable',
+  'HR-04': 'leave',
+};
 
 function Root({ client, webOrigin, defaultTenantCode, tablet }: Omit<NativeAppProps, 'runtime'>) {
   const status = useSession((s) => s.status);
@@ -39,6 +48,10 @@ function Root({ client, webOrigin, defaultTenantCode, tablet }: Omit<NativeAppPr
   const home = () => setPage('home');
   if (page === 'profile') return <ProfileScreen tablet={tablet ?? false} onBack={home} />;
   if (page === 'settings') return <SettingsScreen tablet={tablet ?? false} onBack={home} />;
+  if (page === 'leave') return <LeaveScreen tablet={tablet ?? false} onBack={home} />;
+  if (page === 'timetable') return <TimetableScreen tablet={tablet ?? false} onBack={home} />;
+  if (page === 'notifications')
+    return <NotificationPreferencesScreen tablet={tablet ?? false} onBack={home} />;
   return <HomeScreen linked={linked} tablet={tablet ?? false} onOpen={setPage} />;
 }
 

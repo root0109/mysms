@@ -40,7 +40,7 @@ paths:
     get:
       operationId: payroll.ListPayComponents
       summary: List PayComponents
-      description: List PayComponents visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PayComponents visible to the caller, page by page, with filtering and sorting.
       tags:
       - PayComponent
       security:
@@ -50,10 +50,11 @@ paths:
         service: mysms.payroll.v1.PayComponentService
         method: ListPayComponents
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -61,7 +62,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PayComponentList'
+                $ref: '#/components/schemas/PagingInfoPayComponent'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -280,7 +281,7 @@ paths:
     get:
       operationId: payroll.ListPayCategories
       summary: List PayCategories
-      description: List PayCategories visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PayCategories visible to the caller, page by page, with filtering and sorting.
       tags:
       - PayCategory
       security:
@@ -290,10 +291,11 @@ paths:
         service: mysms.payroll.v1.PayCategoryService
         method: ListPayCategories
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -301,7 +303,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PayCategoryList'
+                $ref: '#/components/schemas/PagingInfoPayCategory'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -520,7 +522,7 @@ paths:
     get:
       operationId: payroll.ListSalaryTemplates
       summary: List SalaryTemplates
-      description: List SalaryTemplates visible to the caller, with cursor pagination, filtering and ordering.
+      description: List SalaryTemplates visible to the caller, page by page, with filtering and sorting.
       tags:
       - SalaryTemplate
       security:
@@ -530,10 +532,11 @@ paths:
         service: mysms.payroll.v1.SalaryTemplateService
         method: ListSalaryTemplates
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -541,7 +544,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SalaryTemplateList'
+                $ref: '#/components/schemas/PagingInfoSalaryTemplate'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -760,7 +763,7 @@ paths:
     get:
       operationId: payroll.ListSalaryTemplateComponents
       summary: List SalaryTemplateComponents
-      description: List SalaryTemplateComponents visible to the caller, with cursor pagination, filtering and ordering.
+      description: List SalaryTemplateComponents visible to the caller, page by page, with filtering and sorting.
       tags:
       - SalaryTemplate
       security:
@@ -777,10 +780,11 @@ paths:
           type: string
           format: uuid
         description: SalaryTemplate id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -788,7 +792,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SalaryTemplateComponentList'
+                $ref: '#/components/schemas/PagingInfoSalaryTemplateComponent'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1035,7 +1039,7 @@ paths:
     get:
       operationId: payroll.ListStaffSalaries
       summary: List StaffSalaries
-      description: List StaffSalaries visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StaffSalaries visible to the caller, page by page, with filtering and sorting.
       tags:
       - StaffSalary
       security:
@@ -1045,10 +1049,11 @@ paths:
         service: mysms.payroll.v1.StaffSalaryService
         method: ListStaffSalaries
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1056,7 +1061,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StaffSalaryList'
+                $ref: '#/components/schemas/PagingInfoStaffSalary'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1275,7 +1280,7 @@ paths:
     get:
       operationId: payroll.ListStaffSalaryComponents
       summary: List StaffSalaryComponents
-      description: List StaffSalaryComponents visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StaffSalaryComponents visible to the caller, page by page, with filtering and sorting.
       tags:
       - StaffSalary
       security:
@@ -1292,10 +1297,11 @@ paths:
           type: string
           format: uuid
         description: StaffSalary id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1303,7 +1309,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StaffSalaryComponentList'
+                $ref: '#/components/schemas/PagingInfoStaffSalaryComponent'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1550,7 +1556,7 @@ paths:
     get:
       operationId: payroll.ListPayslips
       summary: List Payslips
-      description: List Payslips visible to the caller, with cursor pagination, filtering and ordering.
+      description: List Payslips visible to the caller, page by page, with filtering and sorting.
       tags:
       - Payslip
       security:
@@ -1560,10 +1566,11 @@ paths:
         service: mysms.payroll.v1.PayslipService
         method: ListPayslips
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1571,7 +1578,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PayslipList'
+                $ref: '#/components/schemas/PagingInfoPayslip'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1632,7 +1639,7 @@ paths:
     get:
       operationId: payroll.ListPayslipLines
       summary: List PayslipLines
-      description: List PayslipLines visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PayslipLines visible to the caller, page by page, with filtering and sorting.
       tags:
       - Payslip
       security:
@@ -1649,10 +1656,11 @@ paths:
           type: string
           format: uuid
         description: Payslip id.
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1660,7 +1668,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PayslipLineList'
+                $ref: '#/components/schemas/PagingInfoPayslipLine'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1728,7 +1736,7 @@ paths:
     get:
       operationId: payroll.ListPaymentTypes
       summary: List PaymentTypes
-      description: List PaymentTypes visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PaymentTypes visible to the caller, page by page, with filtering and sorting.
       tags:
       - PaymentType
       security:
@@ -1738,10 +1746,11 @@ paths:
         service: mysms.payroll.v1.PaymentTypeService
         method: ListPaymentTypes
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1749,7 +1758,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentTypeList'
+                $ref: '#/components/schemas/PagingInfoPaymentType'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1968,7 +1977,7 @@ paths:
     get:
       operationId: payroll.ListDisbursementAccounts
       summary: List DisbursementAccounts
-      description: List DisbursementAccounts visible to the caller, with cursor pagination, filtering and ordering.
+      description: List DisbursementAccounts visible to the caller, page by page, with filtering and sorting.
       tags:
       - DisbursementAccount
       security:
@@ -1978,10 +1987,11 @@ paths:
         service: mysms.payroll.v1.DisbursementAccountService
         method: ListDisbursementAccounts
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -1989,7 +1999,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DisbursementAccountList'
+                $ref: '#/components/schemas/PagingInfoDisbursementAccount'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2208,7 +2218,7 @@ paths:
     get:
       operationId: payroll.ListPayrollPayments
       summary: List PayrollPayments
-      description: List PayrollPayments visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PayrollPayments visible to the caller, page by page, with filtering and sorting.
       tags:
       - PayrollPayment
       security:
@@ -2218,10 +2228,11 @@ paths:
         service: mysms.payroll.v1.PayrollPaymentService
         method: ListPayrollPayments
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2229,7 +2240,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PayrollPaymentList'
+                $ref: '#/components/schemas/PagingInfoPayrollPayment'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2491,7 +2502,7 @@ paths:
     get:
       operationId: payroll.ListStaffBankAccounts
       summary: List StaffBankAccounts
-      description: List StaffBankAccounts visible to the caller, with cursor pagination, filtering and ordering.
+      description: List StaffBankAccounts visible to the caller, page by page, with filtering and sorting.
       tags:
       - StaffBankAccount
       security:
@@ -2501,10 +2512,11 @@ paths:
         service: mysms.payroll.v1.StaffBankAccountService
         method: ListStaffBankAccounts
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -2512,7 +2524,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StaffBankAccountList'
+                $ref: '#/components/schemas/PagingInfoStaffBankAccount'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2736,7 +2748,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./common.yaml#/components/schemas/OperationList
+                $ref: ./common.yaml#/components/schemas/PagingInfoOperation
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -2760,19 +2772,9 @@ paths:
         description: Filter by kind.
         schema:
           type: string
-      - name: pageSize
-        in: query
-        required: false
-        description: Page size.
-        schema:
-          type: integer
-          format: int32
-      - name: pageToken
-        in: query
-        required: false
-        description: Page token.
-        schema:
-          type: string
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
   /v1/payroll/operations/{operationId}:
     get:
       operationId: payroll.GetOperation
@@ -2967,22 +2969,20 @@ components:
         isActive:
           type: boolean
           description: Whether usable.
-    StaffBankAccountList:
+    PagingInfoStaffBankAccount:
       type: object
+      description: A page of StaffBankAccount, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StaffBankAccount'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PayComponent:
       type: object
       description: Earning or deduction component (Basic, HRA, PF...).
@@ -3056,22 +3056,20 @@ components:
           - defined
           x-extensible-enum: true
           description: Earning, deduction or employer-defined.
-    PayComponentList:
+    PagingInfoPayComponent:
       type: object
+      description: A page of PayComponent, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PayComponent'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PayCategory:
       type: object
       description: Calculation basis of a template component (fixed amount, % of basic, % of gross...).
@@ -3141,22 +3139,20 @@ components:
           type: string
           maxLength: 120
           description: Category name.
-    PayCategoryList:
+    PagingInfoPayCategory:
       type: object
+      description: A page of PayCategory, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PayCategory'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     SalaryTemplate:
       type: object
       description: Reusable salary structure.
@@ -3219,22 +3215,20 @@ components:
         isActive:
           type: boolean
           description: Whether usable.
-    SalaryTemplateList:
+    PagingInfoSalaryTemplate:
       type: object
+      description: A page of SalaryTemplate, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/SalaryTemplate'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     SalaryTemplateComponent:
       type: object
       description: Component included in a salary template and how it is calculated.
@@ -3306,22 +3300,20 @@ components:
           format: decimal
           pattern: ^-?\d+(\.\d+)?$
           description: Amount or rate for the calculation basis.
-    SalaryTemplateComponentList:
+    PagingInfoSalaryTemplateComponent:
       type: object
+      description: A page of SalaryTemplateComponent, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/SalaryTemplateComponent'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StaffSalary:
       type: object
       description: Salary structure assigned to a staff member from an effective date.
@@ -3404,22 +3396,20 @@ components:
         remarks:
           type: string
           description: Comments.
-    StaffSalaryList:
+    PagingInfoStaffSalary:
       type: object
+      description: A page of StaffSalary, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StaffSalary'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StaffSalaryComponent:
       type: object
       description: Resolved amount of each template component for a staff salary.
@@ -3483,22 +3473,20 @@ components:
           format: decimal
           pattern: ^-?\d+(\.\d+)?$
           description: Amount.
-    StaffSalaryComponentList:
+    PagingInfoStaffSalaryComponent:
       type: object
+      description: A page of StaffSalaryComponent, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StaffSalaryComponent'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Payslip:
       type: object
       description: Payroll run result for one staff member and pay period.
@@ -3617,22 +3605,20 @@ components:
       - staffSalaryId
       - periodStart
       - periodEnd
-    PayslipList:
+    PagingInfoPayslip:
       type: object
+      description: A page of Payslip, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Payslip'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PayslipLine:
       type: object
       description: Amount of one salary component on a payslip.
@@ -3695,22 +3681,20 @@ components:
       required:
       - staffSalaryComponentId
       - amount
-    PayslipLineList:
+    PagingInfoPayslipLine:
       type: object
+      description: A page of PayslipLine, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PayslipLine'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PaymentType:
       type: object
       description: Type of payroll transaction (salary, advance, bonus, reimbursement...).
@@ -3780,22 +3764,20 @@ components:
           type: string
           maxLength: 80
           description: Type name.
-    PaymentTypeList:
+    PagingInfoPaymentType:
       type: object
+      description: A page of PaymentType, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PaymentType'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     DisbursementAccount:
       type: object
       description: Institution bank account salaries are paid from.
@@ -3908,22 +3890,20 @@ components:
           type: string
           maxLength: 120
           description: Additional bank parameter (e.g. SWIFT).
-    DisbursementAccountList:
+    PagingInfoDisbursementAccount:
       type: object
+      description: A page of DisbursementAccount, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/DisbursementAccount'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PayrollPayment:
       type: object
       description: Money paid to a staff member (salary disbursement or other payroll transaction).
@@ -4020,22 +4000,20 @@ components:
       - transactionDate
       - amount
       - paymentMethod
-    PayrollPaymentList:
+    PagingInfoPayrollPayment:
       type: object
+      description: A page of PayrollPayment, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PayrollPayment'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     GeneratePayslipsRequest:
       type: object
       properties:

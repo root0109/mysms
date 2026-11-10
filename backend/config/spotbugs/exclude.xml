@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- SpotBugs exclusions. Each entry carries a one-line reason (JAVA-CODING-RULES §13). -->
 <FindBugsFilter>
-  <!-- generated code (OpenAPI interfaces/DTOs, protobuf/gRPC stubs, MapStruct implementations) is never hand-edited -->
+  <!-- the contract layer (kept in the generator's shape), the generated SDK and MapStruct implementations -->
   <Match>
     <Or>
-      <Package name="~com\.mysms\.contracts\..*"/>
+      <Package name="~com\.mysms\.[a-z]+\.api(\..*)?"/>
       <Package name="~com\.mysms\.sdk\..*"/>
       <Package name="~com\.mysms\.[a-z]+\.v1(\..*)?"/>
       <Class name="~.*MapperImpl"/>
     </Or>
   </Match>
-  <!-- Spring injects collaborators by constructor and owns their lifecycle; storing the injected reference is the design -->
+  <!-- Spring injects collaborators by constructor and owns their lifecycle; storing the injected reference is the design
+       (RoutingDataSource keeps the pools the module database created and closes) -->
   <Match>
     <Bug pattern="EI_EXPOSE_REP2"/>
     <Or>
-      <Class name="~com\.mysms\..*(Controller|Service|Repository|Config|Configuration|Filter|Executor|Writer|Store|Checker|Verifier|Factory|Indicator|Handler|Bootstrap|Scopes|Rules|Bus|Relay|Processor|Runtime|Trail|Cleanup|Sync)"/>
+      <Class name="~com\.mysms\..*(Controller|Service|Repository|Config|Configuration|Filter|Executor|Writer|Store|Checker|Verifier|Factory|Indicator|Handler|Bootstrap|Scopes|Rules|Bus|Relay|Processor|Runtime|Trail|Cleanup|Sync|Lookup|AppTransactionManager|RoutingDataSource)"/>
     </Or>
   </Match>
   <!-- ModuleDatabase exists to hand the module's own pool, transaction manager and executor to its repositories -->

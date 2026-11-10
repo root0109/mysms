@@ -20,11 +20,11 @@
     <property name="ignorePattern" value="^(package|import) |https?://"/>
   </module>
 
-  <!-- §4: transactions are programmatic, on PlatformTransactionManager, through TenantTransactionExecutor -->
+  <!-- §4: transactions are programmatic, on PlatformTransactionManager, through AppTransactionManager -->
   <module name="RegexpSingleline">
     <property name="id" value="noTransactionalAnnotation"/>
     <property name="format" value="@Transactional\b|\bTransactionTemplate\b|import\s+org\.springframework\.transaction\.annotation\."/>
-    <property name="message" value="@Transactional and TransactionTemplate are banned: use TenantTransactionExecutor (JAVA-CODING-RULES §4)."/>
+    <property name="message" value="@Transactional and TransactionTemplate are banned: extend AppTransactionManager (JAVA-CODING-RULES §4)."/>
   </module>
   <!-- §1.1: no ORM, ever -->
   <module name="RegexpSingleline">

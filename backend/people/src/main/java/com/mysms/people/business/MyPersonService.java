@@ -1,9 +1,10 @@
 package com.mysms.people.business;
 
 import com.mysms.authclient.AuthContext;
-import com.mysms.contracts.people.model.MyPersonUpdate;
-import com.mysms.contracts.people.model.Person;
+import com.mysms.people.api.model.MyPersonUpdate;
+import com.mysms.people.api.model.Person;
 import com.mysms.core.context.Actor;
+import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.FieldError;
 import com.mysms.core.error.PreconditionFailedException;
@@ -29,6 +30,7 @@ import java.util.Locale;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * The caller's own person record (people.GetMyPerson, people.UpdateMyPerson). Data rule: the record is the one the
@@ -36,7 +38,7 @@ import org.springframework.stereotype.Service;
  * administrators' internal remarks are not shown to the person.
  */
 @Service
-public class MyPersonService {
+public class MyPersonService extends AppTransactionManager {
 
     public static final String AGGREGATE = SelfPersonEntity.TABLE;
     /** The contract's MyPersonUpdate fields, in apply order. */
@@ -47,7 +49,6 @@ public class MyPersonService {
 
     private final SelfPersonRepository repository;
     private final SelfPersonMapper mapper;
-    private final ModuleDatabase database;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
@@ -55,12 +56,14 @@ public class MyPersonService {
 
     public MyPersonService(SelfPersonRepository repository, SelfPersonMapper mapper,
                            @Qualifier(PeopleDatabaseConfig.DATABASE) ModuleDatabase database,
+            @Qualifier(PeopleDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
                            @Qualifier(PeopleEventsConfig.OUTBOX) OutboxWriter outbox,
                            @Qualifier(PeopleEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator,
                            Clock clock) {
+
+        super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
-        this.database = database;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -69,7 +72,9 @@ public class MyPersonService {
 
     public Person get() {
         UUID person = callerPerson();
-        return database.tx().read(() -> selfView(load(person)));
+        return doInReadTransaction(() -> {
+            return selfView(load(person));
+        });
     }
 
     /** Partial update under If-Match; with an updateMask the listed fields are set (absent ones cleared). */
@@ -78,7 +83,7 @@ public class MyPersonService {
         validator.validate(changes);
         List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         UUID person = callerPerson();
-        return database.tx().write(() -> {
+        return doInWriteTransaction(() -> {
             SelfPersonEntity entity = load(person);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException(STALE);

@@ -1,0 +1,293 @@
+[ {
+  "operationId" : "careers.CloseJobOpening",
+  "method" : "POST",
+  "path" : "/v1/careers/job-openings/{jobOpeningId}:close",
+  "permission" : "careers.job_opening.close_job_opening",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "careers.CreateCandidatePreference",
+  "method" : "POST",
+  "path" : "/v1/careers/candidate-preferences",
+  "permission" : "careers.candidate_preference.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "careers.CreateCandidatePreferredFunction",
+  "method" : "POST",
+  "path" : "/v1/careers/candidate-preferences/{candidatePreferenceId}/functions",
+  "permission" : "careers.candidate_preferred_function.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "careers.CreateCandidatePreferredIndustry",
+  "method" : "POST",
+  "path" : "/v1/careers/candidate-preferences/{candidatePreferenceId}/industries",
+  "permission" : "careers.candidate_preferred_industry.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "careers.CreateFunctionArea",
+  "method" : "POST",
+  "path" : "/v1/careers/function-areas",
+  "permission" : "careers.function_area.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "careers.CreateIndustry",
+  "method" : "POST",
+  "path" : "/v1/careers/industries",
+  "permission" : "careers.industry.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "careers.CreateJobApplication",
+  "method" : "POST",
+  "path" : "/v1/careers/job-openings/{jobOpeningId}/applications",
+  "permission" : "careers.job_application.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "careers.CreateJobOpening",
+  "method" : "POST",
+  "path" : "/v1/careers/job-openings",
+  "permission" : "careers.job_opening.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "careers.DeleteCandidatePreference",
+  "method" : "DELETE",
+  "path" : "/v1/careers/candidate-preferences/{candidatePreferenceId}",
+  "permission" : "careers.candidate_preference.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.DeleteCandidatePreferredFunction",
+  "method" : "DELETE",
+  "path" : "/v1/careers/candidate-preferences/{candidatePreferenceId}/functions/{candidatePreferredFunctionId}",
+  "permission" : "careers.candidate_preferred_function.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.DeleteCandidatePreferredIndustry",
+  "method" : "DELETE",
+  "path" : "/v1/careers/candidate-preferences/{candidatePreferenceId}/industries/{candidatePreferredIndustryId}",
+  "permission" : "careers.candidate_preferred_industry.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.DeleteFunctionArea",
+  "method" : "DELETE",
+  "path" : "/v1/careers/function-areas/{functionAreaId}",
+  "permission" : "careers.function_area.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.DeleteIndustry",
+  "method" : "DELETE",
+  "path" : "/v1/careers/industries/{industryId}",
+  "permission" : "careers.industry.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.DeleteJobApplication",
+  "method" : "DELETE",
+  "path" : "/v1/careers/job-openings/{jobOpeningId}/applications/{jobApplicationId}",
+  "permission" : "careers.job_application.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.DeleteJobOpening",
+  "method" : "DELETE",
+  "path" : "/v1/careers/job-openings/{jobOpeningId}",
+  "permission" : "careers.job_opening.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.EmailApplicant",
+  "method" : "POST",
+  "path" : "/v1/careers/job-applications/{applicationId}:email",
+  "permission" : "careers.job_application.email_applicant",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "careers.GetCandidatePreference",
+  "method" : "GET",
+  "path" : "/v1/careers/candidate-preferences/{candidatePreferenceId}",
+  "permission" : "careers.candidate_preference.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.GetCandidatePreferredFunction",
+  "method" : "GET",
+  "path" : "/v1/careers/candidate-preferences/{candidatePreferenceId}/functions/{candidatePreferredFunctionId}",
+  "permission" : "careers.candidate_preferred_function.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.GetCandidatePreferredIndustry",
+  "method" : "GET",
+  "path" : "/v1/careers/candidate-preferences/{candidatePreferenceId}/industries/{candidatePreferredIndustryId}",
+  "permission" : "careers.candidate_preferred_industry.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.GetFunctionArea",
+  "method" : "GET",
+  "path" : "/v1/careers/function-areas/{functionAreaId}",
+  "permission" : "careers.function_area.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.GetIndustry",
+  "method" : "GET",
+  "path" : "/v1/careers/industries/{industryId}",
+  "permission" : "careers.industry.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.GetJobApplication",
+  "method" : "GET",
+  "path" : "/v1/careers/job-openings/{jobOpeningId}/applications/{jobApplicationId}",
+  "permission" : "careers.job_application.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.GetJobOpening",
+  "method" : "GET",
+  "path" : "/v1/careers/job-openings/{jobOpeningId}",
+  "permission" : "careers.job_opening.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "careers.ListCandidatePreferences",
+  "method" : "GET",
+  "path" : "/v1/careers/candidate-preferences",
+  "permission" : "careers.candidate_preference.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.ListCandidatePreferredFunctions",
+  "method" : "GET",
+  "path" : "/v1/careers/candidate-preferences/{candidatePreferenceId}/functions",
+  "permission" : "careers.candidate_preferred_function.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.ListCandidatePreferredIndustries",
+  "method" : "GET",
+  "path" : "/v1/careers/candidate-preferences/{candidatePreferenceId}/industries",
+  "permission" : "careers.candidate_preferred_industry.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.ListFunctionAreas",
+  "method" : "GET",
+  "path" : "/v1/careers/function-areas",
+  "permission" : "careers.function_area.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.ListIndustries",
+  "method" : "GET",
+  "path" : "/v1/careers/industries",
+  "permission" : "careers.industry.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.ListJobApplications",
+  "method" : "GET",
+  "path" : "/v1/careers/job-openings/{jobOpeningId}/applications",
+  "permission" : "careers.job_application.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.ListJobOpenings",
+  "method" : "GET",
+  "path" : "/v1/careers/job-openings",
+  "permission" : "careers.job_opening.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : true
+}, {
+  "operationId" : "careers.ReopenJobOpening",
+  "method" : "POST",
+  "path" : "/v1/careers/job-openings/{jobOpeningId}:reopen",
+  "permission" : "careers.job_opening.reopen_job_opening",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "careers.ReportJobOpening",
+  "method" : "POST",
+  "path" : "/v1/careers/job-openings/{jobOpeningId}:report",
+  "permission" : "careers.job_opening.report_job_opening",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "careers.UpdateApplicationStatus",
+  "method" : "POST",
+  "path" : "/v1/careers/job-openings/{jobOpeningId}/applications/{jobApplicationId}:setStatus",
+  "permission" : "careers.job_application.update_application_status",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "careers.UpdateCandidatePreference",
+  "method" : "PATCH",
+  "path" : "/v1/careers/candidate-preferences/{candidatePreferenceId}",
+  "permission" : "careers.candidate_preference.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.UpdateCandidatePreferredFunction",
+  "method" : "PATCH",
+  "path" : "/v1/careers/candidate-preferences/{candidatePreferenceId}/functions/{candidatePreferredFunctionId}",
+  "permission" : "careers.candidate_preferred_function.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.UpdateCandidatePreferredIndustry",
+  "method" : "PATCH",
+  "path" : "/v1/careers/candidate-preferences/{candidatePreferenceId}/industries/{candidatePreferredIndustryId}",
+  "permission" : "careers.candidate_preferred_industry.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.UpdateFunctionArea",
+  "method" : "PATCH",
+  "path" : "/v1/careers/function-areas/{functionAreaId}",
+  "permission" : "careers.function_area.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.UpdateIndustry",
+  "method" : "PATCH",
+  "path" : "/v1/careers/industries/{industryId}",
+  "permission" : "careers.industry.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.UpdateJobApplication",
+  "method" : "PATCH",
+  "path" : "/v1/careers/job-openings/{jobOpeningId}/applications/{jobApplicationId}",
+  "permission" : "careers.job_application.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "careers.UpdateJobOpening",
+  "method" : "PATCH",
+  "path" : "/v1/careers/job-openings/{jobOpeningId}",
+  "permission" : "careers.job_opening.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+} ]

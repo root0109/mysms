@@ -4,6 +4,8 @@
  * (04 §5). Screens that need more than a list manager (dashboards, wizards, grids, "my …" views) are built on their own.
  */
 /** The task groups of ui/02 §2.1: daily work first, every catalogue and configuration screen in Setup, last. */
+import type { PermissionCode } from '@mysms/core';
+
 export type NavGroupId =
   'people' | 'academics' | 'assessment' | 'learning' | 'money' | 'communication' | 'services' | 'setup';
 
@@ -17,6 +19,12 @@ export interface ResourceScreenDef {
   columns?: readonly string[];
   /** An enum field offered as a filter (default: the record type's status field, when it has one). */
   filter?: string;
+  /** The inventory screen that works on one row of this list (e.g. `ATT-03` for a sheet); rows link to it. */
+  detail?: string;
+  /** The permission that puts the screen in the navigation, when listing the record type is not enough. */
+  navPermission?: PermissionCode;
+  /** Something each row can start besides its editor; the tools are named in `ResourceScreen`. */
+  tool?: 'takeAttendance';
 }
 
 export const NAV_GROUPS: readonly NavGroupId[] = [
@@ -50,11 +58,19 @@ export const RESOURCE_SCREENS: readonly ResourceScreenDef[] = [
   { id: 'ACA-10', resource: 'academics.LessonPlan', group: 'academics' },
   { id: 'SIS-10', resource: 'sis.SubjectRegistration', group: 'academics' },
   { id: 'TT-01', resource: 'timetable.Period', group: 'setup' },
-  { id: 'TT-02', resource: 'timetable.Session', group: 'academics' },
+  { id: 'TT-02', resource: 'timetable.Session', group: 'academics', tool: 'takeAttendance' },
   { id: 'ATT-01', resource: 'attendance.AttendanceRegister', group: 'academics' },
-  { id: 'ATT-02', resource: 'attendance.AttendanceSheet', group: 'academics' },
+  { id: 'ATT-02', resource: 'attendance.AttendanceSheet', group: 'academics', detail: 'ATT-03' },
   { id: 'ATT-06', resource: 'attendance.StaffAttendance', group: 'people' },
-  { id: 'ASM-01', resource: 'assessment.Homework', group: 'assessment' },
+  { id: 'ASM-01', resource: 'assessment.Homework', group: 'assessment', detail: 'ASM-03' },
+  // the same list opened on the homework that waits for review (its route carries ?status=pending)
+  {
+    id: 'ASM-02',
+    resource: 'assessment.Homework',
+    group: 'assessment',
+    detail: 'ASM-03',
+    navPermission: 'assessment.homework.approve_homework',
+  },
   { id: 'ASM-05', resource: 'assessment.Assignment', group: 'assessment' },
   { id: 'ASM-08', resource: 'assessment.ExamSession', group: 'assessment' },
   { id: 'ASM-09', resource: 'assessment.Exam', group: 'assessment' },
@@ -71,7 +87,6 @@ export const RESOURCE_SCREENS: readonly ResourceScreenDef[] = [
   { id: 'FIN-09', resource: 'finance.Coupon', group: 'setup' },
   { id: 'HR-01', resource: 'hr.Staff', group: 'people' },
   { id: 'HR-03', resource: 'hr.LeaveType', group: 'setup' },
-  { id: 'HR-04', resource: 'hr.LeaveApplication', group: 'people' },
   { id: 'HR-05', resource: 'payroll.SalaryTemplate', group: 'setup' },
   { id: 'HR-06', resource: 'payroll.StaffSalary', group: 'money' },
   { id: 'HR-07', resource: 'payroll.Payslip', group: 'money' },

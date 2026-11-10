@@ -5,7 +5,7 @@ import java.util.UUID;
 
 /**
  * Who is calling and on whose behalf, for the duration of one request (or one message). Set at the edge by the
- * auth filter and the trace filter; read by the transaction executor (tenant), the audit writer (actor) and logging.
+ * auth filter and the trace filter; read by the tenant binding (tenant), the audit writer (actor) and logging.
  * Business code never builds one.
  *
  * @param tenantId  tenant the request acts in (from the token, never from the request), or empty for platform calls

@@ -1,22 +1,17 @@
-import { createRuntime } from '@mysms/core';
 import {
-  fakeApi,
-  fakeBackend,
   fakeRecords,
   json,
+  onePage,
   platformAdmin,
   problem,
   schoolAdmin,
   SELF_SERVICE,
-  TENANT_CODE,
   type Handler,
 } from '@mysms/fixtures';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { WebApp } from '@mysms/web-kit';
-import { createMemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it } from 'vitest';
-import { routes } from './routes';
+import { signedIn } from './test/signedIn';
 
 const root = document.documentElement;
 
@@ -25,23 +20,6 @@ afterEach(() => {
     root.removeAttribute(attribute);
   root.style.removeProperty('--sms-text-scale');
 });
-
-async function signedIn(path: string, me = schoolAdmin, extra: Record<string, Handler> = {}) {
-  const api = fakeApi({ ...fakeBackend({ me }), ...extra });
-  const runtime = createRuntime({
-    baseUrl: 'https://school.example.com',
-    clientId: 'web/test/jsdom',
-    fetch: api.fetch,
-  });
-  const router = createMemoryRouter(routes, { initialEntries: [path] });
-  render(<WebApp runtime={runtime} router={router} />);
-  await userEvent.type(await screen.findByLabelText('School code'), TENANT_CODE);
-  await userEvent.type(screen.getByLabelText('Username, e-mail or mobile'), me.user?.username ?? '');
-  await userEvent.type(screen.getByLabelText('Password'), 'password');
-  await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
-  await waitFor(() => expect(router.state.location.pathname).toBe(path));
-  return { api, router, runtime };
-}
 
 describe('ACC-07 My profile', () => {
   it('shows the account and identity and saves contact details under If-Match', async () => {
@@ -323,7 +301,9 @@ describe('ADM-11 Records', () => {
   });
 
   it('offers nothing to a role without record permissions', async () => {
-    await signedIn('/app/admin/records', platformAdmin);
+    // the job-centre permissions only; platformAdmin itself now holds the global record types (PLT-01…05)
+    const operator = { ...platformAdmin, permissions: ['platform.operation.read', ...SELF_SERVICE] };
+    await signedIn('/app/admin/records', operator);
     expect(await screen.findByText('No record types are available to your role.')).toBeInTheDocument();
   });
 
@@ -389,6 +369,64 @@ describe('list-manager screens of the inventory', () => {
     expect(within(nav).getByText('No screen matches.')).toBeInTheDocument();
   });
 
+  it('ACA-10 Lesson plans lets the head approve a plan that waits for review, with a reason', async () => {
+    const plans = fakeRecords({
+      collection: '/v1/academics/lesson-plans',
+      item: '/v1/academics/lesson-plans/{lessonPlanId}',
+      required: ['title'],
+      rows: [{ title: 'Friction', unitNo: '3', unitName: 'Forces', status: 'pending', isPublished: false }],
+    });
+    const approve: Handler = (_request, params) =>
+      new Response(
+        JSON.stringify({ id: params.lessonPlanId, title: 'Friction', status: 'approved', etag: '"2"' }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ETag: '"2"' },
+        },
+      );
+    const backend = { ...plans, 'POST /v1/academics/lesson-plans/{lessonPlanId}:approve': approve };
+    const read = [...SELF_SERVICE, 'academics.lesson_plan.read'];
+    const head = {
+      ...schoolAdmin,
+      permissions: [
+        ...read,
+        'academics.lesson_plan.approve_lesson_plan',
+        'academics.lesson_plan.reject_lesson_plan',
+        'academics.lesson_plan.publish_lesson_plan',
+      ],
+    };
+
+    // the approval queue is the list filtered in the address
+    const review = await signedIn('/app/academics/lesson-plans?status=pending', head, backend);
+    expect(await screen.findByRole('heading', { name: 'Lesson plans' })).toBeInTheDocument();
+    const listed = review.api.calls.filter((c) => c.path === '/v1/academics/lesson-plans').pop();
+    expect(new URLSearchParams(listed?.search).get('filter')).toBe('status = "pending"');
+    await userEvent.click(await screen.findByText('Friction'));
+    const actions = await within(await screen.findByRole('dialog')).findByRole('group', { name: 'Actions' });
+    // a plan is published only after it is approved, so Publish is not offered yet
+    expect(
+      within(actions)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Approve', 'Reject']);
+    await userEvent.click(within(actions).getByRole('button', { name: 'Approve' }));
+    await userEvent.type(within(actions).getByLabelText('Reason (optional)'), 'Clear and complete');
+    await userEvent.click(within(actions).getByRole('button', { name: 'Confirm: Approve' }));
+    expect(await screen.findByText('Approve: done.')).toBeInTheDocument();
+    const post = review.api.calls.find((c) => c.method === 'POST' && c.path.endsWith(':approve'));
+    expect(JSON.parse(post?.body ?? '{}')).toEqual({ etag: '"1"', reason: 'Clear and complete' });
+    review.unmount();
+
+    // the teacher who wrote the plan has no decision to take on it
+    const teacher = { ...schoolAdmin, permissions: [...read, 'academics.lesson_plan.submit_lesson_plan'] };
+    await signedIn('/app/academics/lesson-plans', teacher, backend);
+    await userEvent.click(await screen.findByText('Friction'));
+    const dialog = await screen.findByRole('dialog');
+    await within(dialog).findByDisplayValue('Forces');
+    expect(within(dialog).queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument();
+  });
+
   it('tells a role without the list permission instead of showing a broken list', async () => {
     await signedIn('/app/hr/staff', office);
     expect(await screen.findByRole('heading', { name: 'Staff directory' })).toBeInTheDocument();
@@ -428,7 +466,7 @@ describe('ACC-08 Security & sessions', () => {
         return new Response(null, { status: 204 });
       },
       'POST /v1/iam/auth:changePassword': () => new Response(null, { status: 204 }),
-      [`GET /v1/iam/users/{userAccountId}/sessions`]: () => json({ items: sessions }),
+      [`GET /v1/iam/users/{userAccountId}/sessions`]: (req) => onePage(req, sessions),
       [`DELETE /v1/iam/users/{userAccountId}/sessions/{userSessionId}`]: (req) => {
         if (req.headers.get('If-Match') !== '"3"') return problem(412, 'PRECONDITION_FAILED');
         sessions = [];

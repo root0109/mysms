@@ -1,9 +1,11 @@
 package com.mysms.master.controller;
 
-import com.mysms.contracts.master.api.CityApi;
-import com.mysms.contracts.master.model.City;
-import com.mysms.contracts.master.model.CityList;
-import com.mysms.contracts.master.model.CityUpdate;
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.master.api.CityApi;
+import com.mysms.master.api.model.City;
+import com.mysms.master.api.model.CityUpdate;
 import com.mysms.core.web.ReadMask;
 import com.mysms.master.business.CityService;
 import java.net.URI;
@@ -28,10 +30,10 @@ public class CityController implements CityApi {
     }
 
     @Override
-    public ResponseEntity<CityList> listCities(Integer pageSize, String pageToken, String filter, String orderBy,
-                                              String fields) {
-        CityList list = service.listCities(pageSize, pageToken, filter, orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<City>> listCities(Integer page, Integer size, String cursor, String filter,
+            List<String> sort, String fields) {
+        PagingInfo<City> list = PagingUtil.pagingInfo(service.listCities(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 

@@ -1,6 +1,6 @@
 package com.mysms.master.mapper;
 
-import com.mysms.contracts.master.model.Currency;
+import com.mysms.master.api.model.Currency;
 import com.mysms.core.web.Etags;
 import com.mysms.master.domain.CurrencyEntity;
 import org.mapstruct.Mapper;

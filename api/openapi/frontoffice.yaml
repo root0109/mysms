@@ -28,7 +28,7 @@ paths:
     get:
       operationId: frontoffice.ListVisitorLogs
       summary: List VisitorLogs
-      description: List VisitorLogs visible to the caller, with cursor pagination, filtering and ordering.
+      description: List VisitorLogs visible to the caller, page by page, with filtering and sorting.
       tags:
       - VisitorLog
       security:
@@ -38,10 +38,11 @@ paths:
         service: mysms.frontoffice.v1.VisitorLogService
         method: ListVisitorLogs
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -49,7 +50,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VisitorLogList'
+                $ref: '#/components/schemas/PagingInfoVisitorLog'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -268,7 +269,7 @@ paths:
     get:
       operationId: frontoffice.ListCallLogs
       summary: List CallLogs
-      description: List CallLogs visible to the caller, with cursor pagination, filtering and ordering.
+      description: List CallLogs visible to the caller, page by page, with filtering and sorting.
       tags:
       - CallLog
       security:
@@ -278,10 +279,11 @@ paths:
         service: mysms.frontoffice.v1.CallLogService
         method: ListCallLogs
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -289,7 +291,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CallLogList'
+                $ref: '#/components/schemas/PagingInfoCallLog'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -508,7 +510,7 @@ paths:
     get:
       operationId: frontoffice.ListPostalRecords
       summary: List PostalRecords
-      description: List PostalRecords visible to the caller, with cursor pagination, filtering and ordering.
+      description: List PostalRecords visible to the caller, page by page, with filtering and sorting.
       tags:
       - PostalRecord
       security:
@@ -518,10 +520,11 @@ paths:
         service: mysms.frontoffice.v1.PostalRecordService
         method: ListPostalRecords
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -529,7 +532,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PostalRecordList'
+                $ref: '#/components/schemas/PagingInfoPostalRecord'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -748,7 +751,7 @@ paths:
     get:
       operationId: frontoffice.ListDirectoryContacts
       summary: List DirectoryContacts
-      description: List DirectoryContacts visible to the caller, with cursor pagination, filtering and ordering.
+      description: List DirectoryContacts visible to the caller, page by page, with filtering and sorting.
       tags:
       - DirectoryContact
       security:
@@ -758,10 +761,11 @@ paths:
         service: mysms.frontoffice.v1.DirectoryContactService
         method: ListDirectoryContacts
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -769,7 +773,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DirectoryContactList'
+                $ref: '#/components/schemas/PagingInfoDirectoryContact'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1223,22 +1227,20 @@ components:
         remarks:
           type: string
           description: Remarks.
-    VisitorLogList:
+    PagingInfoVisitorLog:
       type: object
+      description: A page of VisitorLog, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/VisitorLog'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     CallLog:
       type: object
       description: Incoming / outgoing phone call record.
@@ -1393,22 +1395,20 @@ components:
           type: string
           format: uuid
           description: Staff who logged it.
-    CallLogList:
+    PagingInfoCallLog:
       type: object
+      description: A page of CallLog, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/CallLog'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     PostalRecord:
       type: object
       description: Postal dispatch / receipt register.
@@ -1562,22 +1562,20 @@ components:
           type: string
           format: uuid
           description: Staff who logged it.
-    PostalRecordList:
+    PagingInfoPostalRecord:
       type: object
+      description: A page of PostalRecord, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/PostalRecord'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     DirectoryContact:
       type: object
       description: Telephone directory entry.
@@ -1652,22 +1650,20 @@ components:
           type: string
           maxLength: 20
           description: Phone.
-    DirectoryContactList:
+    PagingInfoDirectoryContact:
       type: object
+      description: A page of DirectoryContact, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/DirectoryContact'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     CheckOutVisitorRequest:
       type: object
       properties:

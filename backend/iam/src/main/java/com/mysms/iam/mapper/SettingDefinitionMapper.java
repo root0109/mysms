@@ -1,6 +1,6 @@
 package com.mysms.iam.mapper;
 
-import com.mysms.contracts.iam.model.SettingDefinition;
+import com.mysms.iam.api.model.SettingDefinition;
 import com.mysms.core.web.Etags;
 import com.mysms.iam.domain.SettingDefinitionEntity;
 import java.util.List;

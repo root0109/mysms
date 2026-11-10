@@ -433,160 +433,118 @@
 },
 "academics.ListBatchesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "academics.ListBatchesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.ListClassSectionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "academics.ListClassSectionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.ListClassSubjectsRequest": {
 "class_section_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "academics.ListClassSubjectsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.ListCourseSubjectsRequest": {
 "course_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "academics.ListCourseSubjectsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.ListCoursesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "academics.ListCoursesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.ListCurriculumUnitsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "academics.ListCurriculumUnitsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.ListGradeLevelsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "academics.ListGradeLevelsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.ListLessonPlanApprovalsRequest": {
 "filter": 4,
 "lesson_plan_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "academics.ListLessonPlanApprovalsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.ListLessonPlansRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "academics.ListLessonPlansResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.ListProgramLevelsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "academics.ListProgramLevelsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.ListProgramsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "academics.ListProgramsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.ListSectionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "academics.ListSectionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.ListSubjectsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "academics.ListSubjectsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.ListTeachingAssignmentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "academics.ListTeachingAssignmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "academics.Program": {
 "code": 5,
@@ -1136,69 +1094,53 @@
 "admission.ListAdmissionCycleFeesRequest": {
 "admission_cycle_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "admission.ListAdmissionCycleFeesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "admission.ListAdmissionCyclesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "admission.ListAdmissionCyclesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "admission.ListApplicationEmergencyContactsRequest": {
 "application_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "admission.ListApplicationEmergencyContactsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "admission.ListApplicationGuardiansRequest": {
 "application_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "admission.ListApplicationGuardiansResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "admission.ListApplicationsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "admission.ListApplicationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "admission.ListOperationsRequest": {
 "kind": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "admission.ListOperationsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "admission.MarkApplicationPendingRequest": {
 "application_id": 1,
@@ -1315,8 +1257,7 @@
 "room_ids": 2
 },
 "assessment.AllocateExamRoomsResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "assessment.ApproveAssignmentRequest": {
 "assignment_id": 1,
@@ -1590,15 +1531,6 @@
 "assessment.CreateGradingSchemeResponse": {
 "grading_scheme": 1
 },
-"assessment.CreateHomeworkApprovalRequest": {
-"homework_approval": 2,
-"homework_id": 1,
-"request_id": 3,
-"validate_only": 4
-},
-"assessment.CreateHomeworkApprovalResponse": {
-"homework_approval": 1
-},
 "assessment.CreateHomeworkRequest": {
 "homework": 1,
 "request_id": 2,
@@ -1704,12 +1636,6 @@
 "id": 1
 },
 "assessment.DeleteGradingSchemeResponse": {},
-"assessment.DeleteHomeworkApprovalRequest": {
-"etag": 3,
-"homework_id": 1,
-"id": 2
-},
-"assessment.DeleteHomeworkApprovalResponse": {},
 "assessment.DeleteHomeworkRequest": {
 "etag": 2,
 "id": 1
@@ -1972,13 +1898,12 @@
 "assessment.GetStudentResultsRequest": {
 "academic_year_id": 2,
 "exam_session_id": 3,
-"page_size": 4,
-"page_token": 5,
+"pageable": 6,
 "student_id": 1
 },
 "assessment.GetStudentResultsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "assessment.GradeAssignmentSubmissionRequest": {
 "assignment_submission_id": 1,
@@ -2071,237 +1996,176 @@
 "assessment.ListAssignmentAllocationsRequest": {
 "assignment_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "assessment.ListAssignmentAllocationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListAssignmentApprovalsRequest": {
 "assignment_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "assessment.ListAssignmentApprovalsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListAssignmentSubjectsRequest": {
 "assignment_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "assessment.ListAssignmentSubjectsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListAssignmentSubmissionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListAssignmentSubmissionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListAssignmentTypesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListAssignmentTypesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListAssignmentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListAssignmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListExamInvigilatorsRequest": {
 "exam_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "assessment.ListExamInvigilatorsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListExamResultsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListExamResultsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListExamSessionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListExamSessionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListExamTypesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListExamTypesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListExamsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListExamsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListGradingBandsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListGradingBandsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListGradingSchemesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListGradingSchemesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListHomeworkApprovalsRequest": {
 "filter": 4,
 "homework_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "assessment.ListHomeworkApprovalsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListHomeworkSubmissionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListHomeworkSubmissionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListHomeworksRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListHomeworksResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListMarksheetLinesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListMarksheetLinesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListMarksheetsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListMarksheetsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListOperationsRequest": {
 "kind": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "assessment.ListOperationsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "assessment.ListResultTemplateBandsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "result_template_id": 1
 },
 "assessment.ListResultTemplateBandsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.ListResultTemplatesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "assessment.ListResultTemplatesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "assessment.MarkExamHeldRequest": {
 "etag": 2,
@@ -2371,8 +2235,7 @@
 "request_id": 2
 },
 "assessment.PopulateExamResultsResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "assessment.PublishAssignmentRequest": {
 "assignment_id": 1,
@@ -2404,8 +2267,7 @@
 "request_id": 3
 },
 "assessment.RecordExamMarksResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "assessment.RejectAssignmentRequest": {
 "assignment_id": 1,
@@ -2652,15 +2514,6 @@
 "assessment.UpdateGradingSchemeResponse": {
 "grading_scheme": 1
 },
-"assessment.UpdateHomeworkApprovalRequest": {
-"homework_approval": 2,
-"homework_id": 1,
-"update_mask": 3,
-"validate_only": 4
-},
-"assessment.UpdateHomeworkApprovalResponse": {
-"homework_approval": 1
-},
 "assessment.UpdateHomeworkRequest": {
 "homework": 1,
 "update_mask": 2,
@@ -2905,80 +2758,62 @@
 },
 "attendance.ListAbsenceReasonsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "attendance.ListAbsenceReasonsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "attendance.ListAttendanceRecordsRequest": {
 "attendance_sheet_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "attendance.ListAttendanceRecordsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "attendance.ListAttendanceRegistersRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "attendance.ListAttendanceRegistersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "attendance.ListAttendanceSheetsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "attendance.ListAttendanceSheetsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "attendance.ListAttendanceTypesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "attendance.ListAttendanceTypesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "attendance.ListStaffAttendancesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "attendance.ListStaffAttendancesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "attendance.RecordAttendanceRequest": {
 "attendance_sheet_id": 1,
 "complete": 3,
+"etag": 5,
 "marks": 2,
 "request_id": 4
 },
 "attendance.RecordAttendanceResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "attendance.ResetAttendanceSheetRequest": {
 "attendance_sheet_id": 1,
@@ -3018,14 +2853,13 @@
 "from_date": 2,
 "group_by": 6,
 "institution_id": 1,
-"page_size": 7,
-"page_token": 8,
+"pageable": 9,
 "student_id": 4,
 "to_date": 3
 },
 "attendance.SummarizeAttendanceResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "attendance.TakeAttendanceForSessionRequest": {
 "request_id": 2,
@@ -3327,83 +3161,62 @@
 },
 "careers.ListCandidatePreferencesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "careers.ListCandidatePreferencesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "careers.ListCandidatePreferredFunctionsRequest": {
 "candidate_preference_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "careers.ListCandidatePreferredFunctionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "careers.ListCandidatePreferredIndustriesRequest": {
 "candidate_preference_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "careers.ListCandidatePreferredIndustriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "careers.ListFunctionAreasRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "careers.ListFunctionAreasResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "careers.ListIndustriesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "careers.ListIndustriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "careers.ListJobApplicationsRequest": {
 "filter": 4,
 "job_opening_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "careers.ListJobApplicationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "careers.ListJobOpeningsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "careers.ListJobOpeningsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "careers.ReopenJobOpeningRequest": {
 "etag": 2,
@@ -3744,6 +3557,20 @@
 "tax_amount": 3,
 "total_amount": 4
 },
+"common.PageableRequest": {
+"cursor": 4,
+"page": 1,
+"size": 2,
+"sort": 3
+},
+"common.Pagination": {
+"first": 2,
+"next": 4,
+"next_cursor": 6,
+"page": 5,
+"previous": 3,
+"size": 1
+},
 "common.PeerPoints": {
 "points": 2,
 "user_id": 1
@@ -3836,6 +3663,10 @@
 "queued": 1,
 "skipped": 2
 },
+"common.Sort": {
+"direction": 2,
+"field": 1
+},
 "common.StockImage": {
 "author": 3,
 "thumb_url": 2,
@@ -3890,8 +3721,7 @@
 "user_ids": 2
 },
 "comms.AddGroupMembersResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "comms.ApprovePostRequest": {
 "etag": 2,
@@ -3986,8 +3816,7 @@
 "task_id": 1
 },
 "comms.ClaimTaskResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "comms.ClassPage": {
 "academic_year_id": 3,
@@ -4922,13 +4751,12 @@
 "comms.GetFeedRequest": {
 "class_page_id": 2,
 "class_section_id": 1,
-"page_size": 4,
-"page_token": 5,
+"pageable": 6,
 "saved_only": 3
 },
 "comms.GetFeedResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "comms.GetFeedbackMessageRequest": {
 "feedback_thread_id": 1,
@@ -4971,13 +4799,12 @@
 "cohort_id": 3,
 "from": 1,
 "item_types": 4,
-"page_size": 5,
-"page_token": 6,
+"pageable": 7,
 "to": 2
 },
 "comms.GetMyCalendarResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "comms.GetNoticeAudienceRequest": {
 "id": 2,
@@ -5144,494 +4971,367 @@
 "comms.ListAudienceGroupMembersRequest": {
 "audience_group_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListAudienceGroupMembersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListAudienceGroupsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListAudienceGroupsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListCalendarExportsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListCalendarExportsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListClassPageAttachmentsRequest": {
 "class_page_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListClassPageAttachmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListClassPageMembersRequest": {
 "class_page_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListClassPageMembersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListClassPagesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListClassPagesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListCommentReactionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListCommentReactionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListContentViewsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListContentViewsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListConversationMessagesRequest": {
 "conversation_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListConversationMessagesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListConversationParticipantsRequest": {
 "conversation_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListConversationParticipantsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListConversationsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListConversationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListEventAttendeesRequest": {
 "event_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListEventAttendeesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListEventGalleryItemsRequest": {
 "event_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListEventGalleryItemsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListEventInstitutionsRequest": {
 "event_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListEventInstitutionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListEventOccurrencesRequest": {
 "event_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListEventOccurrencesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListEventsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListEventsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListFeedbackMessagesRequest": {
 "feedback_thread_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListFeedbackMessagesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListFeedbackThreadsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListFeedbackThreadsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListInAppNotificationsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListInAppNotificationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListMagazinesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListMagazinesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListMailboxMessagesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListMailboxMessagesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListMessageTemplatesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListMessageTemplatesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListNoticeAudiencesRequest": {
 "filter": 4,
 "notice_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListNoticeAudiencesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListNoticeBackgroundsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListNoticeBackgroundsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListNoticeVersionsRequest": {
 "filter": 4,
 "notice_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListNoticeVersionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListNoticesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListNoticesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListNotificationChannelPropertiesRequest": {
 "filter": 4,
 "notification_channel_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListNotificationChannelPropertiesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListNotificationChannelsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListNotificationChannelsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListNotificationCohortSettingsRequest": {
 "filter": 4,
 "notification_type_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListNotificationCohortSettingsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListNotificationPreferenceSetsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListNotificationPreferenceSetsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListNotificationPreferencesRequest": {
 "filter": 4,
 "notification_preference_set_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListNotificationPreferencesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListNotificationRulesRequest": {
 "filter": 4,
 "notification_type_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListNotificationRulesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListNotificationTypePropertiesRequest": {
 "filter": 4,
 "notification_type_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "comms.ListNotificationTypePropertiesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListNotificationTypesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListNotificationTypesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListOperationsRequest": {
 "kind": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "comms.ListOperationsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "comms.ListOutboundMessagesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListOutboundMessagesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListPageCategoriesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListPageCategoriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListPostAudienceClassesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "post_id": 1
 },
 "comms.ListPostAudienceClassesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListPostCommentsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "post_id": 1
 },
 "comms.ListPostCommentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListPostReactionsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "post_id": 1
 },
 "comms.ListPostReactionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListPostsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListPostsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListTaskAssigneesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "task_id": 1
 },
 "comms.ListTaskAssigneesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.ListTasksRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "comms.ListTasksResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "comms.Magazine": {
 "academic_year_id": 3,
@@ -6547,60 +6247,45 @@
 },
 "facility.ListAssetItemsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "facility.ListAssetItemsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "facility.ListFacilitiesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "facility.ListFacilitiesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "facility.ListRoomAssetsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "room_id": 1
 },
 "facility.ListRoomAssetsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "facility.ListRoomFacilitiesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "room_id": 1
 },
 "facility.ListRoomFacilitiesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "facility.ListRoomsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "facility.ListRoomsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "facility.Room": {
 "capacity": 6,
@@ -7161,180 +6846,134 @@
 },
 "finance.ListAcquisitionSourcesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "finance.ListAcquisitionSourcesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListCouponScopesRequest": {
 "coupon_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "finance.ListCouponScopesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListCouponsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "finance.ListCouponsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListFeeConcessionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "finance.ListFeeConcessionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListFeeHeadsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "finance.ListFeeHeadsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListFeePlanInstallmentComponentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "finance.ListFeePlanInstallmentComponentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListFeePlanInstallmentsRequest": {
 "fee_plan_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "finance.ListFeePlanInstallmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListFeePlansRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "finance.ListFeePlansResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListFeeStructuresRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "finance.ListFeeStructuresResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListInvoiceLinesRequest": {
 "filter": 4,
 "invoice_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "finance.ListInvoiceLinesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListInvoicesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "finance.ListInvoicesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListOperationsRequest": {
 "kind": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "finance.ListOperationsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "finance.ListPaymentGatewayAccountsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "finance.ListPaymentGatewayAccountsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListPaymentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "finance.ListPaymentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListRefundsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "finance.ListRefundsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.ListStudentFeeDuesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "finance.ListStudentFeeDuesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "finance.Payment": {
 "acquisition_source_id": 24,
@@ -7747,47 +7386,35 @@
 },
 "frontoffice.ListCallLogsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "frontoffice.ListCallLogsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "frontoffice.ListDirectoryContactsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "frontoffice.ListDirectoryContactsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "frontoffice.ListPostalRecordsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "frontoffice.ListPostalRecordsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "frontoffice.ListVisitorLogsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "frontoffice.ListVisitorLogsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "frontoffice.PostalRecord": {
 "academic_year_id": 3,
@@ -8040,13 +7667,12 @@
 },
 "hr.GetStaffLeaveBalanceRequest": {
 "academic_year_id": 2,
-"page_size": 3,
-"page_token": 4,
+"pageable": 5,
 "staff_id": 1
 },
 "hr.GetStaffLeaveBalanceResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "hr.GetStaffRequest": {
 "id": 1
@@ -8114,82 +7740,61 @@
 },
 "hr.ListDesignationsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "hr.ListDesignationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "hr.ListLeaveApplicationsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "hr.ListLeaveApplicationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "hr.ListLeaveBalancesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "hr.ListLeaveBalancesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "hr.ListLeaveTypesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "hr.ListLeaveTypesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "hr.ListStaffDepartmentsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "staff_id": 1
 },
 "hr.ListStaffDepartmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "hr.ListStaffRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "hr.ListStaffResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "hr.ListStaffSubjectsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "staff_id": 1
 },
 "hr.ListStaffSubjectsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "hr.RejectLeaveRequest": {
 "etag": 2,
@@ -8665,15 +8270,12 @@
 },
 "iam.ListAuthTokensRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "user_account_id": 1
 },
 "iam.ListAuthTokensResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "iam.ListMfaCredentialsRequest": {},
 "iam.ListMfaCredentialsResponse": {
@@ -8685,151 +8287,114 @@
 },
 "iam.ListOperationsRequest": {
 "kind": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "iam.ListOperationsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "iam.ListPermissionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "iam.ListPermissionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "iam.ListRolePermissionsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "role_id": 1
 },
 "iam.ListRolePermissionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "iam.ListRolesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "iam.ListRolesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "iam.ListSettingDefinitionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "iam.ListSettingDefinitionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "iam.ListSettingValuesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "iam.ListSettingValuesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "iam.ListUserAccountsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "iam.ListUserAccountsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "iam.ListUserDepartmentAccessesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "user_account_id": 1
 },
 "iam.ListUserDepartmentAccessesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "iam.ListUserDevicesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "user_account_id": 1
 },
 "iam.ListUserDevicesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "iam.ListUserPermissionsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "user_account_id": 1
 },
 "iam.ListUserPermissionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "iam.ListUserPreferencesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "user_account_id": 1
 },
 "iam.ListUserPreferencesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "iam.ListUserRolesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "user_account_id": 1
 },
 "iam.ListUserRolesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "iam.ListUserSessionsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "user_account_id": 1
 },
 "iam.ListUserSessionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "iam.LoginRequest": {
 "device": 4,
@@ -8969,8 +8534,7 @@
 "user_account_id": 1
 },
 "iam.SetUserRolesResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "iam.SettingDefinition": {
 "allowed_scopes": 17,
@@ -9645,197 +9209,146 @@
 },
 "library.ListAuthorsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "library.ListAuthorsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListLibraryCardTypesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "library.ListLibraryCardTypesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListLibraryCardsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "library.ListLibraryCardsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListLoansRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "library.ListLoansResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListMediaAuthorsRequest": {
 "filter": 4,
 "media_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "library.ListMediaAuthorsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListMediaCategoriesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "library.ListMediaCategoriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListMediaCoursesRequest": {
 "filter": 4,
 "media_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "library.ListMediaCoursesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListMediaPublishersRequest": {
 "filter": 4,
 "media_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "library.ListMediaPublishersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListMediaRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "library.ListMediaResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListMediaSubjectsRequest": {
 "filter": 4,
 "media_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "library.ListMediaSubjectsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListMediaTypesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "library.ListMediaTypesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListMediaUnitsRequest": {
 "filter": 4,
 "media_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "library.ListMediaUnitsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListPublishersRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "library.ListPublishersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListPurchaseRequestCoursesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "purchase_request_id": 1
 },
 "library.ListPurchaseRequestCoursesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListPurchaseRequestSubjectsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "purchase_request_id": 1
 },
 "library.ListPurchaseRequestSubjectsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListPurchaseRequestsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "library.ListPurchaseRequestsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.ListReservationsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "library.ListReservationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "library.Loan": {
 "borrower_user_id": 5,
@@ -10266,8 +9779,7 @@
 "source_ids": 3
 },
 "lms.AddFromRepositoryResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.Annotation": {
 "annotated_text": 13,
@@ -10313,8 +9825,7 @@
 "timetable_template_id": 2
 },
 "lms.ApplyTimetableTemplateResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.ApproveCourseRequest": {
 "course_id": 1,
@@ -10414,8 +9925,7 @@
 "validate_only": 4
 },
 "lms.BatchEnrollInCohortResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.BatchEnrollInCourseRequest": {
 "course_id": 1,
@@ -10426,16 +9936,14 @@
 "validate_only": 5
 },
 "lms.BatchEnrollInCourseResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.BatchGradeEntriesRequest": {
 "entries": 1,
 "request_id": 2
 },
 "lms.BatchGradeEntriesResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.Bookmark": {
 "cohort_id": 6,
@@ -10491,8 +9999,8 @@
 "categories": 4,
 "courses": 3,
 "featured": 1,
-"next_page_token": 6,
 "open_cohorts": 5,
+"pagination": 7,
 "showcase": 2
 },
 "lms.Category": {
@@ -10802,12 +10310,11 @@
 },
 "lms.CompareCoursesRequest": {
 "course_ids": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "lms.CompareCoursesResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "lms.ConferencingAccount": {
 "account_name": 3,
@@ -10971,8 +10478,7 @@
 "shift_dates_from": 4
 },
 "lms.CopyCourseOutlineToCohortResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.CopyReleaseRuleRequest": {
 "release_rule_id": 1,
@@ -10980,8 +10486,7 @@
 "source_content_item_ids": 2
 },
 "lms.CopyReleaseRuleResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.CourseAuthorProfile": {
 "bio": 4,
@@ -12767,8 +12272,7 @@
 "user_id": 2
 },
 "lms.EvaluateReleaseRulesResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.Evaluator": {
 "create_time": 5,
@@ -12935,8 +12439,7 @@
 "request_id": 4
 },
 "lms.FinalizePeerReviewResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.FinalizeSubmissionRequest": {
 "assignment_submission_id": 1,
@@ -13157,8 +12660,7 @@
 },
 "lms.GetCatalogHomeRequest": {
 "category_id": 1,
-"page_size": 3,
-"page_token": 4,
+"pageable": 5,
 "query": 2
 },
 "lms.GetCatalogHomeResponse": {
@@ -13238,22 +12740,20 @@
 },
 "lms.GetCohortPerformanceRequest": {
 "cohort_id": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "lms.GetCohortPerformanceResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "lms.GetCohortProgressRequest": {
 "cohort_id": 1,
-"page_size": 3,
-"page_token": 4,
+"pageable": 5,
 "user_id": 2
 },
 "lms.GetCohortProgressResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "lms.GetCohortRequest": {
 "id": 1
@@ -13264,13 +12764,12 @@
 "lms.GetCohortRosterRequest": {
 "cohort_id": 1,
 "include_inactive": 3,
-"page_size": 4,
-"page_token": 5,
+"pageable": 6,
 "role_code": 2
 },
 "lms.GetCohortRosterResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "lms.GetCohortScheduleSlotRequest": {
 "cohort_id": 1,
@@ -13302,12 +12801,11 @@
 },
 "lms.GetCohortTimetableRequest": {
 "cohort_id": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "lms.GetCohortTimetableResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "lms.GetConferencingAccountRequest": {
 "id": 1
@@ -13376,12 +12874,11 @@
 },
 "lms.GetCourseProgressDistributionRequest": {
 "course_id": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "lms.GetCourseProgressDistributionResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "lms.GetCourseReviewRequest": {
 "course_id": 1,
@@ -13459,13 +12956,12 @@
 "cohort_id": 2,
 "course_id": 1,
 "from_date": 3,
-"page_size": 5,
-"page_token": 6,
+"pageable": 7,
 "to_date": 4
 },
 "lms.GetEvaluatorSlotsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "lms.GetExerciseSubmissionRequest": {
 "id": 1
@@ -13587,8 +13083,7 @@
 "lms.GetGradebookRequest": {
 "cohort_id": 1,
 "grading_category_id": 3,
-"page_size": 4,
-"page_token": 5,
+"pageable": 6,
 "user_id": 2
 },
 "lms.GetGradebookResponse": {
@@ -13734,12 +13229,11 @@
 "course_id": 2,
 "ebook_id": 1,
 "file_id": 3,
-"page_size": 4,
-"page_token": 5
+"pageable": 6
 },
 "lms.GetMyRelatedMaterialsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "lms.GetOperationRequest": {
 "operation_id": 1
@@ -14153,7 +13647,7 @@
 "columns": 2,
 "etag": 7,
 "grade_display": 5,
-"next_page_token": 6,
+"pagination": 8,
 "rows": 4
 },
 "lms.GradebookEntry": {
@@ -14202,8 +13696,7 @@
 "user_ids": 2
 },
 "lms.GrantItemAccessResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.HideCatalogListingRequest": {
 "course_id": 1,
@@ -14454,1473 +13947,1091 @@
 },
 "lms.ListAccessLogsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListAccessLogsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListAnnotationSharesRequest": {
 "annotation_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListAnnotationSharesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListAnnotationsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListAnnotationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListAssignmentGroupMembersRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListAssignmentGroupMembersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListAssignmentGroupsRequest": {
 "content_item_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListAssignmentGroupsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListBadgeAwardsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListBadgeAwardsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListBadgesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListBadgesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListBookmarksRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListBookmarksResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCatalogBannersRequest": {
 "course_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCatalogBannersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCategoriesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListCategoriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCertificateEvaluationsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListCertificateEvaluationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCertificateRequestsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListCertificateRequestsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCertificatesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListCertificatesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListChaptersRequest": {
 "course_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListChaptersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCohortActivitiesRequest": {
 "cohort_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCohortActivitiesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCohortCoursesRequest": {
 "cohort_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCohortCoursesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCohortEnrollmentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListCohortEnrollmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCohortFeedbackRequest": {
 "cohort_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCohortFeedbackResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCohortGroupsRequest": {
 "cohort_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCohortGroupsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCohortHolidaysRequest": {
 "cohort_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCohortHolidaysResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCohortScheduleSlotsRequest": {
 "cohort_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCohortScheduleSlotsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCohortSessionsRequest": {
 "cohort_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCohortSessionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCohortTeachersRequest": {
 "cohort_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCohortTeachersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCohortsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListCohortsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListConferencingAccountsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListConferencingAccountsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListContentAuthorsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListContentAuthorsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListContentItemRatingsRequest": {
 "content_item_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListContentItemRatingsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListContentItemsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListContentItemsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListContentViewSessionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListContentViewSessionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCourseAuthorProfilesRequest": {
 "course_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCourseAuthorProfilesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCourseInterestsRequest": {
 "course_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCourseInterestsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCourseMentorsRequest": {
 "course_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCourseMentorsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCoursePreviewsRequest": {
 "course_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCoursePreviewsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCourseReviewsRequest": {
 "course_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCourseReviewsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCourseTeachersRequest": {
 "course_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCourseTeachersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListCourseTestimonialsRequest": {
 "course_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListCourseTestimonialsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListDiscussionPromptsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListDiscussionPromptsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListDriveItemSharesRequest": {
 "drive_item_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListDriveItemSharesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListDriveItemsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListDriveItemsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListEbooksRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListEbooksResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListEnrollmentRequestsRequest": {
 "course_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListEnrollmentRequestsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListEnrollmentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListEnrollmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListEvaluatorAvailabilitiesRequest": {
 "evaluator_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListEvaluatorAvailabilitiesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListEvaluatorsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListEvaluatorsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListExerciseSubmissionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListExerciseSubmissionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListExerciseTestCasesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "programming_exercise_id": 1
 },
 "lms.ListExerciseTestCasesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListExerciseTestResultsRequest": {
 "exercise_submission_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListExerciseTestResultsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListExternalToolInstitutionsRequest": {
 "external_tool_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListExternalToolInstitutionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListExternalToolLinksRequest": {
 "external_tool_resource_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListExternalToolLinksResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListExternalToolOptionsRequest": {
 "external_tool_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListExternalToolOptionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListExternalToolResourcesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListExternalToolResourcesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListExternalToolRolesRequest": {
 "external_tool_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListExternalToolRolesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListExternalToolSettingsRequest": {
 "external_tool_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListExternalToolSettingsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListExternalToolsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListExternalToolsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListForumPostReportsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListForumPostReportsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListForumPostVotesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListForumPostVotesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListForumPostsRequest": {
 "filter": 4,
 "forum_topic_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListForumPostsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListForumReadStatesRequest": {
 "filter": 4,
 "forum_topic_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListForumReadStatesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListForumReportCategoriesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListForumReportCategoriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListForumSectionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListForumSectionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListForumTopicsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListForumTopicsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListForumsRequest": {
 "cohort_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListForumsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListGradeChangeLogsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListGradeChangeLogsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListGradebookEntriesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListGradebookEntriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListGradingCategoriesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListGradingCategoriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListImportExportJobsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListImportExportJobsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListItemOverridesRequest": {
 "content_item_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListItemOverridesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListLearningObjectivesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListLearningObjectivesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListLearningProgramCoursesRequest": {
 "filter": 4,
 "learning_program_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListLearningProgramCoursesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListLearningProgramMembersRequest": {
 "filter": 4,
 "learning_program_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListLearningProgramMembersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListLearningProgramsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListLearningProgramsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListLessonActivitiesRequest": {
 "filter": 4,
 "lesson_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListLessonActivitiesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListLessonNotesRequest": {
 "filter": 4,
 "lesson_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListLessonNotesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListLessonProgressRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListLessonProgressResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListLessonsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListLessonsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListLiveClassParticipantsRequest": {
 "filter": 4,
 "live_class_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListLiveClassParticipantsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListLiveClassesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListLiveClassesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListLmsAssignmentSubmissionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListLmsAssignmentSubmissionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListLmsAssignmentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListLmsAssignmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListLmsCoursesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListLmsCoursesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListMentorshipsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListMentorshipsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListOperationsRequest": {
 "kind": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "lms.ListOperationsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "lms.ListParticipationActivitiesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListParticipationActivitiesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListPeerReviewsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListPeerReviewsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListPlagiarismAccountsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListPlagiarismAccountsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListPlagiarismCohortLinksRequest": {
 "cohort_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListPlagiarismCohortLinksResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListPlagiarismReportsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListPlagiarismReportsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListPlagiarismUserLinksRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "plagiarism_account_id": 1
 },
 "lms.ListPlagiarismUserLinksResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListProgrammingExercisesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListProgrammingExercisesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuestionAcceptedAnswersRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "question_id": 1
 },
 "lms.ListQuestionAcceptedAnswersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuestionBlankAnswersRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListQuestionBlankAnswersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuestionBlanksRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "question_id": 1
 },
 "lms.ListQuestionBlanksResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuestionHotspotRegionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListQuestionHotspotRegionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuestionHotspotsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "question_id": 1
 },
 "lms.ListQuestionHotspotsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuestionMatchPairsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "question_id": 1
 },
 "lms.ListQuestionMatchPairsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuestionOptionsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "question_id": 1
 },
 "lms.ListQuestionOptionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuestionPatternsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "question_id": 1
 },
 "lms.ListQuestionPatternsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuestionPoolItemsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "question_pool_id": 1
 },
 "lms.ListQuestionPoolItemsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuestionPoolsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListQuestionPoolsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuestionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListQuestionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuizAnswersRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "quiz_submission_id": 1
 },
 "lms.ListQuizAnswersResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuizQuestionHistoryRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "quiz_id": 1
 },
 "lms.ListQuizQuestionHistoryResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuizQuestionsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "quiz_id": 1
 },
 "lms.ListQuizQuestionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuizSubmissionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListQuizSubmissionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuizViolationsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "quiz_submission_id": 1
 },
 "lms.ListQuizViolationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListQuizzesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListQuizzesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListReassignmentLogsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListReassignmentLogsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListRelatedCoursesRequest": {
 "course_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListRelatedCoursesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListRelatedMaterialRanksRequest": {
 "ebook_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListRelatedMaterialRanksResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListRelatedMaterialsRequest": {
 "ebook_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListRelatedMaterialsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListReleaseGrantsRequest": {
 "content_item_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListReleaseGrantsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListReleaseRuleConditionsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "release_rule_id": 1
 },
 "lms.ListReleaseRuleConditionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListReleaseRuleTargetsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "release_rule_id": 1
 },
 "lms.ListReleaseRuleTargetsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListReleaseRulesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListReleaseRulesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListResourceCategoriesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListResourceCategoriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListRubricAssessmentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListRubricAssessmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListRubricCellsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "rubric_id": 1
 },
 "lms.ListRubricCellsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListRubricCriteriaRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "rubric_id": 1
 },
 "lms.ListRubricCriteriaResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListRubricLevelsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "rubric_id": 1
 },
 "lms.ListRubricLevelsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListRubricsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListRubricsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListSettingsPrimaryCountriesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "settings_id": 1
 },
 "lms.ListSettingsPrimaryCountriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListSettingsSidebarItemsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "settings_id": 1
 },
 "lms.ListSettingsSidebarItemsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListStudentAlertsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListStudentAlertsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListTimetableEntriesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListTimetableEntriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListTimetableLegendsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListTimetableLegendsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListTimetableTemplatesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListTimetableTemplatesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListVideoWatchesRequest": {
 "filter": 4,
 "lesson_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "lms.ListVideoWatchesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.ListWebResourcesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "lms.ListWebResourcesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "lms.LiveClass": {
 "attendee_count": 20,
@@ -16340,8 +15451,7 @@
 "request_id": 4
 },
 "lms.PublishEbookCurationResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.PublishFinalGradesRequest": {
 "cohort_id": 1,
@@ -16349,8 +15459,7 @@
 "user_ids": 2
 },
 "lms.PublishFinalGradesResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.PublishItemGradesRequest": {
 "content_item_id": 1,
@@ -16358,8 +15467,7 @@
 "user_ids": 2
 },
 "lms.PublishItemGradesResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.Question": {
 "allow_subscript": 27,
@@ -16667,8 +15775,7 @@
 "user_ids": 2
 },
 "lms.ReassignItemResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.ReassignmentLog": {
 "comment": 6,
@@ -16846,8 +15953,7 @@
 "request_id": 3
 },
 "lms.ReorderChaptersResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.ReorderReleaseRulesRequest": {
 "content_item_id": 1,
@@ -16855,8 +15961,7 @@
 "request_id": 3
 },
 "lms.ReorderReleaseRulesResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.RequestToJoinGroupRequest": {
 "assignment_group_id": 2,
@@ -17007,14 +16112,13 @@
 },
 "lms.SearchQuestionBankRequest": {
 "exclude_quiz_id": 3,
-"page_size": 4,
-"page_token": 5,
+"pageable": 6,
 "query": 1,
 "question_types": 2
 },
 "lms.SearchQuestionBankResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "lms.SendCohortAnnouncementRequest": {
 "cohort_id": 1,
@@ -17039,8 +16143,7 @@
 "request_id": 4
 },
 "lms.SetCohortMembersResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.SetContentItemVisibilityRequest": {
 "content_item_id": 1,
@@ -17058,8 +16161,7 @@
 "request_id": 5
 },
 "lms.SetGroupMembersResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.SetQuizQuestionsRequest": {
 "add_question_ids": 2,
@@ -17069,8 +16171,7 @@
 "request_id": 5
 },
 "lms.SetQuizQuestionsResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.SetReleaseRulesEnabledRequest": {
 "content_item_id": 1,
@@ -17078,8 +16179,7 @@
 "request_id": 3
 },
 "lms.SetReleaseRulesEnabledResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.SetStudentAccessRequest": {
 "cohort_id": 1,
@@ -17186,8 +16286,7 @@
 "user_ids": 2
 },
 "lms.ShareDriveItemResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.StartEvaluationRequest": {
 "certificate_request_id": 1,
@@ -17264,8 +16363,7 @@
 "reviews": 3
 },
 "lms.SubmitPeerReviewResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.SubmitQuizRequest": {
 "answers": 3,
@@ -17283,8 +16381,7 @@
 "request_id": 2
 },
 "lms.SyncLiveClassAttendanceResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "lms.TeacherDashboard": {
 "alerts": 6,
@@ -18446,47 +17543,35 @@
 },
 "master.ListCitiesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "master.ListCitiesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "master.ListCountriesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "master.ListCountriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "master.ListCurrenciesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "master.ListCurrenciesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "master.ListStateProvincesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "master.ListStateProvincesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "master.Locality": {
 "create_time": 5,
@@ -18740,21 +17825,19 @@
 },
 "org.FindInstitutionsRequest": {
 "country_code": 2,
-"page_size": 3,
-"page_token": 4,
+"pageable": 5,
 "query": 1
 },
 "org.FindInstitutionsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "org.GenerateTermsRequest": {
 "academic_year_id": 1,
 "request_id": 2
 },
 "org.GenerateTermsResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "org.GetAcademicTermRequest": {
 "academic_year_id": 1,
@@ -18893,104 +17976,77 @@
 "org.ListAcademicTermsRequest": {
 "academic_year_id": 1,
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "org.ListAcademicTermsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "org.ListAcademicYearsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "org.ListAcademicYearsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "org.ListAttributeDefinitionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "org.ListAttributeDefinitionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "org.ListDepartmentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "org.ListDepartmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "org.ListHolidaysRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "org.ListHolidaysResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "org.ListInstitutionAttributesRequest": {
 "filter": 4,
 "institution_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "org.ListInstitutionAttributesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "org.ListInstitutionTypeAttributesRequest": {
 "filter": 4,
 "institution_type_id": 1,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3
+"pageable": 6
 },
 "org.ListInstitutionTypeAttributesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "org.ListInstitutionTypesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "org.ListInstitutionTypesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "org.ListInstitutionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "org.ListInstitutionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "org.UpdateAcademicTermRequest": {
 "academic_term": 2,
@@ -19322,147 +18378,110 @@
 },
 "payroll.ListDisbursementAccountsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "payroll.ListDisbursementAccountsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "payroll.ListOperationsRequest": {
 "kind": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "payroll.ListOperationsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "payroll.ListPayCategoriesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "payroll.ListPayCategoriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "payroll.ListPayComponentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "payroll.ListPayComponentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "payroll.ListPaymentTypesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "payroll.ListPaymentTypesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "payroll.ListPayrollPaymentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "payroll.ListPayrollPaymentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "payroll.ListPayslipLinesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "payslip_id": 1
 },
 "payroll.ListPayslipLinesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "payroll.ListPayslipsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "payroll.ListPayslipsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "payroll.ListSalaryTemplateComponentsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "salary_template_id": 1
 },
 "payroll.ListSalaryTemplateComponentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "payroll.ListSalaryTemplatesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "payroll.ListSalaryTemplatesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "payroll.ListStaffBankAccountsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "payroll.ListStaffBankAccountsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "payroll.ListStaffSalariesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "payroll.ListStaffSalariesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "payroll.ListStaffSalaryComponentsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "staff_salary_id": 1
 },
 "payroll.ListStaffSalaryComponentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "payroll.MarkPayslipPaidRequest": {
 "disbursement_account_id": 3,
@@ -19981,13 +19000,12 @@
 "consent_record": 1
 },
 "people.GetConsentStatusRequest": {
-"page_size": 2,
-"page_token": 3,
+"pageable": 4,
 "person_id": 1
 },
 "people.GetConsentStatusResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "people.GetEducationHistoryRequest": {
 "id": 2,
@@ -20090,166 +19108,126 @@
 "from_date": 2,
 "institution_id": 1,
 "kinds": 4,
-"page_size": 6,
-"page_token": 7,
+"pageable": 8,
 "roles": 5,
 "to_date": 3
 },
 "people.ListBirthdaysResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "people.ListCertificationsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "person_id": 1
 },
 "people.ListCertificationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "people.ListConsentRecordsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "person_id": 1
 },
 "people.ListConsentRecordsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "people.ListEducationHistoryRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "person_id": 1
 },
 "people.ListEducationHistoryResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "people.ListEmergencyContactsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "person_id": 1
 },
 "people.ListEmergencyContactsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "people.ListHonorificsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "people.ListHonorificsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "people.ListPersonAddressesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "person_id": 1
 },
 "people.ListPersonAddressesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "people.ListPersonDocumentsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "person_id": 1
 },
 "people.ListPersonDocumentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "people.ListPersonSkillsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "person_id": 1
 },
 "people.ListPersonSkillsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "people.ListPersonSocialLinksRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "person_id": 1
 },
 "people.ListPersonSocialLinksResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "people.ListPersonsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "people.ListPersonsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "people.ListQualificationsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "people.ListQualificationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "people.ListSkillsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "people.ListSkillsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "people.ListWorkExperiencesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "person_id": 1
 },
 "people.ListWorkExperiencesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "people.MyPersonUpdate": {
 "about_me": 6,
@@ -20967,207 +19945,156 @@
 },
 "platform.GlobalSearchRequest": {
 "entity_types": 2,
-"page_size": 3,
-"page_token": 4,
+"pageable": 5,
 "query": 1
 },
 "platform.GlobalSearchResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "platform.ListAuditLogsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListAuditLogsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListDeletionLogsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListDeletionLogsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListEntityAttachmentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListEntityAttachmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListEntityNotesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListEntityNotesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListFileObjectsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListFileObjectsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListOperationsRequest": {
 "kind": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "platform.ListOperationsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "platform.ListReportDefinitionsRequest": {
 "module": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "platform.ListReportDefinitionsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "platform.ListReservedKeywordsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListReservedKeywordsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListSaasPlansRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListSaasPlansResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListSalesEnquiriesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListSalesEnquiriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListStorageQuotasRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListStorageQuotasResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListSystemSettingsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListSystemSettingsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListTagAssignmentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListTagAssignmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListTagsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListTagsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListTenantSubscriptionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListTenantSubscriptionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListTenantsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListTenantsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListThemesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListThemesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.ListUploadPoliciesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "platform.ListUploadPoliciesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "platform.MarkEnquiryContactedRequest": {
 "reason": 2,
@@ -21235,13 +20162,12 @@
 "updated_by": 13
 },
 "platform.SearchStockImagesRequest": {
-"page_size": 2,
-"page_token": 3,
+"pageable": 4,
 "query": 1
 },
 "platform.SearchStockImagesResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "platform.StartImportRequest": {
 "dry_run": 4,
@@ -21949,220 +20875,166 @@
 },
 "sis.ListActivityTypesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "sis.ListActivityTypesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListClassRosterRequest": {
 "class_section_id": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "sis.ListClassRosterResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "sis.ListDisciplineIncidentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "sis.ListDisciplineIncidentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListGuardiansRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "sis.ListGuardiansResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListMyChildrenRequest": {
-"page_size": 1,
-"page_token": 2
+"pageable": 3
 },
 "sis.ListMyChildrenResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "sis.ListOperationsRequest": {
 "kind": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "sis.ListOperationsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "sis.ListProgramEnrollmentSubjectsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "program_enrollment_id": 1
 },
 "sis.ListProgramEnrollmentSubjectsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListProgramEnrollmentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "sis.ListProgramEnrollmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListPromotionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "sis.ListPromotionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListRelationshipTypesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "sis.ListRelationshipTypesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListStudentActivitiesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "sis.ListStudentActivitiesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListStudentCategoriesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "sis.ListStudentCategoriesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListStudentEnrollmentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "sis.ListStudentEnrollmentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListStudentGuardiansRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "student_id": 1
 },
 "sis.ListStudentGuardiansResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListStudentHealthRecordsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "sis.ListStudentHealthRecordsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListStudentLeaveRequestsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "sis.ListStudentLeaveRequestsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListStudentSiblingsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "student_id": 1
 },
 "sis.ListStudentSiblingsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListStudentsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "sis.ListStudentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListSubjectRegistrationLinesRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "subject_registration_id": 1
 },
 "sis.ListSubjectRegistrationLinesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.ListSubjectRegistrationsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "sis.ListSubjectRegistrationsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "sis.LoadCourseSubjectsRequest": {
 "request_id": 2,
@@ -22242,8 +21114,7 @@
 "to_section_id": 4
 },
 "sis.ProposePromotionsResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "sis.RejectPromotionRequest": {
 "etag": 2,
@@ -22621,8 +21492,7 @@
 "session_ids": 1
 },
 "timetable.BatchConfirmSessionsResponse": {
-"items": 1,
-"next_page_token": 2
+"items": 1
 },
 "timetable.CancelOperationRequest": {
 "operation_id": 1,
@@ -22739,8 +21609,7 @@
 "batch_id": 4,
 "class_section_id": 3,
 "from_date": 1,
-"page_size": 8,
-"page_token": 9,
+"pageable": 10,
 "room_id": 7,
 "staff_id": 5,
 "student_id": 6,
@@ -22748,50 +21617,40 @@
 },
 "timetable.GetTimetableResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "timetable.ListOperationsRequest": {
 "kind": 1,
-"page_size": 2,
-"page_token": 3
+"pageable": 4
 },
 "timetable.ListOperationsResponse": {
 "items": 1,
-"next_page_token": 2
+"pagination": 3
 },
 "timetable.ListPeriodsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "timetable.ListPeriodsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "timetable.ListSessionStudentsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "session_id": 1
 },
 "timetable.ListSessionStudentsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "timetable.ListSessionsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "timetable.ListSessionsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "timetable.Period": {
 "create_time": 7,
@@ -22940,37 +21799,28 @@
 },
 "transport.ListRouteStopsRequest": {
 "filter": 4,
-"order_by": 5,
-"page_size": 2,
-"page_token": 3,
+"pageable": 6,
 "route_id": 1
 },
 "transport.ListRouteStopsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "transport.ListRoutesRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "transport.ListRoutesResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "transport.ListStudentTransportsRequest": {
 "filter": 3,
-"order_by": 4,
-"page_size": 1,
-"page_token": 2
+"pageable": 5
 },
 "transport.ListStudentTransportsResponse": {
 "items": 1,
-"next_page_token": 2,
-"total_size": 3
+"pagination": 4
 },
 "transport.Route": {
 "academic_year_id": 3,

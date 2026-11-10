@@ -33,7 +33,7 @@ class AuthFilterTest {
     private final TestTokens tokens = new TestTokens();
     private final AuthFilter filter = new AuthFilter(OperationTable.load(List.of("master", "org")),
             JwtTokenVerifier.from(new AuthClientProperties(TestTokens.ISSUER, null, tokens.publicKeyPem(), null,
-                    List.of("master", "org"), null)),
+                    List.of("master", "org"), null, false)),
             new ClaimsPermissionChecker(), new ProblemResponseWriter(JsonMapper.builder().build()),
             List.of("/actuator/health", "/actuator/health/**"));
 
@@ -90,6 +90,17 @@ class AuthFilterTest {
         MockHttpServletResponse response = call("GET", "/v1/master/internal-dump", null, null);
         assertThat(response.getStatus()).isEqualTo(404);
         assertThat(response.getContentAsString()).contains("NOT_FOUND");
+    }
+
+    /** The OpenAPI document maps every operation and permission, so it stays closed unless the operator opens it. */
+    @Test
+    void apiDocsAreClosedByDefaultAndOpenOnlyWithTheFlag() throws Exception {
+        assertThat(call("GET", "/v3/api-docs.yaml", null, null).getStatus()).isEqualTo(404);
+        assertThat(call("GET", "/swagger-ui.html", null, null).getStatus()).isEqualTo(404);
+        AuthClientProperties open = new AuthClientProperties(TestTokens.ISSUER, null, tokens.publicKeyPem(), null,
+                List.of("master"), null, true);
+        assertThat(open.infrastructurePaths()).contains("/v3/api-docs.yaml", "/swagger-ui/**")
+                .contains("/actuator/health", AuthClientProperties.JWKS_PATH);
     }
 
     @Test

@@ -1,4 +1,4 @@
-import { useI18n, useSession, useSignOut, type RouteMatch } from '@mysms/core';
+import { useCan, useI18n, useSession, useSignOut, type RouteMatch } from '@mysms/core';
 import { Button, Screen, Text } from '@mysms/ui-native';
 
 /** The app home until the per-persona dashboards are built; shows where a deep link pointed. */
@@ -9,11 +9,14 @@ export function HomeScreen({
 }: {
   linked: RouteMatch | null;
   tablet?: boolean;
-  onOpen: (page: 'profile' | 'settings') => void;
+  onOpen: (page: 'profile' | 'settings' | 'notifications' | 'timetable' | 'leave') => void;
 }) {
   const { t } = useI18n();
   const name = useSession((s) => s.me?.user?.username ?? '');
   const signOut = useSignOut();
+  const mayTimetable = useCan('timetable.session.get_timetable');
+  const mayApplyForLeave = useCan('hr.leave_application.create');
+  const mayApproveLeave = useCan('hr.leave_application.approve_leave');
   return (
     <Screen tablet={tablet}>
       <Text variant="h1">{t('shell.home.welcome', { name })}</Text>
@@ -23,11 +26,20 @@ export function HomeScreen({
           {t('shell.placeholder.title', { screenId: linked.screen.id, title: linked.screen.title })}
         </Text>
       ) : null}
+      {mayTimetable ? <Button onPress={() => onOpen('timetable')}>{t('tt.my.open')}</Button> : null}
+      {mayApplyForLeave || mayApproveLeave ? (
+        <Button variant="secondary" onPress={() => onOpen('leave')}>
+          {t('hr.leave.open')}
+        </Button>
+      ) : null}
       <Button variant="secondary" onPress={() => onOpen('profile')}>
         {t('shell.nav.profile')}
       </Button>
       <Button variant="secondary" onPress={() => onOpen('settings')}>
         {t('shell.nav.settings')}
+      </Button>
+      <Button variant="secondary" onPress={() => onOpen('notifications')}>
+        {t('acc.notifications.title')}
       </Button>
       <Button variant="secondary" loading={signOut.isPending} onPress={() => signOut.mutate()}>
         {t('shell.user.signOut')}

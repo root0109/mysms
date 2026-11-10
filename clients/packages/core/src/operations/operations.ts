@@ -15,7 +15,6 @@ import { call } from '../api/unwrap';
 import { OPERATION_MODULES, type OperationModule } from '../generated/operations';
 
 export type Operation = platform.Operation;
-export type OperationList = platform.OperationList;
 
 /** Terminal states; polling stops here. */
 export const DONE_STATUSES: readonly string[] = ['succeeded', 'failed', 'cancelled'];

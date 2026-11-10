@@ -5,11 +5,12 @@ setup (roles with real passwords, secrets, TLS, microservices, backups) is in [`
 
 ```
 MySMS/
-├── api/        contracts (OpenAPI per module): the source of the generated server interfaces and SDKs
+├── api/        the OpenAPI snapshot per module (the SDKs and conformance checks read it; the Java
+│               contracts are owned source inside each backend module, com.mysms.<module>.api)
 ├── database/   Flyway migrations per schema, data dictionary, ERDs, smoke test
-├── backend/    the multi-module Maven project (21 modules + core, auth-client, messaging, contracts, sdk, app)
+├── backend/    the multi-module Maven project (21 modules + core, auth-client, messaging, sdk, app,
+│               conformance)
 ├── clients/    pnpm/turbo workspace: web app, platform console, phone and tablet apps, shared packages
-├── tools/      generators and conformance checks (Python), not part of the runtime
 └── ui/         screen and navigation specs
 ```
 
@@ -27,10 +28,9 @@ MySMS/
 | Docker | any current | *instead of* installing PostgreSQL, RabbitMQ and the Pub/Sub emulator yourself (Testcontainers or §2) | `docker info` |
 | Node.js | 22.12+ | clients | `node -v` |
 | pnpm | 10 (`corepack enable`) | clients | `pnpm -v` |
-| Python | 3.10+ | only when you re-run the generators or the conformance check in `tools/` | `python3 -V` |
 | OpenSSL | any current | the local signing and encryption keys (§4) | `openssl version` |
 
-**Memory:** the full backend build peaks at about 4.5 GB (the generated contracts module compiles ~11,000 files;
+**Memory:** the full backend build peaks at about 4.5 GB (the contract packages add ~1,700 files;
 `backend/.mvn/jvm.config` sets `-Xmx4g`). **Never run the backend build and the client build at the same time on a
 machine with 8 GB or less** — the operating system kills Maven (exit 137) half way through.
 
@@ -89,11 +89,11 @@ Outputs: `app/target/app-0.1.0-SNAPSHOT-exec.jar` (all modules in one process) a
 
 **In an IDE (Eclipse/STS with m2e, IntelliJ):**
 
-1. If generated contracts or SDK sources are missing, run `mvn install -DskipTests -Djacoco.skip=true` once on the
-   command line (from `backend/`). This generates those sources and installs every module's jar in `~/.m2`, so the IDE
+1. If generated SDK sources are missing, run `mvn install -DskipTests -Djacoco.skip=true` once on the
+   command line (from `backend/`). This generates them and installs every module's jar in `~/.m2`, so the IDE
    can resolve modules such as `messaging` even before they are imported. Run the full `mvn verify` afterwards.
-2. Import `backend/` as *Existing Maven Projects* and select **all** modules (the parent, core, contracts, sdk,
-   auth-client, messaging, the 21 modules and app).
+2. Import `backend/` as *Existing Maven Projects* and select **all** modules (the parent, core, sdk,
+   auth-client, messaging, the 21 modules, app and conformance).
 3. Right-click any project → *Maven → Update Project…* (Alt+F5), select all, tick *Force Update of Snapshots/Releases*.
    m2e takes the Java level (17) from the parent pom; make sure a JDK 17 or newer is installed in
    *Window → Preferences → Java → Installed JREs* and mapped to the JavaSE-17 execution environment.
@@ -109,8 +109,9 @@ the workspace **without deleting its contents**, then use *File → Import → M
 select `backend/`. Import the parent, `messaging`, and every module; then run *Maven → Update Project…* with all projects
 selected. All broker adapters now live in `backend/messaging`; `messaging-rabbitmq` is no longer a Maven artifact.
 
-Optional rule check (no build needed): `python3 tools/backend/conformance.py` — enforces
-[`JAVA-CODING-RULES.md`](JAVA-CODING-RULES.md) and must report 0 violations.
+Rule check: the last module, `conformance`, enforces the mechanical rules of
+[`JAVA-CODING-RULES.md`](JAVA-CODING-RULES.md) on every `mvn verify`; any violation fails the build. Run it alone with
+`mvn -pl conformance test`.
 
 ### 3.2 Clients — one pnpm/turbo build
 
@@ -166,6 +167,7 @@ export MYSMS_AUTH_JWK_SET_URI=http://localhost:8080/oauth2/jwks
 export MYSMS_IAM_SIGNING_KEY="$(cat ~/.mysms/iam-signing.pem)"
 export MYSMS_SECRETS_KEYS="$(cat ~/.mysms/secrets-keys)"
 export MYSMS_PEOPLE_URL=http://localhost:8080
+export MYSMS_TIMETABLE_URL=http://localhost:8080 MYSMS_SIS_URL=http://localhost:8080 MYSMS_ORG_URL=http://localhost:8080
 export MYSMS_EVENTS_BUS=in-process            # or MYSMS_RABBITMQ_URI=amqp://guest:guest@localhost:5672
 # first start only: create a tenant and its administrator
 export MYSMS_IAM_BOOTSTRAP_TENANT_CODE=demo

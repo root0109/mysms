@@ -88,8 +88,6 @@ public class StateProvinceRepository {
                    row_version = row_version + 1
              WHERE id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
-    /** totalSize is exact up to 10,000 (api/README "Pagination"); the count never scans past that. */
-    private static final int COUNT_CAP = 10_001;
 
     private final JdbcClient jdbc;
 
@@ -107,15 +105,10 @@ public class StateProvinceRepository {
 
     public Page<StateProvinceEntity> list(PageRequest page, SqlFragment filter) {
         SqlFragment where = filter.and(page.keysetPredicate());
-        String sql = SELECT_LIVE + " AND (" + where.sql() + ") ORDER BY " + page.orderByClause() + " LIMIT :limit";
-        List<StateProvinceEntity> rows = jdbc.sql(sql).params(where.params()).param("limit", page.limit())
+        String sql = SELECT_LIVE + " AND (" + where.sql() + ") ORDER BY " + page.orderByClause() + page.limitClause();
+        List<StateProvinceEntity> rows = jdbc.sql(sql).params(where.params()).params(page.limitParams())
                 .query(StateProvinceRepository::map).list();
         return page.toPage(rows, e -> sortValues(page.sort(), e), StateProvinceEntity::getId);
-    }
-
-    public int count(SqlFragment filter) {
-        String sql = "SELECT count(*) FROM (" + SELECT_LIVE + " AND (" + filter.sql() + ") LIMIT :cap) counted";
-        return jdbc.sql(sql).params(filter.params()).param("cap", COUNT_CAP).query(Integer.class).single();
     }
 
     public void insert(StateProvinceEntity e) {

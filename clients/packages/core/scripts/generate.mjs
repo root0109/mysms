@@ -20,7 +20,7 @@ const apiDir = resolve(root, 'api/openapi');
 const codes = new Set();
 const opModules = new Set();
 for (const file of readdirSync(apiDir).sort()) {
-  if (!file.endsWith('.yaml') || ['common.yaml', 'mysms-api.yaml', 'redocly.yaml'].includes(file)) continue;
+  if (!file.endsWith('.yaml') || ['common.yaml', 'redocly.yaml'].includes(file)) continue;
   const doc = parse(readFileSync(resolve(apiDir, file), 'utf8'), { maxAliasCount: -1 });
   const module = file.replace(/\.yaml$/, '');
   for (const [path, item] of Object.entries(doc.paths ?? {})) {

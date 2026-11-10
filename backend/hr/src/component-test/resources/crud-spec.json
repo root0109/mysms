@@ -54,6 +54,31 @@
    "duplicateConflicts": false,
    "transitions": [
     {
+     "operation": "hr.ApproveLeave",
+     "path": "/v1/hr/leave-applications/{id}:approve",
+     "permission": "hr.leave_application.approve_leave",
+     "guard": {
+      "status": [
+       "pending"
+      ]
+     },
+     "prepare": [
+      "UPDATE hr.leave_application SET status = 'pending' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "approved"
+     },
+     "stamps": [
+      "decidedByUserId",
+      "decidedOn"
+     ],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
      "operation": "hr.RejectLeave",
      "path": "/v1/hr/leave-applications/{id}:reject",
      "permission": "hr.leave_application.reject_leave",
@@ -84,7 +109,8 @@
      "permission": "hr.leave_application.cancel_leave",
      "guard": {
       "status": [
-       "pending"
+       "pending",
+       "approved"
       ]
      },
      "prepare": [
@@ -121,7 +147,8 @@
    "create": {
     "staffId": "8c30c7a5-6493-5af1-b7dd-ed2a542ff298",
     "leaveTypeId": "502e9f56-4817-5dc2-9f04-abccfeeb796c",
-    "entitledDays": "1"
+    "entitledDays": "1",
+    "academicYearId": "7715fd57-5b52-5a44-b0cc-365a55f1a89a"
    },
    "update": {},
    "duplicateConflicts": false

@@ -5,13 +5,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.db.ModuleDatabase;
-import com.mysms.messaging.events.EventEnvelope;
-import com.mysms.messaging.events.InboxProcessor;
-import com.mysms.messaging.events.RejectedEventException;
 import com.mysms.core.testkit.TestDatabase;
+import com.mysms.core.testkit.TestTransactions;
 import com.mysms.iam.config.IamDatabaseConfig;
 import com.mysms.iam.events.TenantDirectorySync;
 import com.mysms.iam.repository.TenantDirectoryRepository;
+import com.mysms.messaging.events.EventEnvelope;
+import com.mysms.messaging.events.InboxProcessor;
+import com.mysms.messaging.events.RejectedEventException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
@@ -27,8 +28,7 @@ import org.springframework.test.context.DynamicPropertySource;
  * Real PostgreSQL: iam's tenant directory follows platform.tenant from its events — the newest row version wins, a late
  * or repeated event changes nothing, a deleted tenant is closed, and a malformed event is rejected (parked).
  */
-@SpringBootTest(classes = IamApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.config.name=" + IamApplication.CONFIG_NAME)
+@SpringBootTest(classes = IamApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class TenantDirectorySyncComponentTest {
 
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
@@ -60,7 +60,7 @@ class TenantDirectorySyncComponentTest {
     }
 
     private TenantDirectoryRepository.Entry entry(UUID tenant) {
-        return database.tx().readWithoutTenant(() -> directory.find(tenant)).orElseThrow();
+        return TestTransactions.of(database).readWithoutTenant(() -> directory.find(tenant)).orElseThrow();
     }
 
     @Test
@@ -69,14 +69,15 @@ class TenantDirectorySyncComponentTest {
         InboxProcessor inbox = new InboxProcessor(database, Clock.systemUTC());
         inbox.deliver(event(tenant, "created", "greenfield", "active", 1), sync::apply);
         assertThat(entry(tenant)).isEqualTo(new TenantDirectoryRepository.Entry("greenfield", "active", 1));
-        assertThat(database.tx().readWithoutTenant(() -> directory.findActiveTenant("GreenField"))).contains(tenant);
+        assertThat(TestTransactions.of(database).readWithoutTenant(() -> directory.findActiveTenant("GreenField")))
+                .contains(tenant);
 
         assertThat(sync.apply(event(tenant, "updated", "greenfield", "suspended", 3))).isTrue();
         assertThat(sync.apply(event(tenant, "updated", "greenfield", "active", 2)))
                 .as("a late event never restores an older status").isFalse();
         assertThat(sync.apply(event(tenant, "updated", "greenfield", "suspended", 3))).as("a repeat").isFalse();
         assertThat(entry(tenant)).isEqualTo(new TenantDirectoryRepository.Entry("greenfield", "suspended", 3));
-        assertThat(database.tx().readWithoutTenant(() -> directory.findActiveTenant("greenfield")))
+        assertThat(TestTransactions.of(database).readWithoutTenant(() -> directory.findActiveTenant("greenfield")))
                 .as("a suspended tenant cannot sign in").isEmpty();
 
         assertThat(sync.apply(event(tenant, "deleted", "greenfield", "active", 4))).isTrue();

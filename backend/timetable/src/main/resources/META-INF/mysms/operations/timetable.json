@@ -1,0 +1,186 @@
+[ {
+  "operationId" : "timetable.BatchConfirmSessions",
+  "method" : "POST",
+  "path" : "/v1/timetable/sessions:batchConfirm",
+  "permission" : "timetable.session.batch_confirm_sessions",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "timetable.CancelOperation",
+  "method" : "POST",
+  "path" : "/v1/timetable/operations/{operationId}:cancel",
+  "permission" : "timetable.operation.cancel_operation",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "timetable.CancelSession",
+  "method" : "POST",
+  "path" : "/v1/timetable/sessions/{sessionId}:cancel",
+  "permission" : "timetable.session.cancel_session",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "timetable.CompleteSession",
+  "method" : "POST",
+  "path" : "/v1/timetable/sessions/{sessionId}:complete",
+  "permission" : "timetable.session.complete_session",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "timetable.ConfirmSession",
+  "method" : "POST",
+  "path" : "/v1/timetable/sessions/{sessionId}:confirm",
+  "permission" : "timetable.session.confirm_session",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "timetable.CreatePeriod",
+  "method" : "POST",
+  "path" : "/v1/timetable/periods",
+  "permission" : "timetable.period.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "timetable.CreateSession",
+  "method" : "POST",
+  "path" : "/v1/timetable/sessions",
+  "permission" : "timetable.session.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "timetable.CreateSessionStudent",
+  "method" : "POST",
+  "path" : "/v1/timetable/sessions/{sessionId}/students",
+  "permission" : "timetable.session_student.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "timetable.DeletePeriod",
+  "method" : "DELETE",
+  "path" : "/v1/timetable/periods/{periodId}",
+  "permission" : "timetable.period.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.DeleteSession",
+  "method" : "DELETE",
+  "path" : "/v1/timetable/sessions/{sessionId}",
+  "permission" : "timetable.session.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.DeleteSessionStudent",
+  "method" : "DELETE",
+  "path" : "/v1/timetable/sessions/{sessionId}/students/{sessionStudentId}",
+  "permission" : "timetable.session_student.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.GenerateSessions",
+  "method" : "POST",
+  "path" : "/v1/timetable/sessions:generate",
+  "permission" : "timetable.session.generate_sessions",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "timetable.GetOperation",
+  "method" : "GET",
+  "path" : "/v1/timetable/operations/{operationId}",
+  "permission" : "timetable.operation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.GetPeriod",
+  "method" : "GET",
+  "path" : "/v1/timetable/periods/{periodId}",
+  "permission" : "timetable.period.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.GetSession",
+  "method" : "GET",
+  "path" : "/v1/timetable/sessions/{sessionId}",
+  "permission" : "timetable.session.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.GetSessionStudent",
+  "method" : "GET",
+  "path" : "/v1/timetable/sessions/{sessionId}/students/{sessionStudentId}",
+  "permission" : "timetable.session_student.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.GetTimetable",
+  "method" : "GET",
+  "path" : "/v1/timetable/sessions:timetable",
+  "permission" : "timetable.session.get_timetable",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.ListOperations",
+  "method" : "GET",
+  "path" : "/v1/timetable/operations",
+  "permission" : "timetable.operation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.ListPeriods",
+  "method" : "GET",
+  "path" : "/v1/timetable/periods",
+  "permission" : "timetable.period.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.ListSessionStudents",
+  "method" : "GET",
+  "path" : "/v1/timetable/sessions/{sessionId}/students",
+  "permission" : "timetable.session_student.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.ListSessions",
+  "method" : "GET",
+  "path" : "/v1/timetable/sessions",
+  "permission" : "timetable.session.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.ResetSession",
+  "method" : "POST",
+  "path" : "/v1/timetable/sessions/{sessionId}:resetToDraft",
+  "permission" : "timetable.session.reset_session",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "timetable.UpdatePeriod",
+  "method" : "PATCH",
+  "path" : "/v1/timetable/periods/{periodId}",
+  "permission" : "timetable.period.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.UpdateSession",
+  "method" : "PATCH",
+  "path" : "/v1/timetable/sessions/{sessionId}",
+  "permission" : "timetable.session.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "timetable.UpdateSessionStudent",
+  "method" : "PATCH",
+  "path" : "/v1/timetable/sessions/{sessionId}/students/{sessionStudentId}",
+  "permission" : "timetable.session_student.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+} ]

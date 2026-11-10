@@ -1,9 +1,11 @@
 package com.mysms.master.controller;
 
-import com.mysms.contracts.master.api.StateProvinceApi;
-import com.mysms.contracts.master.model.StateProvince;
-import com.mysms.contracts.master.model.StateProvinceList;
-import com.mysms.contracts.master.model.StateProvinceUpdate;
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.master.api.StateProvinceApi;
+import com.mysms.master.api.model.StateProvince;
+import com.mysms.master.api.model.StateProvinceUpdate;
 import com.mysms.core.web.ReadMask;
 import com.mysms.master.business.StateProvinceService;
 import java.net.URI;
@@ -28,10 +30,11 @@ public class StateProvinceController implements StateProvinceApi {
     }
 
     @Override
-    public ResponseEntity<StateProvinceList> listStateProvinces(Integer pageSize, String pageToken, String filter, String orderBy,
-                                              String fields) {
-        StateProvinceList list = service.listStateProvinces(pageSize, pageToken, filter, orderBy);
-        list.getItems().forEach(item -> ReadMask.apply(item, fields));
+    public ResponseEntity<PagingInfo<StateProvince>> listStateProvinces(Integer page, Integer size, String cursor,
+            String filter, List<String> sort, String fields) {
+        PagingInfo<StateProvince> list =
+                PagingUtil.pagingInfo(service.listStateProvinces(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
     }
 

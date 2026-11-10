@@ -34,8 +34,8 @@ import tools.jackson.databind.node.ObjectNode;
  * The standard-operation contract of every resource of a module, checked end to end over HTTP against real
  * PostgreSQL (JAVA-CODING-RULES §12): create, read, list with filter, partial update under If-Match, soft delete, the
  * 403/404/409/412/428 answers, tenant isolation and the institution data scope. The resources and their sample
- * payloads come from {@code crud-spec.json} on the module's component-test classpath, generated from the contract and
- * the schema together with the code under test (tools/backend/crud); nothing is mocked.
+ * payloads come from {@code crud-spec.json} on the module's component-test classpath, owned test data kept beside the
+ * resources it exercises; nothing is mocked.
  */
 public final class CrudContract {
 
@@ -248,21 +248,38 @@ public final class CrudContract {
     }
 
     private void list(State s) {
-        Reply all = call("GET", s.listing("pageSize=500", null), admin(s), null);
+        Reply all = call("GET", s.listing("size=500", null), admin(s), null);
         assertThat(all.status).as(all.text).isEqualTo(200);
         assertThat(ids(all.body)).contains(s.id);
         Reply filtered = call("GET", s.listing("", "id = \"" + s.id + "\""), admin(s), null);
         assertThat(filtered.status).as(filtered.text).isEqualTo(200);
         assertThat(ids(filtered.body)).containsExactly(s.id);
-        assertThat(filtered.body.path("totalSize").asInt()).isEqualTo(1);
-        Reply page = call("GET", s.listing("pageSize=1&orderBy=" + encode("createTime desc"), null), admin(s),
-                null);
+        JsonNode only = filtered.body.path("paging");
+        assertThat(only.path("page").asInt()).isEqualTo(1);
+        assertThat(only.path("size").asInt()).isEqualTo(1);
+        assertThat(only.has("previous")).isFalse();
+        assertThat(only.has("next")).as("one matching row: no next page").isFalse();
+        Reply page = call("GET", s.listing("size=1&sort=createTime,desc", null), admin(s), null);
         assertThat(page.status).as(page.text).isEqualTo(200);
-        assertThat(page.body.path("items").size()).isEqualTo(1);
+        assertThat(page.body.path("data").size()).isEqualTo(1);
+        assertThat(page.body.path("paging").path("first").asString()).contains("page=1").contains("size=1")
+                .contains("sort=createTime,desc");
+        if (page.body.path("paging").has("next")) {
+            // the next link continues after this page's row, under the same sort
+            Reply next = call("GET", page.body.path("paging").path("next").asString(), admin(s), null);
+            assertThat(next.status).as(next.text).isEqualTo(200);
+            assertThat(next.body.path("paging").path("page").asInt()).isEqualTo(2);
+            assertThat(ids(next.body)).doesNotContainAnyElementsOf(ids(page.body));
+            assertThat(next.body.path("paging").path("previous").asString()).contains("page=1")
+                    .doesNotContain("cursor=");
+        }
+        assertThat(call("GET", s.listing("size=0", null), admin(s), null).status).isEqualTo(400);
+        assertThat(call("GET", s.listing("page=0", null), admin(s), null).status).isEqualTo(400);
+        assertThat(call("GET", s.listing("sort=noSuchField", null), admin(s), null).status).isEqualTo(400);
         Reply badFilter = call("GET", s.listing("", "noSuchField = 1"), admin(s), null);
         assertThat(badFilter.status).isEqualTo(400);
         if (s.r.has("partition")) {
-            Reply unbounded = call("GET", s.collection() + "?pageSize=500", admin(s), null);
+            Reply unbounded = call("GET", s.collection() + "?size=500", admin(s), null);
             assertThat(unbounded.status).as("a partitioned list needs its range: " + unbounded.text).isEqualTo(400);
             assertThat(unbounded.text).contains("INVALID_FILTER").contains(s.r.path("partition").asString());
             Reply onlyId = call("GET", s.collection() + "?filter=" + encode("id = \"" + s.id + "\""), admin(s), null);
@@ -276,7 +293,7 @@ public final class CrudContract {
             assertThat(call("GET", s.item(s.id), stranger, null).status).isEqualTo(404);
         }
         if (s.has("List")) {
-            Reply list = call("GET", s.listing("pageSize=500", null), stranger, null);
+            Reply list = call("GET", s.listing("size=500", null), stranger, null);
             assertThat(list.status).as(list.text).isIn(200, 404);
             if (list.status == 200) {
                 assertThat(ids(list.body)).doesNotContain(s.id);
@@ -330,7 +347,7 @@ public final class CrudContract {
                     .isEqualTo(404);
         }
         if (s.has("List")) {
-            Reply list = call("GET", s.listing("pageSize=500", null), outside, null);
+            Reply list = call("GET", s.listing("size=500", null), outside, null);
             if (list.status == 200) {
                 assertThat(ids(list.body)).doesNotContain(s.id);
             } else {
@@ -458,7 +475,17 @@ public final class CrudContract {
         return true;
     }
 
+    /**
+     * Soft delete. A resource whose steps leave records behind that forbid deleting it (a review of a lesson plan)
+     * names in {@code beforeDelete} the statements that take those away first; that such records block the delete is
+     * the module's own test to prove.
+     */
     private void delete(State s) {
+        List<String> before = new ArrayList<>();
+        for (JsonNode statement : s.r.path("beforeDelete")) {
+            before.add(statement.asString().replace("{id}", s.id));
+        }
+        sql.accept(tenant, before);
         assertThat(call("DELETE", s.item(s.id), admin(s), null).status).isEqualTo(428);
         int version = s.version();
         assertThat(call("DELETE", s.item(s.id), admin(s), null, "If-Match", "\"" + (version + 7) + "\"").status)
@@ -577,7 +604,7 @@ public final class CrudContract {
                 return known;
             }
             Reply list = call("GET", listing("", "id = \"" + id + "\""), admin(this), null);
-            return Integer.parseInt(list.body.path("items").path(0).path("etag").asString().replace("\"", ""));
+            return Integer.parseInt(list.body.path("data").path(0).path("etag").asString().replace("\"", ""));
         }
     }
 
@@ -643,19 +670,19 @@ public final class CrudContract {
             Reply listed = call("GET", base, own, null);
             assertThat(listed.status).as(listed.text).isEqualTo(200);
             List<String> ids = new ArrayList<>();
-            listed.body.path("items").forEach(item -> ids.add(item.path("operationId").asString()));
+            listed.body.path("data").forEach(item -> ids.add(item.path("operationId").asString()));
             assertThat(ids).as("own operations, newest first").containsExactly(done.toString(), mine.toString());
-            JsonNode finished = listed.body.path("items").get(0);
+            JsonNode finished = listed.body.path("data").get(0);
             assertThat(finished.path("module").asString()).isEqualTo(module);
             assertThat(finished.path("status").asString()).isEqualTo("succeeded");
             assertThat(finished.path("resultFileId").asString()).isEqualTo(file.toString());
             assertThat(finished.hasNonNull("doneTime")).isTrue();
-            assertThat(call("GET", base + "?kind=import.rows", own, null).body.path("items")).isEmpty();
+            assertThat(call("GET", base + "?kind=import.rows", own, null).body.path("data")).isEmpty();
             assertThat(call("GET", base + "/" + theirs, own, null).status).as("someone else's").isEqualTo(404);
-            assertThat(call("GET", base + "?kind=import.rows", admin(), null).body.path("items")).hasSize(1);
+            assertThat(call("GET", base + "?kind=import.rows", admin(), null).body.path("data")).hasSize(1);
             assertThat(call("GET", base + "/" + theirs, admin(), null).status).isEqualTo(200);
             assertThat(call("GET", base, token(UUID.randomUUID(), List.of("*"), List.of("*"), "*"), null)
-                    .body.path("items")).as("another tenant").isEmpty();
+                    .body.path("data")).as("another tenant").isEmpty();
             assertThat(call("GET", base, token(tenant, List.of("*"), "nothing.at.all"), null).status).isEqualTo(403);
 
             assertThat(call("POST", base + "/" + theirs + ":cancel", own, null).status).isEqualTo(404);
@@ -684,8 +711,12 @@ public final class CrudContract {
             assertThat(call("GET", s.item(s.id), self, null).status).as("the owner's own row").isEqualTo(200);
         }
         if (s.has("List")) {
-            assertThat(call("GET", s.listing("pageSize=500", null), stranger, null).status).isEqualTo(404);
-            Reply own = call("GET", s.listing("pageSize=500", null), self, null);
+            Reply hidden = call("GET", s.listing("size=500", null), stranger, null);
+            assertThat(hidden.status).as(hidden.text).isIn(200, 404);
+            if (hidden.status == 200) {
+                assertThat(ids(hidden.body)).doesNotContain(s.id);
+            }
+            Reply own = call("GET", s.listing("size=500", null), self, null);
             assertThat(own.status).as(own.text).isEqualTo(200);
             assertThat(ids(own.body)).contains(s.id);
         }
@@ -697,7 +728,14 @@ public final class CrudContract {
 
     /** Every permission: a tenant administrator, or platform staff for a global table. */
     private String admin(State s) {
-        return s.global() ? tokens.platformOperator(user, "*") : admin();
+        if (s.global()) {
+            return tokens.platformOperator(user, "*");
+        }
+        if (s.r.has("ownerOnly")) {
+            UUID owner = UUID.fromString(s.r.path("ownerOnly").asString());
+            return tokenOf(owner, tenant, List.of("*"), List.of("*"), "*");
+        }
+        return admin();
     }
 
     /** Every permission in the test tenant. */
@@ -769,7 +807,7 @@ public final class CrudContract {
 
     private static List<String> ids(JsonNode list) {
         List<String> ids = new ArrayList<>();
-        for (JsonNode item : list.path("items")) {
+        for (JsonNode item : list.path("data")) {
             ids.add(item.path("id").asString());
         }
         return ids;

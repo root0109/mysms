@@ -1,6 +1,6 @@
 package com.mysms.people.mapper;
 
-import com.mysms.contracts.people.model.Person;
+import com.mysms.people.api.model.Person;
 import com.mysms.core.web.Etags;
 import com.mysms.people.domain.SelfPersonEntity;
 import org.mapstruct.Mapper;

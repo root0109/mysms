@@ -26,7 +26,7 @@ class TokenIssuerTest {
 
     private final TestTokens keys = new TestTokens();
     private final TokenVerifier verifier = JwtTokenVerifier.from(new AuthClientProperties(TestTokens.ISSUER, null,
-            keys.publicKeyPem(), null, List.of("iam"), null));
+            keys.publicKeyPem(), null, List.of("iam"), null, false));
 
     private TokenIssuer issuer(String keyId) {
         return TokenIssuer.from(new IamProperties.Token(TestTokens.ISSUER, keys.privateKeyPem(), keyId, null, null,

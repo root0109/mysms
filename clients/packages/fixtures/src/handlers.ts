@@ -10,6 +10,7 @@ import {
   tokens,
 } from './data';
 import { json, problem, type Handler } from './fakeApi';
+import { pageOf } from './paging';
 
 type Country = master.Country;
 type Operation = platform.Operation;
@@ -197,13 +198,13 @@ export function fakeBackend(options: FakeBackendOptions = {}): Record<string, Ha
       return new Response(null, { status: 204 });
     },
     'GET /v1/iam/setting-definitions': (req) =>
-      authed(req)
-        ? json({ items: visibleDefinitions(), totalSize: visibleDefinitions().length, nextPageToken: '' })
-        : unauthenticated(),
+      authed(req) ? pageOf(req, visibleDefinitions()) : unauthenticated(),
     'GET /v1/iam/setting-values': (req) => {
       if (!authed(req)) return unauthenticated();
-      const items = [...values.values()].map((v) => ({ ...v.row, etag: etagOf(v.version) }));
-      return json({ items, totalSize: items.length, nextPageToken: '' });
+      return pageOf(
+        req,
+        [...values.values()].map((v) => ({ ...v.row, etag: etagOf(v.version) })),
+      );
     },
     'POST /v1/iam/setting-values': async (req) => {
       if (!authed(req)) return unauthenticated();
@@ -282,15 +283,10 @@ export function fakeBackend(options: FakeBackendOptions = {}): Record<string, Ha
     },
 
     'GET /v1/master/countries': (req) => {
-      const url = new URL(req.url);
-      const size = Number(url.searchParams.get('pageSize') ?? 50);
-      const start = Number(url.searchParams.get('pageToken') ?? 0);
       const all = [...rows.values()]
         .map((r) => r.row)
         .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-      const items = all.slice(start, start + size);
-      const next = start + size < all.length ? String(start + size) : '';
-      return json({ items, nextPageToken: next, totalSize: all.length });
+      return pageOf(req, all);
     },
     'GET /v1/master/countries/{countryId}': (_req, p) => {
       const found = readCountry(p.countryId ?? '');
@@ -334,7 +330,7 @@ export function fakeBackend(options: FakeBackendOptions = {}): Record<string, Ha
     },
 
     'GET /v1/platform/operations': (req) =>
-      authed(req) ? json({ items: [...ops.values()], nextPageToken: '' }) : unauthenticated(),
+      authed(req) ? pageOf(req, [...ops.values()]) : unauthenticated(),
     'GET /v1/{module}/operations/{operationId}': (req, p) => {
       if (!authed(req)) return unauthenticated();
       const op = ops.get(p.operationId ?? '');

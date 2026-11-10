@@ -28,7 +28,7 @@ paths:
     get:
       operationId: master.ListCountries
       summary: List Countries
-      description: List Countries visible to the caller, with cursor pagination, filtering and ordering. Guests (no token) receive published rows only, with internal fields omitted (guest projection).
+      description: List Countries visible to the caller, page by page, with filtering and sorting. Guests (no token) receive published rows only, with internal fields omitted (guest projection).
       tags:
       - Country
       security:
@@ -39,10 +39,11 @@ paths:
         service: mysms.master.v1.CountryService
         method: ListCountries
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -50,7 +51,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CountryList'
+                $ref: '#/components/schemas/PagingInfoCountry'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -269,7 +270,7 @@ paths:
     get:
       operationId: master.ListStateProvinces
       summary: List StateProvinces
-      description: List StateProvinces visible to the caller, with cursor pagination, filtering and ordering. Guests (no token) receive published rows only, with internal fields omitted (guest projection).
+      description: List StateProvinces visible to the caller, page by page, with filtering and sorting. Guests (no token) receive published rows only, with internal fields omitted (guest projection).
       tags:
       - StateProvince
       security:
@@ -280,10 +281,11 @@ paths:
         service: mysms.master.v1.StateProvinceService
         method: ListStateProvinces
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -291,7 +293,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StateProvinceList'
+                $ref: '#/components/schemas/PagingInfoStateProvince'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -510,7 +512,7 @@ paths:
     get:
       operationId: master.ListCities
       summary: List Cities
-      description: List Cities visible to the caller, with cursor pagination, filtering and ordering. Guests (no token) receive published rows only, with internal fields omitted (guest projection).
+      description: List Cities visible to the caller, page by page, with filtering and sorting. Guests (no token) receive published rows only, with internal fields omitted (guest projection).
       tags:
       - City
       security:
@@ -521,10 +523,11 @@ paths:
         service: mysms.master.v1.CityService
         method: ListCities
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -532,7 +535,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CityList'
+                $ref: '#/components/schemas/PagingInfoCity'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -751,7 +754,7 @@ paths:
     get:
       operationId: master.ListCurrencies
       summary: List Currencies
-      description: List Currencies visible to the caller, with cursor pagination, filtering and ordering. Guests (no token) receive published rows only, with internal fields omitted (guest projection).
+      description: List Currencies visible to the caller, page by page, with filtering and sorting. Guests (no token) receive published rows only, with internal fields omitted (guest projection).
       tags:
       - Currency
       security:
@@ -762,10 +765,11 @@ paths:
         service: mysms.master.v1.CurrencyService
         method: ListCurrencies
       parameters:
-      - $ref: ./common.yaml#/components/parameters/PageSize
-      - $ref: ./common.yaml#/components/parameters/PageToken
+      - $ref: ./common.yaml#/components/parameters/Page
+      - $ref: ./common.yaml#/components/parameters/Size
+      - $ref: ./common.yaml#/components/parameters/Cursor
       - $ref: ./common.yaml#/components/parameters/Filter
-      - $ref: ./common.yaml#/components/parameters/OrderBy
+      - $ref: ./common.yaml#/components/parameters/Sort
       - $ref: ./common.yaml#/components/parameters/ReadMask
       responses:
         '200':
@@ -773,7 +777,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CurrencyList'
+                $ref: '#/components/schemas/PagingInfoCurrency'
         '400':
           $ref: ./common.yaml#/components/responses/400
         '401':
@@ -1083,22 +1087,20 @@ components:
         isActive:
           type: boolean
           description: Whether the country is selectable.
-    CountryList:
+    PagingInfoCountry:
       type: object
+      description: A page of Country, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Country'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     StateProvince:
       type: object
       description: First-level administrative division of a country.
@@ -1169,22 +1171,20 @@ components:
         isActive:
           type: boolean
           description: Whether selectable.
-    StateProvinceList:
+    PagingInfoStateProvince:
       type: object
+      description: A page of StateProvince, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/StateProvince'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     City:
       type: object
       description: City / town master used by addresses.
@@ -1255,22 +1255,20 @@ components:
         isActive:
           type: boolean
           description: Whether selectable.
-    CityList:
+    PagingInfoCity:
       type: object
+      description: A page of City, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/City'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
     Currency:
       type: object
       description: Currency master (ISO 4217).
@@ -1349,22 +1347,20 @@ components:
         isActive:
           type: boolean
           description: Whether usable.
-    CurrencyList:
+    PagingInfoCurrency:
       type: object
+      description: A page of Currency, with the links to the other pages.
       required:
-      - items
+      - data
+      - paging
       properties:
-        items:
+        data:
           type: array
+          description: Data retrieved in the paginated request.
           items:
             $ref: '#/components/schemas/Currency'
-        nextPageToken:
-          type: string
-          description: Cursor for the next page; empty on the last page.
-        totalSize:
-          type: integer
-          format: int32
-          description: Total matching items (may be approximate for large sets).
+        paging:
+          $ref: ./common.yaml#/components/schemas/NavigationInfo
   securitySchemes:
     bearerAuth:
       type: http

@@ -1,0 +1,181 @@
+[ {
+  "operationId" : "facility.CreateAssetItem",
+  "method" : "POST",
+  "path" : "/v1/facility/asset-items",
+  "permission" : "facility.asset_item.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "facility.CreateFacility",
+  "method" : "POST",
+  "path" : "/v1/facility/facilities",
+  "permission" : "facility.facility.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "facility.CreateRoom",
+  "method" : "POST",
+  "path" : "/v1/facility/rooms",
+  "permission" : "facility.room.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "facility.CreateRoomAsset",
+  "method" : "POST",
+  "path" : "/v1/facility/rooms/{roomId}/assets",
+  "permission" : "facility.room_asset.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "facility.CreateRoomFacility",
+  "method" : "POST",
+  "path" : "/v1/facility/rooms/{roomId}/facilities",
+  "permission" : "facility.room_facility.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional"
+}, {
+  "operationId" : "facility.DeleteAssetItem",
+  "method" : "DELETE",
+  "path" : "/v1/facility/asset-items/{assetItemId}",
+  "permission" : "facility.asset_item.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.DeleteFacility",
+  "method" : "DELETE",
+  "path" : "/v1/facility/facilities/{facilityId}",
+  "permission" : "facility.facility.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.DeleteRoom",
+  "method" : "DELETE",
+  "path" : "/v1/facility/rooms/{roomId}",
+  "permission" : "facility.room.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.DeleteRoomAsset",
+  "method" : "DELETE",
+  "path" : "/v1/facility/rooms/{roomId}/assets/{roomAssetId}",
+  "permission" : "facility.room_asset.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.DeleteRoomFacility",
+  "method" : "DELETE",
+  "path" : "/v1/facility/rooms/{roomId}/facilities/{roomFacilityId}",
+  "permission" : "facility.room_facility.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.GetAssetItem",
+  "method" : "GET",
+  "path" : "/v1/facility/asset-items/{assetItemId}",
+  "permission" : "facility.asset_item.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.GetFacility",
+  "method" : "GET",
+  "path" : "/v1/facility/facilities/{facilityId}",
+  "permission" : "facility.facility.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.GetRoom",
+  "method" : "GET",
+  "path" : "/v1/facility/rooms/{roomId}",
+  "permission" : "facility.room.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.GetRoomAsset",
+  "method" : "GET",
+  "path" : "/v1/facility/rooms/{roomId}/assets/{roomAssetId}",
+  "permission" : "facility.room_asset.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.GetRoomFacility",
+  "method" : "GET",
+  "path" : "/v1/facility/rooms/{roomId}/facilities/{roomFacilityId}",
+  "permission" : "facility.room_facility.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.ListAssetItems",
+  "method" : "GET",
+  "path" : "/v1/facility/asset-items",
+  "permission" : "facility.asset_item.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.ListFacilities",
+  "method" : "GET",
+  "path" : "/v1/facility/facilities",
+  "permission" : "facility.facility.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.ListRoomAssets",
+  "method" : "GET",
+  "path" : "/v1/facility/rooms/{roomId}/assets",
+  "permission" : "facility.room_asset.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.ListRoomFacilities",
+  "method" : "GET",
+  "path" : "/v1/facility/rooms/{roomId}/facilities",
+  "permission" : "facility.room_facility.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.ListRooms",
+  "method" : "GET",
+  "path" : "/v1/facility/rooms",
+  "permission" : "facility.room.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.UpdateAssetItem",
+  "method" : "PATCH",
+  "path" : "/v1/facility/asset-items/{assetItemId}",
+  "permission" : "facility.asset_item.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.UpdateFacility",
+  "method" : "PATCH",
+  "path" : "/v1/facility/facilities/{facilityId}",
+  "permission" : "facility.facility.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.UpdateRoom",
+  "method" : "PATCH",
+  "path" : "/v1/facility/rooms/{roomId}",
+  "permission" : "facility.room.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.UpdateRoomAsset",
+  "method" : "PATCH",
+  "path" : "/v1/facility/rooms/{roomId}/assets/{roomAssetId}",
+  "permission" : "facility.room_asset.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+}, {
+  "operationId" : "facility.UpdateRoomFacility",
+  "method" : "PATCH",
+  "path" : "/v1/facility/rooms/{roomId}/facilities/{roomFacilityId}",
+  "permission" : "facility.room_facility.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false
+} ]
