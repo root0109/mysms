@@ -22,8 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  * REST edge of the ExamSession operations: implements the generated contract interface, so paths, parameters and
  * payloads
  * cannot drift from api/openapi/assessment.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * The controller stays thin: delegate business rules to the service and shape contract responses here.
  */
 @RestController
 public class ExamSessionController implements ExamSessionApi {

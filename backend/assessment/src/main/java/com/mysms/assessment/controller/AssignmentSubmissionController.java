@@ -13,7 +13,6 @@ import com.mysms.assessment.api.model.RejectAssignmentSubmissionRequest;
 import com.mysms.assessment.api.model.RequestSubmissionChangesRequest;
 import com.mysms.assessment.api.model.ResetAssignmentSubmissionRequest;
 import com.mysms.assessment.api.model.SubmitAssignmentSubmissionRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -24,8 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
  * REST edge of the AssignmentSubmission operations: implements the generated contract interface, so paths, parameters
  * and payloads
  * cannot drift from api/openapi/assessment.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * The controller stays thin: delegate business rules to the service and shape contract responses here.
  */
 @RestController
 public class AssignmentSubmissionController implements AssignmentSubmissionApi {
@@ -74,7 +72,9 @@ public class AssignmentSubmissionController implements AssignmentSubmissionApi {
     @Override
     public ResponseEntity<AssignmentSubmission> gradeAssignmentSubmission(UUID assignmentSubmissionId,
             GradeAssignmentSubmissionRequest gradeAssignmentSubmissionRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        AssignmentSubmission changed = assignmentSubmissionService.gradeAssignmentSubmission(
+                assignmentSubmissionId, gradeAssignmentSubmissionRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -99,13 +99,17 @@ public class AssignmentSubmissionController implements AssignmentSubmissionApi {
     @Override
     public ResponseEntity<AssignmentSubmission> requestSubmissionChanges(UUID assignmentSubmissionId,
             RequestSubmissionChangesRequest requestSubmissionChangesRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        AssignmentSubmission changed = assignmentSubmissionService.requestSubmissionChanges(
+                assignmentSubmissionId, requestSubmissionChangesRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<AssignmentSubmission> resetAssignmentSubmission(UUID assignmentSubmissionId,
             ResetAssignmentSubmissionRequest resetAssignmentSubmissionRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        AssignmentSubmission changed = assignmentSubmissionService.resetAssignmentSubmission(
+                assignmentSubmissionId, resetAssignmentSubmissionRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

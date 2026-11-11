@@ -74,6 +74,26 @@ public class MarksheetRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String HAS_COMPLETE_RESULTS = """
+            SELECT EXISTS (SELECT 1 FROM assessment.marksheet_line ml
+                            WHERE ml.tenant_id = :tenantId AND ml.marksheet_id = m.id AND ml.deleted_at IS NULL)
+               AND NOT EXISTS (
+                    SELECT 1 FROM assessment.exam_result er
+                    JOIN assessment.exam e ON e.tenant_id = er.tenant_id AND e.tenant_id = :tenantId
+                                        AND e.id = er.exam_id
+                    WHERE er.tenant_id = :tenantId AND e.exam_session_id = m.exam_session_id
+                      AND er.deleted_at IS NULL
+                      AND (er.result_status IS NULL OR er.result_status = 'pending' OR er.marksheet_line_id IS NULL
+                           OR NOT EXISTS (SELECT 1 FROM assessment.marksheet_line ml
+                                          WHERE ml.tenant_id = :tenantId AND ml.id = er.marksheet_line_id
+                                            AND ml.marksheet_id = m.id AND ml.student_id = er.student_id
+                                            AND ml.deleted_at IS NULL)))
+               AND NOT EXISTS (SELECT 1 FROM assessment.exam e WHERE e.tenant_id = :tenantId
+                    AND e.exam_session_id = m.exam_session_id AND e.deleted_at IS NULL
+                    AND e.status NOT IN ('result_updated', 'done'))
+              FROM assessment.marksheet m WHERE m.tenant_id = :tenantId AND m.id = :id
+                AND m.deleted_at IS NULL
+            """;
     private static final String INSERT = """
             INSERT INTO assessment.marksheet
             (id, tenant_id, visible_to_guardians, exam_session_id, result_template_id, name, generated_on,
@@ -131,6 +151,9 @@ public class MarksheetRepository {
     private static final String TRANSITION_CANCEL_MARKSHEET = """
             UPDATE assessment.marksheet
                SET status = 'cancelled',
+                   published_at = NULL,
+                   published_by_user_id = NULL,
+                   visible_to_guardians = false,
                    updated_at = :now,
                    updated_by = :actor,
                    row_version = row_version + 1
@@ -142,11 +165,27 @@ public class MarksheetRepository {
     private static final String TRANSITION_RESET_MARKSHEET = """
             UPDATE assessment.marksheet
                SET status = 'draft',
+                   published_at = NULL,
+                   published_by_user_id = NULL,
+                   visible_to_guardians = false,
                    updated_at = :now,
                    updated_by = :actor,
                    row_version = row_version + 1
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String TRANSITION_VALIDATE_MARKSHEET = """
+            UPDATE assessment.marksheet SET status = 'validated', updated_at = :now, updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND status = 'draft'
+               AND deleted_at IS NULL
+            """;
+    private static final String TRANSITION_PUBLISH_MARKSHEET = """
+            UPDATE assessment.marksheet SET published_at = :now, published_by_user_id = :actor,
+                   visible_to_guardians = :visibleToGuardians, updated_at = :now, updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND status = 'validated'
+               AND published_at IS NULL AND deleted_at IS NULL
             """;
     private static final String SCOPE = """
              (:scopeAll OR r.exam_session_id IN (SELECT p0.id FROM assessment.exam_session p0 WHERE p0.tenant_id =
@@ -163,6 +202,10 @@ public class MarksheetRepository {
 
     public Optional<MarksheetEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(MarksheetRepository::map).optional();
+    }
+
+    public boolean hasCompleteResults(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(HAS_COMPLETE_RESULTS).param("id", id).query(Boolean.class).single());
     }
 
     public Page<MarksheetEntity> list(PageRequest page, SqlFragment filter) {
@@ -264,6 +307,16 @@ public class MarksheetRepository {
                 .param("expected", expected)
                 .param("now", now)
                 .param("actor", actor).update();
+    }
+
+    public int validateMarksheet(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_VALIDATE_MARKSHEET).param("id", id).param("expected", expected)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    public int publishMarksheet(UUID id, int expected, OffsetDateTime now, UUID actor, boolean visibleToGuardians) {
+        return jdbc.sql(TRANSITION_PUBLISH_MARKSHEET).param("id", id).param("expected", expected)
+                .param("now", now).param("actor", actor).param("visibleToGuardians", visibleToGuardians).update();
     }
 
     /** Rows of the caller's institutions only (api/README "Authorization"). */

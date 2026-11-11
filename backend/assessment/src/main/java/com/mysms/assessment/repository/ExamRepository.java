@@ -75,6 +75,7 @@ public class ExamRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String LIST_FOR_SESSION = SELECT_LIVE + " AND r.exam_session_id = :sessionId ORDER BY r.id";
     private static final String INSERT = """
             INSERT INTO assessment.exam
             (id, tenant_id, exam_session_id, subject_id, class_section_id, code, name, start_at, end_at, total_marks,
@@ -179,6 +180,21 @@ public class ExamRepository {
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
+    private static final String TRANSITION_MARK_HELD = """
+            UPDATE assessment.exam SET status = 'held', results_entered = false, updated_at = :now,
+                   updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String TRANSITION_RESULTS_UPDATED = """
+            UPDATE assessment.exam SET status = 'result_updated', results_entered = true, updated_at = :now,
+                   updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String REOPEN_RESULTS = """
+            UPDATE assessment.exam SET status = 'held', results_entered = false, updated_at = :now,
+                   updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.exam_session_id IN (SELECT p0.id FROM assessment.exam_session p0 WHERE p0.tenant_id =
                  :tenantId
@@ -194,6 +210,10 @@ public class ExamRepository {
 
     public Optional<ExamEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(ExamRepository::map).optional();
+    }
+
+    public List<ExamEntity> listForSession(UUID sessionId) {
+        return jdbc.sql(LIST_FOR_SESSION).param("sessionId", sessionId).query(ExamRepository::map).list();
     }
 
     public Page<ExamEntity> list(PageRequest page, SqlFragment filter) {
@@ -329,6 +349,21 @@ public class ExamRepository {
                 .param("expected", expected)
                 .param("now", now)
                 .param("actor", actor).update();
+    }
+
+    public int markExamHeld(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_MARK_HELD).param("id", id).param("expected", expected)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    public int markExamResultsUpdated(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_RESULTS_UPDATED).param("id", id).param("expected", expected)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    public int reopenResults(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(REOPEN_RESULTS).param("id", id).param("expected", expected)
+                .param("now", now).param("actor", actor).update();
     }
 
     /** Rows of the caller's institutions only (api/README "Authorization"). */

@@ -54,9 +54,9 @@ What each domain offers per client. "Capture" = create/edit; "view" = read + dri
 | Dashboard / today | ● own day | ● per child | ● teaching day | ● cohort day |
 | Timetable | view | view per child | view + session status | cohort schedule |
 | Attendance | view own + summary | view per child | **capture** + summaries | view (cohort engagement) |
-| Homework (K-12) | view + submit | view per child | **capture** + check | — |
-| Assignments & exams (official) | view + submit | view results | marks **capture** | — |
-| Results / marksheets | view published | view published | view class results | — |
+| Homework (K-12) | view + submit | view per child | **capture** + check | view + submit; teacher check |
+| Assignments & exams (official) | view + submit | view results | marks **capture** | view + submit; teacher marks |
+| Results / marksheets | view published | view published | view class results | view published |
 | Fees | view dues | view + **pay** (checkout) | — | — |
 | Learning: catalogue & enrol | browse, enrol | — | — | browse, enrol |
 | Learning: consume (lessons, quizzes, assignments, SCORM, e-books) | ● | — | — | ● **offline** |

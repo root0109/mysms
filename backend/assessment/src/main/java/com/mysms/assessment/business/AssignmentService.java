@@ -8,8 +8,11 @@ import com.mysms.assessment.api.model.AssignmentApprovalUpdate;
 import com.mysms.assessment.api.model.AssignmentSubject;
 import com.mysms.assessment.api.model.AssignmentSubjectUpdate;
 import com.mysms.assessment.api.model.AssignmentUpdate;
+import com.mysms.assessment.api.model.ApproveAssignmentRequest;
 import com.mysms.assessment.api.model.CancelAssignmentRequest;
+import com.mysms.assessment.api.model.FinishAssignmentRequest;
 import com.mysms.assessment.api.model.PublishAssignmentRequest;
+import com.mysms.assessment.api.model.RejectAssignmentRequest;
 import com.mysms.assessment.api.model.ResetAssignmentRequest;
 import com.mysms.assessment.config.AssessmentDatabaseConfig;
 import com.mysms.assessment.config.AssessmentEventsConfig;
@@ -48,6 +51,7 @@ import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
 import com.mysms.core.web.UpdateMask;
+import com.mysms.assessment.domain.AssignmentApprovalEntity;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -83,6 +87,9 @@ public class AssignmentService extends AppTransactionManager {
     static final String PERMISSION_PUBLISH_ASSIGNMENT = "assessment.assignment.publish_assignment";
     static final String PERMISSION_CANCEL_ASSIGNMENT = "assessment.assignment.cancel_assignment";
     static final String PERMISSION_RESET_ASSIGNMENT = "assessment.assignment.reset_assignment";
+    static final String PERMISSION_APPROVE_ASSIGNMENT = "assessment.assignment.approve_assignment";
+    static final String PERMISSION_REJECT_ASSIGNMENT = "assessment.assignment.reject_assignment";
+    static final String PERMISSION_FINISH_ASSIGNMENT = "assessment.assignment.finish_assignment";
     /** The contract's AssignmentUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("institutionId", "academicYearId", "title", "description", "assignmentTypeId", "classSectionId",
@@ -303,6 +310,131 @@ public class AssignmentService extends AppTransactionManager {
             return mapper.toDto(repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
         });
+    }
+
+    /**
+     * assessment.ApproveAssignment: approve the newest pending review and publish its draft in one transaction.
+     * The assignment's own scope and version protect both records; an absent pending review is a state conflict.
+     */
+    public Assignment approveAssignment(UUID id, ApproveAssignmentRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_APPROVE_ASSIGNMENT);
+        return doInWriteTransaction(() -> {
+            AssignmentEntity entity = repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            Optional<UUID> institution = institutionOf(entity);
+            if (!scope.canRead(institution)) {
+                throw new ResourceNotFoundException(AGGREGATE, id);
+            }
+            scope.requireWritable(institution);
+            OptionalInt expected = Etags.bodyVersion(request == null ? null : request.getEtag());
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!"draft".equals(entity.getStatus())) {
+                throw new InvalidStateException("The assignment cannot be approved in its current state.");
+            }
+            AssignmentApprovalEntity approval = assignmentApprovalRepository.findPendingForAssignment(id)
+                    .orElseThrow(() -> new InvalidStateException("The assignment has no pending approval."));
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            approval.setDecision("approved");
+            approval.setComments(request == null ? null : trimmed(request.getReason()));
+            approval.setDecidedByUserId(Actor.current().orElse(null));
+            approval.setDecidedAt(now);
+            approval.onUpdatingData(Actor.current(), clock);
+            if (assignmentApprovalRepository.update(approval, approval.getRowVersion()) == 0) {
+                throw new PreconditionFailedException("The pending approval changed meanwhile; read it again.");
+            }
+            if (repository.publishAssignment(id, entity.getRowVersion(), now, Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The assignment changed meanwhile; read it again.");
+            }
+            audit.recordTransition(ASSIGNMENT_APPROVAL_AGGREGATE, approval.getId(), "approve",
+                    List.of("decision", "comments", "decidedByUserId", "decidedAt"), request == null ? null
+                            : request.getReason());
+            audit.recordTransition(AGGREGATE, id, "approve", List.of("status"), request == null ? null
+                    : request.getReason());
+            outbox.publish(ASSIGNMENT_APPROVAL_AGGREGATE + ".approve", ASSIGNMENT_APPROVAL_AGGREGATE,
+                    approval.getId(), AssessmentEvents.payload(approval.getId()));
+            outbox.publish(AGGREGATE + ".approve", AGGREGATE, id, AssessmentEvents.payload(id));
+            return mapper.toDto(repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    /**
+     * assessment.RejectAssignment: reject the newest pending review while keeping the draft available to its author.
+     */
+    public Assignment rejectAssignment(UUID id, RejectAssignmentRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_REJECT_ASSIGNMENT);
+        return doInWriteTransaction(() -> {
+            AssignmentEntity entity = repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            Optional<UUID> institution = institutionOf(entity);
+            if (!scope.canRead(institution)) {
+                throw new ResourceNotFoundException(AGGREGATE, id);
+            }
+            scope.requireWritable(institution);
+            OptionalInt expected = Etags.bodyVersion(request == null ? null : request.getEtag());
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!"draft".equals(entity.getStatus())) {
+                throw new InvalidStateException("The assignment cannot be rejected in its current state.");
+            }
+            AssignmentApprovalEntity approval = assignmentApprovalRepository.findPendingForAssignment(id)
+                    .orElseThrow(() -> new InvalidStateException("The assignment has no pending approval."));
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            approval.setDecision("rejected");
+            approval.setComments(request == null ? null : trimmed(request.getReason()));
+            approval.setDecidedByUserId(Actor.current().orElse(null));
+            approval.setDecidedAt(now);
+            approval.onUpdatingData(Actor.current(), clock);
+            if (assignmentApprovalRepository.update(approval, approval.getRowVersion()) == 0) {
+                throw new PreconditionFailedException("The pending approval changed meanwhile; read it again.");
+            }
+            audit.recordTransition(ASSIGNMENT_APPROVAL_AGGREGATE, approval.getId(), "reject",
+                    List.of("decision", "comments", "decidedByUserId", "decidedAt"), request == null ? null
+                            : request.getReason());
+            outbox.publish(ASSIGNMENT_APPROVAL_AGGREGATE + ".reject", ASSIGNMENT_APPROVAL_AGGREGATE,
+                    approval.getId(), AssessmentEvents.payload(approval.getId()));
+            outbox.publish(AGGREGATE + ".reject", AGGREGATE, id, AssessmentEvents.payload(id));
+            return mapper.toDto(entity);
+        });
+    }
+
+    /** assessment.FinishAssignment: close a published or ongoing assignment to further submissions. */
+    public Assignment finishAssignment(UUID id, FinishAssignmentRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_FINISH_ASSIGNMENT);
+        return doInWriteTransaction(() -> {
+            AssignmentEntity entity = repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            Optional<UUID> institution = institutionOf(entity);
+            if (!scope.canRead(institution)) {
+                throw new ResourceNotFoundException(AGGREGATE, id);
+            }
+            scope.requireWritable(institution);
+            OptionalInt expected = Etags.bodyVersion(request == null ? null : request.getEtag());
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!Set.of("published", "ongoing").contains(entity.getStatus())) {
+                throw new InvalidStateException("The assignment cannot be finished in its current state.");
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            if (repository.finishAssignment(id, entity.getRowVersion(), now, Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, "finish", List.of("status"), null);
+            outbox.publish(AGGREGATE + ".finish", AGGREGATE, id, AssessmentEvents.payload(id));
+            return mapper.toDto(repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    private static String trimmed(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     /**

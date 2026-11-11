@@ -66,6 +66,7 @@ public class GradingBandRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String LIST_FOR_SCHEME = SELECT_LIVE + " AND r.grading_scheme_id = :schemeId ORDER BY r.min_percent, r.max_percent";
     private static final String INSERT = """
             INSERT INTO assessment.grading_band
             (id, tenant_id, grading_scheme_id, min_percent, max_percent, grade_label, grade_point, is_pass,
@@ -133,6 +134,10 @@ public class GradingBandRepository {
 
     public Optional<GradingBandEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(GradingBandRepository::map).optional();
+    }
+
+    public List<GradingBandEntity> listForScheme(UUID schemeId) {
+        return jdbc.sql(LIST_FOR_SCHEME).param("schemeId", schemeId).query(GradingBandRepository::map).list();
     }
 
     public Page<GradingBandEntity> list(PageRequest page, SqlFragment filter) {

@@ -31,7 +31,8 @@ class OperationStatusReportTest {
         }
 
         assertThat(expected).contains("| **all** | **2049** |");
-        assertThat(Files.readString(report, StandardCharsets.UTF_8))
+        String actual = Files.readString(report, StandardCharsets.UTF_8).replace("\r\n", "\n");
+        assertThat(actual)
                 .as("%s is stale: run mvn -pl conformance test -Dmysms.write-reports=true", OperationStatusReport.LOCATION)
                 .isEqualTo(expected);
     }

@@ -7,7 +7,6 @@ import com.mysms.core.paging.PagingInfo;
 import com.mysms.assessment.business.MarksheetLineService;
 import com.mysms.assessment.api.MarksheetLineApi;
 import com.mysms.assessment.api.model.MarksheetLine;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -17,8 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
  * REST edge of the MarksheetLine operations: implements the generated contract interface, so paths, parameters and
  * payloads
  * cannot drift from api/openapi/assessment.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * The controller stays thin: delegate business rules to the service and shape contract responses here.
  */
 @RestController
 public class MarksheetLineController implements MarksheetLineApi {
@@ -38,7 +36,8 @@ public class MarksheetLineController implements MarksheetLineApi {
     @Override
     public ResponseEntity<PagingInfo<ResultCard>> getStudentResults(UUID studentId, UUID academicYearId,
             UUID examSessionId, Integer page, Integer size, String cursor) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(PagingUtil.pagingInfo(marksheetLineService.getStudentResults(studentId,
+                academicYearId, examSessionId, page, size, cursor)));
     }
 
     @Override

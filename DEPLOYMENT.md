@@ -138,7 +138,8 @@ Everything comes from the environment; no secret is in the repository.
 | `MYSMS_IAM_PREVIOUS_PUBLIC_KEY` | no | the retiring public key during rotation |
 | `MYSMS_IAM_ACCESS_TOKEN_TTL`, `MYSMS_IAM_REFRESH_TOKEN_TTL` | no | ISO-8601 durations, default `PT15M` and `P30D` |
 | `MYSMS_PEOPLE_URL` | no | base URL of the people service (for the monolith: its own URL) so `GetMe` includes the person record |
-| `MYSMS_TIMETABLE_URL`, `MYSMS_SIS_URL`, `MYSMS_ORG_URL` | no | read by attendance: base URLs of the timetable, sis and org services (for the monolith: its own URL, three times). Without all three, `attendance.TakeAttendanceForSession` and a mark for a student a sheet has no record of yet answer 503; everything else in attendance works |
+| `MYSMS_TIMETABLE_URL`, `MYSMS_SIS_URL`, `MYSMS_ORG_URL` | no | read by attendance: base URLs of the timetable, sis and org services (for the monolith: its own URL, three times). Without all three, `attendance.TakeAttendanceForSession` and a mark for a student a sheet has no record of yet answer 503; everything else in attendance works. Assessment also reads SIS for exam rosters and student/guardian result access |
+| `MYSMS_FACILITY_URL`, `MYSMS_ACADEMICS_URL` | no | read by assessment: Facility supplies exam room capacities; Academics supplies course-plan credits for higher-education exam results. The operation that needs an unset service answers 503 |
 | `MYSMS_IAM_BOOTSTRAP_TENANT_CODE`, `MYSMS_IAM_BOOTSTRAP_ADMIN_USERNAME`, `MYSMS_IAM_BOOTSTRAP_ADMIN_PASSWORD` | first start only | see §5.3 |
 
 ### 4.3 Web apps (build time)
@@ -183,6 +184,7 @@ export MYSMS_IAM_SIGNING_KEY="$(cat /run/secrets/iam-signing.pem)"
 export MYSMS_SECRETS_KEYS="$(cat /run/secrets/mysms-secrets-keys)"
 export MYSMS_PEOPLE_URL=http://localhost:8080
 export MYSMS_TIMETABLE_URL=http://localhost:8080 MYSMS_SIS_URL=http://localhost:8080 MYSMS_ORG_URL=http://localhost:8080
+export MYSMS_FACILITY_URL=http://localhost:8080 MYSMS_ACADEMICS_URL=http://localhost:8080
 export MYSMS_DB_RELAY_USER=mysms_relay MYSMS_DB_RELAY_PASSWORD=<relay-password>
 export MYSMS_RABBITMQ_URI="$(cat /run/secrets/mysms-rabbitmq-uri)"   # or MYSMS_EVENTS_BUS=in-process for one process
 java -jar backend/app/target/app-0.1.0-SNAPSHOT-exec.jar

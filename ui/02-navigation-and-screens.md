@@ -232,19 +232,19 @@ Columns: **ID** · Screen · Web route under `/app` (also the deep link) · Clie
 
 | ID | Screen | Route | Clients | Personas | Key operations | Notes |
 |---|---|---|---|---|---|---|
-| ASM-01 | Homework board | `/assessment/homeworks` | W T S P | teacher, student, parent | `assessment.ListHomeworks`, CRUD, `assessment.PublishHomework` | T: mine; S/P: by section |
-| ASM-02 | Homework approval | `/assessment/homeworks?status=pending` | W | head | `assessment.ApproveHomework`, `assessment.RejectHomework` | Queue |
-| ASM-03 | Homework check | `/assessment/homeworks/{homeworkId}` | W T | teacher | `assessment.ListHomeworkSubmissions`, `assessment.CheckHomeworkSubmission`, `assessment.ReplyToHomeworkFeedback` | Per-student checklist |
-| ASM-04 | Homework submit | (S detail) | S | student | `assessment.CreateHomeworkSubmission` + uploads | |
-| ASM-05 | Assignments (official) | `/assessment/assignments` | W T | teacher | CRUD, `assessment.PublishAssignment`, `assessment.ApproveAssignment`, `assessment.RejectAssignment`, `assessment.FinishAssignment`, `assessment.CancelAssignment`, `assessment.ResetAssignment` | Allocation to students |
-| ASM-06 | Assignment grading | `/assessment/assignments/{assignmentId}` | W T | teacher | `assessment.ListAssignmentSubmissions`, `assessment.GradeAssignmentSubmission`, `assessment.AcceptAssignmentSubmission`, `assessment.RejectAssignmentSubmission`, `assessment.RequestSubmissionChanges` | |
-| ASM-07 | Assignment submit | (S detail) | S W | student | `assessment.SubmitAssignmentSubmission`, `assessment.ResetAssignmentSubmission` | |
-| ASM-08 | Exam sessions | `/assessment/exam-sessions` | W | exam cell | CRUD, `assessment.ScheduleExamSession`, `assessment.MarkExamSessionHeld`, `assessment.CompleteExamSession`, `assessment.CancelExamSession`, `assessment.ResetExamSession` | |
-| ASM-09 | Exams (papers) | `/assessment/exams` | W | exam cell | CRUD, `assessment.ScheduleExam`, `assessment.MarkExamHeld`, `assessment.CompleteExam`, `assessment.CancelExam`, `assessment.ResetExam`, `assessment.PopulateExamResults`, `assessment.AllocateExamRooms` | Invigilators, rooms |
-| ASM-10 | **Marks entry** | `/assessment/exams/{examId}/marks` | W T | teacher | `assessment.RecordExamMarks`, `assessment.MarkExamResultsUpdated` | Grid; per-row errors in the batch result (P1-31 shape) |
-| ASM-11 | Result templates & marksheets | `/assessment/marksheets` | W | exam cell | `assessment.GenerateResults`, `assessment.ValidateMarksheet`, `assessment.CancelMarksheet`, `assessment.ResetMarksheet`, marksheet lists | Validation = publish gate |
-| ASM-12 | Results (student/parent) | `/assessment/results/{studentId}` | W S P | student, parent | marksheet/result lists | Published only |
-| ASM-13 | Grading schemes | `/assessment/grading-schemes` | W | admin | CRUD + bands | |
+| ASM-01 | Homework board | `/assessment/homeworks` | W T S P B | teacher, student, parent | `assessment.ListHomeworks`, CRUD, `assessment.PublishHomework` | T: mine; S/P: by section |
+| ASM-02 | Homework approval | `/assessment/homeworks?status=pending` | W B | head | `assessment.ApproveHomework`, `assessment.RejectHomework` | Queue |
+| ASM-03 | Homework check | `/assessment/homeworks/{homeworkId}` | W T B | teacher | `assessment.ListHomeworkSubmissions`, `assessment.CheckHomeworkSubmission`, `assessment.ReplyToHomeworkFeedback` | Per-student checklist |
+| ASM-04 | Homework submit | (S detail) | W S B | student | `assessment.CreateHomeworkSubmission` + uploads | |
+| ASM-05 | Assignments (official) | `/assessment/assignments` | W T B | teacher | CRUD, `assessment.PublishAssignment`, `assessment.ApproveAssignment`, `assessment.RejectAssignment`, `assessment.FinishAssignment`, `assessment.CancelAssignment`, `assessment.ResetAssignment` | Allocation to students |
+| ASM-06 | Assignment grading | `/assessment/assignments/{assignmentId}` | W T B | teacher | `assessment.ListAssignmentSubmissions`, `assessment.GradeAssignmentSubmission`, `assessment.AcceptAssignmentSubmission`, `assessment.RejectAssignmentSubmission`, `assessment.RequestSubmissionChanges` | |
+| ASM-07 | Assignment submit | (S detail) | W S B | student | `assessment.SubmitAssignmentSubmission`, `assessment.ResetAssignmentSubmission` | |
+| ASM-08 | Exam sessions | `/assessment/exam-sessions` | W B | exam cell | CRUD, `assessment.ScheduleExamSession`, `assessment.MarkExamSessionHeld`, `assessment.CompleteExamSession`, `assessment.CancelExamSession`, `assessment.ResetExamSession` | |
+| ASM-09 | Exams (papers) | `/assessment/exams` | W B | exam cell | CRUD, `assessment.ScheduleExam`, `assessment.MarkExamHeld`, `assessment.CompleteExam`, `assessment.CancelExam`, `assessment.ResetExam`, `assessment.PopulateExamResults`, `assessment.AllocateExamRooms` | Invigilators, rooms |
+| ASM-10 | **Marks entry** | `/assessment/exams/{examId}/marks` | W T B | teacher | `assessment.RecordExamMarks`, `assessment.MarkExamResultsUpdated` | Grid; per-row errors in the batch result (P1-31 shape) |
+| ASM-11 | Result templates & marksheets | `/assessment/marksheets` | W B | exam cell | `assessment.GenerateResults`, `assessment.ValidateMarksheet`, `assessment.CancelMarksheet`, `assessment.ResetMarksheet`, marksheet lists | Validation = publish gate |
+| ASM-12 | Results (student/parent) | `/assessment/results/{studentId}` | W S P B | student, parent | marksheet/result lists | Published only |
+| ASM-13 | Grading schemes | `/assessment/grading-schemes` | W B | admin | CRUD + bands | |
 
 ### 3.9 Finance (fees, invoices, payments)
 

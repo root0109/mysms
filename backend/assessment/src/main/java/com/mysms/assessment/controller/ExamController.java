@@ -18,7 +18,6 @@ import com.mysms.assessment.api.model.MarkExamResultsUpdatedRequest;
 import com.mysms.assessment.api.model.RecordExamMarksRequest;
 import com.mysms.assessment.api.model.ResetExamRequest;
 import com.mysms.assessment.api.model.ScheduleExamRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -28,8 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * REST edge of the Exam operations: implements the generated contract interface, so paths, parameters and payloads
  * cannot drift from api/openapi/assessment.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * The controller stays thin: delegate business rules to the service and shape contract responses here.
  */
 @RestController
 public class ExamController implements ExamApi {
@@ -43,7 +41,7 @@ public class ExamController implements ExamApi {
     @Override
     public ResponseEntity<ExamResultList> allocateExamRooms(UUID examId,
             AllocateExamRoomsRequest allocateExamRoomsRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(examService.allocateExamRooms(examId, allocateExamRoomsRequest));
     }
 
     @Override
@@ -130,25 +128,27 @@ public class ExamController implements ExamApi {
     @Override
     public ResponseEntity<Exam> markExamHeld(UUID examId, MarkExamHeldRequest markExamHeldRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Exam changed = examService.markExamHeld(examId, markExamHeldRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<Exam> markExamResultsUpdated(UUID examId,
             MarkExamResultsUpdatedRequest markExamResultsUpdatedRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Exam changed = examService.markExamResultsUpdated(examId, markExamResultsUpdatedRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<ExamResultList> populateExamResults(UUID examId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(examService.populateExamResults(examId));
     }
 
     @Override
     public ResponseEntity<ExamResultList> recordExamMarks(UUID examId,
             RecordExamMarksRequest recordExamMarksRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(examService.recordExamMarks(examId, recordExamMarksRequest));
     }
 
     @Override

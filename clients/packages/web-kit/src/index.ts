@@ -23,6 +23,13 @@ export { MyTimetableScreen } from './screens/timetable/MyTimetableScreen';
 export { StaffLeaveScreen } from './screens/leave/StaffLeaveScreen';
 export { StudentAttendanceScreen } from './screens/attendance/StudentAttendanceScreen';
 export { HomeworkCheckScreen } from './screens/homework/HomeworkCheckScreen';
+export { AssignmentDetailScreen } from './screens/assessment/SubmissionScreens';
+export {
+  ExamMarksScreen,
+  MarksheetsScreen,
+  StudentResultsScreen,
+} from './screens/assessment/AssessmentScreens';
+export { GradingSchemesScreen } from './screens/assessment/GradingSchemesScreen';
 export { UnsavedChangesGuard } from './routing/UnsavedChangesGuard';
 export { RecordsScreen } from './screens/RecordsScreen';
 export { ResourceScreen } from './screens/ResourceScreen';

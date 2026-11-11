@@ -10,7 +10,10 @@ import com.mysms.authclient.DataScope;
 import com.mysms.assessment.api.model.AcceptAssignmentSubmissionRequest;
 import com.mysms.assessment.api.model.AssignmentSubmission;
 import com.mysms.assessment.api.model.AssignmentSubmissionUpdate;
+import com.mysms.assessment.api.model.GradeAssignmentSubmissionRequest;
 import com.mysms.assessment.api.model.RejectAssignmentSubmissionRequest;
+import com.mysms.assessment.api.model.RequestSubmissionChangesRequest;
+import com.mysms.assessment.api.model.ResetAssignmentSubmissionRequest;
 import com.mysms.assessment.api.model.SubmitAssignmentSubmissionRequest;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
@@ -34,6 +37,7 @@ import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
 import com.mysms.core.web.UpdateMask;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
@@ -69,6 +73,9 @@ public class AssignmentSubmissionService extends AppTransactionManager {
             "assessment.assignment_submission.accept_assignment_submission";
     static final String PERMISSION_REJECT_ASSIGNMENT_SUBMISSION =
             "assessment.assignment_submission.reject_assignment_submission";
+    static final String PERMISSION_REQUEST_CHANGES = "assessment.assignment_submission.request_submission_changes";
+    static final String PERMISSION_RESET_SUBMISSION = "assessment.assignment_submission.reset_assignment_submission";
+    static final String PERMISSION_GRADE_SUBMISSION = "assessment.assignment_submission.grade_assignment_submission";
     /** The contract's AssignmentSubmissionUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("assignmentId", "studentId", "content", "submittedAt", "marksObtained", "gradedByUserId",
@@ -299,6 +306,93 @@ public class AssignmentSubmissionService extends AppTransactionManager {
             return mapper.toDto(repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
         });
+    }
+
+    /** Request corrections from a submitted student work item; the reason is retained in feedback. */
+    public AssignmentSubmission requestSubmissionChanges(UUID id, RequestSubmissionChangesRequest request) {
+        return transition(id, PERMISSION_REQUEST_CHANGES, request == null ? null : request.getEtag(),
+                Set.of("submitted"), "requestChanges", List.of("status", "feedback"),
+                request == null ? null : trimmed(request.getReason()),
+                (row, now, actor) -> repository.requestChanges(id, row.getRowVersion(),
+                        request == null ? null : trimmed(request.getReason()), now, actor));
+    }
+
+    /** Reset a returned/rejected submission to editable draft while preserving its last submission time and content. */
+    public AssignmentSubmission resetAssignmentSubmission(UUID id, ResetAssignmentSubmissionRequest request) {
+        return transition(id, PERMISSION_RESET_SUBMISSION, request == null ? null : request.getEtag(),
+                Set.of("rejected", "change_requested"), "resetToDraft",
+                List.of("status", "marksObtained", "gradedByUserId", "gradedOn"), null,
+                (row, now, actor) -> repository.resetToDraft(id, row.getRowVersion(), now, actor));
+    }
+
+    /** Record marks and grading metadata for a submitted or accepted item. */
+    public AssignmentSubmission gradeAssignmentSubmission(UUID id, GradeAssignmentSubmissionRequest request) {
+        if (request == null || request.getMarks() == null) {
+            throw new ValidationFailedException(List.of(new FieldError("marks", "must not be null", "NotNull")));
+        }
+        java.math.BigDecimal marks = WireValues.decimal(request.getMarks());
+        List<FieldError> errors = new ArrayList<>();
+        WireValues.checkDecimal("marks", request.getMarks(), 8, 2, errors);
+        if (marks == null || marks.signum() < 0) {
+            errors.add(new FieldError("marks", "must be greater than or equal to 0", "PositiveOrZero"));
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
+        }
+        return transition(id, PERMISSION_GRADE_SUBMISSION, request.getEtag(), Set.of("submitted", "accepted"),
+                "grade", List.of("status", "marksObtained", "gradedByUserId", "gradedOn", "feedback"), null,
+                (row, now, actor) -> {
+                    java.math.BigDecimal maximum = repository.assignmentMaxMarks(row.getAssignmentId())
+                            .orElseThrow(() -> new ResourceNotFoundException("assessment.assignment",
+                                    row.getAssignmentId()));
+                    if (marks.compareTo(maximum) > 0) {
+                        throw new ValidationFailedException(List.of(new FieldError("marks",
+                                "must not exceed the assignment maximum marks", "MAX")));
+                    }
+                    return repository.grade(id, row.getRowVersion(), marks, actor,
+                            LocalDate.now(clock), trimmed(request.getFeedback()), now, actor);
+                });
+    }
+
+    private AssignmentSubmission transition(UUID id, String permission, String etag, Set<String> allowedStatuses,
+            String action, List<String> changedFields, String reason,
+            SubmissionTransition transition) {
+        DataScope scope = DataScope.current(permission);
+        return doInWriteTransaction(() -> {
+            AssignmentSubmissionEntity entity = repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            Optional<UUID> institution = institutionOf(entity);
+            if (!scope.canRead(institution)) {
+                throw new ResourceNotFoundException(AGGREGATE, id);
+            }
+            scope.requireWritable(institution);
+            OptionalInt expected = Etags.bodyVersion(etag);
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!allowedStatuses.contains(entity.getStatus())) {
+                throw new InvalidStateException("The assignment submission cannot be changed this way in its current state.");
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            UUID actor = Actor.current().orElse(null);
+            if (transition.apply(entity, now, actor) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, action, changedFields, reason);
+            outbox.publish(AGGREGATE + "." + action, AGGREGATE, id, AssessmentEvents.payload(id));
+            return mapper.toDto(repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    private static String trimmed(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    @FunctionalInterface
+    private interface SubmissionTransition {
+        int apply(AssignmentSubmissionEntity row, OffsetDateTime now, UUID actor);
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */

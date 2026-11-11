@@ -4,13 +4,13 @@ import java.util.List;
 import com.mysms.core.paging.PagingUtil;
 import com.mysms.core.paging.PagingInfo;
 import com.mysms.assessment.business.ResultTemplateService;
+import com.mysms.assessment.business.ResultsGenerationService;
 import com.mysms.assessment.api.ResultTemplateApi;
 import com.mysms.assessment.api.model.Operation;
 import com.mysms.assessment.api.model.ResultTemplate;
 import com.mysms.assessment.api.model.ResultTemplateBand;
 import com.mysms.assessment.api.model.ResultTemplateBandUpdate;
 import com.mysms.assessment.api.model.ResultTemplateUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -21,16 +21,18 @@ import org.springframework.web.bind.annotation.RestController;
  * REST edge of the ResultTemplate operations: implements the generated contract interface, so paths, parameters and
  * payloads
  * cannot drift from api/openapi/assessment.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * The controller stays thin: delegate business rules to the service and shape contract responses here.
  */
 @RestController
 public class ResultTemplateController implements ResultTemplateApi {
 
     private final ResultTemplateService resultTemplateService;
+    private final ResultsGenerationService resultsGenerationService;
 
-    public ResultTemplateController(ResultTemplateService resultTemplateService) {
+    public ResultTemplateController(ResultTemplateService resultTemplateService,
+            ResultsGenerationService resultsGenerationService) {
         this.resultTemplateService = resultTemplateService;
+        this.resultsGenerationService = resultsGenerationService;
     }
 
     @Override
@@ -75,7 +77,7 @@ public class ResultTemplateController implements ResultTemplateApi {
     @Override
     public ResponseEntity<Operation> generateResults(UUID resultTemplateId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.accepted().body(resultsGenerationService.generateResults(resultTemplateId));
     }
 
     @Override

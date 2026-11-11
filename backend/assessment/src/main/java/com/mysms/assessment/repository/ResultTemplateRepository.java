@@ -98,6 +98,12 @@ public class ResultTemplateRepository {
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
+    private static final String MARK_GENERATED = """
+            UPDATE assessment.result_template SET status = 'result_generated', updated_at = :now,
+                   updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND status = 'draft'
+               AND deleted_at IS NULL
+            """;
     private static final String EXISTS_EXAM_SESSION_ID = """
             SELECT EXISTS (SELECT 1 FROM assessment.exam_session WHERE tenant_id = :tenantId
                 AND id = :id AND deleted_at IS NULL)
@@ -173,6 +179,11 @@ public class ResultTemplateRepository {
                 .param("updatedBy", e.getUpdatedBy())
                 .param("expected", expectedVersion)
                 .update();
+    }
+
+    public int markGenerated(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(MARK_GENERATED).param("id", id).param("expected", expected).param("now", now)
+                .param("actor", actor).update();
     }
 
     public int softDelete(ResultTemplateEntity e, int expectedVersion) {

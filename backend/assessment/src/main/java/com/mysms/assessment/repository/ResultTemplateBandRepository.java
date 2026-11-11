@@ -60,6 +60,7 @@ public class ResultTemplateBandRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String BAND_IDS_FOR_TEMPLATE = SELECT_LIVE + " AND r.result_template_id = :templateId ORDER BY r.id";
     private static final String INSERT = """
             INSERT INTO assessment.result_template_band
             (id, tenant_id, result_template_id, grading_band_id, created_at, created_by, updated_at, updated_by,
@@ -123,6 +124,11 @@ public class ResultTemplateBandRepository {
 
     public Optional<ResultTemplateBandEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(ResultTemplateBandRepository::map).optional();
+    }
+
+    public List<ResultTemplateBandEntity> findBandsForTemplate(UUID templateId) {
+        return jdbc.sql(BAND_IDS_FOR_TEMPLATE).param("templateId", templateId)
+                .query(ResultTemplateBandRepository::map).list();
     }
 
     public Page<ResultTemplateBandEntity> list(PageRequest page, SqlFragment filter) {

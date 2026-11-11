@@ -765,6 +765,25 @@
   },
   {
    "module": "assessment",
+   "resource": "GradingScheme",
+   "parent": null,
+   "scope": "direct",
+   "operations": {
+    "Create": "assessment.CreateGradingScheme",
+    "Delete": "assessment.DeleteGradingScheme",
+    "Get": "assessment.GetGradingScheme",
+    "List": "assessment.ListGradingSchemes",
+    "Update": "assessment.UpdateGradingScheme"
+   },
+   "partition": null,
+   "booleanDefaults": {
+    "isActive": true,
+    "isTemplate": false
+   },
+   "transitions": []
+  },
+  {
+   "module": "assessment",
    "resource": "Homework",
    "parent": null,
    "scope": "direct",

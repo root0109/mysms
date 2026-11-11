@@ -174,6 +174,16 @@ public class AssignmentRepository {
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
+    /** assessment.FinishAssignment: close a published assignment after its submission window. */
+    private static final String TRANSITION_FINISH_ASSIGNMENT = """
+            UPDATE assessment.assignment
+               SET status = 'completed',
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
             """;
@@ -307,6 +317,15 @@ public class AssignmentRepository {
     /** assessment.ResetAssignment; 0 rows means the row changed (or vanished) since it was read. */
     public int resetAssignment(UUID id, int expected, OffsetDateTime now, UUID actor) {
         return jdbc.sql(TRANSITION_RESET_ASSIGNMENT)
+                .param("id", id)
+                .param("expected", expected)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** assessment.FinishAssignment; caller enforces the allowed source states. */
+    public int finishAssignment(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_FINISH_ASSIGNMENT)
                 .param("id", id)
                 .param("expected", expected)
                 .param("now", now)

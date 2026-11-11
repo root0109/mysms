@@ -24,7 +24,15 @@ export interface ResourceScreenDef {
   /** The permission that puts the screen in the navigation, when listing the record type is not enough. */
   navPermission?: PermissionCode;
   /** Something each row can start besides its editor; the tools are named in `ResourceScreen`. */
-  tool?: 'takeAttendance';
+  tool?:
+    | 'takeAttendance'
+    | 'homeworkBoard'
+    | 'homeworkApproval'
+    | 'assignment'
+    | 'examSession'
+    | 'exam'
+    | 'marksheet'
+    | 'generateResults';
 }
 
 export const NAV_GROUPS: readonly NavGroupId[] = [
@@ -62,7 +70,13 @@ export const RESOURCE_SCREENS: readonly ResourceScreenDef[] = [
   { id: 'ATT-01', resource: 'attendance.AttendanceRegister', group: 'academics' },
   { id: 'ATT-02', resource: 'attendance.AttendanceSheet', group: 'academics', detail: 'ATT-03' },
   { id: 'ATT-06', resource: 'attendance.StaffAttendance', group: 'people' },
-  { id: 'ASM-01', resource: 'assessment.Homework', group: 'assessment', detail: 'ASM-03' },
+  {
+    id: 'ASM-01',
+    resource: 'assessment.Homework',
+    group: 'assessment',
+    detail: 'ASM-03',
+    tool: 'homeworkBoard',
+  },
   // the same list opened on the homework that waits for review (its route carries ?status=pending)
   {
     id: 'ASM-02',
@@ -70,11 +84,19 @@ export const RESOURCE_SCREENS: readonly ResourceScreenDef[] = [
     group: 'assessment',
     detail: 'ASM-03',
     navPermission: 'assessment.homework.approve_homework',
+    filter: 'status',
+    tool: 'homeworkApproval',
   },
-  { id: 'ASM-05', resource: 'assessment.Assignment', group: 'assessment' },
-  { id: 'ASM-08', resource: 'assessment.ExamSession', group: 'assessment' },
-  { id: 'ASM-09', resource: 'assessment.Exam', group: 'assessment' },
-  { id: 'ASM-11', resource: 'assessment.Marksheet', group: 'assessment' },
+  {
+    id: 'ASM-05',
+    resource: 'assessment.Assignment',
+    group: 'assessment',
+    detail: 'ASM-06',
+    tool: 'assignment',
+  },
+  { id: 'ASM-08', resource: 'assessment.ExamSession', group: 'assessment', tool: 'examSession' },
+  { id: 'ASM-09', resource: 'assessment.Exam', group: 'assessment', detail: 'ASM-10', tool: 'exam' },
+  { id: 'ASM-11', resource: 'assessment.Marksheet', group: 'assessment', tool: 'marksheet' },
   { id: 'LMS-43', resource: 'lms.Question', group: 'learning' },
   { id: 'LMS-27', resource: 'lms.LiveClass', group: 'learning' },
   { id: 'LMS-26', resource: 'lms.Forum', group: 'learning' },

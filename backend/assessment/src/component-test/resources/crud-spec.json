@@ -635,6 +635,34 @@
    "duplicateConflicts": true
   },
   {
+   "name": "GradingScheme",
+   "table": "assessment.grading_scheme",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/assessment/grading-schemes",
+   "item": "/v1/assessment/grading-schemes/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-96f72e83",
+    "schemeType": "scholastic",
+    "gradingMethod": "percentage_band",
+    "criteria": {
+     "indicators": ["effort", "conduct"]
+    }
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "duplicateConflicts": true
+  },
+  {
    "name": "Homework",
    "table": "assessment.homework",
    "ops": [

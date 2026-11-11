@@ -11,6 +11,8 @@ import com.mysms.assessment.api.model.CancelMarksheetRequest;
 import com.mysms.assessment.api.model.Marksheet;
 import com.mysms.assessment.api.model.MarksheetUpdate;
 import com.mysms.assessment.api.model.ResetMarksheetRequest;
+import com.mysms.assessment.api.model.ValidateMarksheetRequest;
+import com.mysms.assessment.api.model.PublishMarksheetRequest;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.AppTransactionManager;
@@ -61,6 +63,8 @@ public class MarksheetService extends AppTransactionManager {
     static final String PERMISSION_DELETE = "assessment.marksheet.delete";
     static final String PERMISSION_CANCEL_MARKSHEET = "assessment.marksheet.cancel_marksheet";
     static final String PERMISSION_RESET_MARKSHEET = "assessment.marksheet.reset_marksheet";
+    static final String PERMISSION_VALIDATE_MARKSHEET = "assessment.marksheet.validate_marksheet";
+    static final String PERMISSION_PUBLISH_MARKSHEET = "assessment.marksheet.publish";
     /** The contract's MarksheetUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("visibleToGuardians", "examSessionId", "resultTemplateId", "name", "generatedOn",
@@ -215,8 +219,9 @@ public class MarksheetService extends AppTransactionManager {
             if (repository.cancelMarksheet(id, entity.getRowVersion(), now, Actor.current().orElse(null)) == 0) {
                 throw new PreconditionFailedException("The row changed since it was read.");
             }
-            audit.recordTransition(AGGREGATE, id, "cancel", List.of("status"), request == null ? null
-                    : request.getReason());
+            audit.recordTransition(AGGREGATE, id, "cancel",
+                    List.of("status", "publishedAt", "publishedByUserId", "visibleToGuardians"),
+                    request == null ? null : request.getReason());
             outbox.publish(AGGREGATE + ".cancel", AGGREGATE, id, AssessmentEvents.payload(id));
             return mapper.toDto(repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
@@ -249,8 +254,66 @@ public class MarksheetService extends AppTransactionManager {
             if (repository.resetMarksheet(id, entity.getRowVersion(), now, Actor.current().orElse(null)) == 0) {
                 throw new PreconditionFailedException("The row changed since it was read.");
             }
-            audit.recordTransition(AGGREGATE, id, "reset", List.of("status"), null);
+            audit.recordTransition(AGGREGATE, id, "reset",
+                    List.of("status", "publishedAt", "publishedByUserId", "visibleToGuardians"), null);
             outbox.publish(AGGREGATE + ".reset", AGGREGATE, id, AssessmentEvents.payload(id));
+            return mapper.toDto(repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    /** Validate generated rows only after every official result for the session is linked and finalized. */
+    public Marksheet validateMarksheet(UUID id, ValidateMarksheetRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_VALIDATE_MARKSHEET);
+        return doInWriteTransaction(() -> {
+            MarksheetEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            OptionalInt expected = Etags.bodyVersion(request == null ? null : request.getEtag());
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!"draft".equals(entity.getStatus())) {
+                throw new InvalidStateException("Only a draft marksheet can be validated.");
+            }
+            if (!repository.hasCompleteResults(id)) {
+                throw new InvalidStateException("The marksheet has missing or unfinished exam results.");
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            UUID actor = Actor.current().orElse(null);
+            if (repository.validateMarksheet(id, entity.getRowVersion(), now, actor) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, "validate", List.of("status"), null);
+            outbox.publish(AGGREGATE + ".validated", AGGREGATE, id, AssessmentEvents.payload(id));
+            return mapper.toDto(repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    /** Publish a validated marksheet once; students see it and guardians when explicitly enabled. */
+    public Marksheet publishMarksheet(UUID id, String ifMatch, PublishMarksheetRequest request) {
+        int expected = Etags.expectedVersion(ifMatch);
+        DataScope scope = DataScope.current(PERMISSION_PUBLISH_MARKSHEET);
+        return doInWriteTransaction(() -> {
+            MarksheetEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            if (entity.getRowVersion() != expected) {
+                throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            if (!"validated".equals(entity.getStatus()) || entity.getPublishedAt() != null) {
+                throw new InvalidStateException("Only an unpublished validated marksheet can be published.");
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            UUID actor = Actor.current().orElse(null);
+            boolean visibleToGuardians = request != null && Boolean.TRUE.equals(request.getVisibleToGuardians());
+            if (repository.publishMarksheet(id, expected, now, actor, visibleToGuardians) == 0) {
+                throw new PreconditionFailedException("The marksheet changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, "publish", List.of("publishedAt", "publishedByUserId",
+                    "visibleToGuardians"), null);
+            outbox.publish(AGGREGATE + ".published", AGGREGATE, id, AssessmentEvents.payload(id));
             return mapper.toDto(repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
         });

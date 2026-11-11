@@ -63,6 +63,8 @@ public class AssignmentApprovalRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String FIND_PENDING_FOR_ASSIGNMENT = SELECT_LIVE + " AND r.assignment_id = :assignmentId"
+            + " AND r.decision = 'pending' ORDER BY r.created_at DESC, r.id LIMIT 1";
     private static final String INSERT = """
             INSERT INTO assessment.assignment_approval
             (id, tenant_id, assignment_id, decision, comments, decided_by_user_id, decided_at, created_at,
@@ -114,6 +116,12 @@ public class AssignmentApprovalRepository {
 
     public Optional<AssignmentApprovalEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(AssignmentApprovalRepository::map).optional();
+    }
+
+    /** The newest live approval awaiting a decision for this already-visible assignment. */
+    public Optional<AssignmentApprovalEntity> findPendingForAssignment(UUID assignmentId) {
+        return jdbc.sql(FIND_PENDING_FOR_ASSIGNMENT).param("assignmentId", assignmentId)
+                .query(AssignmentApprovalRepository::map).optional();
     }
 
     public Page<AssignmentApprovalEntity> list(PageRequest page, SqlFragment filter) {

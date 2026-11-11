@@ -27,6 +27,7 @@ import {
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { UUID } from '../ids';
+import { HomeworkSubmissionPanel } from '../assessment/SubmissionScreens';
 
 /** The workflow's limit on comments and reasons (api/state-machines.md "Homework"). */
 const MAX_TEXT = 4000;
@@ -58,6 +59,8 @@ export function HomeworkCheckScreen() {
   const { t } = useI18n();
   const { homeworkId: param = '' } = useParams();
   const mayRead = useCan('assessment.homework.read');
+  const mayStudentSubmit = useCan('assessment.homework_submission.create');
+  const mayCheck = useCan('assessment.homework_submission.check_homework_submission');
   const homeworkId = mayRead && UUID.test(param) ? param : null;
   const homework = useHomework(homeworkId);
   const title = t('screen.ASM03.title');
@@ -88,6 +91,8 @@ export function HomeworkCheckScreen() {
         {t('common.error.generic')}
       </Banner>
     );
+  if (mayStudentSubmit && !mayCheck)
+    return <HomeworkSubmissionPanel homeworkId={homeworkId} homework={homework.data.data} />;
   return <HomeworkDetail homeworkId={homeworkId} homework={homework.data.data} etag={homework.data.etag} />;
 }
 

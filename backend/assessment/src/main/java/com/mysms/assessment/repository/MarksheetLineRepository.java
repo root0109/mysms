@@ -72,6 +72,46 @@ public class MarksheetLineRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String INSERT_GENERATED = """
+            INSERT INTO assessment.marksheet_line
+                (id, tenant_id, marksheet_id, student_id, total_marks, percentage, grade_label, result_status,
+                 generated_on, credits_attempted, credits_earned, grade_points, sgpa, cgpa,
+                 created_at, created_by, updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :marksheetId, :studentId, :totalMarks, :percentage, :gradeLabel, :resultStatus,
+                    :generatedOn, :creditsAttempted, :creditsEarned, :gradePoints, :sgpa, :cgpa,
+                    :createdAt, :createdBy, :updatedAt, :updatedBy, :rowVersion)
+            RETURNING id, tenant_id, credits_attempted, credits_earned, grade_points, sgpa, cgpa, marksheet_id,
+                      student_id, total_marks, percentage, grade_label, result_status, generated_on, created_at,
+                      created_by, updated_at, updated_by, deleted_at, row_version
+            """;
+    private static final String STUDENT_RESULTS = """
+            SELECT r.id, r.tenant_id, r.credits_attempted, r.credits_earned, r.grade_points, r.sgpa, r.cgpa,
+                   r.marksheet_id, r.student_id, r.total_marks, r.percentage, r.grade_label, r.result_status,
+                   r.generated_on, r.created_at, r.created_by, r.updated_at, r.updated_by, r.deleted_at,
+                   r.row_version, m.exam_session_id, m.visible_to_guardians
+              FROM assessment.marksheet_line r
+              JOIN assessment.marksheet m ON m.tenant_id = r.tenant_id AND m.tenant_id = :tenantId
+                   AND m.id = r.marksheet_id
+              JOIN assessment.exam_session s ON s.tenant_id = m.tenant_id AND s.tenant_id = :tenantId
+                   AND s.id = m.exam_session_id
+             WHERE r.tenant_id = :tenantId AND r.deleted_at IS NULL AND m.deleted_at IS NULL
+               AND m.status = 'validated' AND r.student_id = :studentId
+               AND (NOT :requirePublished OR m.published_at IS NOT NULL)
+               AND (NOT :guardians OR m.visible_to_guardians)
+               AND (CAST(:academicYearId AS uuid) IS NULL OR s.academic_year_id = :academicYearId)
+               AND (CAST(:examSessionId AS uuid) IS NULL OR m.exam_session_id = :examSessionId)
+            """;
+    private static final String CUMULATIVE_GPA = """
+            SELECT COALESCE(SUM(r.grade_points), 0) AS grade_points,
+                   COALESCE(SUM(r.credits_attempted), 0) AS credits_attempted
+              FROM assessment.marksheet_line r
+              JOIN assessment.marksheet m ON m.tenant_id = r.tenant_id AND m.tenant_id = :tenantId
+                   AND m.id = r.marksheet_id
+             WHERE r.tenant_id = :tenantId AND r.deleted_at IS NULL AND m.deleted_at IS NULL
+               AND r.student_id = :studentId AND m.status = 'validated'
+               AND m.exam_session_id <> :examSessionId AND m.generated_on <= :generatedOn
+               AND r.grade_points IS NOT NULL AND r.credits_attempted > 0
+            """;
     private static final String INSERT = """
             INSERT INTO assessment.marksheet_line
             (id, tenant_id, marksheet_id, student_id, generated_on, created_at, created_by, updated_at, updated_by,
@@ -157,6 +197,47 @@ public class MarksheetLineRepository {
                 .param("updatedBy", e.getUpdatedBy())
                 .param("rowVersion", e.getRowVersion())
                 .query(MarksheetLineRepository::map).single();
+    }
+
+    public MarksheetLineEntity insertGenerated(MarksheetLineEntity e) {
+        return jdbc.sql(INSERT_GENERATED).param("id", e.getId()).param("tenantId", e.getTenantId())
+                .param("marksheetId", e.getMarksheetId()).param("studentId", e.getStudentId())
+                .param("totalMarks", e.getTotalMarks()).param("percentage", e.getPercentage())
+                .param("gradeLabel", e.getGradeLabel()).param("resultStatus", e.getResultStatus())
+                .param("generatedOn", e.getGeneratedOn()).param("creditsAttempted", e.getCreditsAttempted())
+                .param("creditsEarned", e.getCreditsEarned()).param("gradePoints", e.getGradePoints())
+                .param("sgpa", e.getSgpa()).param("cgpa", e.getCgpa()).param("createdAt", e.getCreatedAt())
+                .param("createdBy", e.getCreatedBy()).param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy()).param("rowVersion", e.getRowVersion())
+                .query(MarksheetLineRepository::map).single();
+    }
+
+    public record StudentResultRow(UUID examSessionId, boolean visibleToGuardians, MarksheetLineEntity line) { }
+
+    public record GpaTotals(java.math.BigDecimal gradePoints, java.math.BigDecimal creditsAttempted) { }
+
+    public GpaTotals cumulativeGpaTotals(UUID studentId, UUID examSessionId, LocalDate generatedOn) {
+        return jdbc.sql(CUMULATIVE_GPA).param("studentId", studentId).param("examSessionId", examSessionId)
+                .param("generatedOn", generatedOn).query((rs, row) -> new GpaTotals(
+                        rs.getBigDecimal("grade_points"), rs.getBigDecimal("credits_attempted"))).single();
+    }
+
+    public Page<StudentResultRow> listStudentResults(UUID studentId, UUID academicYearId, UUID examSessionId,
+            boolean requirePublished, boolean guardian, PageRequest page, SqlFragment extraScope) {
+        SqlFragment where = extraScope.and(page.keysetPredicate());
+        String sql = STUDENT_RESULTS + " AND (" + where.sql() + ") ORDER BY " + page.orderByClause()
+                + page.limitClause();
+        Map<String, Object> params = new java.util.HashMap<>();
+        params.put("studentId", studentId);
+        params.put("academicYearId", academicYearId);
+        params.put("examSessionId", examSessionId);
+        params.put("requirePublished", requirePublished);
+        params.put("guardians", guardian);
+        params.putAll(where.params());
+        params.putAll(page.limitParams());
+        List<StudentResultRow> rows = jdbc.sql(sql).params(params).query((rs, row) -> new StudentResultRow(
+                rs.getObject("exam_session_id", UUID.class), rs.getBoolean("visible_to_guardians"), map(rs, row))).list();
+        return page.toPage(rows, result -> sortValues(page.sort(), result.line()), result -> result.line().getId());
     }
 
     /** Updates under the ETag guard; 0 rows means the row changed (or vanished) since it was read. */

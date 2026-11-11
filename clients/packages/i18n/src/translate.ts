@@ -40,8 +40,11 @@ export function createTranslator(
   };
 }
 
+const enumKeySegment = (segment: string) =>
+  segment.replace(/_([a-z0-9])/g, (_match, letter: string) => letter.toUpperCase());
+
 /** Enum labels come from the catalogue keyed by the API value; an unknown value is never shown raw (ui/04 §7). */
 export function enumLabel(t: Translate, group: string, value: string | null | undefined): string {
-  const key = `enum.${group}.${value ?? ''}`;
+  const key = `enum.${enumKeySegment(group)}.${enumKeySegment(value ?? '')}`;
   return key in en ? t(key as MessageKey) : t('enum.common.unknown');
 }

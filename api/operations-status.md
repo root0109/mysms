@@ -9,7 +9,7 @@ misleading 404.
 |---|---:|---:|---:|
 | academics | 75 | 75 | 0 |
 | admission | 43 | 32 | 11 |
-| assessment | 132 | 112 | 20 |
+| assessment | 132 | 132 | 0 |
 | attendance | 33 | 33 | 0 |
 | careers | 40 | 35 | 5 |
 | comms | 235 | 202 | 33 |
@@ -28,7 +28,7 @@ misleading 404.
 | sis | 108 | 96 | 12 |
 | timetable | 25 | 23 | 2 |
 | transport | 15 | 15 | 0 |
-| **all** | **2049** | **1709** | **340** |
+| **all** | **2049** | **1729** | **320** |
 
 ## academics
 
@@ -204,11 +204,11 @@ misleading 404.
 | `assessment.GetAssignmentSubmission` | GET | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}` | `assessment.assignment_submission.read` | served |  |
 | `assessment.UpdateAssignmentSubmission` | PATCH | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}` | `assessment.assignment_submission.update` | served |  |
 | `assessment.DeleteAssignmentSubmission` | DELETE | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}` | `assessment.assignment_submission.delete` | served |  |
-| `assessment.ListGradingSchemes` | GET | `/v1/assessment/grading-schemes` | `assessment.grading_scheme.read` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
-| `assessment.CreateGradingScheme` | POST | `/v1/assessment/grading-schemes` | `assessment.grading_scheme.create` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
-| `assessment.GetGradingScheme` | GET | `/v1/assessment/grading-schemes/{gradingSchemeId}` | `assessment.grading_scheme.read` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
-| `assessment.UpdateGradingScheme` | PATCH | `/v1/assessment/grading-schemes/{gradingSchemeId}` | `assessment.grading_scheme.update` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
-| `assessment.DeleteGradingScheme` | DELETE | `/v1/assessment/grading-schemes/{gradingSchemeId}` | `assessment.grading_scheme.delete` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `assessment.ListGradingSchemes` | GET | `/v1/assessment/grading-schemes` | `assessment.grading_scheme.read` | served |  |
+| `assessment.CreateGradingScheme` | POST | `/v1/assessment/grading-schemes` | `assessment.grading_scheme.create` | served |  |
+| `assessment.GetGradingScheme` | GET | `/v1/assessment/grading-schemes/{gradingSchemeId}` | `assessment.grading_scheme.read` | served |  |
+| `assessment.UpdateGradingScheme` | PATCH | `/v1/assessment/grading-schemes/{gradingSchemeId}` | `assessment.grading_scheme.update` | served |  |
+| `assessment.DeleteGradingScheme` | DELETE | `/v1/assessment/grading-schemes/{gradingSchemeId}` | `assessment.grading_scheme.delete` | served |  |
 | `assessment.ListGradingBands` | GET | `/v1/assessment/grading-bands` | `assessment.grading_band.read` | served |  |
 | `assessment.CreateGradingBand` | POST | `/v1/assessment/grading-bands` | `assessment.grading_band.create` | served |  |
 | `assessment.GetGradingBand` | GET | `/v1/assessment/grading-bands/{gradingBandId}` | `assessment.grading_band.read` | served |  |
@@ -260,37 +260,37 @@ misleading 404.
 | `assessment.CheckHomeworkSubmission` | POST | `/v1/assessment/homework-submissions/{homeworkSubmissionId}:check` | `assessment.homework_submission.check_homework_submission` | served |  |
 | `assessment.ReplyToHomeworkFeedback` | POST | `/v1/assessment/homework-submissions/{homeworkSubmissionId}:reply` | `assessment.homework_submission.reply_to_homework_feedback` | served |  |
 | `assessment.PublishAssignment` | POST | `/v1/assessment/assignments/{assignmentId}:publish` | `assessment.assignment.publish_assignment` | served |  |
-| `assessment.ApproveAssignment` | POST | `/v1/assessment/assignments/{assignmentId}:approve` | `assessment.assignment.approve_assignment` | 501 | workflow / custom operation |
-| `assessment.RejectAssignment` | POST | `/v1/assessment/assignments/{assignmentId}:reject` | `assessment.assignment.reject_assignment` | 501 | workflow / custom operation |
-| `assessment.FinishAssignment` | POST | `/v1/assessment/assignments/{assignmentId}:finish` | `assessment.assignment.finish_assignment` | 501 | workflow / custom operation |
+| `assessment.ApproveAssignment` | POST | `/v1/assessment/assignments/{assignmentId}:approve` | `assessment.assignment.approve_assignment` | served |  |
+| `assessment.RejectAssignment` | POST | `/v1/assessment/assignments/{assignmentId}:reject` | `assessment.assignment.reject_assignment` | served |  |
+| `assessment.FinishAssignment` | POST | `/v1/assessment/assignments/{assignmentId}:finish` | `assessment.assignment.finish_assignment` | served |  |
 | `assessment.CancelAssignment` | POST | `/v1/assessment/assignments/{assignmentId}:cancel` | `assessment.assignment.cancel_assignment` | served |  |
 | `assessment.ResetAssignment` | POST | `/v1/assessment/assignments/{assignmentId}:resetToDraft` | `assessment.assignment.reset_assignment` | served |  |
 | `assessment.SubmitAssignmentSubmission` | POST | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}:submit` | `assessment.assignment_submission.submit_assignment_submission` | served |  |
 | `assessment.AcceptAssignmentSubmission` | POST | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}:accept` | `assessment.assignment_submission.accept_assignment_submission` | served |  |
-| `assessment.RequestSubmissionChanges` | POST | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}:requestChanges` | `assessment.assignment_submission.request_submission_changes` | 501 | workflow / custom operation |
+| `assessment.RequestSubmissionChanges` | POST | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}:requestChanges` | `assessment.assignment_submission.request_submission_changes` | served |  |
 | `assessment.RejectAssignmentSubmission` | POST | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}:reject` | `assessment.assignment_submission.reject_assignment_submission` | served |  |
-| `assessment.ResetAssignmentSubmission` | POST | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}:resetToDraft` | `assessment.assignment_submission.reset_assignment_submission` | 501 | workflow / custom operation |
-| `assessment.GradeAssignmentSubmission` | POST | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}:grade` | `assessment.assignment_submission.grade_assignment_submission` | 501 | workflow / custom operation |
+| `assessment.ResetAssignmentSubmission` | POST | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}:resetToDraft` | `assessment.assignment_submission.reset_assignment_submission` | served |  |
+| `assessment.GradeAssignmentSubmission` | POST | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}:grade` | `assessment.assignment_submission.grade_assignment_submission` | served |  |
 | `assessment.ScheduleExamSession` | POST | `/v1/assessment/exam-sessions/{examSessionId}:schedule` | `assessment.exam_session.schedule_exam_session` | served |  |
 | `assessment.MarkExamSessionHeld` | POST | `/v1/assessment/exam-sessions/{examSessionId}:markHeld` | `assessment.exam_session.mark_exam_session_held` | served |  |
 | `assessment.CompleteExamSession` | POST | `/v1/assessment/exam-sessions/{examSessionId}:complete` | `assessment.exam_session.complete_exam_session` | served |  |
 | `assessment.CancelExamSession` | POST | `/v1/assessment/exam-sessions/{examSessionId}:cancel` | `assessment.exam_session.cancel_exam_session` | served |  |
 | `assessment.ResetExamSession` | POST | `/v1/assessment/exam-sessions/{examSessionId}:resetToDraft` | `assessment.exam_session.reset_exam_session` | served |  |
 | `assessment.ScheduleExam` | POST | `/v1/assessment/exams/{examId}:schedule` | `assessment.exam.schedule_exam` | served |  |
-| `assessment.MarkExamHeld` | POST | `/v1/assessment/exams/{examId}:markHeld` | `assessment.exam.mark_exam_held` | 501 | workflow / custom operation |
-| `assessment.MarkExamResultsUpdated` | POST | `/v1/assessment/exams/{examId}:markResultsUpdated` | `assessment.exam.mark_exam_results_updated` | 501 | workflow / custom operation |
+| `assessment.MarkExamHeld` | POST | `/v1/assessment/exams/{examId}:markHeld` | `assessment.exam.mark_exam_held` | served |  |
+| `assessment.MarkExamResultsUpdated` | POST | `/v1/assessment/exams/{examId}:markResultsUpdated` | `assessment.exam.mark_exam_results_updated` | served |  |
 | `assessment.CompleteExam` | POST | `/v1/assessment/exams/{examId}:complete` | `assessment.exam.complete_exam` | served |  |
 | `assessment.CancelExam` | POST | `/v1/assessment/exams/{examId}:cancel` | `assessment.exam.cancel_exam` | served |  |
 | `assessment.ResetExam` | POST | `/v1/assessment/exams/{examId}:resetToDraft` | `assessment.exam.reset_exam` | served |  |
-| `assessment.PopulateExamResults` | POST | `/v1/assessment/exams/{examId}:populateResults` | `assessment.exam.populate_exam_results` | 501 | workflow / custom operation |
-| `assessment.AllocateExamRooms` | POST | `/v1/assessment/exams/{examId}:allocateRooms` | `assessment.exam.allocate_exam_rooms` | 501 | workflow / custom operation |
-| `assessment.RecordExamMarks` | POST | `/v1/assessment/exams/{examId}:recordMarks` | `assessment.exam.record_exam_marks` | 501 | workflow / custom operation |
-| `assessment.GenerateResults` | POST | `/v1/assessment/result-templates/{resultTemplateId}:generateResults` | `assessment.result_template.generate_results` | 501 | workflow / custom operation |
-| `assessment.ValidateMarksheet` | POST | `/v1/assessment/marksheets/{marksheetId}:validate` | `assessment.marksheet.validate_marksheet` | 501 | workflow / custom operation |
+| `assessment.PopulateExamResults` | POST | `/v1/assessment/exams/{examId}:populateResults` | `assessment.exam.populate_exam_results` | served |  |
+| `assessment.AllocateExamRooms` | POST | `/v1/assessment/exams/{examId}:allocateRooms` | `assessment.exam.allocate_exam_rooms` | served |  |
+| `assessment.RecordExamMarks` | POST | `/v1/assessment/exams/{examId}:recordMarks` | `assessment.exam.record_exam_marks` | served |  |
+| `assessment.GenerateResults` | POST | `/v1/assessment/result-templates/{resultTemplateId}:generateResults` | `assessment.result_template.generate_results` | served |  |
+| `assessment.ValidateMarksheet` | POST | `/v1/assessment/marksheets/{marksheetId}:validate` | `assessment.marksheet.validate_marksheet` | served |  |
 | `assessment.CancelMarksheet` | POST | `/v1/assessment/marksheets/{marksheetId}:cancel` | `assessment.marksheet.cancel_marksheet` | served |  |
 | `assessment.ResetMarksheet` | POST | `/v1/assessment/marksheets/{marksheetId}:resetToDraft` | `assessment.marksheet.reset_marksheet` | served |  |
-| `assessment.GetStudentResults` | GET | `/v1/assessment/students/{studentId}/results` | `assessment.marksheet_line.get_student_results` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
-| `assessment.PublishMarksheet` | POST | `/v1/assessment/marksheets/{marksheetId}:publish` | `assessment.marksheet.publish` | 501 | workflow / custom operation |
+| `assessment.GetStudentResults` | GET | `/v1/assessment/students/{studentId}/results` | `assessment.marksheet_line.get_student_results` | served |  |
+| `assessment.PublishMarksheet` | POST | `/v1/assessment/marksheets/{marksheetId}:publish` | `assessment.marksheet.publish` | served |  |
 | `assessment.ListOperations` | GET | `/v1/assessment/operations` | `assessment.operation.read` | served |  |
 | `assessment.GetOperation` | GET | `/v1/assessment/operations/{operationId}` | `assessment.operation.read` | served |  |
 | `assessment.CancelOperation` | POST | `/v1/assessment/operations/{operationId}:cancel` | `assessment.operation.cancel_operation` | served |  |

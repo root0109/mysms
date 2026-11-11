@@ -11,6 +11,15 @@ import {
 import { Card } from '@mysms/ui-web';
 import { useState, type ComponentType } from 'react';
 import { TakeAttendanceButton } from './attendance/TakeAttendanceButton';
+import {
+  AssignmentTools,
+  ExamSessionTools,
+  ExamTools,
+  GenerateResultsTool,
+  HomeworkApprovalTools,
+  HomeworkBoardTools,
+  MarksheetTools,
+} from './assessment/AssessmentWorkflowTools';
 import { RecordsOf } from './RecordsScreen';
 import { defaultColumns, defaultFilter, screenTitleKey } from './resourceColumns';
 import type { ResourceScreenDef } from './resourceScreens';
@@ -19,6 +28,13 @@ import type { ResourceScreenDef } from './resourceScreens';
 const ROW_TOOLS: Readonly<Record<NonNullable<ResourceScreenDef['tool']>, ComponentType<{ row: RecordRow }>>> =
   {
     takeAttendance: TakeAttendanceButton,
+    homeworkBoard: HomeworkBoardTools,
+    homeworkApproval: HomeworkApprovalTools,
+    assignment: AssignmentTools,
+    examSession: ExamSessionTools,
+    exam: ExamTools,
+    marksheet: MarksheetTools,
+    generateResults: GenerateResultsTool,
   };
 
 /**

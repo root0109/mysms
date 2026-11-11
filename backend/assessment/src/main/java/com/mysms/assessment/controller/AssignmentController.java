@@ -19,7 +19,6 @@ import com.mysms.assessment.api.model.FinishAssignmentRequest;
 import com.mysms.assessment.api.model.PublishAssignmentRequest;
 import com.mysms.assessment.api.model.RejectAssignmentRequest;
 import com.mysms.assessment.api.model.ResetAssignmentRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -30,8 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  * REST edge of the Assignment operations: implements the generated contract interface, so paths, parameters and
  * payloads
  * cannot drift from api/openapi/assessment.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * The controller stays thin: delegate business rules to the service and shape contract responses here.
  */
 @RestController
 public class AssignmentController implements AssignmentApi {
@@ -45,7 +43,8 @@ public class AssignmentController implements AssignmentApi {
     @Override
     public ResponseEntity<Assignment> approveAssignment(UUID assignmentId,
             ApproveAssignmentRequest approveAssignmentRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Assignment changed = assignmentService.approveAssignment(assignmentId, approveAssignmentRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -139,7 +138,8 @@ public class AssignmentController implements AssignmentApi {
     @Override
     public ResponseEntity<Assignment> finishAssignment(UUID assignmentId,
             FinishAssignmentRequest finishAssignmentRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Assignment changed = assignmentService.finishAssignment(assignmentId, finishAssignmentRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -219,7 +219,8 @@ public class AssignmentController implements AssignmentApi {
     @Override
     public ResponseEntity<Assignment> rejectAssignment(UUID assignmentId,
             RejectAssignmentRequest rejectAssignmentRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Assignment changed = assignmentService.rejectAssignment(assignmentId, rejectAssignmentRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

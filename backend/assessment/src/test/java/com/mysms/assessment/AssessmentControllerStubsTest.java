@@ -11,6 +11,7 @@ import com.mysms.assessment.controller.ExamResultController;
 import com.mysms.assessment.controller.ExamSessionController;
 import com.mysms.assessment.controller.ExamTypeController;
 import com.mysms.assessment.controller.GradingBandController;
+import com.mysms.assessment.controller.GradingSchemeController;
 import com.mysms.assessment.controller.HomeworkController;
 import com.mysms.assessment.controller.HomeworkSubmissionController;
 import com.mysms.assessment.controller.MarksheetController;
@@ -19,26 +20,26 @@ import com.mysms.assessment.controller.ResultTemplateController;
 import org.junit.jupiter.api.Test;
 
 /**
- * The contract operations assessment does not serve yet answer 501 NOT_IMPLEMENTED explicitly — none falls through, and
- * a
- * newly served operation changes the count on purpose.
+ * Every assessment operation listed as served by the batch has a controller implementation; no contract route falls
+ * through to a 501 placeholder.
  */
 class AssessmentControllerStubsTest {
 
     @Test
-    void unservedOperationsAnswerNotImplemented() {
-        assertThat(ControllerStubs.count(AssignmentController.class)).as("Assignment").isEqualTo(3);
-        assertThat(ControllerStubs.count(AssignmentSubmissionController.class)).as("AssignmentSubmission").isEqualTo(3);
+    void noAssessmentOperationAnswersNotImplemented() {
+        assertThat(ControllerStubs.count(AssignmentController.class)).as("Assignment").isZero();
+        assertThat(ControllerStubs.count(AssignmentSubmissionController.class)).as("AssignmentSubmission").isZero();
         assertThat(ControllerStubs.count(AssignmentTypeController.class)).as("AssignmentType").isEqualTo(0);
-        assertThat(ControllerStubs.count(ExamController.class)).as("Exam").isEqualTo(5);
+        assertThat(ControllerStubs.count(ExamController.class)).as("Exam").isZero();
         assertThat(ControllerStubs.count(ExamResultController.class)).as("ExamResult").isEqualTo(0);
         assertThat(ControllerStubs.count(ExamSessionController.class)).as("ExamSession").isEqualTo(0);
         assertThat(ControllerStubs.count(ExamTypeController.class)).as("ExamType").isEqualTo(0);
         assertThat(ControllerStubs.count(GradingBandController.class)).as("GradingBand").isEqualTo(0);
+        assertThat(ControllerStubs.count(GradingSchemeController.class)).as("GradingScheme").isZero();
         assertThat(ControllerStubs.count(HomeworkController.class)).as("Homework").isEqualTo(0);
         assertThat(ControllerStubs.count(HomeworkSubmissionController.class)).as("HomeworkSubmission").isEqualTo(0);
-        assertThat(ControllerStubs.count(MarksheetController.class)).as("Marksheet").isEqualTo(2);
-        assertThat(ControllerStubs.count(MarksheetLineController.class)).as("MarksheetLine").isEqualTo(1);
-        assertThat(ControllerStubs.count(ResultTemplateController.class)).as("ResultTemplate").isEqualTo(1);
+        assertThat(ControllerStubs.count(MarksheetController.class)).as("Marksheet").isZero();
+        assertThat(ControllerStubs.count(MarksheetLineController.class)).as("MarksheetLine").isZero();
+        assertThat(ControllerStubs.count(ResultTemplateController.class)).as("ResultTemplate").isZero();
     }
 }

@@ -3,6 +3,7 @@ import com.mysms.assessment.config.AssessmentDatabaseConfig;
 import com.mysms.assessment.domain.ExamResultEntity;
 import com.mysms.authclient.DataScope;
 import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.id.UuidV7;
 import com.mysms.core.paging.FieldSpec;
 import com.mysms.core.paging.Page;
 import com.mysms.core.paging.PageRequest;
@@ -11,6 +12,7 @@ import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.paging.ValueType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -76,14 +78,60 @@ public class ExamResultRepository {
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
     private static final String INSERT = """
             INSERT INTO assessment.exam_result
-            (id, tenant_id, exam_id, student_id, room_id, attendance_status, note, created_at, created_by,
+            (id, tenant_id, exam_id, student_id, room_id, attendance_status, max_marks, credits, note, created_at, created_by,
              updated_at, updated_by, row_version)
             VALUES (:id, :tenantId, :examId, :studentId, :roomId,
-                    COALESCE(:attendanceStatus, 'expected'::character varying), :note, :createdAt, :createdBy,
+                    COALESCE(:attendanceStatus, 'expected'::character varying), :maxMarks, :credits, :note, :createdAt, :createdBy,
                     :updatedAt, :updatedBy, :rowVersion)
             RETURNING id, tenant_id, max_marks, grade_label, grade_point, credits, result_status, marksheet_line_id,
                       evaluated_by_user_id, evaluated_at, exam_id, student_id, room_id, attendance_status, marks, note,
                       created_at, created_by, updated_at, updated_by, deleted_at, row_version
+            """;
+    private static final String LIST_FOR_EXAM = SELECT_LIVE + " AND r.exam_id = :examId ORDER BY r.student_id, r.id";
+    private static final String LIST_FOR_SESSION_STUDENT = SELECT_LIVE + " AND r.student_id = :studentId"
+            + " AND r.exam_id IN (SELECT e.id FROM assessment.exam e WHERE e.tenant_id = :tenantId"
+            + " AND e.exam_session_id = :sessionId AND e.deleted_at IS NULL) ORDER BY r.exam_id, r.id";
+    private static final String COUNT_FOR_EXAM = """
+            SELECT count(*) FROM assessment.exam_result WHERE tenant_id = :tenantId AND exam_id = :examId
+              AND deleted_at IS NULL
+            """;
+    private static final String ALL_MARKS_ENTERED = """
+            SELECT count(*) > 0 AND NOT EXISTS (
+                SELECT 1 FROM assessment.exam_result WHERE tenant_id = :tenantId AND exam_id = :examId
+                  AND deleted_at IS NULL
+                  AND (attendance_status = 'expected' OR (attendance_status = 'present' AND marks IS NULL))
+            ) FROM assessment.exam_result WHERE tenant_id = :tenantId AND exam_id = :examId AND deleted_at IS NULL
+            """;
+    private static final String ASSIGN_ROOM = """
+            UPDATE assessment.exam_result SET room_id = :roomId, updated_at = :now, updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String SET_CREDITS = """
+            UPDATE assessment.exam_result SET credits = :credits, updated_at = :now, updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String RECORD_MARKS = """
+            UPDATE assessment.exam_result
+               SET attendance_status = :attendanceStatus, marks = :marks, max_marks = :maxMarks,
+                   result_status = :resultStatus, note = :note, evaluated_by_user_id = :actor,
+                   evaluated_at = :now, updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+               AND marksheet_line_id IS NULL
+            """;
+    private static final String SET_GENERATED_VALUES = """
+            UPDATE assessment.exam_result SET grade_label = :gradeLabel, grade_point = :gradePoint,
+                   credits = :credits, marksheet_line_id = :lineId, updated_at = :now, updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String INSERT_CHANGE_LOG = """
+            INSERT INTO assessment.result_change_log
+                (id, tenant_id, exam_result_id, changed_by_user_id, changed_at, old_marks, new_marks,
+                 old_result_status, new_result_status, old_grade_label, new_grade_label, reason)
+            VALUES (:id, :tenantId, :resultId, :actor, :now, :oldMarks, :newMarks,
+                    :oldStatus, :newStatus, :oldGrade, :newGrade, :reason)
             """;
     private static final String SOFT_DELETE = """
             UPDATE assessment.exam_result
@@ -145,6 +193,57 @@ public class ExamResultRepository {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(ExamResultRepository::map).optional();
     }
 
+    public List<ExamResultEntity> listForExam(UUID examId) {
+        return jdbc.sql(LIST_FOR_EXAM).param("examId", examId).query(ExamResultRepository::map).list();
+    }
+
+    public List<ExamResultEntity> listForSessionAndStudent(UUID sessionId, UUID studentId) {
+        return jdbc.sql(LIST_FOR_SESSION_STUDENT).param("sessionId", sessionId).param("studentId", studentId)
+                .query(ExamResultRepository::map).list();
+    }
+
+    public long countForExam(UUID examId) {
+        return jdbc.sql(COUNT_FOR_EXAM).param("examId", examId).query(Long.class).single();
+    }
+
+    public boolean allMarksEntered(UUID examId) {
+        return Boolean.TRUE.equals(jdbc.sql(ALL_MARKS_ENTERED).param("examId", examId)
+                .query(Boolean.class).single());
+    }
+
+    public int assignRoom(UUID id, int expected, UUID roomId, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(ASSIGN_ROOM).param("id", id).param("expected", expected).param("roomId", roomId)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    public int setCredits(UUID id, int expected, BigDecimal credits, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(SET_CREDITS).param("id", id).param("expected", expected).param("credits", credits)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    public int recordMarks(ExamResultEntity current, int expected, String attendanceStatus, BigDecimal marks,
+            BigDecimal maxMarks, String resultStatus, String note, UUID actor, OffsetDateTime now, String reason) {
+        int updated = jdbc.sql(RECORD_MARKS).param("id", current.getId()).param("expected", expected)
+                .param("attendanceStatus", attendanceStatus).param("marks", marks).param("maxMarks", maxMarks)
+                .param("resultStatus", resultStatus).param("note", note).param("actor", actor)
+                .param("now", now).update();
+        if (updated > 0) {
+            jdbc.sql(INSERT_CHANGE_LOG).param("id", UuidV7.next()).param("resultId", current.getId())
+                    .param("actor", actor).param("now", now).param("oldMarks", current.getMarks())
+                    .param("newMarks", marks).param("oldStatus", current.getResultStatus())
+                    .param("newStatus", resultStatus).param("oldGrade", current.getGradeLabel())
+                    .param("newGrade", null).param("reason", reason).update();
+        }
+        return updated;
+    }
+
+    public int setGeneratedValues(ExamResultEntity current, int expected, String gradeLabel, BigDecimal gradePoint,
+            BigDecimal credits, UUID lineId, UUID actor, OffsetDateTime now) {
+        return jdbc.sql(SET_GENERATED_VALUES).param("id", current.getId()).param("expected", expected)
+                .param("gradeLabel", gradeLabel).param("gradePoint", gradePoint).param("credits", credits)
+                .param("lineId", lineId).param("actor", actor).param("now", now).update();
+    }
+
     public Page<ExamResultEntity> list(PageRequest page, SqlFragment filter) {
         SqlFragment where = filter.and(page.keysetPredicate());
         String sql = SELECT_LIVE + " AND (" + where.sql() + ") ORDER BY " + page.orderByClause() + page.limitClause();
@@ -162,6 +261,8 @@ public class ExamResultRepository {
                 .param("studentId", e.getStudentId())
                 .param("roomId", e.getRoomId())
                 .param("attendanceStatus", e.getAttendanceStatus())
+                .param("maxMarks", e.getMaxMarks())
+                .param("credits", e.getCredits())
                 .param("note", e.getNote())
                 .param("createdAt", e.getCreatedAt())
                 .param("createdBy", e.getCreatedBy())

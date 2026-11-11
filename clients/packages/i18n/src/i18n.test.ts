@@ -47,6 +47,10 @@ describe('translation', () => {
     const t = createTranslator('en');
     expect(enumLabel(t, 'operation', 'succeeded')).toBe('Done');
     expect(enumLabel(t, 'operation', 'paused_by_admin')).toBe('Other');
+    expect(enumLabel(t, 'assessment.assignment_submission_status', 'change_requested')).toBe(
+      'Changes requested',
+    );
+    expect(enumLabel(t, 'assessment.gradingMethod', 'percentage_band')).toBe('Percentage bands');
     expect(enumLabel(t, 'operation', null)).toBe('Other');
   });
 });

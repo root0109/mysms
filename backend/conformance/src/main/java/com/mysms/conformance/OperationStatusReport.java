@@ -94,7 +94,8 @@ public final class OperationStatusReport {
             Path controllers = tree.backend().resolve(module).resolve("src/main/java/com/mysms").resolve(module)
                     .resolve("controller");
             for (Path file : tree.files(controllers, "Controller.java")) {
-                Matcher method = CONTROLLER_METHOD.matcher(tree.read(file));
+                String source = tree.read(file).replace("\r\n", "\n").replace('\r', '\n');
+                Matcher method = CONTROLLER_METHOD.matcher(source);
                 while (method.find()) {
                     served.computeIfAbsent(module, m -> new HashMap<>())
                             .put(method.group(1), !method.group(2).contains("NotImplementedException"));

@@ -4,9 +4,12 @@ import com.mysms.assessment.config.AssessmentDatabaseConfig;
 import com.mysms.assessment.config.AssessmentEventsConfig;
 import com.mysms.assessment.domain.MarksheetLineEntity;
 import com.mysms.assessment.mapper.MarksheetLineMapper;
+import com.mysms.assessment.mapper.ExamResultMapper;
 import com.mysms.assessment.repository.MarksheetLineRepository;
+import com.mysms.assessment.repository.ExamResultRepository;
 import com.mysms.authclient.DataScope;
 import com.mysms.assessment.api.model.MarksheetLine;
+import com.mysms.assessment.api.model.ResultCard;
 import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.DuplicateResourceException;
@@ -18,6 +21,7 @@ import com.mysms.core.outbox.AuditWriter;
 import com.mysms.core.outbox.OutboxWriter;
 import com.mysms.core.paging.Page;
 import com.mysms.core.paging.PageRequest;
+import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
@@ -46,12 +50,17 @@ public class MarksheetLineService extends AppTransactionManager {
 
     private final MarksheetLineRepository repository;
     private final MarksheetLineMapper mapper;
+    private final ExamResultRepository examResultRepository;
+    private final ExamResultMapper examResultMapper;
+    private final StudentResultAccessLookup studentResultAccess;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
 
     public MarksheetLineService(MarksheetLineRepository repository, MarksheetLineMapper mapper,
+            ExamResultRepository examResultRepository, ExamResultMapper examResultMapper,
+            StudentResultAccessLookup studentResultAccess,
             @Qualifier(AssessmentDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(AssessmentDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(AssessmentEventsConfig.OUTBOX) OutboxWriter outbox,
@@ -61,6 +70,9 @@ public class MarksheetLineService extends AppTransactionManager {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
+        this.examResultRepository = examResultRepository;
+        this.examResultMapper = examResultMapper;
+        this.studentResultAccess = studentResultAccess;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -85,6 +97,26 @@ public class MarksheetLineService extends AppTransactionManager {
             Page<MarksheetLineEntity> rows = repository.list(page, where);
             return rows.map(mapper::toDto);
         });
+    }
+
+    /** Returns published results only to the student named in the route or one of that student's guardians. */
+    public Page<ResultCard> getStudentResults(UUID studentId, UUID academicYearId, UUID examSessionId,
+            Integer pageNumber, Integer pageSize, String cursor) {
+        boolean guardian = studentResultAccess.isStudentOrGuardian(studentId);
+        SortSpec sort = SortSpec.parse(null, MarksheetLineRepository.SORT_FIELDS,
+                MarksheetLineRepository.DEFAULT_ORDER, MarksheetLineRepository.ID_COLUMN);
+        String cursorScope = studentId + "|" + academicYearId + "|" + examSessionId + "|" + guardian;
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, cursorScope, clock);
+        return doInReadTransaction(() -> repository.listStudentResults(studentId, academicYearId, examSessionId,
+                true, guardian, page, SqlFragment.TRUE).map(row -> {
+                    ResultCard card = new ResultCard();
+                    card.setExamSessionId(row.examSessionId());
+                    card.setMarksheetLine(mapper.toDto(row.line()));
+                    card.setResults(examResultRepository.listForSessionAndStudent(row.examSessionId(), studentId)
+                            .stream().filter(result -> row.line().getId().equals(result.getMarksheetLineId()))
+                            .map(examResultMapper::toDto).toList());
+                    return card;
+                }));
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */

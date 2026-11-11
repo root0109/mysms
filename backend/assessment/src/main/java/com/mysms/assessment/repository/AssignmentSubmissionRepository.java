@@ -152,6 +152,28 @@ public class AssignmentSubmissionRepository {
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
+    private static final String TRANSITION_REQUEST_CHANGES = """
+            UPDATE assessment.assignment_submission
+               SET status = 'change_requested', feedback = :reason, updated_at = :now, updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String TRANSITION_RESET = """
+            UPDATE assessment.assignment_submission
+               SET status = 'draft', marks_obtained = NULL, graded_by_user_id = NULL, graded_on = NULL,
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String TRANSITION_GRADE = """
+            UPDATE assessment.assignment_submission
+               SET status = 'graded', marks_obtained = :marks, graded_by_user_id = :grader, graded_on = :gradedOn,
+                   feedback = :feedback, updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String ASSIGNMENT_MAX_MARKS = """
+            SELECT max_marks FROM assessment.assignment WHERE tenant_id = :tenantId AND id = :id
+              AND deleted_at IS NULL
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.assignment_id IN (SELECT p0.id FROM assessment.assignment p0 WHERE p0.tenant_id = :tenantId
                  AND (p0.institution_id =
@@ -274,6 +296,27 @@ public class AssignmentSubmissionRepository {
                 .param("expected", expected)
                 .param("now", now)
                 .param("actor", actor).update();
+    }
+
+    public int requestChanges(UUID id, int expected, String reason, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_REQUEST_CHANGES).param("id", id).param("expected", expected)
+                .param("reason", reason).param("now", now).param("actor", actor).update();
+    }
+
+    public int resetToDraft(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_RESET).param("id", id).param("expected", expected)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    public int grade(UUID id, int expected, java.math.BigDecimal marks, UUID grader, java.time.LocalDate gradedOn,
+            String feedback, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_GRADE).param("id", id).param("expected", expected).param("marks", marks)
+                .param("grader", grader).param("gradedOn", gradedOn).param("feedback", feedback)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    public Optional<java.math.BigDecimal> assignmentMaxMarks(UUID assignmentId) {
+        return jdbc.sql(ASSIGNMENT_MAX_MARKS).param("id", assignmentId).query(java.math.BigDecimal.class).optional();
     }
 
     /** Rows of the caller's institutions only (api/README "Authorization"). */
