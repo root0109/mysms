@@ -14,9 +14,8 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 /**
- * The audit set every MySMS table carries, column for column (JAVA-CODING-RULES §5): id (UUIDv7, generated here),
- * created/updated at+by, soft-delete marker and the optimistic-lock version. The lifecycle hooks are called by the
- * owning business service immediately before the write — never by a framework.
+ * The audit columns every table carries: UUIDv7 id, created/updated at and by, soft-delete marker and row version.
+ * The owning service calls the lifecycle hooks immediately before the write, never a framework.
  */
 @Getter
 @Setter

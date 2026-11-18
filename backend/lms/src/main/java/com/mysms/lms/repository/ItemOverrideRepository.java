@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.item_override (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.item_override: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class ItemOverrideRepository {
@@ -209,14 +206,23 @@ public class ItemOverrideRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.content_item_id = :parentId", Map.of("parentId", parentId));
+    }
+
+    private static final String OWN_OVERRIDE = SELECT_LIVE
+            + " AND r.content_item_id = :itemId AND r.user_id = :userId ORDER BY r.created_at DESC LIMIT 1";
+
+    /** The student's newest override for the item, when a teacher gave them one. */
+    public Optional<ItemOverrideEntity> ownOverride(UUID itemId, UUID userId) {
+        return jdbc.sql(OWN_OVERRIDE).param("itemId", itemId).param("userId", userId)
+                .query(ItemOverrideRepository::map).optional();
     }
 
     private static List<Object> sortValues(SortSpec sort, ItemOverrideEntity e) {

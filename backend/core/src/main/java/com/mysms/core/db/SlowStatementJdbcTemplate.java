@@ -12,11 +12,8 @@ import org.springframework.jdbc.core.SqlProvider;
 import org.springframework.jdbc.support.KeyHolder;
 
 /**
- * The module's {@link JdbcTemplate}, which names every statement that takes longer than the module's limit
- * ({@code mysms.<module>.datasource.slow-statement}) in the log — the statement text with its placeholders, never a
- * bound value, so no data reaches the log. A Decorator of the three template methods the list, single-row and update
- * statements of a module's {@code JdbcClient} pass through (queries, updates and updates that return keys). Streamed
- * results and batches take other paths and are not timed.
+ * Decorator that logs every statement slower than {@code mysms.<module>.datasource.slow-statement}: its text with
+ * placeholders, never a bound value. Streamed results and batches are not timed.
  */
 final class SlowStatementJdbcTemplate extends JdbcTemplate {
 

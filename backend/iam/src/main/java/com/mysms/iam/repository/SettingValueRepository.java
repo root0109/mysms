@@ -24,7 +24,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * Plain-JDBC access to iam.setting_value (JAVA-CODING-RULES §6): schema-qualified constant SQL, live rows only,
+ * Plain-JDBC access to iam.setting_value: live rows only,
  * keyset paging, the row_version guard on update and delete. Row-level security limits every statement to the bound
  * tenant; the explicit tenant column is still written from the call context.
  */

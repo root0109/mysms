@@ -6,7 +6,7 @@ import java.net.URI;
 import java.util.Map;
 
 /**
- * Operator commands for the events on RabbitMQ (DEPLOYMENT.md "Events"), run from any service jar:
+ * Operator commands for the events on RabbitMQ, run from any service jar:
  *
  * <pre>
  * MYSMS_RABBITMQ_URI=amqps://mysms-ops:...@broker:5671/mysms \
@@ -18,7 +18,7 @@ import java.util.Map;
  *   <li>{@code replay-dead <module> [max]}: returns a module's dead-lettered events to its queue.</li>
  *   <li>{@code replay-unrouted [max]}: publishes again the events no queue was bound to.</li>
  * </ul>
- * The broker user needs the {@code impersonator} tag: replayed events keep their original publisher's `user-id`.
+ * The broker user needs the {@code impersonator} tag: replayed events keep their original publisher's {@code user-id}.
  */
 public final class EventsAdmin {
 
@@ -31,7 +31,7 @@ public final class EventsAdmin {
         System.exit(run(args, System.getenv(), System.out, System.err));
     }
 
-    /** Runs one command; the process exit code (0 done, 1 failed, 2 usage). */
+    /** Runs one command; returns the exit code (0 done, 1 failed, 2 usage). */
     static int run(String[] args, Map<String, String> environment, PrintStream out, PrintStream err) {
         String uri = environment.getOrDefault("MYSMS_RABBITMQ_URI", "");
         if (args.length == 0 || uri.isBlank()) {

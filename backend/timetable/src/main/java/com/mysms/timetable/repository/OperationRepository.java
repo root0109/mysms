@@ -20,8 +20,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * Plain-JDBC access to timetable.operation (JAVA-CODING-RULES §6): constant SQL, the tenant filtered in every statement,
- * live rows only, newest first with keyset paging, the row_version guard on cancel.
+ * Plain-JDBC access to timetable.operation: constant SQL, the tenant filtered in every statement, live rows only,
+ * newest first with keyset paging, the row_version guard on cancel.
  */
 @Repository
 public class OperationRepository {

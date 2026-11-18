@@ -1,5 +1,17 @@
 package com.mysms.lms.business;
 
+import java.time.temporal.ChronoUnit;
+import java.time.ZoneOffset;
+import java.time.OffsetDateTime;
+import java.util.OptionalInt;
+import java.util.Objects;
+import java.util.HashSet;
+import com.mysms.lms.repository.ContentItemRepository;
+import com.mysms.lms.domain.ContentItemEntity;
+import com.mysms.lms.api.model.SetReleaseRulesEnabledRequest;
+import com.mysms.lms.api.model.ReorderReleaseRulesRequest;
+import com.mysms.lms.api.model.ReleaseRuleList;
+import com.mysms.lms.api.model.CopyReleaseRuleRequest;
 import com.mysms.authclient.DataScope;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
@@ -48,13 +60,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.release_rule (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a ReleaseRule
- * are served here too — ReleaseRuleCondition, ReleaseRuleTarget.
+ * Business service of lms.release_rule and of the records that exist only as part of a ReleaseRule
+ * (ReleaseRuleCondition, ReleaseRuleTarget): audit and domain event commit in the same transaction as every change.
+ * Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class ReleaseRuleService extends AppTransactionManager {
@@ -65,6 +73,13 @@ public class ReleaseRuleService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "lms.release_rule.create";
     static final String PERMISSION_UPDATE = "lms.release_rule.update";
     static final String PERMISSION_DELETE = "lms.release_rule.delete";
+    static final String PERMISSION_ENABLE = "lms.release_rule.enable_release_rule";
+    static final String PERMISSION_DISABLE = "lms.release_rule.disable_release_rule";
+    static final String PERMISSION_COPY = "lms.release_rule.copy_release_rule";
+    static final String PERMISSION_REORDER = "lms.content_item.reorder_release_rules";
+    static final String PERMISSION_SET_ENABLED = "lms.content_item.set_release_rules_enabled";
+    /** A rule is copied to a handful of items at a time. */
+    static final int MAX_COPIES = 50;
     /** The contract's ReleaseRuleUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("courseId", "cohortId", "sourceContentItemId", "title", "stopIfTrue", "isDisabled",
@@ -100,6 +115,7 @@ public class ReleaseRuleService extends AppTransactionManager {
     private final ReleaseRuleConditionMapper releaseRuleConditionMapper;
     private final ReleaseRuleTargetRepository releaseRuleTargetRepository;
     private final ReleaseRuleTargetMapper releaseRuleTargetMapper;
+    private final ContentItemRepository items;
 
     public ReleaseRuleService(ReleaseRuleRepository repository,
             ReleaseRuleMapper mapper,
@@ -112,7 +128,8 @@ public class ReleaseRuleService extends AppTransactionManager {
             ReleaseRuleConditionRepository releaseRuleConditionRepository,
             ReleaseRuleConditionMapper releaseRuleConditionMapper,
             ReleaseRuleTargetRepository releaseRuleTargetRepository,
-            ReleaseRuleTargetMapper releaseRuleTargetMapper) {
+            ReleaseRuleTargetMapper releaseRuleTargetMapper,
+            ContentItemRepository items) {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
@@ -124,6 +141,7 @@ public class ReleaseRuleService extends AppTransactionManager {
         this.releaseRuleConditionMapper = releaseRuleConditionMapper;
         this.releaseRuleTargetRepository = releaseRuleTargetRepository;
         this.releaseRuleTargetMapper = releaseRuleTargetMapper;
+        this.items = items;
     }
 
     public ReleaseRule getReleaseRule(UUID id) {
@@ -167,8 +185,8 @@ public class ReleaseRuleService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ReleaseRule updateReleaseRule(UUID id, String ifMatch, ReleaseRuleUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -232,6 +250,147 @@ public class ReleaseRuleService extends AppTransactionManager {
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
+    /** lms.EnableReleaseRule: a disabled rule takes part in releasing again (409 when it is enabled). */
+    public ReleaseRule enableReleaseRule(UUID id, String etag) {
+        return setEnabled(id, etag, true, PERMISSION_ENABLE);
+    }
+
+    /** lms.DisableReleaseRule: an enabled rule stops holding items back (409 when it is disabled). */
+    public ReleaseRule disableReleaseRule(UUID id, String etag) {
+        return setEnabled(id, etag, false, PERMISSION_DISABLE);
+    }
+
+    /** The guarded step on is_disabled: scope, writable, body etag, guard, guarded UPDATE. */
+    private ReleaseRule setEnabled(UUID id, String etag, boolean enabled, String permission) {
+        DataScope scope = DataScope.current(permission);
+        OptionalInt expected = Etags.bodyVersion(etag);
+        return doInWriteTransaction(() -> {
+            ReleaseRuleEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (Boolean.TRUE.equals(entity.getIsDisabled()) != enabled) {
+                throw new InvalidStateException("The release rule cannot be changed this way in its current state.");
+            }
+            if (repository.setEnabled(id, enabled, entity.getRowVersion(), now(), Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            String step = enabled ? "enable" : "disable";
+            audit.recordTransition(AGGREGATE, id, step, List.of("isDisabled"), null);
+            outbox.publish(AGGREGATE + "." + step, AGGREGATE, id, LmsEvents.payload(id));
+            return mapper.toDto(repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    /**
+     * lms.CopyReleaseRule: copies the rule — its conditions and targets — to each listed item of the same course or
+     * cohort as its new source (at most 50; an item elsewhere is 422). Each copy remembers the rule it came from and
+     * goes last in its source's order.
+     */
+    public ReleaseRuleList copyReleaseRule(UUID id, CopyReleaseRuleRequest request) {
+        validator.validate(request);
+        List<UUID> sources = request.getSourceContentItemIds().stream().distinct().toList();
+        if (sources.isEmpty() || sources.size() > MAX_COPIES) {
+            throw new ValidationFailedException(List.of(new FieldError("sourceContentItemIds", "name 1 to 50 items",
+                    "Size")));
+        }
+        DataScope scope = DataScope.current(PERMISSION_COPY);
+        UUID tenant = CallContextHolder.require().tenantId().orElseThrow();
+        return doInWriteTransaction(() -> {
+            ReleaseRuleEntity rule = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(rule));
+            List<ReleaseRuleConditionEntity> conditions = releaseRuleConditionRepository.ofRules(List.of(id));
+            List<ReleaseRuleTargetEntity> targets = releaseRuleTargetRepository.ofRule(id);
+            List<ReleaseRule> copies = new ArrayList<>();
+            for (UUID source : sources) {
+                ContentItemEntity item = items.findById(source)
+                        .filter(i -> Objects.equals(i.getCourseId(), rule.getCourseId()) && rule.getCohortId() == null
+                                || rule.getCohortId() != null && rule.getCohortId().equals(i.getCohortId()))
+                        .orElseThrow(() -> new ValidationFailedException(List.of(new FieldError(
+                                "sourceContentItemIds", "items must belong to the rule's course or cohort",
+                                "NOT_FOUND"))));
+                ReleaseRuleEntity copy = ReleaseRuleEntity.builder().tenantId(tenant).courseId(rule.getCourseId())
+                        .cohortId(rule.getCohortId()).sourceContentItemId(item.getId()).title(rule.getTitle())
+                        .stopIfTrue(rule.getStopIfTrue()).isDisabled(rule.getIsDisabled())
+                        .reassignSource(rule.getReassignSource()).sortOrder(repository.ofSource(item.getId()).size())
+                        .copiedFromId(rule.getId()).build();
+                copy.onCreatingData(Actor.current(), clock);
+                ReleaseRuleEntity stored = repository.insert(copy);
+                for (ReleaseRuleConditionEntity condition : conditions) {
+                    ReleaseRuleConditionEntity c = ReleaseRuleConditionEntity.builder().tenantId(tenant)
+                            .releaseRuleId(stored.getId()).conditionType(condition.getConditionType())
+                            .operator(condition.getOperator()).value(condition.getValue()).value2(condition.getValue2())
+                            .sortOrder(condition.getSortOrder()).build();
+                    c.onCreatingData(Actor.current(), clock);
+                    releaseRuleConditionRepository.insert(c);
+                }
+                for (ReleaseRuleTargetEntity target : targets) {
+                    ReleaseRuleTargetEntity t = ReleaseRuleTargetEntity.builder().tenantId(tenant)
+                            .releaseRuleId(stored.getId()).contentItemId(target.getContentItemId())
+                            .chapterId(target.getChapterId()).build();
+                    t.onCreatingData(Actor.current(), clock);
+                    releaseRuleTargetRepository.insert(t);
+                }
+                audit.recordCreate(AGGREGATE, stored.getId());
+                outbox.publish(AGGREGATE + LmsEvents.CREATED, AGGREGATE, stored.getId(),
+                        LmsEvents.payload(stored.getId()));
+                copies.add(mapper.toDto(stored));
+            }
+            return new ReleaseRuleList(copies);
+        });
+    }
+
+    /**
+     * lms.ReorderReleaseRules: the rules whose source is the item, in the order given (each named exactly once — 422
+     * otherwise); they are evaluated in this order.
+     */
+    public ReleaseRuleList reorderReleaseRules(UUID itemId, ReorderReleaseRulesRequest request) {
+        validator.validate(request);
+        DataScope scope = DataScope.current(PERMISSION_REORDER);
+        return doInWriteTransaction(() -> {
+            ContentItemEntity item = writableItem(scope, itemId);
+            List<UUID> current = repository.ofSource(item.getId()).stream().map(ReleaseRuleEntity::getId).toList();
+            List<UUID> wanted = request.getReleaseRuleIds();
+            if (wanted.size() != current.size() || !new HashSet<>(wanted).equals(new HashSet<>(current))) {
+                throw new ValidationFailedException(List.of(new FieldError("releaseRuleIds",
+                        "must list each rule of the item exactly once", "Invalid")));
+            }
+            repository.place(wanted, now(), Actor.current().orElse(null));
+            audit.recordTransition("lms.content_item", itemId, "reorder_release_rules", List.of("releaseRules"), null);
+            return new ReleaseRuleList(repository.ofSource(itemId).stream().map(mapper::toDto).toList());
+        });
+    }
+
+    /** lms.SetReleaseRulesEnabled: enables or disables every rule whose source is the item, at once. */
+    public ReleaseRuleList setReleaseRulesEnabled(UUID itemId, SetReleaseRulesEnabledRequest request) {
+        validator.validate(request);
+        DataScope scope = DataScope.current(PERMISSION_SET_ENABLED);
+        return doInWriteTransaction(() -> {
+            ContentItemEntity item = writableItem(scope, itemId);
+            repository.setEnabledForSource(item.getId(), request.getEnabled(), now(), Actor.current().orElse(null));
+            audit.recordTransition("lms.content_item", itemId, request.getEnabled() ? "enable_release_rules"
+                    : "disable_release_rules", List.of("releaseRules"), null);
+            return new ReleaseRuleList(repository.ofSource(itemId).stream().map(mapper::toDto).toList());
+        });
+    }
+
+    /** The item, visible (404) and writable (403) for the caller: its course's institution decides. */
+    private ContentItemEntity writableItem(DataScope scope, UUID itemId) {
+        ContentItemEntity item = items.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("lms.content_item", itemId));
+        Optional<UUID> institution = items.institutionOf(item.getCourseId());
+        if (!scope.canRead(institution)) {
+            throw new ResourceNotFoundException("lms.content_item", itemId);
+        }
+        scope.requireWritable(institution);
+        return item;
+    }
+
+    private OffsetDateTime now() {
+        return OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+    }
+
     private ReleaseRuleEntity loadVisible(DataScope scope, UUID id) {
         ReleaseRuleEntity entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
@@ -241,12 +400,12 @@ public class ReleaseRuleService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOf(ReleaseRuleEntity entity) {
         return repository.institutionOf(entity.getCourseId());
     }
 
-    /** Applies the selected ReleaseRuleUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected ReleaseRuleUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(ReleaseRuleEntity entity, ReleaseRuleUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -360,8 +519,8 @@ public class ReleaseRuleService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ReleaseRuleCondition updateReleaseRuleCondition(UUID releaseRuleId, UUID id, String ifMatch,
             ReleaseRuleConditionUpdate changes, String updateMask, boolean validateOnly) {
@@ -429,10 +588,7 @@ public class ReleaseRuleService extends AppTransactionManager {
         return releaseRuleConditionRepository.institutionOf(entity.getReleaseRuleId());
     }
 
-    /**
-     * Applies the selected ReleaseRuleConditionUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected ReleaseRuleConditionUpdate fields; explicit per field so a mask can clear values. */
     private static void applyReleaseRuleCondition(ReleaseRuleConditionEntity entity, ReleaseRuleConditionUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -531,8 +687,8 @@ public class ReleaseRuleService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ReleaseRuleTarget updateReleaseRuleTarget(UUID releaseRuleId, UUID id, String ifMatch,
             ReleaseRuleTargetUpdate changes, String updateMask, boolean validateOnly) {
@@ -600,10 +756,7 @@ public class ReleaseRuleService extends AppTransactionManager {
         return releaseRuleTargetRepository.institutionOf(entity.getReleaseRuleId());
     }
 
-    /**
-     * Applies the selected ReleaseRuleTargetUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected ReleaseRuleTargetUpdate fields; explicit per field so a mask can clear values. */
     private static void applyReleaseRuleTarget(ReleaseRuleTargetEntity entity, ReleaseRuleTargetUpdate changes,
             List<String> fields) {
         for (String field : fields) {

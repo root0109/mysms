@@ -21,7 +21,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Keeps iam.tenant_directory — the tenant codes and status sign-in resolves before a tenant is known — in step with
- * platform.tenant (database/README "Global tables"). Tenant events carry the tenant's code, status and the row version
+ * platform.tenant. Tenant events carry the tenant's code, status and the row version
  * they produced; an entry changes only to a newer version, so out-of-order and repeated deliveries are harmless. A
  * deleted tenant is closed: nobody signs in to it.
  */

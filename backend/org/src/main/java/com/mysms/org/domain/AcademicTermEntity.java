@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of org.academic_term (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of org.academic_term. */
 @Getter
 @Setter
 @SuperBuilder

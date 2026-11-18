@@ -18,8 +18,8 @@ import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Keeps iam.member_record — the staff and student records of each login account and person, which iam.GetMe answers
- * as {@code staffIds} and {@code studentIds} — in step with hr.staff and sis.student (against the DAG, events only:
- * iam never reads another module's schema). Their created, updated and deleted events carry the record's account,
+ * as {@code staffIds} and {@code studentIds} — in step with hr.staff and sis.student from their events (iam never
+ * reads another module's schema). Their created, updated and deleted events carry the record's account,
  * person, institution and row version; an entry changes only to a newer version, so out-of-order and repeated
  * deliveries are harmless. Runs inside the event's tenant (messaging's InboxProcessor: exactly once per event).
  *

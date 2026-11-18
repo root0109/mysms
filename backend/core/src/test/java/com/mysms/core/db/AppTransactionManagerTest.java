@@ -13,17 +13,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 
-/**
- * The transaction base class against stand-ins of the module database and its transaction manager (a unit test; the
- * real ones run under every service's component tests): which definition a transaction uses, when the tenant is
- * bound, and how the work's result or failure ends it.
- */
+/** The transaction base class against stand-ins: which definition is used, when the tenant is bound, how work ends. */
 class AppTransactionManagerTest {
 
     private final ModuleDatabase database = mock(ModuleDatabase.class);
@@ -67,6 +64,10 @@ class AppTransactionManagerTest {
         void runGlobal(Runnable task) {
             runInGlobalWriteTransaction(task);
         }
+
+        String nested(CallBack<String> callBack) {
+            return doInNestedWriteTransaction(callBack);
+        }
     }
 
     private static TransactionDefinition definition(boolean readOnly) {
@@ -94,6 +95,18 @@ class AppTransactionManagerTest {
 
         assertThat(work.read(() -> "found")).isEqualTo("found");
         verify(transactions).getTransaction(read);
+    }
+
+    @Test
+    void nestedWorkRunsInASavepointOfTheWriteTransaction() {
+        given();
+        assertThat(work.nested(() -> "row")).isEqualTo("row");
+        ArgumentCaptor<TransactionDefinition> used = ArgumentCaptor.forClass(TransactionDefinition.class);
+        verify(transactions).getTransaction(used.capture());
+        assertThat(used.getValue().getPropagationBehavior()).isEqualTo(TransactionDefinition.PROPAGATION_NESTED);
+        assertThat(used.getValue().isReadOnly()).isFalse();
+        verify(database).bindTenant();
+        verify(transactions).commit(status);
     }
 
     @Test

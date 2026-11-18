@@ -10,9 +10,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * The single trigger of DTO validation (JAVA-CODING-RULES §9, §11): controllers call it explicitly on create and
- * update bodies, and services call it again on the merged model after a patch. Violations become 422
- * VALIDATION_FAILED with one entry per field.
+ * The single trigger of DTO validation: on create and update bodies, and again on the merged model after a patch.
+ * Violations become 422 VALIDATION_FAILED with one entry per field.
  */
 public final class DtoValidator {
 

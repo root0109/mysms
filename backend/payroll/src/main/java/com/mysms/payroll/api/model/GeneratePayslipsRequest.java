@@ -1,4 +1,4 @@
-// Owned API contract of payroll (JAVA-CODING-RULES §7); first materialized from api/openapi/payroll.yaml on 2026-11-10.
+// Owned API contract of payroll.
 package com.mysms.payroll.api.model;
 
 import java.net.URI;
@@ -38,7 +38,7 @@ public class GeneratePayslipsRequest {
   private LocalDate periodEnd;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<UUID> staffIds = new ArrayList<>();
+  private @Nullable List<UUID> staffIds = new ArrayList<>();
 
   public GeneratePayslipsRequest() {
     super();

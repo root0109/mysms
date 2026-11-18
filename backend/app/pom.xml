@@ -15,6 +15,11 @@
   <artifactId>app</artifactId>
   <name>MySMS monolith</name>
 
+  <properties>
+    <!-- no layer packages here: SpotBugs analyses the module's own root package -->
+    <mysms.spotbugs.onlyAnalyze>com.mysms.app.-</mysms.spotbugs.onlyAnalyze>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>com.mysms</groupId>
@@ -138,6 +143,12 @@
       <artifactId>testcontainers-postgresql</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- a real SMTP server for the mails iam sends (self sign-up) -->
+    <dependency>
+      <groupId>com.icegreen</groupId>
+      <artifactId>greenmail</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers</artifactId>
@@ -154,13 +165,6 @@
           <mainClass>com.mysms.app.MySmsApplication</mainClass>
           <classifier>exec</classifier>
         </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

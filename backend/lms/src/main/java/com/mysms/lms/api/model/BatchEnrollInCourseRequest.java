@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -31,7 +31,7 @@ public class BatchEnrollInCourseRequest {
   private @Nullable Boolean purchasedCertificate;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<UUID> paymentIds = new ArrayList<>();
+  private @Nullable List<UUID> paymentIds = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Boolean validateOnly;

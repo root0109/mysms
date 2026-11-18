@@ -9,33 +9,41 @@ import {
   type RecordRow,
 } from '@mysms/core';
 import { Card } from '@mysms/ui-web';
-import { useState, type ComponentType } from 'react';
+import { lazy, Suspense, useState, type ComponentType } from 'react';
+import { CycleRowTimeline } from './admission/CycleTimeline';
 import { TakeAttendanceButton } from './attendance/TakeAttendanceButton';
-import {
-  AssignmentTools,
-  ExamSessionTools,
-  ExamTools,
-  GenerateResultsTool,
-  HomeworkApprovalTools,
-  HomeworkBoardTools,
-  MarksheetTools,
-} from './assessment/AssessmentWorkflowTools';
+import type * as WorkflowTools from './assessment/AssessmentWorkflowTools';
 import { RecordsOf } from './RecordsScreen';
 import { defaultColumns, defaultFilter, screenTitleKey } from './resourceColumns';
 import type { ResourceScreenDef } from './resourceScreens';
 
+type RowTool = ComponentType<{ row: RecordRow }>;
+
+/**
+ * An assessment workflow tool, loaded with the first list that shows one: the tools are a chunk of their own, so the
+ * web's initial JS stays within its budget (ui/05 §10).
+ */
+function workflowTool(name: keyof typeof WorkflowTools): RowTool {
+  return lazy(() =>
+    import('./assessment/AssessmentWorkflowTools').then((tools) => ({ default: tools[name] })),
+  );
+}
+
 /** What a row of a list can start besides its editor, by the name a screen definition gives it. */
-const ROW_TOOLS: Readonly<Record<NonNullable<ResourceScreenDef['tool']>, ComponentType<{ row: RecordRow }>>> =
-  {
-    takeAttendance: TakeAttendanceButton,
-    homeworkBoard: HomeworkBoardTools,
-    homeworkApproval: HomeworkApprovalTools,
-    assignment: AssignmentTools,
-    examSession: ExamSessionTools,
-    exam: ExamTools,
-    marksheet: MarksheetTools,
-    generateResults: GenerateResultsTool,
-  };
+const ROW_TOOLS: Readonly<Record<NonNullable<ResourceScreenDef['tool']>, RowTool>> = {
+  takeAttendance: TakeAttendanceButton,
+  cycleTimeline: CycleRowTimeline,
+  homeworkBoard: workflowTool('HomeworkBoardTools'),
+  homeworkApproval: workflowTool('HomeworkApprovalTools'),
+  assignment: workflowTool('AssignmentTools'),
+  examSession: workflowTool('ExamSessionTools'),
+  exam: workflowTool('ExamTools'),
+  marksheet: workflowTool('MarksheetTools'),
+  generateResults: workflowTool('GenerateResultsTool'),
+  clearDemoData: lazy(() =>
+    import('./platform/PlatformTools').then((tools) => ({ default: tools.ClearDemoDataTool })),
+  ),
+};
 
 /**
  * One inventory screen over one record type: its own heading and route, the columns that identify a row, a status
@@ -73,7 +81,15 @@ export function ResourceScreen({ screen }: { screen: ResourceScreenDef }) {
           ? (row) => `/app${buildPath(detailRoute, { [detailParam]: row.id })}`
           : undefined
       }
-      rowTool={Tool ? (row) => <Tool row={row} /> : undefined}
+      rowTool={
+        Tool
+          ? (row) => (
+              <Suspense fallback={null}>
+                <Tool row={row} />
+              </Suspense>
+            )
+          : undefined
+      }
       title={title}
       intro={t(def.scope === 'global' ? 'adm.resource.introGlobal' : 'adm.resource.intro', {
         label: def.label,

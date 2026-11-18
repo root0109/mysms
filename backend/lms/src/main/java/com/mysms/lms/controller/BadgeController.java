@@ -8,7 +8,6 @@ import com.mysms.lms.api.model.AwardBadgeRequest;
 import com.mysms.lms.api.model.Badge;
 import com.mysms.lms.api.model.BadgeAward;
 import com.mysms.lms.api.model.BadgeUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.BadgeService;
 import java.net.URI;
@@ -17,10 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Badge operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Badge operations; authentication and the permission check already ran in the auth-client filter.
+ * Operations not served yet answer 501.
  */
 @RestController
 public class BadgeController implements BadgeApi {
@@ -34,7 +31,8 @@ public class BadgeController implements BadgeApi {
     @Override
     public ResponseEntity<BadgeAward> awardBadge(UUID badgeId, AwardBadgeRequest awardBadgeRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        BadgeAward awarded = badgeService.awardBadge(badgeId, awardBadgeRequest.getUserId());
+        return ResponseEntity.ok().eTag(awarded.getEtag()).body(awarded);
     }
 
     @Override

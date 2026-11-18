@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of iam.user_role (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of iam.user_role. */
 @Getter
 @Setter
 @SuperBuilder

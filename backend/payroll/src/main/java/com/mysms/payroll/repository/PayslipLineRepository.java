@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to payroll.payslip_line (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to payroll.payslip_line: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class PayslipLineRepository {
@@ -115,6 +112,14 @@ public class PayslipLineRepository {
              ANY(:scopeIds))))
             """;
 
+    /** Owner-only reads: the lines of the payslips the reader may read (PayslipRepository#readableBy). */
+    private static final String READABLE_BY = """
+             (r.payslip_id IN (SELECT p1.id FROM payroll.payslip p1 WHERE p1.tenant_id = :tenantId
+                 AND (:officerAll OR p1.institution_id = ANY(:officerIds) OR p1.staff_id IN (SELECT m.staff_id
+                 FROM payroll.staff_member m WHERE m.tenant_id = :tenantId AND NOT m.is_deleted
+                  AND m.user_id = :reader))))
+            """;
+
     private final JdbcClient jdbc;
 
     public PayslipLineRepository(@Qualifier(PayrollDatabaseConfig.DATABASE) ModuleDatabase database) {
@@ -200,12 +205,18 @@ public class PayslipLineRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
+    /** The lines the reader may read; {@code officer} is where the reader is a payroll officer. */
+    public static SqlFragment readableBy(DataScope officer, UUID reader) {
+        return new SqlFragment(READABLE_BY, Map.of("officerAll", officer.all(), "officerIds", officer.institutionArray(),
+                "reader", reader));
+    }
+
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.payslip_id = :parentId", Map.of("parentId", parentId));
     }

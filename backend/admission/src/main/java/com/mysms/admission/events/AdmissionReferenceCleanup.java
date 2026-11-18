@@ -18,10 +18,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
- * admission keeps its logical references consistent when their owners are deleted (database/logical-references.md, "Events
- * drive cleanup"; references are not checked against the owner when written). For each owner's `.deleted` event it
- * clears the referencing column or soft-deletes the referencing row, audits each changed row and announces it on its
- * own outbox, inside the event's tenant (messaging's InboxProcessor: exactly once per event).
+ * Keeps admission's logical references consistent when their owners are deleted (references are not checked when
+ * written). For each owner's {@code .deleted} event it clears the referencing column or soft-deletes the referencing
+ * row, audited and announced on the outbox, inside the event's tenant; the inbox delivers each event exactly once.
  */
 @Component
 public class AdmissionReferenceCleanup implements EventSubscriptions {

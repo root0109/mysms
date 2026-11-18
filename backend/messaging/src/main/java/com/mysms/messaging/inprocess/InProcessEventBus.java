@@ -15,13 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * `mysms.events.bus=in-process`: delivers events to the subscribers of the same JVM, synchronously on the publishing
- * thread (the relay). A failing handler makes the publish fail, so the outbox row stays pending and is published
- * again at the relay's next pass — the same at-least-once contract as a broker. After {@code deliveryLimit} failed
- * deliveries of one event to one consumer, that consumer is skipped for it (logged as an error; its inbox keeps the
- * failure in `processing_error`), so one poison event cannot hold back the module's later events. A
- * {@link RejectedEventException} skips at once. Suitable for the single-process monolith; services in separate
- * processes need a broker (RabbitMQ, the default, or Google Cloud Pub/Sub).
+ * {@code mysms.events.bus=in-process}: delivers synchronously to subscribers in the same JVM, on the relay's thread. A
+ * failing handler fails the publish, so the outbox row is republished on the next pass (at least once, as with a
+ * broker). After {@code deliveryLimit} failed deliveries to one consumer it is skipped for that event (logged; its
+ * inbox keeps the failure), so one poison event cannot hold back later ones. For the single-process monolith only.
  */
 public final class InProcessEventBus implements EventBus {
 

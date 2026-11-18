@@ -8,6 +8,7 @@ import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.FieldError;
 import com.mysms.core.error.InvalidStateException;
+import com.mysms.core.error.PermissionDeniedException;
 import com.mysms.core.error.PreconditionFailedException;
 import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.error.ValidationFailedException;
@@ -52,15 +53,15 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import com.mysms.authclient.AuthContext;
+import com.mysms.core.id.UuidV7;
+import com.mysms.lms.repository.ForumModerationRepository;
+import java.util.function.Predicate;
 
 /**
- * Business service of lms.forum_topic (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a ForumTopic
- * are served here too — ForumPost, ForumReadState.
+ * Business service of lms.forum_topic and of the records that exist only as part of a ForumTopic (ForumPost,
+ * ForumReadState): audit and domain event commit in the same transaction as every change. Rows outside the caller's
+ * institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class ForumTopicService extends AppTransactionManager {
@@ -86,12 +87,12 @@ public class ForumTopicService extends AppTransactionManager {
     static final String FORUM_POST_PERMISSION_CREATE = "lms.forum_post.create";
     static final String FORUM_POST_PERMISSION_UPDATE = "lms.forum_post.update";
     static final String FORUM_POST_PERMISSION_DELETE = "lms.forum_post.delete";
-    /** The contract's ForumPostUpdate fields, in apply order. */
+    /**
+     * The contract's ForumPostUpdate fields, in apply order: what its author writes. The author comes from the token;
+     * moderation, flags and counts are the workflows' own.
+     */
     static final List<String> FORUM_POST_WRITABLE =
-            List.of("parentPostId", "title", "body", "authorUserId", "postedAt", "isDraft", "isTeacherPost",
-                    "substantiveFlag",
-            "isHidden", "isHiddenByParent", "isFlagged", "showSignature", "usesInlineAuthoring", "isAbusive",
-            "abuseReported", "abuseReportCount", "abuseConfirmedBy", "abuseConfirmedAt", "likeCount");
+            List.of("parentPostId", "title", "body", "isDraft", "showSignature", "usesInlineAuthoring");
 
     public static final String FORUM_READ_STATE_AGGREGATE = ForumReadStateEntity.TABLE;
     static final String FORUM_READ_STATE_PERMISSION_LIST = "lms.forum_read_state.read";
@@ -106,6 +107,8 @@ public class ForumTopicService extends AppTransactionManager {
     private final ForumPostMapper forumPostMapper;
     private final ForumReadStateRepository forumReadStateRepository;
     private final ForumReadStateMapper forumReadStateMapper;
+    private final ForumModerationRepository moderation;
+    private final CohortAccess access;
 
     public ForumTopicService(ForumTopicRepository repository,
             ForumTopicMapper mapper,
@@ -118,8 +121,12 @@ public class ForumTopicService extends AppTransactionManager {
             ForumPostRepository forumPostRepository,
             ForumPostMapper forumPostMapper,
             ForumReadStateRepository forumReadStateRepository,
-            ForumReadStateMapper forumReadStateMapper) {
+            ForumReadStateMapper forumReadStateMapper,
+            ForumModerationRepository moderation,
+            CohortAccess access) {
         super(database, transactions);
+        this.access = access;
+        this.moderation = moderation;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
@@ -173,8 +180,8 @@ public class ForumTopicService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ForumTopic updateForumTopic(UUID id, String ifMatch, ForumTopicUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -246,9 +253,8 @@ public class ForumTopicService extends AppTransactionManager {
     }
 
     /**
-     * lms.HideForumTopic: Hide from students. The row must be visible and writable for the caller, and the step is
-     * allowed while is_hidden is false; in any other state
-     * the answer is 409 and nothing changes.
+     * lms.HideForumTopic: Hide from students. Allowed while is_hidden is false, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public ForumTopic hideForumTopic(UUID id, HideForumTopicRequest request) {
         DataScope scope = DataScope.current(PERMISSION_HIDE_FORUM_TOPIC);
@@ -279,9 +285,8 @@ public class ForumTopicService extends AppTransactionManager {
     }
 
     /**
-     * lms.UnhideForumTopic: Show again. The row must be visible and writable for the caller, and the step is allowed
-     * while is_hidden is true; in any other state
-     * the answer is 409 and nothing changes.
+     * lms.UnhideForumTopic: Show again. Allowed while is_hidden is true, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public ForumTopic unhideForumTopic(UUID id, UnhideForumTopicRequest request) {
         DataScope scope = DataScope.current(PERMISSION_UNHIDE_FORUM_TOPIC);
@@ -321,12 +326,12 @@ public class ForumTopicService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.discussion_prompt it belongs to). */
+    /** The institution of the lms.discussion_prompt the row belongs to. */
     private Optional<UUID> institutionOf(ForumTopicEntity entity) {
         return repository.institutionOf(entity.getDiscussionPromptId());
     }
 
-    /** Applies the selected ForumTopicUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected ForumTopicUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(ForumTopicEntity entity, ForumTopicUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -427,11 +432,26 @@ public class ForumTopicService extends AppTransactionManager {
         });
     }
 
-    /** Creates the row; with validateOnly every check runs and nothing is written. */
+    /**
+     * The caller's post in a topic of a cohort they study in or teach (403 for anyone else, and for a topic of no
+     * cohort); moderation, flags and counts start at their defaults. With validateOnly nothing is written.
+     */
     public ForumPost createForumPost(UUID forumTopicId, ForumPost request, boolean validateOnly) {
         validator.validate(request);
         ForumPostEntity entity = forumPostMapper.toEntity(request);
         entity.setForumTopicId(forumTopicId);
+        entity.setAuthorUserId(AuthContext.require().userId());
+        entity.setPostedAt(null);
+        entity.setSubstantiveFlag(null);
+        entity.setIsHidden(null);
+        entity.setIsHiddenByParent(null);
+        entity.setIsFlagged(null);
+        entity.setIsAbusive(null);
+        entity.setAbuseReported(null);
+        entity.setAbuseReportCount(null);
+        entity.setAbuseConfirmedBy(null);
+        entity.setAbuseConfirmedAt(null);
+        entity.setLikeCount(null);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
         DataScope scope = DataScope.current(FORUM_POST_PERMISSION_CREATE);
@@ -442,6 +462,9 @@ public class ForumTopicService extends AppTransactionManager {
             if (!scope.canRead(institutionOfForumPost(entity))) {
                 throw new ResourceNotFoundException("lms.forum_topic", entity.getForumTopicId());
             }
+            UUID cohort = forumPostRepository.cohortOfTopic(forumTopicId).orElseThrow(() ->
+                    new PermissionDeniedException("Only the members of the topic's cohort post in it."));
+            entity.setIsTeacherPost(access.requireMember(cohort, FORUM_POST_PERMISSION_CREATE));
             assertValidForumPost(entity, true);
             scope.requireWritable(institutionOfForumPost(entity));
             assertUniqueForumPost(entity);
@@ -457,8 +480,8 @@ public class ForumTopicService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ForumPost updateForumPost(UUID forumTopicId, UUID id, String ifMatch, ForumPostUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -466,7 +489,7 @@ public class ForumTopicService extends AppTransactionManager {
         List<String> fields = UpdateMask.fields(updateMask, changes, FORUM_POST_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(FORUM_POST_PERMISSION_UPDATE);
-            ForumPostEntity entity = loadVisibleForumPost(scope, forumTopicId, id);
+            ForumPostEntity entity = writableForumPost(scope, forumTopicId, id);
             scope.requireWritable(institutionOfForumPost(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -495,7 +518,7 @@ public class ForumTopicService extends AppTransactionManager {
         int expected = Etags.expectedVersion(ifMatch);
         runInWriteTransaction(() -> {
             DataScope scope = DataScope.current(FORUM_POST_PERMISSION_DELETE);
-            ForumPostEntity entity = loadVisibleForumPost(scope, forumTopicId, id);
+            ForumPostEntity entity = writableForumPost(scope, forumTopicId, id);
             scope.requireWritable(institutionOfForumPost(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -539,6 +562,16 @@ public class ForumTopicService extends AppTransactionManager {
         return entity;
     }
 
+    /** A post its author or the topic's teaching staff may change; anybody else's is 404. */
+    private ForumPostEntity writableForumPost(DataScope scope, UUID forumTopicId, UUID id) {
+        ForumPostEntity entity = loadVisibleForumPost(scope, forumTopicId, id);
+        if (!AuthContext.require().userId().equals(entity.getAuthorUserId()) && !forumPostRepository
+                .cohortOfTopic(forumTopicId).map(access::teaches).orElse(false)) {
+            throw new ResourceNotFoundException(FORUM_POST_AGGREGATE, id);
+        }
+        return entity;
+    }
+
     /**
      * The institution that owns the row (the institution of the lms.forum_topic → lms.discussion_prompt it belongs to).
      */
@@ -546,29 +579,16 @@ public class ForumTopicService extends AppTransactionManager {
         return forumPostRepository.institutionOf(entity.getForumTopicId());
     }
 
-    /** Applies the selected ForumPostUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected ForumPostUpdate fields; explicit per field so a mask can clear values. */
     private static void applyForumPost(ForumPostEntity entity, ForumPostUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
                 case "parentPostId" -> entity.setParentPostId(changes.getParentPostId());
                 case "title" -> entity.setTitle(changes.getTitle());
                 case "body" -> entity.setBody(changes.getBody());
-                case "authorUserId" -> entity.setAuthorUserId(changes.getAuthorUserId());
-                case "postedAt" -> entity.setPostedAt(changes.getPostedAt());
                 case "isDraft" -> entity.setIsDraft(changes.getIsDraft());
-                case "isTeacherPost" -> entity.setIsTeacherPost(changes.getIsTeacherPost());
-                case "substantiveFlag" -> entity.setSubstantiveFlag(changes.getSubstantiveFlag());
-                case "isHidden" -> entity.setIsHidden(changes.getIsHidden());
-                case "isHiddenByParent" -> entity.setIsHiddenByParent(changes.getIsHiddenByParent());
-                case "isFlagged" -> entity.setIsFlagged(changes.getIsFlagged());
                 case "showSignature" -> entity.setShowSignature(changes.getShowSignature());
                 case "usesInlineAuthoring" -> entity.setUsesInlineAuthoring(changes.getUsesInlineAuthoring());
-                case "isAbusive" -> entity.setIsAbusive(changes.getIsAbusive());
-                case "abuseReported" -> entity.setAbuseReported(changes.getAbuseReported());
-                case "abuseReportCount" -> entity.setAbuseReportCount(changes.getAbuseReportCount());
-                case "abuseConfirmedBy" -> entity.setAbuseConfirmedBy(changes.getAbuseConfirmedBy());
-                case "abuseConfirmedAt" -> entity.setAbuseConfirmedAt(changes.getAbuseConfirmedAt());
-                case "likeCount" -> entity.setLikeCount(changes.getLikeCount());
                 default -> throw new IllegalStateException("unhandled writable field " + field);
             }
         }
@@ -690,5 +710,110 @@ public class ForumTopicService extends AppTransactionManager {
 
     private void assertUniqueForumReadState(ForumReadStateEntity entity) {
 
+    }
+
+    // ---- moderation of posts and the reader's own marks ----
+
+    static final String PERMISSION_MARK_READ = "lms.forum_topic.mark_topic_read";
+    static final String PERMISSION_HIDE_POST = "lms.forum_post.hide_forum_post";
+    static final String PERMISSION_UNHIDE_POST = "lms.forum_post.unhide_forum_post";
+    static final String PERMISSION_CONFIRM_ABUSE = "lms.forum_post.confirm_post_abuse";
+    static final String PERMISSION_FLAG_POST = "lms.forum_post.flag_forum_post";
+    static final String PERMISSION_SUBSTANTIVE = "lms.forum_post.mark_post_substantive";
+
+    /** Marks the topic, and any of its posts named, read by the caller; a post of another topic is 422. */
+    public void markTopicRead(UUID topicId, List<UUID> postIds) {
+        AuthContext caller = AuthContext.require();
+        DataScope scope = DataScope.current(PERMISSION_MARK_READ);
+        runInWriteTransaction(() -> {
+            loadVisible(scope, topicId);
+            List<UUID> posts = postIds == null ? List.of() : postIds.stream().distinct().toList();
+            for (UUID post : posts) {
+                if (forumPostRepository.findById(post).filter(row -> topicId.equals(row.getForumTopicId())).isEmpty()) {
+                    throw new ValidationFailedException(List.of(new FieldError("forumPostIds",
+                            "every post must belong to the topic", "NOT_FOUND")));
+                }
+            }
+            OffsetDateTime now = now();
+            moderation.markRead(UuidV7.next(clock), caller.userId(), topicId, null, now);
+            for (UUID post : posts) {
+                moderation.markRead(UuidV7.next(clock), caller.userId(), topicId, post, now);
+            }
+        });
+    }
+
+    /** Sets or clears the caller's own flag on a post (seen only by them). */
+    public void flagForumPost(UUID topicId, UUID postId, boolean flagged) {
+        AuthContext caller = AuthContext.require();
+        DataScope scope = DataScope.current(PERMISSION_FLAG_POST);
+        runInWriteTransaction(() -> {
+            loadVisibleForumPost(scope, topicId, postId);
+            moderation.flag(UuidV7.next(clock), caller.userId(), topicId, postId, flagged, now());
+        });
+    }
+
+    /** Hides a visible post; its replies are hidden with it. The reason is kept with the audit record. */
+    public ForumPost hideForumPost(UUID topicId, UUID postId, String etag, String reason) {
+        return moderate(topicId, postId, etag, PERMISSION_HIDE_POST, "hide", List.of("isHidden"), reason,
+                row -> !Boolean.TRUE.equals(row.getIsHidden()),
+                (row, now, actor) -> moderation.setHidden(postId, row.getRowVersion(), true, now, actor));
+    }
+
+    /** Shows a hidden post again, with the replies no other hidden post still covers. */
+    public ForumPost unhideForumPost(UUID topicId, UUID postId, String etag) {
+        return moderate(topicId, postId, etag, PERMISSION_UNHIDE_POST, "unhide", List.of("isHidden"), null,
+                row -> Boolean.TRUE.equals(row.getIsHidden()),
+                (row, now, actor) -> moderation.setHidden(postId, row.getRowVersion(), false, now, actor));
+    }
+
+    /** Confirms a reported post as abusive and hides it; a post nobody reported, or already confirmed, is 409. */
+    public ForumPost confirmPostAbuse(UUID topicId, UUID postId, String etag, String reason) {
+        return moderate(topicId, postId, etag, PERMISSION_CONFIRM_ABUSE, "confirm_abuse",
+                List.of("isAbusive", "isHidden", "abuseConfirmedBy", "abuseConfirmedAt"), reason,
+                row -> !Boolean.TRUE.equals(row.getIsAbusive()) && (Boolean.TRUE.equals(row.getAbuseReported())
+                        || row.getAbuseReportCount() != null && row.getAbuseReportCount() > 0),
+                (row, now, actor) -> moderation.confirmAbuse(postId, row.getRowVersion(), now, actor));
+    }
+
+    /** Marks a post substantive (1) or not (0) for discussion grading. */
+    public ForumPost markPostSubstantive(UUID topicId, UUID postId, boolean substantive) {
+        return moderate(topicId, postId, null, PERMISSION_SUBSTANTIVE, "mark_substantive", List.of("substantiveFlag"),
+                null, row -> true, (row, now, actor) -> moderation.setSubstantive(postId, row.getRowVersion(),
+                        (short) (substantive ? 1 : 0), now, actor));
+    }
+
+    @FunctionalInterface
+    private interface PostWrite {
+        int apply(ForumPostEntity row, OffsetDateTime now, UUID actor);
+    }
+
+    /** One guarded step on a post: scope 404, writable 403, body etag 412, guard 409, then audit and event. */
+    private ForumPost moderate(UUID topicId, UUID postId, String etag, String permission, String step,
+            List<String> changed, String reason, Predicate<ForumPostEntity> guard, PostWrite write) {
+        DataScope scope = DataScope.current(permission);
+        OptionalInt expected = Etags.bodyVersion(etag);
+        return doInWriteTransaction(() -> {
+            ForumPostEntity row = loadVisibleForumPost(scope, topicId, postId);
+            scope.requireWritable(institutionOfForumPost(row));
+            if (expected.isPresent() && expected.getAsInt() != row.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!guard.test(row)) {
+                throw new InvalidStateException("The post cannot be changed this way in its current state.");
+            }
+            OffsetDateTime now = now();
+            UUID actor = Actor.current().orElse(null);
+            if (write.apply(row, now, actor) == 0) {
+                throw new PreconditionFailedException("The post changed since it was read.");
+            }
+            moderation.recomputeHiddenByParent(topicId, now, actor);
+            audit.recordTransition(FORUM_POST_AGGREGATE, postId, step, changed, reason);
+            outbox.publish(FORUM_POST_AGGREGATE + "." + step, FORUM_POST_AGGREGATE, postId, LmsEvents.payload(postId));
+            return forumPostMapper.toDto(forumPostRepository.findById(postId).orElseThrow());
+        });
+    }
+
+    private OffsetDateTime now() {
+        return OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
     }
 }

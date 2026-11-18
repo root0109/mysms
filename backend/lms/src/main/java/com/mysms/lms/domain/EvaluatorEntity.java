@@ -2,6 +2,7 @@ package com.mysms.lms.domain;
 
 import com.mysms.core.entity.BaseEntity;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of lms.evaluator (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of lms.evaluator. */
 @Getter
 @Setter
 @SuperBuilder
@@ -23,4 +24,8 @@ public class EvaluatorEntity extends BaseEntity {
     private UUID userId;
     private LocalDate unavailableFrom;
     private LocalDate unavailableTo;
+    private String calendarProvider;
+    private String calendarState;
+    private OffsetDateTime calendarRequestedAt;
+    private OffsetDateTime calendarConnectedAt;
 }

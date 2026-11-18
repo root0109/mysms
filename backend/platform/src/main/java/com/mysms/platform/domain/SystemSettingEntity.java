@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of platform.system_setting (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of platform.system_setting. */
 @Getter
 @Setter
 @SuperBuilder

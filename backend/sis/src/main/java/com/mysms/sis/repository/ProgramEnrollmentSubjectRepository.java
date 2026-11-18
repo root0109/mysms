@@ -23,11 +23,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to sis.program_enrollment_subject (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to sis.program_enrollment_subject: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. Every statement filters the caller's tenant itself; row-level security
+ * is the backstop.
  */
 @Repository
 public class ProgramEnrollmentSubjectRepository {
@@ -60,6 +58,11 @@ public class ProgramEnrollmentSubjectRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String SUBJECTS_OF = """
+            SELECT r.subject_id FROM sis.program_enrollment_subject r
+             WHERE r.tenant_id = :tenantId
+               AND r.program_enrollment_id = :programEnrollmentId AND r.deleted_at IS NULL
+            """;
     private static final String INSERT = """
             INSERT INTO sis.program_enrollment_subject
             (id, tenant_id, program_enrollment_id, subject_id, created_at, created_by, updated_at, updated_by,
@@ -129,6 +132,12 @@ public class ProgramEnrollmentSubjectRepository {
         return page.toPage(rows, e -> sortValues(page.sort(), e), ProgramEnrollmentSubjectEntity::getId);
     }
 
+    /** The subjects the course registration already covers. */
+    public List<UUID> subjectsOf(UUID programEnrollmentId) {
+        return jdbc.sql(SUBJECTS_OF).param("programEnrollmentId", programEnrollmentId)
+                .query((rs, row) -> rs.getObject("subject_id", UUID.class)).list();
+    }
+
     /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
     public ProgramEnrollmentSubjectEntity insert(ProgramEnrollmentSubjectEntity e) {
         return jdbc.sql(INSERT)
@@ -190,7 +199,7 @@ public class ProgramEnrollmentSubjectRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

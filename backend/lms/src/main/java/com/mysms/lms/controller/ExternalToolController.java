@@ -1,5 +1,6 @@
 package com.mysms.lms.controller;
 
+import com.mysms.lms.business.ExternalToolWorkflowService;
 import java.util.List;
 import com.mysms.core.paging.PagingUtil;
 import com.mysms.core.paging.PagingInfo;
@@ -15,7 +16,6 @@ import com.mysms.lms.api.model.ExternalToolRoleUpdate;
 import com.mysms.lms.api.model.ExternalToolSetting;
 import com.mysms.lms.api.model.ExternalToolSettingUpdate;
 import com.mysms.lms.api.model.ExternalToolUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.ExternalToolService;
 import java.net.URI;
@@ -24,25 +24,27 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the ExternalTool operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the ExternalTool operations; authentication and the permission check already ran in the auth-client
+ * filter. Operations not served yet answer 501.
  */
 @RestController
 public class ExternalToolController implements ExternalToolApi {
 
     private final ExternalToolService externalToolService;
+    private final ExternalToolWorkflowService externalToolWorkflowService;
 
-    public ExternalToolController(ExternalToolService externalToolService) {
+    public ExternalToolController(ExternalToolService externalToolService,
+            ExternalToolWorkflowService externalToolWorkflowService) {
+        this.externalToolWorkflowService = externalToolWorkflowService;
         this.externalToolService = externalToolService;
     }
 
     @Override
     public ResponseEntity<ExternalTool> activateExternalTool(UUID externalToolId,
             ActivateExternalToolRequest activateExternalToolRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        ExternalTool activated = externalToolWorkflowService.activateExternalTool(externalToolId,
+                activateExternalToolRequest);
+        return ResponseEntity.ok().eTag(activated.getEtag()).body(activated);
     }
 
     @Override

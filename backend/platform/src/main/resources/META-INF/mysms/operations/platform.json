@@ -5,7 +5,8 @@
   "permission" : "platform.operation.cancel_operation",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.CancelSubscription",
   "method" : "POST",
@@ -13,7 +14,8 @@
   "permission" : "platform.tenant_subscription.cancel_subscription",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.ClearDemoData",
   "method" : "POST",
@@ -21,7 +23,8 @@
   "permission" : "platform.tenant.clear_demo_data",
   "schemes" : [ "platformAdminAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "platform"
 }, {
   "operationId" : "platform.CompleteUpload",
   "method" : "POST",
@@ -29,7 +32,17 @@
   "permission" : "platform.file_object.complete_upload",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "platform.ConfirmSubscriptionCheckout",
+  "method" : "POST",
+  "path" : "/v1/platform/tenant-subscriptions/{tenantSubscriptionId}:confirmCheckout",
+  "permission" : "platform.tenant_subscription.start_subscription_checkout",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.CopyFile",
   "method" : "POST",
@@ -37,7 +50,8 @@
   "permission" : "platform.file_object.copy_file",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.CreateEntityAttachment",
   "method" : "POST",
@@ -45,7 +59,8 @@
   "permission" : "platform.entity_attachment.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.CreateEntityNote",
   "method" : "POST",
@@ -53,7 +68,8 @@
   "permission" : "platform.entity_note.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.CreateReservedKeyword",
   "method" : "POST",
@@ -61,7 +77,8 @@
   "permission" : "platform.reserved_keyword.create",
   "schemes" : [ "platformAdminAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "platform"
 }, {
   "operationId" : "platform.CreateSaasPlan",
   "method" : "POST",
@@ -69,7 +86,8 @@
   "permission" : "platform.saas_plan.create",
   "schemes" : [ "platformAdminAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "platform"
 }, {
   "operationId" : "platform.CreateSalesEnquiry",
   "method" : "POST",
@@ -77,7 +95,8 @@
   "permission" : "platform.sales_enquiry.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : true,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.CreateStorageQuota",
   "method" : "POST",
@@ -85,7 +104,8 @@
   "permission" : "platform.storage_quota.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.CreateSystemSetting",
   "method" : "POST",
@@ -93,7 +113,8 @@
   "permission" : "platform.system_setting.create",
   "schemes" : [ "platformAdminAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "platform"
 }, {
   "operationId" : "platform.CreateTag",
   "method" : "POST",
@@ -101,7 +122,8 @@
   "permission" : "platform.tag.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.CreateTagAssignment",
   "method" : "POST",
@@ -109,7 +131,8 @@
   "permission" : "platform.tag_assignment.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.CreateTenant",
   "method" : "POST",
@@ -117,7 +140,8 @@
   "permission" : "platform.tenant.create",
   "schemes" : [ "platformAdminAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "platform"
 }, {
   "operationId" : "platform.CreateTheme",
   "method" : "POST",
@@ -125,7 +149,8 @@
   "permission" : "platform.theme.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.CreateUploadPolicy",
   "method" : "POST",
@@ -133,7 +158,8 @@
   "permission" : "platform.upload_policy.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.CreateUploadUrl",
   "method" : "POST",
@@ -141,372 +167,433 @@
   "permission" : "platform.file_object.create_upload_url",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.DeleteEntityAttachment",
   "method" : "DELETE",
   "path" : "/v1/platform/attachments/{entityAttachmentId}",
   "permission" : "platform.entity_attachment.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.DeleteEntityNote",
   "method" : "DELETE",
   "path" : "/v1/platform/entity-notes/{entityNoteId}",
   "permission" : "platform.entity_note.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.DeleteFileObject",
   "method" : "DELETE",
   "path" : "/v1/platform/files/{fileObjectId}",
   "permission" : "platform.file_object.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.DeleteReservedKeyword",
   "method" : "DELETE",
   "path" : "/v1/platform/reserved-keywords/{reservedKeywordId}",
   "permission" : "platform.reserved_keyword.delete",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.DeleteSaasPlan",
   "method" : "DELETE",
   "path" : "/v1/platform/saas-plans/{saasPlanId}",
   "permission" : "platform.saas_plan.delete",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.DeleteSalesEnquiry",
   "method" : "DELETE",
   "path" : "/v1/platform/sales-enquiries/{salesEnquiryId}",
   "permission" : "platform.sales_enquiry.delete",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.DeleteStorageQuota",
   "method" : "DELETE",
   "path" : "/v1/platform/storage-quotas/{storageQuotaId}",
   "permission" : "platform.storage_quota.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.DeleteSystemSetting",
   "method" : "DELETE",
   "path" : "/v1/platform/system-settings/{systemSettingId}",
   "permission" : "platform.system_setting.delete",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.DeleteTag",
   "method" : "DELETE",
   "path" : "/v1/platform/tags/{tagId}",
   "permission" : "platform.tag.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.DeleteTagAssignment",
   "method" : "DELETE",
   "path" : "/v1/platform/tag-assignments/{tagAssignmentId}",
   "permission" : "platform.tag_assignment.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.DeleteTenant",
   "method" : "DELETE",
   "path" : "/v1/platform/tenants/{tenantId}",
   "permission" : "platform.tenant.delete",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.DeleteTheme",
   "method" : "DELETE",
   "path" : "/v1/platform/themes/{themeId}",
   "permission" : "platform.theme.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.DeleteUploadPolicy",
   "method" : "DELETE",
   "path" : "/v1/platform/upload-policies/{uploadPolicyId}",
   "permission" : "platform.upload_policy.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetAuditLog",
   "method" : "GET",
   "path" : "/v1/platform/audit-logs/{auditLogId}",
   "permission" : "platform.audit_log.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetBranding",
   "method" : "GET",
   "path" : "/v1/platform/branding",
   "permission" : "platform.tenant.get_branding",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : true
+  "anonymous" : true,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetDeletionLog",
   "method" : "GET",
   "path" : "/v1/platform/deletion-logs/{deletionLogId}",
   "permission" : "platform.deletion_log.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetDownloadUrl",
   "method" : "GET",
   "path" : "/v1/platform/files/{fileObjectId}:downloadUrl",
   "permission" : "platform.file_object.get_download_url",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : true
+  "anonymous" : true,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetEntityNote",
   "method" : "GET",
   "path" : "/v1/platform/entity-notes/{entityNoteId}",
   "permission" : "platform.entity_note.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetFileObject",
   "method" : "GET",
   "path" : "/v1/platform/files/{fileObjectId}",
   "permission" : "platform.file_object.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetImportTemplate",
   "method" : "GET",
   "path" : "/v1/platform/imports/templates/{entityType}",
   "permission" : "platform.tenant.get_import_template",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetMyStorageUsage",
   "method" : "GET",
   "path" : "/v1/platform/me/storage",
   "permission" : "platform.storage_quota.get_my_storage_usage",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetOperation",
   "method" : "GET",
   "path" : "/v1/platform/operations/{operationId}",
   "permission" : "platform.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetReservedKeyword",
   "method" : "GET",
   "path" : "/v1/platform/reserved-keywords/{reservedKeywordId}",
   "permission" : "platform.reserved_keyword.read",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.GetSaasPlan",
   "method" : "GET",
   "path" : "/v1/platform/saas-plans/{saasPlanId}",
   "permission" : "platform.saas_plan.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : true
+  "anonymous" : true,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetSalesEnquiry",
   "method" : "GET",
   "path" : "/v1/platform/sales-enquiries/{salesEnquiryId}",
   "permission" : "platform.sales_enquiry.read",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.GetStorageQuota",
   "method" : "GET",
   "path" : "/v1/platform/storage-quotas/{storageQuotaId}",
   "permission" : "platform.storage_quota.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetSystemSetting",
   "method" : "GET",
   "path" : "/v1/platform/system-settings/{systemSettingId}",
   "permission" : "platform.system_setting.read",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.GetTag",
   "method" : "GET",
   "path" : "/v1/platform/tags/{tagId}",
   "permission" : "platform.tag.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetTenant",
   "method" : "GET",
   "path" : "/v1/platform/tenants/{tenantId}",
   "permission" : "platform.tenant.read",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.GetTenantSubscription",
   "method" : "GET",
   "path" : "/v1/platform/tenant-subscriptions/{tenantSubscriptionId}",
   "permission" : "platform.tenant_subscription.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetTheme",
   "method" : "GET",
   "path" : "/v1/platform/themes/{themeId}",
   "permission" : "platform.theme.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : true
+  "anonymous" : true,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GetUploadPolicy",
   "method" : "GET",
   "path" : "/v1/platform/upload-policies/{uploadPolicyId}",
   "permission" : "platform.upload_policy.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.GlobalSearch",
   "method" : "GET",
   "path" : "/v1/platform/search",
   "permission" : "platform.tenant.global_search",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListAuditLogs",
   "method" : "GET",
   "path" : "/v1/platform/audit-logs",
   "permission" : "platform.audit_log.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListDeletionLogs",
   "method" : "GET",
   "path" : "/v1/platform/deletion-logs",
   "permission" : "platform.deletion_log.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListEntityAttachments",
   "method" : "GET",
   "path" : "/v1/platform/attachments",
   "permission" : "platform.entity_attachment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListEntityNotes",
   "method" : "GET",
   "path" : "/v1/platform/entity-notes",
   "permission" : "platform.entity_note.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListFileObjects",
   "method" : "GET",
   "path" : "/v1/platform/files",
   "permission" : "platform.file_object.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListOperations",
   "method" : "GET",
   "path" : "/v1/platform/operations",
   "permission" : "platform.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListReportDefinitions",
   "method" : "GET",
   "path" : "/v1/platform/reports",
   "permission" : "platform.tenant.list_report_definitions",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListReservedKeywords",
   "method" : "GET",
   "path" : "/v1/platform/reserved-keywords",
   "permission" : "platform.reserved_keyword.read",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.ListSaasPlans",
   "method" : "GET",
   "path" : "/v1/platform/saas-plans",
   "permission" : "platform.saas_plan.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : true
+  "anonymous" : true,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListSalesEnquiries",
   "method" : "GET",
   "path" : "/v1/platform/sales-enquiries",
   "permission" : "platform.sales_enquiry.read",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.ListStorageQuotas",
   "method" : "GET",
   "path" : "/v1/platform/storage-quotas",
   "permission" : "platform.storage_quota.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListSystemSettings",
   "method" : "GET",
   "path" : "/v1/platform/system-settings",
   "permission" : "platform.system_setting.read",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.ListTagAssignments",
   "method" : "GET",
   "path" : "/v1/platform/tag-assignments",
   "permission" : "platform.tag_assignment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListTags",
   "method" : "GET",
   "path" : "/v1/platform/tags",
   "permission" : "platform.tag.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListTenantSubscriptions",
   "method" : "GET",
   "path" : "/v1/platform/tenant-subscriptions",
   "permission" : "platform.tenant_subscription.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListTenants",
   "method" : "GET",
   "path" : "/v1/platform/tenants",
   "permission" : "platform.tenant.read",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.ListThemes",
   "method" : "GET",
   "path" : "/v1/platform/themes",
   "permission" : "platform.theme.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : true
+  "anonymous" : true,
+  "audience" : "public"
 }, {
   "operationId" : "platform.ListUploadPolicies",
   "method" : "GET",
   "path" : "/v1/platform/upload-policies",
   "permission" : "platform.upload_policy.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.MarkEnquiryContacted",
   "method" : "POST",
   "path" : "/v1/platform/sales-enquiries/{salesEnquiryId}:markContacted",
   "permission" : "platform.sales_enquiry.mark_enquiry_contacted",
-  "schemes" : [ "bearerAuth" ],
+  "schemes" : [ "platformAdminAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "platform"
+}, {
+  "operationId" : "platform.ReceiveSubscriptionWebhook",
+  "method" : "POST",
+  "path" : "/v1/platform/tenant-subscriptions:webhook",
+  "permission" : "platform.tenant_subscription.receive_webhook",
+  "schemes" : [ ],
+  "anonymous" : true,
+  "audience" : "public"
 }, {
   "operationId" : "platform.RunReport",
   "method" : "POST",
@@ -514,14 +601,16 @@
   "permission" : "platform.tenant.run_report",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.SearchStockImages",
   "method" : "GET",
   "path" : "/v1/platform/stock-images",
   "permission" : "platform.tenant.search_stock_images",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.StartImport",
   "method" : "POST",
@@ -529,7 +618,8 @@
   "permission" : "platform.tenant.start_import",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "platform.StartSubscriptionCheckout",
   "method" : "POST",
@@ -537,75 +627,86 @@
   "permission" : "platform.tenant_subscription.start_subscription_checkout",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "required"
+  "idempotency" : "required",
+  "audience" : "public"
 }, {
   "operationId" : "platform.UpdateEntityNote",
   "method" : "PATCH",
   "path" : "/v1/platform/entity-notes/{entityNoteId}",
   "permission" : "platform.entity_note.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.UpdateReservedKeyword",
   "method" : "PATCH",
   "path" : "/v1/platform/reserved-keywords/{reservedKeywordId}",
   "permission" : "platform.reserved_keyword.update",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.UpdateSaasPlan",
   "method" : "PATCH",
   "path" : "/v1/platform/saas-plans/{saasPlanId}",
   "permission" : "platform.saas_plan.update",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.UpdateSalesEnquiry",
   "method" : "PATCH",
   "path" : "/v1/platform/sales-enquiries/{salesEnquiryId}",
   "permission" : "platform.sales_enquiry.update",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.UpdateStorageQuota",
   "method" : "PATCH",
   "path" : "/v1/platform/storage-quotas/{storageQuotaId}",
   "permission" : "platform.storage_quota.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.UpdateSystemSetting",
   "method" : "PATCH",
   "path" : "/v1/platform/system-settings/{systemSettingId}",
   "permission" : "platform.system_setting.update",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.UpdateTag",
   "method" : "PATCH",
   "path" : "/v1/platform/tags/{tagId}",
   "permission" : "platform.tag.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.UpdateTenant",
   "method" : "PATCH",
   "path" : "/v1/platform/tenants/{tenantId}",
   "permission" : "platform.tenant.update",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "platform.UpdateTheme",
   "method" : "PATCH",
   "path" : "/v1/platform/themes/{themeId}",
   "permission" : "platform.theme.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "platform.UpdateUploadPolicy",
   "method" : "PATCH",
   "path" : "/v1/platform/upload-policies/{uploadPolicyId}",
   "permission" : "platform.upload_policy.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 } ]

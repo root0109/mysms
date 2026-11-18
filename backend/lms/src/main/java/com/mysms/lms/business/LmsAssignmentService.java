@@ -8,6 +8,7 @@ import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.FieldError;
+import com.mysms.core.error.InvalidStateException;
 import com.mysms.core.error.PreconditionFailedException;
 import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.error.ValidationFailedException;
@@ -38,10 +39,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.assignment (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of lms.assignment: audit and domain event commit in the same transaction as every change. Rows
+ * outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class LmsAssignmentService extends AppTransactionManager {
@@ -51,6 +50,7 @@ public class LmsAssignmentService extends AppTransactionManager {
     static final String PERMISSION_GET = "lms.assignment.read";
     static final String PERMISSION_CREATE = "lms.assignment.create";
     static final String PERMISSION_UPDATE = "lms.assignment.update";
+    static final String PERMISSION_DELETE = "lms.assignment.delete";
     /** The contract's LmsAssignmentUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("title", "question", "submissionType", "courseId", "isGraded", "showModelAnswer", "modelAnswer",
@@ -122,8 +122,8 @@ public class LmsAssignmentService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public LmsAssignment updateLmsAssignment(UUID id, String ifMatch, LmsAssignmentUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -155,6 +155,55 @@ public class LmsAssignmentService extends AppTransactionManager {
         });
     }
 
+    /**
+     * Soft delete under If-Match; refused while live rows of this module still reference the assignment (its
+     * submissions, placements, versions), and for a published version (409): published content is immutable.
+     */
+    public void deleteLmsAssignment(UUID id, String ifMatch) {
+        int expected = Etags.expectedVersion(ifMatch);
+        runInWriteTransaction(() -> {
+            DataScope scope = DataScope.current(PERMISSION_DELETE);
+            LmsAssignmentEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            if (entity.getRowVersion() != expected) {
+                throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            if (entity.getPublishedAt() != null) {
+                throw new InvalidStateException("A published assignment is kept; make a new version instead.");
+            }
+            if (repository.referencedByAssignmentSupersededById(id)) {
+                throw new InvalidStateException(
+                        "The assignment is still referenced by lms.assignment (a newer version) rows; remove those first.");
+            }
+            if (repository.referencedByAssignmentSubmissionAssignmentId(id)) {
+                throw new InvalidStateException(
+                        "The assignment is still referenced by lms.assignment_submission rows; remove those first.");
+            }
+            if (repository.referencedByContentAuthorAssignmentId(id)) {
+                throw new InvalidStateException(
+                        "The assignment is still referenced by lms.content_author rows; remove those first.");
+            }
+            if (repository.referencedByContentItemAssignmentId(id)) {
+                throw new InvalidStateException(
+                        "The assignment is still referenced by lms.content_item rows; remove those first.");
+            }
+            if (repository.referencedByLessonActivityAssignmentId(id)) {
+                throw new InvalidStateException(
+                        "The assignment is still referenced by lms.lesson_activity rows; remove those first.");
+            }
+            if (repository.referencedByTimetableEntryAssignmentId(id)) {
+                throw new InvalidStateException(
+                        "The assignment is still referenced by lms.timetable_entry rows; remove those first.");
+            }
+            entity.onDeletingData(Actor.current(), clock);
+            if (repository.softDelete(entity, expected) == 0) {
+                throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            audit.recordDelete(AGGREGATE, id);
+            outbox.publish(AGGREGATE + LmsEvents.DELETED, AGGREGATE, id, LmsEvents.payload(id));
+        });
+    }
+
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
     private LmsAssignmentEntity loadVisible(DataScope scope, UUID id) {
         LmsAssignmentEntity entity = repository.findById(id)
@@ -165,14 +214,12 @@ public class LmsAssignmentService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(LmsAssignmentEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /**
-     * Applies the selected LmsAssignmentUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected LmsAssignmentUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(LmsAssignmentEntity entity, LmsAssignmentUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

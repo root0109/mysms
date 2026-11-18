@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,11 +25,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to assessment.homework_submission (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to assessment.homework_submission: live rows only, keyset paging, and the row_version guard on
+ * every update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class HomeworkSubmissionRepository {
@@ -114,12 +112,7 @@ public class HomeworkSubmissionRepository {
     private static final String UPDATE = """
             UPDATE assessment.homework_submission
                SET homework_id = :homeworkId,
-                   student_id = :studentId,
                    submitted_on = :submittedOn,
-                   checked_by_user_id = :checkedByUserId,
-                   checked_on = :checkedOn,
-                   teacher_comments = :teacherComments,
-                   student_reply = :studentReply,
                    updated_at = :updatedAt,
                    updated_by = :updatedBy,
                    row_version = row_version + 1
@@ -143,6 +136,12 @@ public class HomeworkSubmissionRepository {
              (:scopeAll OR r.homework_id IN (SELECT p0.id FROM assessment.homework p0 WHERE p0.tenant_id = :tenantId
                  AND (p0.institution_id =
              ANY(:scopeIds))))
+            """;
+
+    private static final String REACHABLE_OR_OWN = """
+             (:reachAll OR r.homework_id IN (SELECT p0.id FROM assessment.homework p0 WHERE p0.tenant_id = :tenantId
+                 AND p0.institution_id = ANY(:reachIds))
+              OR r.student_id = ANY(:ownIds))
             """;
 
     private final JdbcClient jdbc;
@@ -204,12 +203,7 @@ public class HomeworkSubmissionRepository {
         return jdbc.sql(UPDATE)
                 .param("id", e.getId())
                 .param("homeworkId", e.getHomeworkId())
-                .param("studentId", e.getStudentId())
                 .param("submittedOn", e.getSubmittedOn())
-                .param("checkedByUserId", e.getCheckedByUserId())
-                .param("checkedOn", e.getCheckedOn())
-                .param("teacherComments", e.getTeacherComments())
-                .param("studentReply", e.getStudentReply())
                 .param("updatedAt", e.getUpdatedAt())
                 .param("updatedBy", e.getUpdatedBy())
                 .param("expected", expectedVersion)
@@ -250,7 +244,13 @@ public class HomeworkSubmissionRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the institutions in the caller's staff reach, and rows of the caller's own students anywhere. */
+    public static SqlFragment reachableOrOwn(DataScope reach, Collection<UUID> ownStudents) {
+        return new SqlFragment(REACHABLE_OR_OWN, Map.of("reachAll", reach.all(), "reachIds", reach.institutionArray(),
+                "ownIds", ownStudents.toArray(UUID[]::new)));
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

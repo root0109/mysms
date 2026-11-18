@@ -1,14 +1,14 @@
 package com.mysms.core.error;
 
+import com.mysms.core.grpc.GrpcStatuses;
+import io.grpc.StatusRuntimeException;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.postgresql.util.PSQLException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -25,8 +25,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
- * The single place REST error bodies are built (JAVA-CODING-RULES §9, §11): typed exceptions keep their status and
- * code, framework exceptions map onto the contract's codes, anything unexpected becomes a 500 without details.
+ * Builds every REST error body: typed exceptions keep their status and code, framework exceptions map onto the
+ * contract's codes, anything unexpected is a 500 without details.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -128,34 +128,23 @@ public class GlobalExceptionHandler {
         return Problems.response(HttpStatus.NOT_FOUND, "NOT_FOUND", null, List.of());
     }
 
-    /** A unique index caught a duplicate the service did not pre-check (race): still a clean 409. */
-    @ExceptionHandler(DuplicateKeyException.class)
-    public ResponseEntity<Map<String, Object>> duplicate(DuplicateKeyException exception) {
-        return Problems.response(new DuplicateResourceException("A resource with the same unique key already exists."));
-    }
-
     /**
-     * Any other integrity violation (NOT NULL, CHECK, foreign key) that a service did not pre-validate. The database's
-     * message contains row values, so only the SQLState and constraint name are logged — never the message.
+     * A unique index caught a duplicate the service did not pre-check (race), or another integrity violation (NOT
+     * NULL, CHECK, foreign key) a service did not pre-validate: still a clean 409 or 422 ({@link IntegrityViolations}).
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> integrity(DataIntegrityViolationException exception) {
-        String sqlState = null;
-        String constraint = null;
-        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
-            if (cause instanceof PSQLException psql) {
-                sqlState = psql.getSQLState();
-                org.postgresql.util.ServerErrorMessage server = psql.getServerErrorMessage();
-                constraint = server == null ? null : server.getConstraint();
-                break;
-            }
-        }
-        LOG.warn("integrity violation sqlState={} constraint={}", sqlState, constraint);
-        if ("23503".equals(sqlState)) {
-            return Problems.response(new InvalidStateException("A referenced or referencing row prevents this change."));
-        }
-        return Problems.response(HttpStatus.UNPROCESSABLE_CONTENT, "VALIDATION_FAILED",
-                "The request violates a data rule.", List.of());
+        return Problems.response(IntegrityViolations.problem(exception));
+    }
+
+    /**
+     * A gRPC status that escaped a stub call made without {@code IntegrationGrpcClientException.call}: the callee
+     * could not be used, so 503 UNAVAILABLE without anything of its answer, as over gRPC ({@link GrpcStatuses}).
+     */
+    @ExceptionHandler(StatusRuntimeException.class)
+    public ResponseEntity<Map<String, Object>> unwrappedCall(StatusRuntimeException exception) {
+        LOG.warn("a call to another service failed with {} and was not unwrapped", exception.getStatus().getCode());
+        return api(new UnavailableException(GrpcStatuses.UNANSWERED));
     }
 
     /** Anything unexpected: logged with the trace id, answered without internals. */

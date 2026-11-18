@@ -32,11 +32,9 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Taking attendance end to end over HTTP against real PostgreSQL as the application role (row-level security on):
- * attendance.RecordAttendance, CompleteAttendanceSheet, the reopening of a completed sheet and
- * attendance.SummarizeAttendance. Each test works in a tenant of its own. The session lookup of
- * TakeAttendanceForSession needs the timetable, sis and org services, which this module's test does not run: here it
- * must answer 503; the whole flow across the modules is proven in the app module's component test.
+ * Taking attendance over HTTP against real PostgreSQL (row-level security on): RecordAttendance,
+ * CompleteAttendanceSheet, reopening a completed sheet and SummarizeAttendance. Each test works in a tenant of its own.
+ * TakeAttendanceForSession needs timetable, sis and org, which do not run here, so it answers 503.
  */
 @SpringBootTest(classes = AttendanceApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AttendanceTakingComponentTest {
@@ -98,9 +96,8 @@ class AttendanceTakingComponentTest {
         }
 
         /**
-         * Students expected on the sheet: each gets a record marked present, as TakeAttendanceForSession pre-fills
-         * a sheet. (A mark for a student the sheet does not know is checked with sis, which this module-only test
-         * does not run; the app module's component test covers that path against the real sis.)
+         * Students expected on the sheet: each gets a record marked present, as TakeAttendanceForSession pre-fills a
+         * sheet.
          */
         UUID[] expected(String sheet, String date, int count) {
             UUID[] students = new UUID[count];

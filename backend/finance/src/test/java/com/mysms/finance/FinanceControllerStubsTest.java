@@ -12,6 +12,9 @@ import com.mysms.finance.controller.FeePlanInstallmentComponentController;
 import com.mysms.finance.controller.FeeStructureController;
 import com.mysms.finance.controller.InvoiceController;
 import com.mysms.finance.controller.PaymentGatewayAccountController;
+import com.mysms.finance.controller.PaymentController;
+import com.mysms.finance.controller.RefundController;
+import com.mysms.finance.controller.StudentFeeDueController;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -29,9 +32,12 @@ class FinanceControllerStubsTest {
         assertThat(ControllerStubs.count(FeePlanController.class)).as("FeePlan").isEqualTo(0);
         assertThat(ControllerStubs.count(FeePlanInstallmentComponentController.class))
                 .as("FeePlanInstallmentComponent").isEqualTo(0);
-        assertThat(ControllerStubs.count(FeeStructureController.class)).as("FeeStructure").isEqualTo(1);
-        assertThat(ControllerStubs.count(InvoiceController.class)).as("Invoice").isEqualTo(9);
+        assertThat(ControllerStubs.count(FeeStructureController.class)).as("FeeStructure").isEqualTo(0);
+        assertThat(ControllerStubs.count(InvoiceController.class)).as("Invoice").isEqualTo(0);
         assertThat(ControllerStubs.count(PaymentGatewayAccountController.class)).as("PaymentGatewayAccount")
                 .isEqualTo(0);
+        assertThat(ControllerStubs.count(PaymentController.class)).as("Payment").isEqualTo(0);
+        assertThat(ControllerStubs.count(RefundController.class)).as("Refund").isEqualTo(0);
+        assertThat(ControllerStubs.count(StudentFeeDueController.class)).as("StudentFeeDue").isEqualTo(0);
     }
 }

@@ -8,9 +8,9 @@ import org.flywaydb.core.api.callback.Context;
 import org.flywaydb.core.api.callback.Event;
 
 /**
- * Runs after every migration, as the schema owner: the application role may use the schema and read and write its rows,
- * nothing more — it owns nothing, so it can neither alter tables nor disable or bypass row-level security
- * (database/README "Roles"). Names are validated by {@link ModuleDatabase} before they reach this SQL.
+ * Runs after every migration, as the schema owner: the application role may read and write the schema's rows and
+ * nothing more, so it can neither alter tables nor bypass row-level security. Names are validated by
+ * {@link ModuleDatabase} before they reach this SQL.
  */
 final class ApplicationRoleGrants implements Callback {
 

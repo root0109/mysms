@@ -14,8 +14,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * Plain-JDBC access to people.person (JAVA-CODING-RULES §6). Row-level security limits every statement to the bound
- * tenant. The self-service update writes only the contact and self-description columns, under the row_version guard.
+ * Plain-JDBC access to people.person. Row-level security limits every statement to the bound tenant. The self-service
+ * update writes only the contact and self-description columns, under the row_version guard.
  */
 @Repository
 public class SelfPersonRepository {

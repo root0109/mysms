@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- * api/operations-status.md matches the code. Run with {@code -Dmysms.write-reports=true} to rewrite it from the
- * current contracts and controllers ({@code mvn -pl conformance test -Dmysms.write-reports=true}).
+ * api/operations-status.md matches the code. Rewrite it with
+ * {@code mvn -pl conformance test -Dmysms.write-reports=true}.
  */
 class OperationStatusReportTest {
 
@@ -30,7 +30,7 @@ class OperationStatusReportTest {
             Files.writeString(report, expected, StandardCharsets.UTF_8);
         }
 
-        assertThat(expected).contains("| **all** | **2049** |");
+        assertThat(expected).contains("| **all** | **2055** |");
         String actual = Files.readString(report, StandardCharsets.UTF_8).replace("\r\n", "\n");
         assertThat(actual)
                 .as("%s is stale: run mvn -pl conformance test -Dmysms.write-reports=true", OperationStatusReport.LOCATION)

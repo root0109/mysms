@@ -1,5 +1,9 @@
 package com.mysms.lms.controller;
 
+import com.mysms.lms.business.CoursePackageService;
+import com.mysms.lms.model.CatalogPage;
+import com.mysms.lms.business.CatalogService;
+import com.mysms.lms.business.EnrollmentService;
 import com.mysms.lms.api.model.EvaluatorSlot;
 import com.mysms.lms.api.model.ProgressBucket;
 import com.mysms.core.paging.PagingUtil;
@@ -44,6 +48,7 @@ import com.mysms.lms.api.model.LessonProgress;
 import com.mysms.lms.api.model.LmsCourse;
 import com.mysms.lms.api.model.LmsCourseUpdate;
 import com.mysms.lms.api.model.MoveChapterRequest;
+import com.mysms.lms.api.model.ImportCoursePackageRequest;
 import com.mysms.lms.api.model.Operation;
 import com.mysms.lms.api.model.PublishCatalogListingRequest;
 import com.mysms.lms.api.model.PublishCourseRequest;
@@ -57,59 +62,68 @@ import com.mysms.lms.api.model.ScormLaunch;
 import com.mysms.lms.api.model.SubmitCourseForReviewRequest;
 import com.mysms.lms.api.model.TeacherDashboard;
 import com.mysms.lms.api.model.UnpublishCourseRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.LmsCourseService;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the LmsCourse operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the LmsCourse operations; authentication and the permission check already ran in the auth-client filter.
+ * Operations not served yet answer 501.
  */
 @RestController
 public class LmsCourseController implements LmsCourseApi {
 
     private final LmsCourseService lmsCourseService;
+    private final CoursePackageService coursePackageService;
+    private final EnrollmentService enrollmentService;
+    private final CatalogService catalogService;
 
-    public LmsCourseController(LmsCourseService lmsCourseService) {
+    public LmsCourseController(LmsCourseService lmsCourseService, CoursePackageService coursePackageService,
+            EnrollmentService enrollmentService, CatalogService catalogService) {
+        this.coursePackageService = coursePackageService;
         this.lmsCourseService = lmsCourseService;
+        this.enrollmentService = enrollmentService;
+        this.catalogService = catalogService;
     }
 
     @Override
     public ResponseEntity<LmsCourse> approveCourse(UUID courseId,
             ApproveCourseRequest approveCourseRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LmsCourse changed = lmsCourseService.approveCourse(courseId, approveCourseRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<EnrollmentRequest> approveEnrollmentRequest(UUID courseId,
             UUID enrollmentRequestId, ApproveEnrollmentRequestRequest approveEnrollmentRequestRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        EnrollmentRequest approved = lmsCourseService.approveEnrollmentRequest(courseId, enrollmentRequestId,
+                approveEnrollmentRequestRequest);
+        return ResponseEntity.ok().eTag(approved.getEtag()).body(approved);
     }
 
     @Override
     public ResponseEntity<BatchEnrollPreviewList> batchEnrollInCourse(UUID courseId, UUID idempotencyKey,
             BatchEnrollInCourseRequest batchEnrollInCourseRequest) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(lmsCourseService.batchEnrollInCourse(courseId, batchEnrollInCourseRequest));
     }
 
     @Override
     public ResponseEntity<Dependencies> checkCourseDependencies(UUID courseId) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(lmsCourseService.checkCourseDependencies(courseId));
     }
 
     @Override
     public ResponseEntity<PagingInfo<LmsCourse>> compareCourses(List<UUID> courseIds, Integer page, Integer size,
             String cursor) {
-        throw new NotImplementedException();
+        PagingInfo<LmsCourse> list = PagingUtil.pagingInfo(catalogService.compareCourses(courseIds, page, size, cursor));
+        return ResponseEntity.ok(list);
     }
 
     @Override
@@ -226,7 +240,9 @@ public class LmsCourseController implements LmsCourseApi {
     @Override
     public ResponseEntity<LmsCourse> createCourseVersion(UUID courseId,
             CreateCourseVersionRequest createCourseVersionRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LmsCourse created = lmsCourseService.createCourseVersion(courseId, createCourseVersionRequest);
+        return ResponseEntity.created(URI.create("/v1/lms/courses/" + created.getId())).eTag(created.getEtag())
+                .body(created);
     }
 
     @Override
@@ -251,7 +267,8 @@ public class LmsCourseController implements LmsCourseApi {
         if (dryRun) {
             return ResponseEntity.ok(created);
         }
-        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).eTag(created.getEtag()).body(created);
+        return ResponseEntity.created(URI.create("/v1/lms/courses/" + created.getId())).eTag(created.getEtag())
+                .body(created);
     }
 
     @Override
@@ -270,7 +287,9 @@ public class LmsCourseController implements LmsCourseApi {
     @Override
     public ResponseEntity<LmsCourse> deactivateCourse(UUID courseId,
             DeactivateCourseRequest deactivateCourseRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LmsCourse changed = lmsCourseService.deactivateCourse(courseId, deactivateCourseRequest.getEtag(),
+                deactivateCourseRequest.getReason());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -339,7 +358,8 @@ public class LmsCourseController implements LmsCourseApi {
 
     @Override
     public ResponseEntity<Void> deleteLmsCourse(UUID courseId, String ifMatch) {
-        throw new NotImplementedException();
+        lmsCourseService.deleteLmsCourse(courseId, ifMatch);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
@@ -351,12 +371,19 @@ public class LmsCourseController implements LmsCourseApi {
     @Override
     public ResponseEntity<Enrollment> enrollInCourse(UUID courseId,
             EnrollInCourseRequest enrollInCourseRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(enrollmentService.enrollInCourse(courseId));
     }
 
     @Override
     public ResponseEntity<Operation> exportCourse(UUID courseId, Object body, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(coursePackageService.exportCourse(courseId));
+    }
+
+    @Override
+    public ResponseEntity<Operation> importCoursePackage(UUID courseId,
+            ImportCoursePackageRequest importCoursePackageRequest, UUID idempotencyKey) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body(coursePackageService.importCoursePackage(courseId, importCoursePackageRequest));
     }
 
     @Override
@@ -369,7 +396,9 @@ public class LmsCourseController implements LmsCourseApi {
     @Override
     public ResponseEntity<CatalogHome> getCatalogHome(UUID categoryId, String query, Integer page,
             Integer size, String cursor) {
-        throw new NotImplementedException();
+        CatalogPage found = catalogService.getCatalogHome(categoryId, query, page, size, cursor);
+        PagingInfo<LmsCourse> courses = PagingUtil.pagingInfo(found.courses());
+        return ResponseEntity.ok(found.home().courses(courses.data()).paging(courses.paging()));
     }
 
     @Override
@@ -401,7 +430,7 @@ public class LmsCourseController implements LmsCourseApi {
 
     @Override
     public ResponseEntity<CourseOutline> getCourseOutline(UUID courseId) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(lmsCourseService.getCourseOutline(courseId));
     }
 
     @Override
@@ -414,7 +443,7 @@ public class LmsCourseController implements LmsCourseApi {
     @Override
     public ResponseEntity<PagingInfo<ProgressBucket>> getCourseProgressDistribution(UUID courseId, Integer page,
             Integer size, String cursor) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(PagingUtil.pagingInfo(lmsCourseService.getCourseProgressDistribution(courseId)));
     }
 
     @Override
@@ -426,7 +455,7 @@ public class LmsCourseController implements LmsCourseApi {
 
     @Override
     public ResponseEntity<DownloadLink> getCourseSyllabus(UUID courseId, String format) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(lmsCourseService.getCourseSyllabus(courseId, format));
     }
 
     @Override
@@ -453,12 +482,14 @@ public class LmsCourseController implements LmsCourseApi {
     @Override
     public ResponseEntity<PagingInfo<EvaluatorSlot>> getEvaluatorSlots(UUID courseId, LocalDate fromDate,
             LocalDate toDate, UUID cohortId, Integer page, Integer size, String cursor) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(PagingUtil.pagingInfo(lmsCourseService.getEvaluatorSlots(courseId, fromDate, toDate,
+                page, size)));
     }
 
     @Override
     public ResponseEntity<LmsCourse> getLmsCourse(UUID courseId, String fields) {
-        throw new NotImplementedException();
+        LmsCourse found = lmsCourseService.getLmsCourse(courseId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
@@ -470,30 +501,35 @@ public class LmsCourseController implements LmsCourseApi {
 
     @Override
     public ResponseEntity<ScormLaunch> getScormLaunch(UUID chapterId) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(lmsCourseService.getScormLaunch(chapterId));
     }
 
     @Override
     public ResponseEntity<TeacherDashboard> getTeacherDashboard() {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(lmsCourseService.getTeacherDashboard());
     }
 
     @Override
     public ResponseEntity<LmsCourse> hideCatalogListing(UUID courseId,
             HideCatalogListingRequest hideCatalogListingRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LmsCourse changed = lmsCourseService.hideCatalogListing(courseId, hideCatalogListingRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<Certificate> issueMyCertificate(UUID courseId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Certificate issued = lmsCourseService.issueMyCertificate(courseId);
+        return ResponseEntity.ok().eTag(issued.getEtag()).body(issued);
     }
 
     @Override
     public ResponseEntity<PagingInfo<CatalogBanner>> listCatalogBanners(UUID courseId, Integer page, Integer size,
             String cursor, String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<CatalogBanner> list =
+                PagingUtil.pagingInfo(lmsCourseService.listCatalogBanners(courseId, page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
@@ -508,7 +544,10 @@ public class LmsCourseController implements LmsCourseApi {
     @Override
     public ResponseEntity<PagingInfo<CourseAuthorProfile>> listCourseAuthorProfiles(UUID courseId, Integer page,
             Integer size, String cursor, String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<CourseAuthorProfile> list =
+                PagingUtil.pagingInfo(lmsCourseService.listCourseAuthorProfiles(courseId, page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
@@ -532,13 +571,19 @@ public class LmsCourseController implements LmsCourseApi {
     @Override
     public ResponseEntity<PagingInfo<CoursePreview>> listCoursePreviews(UUID courseId, Integer page, Integer size,
             String cursor, String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<CoursePreview> list =
+                PagingUtil.pagingInfo(lmsCourseService.listCoursePreviews(courseId, page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
     public ResponseEntity<PagingInfo<CourseReview>> listCourseReviews(UUID courseId, Integer page, Integer size,
             String cursor, String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<CourseReview> list =
+                PagingUtil.pagingInfo(lmsCourseService.listCourseReviews(courseId, page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
@@ -553,7 +598,10 @@ public class LmsCourseController implements LmsCourseApi {
     @Override
     public ResponseEntity<PagingInfo<CourseTestimonial>> listCourseTestimonials(UUID courseId, Integer page,
             Integer size, String cursor, String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<CourseTestimonial> list =
+                PagingUtil.pagingInfo(lmsCourseService.listCourseTestimonials(courseId, page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
@@ -569,37 +617,47 @@ public class LmsCourseController implements LmsCourseApi {
     @Override
     public ResponseEntity<PagingInfo<LmsCourse>> listLmsCourses(Integer page, Integer size, String cursor,
             String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<LmsCourse> list =
+                PagingUtil.pagingInfo(lmsCourseService.listLmsCourses(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
     public ResponseEntity<PagingInfo<RelatedCourse>> listRelatedCourses(UUID courseId, Integer page, Integer size,
             String cursor, String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<RelatedCourse> list =
+                PagingUtil.pagingInfo(lmsCourseService.listRelatedCourses(courseId, page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
     public ResponseEntity<Chapter> moveChapter(UUID chapterId, MoveChapterRequest moveChapterRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Chapter moved = lmsCourseService.moveChapter(chapterId, moveChapterRequest);
+        return ResponseEntity.ok().eTag(moved.getEtag()).body(moved);
     }
 
     @Override
     public ResponseEntity<LmsCourse> publishCatalogListing(UUID courseId,
             PublishCatalogListingRequest publishCatalogListingRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LmsCourse changed = lmsCourseService.publishCatalogListing(courseId, publishCatalogListingRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<LmsCourse> publishCourse(UUID courseId,
             PublishCourseRequest publishCourseRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LmsCourse changed = lmsCourseService.publishCourse(courseId, publishCourseRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<LmsCourse> reactivateCourse(UUID courseId,
             ReactivateCourseRequest reactivateCourseRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LmsCourse changed = lmsCourseService.reactivateCourse(courseId, reactivateCourseRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -615,25 +673,27 @@ public class LmsCourseController implements LmsCourseApi {
     @Override
     public ResponseEntity<ChapterList> reorderChapters(UUID courseId,
             ReorderChaptersRequest reorderChaptersRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(lmsCourseService.reorderChapters(courseId, reorderChaptersRequest));
     }
 
     @Override
     public ResponseEntity<LessonProgress> saveScormProgress(UUID chapterId,
             SaveScormProgressRequest saveScormProgressRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(lmsCourseService.saveScormProgress(chapterId, saveScormProgressRequest));
     }
 
     @Override
     public ResponseEntity<LmsCourse> submitCourseForReview(UUID courseId,
             SubmitCourseForReviewRequest submitCourseForReviewRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LmsCourse changed = lmsCourseService.submitCourseForReview(courseId, submitCourseForReviewRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<LmsCourse> unpublishCourse(UUID courseId,
             UnpublishCourseRequest unpublishCourseRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LmsCourse changed = lmsCourseService.unpublishCourse(courseId, unpublishCourseRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

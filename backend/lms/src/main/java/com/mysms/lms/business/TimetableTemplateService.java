@@ -38,10 +38,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.timetable_template (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of lms.timetable_template: audit and domain event commit in the same transaction as every change.
+ * Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class TimetableTemplateService extends AppTransactionManager {
@@ -120,8 +118,8 @@ public class TimetableTemplateService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public TimetableTemplate updateTimetableTemplate(UUID id, String ifMatch, TimetableTemplateUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -194,15 +192,12 @@ public class TimetableTemplateService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(TimetableTemplateEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected TimetableTemplateUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected TimetableTemplateUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(TimetableTemplateEntity entity, TimetableTemplateUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

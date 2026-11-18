@@ -17,13 +17,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
 
 /**
- * Starts the event machinery of this process once the application is ready: one subscription per consuming module
- * (the handlers of all its {@link EventSubscriptions} beans, through its {@link InboxProcessor}) and one relay loop
- * over the module databases. Stops them on shutdown (the bus itself is closed with the application context).
+ * Starts this process's event machinery once the application is ready: one subscription per consuming module and one
+ * relay loop over the module databases.
  *
- * <p>A consumer handles only events their source owns ({@link EventEnvelope#ownedBySource()}); anything else is
- * rejected and parked. A relay pass gives each module at most {@value #MAX_BATCHES_PER_PASS} batches, so a backlog in
- * one module cannot starve the others. {@link #health()} reports the bus connection and relays that keep failing.
+ * <p>A consumer handles only events their source owns; anything else is rejected and parked. A relay pass gives each
+ * module at most {@value #MAX_BATCHES_PER_PASS} batches, so a backlog in one module cannot starve the others.
  */
 public final class EventRuntime implements SmartLifecycle {
 

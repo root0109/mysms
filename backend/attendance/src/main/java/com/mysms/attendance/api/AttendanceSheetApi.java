@@ -1,4 +1,4 @@
-// Owned API contract of attendance (JAVA-CODING-RULES §7); first materialized from api/openapi/attendance.yaml on 2026-11-10.
+// Owned API contract of attendance.
 package com.mysms.attendance.api;
 
 import com.mysms.attendance.api.model.AttendanceSummary;

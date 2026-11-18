@@ -76,13 +76,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of iam.user_account (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a UserAccount
- * are served here too — UserDepartmentAccess, UserDevice, UserPermission, UserPreference, UserRole, UserSession.
+ * Business service of iam.user_account and of the records that exist only as part of a UserAccount
+ * (UserDepartmentAccess, UserDevice, UserPermission, UserPreference, UserRole, UserSession): audit and domain event
+ * commit in the same transaction as every change. Rows outside the caller's institutions are invisible; tenant-level
+ * rows change only through a tenant-wide grant.
  */
 @Service
 public class UserAccountService extends AppTransactionManager {
@@ -265,8 +262,8 @@ public class UserAccountService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public UserAccount updateUserAccount(UUID id, String ifMatch, UserAccountUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -280,6 +277,8 @@ public class UserAccountService extends AppTransactionManager {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
             rules.beforeUpdate(entity);
+            String emailBefore = entity.getEmail();
+            String mobileBefore = entity.getMobileNo();
             apply(entity, changes, fields);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
@@ -296,6 +295,7 @@ public class UserAccountService extends AppTransactionManager {
             entity.setRowVersion(expected + 1);
             audit.recordUpdate(AGGREGATE, id, fields);
             outbox.publish(AGGREGATE + IamEvents.UPDATED, AGGREGATE, id, IamEvents.payload(id));
+            rules.afterUpdate(entity, emailBefore, mobileBefore);
             return mapper.toDto(entity);
         });
     }
@@ -346,9 +346,8 @@ public class UserAccountService extends AppTransactionManager {
     }
 
     /**
-     * iam.ActivateUser: Set status active. The row must be visible and writable for the caller, and the step is allowed
-     * while status is inactive; in any other state
-     * the answer is 409 and nothing changes.
+     * iam.ActivateUser: Set status active. Allowed while status is inactive, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public UserAccount activateUser(UUID id, ActivateUserRequest request) {
         DataScope scope = DataScope.current(PERMISSION_ACTIVATE_USER);
@@ -379,9 +378,9 @@ public class UserAccountService extends AppTransactionManager {
     }
 
     /**
-     * iam.DeactivateUser: Set status inactive (login blocked). The row must be visible and writable for the caller, and
-     * the step is allowed while status is active or locked; in any other state
-     * the answer is 409 and nothing changes.
+     * iam.DeactivateUser: Set status inactive (login blocked) and sign the account out everywhere, its API tokens
+     * included ({@link UserAccountRules#afterDeactivate}), so reactivating it revives no old session or token. Allowed
+     * while status is active or locked, on a row the caller may see and write; otherwise 409 and nothing changes.
      */
     public UserAccount deactivateUser(UUID id, DeactivateUserRequest request) {
         DataScope scope = DataScope.current(PERMISSION_DEACTIVATE_USER);
@@ -407,15 +406,15 @@ public class UserAccountService extends AppTransactionManager {
             audit.recordTransition(AGGREGATE, id, "deactivateUser", List.of("status"), request == null ? null
                     : request.getReason());
             outbox.publish(AGGREGATE + ".deactivateUser", AGGREGATE, id, IamEvents.payload(id));
+            rules.afterDeactivate(id);
             return mapper.toDto(repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
         });
     }
 
     /**
-     * iam.UnlockUser: Clear a lock caused by failed logins. The row must be visible and writable for the caller, and
-     * the step is allowed in every state; in any other state
-     * the answer is 409 and nothing changes.
+     * iam.UnlockUser: Clear a lock caused by failed logins. Allowed in every state, on a row the caller may see and
+     * write.
      */
     public UserAccount unlockUser(UUID id, UnlockUserRequest request) {
         DataScope scope = DataScope.current(PERMISSION_UNLOCK_USER);
@@ -452,12 +451,12 @@ public class UserAccountService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(UserAccountEntity entity) {
         return Optional.empty();
     }
 
-    /** Applies the selected UserAccountUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected UserAccountUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(UserAccountEntity entity, UserAccountUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -552,8 +551,8 @@ public class UserAccountService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public UserDepartmentAccess updateUserDepartmentAccess(UUID userId, UUID id, String ifMatch,
             UserDepartmentAccessUpdate changes, String updateMask, boolean validateOnly) {
@@ -616,15 +615,12 @@ public class UserAccountService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfUserDepartmentAccess(UserDepartmentAccessEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected UserDepartmentAccessUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected UserDepartmentAccessUpdate fields; explicit per field so a mask can clear values. */
     private static void applyUserDepartmentAccess(UserDepartmentAccessEntity entity, UserDepartmentAccessUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -711,8 +707,8 @@ public class UserAccountService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public UserDevice updateUserDevice(UUID userId, UUID id, String ifMatch, UserDeviceUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -777,12 +773,12 @@ public class UserAccountService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfUserDevice(UserDeviceEntity entity) {
         return Optional.empty();
     }
 
-    /** Applies the selected UserDeviceUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected UserDeviceUpdate fields; explicit per field so a mask can clear values. */
     private static void applyUserDevice(UserDeviceEntity entity, UserDeviceUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -878,8 +874,8 @@ public class UserAccountService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public UserPermission updateUserPermission(UUID userId, UUID id, String ifMatch, UserPermissionUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -944,14 +940,12 @@ public class UserAccountService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfUserPermission(UserPermissionEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected UserPermissionUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected UserPermissionUpdate fields; explicit per field so a mask can clear values. */
     private static void applyUserPermission(UserPermissionEntity entity, UserPermissionUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -1043,8 +1037,8 @@ public class UserAccountService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public UserPreference updateUserPreference(UUID userId, UUID id, String ifMatch, UserPreferenceUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -1105,14 +1099,12 @@ public class UserAccountService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfUserPreference(UserPreferenceEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected UserPreferenceUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected UserPreferenceUpdate fields; explicit per field so a mask can clear values. */
     private static void applyUserPreference(UserPreferenceEntity entity, UserPreferenceUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -1196,8 +1188,8 @@ public class UserAccountService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public UserRole updateUserRole(UUID userId, UUID id, String ifMatch, UserRoleUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -1262,12 +1254,12 @@ public class UserAccountService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfUserRole(UserRoleEntity entity) {
         return Optional.empty();
     }
 
-    /** Applies the selected UserRoleUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected UserRoleUpdate fields; explicit per field so a mask can clear values. */
     private static void applyUserRole(UserRoleEntity entity, UserRoleUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -1370,7 +1362,7 @@ public class UserAccountService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfUserSession(UserSessionEntity entity) {
         return Optional.empty();
     }

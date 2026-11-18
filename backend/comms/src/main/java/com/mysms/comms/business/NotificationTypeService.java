@@ -56,13 +56,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of comms.notification_type (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a NotificationType
- * are served here too — NotificationCohortSetting, NotificationRule, NotificationTypeProperty.
+ * Business service of comms.notification_type and of the records that exist only as part of a NotificationType
+ * (NotificationCohortSetting, NotificationRule, NotificationTypeProperty): audit and domain event commit in the same
+ * transaction as every change. Rows outside the caller's institutions are invisible; tenant-level rows change only
+ * through a tenant-wide grant.
  */
 @Service
 public class NotificationTypeService extends AppTransactionManager {
@@ -183,8 +180,8 @@ public class NotificationTypeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public NotificationType updateNotificationType(UUID id, String ifMatch, NotificationTypeUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -255,15 +252,12 @@ public class NotificationTypeService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(NotificationTypeEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected NotificationTypeUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected NotificationTypeUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(NotificationTypeEntity entity, NotificationTypeUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -320,7 +314,7 @@ public class NotificationTypeService extends AppTransactionManager {
         return payload;
     }
 
-    // ---- NotificationCohortSetting: a record of the NotificationType aggregate ----
+    // ---- NotificationCohortSetting ----
 
     public NotificationCohortSetting getNotificationCohortSetting(UUID notificationTypeId, UUID id) {
         return doInReadTransaction(() -> {
@@ -373,8 +367,8 @@ public class NotificationTypeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public NotificationCohortSetting updateNotificationCohortSetting(UUID notificationTypeId, UUID id, String ifMatch,
             NotificationCohortSettingUpdate changes, String updateMask, boolean validateOnly) {
@@ -439,15 +433,12 @@ public class NotificationTypeService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfNotificationCohortSetting(NotificationCohortSettingEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected NotificationCohortSettingUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected NotificationCohortSettingUpdate fields; explicit per field so a mask can clear values. */
     private static void applyNotificationCohortSetting(NotificationCohortSettingEntity entity,
             NotificationCohortSettingUpdate changes,
             List<String> fields) {
@@ -488,7 +479,7 @@ public class NotificationTypeService extends AppTransactionManager {
         }
     }
 
-    // ---- NotificationRule: a record of the NotificationType aggregate ----
+    // ---- NotificationRule ----
 
     public NotificationRule getNotificationRule(UUID notificationTypeId, UUID id) {
         return doInReadTransaction(() -> {
@@ -540,8 +531,8 @@ public class NotificationTypeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public NotificationRule updateNotificationRule(UUID notificationTypeId, UUID id, String ifMatch,
             NotificationRuleUpdate changes, String updateMask, boolean validateOnly) {
@@ -604,15 +595,12 @@ public class NotificationTypeService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfNotificationRule(NotificationRuleEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected NotificationRuleUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected NotificationRuleUpdate fields; explicit per field so a mask can clear values. */
     private static void applyNotificationRule(NotificationRuleEntity entity, NotificationRuleUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -653,7 +641,7 @@ public class NotificationTypeService extends AppTransactionManager {
 
     }
 
-    // ---- NotificationTypeProperty: a record of the NotificationType aggregate ----
+    // ---- NotificationTypeProperty ----
 
     public NotificationTypeProperty getNotificationTypeProperty(UUID notificationTypeId, UUID id) {
         return doInGlobalReadTransaction(() -> {
@@ -708,8 +696,8 @@ public class NotificationTypeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public NotificationTypeProperty updateNotificationTypeProperty(UUID notificationTypeId, UUID id, String ifMatch,
             NotificationTypePropertyUpdate changes, String updateMask, boolean validateOnly) {
@@ -779,15 +767,12 @@ public class NotificationTypeService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfNotificationTypeProperty(NotificationTypePropertyEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected NotificationTypePropertyUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected NotificationTypePropertyUpdate fields; explicit per field so a mask can clear values. */
     private static void applyNotificationTypeProperty(NotificationTypePropertyEntity entity,
             NotificationTypePropertyUpdate changes,
             List<String> fields) {

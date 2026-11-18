@@ -204,6 +204,34 @@
    "duplicateConflicts": true
   },
   {
+   "name": "Tag",
+   "table": "platform.tag",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/platform/tags",
+   "item": "/v1/platform/tags/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "tagType": "lms_course",
+    "name": "Science",
+    "slug": "science",
+    "sortOrder": 2,
+    "code": "SCI"
+   },
+   "update": {
+    "name": "Natural science"
+   },
+   "duplicateConflicts": true
+  },
+  {
    "name": "TagAssignment",
    "table": "platform.tag_assignment",
    "ops": [
@@ -273,7 +301,59 @@
    "seedId": "95da2d53-248f-5146-9e93-80da49d99870",
    "seed": [
     "INSERT INTO platform.tenant_subscription (institution_id, requested_by_user_id, tenant_id, row_version, id) VALUES ('0196f000-0000-7000-8000-00000000a001', '98b868c2-cb2b-5b49-be08-dbe11894b8ef', :tenant, 1, '95da2d53-248f-5146-9e93-80da49d99870')"
+   ],
+   "transitions": [
+    {
+     "operation": "platform.CancelSubscription",
+     "path": "/v1/platform/tenant-subscriptions/{id}:cancel",
+     "permission": "platform.tenant_subscription.cancel_subscription",
+     "guard": {
+      "status": [
+       "pending",
+       "active"
+      ]
+     },
+     "prepare": [
+      "UPDATE platform.tenant_subscription SET status = 'active' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "cancelled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
    ]
+  },
+  {
+   "name": "Theme",
+   "table": "platform.theme",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/platform/themes",
+   "item": "/v1/platform/themes/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, 't' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "name": "Ocean",
+    "description": "Calm blues",
+    "tokens": {
+     "color.primary": "#1D4ED8",
+     "font.family": "Inter"
+    }
+   },
+   "update": {
+    "name": "Deep ocean"
+   },
+   "duplicateConflicts": false
   },
   {
    "name": "UploadPolicy",

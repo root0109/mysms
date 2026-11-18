@@ -1,4 +1,4 @@
-// Owned API contract of sis (JAVA-CODING-RULES §7); first materialized from api/openapi/sis.yaml on 2026-11-10.
+// Owned API contract of sis.
 package com.mysms.sis.api.model;
 
 import java.net.URI;

@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { isApiError, useCompleteMfa, useI18n, useSession, useSignIn } from '@mysms/core';
 import { Banner, Button, Card, TextInput } from '@mysms/ui-web';
 import { useForm } from 'react-hook-form';
-import { Navigate, useLocation, useSearchParams } from 'react-router';
+import { Link, Navigate, useLocation, useSearchParams } from 'react-router';
 import { z } from 'zod';
 import { safeNext } from '../routing/safeNext';
 
@@ -18,7 +18,7 @@ const mfa = z.object({
     .regex(/^\d{6,8}$/),
 });
 
-/** ACC-01 Sign in, with the MFA step when the account requires it. */
+/** ACC-01 Sign in, with the MFA step when the account requires it, and the ways to a reset (ACC-02) and sign-up. */
 export function SignInScreen({ defaultTenantCode = '' }: { defaultTenantCode?: string }) {
   const { t } = useI18n();
   const status = useSession((s) => s.status);
@@ -93,6 +93,12 @@ export function SignInScreen({ defaultTenantCode = '' }: { defaultTenantCode?: s
             <Button type="submit" loading={signIn.isPending}>
               {t('acc.signIn.submit')}
             </Button>
+            <p className="hint">
+              <Link to="/app/auth/reset">{t('acc.signIn.forgot')}</Link>
+            </p>
+            <p className="hint">
+              <Link to="/app/auth/signup">{t('acc.signIn.signUp')}</Link>
+            </p>
           </form>
         )}
       </Card>

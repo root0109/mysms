@@ -44,13 +44,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of org.institution (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of org.institution: audit and domain event in the same transaction as every change; rows outside the
+ * caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Institution
- * are served here too — InstitutionAttribute.
+ * <p>Also serves the records that exist only as part of the Institution aggregate: InstitutionAttribute.
  */
 @Service
 public class InstitutionService extends AppTransactionManager {
@@ -61,6 +58,7 @@ public class InstitutionService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "org.institution.create";
     static final String PERMISSION_UPDATE = "org.institution.update";
     static final String PERMISSION_DELETE = "org.institution.delete";
+    static final String PERMISSION_LIST_ACTIVE = "org.institution.list_active";
     /** The contract's InstitutionUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("parentInstitutionId", "code", "name", "slug", "institutionType", "email", "phone", "addressLine1",
@@ -124,6 +122,18 @@ public class InstitutionService extends AppTransactionManager {
             Page<InstitutionEntity> rows = repository.list(page, where);
             return rows.map(mapper::toDto);
         });
+    }
+
+    /** org.ListActiveInstitutions: the tenant's active institutions, by name, for a service that offers them. */
+    public Page<Institution> listActiveInstitutions(Integer pageNumber, Integer pageSize, String cursor,
+            String filter) {
+        SortSpec sort = SortSpec.parse(List.of("name"), InstitutionRepository.SORT_FIELDS,
+                InstitutionRepository.DEFAULT_ORDER, InstitutionRepository.ID_COLUMN);
+        SqlFragment where = FilterParser.parse(filter, InstitutionRepository.FILTER_FIELDS)
+                .and(InstitutionRepository.ACTIVE)
+                .and(InstitutionRepository.scope(DataScope.current(PERMISSION_LIST_ACTIVE)));
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|active", clock);
+        return doInReadTransaction(() -> repository.list(page, where).map(mapper::toDto));
     }
 
     /** Creates the row; with validateOnly every check runs and nothing is written. */

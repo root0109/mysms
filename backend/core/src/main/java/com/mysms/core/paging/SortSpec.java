@@ -8,15 +8,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * A validated {@code sort} (api/README "Pagination"): one or more {@code field,asc|desc} criteria, each checked
- * against the aggregate's allowlist and mapped to its column (JAVA-CODING-RULES §6). The row id is always the final
- * tie-breaker (descending when every key descends, ascending otherwise), so the order is total and both OFFSET pages
- * and keyset cursors are exact.
- *
- * <p>The criteria arrive as the repeated {@code sort} query parameter. Spring hands a single value over split at its
- * commas ({@code sort=name,desc} → {@code [name, desc]}) and several values unsplit ({@code [name,desc, code,asc]}),
- * so the parser reads all values as one token stream: a field name, optionally followed by its direction. Field names
- * are never {@code asc} or {@code desc}, so the stream is unambiguous.
+ * A validated {@code sort}: {@code field,asc|desc} criteria checked against the allowlist, with the row id as final
+ * tie-breaker so OFFSET pages and keyset cursors are exact. Spring splits a single value at its commas but not
+ * several, so all values are read as one token stream of field names, each optionally followed by a direction.
  */
 public final class SortSpec {
 

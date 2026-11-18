@@ -5,7 +5,7 @@ import java.util.HexFormat;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
 /**
- * argon2id password hashing (JAVA-CODING-RULES §16 security floor) with the OWASP parameters: 19 MiB memory,
+ * argon2id password hashing with the OWASP parameters: 19 MiB memory,
  * 2 iterations, parallelism 1, 16-byte salt, 32-byte hash. Every verification costs the same whether or not the
  * account exists or has a usable hash: a missing or foreign hash is checked against a dummy hash, so response times
  * do not reveal which accounts exist.

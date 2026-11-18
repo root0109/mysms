@@ -49,13 +49,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of comms.class_page (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a ClassPage
- * are served here too — ClassPageAttachment, ClassPageMember.
+ * Business service of comms.class_page and of the records that exist only as part of a ClassPage (ClassPageAttachment,
+ * ClassPageMember): audit and domain event commit in the same transaction as every change. Rows outside the caller's
+ * institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class ClassPageService extends AppTransactionManager {
@@ -167,8 +163,8 @@ public class ClassPageService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ClassPage updateClassPage(UUID id, String ifMatch, ClassPageUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -241,12 +237,12 @@ public class ClassPageService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(ClassPageEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected ClassPageUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected ClassPageUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(ClassPageEntity entity, ClassPageUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -293,7 +289,7 @@ public class ClassPageService extends AppTransactionManager {
 
     }
 
-    // ---- ClassPageAttachment: a record of the ClassPage aggregate ----
+    // ---- ClassPageAttachment ----
 
     public ClassPageAttachment getClassPageAttachment(UUID classPageId, UUID id) {
         return doInReadTransaction(() -> {
@@ -349,8 +345,8 @@ public class ClassPageService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ClassPageAttachment updateClassPageAttachment(UUID classPageId, UUID id, String ifMatch,
             ClassPageAttachmentUpdate changes, String updateMask, boolean validateOnly) {
@@ -413,15 +409,12 @@ public class ClassPageService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the comms.class_page it belongs to). */
+    /** The institution of the comms.class_page the row belongs to. */
     private Optional<UUID> institutionOfClassPageAttachment(ClassPageAttachmentEntity entity) {
         return classPageAttachmentRepository.institutionOf(entity.getClassPageId());
     }
 
-    /**
-     * Applies the selected ClassPageAttachmentUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected ClassPageAttachmentUpdate fields; explicit per field so a mask can clear values. */
     private static void applyClassPageAttachment(ClassPageAttachmentEntity entity, ClassPageAttachmentUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -457,7 +450,7 @@ public class ClassPageService extends AppTransactionManager {
 
     }
 
-    // ---- ClassPageMember: a record of the ClassPage aggregate ----
+    // ---- ClassPageMember ----
 
     public ClassPageMember getClassPageMember(UUID classPageId, UUID id) {
         return doInReadTransaction(() -> {
@@ -511,8 +504,8 @@ public class ClassPageService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ClassPageMember updateClassPageMember(UUID classPageId, UUID id, String ifMatch,
             ClassPageMemberUpdate changes, String updateMask, boolean validateOnly) {
@@ -575,14 +568,12 @@ public class ClassPageService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the comms.class_page it belongs to). */
+    /** The institution of the comms.class_page the row belongs to. */
     private Optional<UUID> institutionOfClassPageMember(ClassPageMemberEntity entity) {
         return classPageMemberRepository.institutionOf(entity.getClassPageId());
     }
 
-    /**
-     * Applies the selected ClassPageMemberUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected ClassPageMemberUpdate fields; explicit per field so a mask can clear values. */
     private static void applyClassPageMember(ClassPageMemberEntity entity, ClassPageMemberUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

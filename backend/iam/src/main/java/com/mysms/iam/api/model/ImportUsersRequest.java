@@ -1,4 +1,4 @@
-// Owned API contract of iam (JAVA-CODING-RULES §7); first materialized from api/openapi/iam.yaml on 2026-11-10.
+// Owned API contract of iam.
 package com.mysms.iam.api.model;
 
 import java.net.URI;
@@ -22,7 +22,10 @@ import java.util.*;
 public class ImportUsersRequest {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID fileId;
+  private @Nullable UUID fileId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable List<@Valid ImportUserRow> rows;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Boolean validateOnly;
@@ -31,31 +34,44 @@ public class ImportUsersRequest {
     super();
   }
 
-  /**
-   * Constructor with only required parameters
-   */
-  public ImportUsersRequest(UUID fileId) {
-    this.fileId = fileId;
-  }
-
-  public ImportUsersRequest fileId(UUID fileId) {
+  public ImportUsersRequest fileId(@Nullable UUID fileId) {
     this.fileId = fileId;
     return this;
   }
 
   /**
-   * Uploaded CSV / spreadsheet.
+   * Uploaded CSV / spreadsheet (platform file). Not available: iam cannot read the platform's file store; send rows.
    * @return fileId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("fileId")
-  public UUID getFileId() {
+  public @Nullable UUID getFileId() {
     return fileId;
   }
 
   @JsonProperty("fileId")
-  public void setFileId(UUID fileId) {
+  public void setFileId(@Nullable UUID fileId) {
     this.fileId = fileId;
+  }
+
+  public ImportUsersRequest rows(@Nullable List<@Valid ImportUserRow> rows) {
+    this.rows = rows;
+    return this;
+  }
+
+  /**
+   * The users to create, inline (1 to 500): give either rows or fileId.
+   * @return rows
+   */
+  @Valid @Size(min = 1, max = 500) 
+  @JsonProperty("rows")
+  public @Nullable List<@Valid ImportUserRow> getRows() {
+    return rows;
+  }
+
+  @JsonProperty("rows")
+  public void setRows(@Nullable List<@Valid ImportUserRow> rows) {
+    this.rows = rows;
   }
 
   public ImportUsersRequest validateOnly(@Nullable Boolean validateOnly) {
@@ -88,12 +104,13 @@ public class ImportUsersRequest {
     }
     ImportUsersRequest importUsersRequest = (ImportUsersRequest) o;
     return Objects.equals(this.fileId, importUsersRequest.fileId) &&
+        Objects.equals(this.rows, importUsersRequest.rows) &&
         Objects.equals(this.validateOnly, importUsersRequest.validateOnly);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(fileId, validateOnly);
+    return Objects.hash(fileId, rows, validateOnly);
   }
 
   @Override
@@ -101,6 +118,7 @@ public class ImportUsersRequest {
     StringBuilder sb = new StringBuilder();
     sb.append("class ImportUsersRequest {\n");
     sb.append("    fileId: ").append(toIndentedString(fileId)).append("\n");
+    sb.append("    rows: ").append(toIndentedString(rows)).append("\n");
     sb.append("    validateOnly: ").append(toIndentedString(validateOnly)).append("\n");
     sb.append("}");
     return sb.toString();

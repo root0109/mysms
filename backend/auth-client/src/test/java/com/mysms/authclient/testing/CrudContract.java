@@ -31,11 +31,8 @@ import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * The standard-operation contract of every resource of a module, checked end to end over HTTP against real
- * PostgreSQL (JAVA-CODING-RULES §12): create, read, list with filter, partial update under If-Match, soft delete, the
- * 403/404/409/412/428 answers, tenant isolation and the institution data scope. The resources and their sample
- * payloads come from {@code crud-spec.json} on the module's component-test classpath, owned test data kept beside the
- * resources it exercises; nothing is mocked.
+ * The standard-operation contract of every resource of a module, end to end over HTTP against real PostgreSQL: CRUD,
+ * the 403/404/409/412/428 answers, tenant isolation and institution scope, driven by the module's {@code crud-spec.json}.
  */
 public final class CrudContract {
 
@@ -698,14 +695,14 @@ public final class CrudContract {
         }));
     }
 
-    /** A tenant-wide administrator holding every permission. */
     /**
      * Rows reachable only by their owner (the parent user) or with the permission held tenant-wide, such as sign-in
      * sessions: another user with the permission at institution level gets 404, the owner gets the rows.
      */
     private void ownerOnly(State s, UUID owner) {
         String stranger = token(tenant, List.of("*"), "*");
-        String self = tokenOf(owner, tenant, List.of("*"), List.of(), "*");
+        // the owner as a school-level user of the rows' institution (a "*" without tenant-wide grants reaches none)
+        String self = tokenOf(owner, tenant, List.of(INSTITUTION.toString()), List.of(), "*");
         if (s.has("Get")) {
             assertThat(call("GET", s.item(s.id), stranger, null).status).as("another user's row").isEqualTo(404);
             assertThat(call("GET", s.item(s.id), self, null).status).as("the owner's own row").isEqualTo(200);

@@ -630,6 +630,7 @@ CREATE TABLE people.outbox_event (
     payload text NOT NULL,
     occurred_at timestamptz NOT NULL DEFAULT now(),
     published_at timestamptz,
+    publish_error text,
     CONSTRAINT pk_people_outbox_event PRIMARY KEY (id)
 );
 COMMENT ON TABLE people.outbox_event IS 'Transactional outbox of the people module: events written in the same transaction as the change, published to the bus by a relay, then pruned. Ordered by the identity column.';
@@ -641,7 +642,8 @@ COMMENT ON COLUMN people.outbox_event.aggregate_id IS 'Entity id the event is ab
 COMMENT ON COLUMN people.outbox_event.payload IS 'Serialised event (opaque message envelope).';
 COMMENT ON COLUMN people.outbox_event.occurred_at IS 'When the change committed.';
 COMMENT ON COLUMN people.outbox_event.published_at IS 'When the relay published it (NULL = pending).';
-CREATE INDEX ix_people_outbox_event_pending ON people.outbox_event (id) WHERE published_at IS NULL;
+COMMENT ON COLUMN people.outbox_event.publish_error IS 'Why the relay could not turn the row into an event (set aside, not published); NULL otherwise.';
+CREATE INDEX ix_people_outbox_event_pending ON people.outbox_event (id) WHERE published_at IS NULL AND publish_error IS NULL;
 CREATE TABLE people.inbox_event (
     event_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
@@ -649,15 +651,16 @@ CREATE TABLE people.inbox_event (
     received_at timestamptz NOT NULL DEFAULT now(),
     processed_at timestamptz,
     processing_error text,
-    CONSTRAINT pk_people_inbox_event PRIMARY KEY (event_id)
+    CONSTRAINT pk_people_inbox_event PRIMARY KEY (tenant_id, event_id)
 );
 COMMENT ON TABLE people.inbox_event IS 'Inbox of the people module: ids of consumed events, kept so redeliveries are processed exactly once.';
-COMMENT ON COLUMN people.inbox_event.event_id IS 'Global id of the consumed event.';
+COMMENT ON COLUMN people.inbox_event.event_id IS 'Global id of the consumed event; recorded per tenant.';
 COMMENT ON COLUMN people.inbox_event.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
 COMMENT ON COLUMN people.inbox_event.event_type IS 'Event name.';
 COMMENT ON COLUMN people.inbox_event.received_at IS 'First delivery time.';
 COMMENT ON COLUMN people.inbox_event.processed_at IS 'When handling committed (NULL = in flight).';
 COMMENT ON COLUMN people.inbox_event.processing_error IS 'Last handling error, if any.';
+CREATE INDEX ix_people_inbox_event_processed ON people.inbox_event (processed_at) WHERE processed_at IS NOT NULL;
 
 -- === P1-15: business uniqueness ignores soft-deleted rows ===
 

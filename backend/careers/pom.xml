@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   careers: the Careers microservice, owner of database schema "careers" (JAVA-CODING-RULES §2).
-  Depends on core, sdk, auth-client and the messaging runtime; only event consumers compile against the
+  Depends on core, auth-client and the messaging runtime; only event consumers compile against the
   narrow messaging API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
   Its Flyway migrations are database/migrations/careers, applied to its own schema only.
 -->
@@ -24,10 +24,6 @@
     </dependency>
     <dependency>
       <groupId>com.mysms</groupId>
-      <artifactId>sdk</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
       <artifactId>auth-client</artifactId>
     </dependency>
     <dependency>
@@ -38,6 +34,11 @@
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <scope>provided</scope>
+    </dependency>
+    <!-- e-mail to an applicant (careers.EmailApplicant) over SMTP: core's MailDelivery -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-mail</artifactId>
     </dependency>
     <!-- messaging runtime relay; event consumers compile against its narrow API -->
     <dependency>
@@ -75,6 +76,11 @@
       </resource>
     </resources>
     <plugins>
+      <!-- its protos (src/main/resources/proto: its own, and copies of the callees' it calls) into its jar -->
+      <plugin>
+        <groupId>org.xolstice.maven.plugins</groupId>
+        <artifactId>protobuf-maven-plugin</artifactId>
+      </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
@@ -82,13 +88,6 @@
           <mainClass>com.mysms.careers.CareersApplication</mainClass>
           <classifier>exec</classifier>
         </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

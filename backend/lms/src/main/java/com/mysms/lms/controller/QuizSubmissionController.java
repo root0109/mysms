@@ -12,27 +12,27 @@ import com.mysms.lms.api.model.QuizSubmission;
 import com.mysms.lms.api.model.QuizViolation;
 import com.mysms.lms.api.model.ResumeQuizAttemptRequest;
 import com.mysms.lms.api.model.SaveQuizResponsesRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
+import com.mysms.lms.business.QuizAttemptService;
 import com.mysms.lms.business.QuizSubmissionService;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the QuizSubmission operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the QuizSubmission operations; authentication and the permission check already ran in the auth-client
+ * filter. Operations not served yet answer 501.
  */
 @RestController
 public class QuizSubmissionController implements QuizSubmissionApi {
 
     private final QuizSubmissionService quizSubmissionService;
+    private final QuizAttemptService quizAttemptService;
 
-    public QuizSubmissionController(QuizSubmissionService quizSubmissionService) {
+    public QuizSubmissionController(QuizSubmissionService quizSubmissionService,
+            QuizAttemptService quizAttemptService) {
         this.quizSubmissionService = quizSubmissionService;
+        this.quizAttemptService = quizAttemptService;
     }
 
     @Override
@@ -58,7 +58,8 @@ public class QuizSubmissionController implements QuizSubmissionApi {
     @Override
     public ResponseEntity<QuizSubmission> gradeQuizAnswers(UUID quizSubmissionId,
             GradeQuizAnswersRequest gradeQuizAnswersRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        QuizSubmission changed = quizAttemptService.gradeQuizAnswers(quizSubmissionId, gradeQuizAnswersRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -93,18 +94,20 @@ public class QuizSubmissionController implements QuizSubmissionApi {
     @Override
     public ResponseEntity<QuizSubmission> pauseQuizAttempt(UUID quizSubmissionId,
             PauseQuizAttemptRequest pauseQuizAttemptRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        QuizSubmission changed = quizAttemptService.pauseQuizAttempt(quizSubmissionId, pauseQuizAttemptRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<QuizSubmission> resumeQuizAttempt(UUID quizSubmissionId,
             ResumeQuizAttemptRequest resumeQuizAttemptRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        QuizSubmission changed = quizAttemptService.resumeQuizAttempt(quizSubmissionId, resumeQuizAttemptRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<QuizAutosaveResult> saveQuizResponses(UUID quizSubmissionId,
             SaveQuizResponsesRequest saveQuizResponsesRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(quizAttemptService.saveQuizResponses(quizSubmissionId, saveQuizResponsesRequest));
     }
 }

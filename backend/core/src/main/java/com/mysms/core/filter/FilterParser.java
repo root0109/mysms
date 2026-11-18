@@ -14,10 +14,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The reviewed criteria builder for `filter` (api/README "Filtering and ordering"; JAVA-CODING-RULES §6): the AIP-160
- * subset `= != < <= > >=`, `:` (contains, strings), AND, OR, NOT, parentheses, quoted strings, numbers, true/false and
- * null, over an allowlist of fields. Produces SQL whose columns come only from the allowlist and whose values are
- * all bind parameters. Anything else is rejected with 400 INVALID_FILTER.
+ * Parses `filter`, an AIP-160 subset (`= != < <= > >=`, `:` contains, AND, OR, NOT, parentheses), over an allowlist
+ * of fields: columns come only from the allowlist and every value is a bind parameter. Anything else is 400
+ * INVALID_FILTER.
  */
 public final class FilterParser {
 
@@ -62,11 +61,9 @@ public final class FilterParser {
     public static final int MAX_RANGE_DAYS = 366;
 
     /**
-     * Checks that a filter bounds a partitioned table's partition key on both sides, so the database reads only the
-     * partitions of that range (database/README.md "Partitioned high-volume tables"). Accepted: top-level
-     * {@code AND}-ed conditions {@code key >= a} (or {@code >}) and {@code key <= b} (or {@code <}), or {@code key = a},
-     * spanning at most {@link #MAX_RANGE_DAYS} days. A bound inside {@code OR} or {@code NOT} does not count.
-     * Call it before {@link #parse}; it answers 400 INVALID_FILTER, naming the field, when the range is missing.
+     * Requires the filter to bound a partitioned table's key on both sides with top-level {@code AND}-ed conditions
+     * (or {@code key = a}), spanning at most {@link #MAX_RANGE_DAYS} days, so only those partitions are read; bounds
+     * inside {@code OR} or {@code NOT} do not count. Otherwise 400 INVALID_FILTER naming the field.
      */
     public static void requireRange(String filter, Map<String, FieldSpec> fields, String key) {
         FieldSpec field = fields.get(key);

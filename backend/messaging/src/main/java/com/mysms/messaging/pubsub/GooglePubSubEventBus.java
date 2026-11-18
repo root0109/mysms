@@ -55,17 +55,15 @@ import org.springframework.util.StringUtils;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Cloud Pub/Sub adapter for the MySMS {@link EventBus}. Each source module publishes to its own topic so IAM can limit
- * a service account to its own event stream. Each consuming module gets a durable subscription per source; the
- * subscription is shared by replicas, and Pub/Sub filters it to that source before the adapter applies the consumer's
- * event-type allowlist. Messages use CloudEvents JSON and the source/type attributes are checked against the body.
+ * Cloud Pub/Sub adapter for the {@link EventBus}. Each source module publishes to its own topic so IAM can limit a
+ * service account to its own stream; each consuming module gets a durable subscription per source, shared by replicas
+ * and filtered to that source. Source and type attributes are checked against the CloudEvents body.
  *
- * <p>Delivery is at least once. The broker retries negative acknowledgements with exponential backoff and can move
- * poison messages to a consumer dead-letter topic; the module inbox makes successfully handled events exactly once.
+ * <p>Negative acknowledgements are retried with exponential backoff, and poison messages go to the consumer's
+ * dead-letter topic.
  */
 public final class GooglePubSubEventBus implements EventBus {
 
-    /** Immutable Pub/Sub resource and retry settings. */
     public record Settings(String projectId, String topicPrefix, String subscriptionPrefix, Set<String> sourceModules,
                            boolean createResources, String emulatorHost, Duration topicRetention,
                            Duration publishTimeout, Duration retryDelay, Duration maxRetryDelay,

@@ -55,13 +55,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of comms.notice (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Notice
- * are served here too — NoticeAudience, NoticeVersion.
+ * Business service of comms.notice and of the records that exist only as part of a Notice (NoticeAudience,
+ * NoticeVersion): audit and domain event commit in the same transaction as every change. Rows outside the caller's
+ * institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class NoticeService extends AppTransactionManager {
@@ -173,8 +169,8 @@ public class NoticeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Notice updateNotice(UUID id, String ifMatch, NoticeUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
@@ -233,9 +229,8 @@ public class NoticeService extends AppTransactionManager {
     }
 
     /**
-     * comms.PublishNotice: Publish. The row must be visible and writable for the caller, and the step is allowed while
-     * is_published is false and is_closed is false; in any other state
-     * the answer is 409 and nothing changes.
+     * comms.PublishNotice: Publish. Allowed while is_published is false and is_closed is false, on a row the caller may
+     * see and write; otherwise 409 and nothing changes.
      */
     public Notice publishNotice(UUID id, PublishNoticeRequest request) {
         DataScope scope = DataScope.current(PERMISSION_PUBLISH_NOTICE);
@@ -266,9 +261,8 @@ public class NoticeService extends AppTransactionManager {
     }
 
     /**
-     * comms.UnpublishNotice: Unpublish. The row must be visible and writable for the caller, and the step is allowed
-     * while is_published is true; in any other state
-     * the answer is 409 and nothing changes.
+     * comms.UnpublishNotice: Unpublish. Allowed while is_published is true, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public Notice unpublishNotice(UUID id, UnpublishNoticeRequest request) {
         DataScope scope = DataScope.current(PERMISSION_UNPUBLISH_NOTICE);
@@ -299,9 +293,8 @@ public class NoticeService extends AppTransactionManager {
     }
 
     /**
-     * comms.DeactivateNotice: Withdraw a notice. The row must be visible and writable for the caller, and the step is
-     * allowed while is_closed is false; in any other state
-     * the answer is 409 and nothing changes.
+     * comms.DeactivateNotice: Withdraw a notice. Allowed while is_closed is false, on a row the caller may see and
+     * write; otherwise 409 and nothing changes.
      */
     public Notice deactivateNotice(UUID id, DeactivateNoticeRequest request) {
         DataScope scope = DataScope.current(PERMISSION_DEACTIVATE_NOTICE);
@@ -333,9 +326,8 @@ public class NoticeService extends AppTransactionManager {
     }
 
     /**
-     * comms.ReactivateNotice: Restore a withdrawn notice. The row must be visible and writable for the caller, and the
-     * step is allowed while is_closed is true; in any other state
-     * the answer is 409 and nothing changes.
+     * comms.ReactivateNotice: Restore a withdrawn notice. Allowed while is_closed is true, on a row the caller may see
+     * and write; otherwise 409 and nothing changes.
      */
     public Notice reactivateNotice(UUID id, ReactivateNoticeRequest request) {
         DataScope scope = DataScope.current(PERMISSION_REACTIVATE_NOTICE);
@@ -374,12 +366,12 @@ public class NoticeService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(NoticeEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected NoticeUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected NoticeUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(NoticeEntity entity, NoticeUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -442,7 +434,7 @@ public class NoticeService extends AppTransactionManager {
 
     }
 
-    // ---- NoticeAudience: a record of the Notice aggregate ----
+    // ---- NoticeAudience ----
 
     public NoticeAudience getNoticeAudience(UUID noticeId, UUID id) {
         return doInReadTransaction(() -> {
@@ -493,8 +485,8 @@ public class NoticeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public NoticeAudience updateNoticeAudience(UUID noticeId, UUID id, String ifMatch, NoticeAudienceUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -557,14 +549,12 @@ public class NoticeService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOfNoticeAudience(NoticeAudienceEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /**
-     * Applies the selected NoticeAudienceUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected NoticeAudienceUpdate fields; explicit per field so a mask can clear values. */
     private static void applyNoticeAudience(NoticeAudienceEntity entity, NoticeAudienceUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -593,7 +583,7 @@ public class NoticeService extends AppTransactionManager {
 
     }
 
-    // ---- NoticeVersion: a record of the Notice aggregate ----
+    // ---- NoticeVersion ----
 
     public NoticeVersion getNoticeVersion(UUID noticeId, UUID id) {
         return doInReadTransaction(() -> {
@@ -627,7 +617,7 @@ public class NoticeService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the comms.notice it belongs to). */
+    /** The institution of the comms.notice the row belongs to. */
     private Optional<UUID> institutionOfNoticeVersion(NoticeVersionEntity entity) {
         return noticeVersionRepository.institutionOf(entity.getNoticeId());
     }

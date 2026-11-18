@@ -8,7 +8,6 @@ import com.mysms.sis.api.model.DisciplineIncident;
 import com.mysms.sis.api.model.DisciplineIncidentUpdate;
 import com.mysms.sis.api.model.MarkIncidentActionTakenRequest;
 import com.mysms.sis.api.model.MarkIncidentSeenRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.sis.business.DisciplineIncidentService;
 import java.net.URI;
@@ -17,11 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the DisciplineIncident operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/sis.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the DisciplineIncident operations; authentication and the permission check already happened in the
+ * auth-client filter; operations not served yet answer 501 NOT_IMPLEMENTED.
  */
 @RestController
 public class DisciplineIncidentController implements DisciplineIncidentApi {
@@ -70,13 +66,16 @@ public class DisciplineIncidentController implements DisciplineIncidentApi {
     @Override
     public ResponseEntity<DisciplineIncident> markIncidentActionTaken(UUID disciplineIncidentId,
             MarkIncidentActionTakenRequest markIncidentActionTakenRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        DisciplineIncident changed = disciplineIncidentService.markIncidentActionTaken(disciplineIncidentId,
+                markIncidentActionTakenRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<DisciplineIncident> markIncidentSeen(UUID disciplineIncidentId,
             MarkIncidentSeenRequest markIncidentSeenRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        DisciplineIncident changed = disciplineIncidentService.markIncidentSeen(disciplineIncidentId, markIncidentSeenRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

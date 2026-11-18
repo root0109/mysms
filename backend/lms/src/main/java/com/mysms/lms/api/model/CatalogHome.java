@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import com.mysms.core.paging.NavigationInfo;
@@ -29,19 +29,19 @@ import java.util.*;
 public class CatalogHome {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid CatalogBanner> featured = new ArrayList<>();
+  private @Nullable List<@Valid CatalogBanner> featured = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid CatalogBanner> showcase = new ArrayList<>();
+  private @Nullable List<@Valid CatalogBanner> showcase = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid LmsCourse> courses = new ArrayList<>();
+  private @Nullable List<@Valid LmsCourse> courses = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid Category> categories = new ArrayList<>();
+  private @Nullable List<@Valid Category> categories = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid Cohort> openCohorts = new ArrayList<>();
+  private @Nullable List<@Valid Cohort> openCohorts = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable NavigationInfo paging;

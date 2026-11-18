@@ -22,11 +22,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to platform.saas_plan (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. The table is global (no
- * tenant column, no row-level security): it is written only by
- * platform staff, through the operations whose scheme the edge enforces.
+ * Plain-JDBC access to platform.saas_plan: live rows only, keyset paging over an allowlisted order and the row_version
+ * guard on every update and delete. The table is global (no tenant column, no row-level security): it is written only
+ * by platform staff, through the operations whose scheme the edge enforces.
  */
 @Repository
 public class SaasPlanRepository {

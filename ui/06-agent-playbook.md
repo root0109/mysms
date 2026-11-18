@@ -6,7 +6,7 @@ How an AI agent (or a new developer) picks up and completes UI work in this repo
 
 1. [README.md](README.md) — ground rules (the seven rules bind every change).
 2. The work item: a screen ID (02 §3), a flow (03), or a component (04 §5).
-3. For the screen's operations: [`../api/operations.md`](../api/operations.md) row(s) → exact REST path, gRPC method, permission code; the module's `../api/openapi/<module>.yaml` for request/response shapes.
+3. For the screen's operations: [`../api/operations.md`](../api/operations.md) row(s) → exact REST path, gRPC method, permission code; the module's `../backend/<module>/target/openapi/api-docs.yml` (written by the backend build) for request/response shapes.
 4. [05-frontend-architecture.md](05-frontend-architecture.md) — where code goes and which `core` hooks to use.
 5. [07-open-dependencies.md](07-open-dependencies.md) — if the screen cites a pending item, build the interim behaviour named there, behind the named feature flag.
 

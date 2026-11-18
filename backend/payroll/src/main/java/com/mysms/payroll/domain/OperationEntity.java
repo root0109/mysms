@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of payroll.operation: one long-running job of this module (column for column). */
+/** A row of payroll.operation: one long-running job of this module. */
 @Getter
 @Setter
 @SuperBuilder
@@ -32,4 +32,5 @@ public class OperationEntity extends BaseEntity {
     private UUID startedByUserId;
     private OffsetDateTime startedAt;
     private OffsetDateTime finishedAt;
+    private String result;
 }

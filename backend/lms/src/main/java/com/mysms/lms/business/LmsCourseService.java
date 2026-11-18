@@ -1,5 +1,38 @@
 package com.mysms.lms.business;
 
+import com.mysms.lms.api.model.DownloadLink;
+import com.mysms.lms.repository.LearningActivityRepository;
+import com.mysms.lms.api.model.ProgressBucket;
+import java.util.stream.Collectors;
+import java.nio.charset.StandardCharsets;
+import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.HashSet;
+import org.springframework.beans.factory.annotation.Value;
+import com.mysms.lms.repository.LessonRepository;
+import com.mysms.lms.repository.LessonProgressRepository;
+import com.mysms.lms.repository.EnrollmentRepository;
+import com.mysms.lms.mapper.LessonProgressMapper;
+import com.mysms.lms.errors.NotConfiguredException;
+import com.mysms.lms.domain.LessonProgressEntity;
+import com.mysms.lms.domain.LessonEntity;
+import com.mysms.lms.domain.EnrollmentEntity;
+import com.mysms.lms.api.model.ScormLaunch;
+import com.mysms.lms.api.model.SaveScormProgressRequest;
+import com.mysms.lms.api.model.ReorderChaptersRequest;
+import com.mysms.lms.api.model.MoveChapterRequest;
+import com.mysms.lms.api.model.LessonProgress;
+import com.mysms.lms.api.model.CourseOutlineLesson;
+import com.mysms.lms.api.model.CourseOutlineChapter;
+import com.mysms.lms.api.model.CourseOutline;
+import com.mysms.lms.api.model.ChapterList;
+import com.mysms.core.error.ConflictException;
+import com.mysms.authclient.AuthContext;
+import java.util.function.Predicate;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import com.mysms.lms.api.model.Dependencies;
 import com.mysms.authclient.DataScope;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
@@ -22,6 +55,45 @@ import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
 import com.mysms.core.web.UpdateMask;
+import com.mysms.lms.api.model.ApproveEnrollmentRequestRequest;
+import com.mysms.lms.api.model.BatchEnrollInCourseRequest;
+import com.mysms.lms.api.model.BatchEnrollPreview;
+import com.mysms.lms.api.model.BatchEnrollPreviewList;
+import com.mysms.lms.api.model.CalendarItem;
+import com.mysms.lms.api.model.Certificate;
+import com.mysms.lms.api.model.CreateCourseVersionRequest;
+import com.mysms.lms.api.model.EvaluatorSlot;
+import com.mysms.lms.api.model.TeacherDashboard;
+import com.mysms.lms.domain.CertificateEntity;
+import com.mysms.lms.domain.CohortEnrollmentEntity;
+import com.mysms.lms.domain.ContentItemEntity;
+import com.mysms.lms.domain.EvaluatorAvailabilityEntity;
+import com.mysms.lms.domain.EvaluatorEntity;
+import com.mysms.lms.domain.GradingCategoryEntity;
+import com.mysms.lms.domain.LearningObjectiveEntity;
+import com.mysms.lms.domain.ReleaseRuleConditionEntity;
+import com.mysms.lms.domain.ReleaseRuleTargetEntity;
+import com.mysms.lms.mapper.CertificateMapper;
+import com.mysms.lms.mapper.CohortMapper;
+import com.mysms.lms.mapper.StudentAlertMapper;
+import com.mysms.lms.repository.CertificateRepository;
+import com.mysms.lms.repository.CertificateRequestRepository;
+import com.mysms.lms.repository.CohortCourseRepository;
+import com.mysms.lms.repository.CohortEnrollmentRepository;
+import com.mysms.lms.repository.CohortRepository;
+import com.mysms.lms.repository.ContentItemRepository;
+import com.mysms.lms.repository.EvaluatorAvailabilityRepository;
+import com.mysms.lms.repository.EvaluatorRepository;
+import com.mysms.lms.repository.GradingCategoryRepository;
+import com.mysms.lms.repository.LearningObjectiveRepository;
+import com.mysms.lms.repository.ReleaseRuleConditionRepository;
+import com.mysms.lms.repository.ReleaseRuleRepository;
+import com.mysms.lms.repository.ReleaseRuleTargetRepository;
+import com.mysms.lms.repository.StudentAlertRepository;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Locale;
+import com.mysms.lms.domain.ReleaseRuleEntity;
 import com.mysms.lms.api.model.CatalogBanner;
 import com.mysms.lms.api.model.CatalogBannerUpdate;
 import com.mysms.lms.api.model.Chapter;
@@ -101,19 +173,40 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.course (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a LmsCourse
- * are served here too — CatalogBanner, Chapter, CourseAuthorProfile, CourseInterest, CourseMentor, CoursePreview,
- * CourseReview, CourseTeacher, CourseTestimonial, EnrollmentRequest, RelatedCourse.
+ * Business service of lms.course and of the records that exist only as part of a LmsCourse (CatalogBanner, Chapter,
+ * CourseAuthorProfile, CourseInterest, CourseMentor, CoursePreview, CourseReview, CourseTeacher, CourseTestimonial,
+ * EnrollmentRequest, RelatedCourse): audit and domain event commit in the same transaction as every change. Rows
+ * outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class LmsCourseService extends AppTransactionManager {
 
     public static final String AGGREGATE = LmsCourseEntity.TABLE;
+    static final String PERMISSION_READ = "lms.course.read";
+    static final String PERMISSION_DELETE = "lms.course.delete";
+    static final String PERMISSION_CHECK_DEPENDENCIES = "lms.course.check_course_dependencies";
+    static final String PERMISSION_SUBMIT_FOR_REVIEW = "lms.course.submit_course_for_review";
+    static final String PERMISSION_APPROVE = "lms.course.approve_course";
+    static final String PERMISSION_PUBLISH = "lms.course.publish_course";
+    static final String PERMISSION_UNPUBLISH = "lms.course.unpublish_course";
+    static final String PERMISSION_DEACTIVATE = "lms.course.deactivate_course";
+    static final String PERMISSION_REACTIVATE = "lms.course.reactivate_course";
+    static final String PERMISSION_PUBLISH_CATALOG_LISTING = "lms.course.publish_catalog_listing";
+    static final String PERMISSION_HIDE_CATALOG_LISTING = "lms.course.hide_catalog_listing";
+    static final String PUBLISHED = "published";
+    static final String PERMISSION_GET_OUTLINE = "lms.course.get_course_outline";
+    static final String PERMISSION_PROGRESS_DISTRIBUTION = "lms.course.get_course_progress_distribution";
+    static final String PERMISSION_REORDER_CHAPTERS = "lms.course.reorder_chapters";
+    static final String CHAPTER_PERMISSION_MOVE = "lms.chapter.move_chapter";
+    static final String CHAPTER_PERMISSION_SCORM_LAUNCH = "lms.chapter.get_scorm_launch";
+    static final String PROGRESS_AGGREGATE = "lms.lesson_progress";
+    /** The runtime-state keys a SCORM player saves (lms.SaveScormProgress) and gets back on launch. */
+    static final String SCORM_SUSPEND_DATA = "suspendData";
+    static final String SCORM_LOCATION = "location";
+    static final String SCORM_SCORE = "score";
+    static final String SCORM_TOTAL_TIME = "totalTimeSeconds";
+    /** lms.lesson_progress.scorm_location is varchar(1000). */
+    private static final int MAX_SCORM_LOCATION = 1000;
     static final String PERMISSION_CREATE = "lms.course.create";
     static final String PERMISSION_UPDATE = "lms.course.update";
     /** The contract's LmsCourseUpdate fields, in apply order. */
@@ -167,7 +260,7 @@ public class LmsCourseService extends AppTransactionManager {
     static final String COURSE_INTEREST_PERMISSION_UPDATE = "lms.course_interest.update";
     static final String COURSE_INTEREST_PERMISSION_DELETE = "lms.course_interest.delete";
     /** The contract's CourseInterestUpdate fields, in apply order. */
-    static final List<String> COURSE_INTEREST_WRITABLE = List.of("userId", "emailSent");
+    static final List<String> COURSE_INTEREST_WRITABLE = List.of("emailSent");
 
     public static final String COURSE_MENTOR_AGGREGATE = CourseMentorEntity.TABLE;
     static final String COURSE_MENTOR_PERMISSION_LIST = "lms.course_mentor.read";
@@ -193,7 +286,7 @@ public class LmsCourseService extends AppTransactionManager {
     static final String COURSE_REVIEW_PERMISSION_UPDATE = "lms.course_review.update";
     static final String COURSE_REVIEW_PERMISSION_DELETE = "lms.course_review.delete";
     /** The contract's CourseReviewUpdate fields, in apply order. */
-    static final List<String> COURSE_REVIEW_WRITABLE = List.of("userId", "rating", "review");
+    static final List<String> COURSE_REVIEW_WRITABLE = List.of("rating", "review");
 
     public static final String COURSE_TEACHER_AGGREGATE = CourseTeacherEntity.TABLE;
     static final String COURSE_TEACHER_PERMISSION_LIST = "lms.course_teacher.read";
@@ -221,7 +314,7 @@ public class LmsCourseService extends AppTransactionManager {
     static final String ENROLLMENT_REQUEST_PERMISSION_DELETE = "lms.enrollment_request.delete";
     static final String PERMISSION_REJECT_ENROLLMENT_REQUEST = "lms.enrollment_request.reject_enrollment_request";
     /** The contract's EnrollmentRequestUpdate fields, in apply order. */
-    static final List<String> ENROLLMENT_REQUEST_WRITABLE = List.of("cohortId", "userId", "requestedAt");
+    static final List<String> ENROLLMENT_REQUEST_WRITABLE = List.of("cohortId", "requestedAt");
 
     public static final String RELATED_COURSE_AGGREGATE = RelatedCourseEntity.TABLE;
     static final String RELATED_COURSE_PERMISSION_GET = "lms.related_course.read";
@@ -259,6 +352,31 @@ public class LmsCourseService extends AppTransactionManager {
     private final EnrollmentRequestMapper enrollmentRequestMapper;
     private final RelatedCourseRepository relatedCourseRepository;
     private final RelatedCourseMapper relatedCourseMapper;
+    private final LessonRepository lessonRepository;
+    private final LessonProgressRepository progressRepository;
+    private final LessonProgressMapper progressMapper;
+    private final EnrollmentRepository enrollmentRepository;
+    private final LearningActivityRepository activity;
+    private final ContentItemRepository contentItems;
+    private final LearningObjectiveRepository objectives;
+    private final GradingCategoryRepository gradingCategories;
+    private final ReleaseRuleRepository releaseRules;
+    private final ReleaseRuleConditionRepository releaseRuleConditions;
+    private final ReleaseRuleTargetRepository releaseRuleTargets;
+    private final CohortRepository cohorts;
+    private final CohortCourseRepository cohortCourses;
+    private final CohortEnrollmentRepository cohortEnrollments;
+    private final CohortMapper cohortMapper;
+    private final CertificateRepository certificates;
+    private final CertificateMapper certificateMapper;
+    private final CertificateRequestRepository certificateRequests;
+    private final EvaluatorRepository evaluators;
+    private final EvaluatorAvailabilityRepository evaluatorAvailability;
+    private final StudentAlertRepository studentAlerts;
+    private final StudentAlertMapper studentAlertMapper;
+    private final PlatformFiles files;
+    private final String scormContentBaseUrl;
+    private final PublicReads publicReads;
 
     public LmsCourseService(LmsCourseRepository repository,
             LmsCourseMapper mapper,
@@ -289,8 +407,33 @@ public class LmsCourseService extends AppTransactionManager {
             EnrollmentRequestRepository enrollmentRequestRepository,
             EnrollmentRequestMapper enrollmentRequestMapper,
             RelatedCourseRepository relatedCourseRepository,
-            RelatedCourseMapper relatedCourseMapper) {
+            RelatedCourseMapper relatedCourseMapper,
+            LessonRepository lessonRepository,
+            LessonProgressRepository progressRepository,
+            LessonProgressMapper progressMapper,
+            EnrollmentRepository enrollmentRepository,
+            LearningActivityRepository activity,
+            ContentItemRepository contentItems,
+            LearningObjectiveRepository objectives,
+            GradingCategoryRepository gradingCategories,
+            ReleaseRuleRepository releaseRules,
+            ReleaseRuleConditionRepository releaseRuleConditions,
+            ReleaseRuleTargetRepository releaseRuleTargets,
+            CohortRepository cohorts,
+            CohortCourseRepository cohortCourses,
+            CohortEnrollmentRepository cohortEnrollments,
+            CohortMapper cohortMapper,
+            CertificateRepository certificates,
+            CertificateMapper certificateMapper,
+            CertificateRequestRepository certificateRequests,
+            EvaluatorRepository evaluators,
+            EvaluatorAvailabilityRepository evaluatorAvailability,
+            StudentAlertRepository studentAlerts,
+            StudentAlertMapper studentAlertMapper,
+            PlatformFiles files,
+            @Value("${mysms.lms.scorm.content-base-url}") String scormContentBaseUrl, PublicReads publicReads) {
         super(database, transactions);
+        this.publicReads = publicReads;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
@@ -319,6 +462,30 @@ public class LmsCourseService extends AppTransactionManager {
         this.enrollmentRequestMapper = enrollmentRequestMapper;
         this.relatedCourseRepository = relatedCourseRepository;
         this.relatedCourseMapper = relatedCourseMapper;
+        this.lessonRepository = lessonRepository;
+        this.progressRepository = progressRepository;
+        this.progressMapper = progressMapper;
+        this.enrollmentRepository = enrollmentRepository;
+        this.activity = activity;
+        this.contentItems = contentItems;
+        this.objectives = objectives;
+        this.gradingCategories = gradingCategories;
+        this.releaseRules = releaseRules;
+        this.releaseRuleConditions = releaseRuleConditions;
+        this.releaseRuleTargets = releaseRuleTargets;
+        this.cohorts = cohorts;
+        this.cohortCourses = cohortCourses;
+        this.cohortEnrollments = cohortEnrollments;
+        this.cohortMapper = cohortMapper;
+        this.certificates = certificates;
+        this.certificateMapper = certificateMapper;
+        this.certificateRequests = certificateRequests;
+        this.evaluators = evaluators;
+        this.evaluatorAvailability = evaluatorAvailability;
+        this.studentAlerts = studentAlerts;
+        this.studentAlertMapper = studentAlertMapper;
+        this.files = files;
+        this.scormContentBaseUrl = scormContentBaseUrl == null ? "" : scormContentBaseUrl.trim();
     }
 
     /** Creates the row; with validateOnly every check runs and nothing is written. */
@@ -343,8 +510,8 @@ public class LmsCourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public LmsCourse updateLmsCourse(UUID id, String ifMatch, LmsCourseUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -376,6 +543,1188 @@ public class LmsCourseService extends AppTransactionManager {
         });
     }
 
+    // ---- reads the public may make ----
+
+    /**
+     * A course. A member holding lms.course.read sees every course within their data scope; the public — a guest
+     * naming the school, or a signed-in user without the permission — sees a published, active course only, in the
+     * guest projection.
+     */
+    public LmsCourse getLmsCourse(UUID id) {
+        boolean member = publicReads.asMember(PERMISSION_READ);
+        return doInReadTransaction(() -> {
+            if (member) {
+                return mapper.toDto(loadVisible(DataScope.current(PERMISSION_READ), id));
+            }
+            return guestProjection(mapper.toDto(loadPublic(id)));
+        });
+    }
+
+    /** The tenant's courses within the caller's scope, page by page; published, active ones only to the public. */
+    public Page<LmsCourse> listLmsCourses(Integer pageNumber, Integer pageSize, String cursor, String filter,
+            List<String> sortBy) {
+        boolean member = publicReads.asMember(PERMISSION_READ);
+        SortSpec sort = SortSpec.parse(sortBy, LmsCourseRepository.SORT_FIELDS, LmsCourseRepository.DEFAULT_ORDER,
+                LmsCourseRepository.ID_COLUMN);
+        SqlFragment where = FilterParser.parse(filter, member ? LmsCourseRepository.FILTER_FIELDS
+                : PublicReads.guestFields(LmsCourseRepository.FILTER_FIELDS, COURSE_GUEST_HIDDEN));
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+        if (member) {
+            SqlFragment scoped = where.and(LmsCourseRepository.scope(DataScope.current(PERMISSION_READ)));
+            return doInReadTransaction(() -> repository.list(page, scoped).map(mapper::toDto));
+        }
+        return doInReadTransaction(() -> repository.list(page, where.and(LmsCourseRepository.PUBLISHED))
+                .map(e -> guestProjection(mapper.toDto(e))));
+    }
+
+    /** Fields {@link #guestProjection} leaves out, so the public cannot filter on them either. */
+    static final Set<String> COURSE_GUEST_HIDDEN = Set.of("authorComments", "externalRef", "publishNotificationSent",
+            "defaultEvaluatorId", "gradingSchemeId", "createdBy", "updatedBy");
+    /** Who wrote, created and changed a row: hidden from the public. */
+    private static final Set<String> AUTHORS = Set.of("userId", "createdBy", "updatedBy");
+
+    /** The public's view of a course: authoring notes, references and who changed what are internal. */
+    static LmsCourse guestProjection(LmsCourse course) {
+        course.setAuthorComments(null);
+        course.setExternalRef(null);
+        course.setPublishNotificationSent(null);
+        course.setDefaultEvaluatorId(null);
+        course.setGradingSchemeId(null);
+        course.setCreatedBy(null);
+        course.setUpdatedBy(null);
+        return course;
+    }
+
+    /** A published, active course (404 otherwise: the public never learns that a draft exists). */
+    private LmsCourseEntity loadPublic(UUID id) {
+        return repository.findById(id)
+                .filter(e -> Boolean.TRUE.equals(e.getIsPublished()) && PUBLISHED.equals(e.getLifecycleStatus()))
+                .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+    }
+
+    /**
+     * How the caller reads a course's public children (banners, previews, reviews, testimonials, author profiles,
+     * related courses): true for a member who sees the course within their scope; false for the public, once the course
+     * proved published. Either way an invisible course is 404.
+     */
+    private boolean readCourseChildren(UUID courseId, String permission) {
+        if (publicReads.asMember(permission)) {
+            loadVisible(DataScope.current(permission), courseId);
+            return true;
+        }
+        loadPublic(courseId);
+        return false;
+    }
+
+    /** The catalogue banners of a course. */
+    public Page<CatalogBanner> listCatalogBanners(UUID courseId, Integer pageNumber, Integer pageSize, String cursor,
+            String filter, List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, CatalogBannerRepository.SORT_FIELDS,
+                CatalogBannerRepository.DEFAULT_ORDER, CatalogBannerRepository.ID_COLUMN);
+        SqlFragment where = FilterParser.parse(filter, CatalogBannerRepository.FILTER_FIELDS)
+                .and(CatalogBannerRepository.ofParent(courseId));
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + courseId, clock);
+        return doInReadTransaction(() -> {
+            boolean member = readCourseChildren(courseId, CATALOG_BANNER_PERMISSION_GET);
+            return catalogBannerRepository.list(page, where).map(catalogBannerMapper::toDto)
+                    .map(d -> member ? d : withoutAuthors(d));
+        });
+    }
+
+    /** The preview items of a course (what a visitor may see before enrolling). */
+    public Page<CoursePreview> listCoursePreviews(UUID courseId, Integer pageNumber, Integer pageSize, String cursor,
+            String filter, List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, CoursePreviewRepository.SORT_FIELDS,
+                CoursePreviewRepository.DEFAULT_ORDER, CoursePreviewRepository.ID_COLUMN);
+        SqlFragment where = FilterParser.parse(filter, CoursePreviewRepository.FILTER_FIELDS)
+                .and(CoursePreviewRepository.ofParent(courseId));
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + courseId, clock);
+        return doInReadTransaction(() -> {
+            boolean member = readCourseChildren(courseId, COURSE_PREVIEW_PERMISSION_GET);
+            return coursePreviewRepository.list(page, where).map(coursePreviewMapper::toDto)
+                    .map(d -> member ? d : withoutAuthors(d));
+        });
+    }
+
+    /** The students' reviews of a course; the public neither sees nor filters on who wrote them. */
+    public Page<CourseReview> listCourseReviews(UUID courseId, Integer pageNumber, Integer pageSize, String cursor,
+            String filter, List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, CourseReviewRepository.SORT_FIELDS,
+                CourseReviewRepository.DEFAULT_ORDER, CourseReviewRepository.ID_COLUMN);
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + courseId, clock);
+        return doInReadTransaction(() -> {
+            boolean member = readCourseChildren(courseId, COURSE_REVIEW_PERMISSION_GET);
+            SqlFragment where = FilterParser.parse(filter, member ? CourseReviewRepository.FILTER_FIELDS
+                    : PublicReads.guestFields(CourseReviewRepository.FILTER_FIELDS, AUTHORS))
+                    .and(CourseReviewRepository.ofParent(courseId));
+            return courseReviewRepository.list(page, where).map(courseReviewMapper::toDto)
+                    .map(d -> member ? d : withoutAuthors(d));
+        });
+    }
+
+    /** The testimonials shown on a course's page. */
+    public Page<CourseTestimonial> listCourseTestimonials(UUID courseId, Integer pageNumber, Integer pageSize,
+            String cursor, String filter, List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, CourseTestimonialRepository.SORT_FIELDS,
+                CourseTestimonialRepository.DEFAULT_ORDER, CourseTestimonialRepository.ID_COLUMN);
+        SqlFragment where = FilterParser.parse(filter, CourseTestimonialRepository.FILTER_FIELDS)
+                .and(CourseTestimonialRepository.ofParent(courseId));
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + courseId, clock);
+        return doInReadTransaction(() -> {
+            boolean member = readCourseChildren(courseId, COURSE_TESTIMONIAL_PERMISSION_GET);
+            return courseTestimonialRepository.list(page, where).map(courseTestimonialMapper::toDto)
+                    .map(d -> member ? d : withoutAuthors(d));
+        });
+    }
+
+    /** The author profiles shown on a course's page. */
+    public Page<CourseAuthorProfile> listCourseAuthorProfiles(UUID courseId, Integer pageNumber, Integer pageSize,
+            String cursor, String filter, List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, CourseAuthorProfileRepository.SORT_FIELDS,
+                CourseAuthorProfileRepository.DEFAULT_ORDER, CourseAuthorProfileRepository.ID_COLUMN);
+        SqlFragment where = FilterParser.parse(filter, CourseAuthorProfileRepository.FILTER_FIELDS)
+                .and(CourseAuthorProfileRepository.ofParent(courseId));
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + courseId, clock);
+        return doInReadTransaction(() -> {
+            boolean member = readCourseChildren(courseId, COURSE_AUTHOR_PROFILE_PERMISSION_GET);
+            return courseAuthorProfileRepository.list(page, where).map(courseAuthorProfileMapper::toDto)
+                    .map(d -> member ? d : withoutAuthors(d));
+        });
+    }
+
+    /** The courses recommended alongside a course; the public sees only those that are published themselves. */
+    public Page<RelatedCourse> listRelatedCourses(UUID courseId, Integer pageNumber, Integer pageSize, String cursor,
+            String filter, List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, RelatedCourseRepository.SORT_FIELDS,
+                RelatedCourseRepository.DEFAULT_ORDER, RelatedCourseRepository.ID_COLUMN);
+        SqlFragment where = FilterParser.parse(filter, RelatedCourseRepository.FILTER_FIELDS)
+                .and(RelatedCourseRepository.ofParent(courseId));
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + courseId, clock);
+        return doInReadTransaction(() -> {
+            boolean member = readCourseChildren(courseId, RELATED_COURSE_PERMISSION_GET);
+            if (member) {
+                return relatedCourseRepository.list(page, where).map(relatedCourseMapper::toDto);
+            }
+            return relatedCourseRepository.list(page, where.and(RelatedCourseRepository.PUBLISHED_TARGET))
+                    .map(relatedCourseMapper::toDto).map(LmsCourseService::withoutAuthors);
+        });
+    }
+
+    /** The public's view of a course's child row: who wrote, created and changed it is internal. */
+    private static <T> T withoutAuthors(T dto) {
+        if (dto instanceof CatalogBanner d) {
+            d.setCreatedBy(null);
+            d.setUpdatedBy(null);
+        } else if (dto instanceof CoursePreview d) {
+            d.setCreatedBy(null);
+            d.setUpdatedBy(null);
+        } else if (dto instanceof CourseReview d) {
+            d.setUserId(null);
+            d.setCreatedBy(null);
+            d.setUpdatedBy(null);
+        } else if (dto instanceof CourseTestimonial d) {
+            d.setCreatedBy(null);
+            d.setUpdatedBy(null);
+        } else if (dto instanceof CourseAuthorProfile d) {
+            d.setCreatedBy(null);
+            d.setUpdatedBy(null);
+        } else if (dto instanceof RelatedCourse d) {
+            d.setCreatedBy(null);
+            d.setUpdatedBy(null);
+        }
+        return dto;
+    }
+
+    // ---- the outline: what a course page, a course home and the structure editor show ----
+
+    /**
+     * lms.GetCourseOutline: the course's template chapters (each followed by the chapters inside it) with their
+     * lessons, for the public (a published course, guest projection) or a member in scope; a signed-in student also
+     * gets their progress — the enrolment, its percentage and each lesson's status.
+     */
+    public CourseOutline getCourseOutline(UUID id) {
+        boolean member = publicReads.asMember(PERMISSION_READ);
+        Optional<UUID> user = AuthContext.current().map(AuthContext::userId);
+        return doInReadTransaction(() -> {
+            Optional<EnrollmentEntity> enrolment = user.flatMap(u -> enrollmentRepository.findOwn(id, u));
+            LmsCourseEntity course = member ? loadVisible(DataScope.current(PERMISSION_READ), id)
+                    : enrolment.isPresent() ? repository.findById(id)
+                            .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)) : loadPublic(id);
+            List<ChapterEntity> chapters = inReadingOrder(chapterRepository.templateOutline(id));
+            Map<UUID, List<LessonEntity>> lessons = new LinkedHashMap<>();
+            if (!chapters.isEmpty()) {
+                lessonRepository.ofChapters(chapters.stream().map(ChapterEntity::getId).toList())
+                        .forEach(l -> lessons.computeIfAbsent(l.getChapterId(), k -> new ArrayList<>()).add(l));
+            }
+            Map<UUID, String> statuses = new LinkedHashMap<>();
+            enrolment.ifPresent(e -> progressRepository.ownInCourse(e.getUserId(), id).stream()
+                    .filter(p -> p.getLessonId() != null)
+                    .forEach(p -> statuses.put(p.getLessonId(), p.getStatus())));
+            LmsCourse dto = mapper.toDto(course);
+            CourseOutline outline = new CourseOutline(member ? dto : guestProjection(dto));
+            outline.setChapters(chapters.stream().map(c -> new CourseOutlineChapter(c.getId(), c.getTitle(),
+                    c.getSortOrder(), Boolean.TRUE.equals(c.getIsScormPackage()))
+                    .lessons(lessons.getOrDefault(c.getId(), List.of()).stream().map(l -> new CourseOutlineLesson(
+                            l.getId(), l.getTitle(), l.getSortOrder(), Boolean.TRUE.equals(l.getIncludeInPreview()))
+                            .progressStatus(statuses.get(l.getId()))).toList())).toList());
+            enrolment.ifPresent(e -> {
+                outline.setEnrollmentId(e.getId());
+                outline.setProgressPercent(WireValues.decimal(e.getProgressPercent()));
+            });
+            return outline;
+        });
+    }
+
+    /** Depth first: each chapter followed by the chapters inside it, every level in its own order. */
+    private static List<ChapterEntity> inReadingOrder(List<ChapterEntity> chapters) {
+        Map<UUID, List<ChapterEntity>> children = new LinkedHashMap<>();
+        chapters.forEach(c -> children.computeIfAbsent(c.getParentChapterId(), k -> new ArrayList<>()).add(c));
+        List<ChapterEntity> ordered = new ArrayList<>();
+        appendLevel(children, null, ordered);
+        return ordered;
+    }
+
+    private static void appendLevel(Map<UUID, List<ChapterEntity>> children, UUID parent, List<ChapterEntity> into) {
+        for (ChapterEntity chapter : children.getOrDefault(parent, List.of())) {
+            into.add(chapter);
+            appendLevel(children, chapter.getId(), into);
+        }
+    }
+
+    /**
+     * lms.ReorderChapters: the course's top-level template chapters in the order given, which must name each of
+     * them exactly once (422 otherwise). Answers the chapters in their new order.
+     */
+    public ChapterList reorderChapters(UUID courseId, ReorderChaptersRequest request) {
+        validator.validate(request);
+        if (request.getChapterIds().isEmpty()) {
+            // gRPC has no absent list; an empty one is refused as REST refuses a missing one
+            throw new ValidationFailedException(List.of(new FieldError("chapterIds", "must not be null", "NotNull")));
+        }
+        DataScope scope = DataScope.current(PERMISSION_REORDER_CHAPTERS);
+        return doInWriteTransaction(() -> {
+            LmsCourseEntity course = loadVisible(scope, courseId);
+            scope.requireWritable(institutionOf(course));
+            List<UUID> current = chapterRepository.siblings(courseId, null, null).stream().map(ChapterEntity::getId)
+                    .toList();
+            List<UUID> wanted = request.getChapterIds();
+            if (wanted.size() != current.size() || !new HashSet<>(wanted).equals(new HashSet<>(current))) {
+                throw new ValidationFailedException(List.of(new FieldError("chapterIds",
+                        "must list each top-level chapter of the course exactly once", "Invalid")));
+            }
+            chapterRepository.renumber(wanted, null, now(), Actor.current().orElse(null));
+            audit.recordTransition(AGGREGATE, courseId, "reorder_chapters", List.of("chapters"), null);
+            outbox.publish(AGGREGATE + ".reorder_chapters", AGGREGATE, courseId, LmsEvents.payload(courseId));
+            return new ChapterList(chapterRepository.siblings(courseId, null, null).stream()
+                    .map(chapterMapper::toDto).toList());
+        });
+    }
+
+    /**
+     * lms.MoveChapter: puts a chapter at a place (0-based) under a parent chapter of the same course and outline
+     * (cohort), or at the top level; the siblings there are renumbered around it. A parent that is the chapter itself,
+     * inside it, or in another outline is 422.
+     */
+    public Chapter moveChapter(UUID chapterId, MoveChapterRequest request) {
+        validator.validate(request);
+        if (request.getPosition() < 0) {
+            throw new ValidationFailedException(List.of(new FieldError("position", "must be 0 or more", "Min")));
+        }
+        DataScope scope = DataScope.current(CHAPTER_PERMISSION_MOVE);
+        return doInWriteTransaction(() -> {
+            ChapterEntity chapter = chapterRepository.findById(chapterId)
+                    .orElseThrow(() -> new ResourceNotFoundException(CHAPTER_AGGREGATE, chapterId));
+            LmsCourseEntity course = loadVisible(scope, chapter.getCourseId());
+            scope.requireWritable(institutionOf(course));
+            UUID parent = request.getParentChapterId();
+            if (parent != null && !isPlaceFor(chapter, parent)) {
+                throw new ValidationFailedException(List.of(new FieldError("parentChapterId",
+                        "must be another chapter of the same outline, not inside this one", "Invalid")));
+            }
+            List<UUID> siblings = new ArrayList<>(chapterRepository.siblings(chapter.getCourseId(),
+                    chapter.getCohortId(), parent).stream().map(ChapterEntity::getId).filter(i -> !i.equals(chapterId))
+                    .toList());
+            siblings.add(Math.min(request.getPosition(), siblings.size()), chapterId);
+            chapterRepository.renumber(siblings, parent, now(), Actor.current().orElse(null));
+            audit.recordTransition(CHAPTER_AGGREGATE, chapterId, "move", List.of("parentChapterId", "sortOrder"),
+                    null);
+            outbox.publish(CHAPTER_AGGREGATE + ".move", CHAPTER_AGGREGATE, chapterId, LmsEvents.payload(chapterId));
+            return chapterMapper.toDto(chapterRepository.findById(chapterId)
+                    .orElseThrow(() -> new ResourceNotFoundException(CHAPTER_AGGREGATE, chapterId)));
+        });
+    }
+
+    /** Whether the chapter may move under this parent: same course and outline, and not into its own subtree. */
+    private boolean isPlaceFor(ChapterEntity chapter, UUID parentId) {
+        UUID at = parentId;
+        while (at != null) {
+            if (at.equals(chapter.getId())) {
+                return false;
+            }
+            Optional<ChapterEntity> step = chapterRepository.findById(at);
+            if (step.isEmpty() || !step.get().getCourseId().equals(chapter.getCourseId())
+                    || !Objects.equals(step.get().getCohortId(), chapter.getCohortId())) {
+                return false;
+            }
+            at = step.get().getParentChapterId();
+        }
+        return true;
+    }
+
+    // ---- SCORM chapters: the player's launch and saved state ----
+
+    /**
+     * lms.GetScormLaunch: the package URL under {@code mysms.lms.scorm.content-base-url} and the caller's saved state.
+     * A student must be enrolled (404 otherwise); 409 NOT_SCORM for a plain chapter, 503 NOT_CONFIGURED without a
+     * package host.
+     */
+    public ScormLaunch getScormLaunch(UUID chapterId) {
+        UUID user = AuthContext.require().userId();
+        return doInReadTransaction(() -> {
+            ChapterEntity chapter = scormChapter(chapterId, user, CHAPTER_PERMISSION_SCORM_LAUNCH);
+            if (scormContentBaseUrl.isEmpty()) {
+                throw new NotConfiguredException("No host serves SCORM packages in this deployment.");
+            }
+            if (chapter.getScormPackagePath() == null || chapter.getScormLaunchFile() == null) {
+                throw new ConflictException("SCORM_NOT_READY", "The chapter's SCORM package has not been extracted.");
+            }
+            ScormLaunch launch = new ScormLaunch(scormUrl(chapter));
+            progressRepository.findOwn(user, chapterId, null).ifPresent(p -> {
+                Map<String, Object> state = new LinkedHashMap<>();
+                state.put("status", p.getStatus());
+                putIfSet(state, SCORM_SUSPEND_DATA, p.getScormSuspendData());
+                putIfSet(state, SCORM_LOCATION, p.getScormLocation());
+                putIfSet(state, SCORM_SCORE, WireValues.decimal(p.getScormScore()));
+                putIfSet(state, SCORM_TOTAL_TIME, p.getScormTotalTimeSeconds());
+                launch.setRuntimeState(state);
+            });
+            return launch;
+        });
+    }
+
+    /**
+     * lms.SaveScormProgress: stores the enrolled student's SCORM runtime state for a chapter (a completed chapter
+     * stays complete) and recomputes the enrolment's progress in the same transaction.
+     */
+    public LessonProgress saveScormProgress(UUID chapterId, SaveScormProgressRequest request) {
+        validator.validate(request);
+        UUID user = AuthContext.require().userId();
+        LessonProgressEntity row = new LessonProgressEntity();
+        row.setStatus(request.getStatus().getValue());
+        readScormState(request.getRuntimeState(), row);
+        row.onCreatingData(Actor.current(), clock);
+        row.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
+        row.setUserId(user);
+        row.setChapterId(chapterId);
+        row.setIsScormChapter(true);
+        return doInWriteTransaction(() -> {
+            ChapterEntity chapter = chapterRepository.findById(chapterId)
+                    .filter(c -> Boolean.TRUE.equals(c.getIsScormPackage()))
+                    .orElseThrow(() -> new ResourceNotFoundException(CHAPTER_AGGREGATE, chapterId));
+            if (enrollmentRepository.findOwn(chapter.getCourseId(), user).isEmpty()) {
+                throw new ConflictException("NOT_ENROLLED", "Enrol in the course first.");
+            }
+            row.setCourseId(chapter.getCourseId());
+            OffsetDateTime now = now();
+            LessonProgressEntity stored = progressRepository.upsert(row, now, user);
+            enrollmentRepository.recordProgress(chapter.getCourseId(), user, null, now, user);
+            audit.recordTransition(PROGRESS_AGGREGATE, stored.getId(), "save_scorm_progress", List.of("status"), null);
+            return progressMapper.toDto(stored);
+        });
+    }
+
+    /** A SCORM chapter the caller may launch: a member in scope, or a student enrolled in its course. */
+    private ChapterEntity scormChapter(UUID chapterId, UUID user, String permission) {
+        ChapterEntity chapter = chapterRepository.findById(chapterId)
+                .orElseThrow(() -> new ResourceNotFoundException(CHAPTER_AGGREGATE, chapterId));
+        boolean member = PublicReads.member(PERMISSION_READ)
+                && repository.findById(chapter.getCourseId()).map(c -> DataScope.current(permission)
+                        .canRead(institutionOf(c))).orElse(false);
+        if (!member && enrollmentRepository.findOwn(chapter.getCourseId(), user).isEmpty()) {
+            throw new ResourceNotFoundException(CHAPTER_AGGREGATE, chapterId);
+        }
+        if (!Boolean.TRUE.equals(chapter.getIsScormPackage())) {
+            throw new ConflictException("NOT_SCORM", "The chapter is not a SCORM package.");
+        }
+        return chapter;
+    }
+
+    private String scormUrl(ChapterEntity chapter) {
+        String base = scormContentBaseUrl.endsWith("/")
+                ? scormContentBaseUrl.substring(0, scormContentBaseUrl.length() - 1) : scormContentBaseUrl;
+        return base + "/" + encodePath(chapter.getScormPackagePath()) + "/" + encodePath(chapter.getScormLaunchFile());
+    }
+
+    /** Each segment of a stored path, URL-encoded (a path never leaves the package by "." or ".." segments). */
+    private static String encodePath(String path) {
+        return Arrays.stream(path.split("/")).filter(seg -> !seg.isEmpty() && !".".equals(seg) && !"..".equals(seg))
+                .map(seg -> URLEncoder.encode(seg, StandardCharsets.UTF_8).replace("+", "%20"))
+                .collect(Collectors.joining("/"));
+    }
+
+    private static void putIfSet(Map<String, Object> state, String key, Object value) {
+        if (value != null) {
+            state.put(key, value);
+        }
+    }
+
+    /** The saved runtime state, field by field, checked against the columns that keep it (422 otherwise). */
+    private static void readScormState(Object runtimeState, LessonProgressEntity row) {
+        if (!(runtimeState instanceof Map<?, ?> state)) {
+            throw new ValidationFailedException(List.of(new FieldError("runtimeState", "must be a JSON object",
+                    "Type")));
+        }
+        List<FieldError> errors = new ArrayList<>();
+        Object suspend = state.get(SCORM_SUSPEND_DATA);
+        if (suspend != null) {
+            row.setScormSuspendData(String.valueOf(suspend));
+        }
+        Object location = state.get(SCORM_LOCATION);
+        if (location != null) {
+            String text = String.valueOf(location);
+            if (text.length() > MAX_SCORM_LOCATION) {
+                errors.add(new FieldError("runtimeState.location", "at most 1000 characters", "Size"));
+            }
+            row.setScormLocation(text);
+        }
+        Object score = state.get(SCORM_SCORE);
+        if (score != null) {
+            WireValues.checkDecimal("runtimeState.score", String.valueOf(score), 6, 2, errors);
+            if (errors.isEmpty()) {
+                row.setScormScore(WireValues.decimal(String.valueOf(score)));
+            }
+        }
+        Object time = state.get(SCORM_TOTAL_TIME);
+        if (time != null) {
+            if (time instanceof Number n && n.longValue() >= 0 && n.longValue() <= Integer.MAX_VALUE
+                    && n.doubleValue() == n.longValue()) {
+                row.setScormTotalTimeSeconds(n.intValue());
+            } else {
+                errors.add(new FieldError("runtimeState.totalTimeSeconds", "must be a whole number of seconds",
+                        "Type"));
+            }
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
+        }
+    }
+
+    private OffsetDateTime now() {
+        return OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+    }
+
+    /**
+     * lms.GetCourseProgressDistribution: how many of the course's students are in each progress range (not started,
+     * each quarter, complete), for a member who sees the course. The six ranges always come in one page.
+     */
+    public Page<ProgressBucket> getCourseProgressDistribution(UUID courseId) {
+        DataScope scope = DataScope.current(PERMISSION_PROGRESS_DISTRIBUTION);
+        return doInReadTransaction(() -> {
+            loadVisible(scope, courseId);
+            List<ProgressBucket> buckets = activity.progressBuckets(courseId).stream()
+                    .map(b -> new ProgressBucket(b.label(), b.students())).toList();
+            return new Page<>(buckets, 1, buckets.size(), null);
+        });
+    }
+
+
+    // ---- enrolment approval, batch enrolment, versions, slots, certificates, the teacher's home ----
+
+    static final String PERMISSION_APPROVE_ENROLLMENT_REQUEST =
+            "lms.enrollment_request.approve_enrollment_request";
+    static final String PERMISSION_BATCH_ENROLL = "lms.course.batch_enroll_in_course";
+    static final String PERMISSION_CREATE_VERSION = "lms.course.create_course_version";
+    static final String PERMISSION_EVALUATOR_SLOTS = "lms.course.get_evaluator_slots";
+    static final String PERMISSION_SYLLABUS = "lms.course.get_course_syllabus";
+    static final int MAX_BATCH_ENROLL = 500;
+    static final int MAX_SLOT_DAYS = 92;
+    static final int DASHBOARD_COHORTS = 20;
+    static final int DASHBOARD_ITEMS = 10;
+
+    /**
+     * lms.ApproveEnrollmentRequest: approves the pending request (decided_by, decided_at) and enrols its student in
+     * the named cohort of the course, in one transaction. A cohort of another course is 422; a student already in
+     * the cohort keeps their enrolment.
+     */
+    public EnrollmentRequest approveEnrollmentRequest(UUID courseId, UUID requestId,
+            ApproveEnrollmentRequestRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_APPROVE_ENROLLMENT_REQUEST);
+        OptionalInt expected = Etags.bodyVersion(request.getEtag());
+        UUID tenant = CallContextHolder.require().tenantId().orElseThrow();
+        return doInWriteTransaction(() -> {
+            EnrollmentRequestEntity row = enrollmentRequestRepository.findById(requestId)
+                    .filter(r -> courseId.equals(r.getCourseId()))
+                    .orElseThrow(() -> new ResourceNotFoundException(ENROLLMENT_REQUEST_AGGREGATE, requestId));
+            LmsCourseEntity course = loadVisible(scope, courseId);
+            scope.requireWritable(institutionOf(course));
+            validator.validate(request);
+            if (request.getCohortId() == null) {
+                throw new ValidationFailedException(List.of(new FieldError("cohortId",
+                        "must name the cohort the student joins", "NotNull")));
+            }
+            if (expected.isPresent() && expected.getAsInt() != row.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!"pending".equals(row.getStatus())) {
+                throw new InvalidStateException("The enrolment request was already decided.");
+            }
+            if (cohorts.findById(request.getCohortId()).isEmpty()
+                    || !cohortCourses.linked(request.getCohortId(), courseId)) {
+                throw new ValidationFailedException(List.of(new FieldError("cohortId",
+                        "must be a cohort that teaches the course", "NOT_FOUND")));
+            }
+            OffsetDateTime now = now();
+            UUID actor = Actor.current().orElse(null);
+            if (enrollmentRequestRepository.approve(requestId, row.getRowVersion(), now, actor) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            if (!cohortEnrollments.exists(request.getCohortId(), row.getUserId())) {
+                CohortEnrollmentEntity member = CohortEnrollmentEntity.builder().cohortId(request.getCohortId())
+                        .userId(row.getUserId()).isActive(true).isSelfEnrolled(false).confirmationEmailSent(false)
+                        .gradePublished(false).hasAccommodation(false).build();
+                member.onCreatingData(Actor.current(), clock);
+                member.setTenantId(tenant);
+                cohortEnrollments.insert(member);
+                audit.recordCreate(CohortEnrollmentEntity.TABLE, member.getId());
+            }
+            audit.recordTransition(ENROLLMENT_REQUEST_AGGREGATE, requestId, "approve",
+                    List.of("status", "decidedBy", "decidedAt"), null);
+            outbox.publish(ENROLLMENT_REQUEST_AGGREGATE + ".approve", ENROLLMENT_REQUEST_AGGREGATE, requestId,
+                    LmsEvents.payload(requestId));
+            return enrollmentRequestMapper.toDto(enrollmentRequestRepository.findById(requestId).orElseThrow(
+                    () -> new ResourceNotFoundException(ENROLLMENT_REQUEST_AGGREGATE, requestId)));
+        });
+    }
+
+    /**
+     * lms.BatchEnrollInCourse: enrols up to 500 named students in the course, or previews the run (validateOnly).
+     * Each student's line says whether they were already enrolled and whether a paid course still waits for payment
+     * (the payment ids passed stand for the students' settled payments; without any, a paid course enrols nobody).
+     */
+    public BatchEnrollPreviewList batchEnrollInCourse(UUID courseId, BatchEnrollInCourseRequest request) {
+        validator.validate(request);
+        List<UUID> users = request.getUserIds().stream().distinct().toList();
+        if (users.isEmpty() || users.size() > MAX_BATCH_ENROLL) {
+            throw new ValidationFailedException(List.of(new FieldError("userIds", "name 1 to 500 students", "Size")));
+        }
+        boolean preview = Boolean.TRUE.equals(request.getValidateOnly());
+        boolean paymentsNamed = request.getPaymentIds() != null && !request.getPaymentIds().isEmpty();
+        DataScope scope = DataScope.current(PERMISSION_BATCH_ENROLL);
+        UUID tenant = CallContextHolder.require().tenantId().orElseThrow();
+        return doInWriteTransaction(() -> {
+            LmsCourseEntity course = loadVisible(scope, courseId);
+            scope.requireWritable(institutionOf(course));
+            if (!PUBLISHED.equals(course.getLifecycleStatus())) {
+                throw new InvalidStateException("Only a published course takes enrolments.");
+            }
+            boolean paymentRequired = Boolean.TRUE.equals(course.getIsPaid()) && !paymentsNamed;
+            List<BatchEnrollPreview> lines = new ArrayList<>();
+            for (UUID user : users) {
+                boolean already = enrollmentRepository.findOwn(courseId, user).isPresent();
+                lines.add(new BatchEnrollPreview(user, already, !already && paymentRequired));
+                if (preview || already || paymentRequired) {
+                    continue;
+                }
+                EnrollmentEntity entity = new EnrollmentEntity();
+                entity.setCourseId(courseId);
+                entity.setUserId(user);
+                entity.setMemberType("student");
+                entity.setMemberRole("member");
+                entity.setProgressPercent(BigDecimal.ZERO);
+                entity.setPurchasedCertificate(Boolean.TRUE.equals(request.getPurchasedCertificate()));
+                entity.onCreatingData(Actor.current(), clock);
+                entity.setTenantId(tenant);
+                EnrollmentEntity stored = enrollmentRepository.insert(entity);
+                repository.countEnrollment(courseId);
+                audit.recordCreate(EnrollmentEntity.TABLE, stored.getId());
+                outbox.publish(EnrollmentEntity.TABLE + LmsEvents.CREATED, EnrollmentEntity.TABLE, stored.getId(),
+                        LmsEvents.payload(stored.getId()));
+            }
+            return new BatchEnrollPreviewList(lines);
+        });
+    }
+
+    /**
+     * lms.CreateCourseVersion: copies the course into its next major or minor version — chapters, lessons, items,
+     * objectives, grading categories and release rules with their conditions and targets — as a fresh draft with
+     * previous_version_id and root_course_id set. Cohorts, enrolments and reviews stay with the old version.
+     */
+    public LmsCourse createCourseVersion(UUID courseId, CreateCourseVersionRequest request) {
+        validator.validate(request);
+        boolean major = request.getVersionKind() == CreateCourseVersionRequest.VersionKindEnum.MAJOR;
+        DataScope scope = DataScope.current(PERMISSION_CREATE_VERSION);
+        UUID tenant = CallContextHolder.require().tenantId().orElseThrow();
+        return doInWriteTransaction(() -> {
+            LmsCourseEntity source = loadVisible(scope, courseId);
+            scope.requireWritable(institutionOf(source));
+            LmsCourseEntity next = nextVersionOf(source, major, request.getAuthorComments());
+            next.onCreatingData(Actor.current(), clock);
+            next.setTenantId(tenant);
+            LmsCourseEntity stored = repository.insert(next);
+            copyStructure(source, stored, tenant);
+            audit.recordCreate(AGGREGATE, stored.getId());
+            outbox.publish(AGGREGATE + ".create_version", AGGREGATE, stored.getId(),
+                    LmsEvents.payload(stored.getId()));
+            return mapper.toDto(repository.findById(stored.getId()).orElseThrow(
+                    () -> new ResourceNotFoundException(AGGREGATE, stored.getId())));
+        });
+    }
+
+    /** The next version's course row: the source's content, a fresh review, lifecycle and catalogue state. */
+    private static LmsCourseEntity nextVersionOf(LmsCourseEntity s, boolean major, String authorComments) {
+        return LmsCourseEntity.builder()
+                .institutionId(s.getInstitutionId()).title(s.getTitle()).shortIntroduction(s.getShortIntroduction())
+                .description(s.getDescription()).imageFileId(s.getImageFileId()).videoUrl(s.getVideoUrl())
+                .categoryId(s.getCategoryId()).status("in_progress").isPublished(false).publishedOn(null)
+                .isUpcoming(s.getIsUpcoming()).isFeatured(s.getIsFeatured())
+                .disableSelfLearning(s.getDisableSelfLearning()).enforceLessonOrder(s.getEnforceLessonOrder())
+                .certificationEnabled(s.getCertificationEnabled()).paidCertificate(s.getPaidCertificate())
+                .defaultEvaluatorId(s.getDefaultEvaluatorId()).isPaid(s.getIsPaid()).price(s.getPrice())
+                .currencyId(s.getCurrencyId()).priceUsd(s.getPriceUsd()).cardGradient(s.getCardGradient())
+                .timezone(s.getTimezone()).publishNotificationSent(false).enrollmentCount(0)
+                .lessonCount(s.getLessonCount()).averageRating(null).code(s.getCode())
+                .stateStandardCode(s.getStateStandardCode()).credits(s.getCredits())
+                .prerequisites(s.getPrerequisites()).corequisites(s.getCorequisites())
+                .effectiveFrom(s.getEffectiveFrom()).lifecycleStatus("draft").deactivatedOn(null)
+                .versionMajor(major ? versionOf(s.getVersionMajor()) + 1 : versionOf(s.getVersionMajor()))
+                .versionMinor(major ? 0 : versionOf(s.getVersionMinor()) + 1)
+                .previousVersionId(s.getId())
+                .rootCourseId(s.getRootCourseId() == null ? s.getId() : s.getRootCourseId())
+                .authorComments(authorComments).externalRef(s.getExternalRef())
+                .nominalDuration(s.getNominalDuration()).deliveryModality(s.getDeliveryModality())
+                .isShared(s.getIsShared()).contentUpdatedAt(null).gradeDisplay(s.getGradeDisplay())
+                .gradingSchemeId(s.getGradingSchemeId()).isInCatalog(false)
+                .catalogDescription(s.getCatalogDescription()).catalogVisibleFrom(s.getCatalogVisibleFrom())
+                .catalogVisibleUntil(s.getCatalogVisibleUntil()).outline(s.getOutline())
+                .workloadHours(s.getWorkloadHours()).catalogStatus("draft")
+                .build();
+    }
+
+    private static int versionOf(Integer version) {
+        return version == null ? 1 : version;
+    }
+
+    /** Copies the source's template structure under the new version, keeping every cross-reference inside it. */
+    private void copyStructure(LmsCourseEntity source, LmsCourseEntity next, UUID tenant) {
+        Map<UUID, UUID> chapterIds = new LinkedHashMap<>();
+        Map<UUID, UUID> lessonIds = new LinkedHashMap<>();
+        Map<UUID, UUID> itemIds = new LinkedHashMap<>();
+        List<ChapterEntity> sourceChapters = inReadingOrder(chapterRepository.templateOutline(source.getId()));
+        for (ChapterEntity chapter : sourceChapters) {
+            UUID oldId = chapter.getId();
+            chapter.setCourseId(next.getId());
+            chapter.setParentChapterId(chapter.getParentChapterId() == null ? null
+                    : chapterIds.get(chapter.getParentChapterId()));
+            // a template chapter carries no copied_from_id (ck_chapter_1); the new course row records the lineage
+            chapter.setIsOriginal(false);
+            chapter.onCreatingData(Actor.current(), clock);
+            chapter.setTenantId(tenant);
+            chapterIds.put(oldId, chapterRepository.insert(chapter).getId());
+        }
+        List<UUID> oldChapterIds = List.copyOf(chapterIds.keySet());
+        for (LessonEntity lesson : lessonRepository.ofChapters(oldChapterIds)) {
+            UUID oldId = lesson.getId();
+            lesson.setChapterId(chapterIds.get(lesson.getChapterId()));
+            lesson.onCreatingData(Actor.current(), clock);
+            lesson.setTenantId(tenant);
+            lessonRepository.insert(lesson);
+            lessonIds.put(oldId, lesson.getId());
+        }
+        for (ContentItemEntity item : contentItems.ofChapters(oldChapterIds)) {
+            UUID oldId = item.getId();
+            item.setChapterId(chapterIds.get(item.getChapterId()));
+            item.setCourseId(next.getId());
+            if (item.getLessonId() != null) {
+                item.setLessonId(lessonIds.getOrDefault(item.getLessonId(), item.getLessonId()));
+            }
+            item.setCopiedFromId(oldId);
+            item.setIsOriginal(false);
+            item.setViewCount(0L);
+            item.setLikeCount(0L);
+            item.setRatingTotal(BigDecimal.ZERO);
+            item.setRatingCount(0);
+            item.onCreatingData(Actor.current(), clock);
+            item.setTenantId(tenant);
+            itemIds.put(oldId, contentItems.insert(item).getId());
+        }
+        for (LearningObjectiveEntity objective : objectives.ofCourse(source.getId())) {
+            UUID oldId = objective.getId();
+            objective.setCourseId(next.getId());
+            objective.setChapterId(objective.getChapterId() == null ? null
+                    : chapterIds.get(objective.getChapterId()));
+            objective.setCopiedFromId(oldId);
+            objective.onCreatingData(Actor.current(), clock);
+            objective.setTenantId(tenant);
+            objectives.insert(objective);
+        }
+        for (GradingCategoryEntity category : gradingCategories.ofCourse(source.getId())) {
+            category.setCourseId(next.getId());
+            category.onCreatingData(Actor.current(), clock);
+            category.setTenantId(tenant);
+            gradingCategories.insert(category);
+        }
+        for (ReleaseRuleEntity rule : releaseRules.ofCourse(source.getId())) {
+            UUID oldRuleId = rule.getId();
+            UUID newSource = itemIds.get(rule.getSourceContentItemId());
+            if (newSource == null) {
+                continue;
+            }
+            rule.setCourseId(next.getId());
+            rule.setSourceContentItemId(newSource);
+            rule.setCopiedFromId(oldRuleId);
+            rule.onCreatingData(Actor.current(), clock);
+            rule.setTenantId(tenant);
+            UUID newRuleId = releaseRules.insert(rule).getId();
+            for (ReleaseRuleConditionEntity condition : releaseRuleConditions.ofRules(List.of(oldRuleId))) {
+                condition.setReleaseRuleId(newRuleId);
+                condition.onCreatingData(Actor.current(), clock);
+                condition.setTenantId(tenant);
+                releaseRuleConditions.insert(condition);
+            }
+            for (ReleaseRuleTargetEntity target : releaseRuleTargets.ofRule(oldRuleId)) {
+                UUID targetItem = target.getContentItemId() == null ? null
+                        : itemIds.get(target.getContentItemId());
+                UUID targetChapter = target.getChapterId() == null ? null : chapterIds.get(target.getChapterId());
+                if (targetItem == null && targetChapter == null) {
+                    continue;
+                }
+                target.setReleaseRuleId(newRuleId);
+                target.setContentItemId(targetItem);
+                target.setChapterId(targetChapter);
+                target.onCreatingData(Actor.current(), clock);
+                target.setTenantId(tenant);
+                releaseRuleTargets.insert(target);
+            }
+        }
+    }
+
+    /**
+     * lms.GetEvaluatorSlots: the course's default evaluator's free evaluation slots between two dates (at most 92
+     * days apart) — their weekly availability expanded day by day, minus their unavailable range and the slots
+     * already booked. A course with no default evaluator has none.
+     */
+    public Page<EvaluatorSlot> getEvaluatorSlots(UUID courseId, LocalDate fromDate, LocalDate toDate,
+            Integer pageNumber, Integer pageSize) {
+        if (toDate.isBefore(fromDate) || fromDate.plusDays(MAX_SLOT_DAYS).isBefore(toDate)) {
+            throw new ValidationFailedException(List.of(new FieldError("toDate",
+                    "must lie within 92 days of fromDate", "Range")));
+        }
+        DataScope scope = DataScope.current(PERMISSION_EVALUATOR_SLOTS);
+        return doInReadTransaction(() -> {
+            LmsCourseEntity course = loadVisible(scope, courseId);
+            List<EvaluatorSlot> slots = course.getDefaultEvaluatorId() == null ? List.of()
+                    : freeSlots(course.getDefaultEvaluatorId(), fromDate, toDate);
+            int size = pageSize == null ? 50 : pageSize;
+            int page = pageNumber == null ? 1 : pageNumber;
+            int from = Math.min((page - 1) * size, slots.size());
+            return new Page<>(slots.subList(from, Math.min(from + size, slots.size())), page, size, null);
+        });
+    }
+
+    /** The evaluator's availability expanded over the dates, without booked or unavailable days. */
+    private List<EvaluatorSlot> freeSlots(UUID evaluatorId, LocalDate fromDate, LocalDate toDate) {
+        EvaluatorEntity evaluator = evaluators.findById(evaluatorId).orElse(null);
+        if (evaluator == null) {
+            return List.of();
+        }
+        Map<String, List<EvaluatorAvailabilityEntity>> byWeekday = new LinkedHashMap<>();
+        for (EvaluatorAvailabilityEntity window : evaluatorAvailability.ofEvaluator(evaluatorId)) {
+            byWeekday.computeIfAbsent(window.getWeekday(), k -> new ArrayList<>()).add(window);
+        }
+        Set<String> booked = certificateRequests.booked(evaluator.getUserId(), fromDate, toDate).stream()
+                .map(b -> b.date() + "T" + b.start())
+                .collect(Collectors.toSet());
+        List<EvaluatorSlot> slots = new ArrayList<>();
+        for (LocalDate date = fromDate; !date.isAfter(toDate); date = date.plusDays(1)) {
+            if (evaluator.getUnavailableFrom() != null && evaluator.getUnavailableTo() != null
+                    && !date.isBefore(evaluator.getUnavailableFrom()) && !date.isAfter(evaluator.getUnavailableTo())) {
+                continue;
+            }
+            String weekday = date.getDayOfWeek().name().toLowerCase(Locale.ROOT);
+            for (EvaluatorAvailabilityEntity window : byWeekday.getOrDefault(weekday, List.of())) {
+                if (!booked.contains(date + "T" + window.getStartTime())) {
+                    slots.add(new EvaluatorSlot(evaluator.getUserId(), date,
+                            WireValues.time(window.getStartTime()), WireValues.time(window.getEndTime())));
+                }
+            }
+        }
+        return slots;
+    }
+
+    /**
+     * lms.IssueMyCertificate: issues the caller their completion certificate once the course is complete — the
+     * course must have certification enabled, a paid certificate must have been bought, and a certificate issued
+     * before is simply returned.
+     */
+    public Certificate issueMyCertificate(UUID courseId) {
+        UUID user = AuthContext.require().userId();
+        UUID tenant = CallContextHolder.require().tenantId().orElseThrow();
+        return doInWriteTransaction(() -> {
+            EnrollmentEntity enrollment = enrollmentRepository.findOwn(courseId, user)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, courseId));
+            LmsCourseEntity course = repository.findById(courseId)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, courseId));
+            Optional<CertificateEntity> issued = certificates.findOwnForCourse(user, courseId);
+            if (issued.isPresent()) {
+                return certificateMapper.toDto(issued.get());
+            }
+            if (!Boolean.TRUE.equals(course.getCertificationEnabled())) {
+                throw new ConflictException("CERTIFICATION_DISABLED", "The course issues no certificates.");
+            }
+            if (enrollment.getProgressPercent() == null
+                    || enrollment.getProgressPercent().compareTo(BigDecimal.valueOf(100)) < 0) {
+                throw new ConflictException("COURSE_NOT_COMPLETE", "Complete the course first.");
+            }
+            if (Boolean.TRUE.equals(course.getPaidCertificate())
+                    && !Boolean.TRUE.equals(enrollment.getPurchasedCertificate())) {
+                throw new ConflictException("PAYMENT_REQUIRED", "Buy the certificate first.");
+            }
+            LocalDate today = LocalDate.now(clock.withZone(ZoneOffset.UTC));
+            CertificateEntity entity = CertificateEntity.builder().userId(user).courseId(courseId)
+                    .templateCode("course_completion").issueDate(today).isPublished(true).build();
+            entity.onCreatingData(Actor.current(), clock);
+            entity.setTenantId(tenant);
+            entity.setCertificateNumber(("C-" + today.getYear() + "-" + entity.getId()).substring(0, 20));
+            CertificateEntity stored = certificates.insert(entity);
+            audit.recordCreate(CertificateEntity.TABLE, stored.getId());
+            outbox.publish(CertificateEntity.TABLE + LmsEvents.CREATED, CertificateEntity.TABLE, stored.getId(),
+                    LmsEvents.payload(stored.getId()));
+            return certificateMapper.toDto(stored);
+        });
+    }
+
+    /**
+     * lms.GetTeacherDashboard: the caller's cohorts, how many submissions wait for a grade, their unread forum
+     * posts, the next due items and sessions, and the latest student alerts.
+     */
+    public TeacherDashboard getTeacherDashboard() {
+        UUID user = AuthContext.require().userId();
+        return doInReadTransaction(() -> {
+            List<UUID> cohortIds = activity.teachingCohorts(user);
+            int unread = activity.unreadPosts(user, cohortIds).stream()
+                    .mapToInt(LearningActivityRepository.CohortUnread::posts).sum();
+            TeacherDashboard dashboard = new TeacherDashboard(activity.toGrade(cohortIds), unread);
+            dashboard.setCohorts(cohortIds.stream().limit(DASHBOARD_COHORTS).map(cohorts::findById)
+                    .flatMap(Optional::stream).map(cohortMapper::toDto).toList());
+            OffsetDateTime now = now();
+            dashboard.setUpcomingDue(activity.upcomingDue(cohortIds, now, DASHBOARD_ITEMS).stream()
+                    .map(u -> calendarItem(CalendarItem.ItemTypeEnum.DUE_DATE, u)).toList());
+            dashboard.setUpcomingSessions(activity.upcomingSessions(cohortIds, now, DASHBOARD_ITEMS).stream()
+                    .map(u -> calendarItem(CalendarItem.ItemTypeEnum.COHORT_SESSION, u)).toList());
+            dashboard.setAlerts(studentAlerts.ofCohorts(cohortIds, DASHBOARD_ITEMS).stream()
+                    .map(studentAlertMapper::toDto).toList());
+            return dashboard;
+        });
+    }
+
+    private static CalendarItem calendarItem(CalendarItem.ItemTypeEnum type, LearningActivityRepository.Upcoming u) {
+        CalendarItem item = new CalendarItem(type, u.id(), u.title(), u.startAt());
+        item.setEndAt(u.endAt());
+        item.setCohortId(u.cohortId());
+        item.setContentItemId(u.contentItemId());
+        return item;
+    }
+
+
+    /**
+     * lms.GetCourseSyllabus: generates the syllabus (HTML; other formats are not generated here) from the outline,
+     * the objectives and the grading categories, stores it, and answers its signed short-lived address.
+     */
+    public DownloadLink getCourseSyllabus(UUID courseId, String format) {
+        if (format != null && !"html".equalsIgnoreCase(format)) {
+            throw new ValidationFailedException(List.of(new FieldError("format",
+                    "only html is generated by this release", "Pattern")));
+        }
+        DataScope scope = DataScope.current(PERMISSION_SYLLABUS);
+        String html = doInReadTransaction(() -> syllabusHtml(loadVisible(scope, courseId)));
+        UUID fileId = files.write("syllabus-" + courseId + ".html", "text/html; charset=utf-8",
+                html.getBytes(StandardCharsets.UTF_8), AGGREGATE, courseId);
+        return files.link(fileId, "courseId");
+    }
+
+    /** The syllabus document: title, introduction, objectives, grading categories and the chapter tree. */
+    private String syllabusHtml(LmsCourseEntity course) {
+        StringBuilder html = new StringBuilder("<!doctype html><html><head><meta charset=\"utf-8\"><title>")
+                .append(escape(course.getTitle())).append("</title></head><body><h1>")
+                .append(escape(course.getTitle())).append("</h1>");
+        if (course.getShortIntroduction() != null) {
+            html.append("<p>").append(escape(course.getShortIntroduction())).append("</p>");
+        }
+        List<LearningObjectiveEntity> courseObjectives = objectives.ofCourse(course.getId());
+        if (!courseObjectives.isEmpty()) {
+            html.append("<h2>Objectives</h2><ul>");
+            courseObjectives.forEach(o -> html.append("<li>").append(escape(o.getObjective())).append("</li>"));
+            html.append("</ul>");
+        }
+        List<GradingCategoryEntity> categories = gradingCategories.ofCourse(course.getId());
+        if (!categories.isEmpty()) {
+            html.append("<h2>Grading</h2><ul>");
+            categories.forEach(c -> html.append("<li>").append(escape(c.getName()))
+                    .append(c.getWeightPercent() == null ? "" : " — " + c.getWeightPercent() + "%")
+                    .append("</li>"));
+            html.append("</ul>");
+        }
+        html.append("<h2>Outline</h2><ol>");
+        List<ChapterEntity> chapters = inReadingOrder(chapterRepository.templateOutline(course.getId()));
+        List<UUID> chapterIds = chapters.stream().map(ChapterEntity::getId).toList();
+        Map<UUID, List<LessonEntity>> lessons = new LinkedHashMap<>();
+        for (LessonEntity lesson : lessonRepository.ofChapters(chapterIds)) {
+            lessons.computeIfAbsent(lesson.getChapterId(), k -> new ArrayList<>()).add(lesson);
+        }
+        for (ChapterEntity chapter : chapters) {
+            html.append("<li>").append(escape(chapter.getTitle()));
+            List<LessonEntity> own = lessons.getOrDefault(chapter.getId(), List.of());
+            if (!own.isEmpty()) {
+                html.append("<ul>");
+                own.forEach(l -> html.append("<li>").append(escape(l.getTitle())).append("</li>"));
+                html.append("</ul>");
+            }
+            html.append("</li>");
+        }
+        return html.append("</ol></body></html>").toString();
+    }
+
+    private static String escape(String text) {
+        return text == null ? "" : text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
+    // ---- delete and its dependencies ----
+
+    /**
+     * lms.CheckCourseDependencies: what keeps the course from being deleted — every table of this module whose live
+     * rows still reference it (cohorts, enrolments, newer versions, chapters, its catalogue banners…), and a published
+     * course, which must be unpublished first.
+     */
+    public Dependencies checkCourseDependencies(UUID id) {
+        return doInReadTransaction(() -> {
+            LmsCourseEntity entity = loadVisible(DataScope.current(PERMISSION_CHECK_DEPENDENCIES), id);
+            Map<String, Boolean> blocking = blockers(entity);
+            return new Dependencies(blocking.isEmpty()).blocking(blocking);
+        });
+    }
+
+    /**
+     * Soft delete under If-Match: refused (409) while the course is published or any live row of this module still
+     * references it — {@link #checkCourseDependencies} names them.
+     */
+    public void deleteLmsCourse(UUID id, String ifMatch) {
+        int expected = Etags.expectedVersion(ifMatch);
+        runInWriteTransaction(() -> {
+            DataScope scope = DataScope.current(PERMISSION_DELETE);
+            LmsCourseEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            if (entity.getRowVersion() != expected) {
+                throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            Map<String, Boolean> blocking = blockers(entity);
+            if (!blocking.isEmpty()) {
+                throw new InvalidStateException("The course is still referenced by " + blocking.keySet().iterator()
+                        .next() + " rows; see its dependencies and remove those first.");
+            }
+            entity.onDeletingData(Actor.current(), clock);
+            if (repository.softDelete(entity, expected) == 0) {
+                throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            audit.recordDelete(AGGREGATE, id);
+            outbox.publish(AGGREGATE + LmsEvents.DELETED, AGGREGATE, id, LmsEvents.payload(id));
+        });
+    }
+
+    /** The reasons the course cannot be deleted, in a stable order; empty when it can. */
+    private Map<String, Boolean> blockers(LmsCourseEntity entity) {
+        UUID id = entity.getId();
+        Map<String, Boolean> blocking = new LinkedHashMap<>();
+        if (PUBLISHED.equals(entity.getLifecycleStatus())) {
+            blocking.put("published", true);
+        }
+        if (repository.referencedByAssignmentCourseId(id)) {
+            blocking.put("lms.assignment", true);
+        }
+        if (repository.referencedByAssignmentSubmissionCourseId(id)) {
+            blocking.put("lms.assignment_submission", true);
+        }
+        if (repository.referencedByCatalogBannerCourseId(id)) {
+            blocking.put("lms.catalog_banner", true);
+        }
+        if (repository.referencedByCertificateCourseId(id)) {
+            blocking.put("lms.certificate", true);
+        }
+        if (repository.referencedByCertificateEvaluationCourseId(id)) {
+            blocking.put("lms.certificate_evaluation", true);
+        }
+        if (repository.referencedByCertificateRequestCourseId(id)) {
+            blocking.put("lms.certificate_request", true);
+        }
+        if (repository.referencedByChapterCourseId(id)) {
+            blocking.put("lms.chapter", true);
+        }
+        if (repository.referencedByCohortCourseCourseId(id)) {
+            blocking.put("lms.cohort_course", true);
+        }
+        if (repository.referencedByContentItemCourseId(id)) {
+            blocking.put("lms.content_item", true);
+        }
+        if (repository.referencedByCoursePreviousVersionId(id)) {
+            blocking.put("lms.course", true);
+        }
+        if (repository.referencedByCourseRootCourseId(id)) {
+            blocking.put("lms.course", true);
+        }
+        if (repository.referencedByCourseAuthorProfileCourseId(id)) {
+            blocking.put("lms.course_author_profile", true);
+        }
+        if (repository.referencedByCourseInterestCourseId(id)) {
+            blocking.put("lms.course_interest", true);
+        }
+        if (repository.referencedByCourseMentorCourseId(id)) {
+            blocking.put("lms.course_mentor", true);
+        }
+        if (repository.referencedByCoursePreviewCourseId(id)) {
+            blocking.put("lms.course_preview", true);
+        }
+        if (repository.referencedByCourseReviewCourseId(id)) {
+            blocking.put("lms.course_review", true);
+        }
+        if (repository.referencedByCourseTeacherCourseId(id)) {
+            blocking.put("lms.course_teacher", true);
+        }
+        if (repository.referencedByCourseTestimonialCourseId(id)) {
+            blocking.put("lms.course_testimonial", true);
+        }
+        if (repository.referencedByDriveItemCourseId(id)) {
+            blocking.put("lms.drive_item", true);
+        }
+        if (repository.referencedByEnrollmentCourseId(id)) {
+            blocking.put("lms.enrollment", true);
+        }
+        if (repository.referencedByEnrollmentRequestCourseId(id)) {
+            blocking.put("lms.enrollment_request", true);
+        }
+        if (repository.referencedByGradingCategoryCourseId(id)) {
+            blocking.put("lms.grading_category", true);
+        }
+        if (repository.referencedByImportExportJobCourseId(id)) {
+            blocking.put("lms.import_export_job", true);
+        }
+        if (repository.referencedByLearningObjectiveCourseId(id)) {
+            blocking.put("lms.learning_objective", true);
+        }
+        if (repository.referencedByLearningProgramCourseCourseId(id)) {
+            blocking.put("lms.learning_program_course", true);
+        }
+        if (repository.referencedByLessonProgressCourseId(id)) {
+            blocking.put("lms.lesson_progress", true);
+        }
+        if (repository.referencedByQuizCourseId(id)) {
+            blocking.put("lms.quiz", true);
+        }
+        if (repository.referencedByQuizSubmissionCourseId(id)) {
+            blocking.put("lms.quiz_submission", true);
+        }
+        if (repository.referencedByRelatedCourseCourseId(id)) {
+            blocking.put("lms.related_course", true);
+        }
+        if (repository.referencedByRelatedCourseRelatedCourseId(id)) {
+            blocking.put("lms.related_course", true);
+        }
+        if (repository.referencedByRelatedMaterialRankCourseId(id)) {
+            blocking.put("lms.related_material_rank", true);
+        }
+        if (repository.referencedByReleaseRuleCourseId(id)) {
+            blocking.put("lms.release_rule", true);
+        }
+        if (repository.referencedByStudentAlertCourseId(id)) {
+            blocking.put("lms.student_alert", true);
+        }
+        return blocking;
+    }
+
+    // ---- the course's guarded steps ----
+
+    /** lms.SubmitCourseForReview: in_progress → under_review. */
+    public LmsCourse submitCourseForReview(UUID id, String etag) {
+        return courseStep(id, PERMISSION_SUBMIT_FOR_REVIEW, etag, "submit_for_review", null,
+                e -> "in_progress".equals(e.getStatus()), LmsCourseRepository.CourseStep.SUBMIT_FOR_REVIEW,
+                List.of("status"));
+    }
+
+    /** lms.ApproveCourse: under_review → approved. */
+    public LmsCourse approveCourse(UUID id, String etag) {
+        return courseStep(id, PERMISSION_APPROVE, etag, "approve", null, e -> "under_review".equals(e.getStatus()),
+                LmsCourseRepository.CourseStep.APPROVE, List.of("status"));
+    }
+
+    /** lms.PublishCourse: draft → published, once the review approved the course. */
+    public LmsCourse publishCourse(UUID id, String etag) {
+        return courseStep(id, PERMISSION_PUBLISH, etag, "publish", null,
+                e -> "draft".equals(e.getLifecycleStatus()) && "approved".equals(e.getStatus()),
+                LmsCourseRepository.CourseStep.PUBLISH, List.of("lifecycleStatus", "isPublished", "publishedOn"));
+    }
+
+    /** lms.UnpublishCourse: published → draft (hidden from the public; enrolled students keep their access). */
+    public LmsCourse unpublishCourse(UUID id, String etag) {
+        return courseStep(id, PERMISSION_UNPUBLISH, etag, "unpublish", null,
+                e -> PUBLISHED.equals(e.getLifecycleStatus()), LmsCourseRepository.CourseStep.UNPUBLISH,
+                List.of("lifecycleStatus", "isPublished"));
+    }
+
+    /** lms.DeactivateCourse: published → deactivated (no new cohorts or enrolments); the reason is kept. */
+    public LmsCourse deactivateCourse(UUID id, String etag, String reason) {
+        return courseStep(id, PERMISSION_DEACTIVATE, etag, "deactivate", reason,
+                e -> PUBLISHED.equals(e.getLifecycleStatus()), LmsCourseRepository.CourseStep.DEACTIVATE,
+                List.of("lifecycleStatus", "isPublished", "deactivatedOn"));
+    }
+
+    /** lms.ReactivateCourse: deactivated → published. */
+    public LmsCourse reactivateCourse(UUID id, String etag) {
+        return courseStep(id, PERMISSION_REACTIVATE, etag, "reactivate", null,
+                e -> "deactivated".equals(e.getLifecycleStatus()), LmsCourseRepository.CourseStep.REACTIVATE,
+                List.of("lifecycleStatus", "isPublished", "deactivatedOn"));
+    }
+
+    /** lms.PublishCatalogListing: the listing (draft or archived) goes into the catalogue of a published course. */
+    public LmsCourse publishCatalogListing(UUID id, String etag) {
+        return courseStep(id, PERMISSION_PUBLISH_CATALOG_LISTING, etag, "publish_catalog_listing", null,
+                e -> !PUBLISHED.equals(e.getCatalogStatus()) && PUBLISHED.equals(e.getLifecycleStatus()),
+                LmsCourseRepository.CourseStep.PUBLISH_CATALOG_LISTING, List.of("catalogStatus", "isInCatalog"));
+    }
+
+    /** lms.HideCatalogListing: a published listing is archived and leaves the catalogue. */
+    public LmsCourse hideCatalogListing(UUID id, String etag) {
+        return courseStep(id, PERMISSION_HIDE_CATALOG_LISTING, etag, "hide_catalog_listing", null,
+                e -> PUBLISHED.equals(e.getCatalogStatus()), LmsCourseRepository.CourseStep.HIDE_CATALOG_LISTING,
+                List.of("catalogStatus", "isInCatalog"));
+    }
+
+    /**
+     * Template method of every guarded course step: 404 when invisible, 403 when not writable, 412 on an etag
+     * mismatch, 409 when the guard fails on the row as read; then the guarded UPDATE, audit and
+     * {@code lms.course.<step>} event in one transaction.
+     */
+    private LmsCourse courseStep(UUID id, String permission, String etag, String step, String reason,
+            Predicate<LmsCourseEntity> guard, LmsCourseRepository.CourseStep write, List<String> changed) {
+        DataScope scope = DataScope.current(permission);
+        OptionalInt expected = Etags.bodyVersion(etag);
+        return doInWriteTransaction(() -> {
+            LmsCourseEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!guard.test(entity)) {
+                throw new InvalidStateException("The course cannot be changed this way in its current state.");
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            if (repository.step(write, id, entity.getRowVersion(), now, Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, step, changed, reason);
+            outbox.publish(AGGREGATE + "." + step, AGGREGATE, id, LmsEvents.payload(id));
+            return mapper.toDto(repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
     private LmsCourseEntity loadVisible(DataScope scope, UUID id) {
         LmsCourseEntity entity = repository.findById(id)
@@ -386,12 +1735,12 @@ public class LmsCourseService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(LmsCourseEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected LmsCourseUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected LmsCourseUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(LmsCourseEntity entity, LmsCourseUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -581,8 +1930,8 @@ public class LmsCourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CatalogBanner updateCatalogBanner(UUID courseId, UUID id, String ifMatch, CatalogBannerUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -643,14 +1992,12 @@ public class LmsCourseService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOfCatalogBanner(CatalogBannerEntity entity) {
         return catalogBannerRepository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected CatalogBannerUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected CatalogBannerUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCatalogBanner(CatalogBannerEntity entity, CatalogBannerUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -745,8 +2092,8 @@ public class LmsCourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Chapter updateChapter(UUID courseId, UUID id, String ifMatch, ChapterUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -845,12 +2192,12 @@ public class LmsCourseService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOfChapter(ChapterEntity entity) {
         return chapterRepository.institutionOf(entity.getCourseId());
     }
 
-    /** Applies the selected ChapterUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected ChapterUpdate fields; explicit per field so a mask can clear values. */
     private static void applyChapter(ChapterEntity entity, ChapterUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -969,8 +2316,8 @@ public class LmsCourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CourseAuthorProfile updateCourseAuthorProfile(UUID courseId, UUID id, String ifMatch,
             CourseAuthorProfileUpdate changes, String updateMask, boolean validateOnly) {
@@ -1038,15 +2385,12 @@ public class LmsCourseService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOfCourseAuthorProfile(CourseAuthorProfileEntity entity) {
         return courseAuthorProfileRepository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected CourseAuthorProfileUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected CourseAuthorProfileUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCourseAuthorProfile(CourseAuthorProfileEntity entity, CourseAuthorProfileUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -1113,6 +2457,7 @@ public class LmsCourseService extends AppTransactionManager {
     public CourseInterest createCourseInterest(UUID courseId, CourseInterest request, boolean validateOnly) {
         validator.validate(request);
         CourseInterestEntity entity = courseInterestMapper.toEntity(request);
+        entity.setUserId(OwnRows.caller());
         entity.setCourseId(courseId);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
@@ -1139,8 +2484,8 @@ public class LmsCourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CourseInterest updateCourseInterest(UUID courseId, UUID id, String ifMatch, CourseInterestUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -1149,6 +2494,7 @@ public class LmsCourseService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(COURSE_INTEREST_PERMISSION_UPDATE);
             CourseInterestEntity entity = loadVisibleCourseInterest(scope, courseId, id);
+            OwnRows.require(entity.getUserId(), COURSE_INTEREST_AGGREGATE, id);
             scope.requireWritable(institutionOfCourseInterest(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -1178,6 +2524,7 @@ public class LmsCourseService extends AppTransactionManager {
         runInWriteTransaction(() -> {
             DataScope scope = DataScope.current(COURSE_INTEREST_PERMISSION_DELETE);
             CourseInterestEntity entity = loadVisibleCourseInterest(scope, courseId, id);
+            OwnRows.require(entity.getUserId(), COURSE_INTEREST_AGGREGATE, id);
             scope.requireWritable(institutionOfCourseInterest(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -1201,18 +2548,15 @@ public class LmsCourseService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOfCourseInterest(CourseInterestEntity entity) {
         return courseInterestRepository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected CourseInterestUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected CourseInterestUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCourseInterest(CourseInterestEntity entity, CourseInterestUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
-                case "userId" -> entity.setUserId(changes.getUserId());
                 case "emailSent" -> entity.setEmailSent(changes.getEmailSent());
                 default -> throw new IllegalStateException("unhandled writable field " + field);
             }
@@ -1300,8 +2644,8 @@ public class LmsCourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CourseMentor updateCourseMentor(UUID courseId, UUID id, String ifMatch, CourseMentorUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -1362,14 +2706,12 @@ public class LmsCourseService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOfCourseMentor(CourseMentorEntity entity) {
         return courseMentorRepository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected CourseMentorUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected CourseMentorUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCourseMentor(CourseMentorEntity entity, CourseMentorUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -1441,8 +2783,8 @@ public class LmsCourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CoursePreview updateCoursePreview(UUID courseId, UUID id, String ifMatch, CoursePreviewUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -1503,14 +2845,12 @@ public class LmsCourseService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOfCoursePreview(CoursePreviewEntity entity) {
         return coursePreviewRepository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected CoursePreviewUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected CoursePreviewUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCoursePreview(CoursePreviewEntity entity, CoursePreviewUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -1566,6 +2906,7 @@ public class LmsCourseService extends AppTransactionManager {
     public CourseReview createCourseReview(UUID courseId, CourseReview request, boolean validateOnly) {
         validator.validate(request);
         CourseReviewEntity entity = courseReviewMapper.toEntity(request);
+        entity.setUserId(OwnRows.caller());
         entity.setCourseId(courseId);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
@@ -1592,8 +2933,8 @@ public class LmsCourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CourseReview updateCourseReview(UUID courseId, UUID id, String ifMatch, CourseReviewUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -1602,6 +2943,7 @@ public class LmsCourseService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(COURSE_REVIEW_PERMISSION_UPDATE);
             CourseReviewEntity entity = loadVisibleCourseReview(scope, courseId, id);
+            OwnRows.require(entity.getUserId(), COURSE_REVIEW_AGGREGATE, id);
             scope.requireWritable(institutionOfCourseReview(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -1631,6 +2973,7 @@ public class LmsCourseService extends AppTransactionManager {
         runInWriteTransaction(() -> {
             DataScope scope = DataScope.current(COURSE_REVIEW_PERMISSION_DELETE);
             CourseReviewEntity entity = loadVisibleCourseReview(scope, courseId, id);
+            OwnRows.require(entity.getUserId(), COURSE_REVIEW_AGGREGATE, id);
             scope.requireWritable(institutionOfCourseReview(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -1654,18 +2997,15 @@ public class LmsCourseService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOfCourseReview(CourseReviewEntity entity) {
         return courseReviewRepository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected CourseReviewUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected CourseReviewUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCourseReview(CourseReviewEntity entity, CourseReviewUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
-                case "userId" -> entity.setUserId(changes.getUserId());
                 case "rating" -> entity.setRating(WireValues.decimal(changes.getRating()));
                 case "review" -> entity.setReview(changes.getReview());
                 default -> throw new IllegalStateException("unhandled writable field " + field);
@@ -1754,8 +3094,8 @@ public class LmsCourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CourseTeacher updateCourseTeacher(UUID courseId, UUID id, String ifMatch, CourseTeacherUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -1816,14 +3156,12 @@ public class LmsCourseService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOfCourseTeacher(CourseTeacherEntity entity) {
         return courseTeacherRepository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected CourseTeacherUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected CourseTeacherUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCourseTeacher(CourseTeacherEntity entity, CourseTeacherUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -1900,8 +3238,8 @@ public class LmsCourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CourseTestimonial updateCourseTestimonial(UUID courseId, UUID id, String ifMatch,
             CourseTestimonialUpdate changes, String updateMask, boolean validateOnly) {
@@ -1964,15 +3302,12 @@ public class LmsCourseService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOfCourseTestimonial(CourseTestimonialEntity entity) {
         return courseTestimonialRepository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected CourseTestimonialUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected CourseTestimonialUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCourseTestimonial(CourseTestimonialEntity entity, CourseTestimonialUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -2037,6 +3372,7 @@ public class LmsCourseService extends AppTransactionManager {
     public EnrollmentRequest createEnrollmentRequest(UUID courseId, EnrollmentRequest request, boolean validateOnly) {
         validator.validate(request);
         EnrollmentRequestEntity entity = enrollmentRequestMapper.toEntity(request);
+        entity.setUserId(OwnRows.caller());
         entity.setCourseId(courseId);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
@@ -2063,8 +3399,8 @@ public class LmsCourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public EnrollmentRequest updateEnrollmentRequest(UUID courseId, UUID id, String ifMatch,
             EnrollmentRequestUpdate changes, String updateMask, boolean validateOnly) {
@@ -2073,6 +3409,7 @@ public class LmsCourseService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(ENROLLMENT_REQUEST_PERMISSION_UPDATE);
             EnrollmentRequestEntity entity = loadVisibleEnrollmentRequest(scope, courseId, id);
+            OwnRows.require(entity.getUserId(), ENROLLMENT_REQUEST_AGGREGATE, id);
             scope.requireWritable(institutionOfEnrollmentRequest(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -2103,6 +3440,7 @@ public class LmsCourseService extends AppTransactionManager {
         runInWriteTransaction(() -> {
             DataScope scope = DataScope.current(ENROLLMENT_REQUEST_PERMISSION_DELETE);
             EnrollmentRequestEntity entity = loadVisibleEnrollmentRequest(scope, courseId, id);
+            OwnRows.require(entity.getUserId(), ENROLLMENT_REQUEST_AGGREGATE, id);
             scope.requireWritable(institutionOfEnrollmentRequest(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -2118,9 +3456,8 @@ public class LmsCourseService extends AppTransactionManager {
     }
 
     /**
-     * lms.RejectEnrollmentRequest: Reject. The row must be visible and writable for the caller, and the step is allowed
-     * while status is pending; in any other state
-     * the answer is 409 and nothing changes.
+     * lms.RejectEnrollmentRequest: Reject. Allowed while status is pending, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public EnrollmentRequest rejectEnrollmentRequest(UUID courseId, UUID id, RejectEnrollmentRequestRequest request) {
         DataScope scope = DataScope.current(PERMISSION_REJECT_ENROLLMENT_REQUEST);
@@ -2163,21 +3500,17 @@ public class LmsCourseService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOfEnrollmentRequest(EnrollmentRequestEntity entity) {
         return enrollmentRequestRepository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected EnrollmentRequestUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected EnrollmentRequestUpdate fields; explicit per field so a mask can clear values. */
     private static void applyEnrollmentRequest(EnrollmentRequestEntity entity, EnrollmentRequestUpdate changes,
             List<String> fields) {
         for (String field : fields) {
             switch (field) {
                 case "cohortId" -> entity.setCohortId(changes.getCohortId());
-                case "userId" -> entity.setUserId(changes.getUserId());
                 case "requestedAt" -> entity.setRequestedAt(changes.getRequestedAt());
                 default -> throw new IllegalStateException("unhandled writable field " + field);
             }
@@ -2250,8 +3583,8 @@ public class LmsCourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public RelatedCourse updateRelatedCourse(UUID courseId, UUID id, String ifMatch, RelatedCourseUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -2312,14 +3645,12 @@ public class LmsCourseService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOfRelatedCourse(RelatedCourseEntity entity) {
         return relatedCourseRepository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected RelatedCourseUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected RelatedCourseUpdate fields; explicit per field so a mask can clear values. */
     private static void applyRelatedCourse(RelatedCourseEntity entity, RelatedCourseUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -12,7 +12,6 @@ import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
-
 import java.util.*;
 
 /**
@@ -20,9 +19,6 @@ import java.util.*;
  */
 
 public class CohortFeedbackUpdate {
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String feedback;
@@ -35,26 +31,6 @@ public class CohortFeedbackUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String valueRating;
-
-  public CohortFeedbackUpdate userId(@Nullable UUID userId) {
-    this.userId = userId;
-    return this;
-  }
-
-  /**
-   * Student.
-   * @return userId
-   */
-  @Valid 
-  @JsonProperty("userId")
-  public @Nullable UUID getUserId() {
-    return userId;
-  }
-
-  @JsonProperty("userId")
-  public void setUserId(@Nullable UUID userId) {
-    this.userId = userId;
-  }
 
   public CohortFeedbackUpdate feedback(@Nullable String feedback) {
     this.feedback = feedback;
@@ -145,8 +121,7 @@ public class CohortFeedbackUpdate {
       return false;
     }
     CohortFeedbackUpdate cohortFeedbackUpdate = (CohortFeedbackUpdate) o;
-    return Objects.equals(this.userId, cohortFeedbackUpdate.userId) &&
-        Objects.equals(this.feedback, cohortFeedbackUpdate.feedback) &&
+    return Objects.equals(this.feedback, cohortFeedbackUpdate.feedback) &&
         Objects.equals(this.contentRating, cohortFeedbackUpdate.contentRating) &&
         Objects.equals(this.teacherRating, cohortFeedbackUpdate.teacherRating) &&
         Objects.equals(this.valueRating, cohortFeedbackUpdate.valueRating);
@@ -154,14 +129,13 @@ public class CohortFeedbackUpdate {
 
   @Override
   public int hashCode() {
-    return Objects.hash(userId, feedback, contentRating, teacherRating, valueRating);
+    return Objects.hash(feedback, contentRating, teacherRating, valueRating);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class CohortFeedbackUpdate {\n");
-    sb.append("    userId: ").append(toIndentedString(userId)).append("\n");
     sb.append("    feedback: ").append(toIndentedString(feedback)).append("\n");
     sb.append("    contentRating: ").append(toIndentedString(contentRating)).append("\n");
     sb.append("    teacherRating: ").append(toIndentedString(teacherRating)).append("\n");

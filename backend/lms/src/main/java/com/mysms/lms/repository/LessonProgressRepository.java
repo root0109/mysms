@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.lesson_progress (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.lesson_progress: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class LessonProgressRepository {
@@ -70,6 +67,40 @@ public class LessonProgressRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** A user's progress rows in a course (an outline's statuses in one round trip). */
+    private static final String OWN_IN_COURSE = SELECT_LIVE + " AND r.user_id = :userId AND r.course_id = :courseId";
+    /** A user's progress on a lesson, or on a SCORM chapter (no lesson). */
+    private static final String FIND_OWN = SELECT_LIVE
+            + " AND r.user_id = :userId AND r.chapter_id = :chapterId AND r.lesson_id IS NOT DISTINCT FROM :lessonId";
+    /**
+     * Records a user's progress on a lesson or SCORM chapter: one row per user, chapter and lesson (the unique index
+     * ix_lesson_progress_1 decides between two concurrent first calls); a row soft-deleted earlier comes back. A
+     * completed row stays complete when a later call reports less.
+     */
+    private static final String UPSERT = """
+            INSERT INTO lms.lesson_progress
+            (id, tenant_id, scorm_suspend_data, scorm_location, scorm_score, scorm_total_time_seconds, user_id,
+             course_id, chapter_id, lesson_id, status, is_scorm_chapter, created_at, created_by, updated_at,
+             updated_by, row_version)
+            VALUES (:id, :tenantId, :scormSuspendData, :scormLocation, :scormScore, :scormTotalTimeSeconds, :userId,
+                    :courseId, :chapterId, :lessonId, :status, :isScormChapter, :now, :actor, :now, :actor, 1)
+            ON CONFLICT (user_id, chapter_id, (COALESCE(lesson_id, '00000000-0000-0000-0000-000000000000'::uuid)))
+            DO UPDATE SET status = CASE WHEN lms.lesson_progress.status = 'complete'
+                                         AND lms.lesson_progress.deleted_at IS NULL THEN 'complete'
+                                        ELSE EXCLUDED.status END,
+                          scorm_suspend_data = COALESCE(EXCLUDED.scorm_suspend_data,
+                                                        lms.lesson_progress.scorm_suspend_data),
+                          scorm_location = COALESCE(EXCLUDED.scorm_location, lms.lesson_progress.scorm_location),
+                          scorm_score = COALESCE(EXCLUDED.scorm_score, lms.lesson_progress.scorm_score),
+                          scorm_total_time_seconds = COALESCE(EXCLUDED.scorm_total_time_seconds,
+                                                              lms.lesson_progress.scorm_total_time_seconds),
+                          deleted_at = NULL, updated_at = :now, updated_by = :actor,
+                          row_version = lms.lesson_progress.row_version + 1
+             WHERE lms.lesson_progress.tenant_id = :tenantId
+            RETURNING id, tenant_id, scorm_suspend_data, scorm_location, scorm_score, scorm_total_time_seconds,
+                      user_id, course_id, chapter_id, lesson_id, status, is_scorm_chapter, created_at, created_by,
+                      updated_at, updated_by, deleted_at, row_version
+            """;
     private static final String INSERT = """
             INSERT INTO lms.lesson_progress
             (id, tenant_id, scorm_suspend_data, scorm_location, scorm_score, scorm_total_time_seconds, user_id,
@@ -204,7 +235,39 @@ public class LessonProgressRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** The user's progress rows in the course. */
+    public List<LessonProgressEntity> ownInCourse(UUID userId, UUID courseId) {
+        return jdbc.sql(OWN_IN_COURSE).param("userId", userId).param("courseId", courseId)
+                .query(LessonProgressRepository::map).list();
+    }
+
+    /** The user's progress on the lesson (or, with no lesson, on the SCORM chapter). */
+    public Optional<LessonProgressEntity> findOwn(UUID userId, UUID chapterId, UUID lessonId) {
+        return jdbc.sql(FIND_OWN).param("userId", userId).param("chapterId", chapterId).param("lessonId", lessonId)
+                .query(LessonProgressRepository::map).optional();
+    }
+
+    /** Records the progress (see {@link #UPSERT}) and returns the row as stored. */
+    public LessonProgressEntity upsert(LessonProgressEntity e, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(UPSERT)
+                .param("id", e.getId())
+                .param("tenantId", e.getTenantId())
+                .param("scormSuspendData", e.getScormSuspendData())
+                .param("scormLocation", e.getScormLocation())
+                .param("scormScore", e.getScormScore())
+                .param("scormTotalTimeSeconds", e.getScormTotalTimeSeconds())
+                .param("userId", e.getUserId())
+                .param("courseId", e.getCourseId())
+                .param("chapterId", e.getChapterId())
+                .param("lessonId", e.getLessonId())
+                .param("status", e.getStatus())
+                .param("isScormChapter", e.getIsScormChapter())
+                .param("now", now)
+                .param("actor", actor)
+                .query(LessonProgressRepository::map).single();
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

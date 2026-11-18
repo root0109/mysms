@@ -20,8 +20,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * Plain-JDBC access to platform.operation (JAVA-CODING-RULES §6): constant SQL, the tenant filtered in every statement,
- * live rows only, newest first with keyset paging, the row_version guard on cancel.
+ * Plain-JDBC access to platform.operation: constant SQL, the tenant filtered in every statement, live rows only, newest
+ * first with keyset paging, the row_version guard on cancel.
  */
 @Repository
 public class OperationRepository {
@@ -49,6 +49,36 @@ public class OperationRepository {
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND status = 'running' AND deleted_at IS NULL
             """;
+    /** A job that ran to its end inside the request that started it: recorded finished, with what it produced. */
+    private static final String INSERT_FINISHED = """
+            INSERT INTO platform.operation
+            (id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent, result_entity_type,
+             result_entity_id, started_by_user_id, started_at, finished_at, created_at, created_by, updated_at,
+             updated_by, row_version)
+            VALUES (:id, :tenantId, :operationName, :resourceType, :resourceId, 'succeeded', 100, :resultEntityType,
+                    :resultEntityId, :actor, :now, :now, :now, :actor, :now, :actor, 1)
+            RETURNING id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent, error_code,
+                      error_message, result_entity_type, result_entity_id, started_by_user_id, started_at,
+                      finished_at, created_at, created_by, updated_at, updated_by, deleted_at, row_version
+            """;
+
+    /** A job that goes on after the request that started it (an import whose batches are with their module). */
+    private static final String INSERT_RUNNING = """
+            INSERT INTO platform.operation
+            (id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent,
+             started_by_user_id, started_at, created_at, created_by, updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :operationName, :resourceType, :resourceId, 'running', 0, :actor, :now, :now,
+                    :actor, :now, :actor, 1)
+            """;
+    /** Progress of a running job, or its end (status succeeded, 100 %, finished_at); 0 rows once it has ended. */
+    private static final String PROGRESS = """
+            UPDATE platform.operation
+               SET progress_percent = :percent, status = CASE WHEN :percent = 100 THEN 'succeeded' ELSE status END,
+                   finished_at = CASE WHEN :percent = 100 THEN :now END, updated_at = :now, updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND status = 'running' AND deleted_at IS NULL
+            """;
 
     private final JdbcClient jdbc;
 
@@ -71,6 +101,40 @@ public class OperationRepository {
     /** Marks a running operation cancelled (the schema has no queued state); 0 when it changed or finished. */
     public int cancel(UUID id, int expected, OffsetDateTime now, UUID actor) {
         return jdbc.sql(CANCEL).param("id", id).param("expected", expected).param("now", now).param("actor", actor)
+                .update();
+    }
+
+    /**
+     * Records a job that ran to its end inside the request that started it, as a succeeded operation of the caller.
+     *
+     * @param resourceType     what the job worked on (a table name), with {@code resourceId} when it is one row
+     * @param resultEntityType what it produced ({@code file} for an output file), with {@code resultEntityId}
+     */
+    public OperationEntity insertFinished(UUID id, String operationName, String resourceType, UUID resourceId,
+            String resultEntityType, UUID resultEntityId, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(INSERT_FINISHED)
+                .param("id", id)
+                .param("operationName", operationName)
+                .param("resourceType", resourceType)
+                .param("resourceId", resourceId)
+                .param("resultEntityType", resultEntityType)
+                .param("resultEntityId", resultEntityId)
+                .param("now", now)
+                .param("actor", actor)
+                .query(OperationRepository::map).single();
+    }
+
+    /** Records a job of the caller that runs on after the request (status running, 0 %). */
+    public void insertRunning(UUID id, String operationName, String resourceType, UUID resourceId,
+            OffsetDateTime now, UUID actor) {
+        jdbc.sql(INSERT_RUNNING).param("id", id).param("operationName", operationName)
+                .param("resourceType", resourceType).param("resourceId", resourceId).param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Sets a running job's progress; at 100 the job has succeeded. 0 when it is no longer running. */
+    public int progress(UUID id, int percent, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(PROGRESS).param("id", id).param("percent", percent).param("now", now).param("actor", actor)
                 .update();
     }
 

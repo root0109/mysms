@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of lms.forum_read_state (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of lms.forum_read_state. */
 @Getter
 @Setter
 @SuperBuilder

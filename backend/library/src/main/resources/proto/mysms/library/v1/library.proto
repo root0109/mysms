@@ -1,0 +1,2056 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.library.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "LibraryProto";
+option java_package = "com.mysms.library.v1";
+
+// MediaTypeService: operations on the MediaType aggregate.
+service MediaTypeService {
+  // List MediaTypes.
+  rpc ListMediaTypes(ListMediaTypesRequest) returns (ListMediaTypesResponse);
+  // Get MediaType.
+  rpc GetMediaType(GetMediaTypeRequest) returns (GetMediaTypeResponse);
+  // Create MediaType.
+  rpc CreateMediaType(CreateMediaTypeRequest) returns (CreateMediaTypeResponse);
+  // Update MediaType.
+  rpc UpdateMediaType(UpdateMediaTypeRequest) returns (UpdateMediaTypeResponse);
+  // Soft-delete MediaType.
+  rpc DeleteMediaType(DeleteMediaTypeRequest) returns (DeleteMediaTypeResponse);
+}
+
+// MediaCategoryService: operations on the MediaCategory aggregate.
+service MediaCategoryService {
+  // List MediaCategories.
+  rpc ListMediaCategories(ListMediaCategoriesRequest) returns (ListMediaCategoriesResponse);
+  // Get MediaCategory.
+  rpc GetMediaCategory(GetMediaCategoryRequest) returns (GetMediaCategoryResponse);
+  // Create MediaCategory.
+  rpc CreateMediaCategory(CreateMediaCategoryRequest) returns (CreateMediaCategoryResponse);
+  // Update MediaCategory.
+  rpc UpdateMediaCategory(UpdateMediaCategoryRequest) returns (UpdateMediaCategoryResponse);
+  // Soft-delete MediaCategory.
+  rpc DeleteMediaCategory(DeleteMediaCategoryRequest) returns (DeleteMediaCategoryResponse);
+}
+
+// AuthorService: operations on the Author aggregate.
+service AuthorService {
+  // List Authors.
+  rpc ListAuthors(ListAuthorsRequest) returns (ListAuthorsResponse);
+  // Get Author.
+  rpc GetAuthor(GetAuthorRequest) returns (GetAuthorResponse);
+  // Create Author.
+  rpc CreateAuthor(CreateAuthorRequest) returns (CreateAuthorResponse);
+  // Update Author.
+  rpc UpdateAuthor(UpdateAuthorRequest) returns (UpdateAuthorResponse);
+  // Soft-delete Author.
+  rpc DeleteAuthor(DeleteAuthorRequest) returns (DeleteAuthorResponse);
+}
+
+// PublisherService: operations on the Publisher aggregate.
+service PublisherService {
+  // List Publishers.
+  rpc ListPublishers(ListPublishersRequest) returns (ListPublishersResponse);
+  // Get Publisher.
+  rpc GetPublisher(GetPublisherRequest) returns (GetPublisherResponse);
+  // Create Publisher.
+  rpc CreatePublisher(CreatePublisherRequest) returns (CreatePublisherResponse);
+  // Update Publisher.
+  rpc UpdatePublisher(UpdatePublisherRequest) returns (UpdatePublisherResponse);
+  // Soft-delete Publisher.
+  rpc DeletePublisher(DeletePublisherRequest) returns (DeletePublisherResponse);
+}
+
+// MediaService: operations on the Media aggregate.
+service MediaService {
+  // List Media.
+  rpc ListMedia(ListMediaRequest) returns (ListMediaResponse);
+  // Get Media.
+  rpc GetMedia(GetMediaRequest) returns (GetMediaResponse);
+  // Create Media.
+  rpc CreateMedia(CreateMediaRequest) returns (CreateMediaResponse);
+  // Update Media.
+  rpc UpdateMedia(UpdateMediaRequest) returns (UpdateMediaResponse);
+  // Soft-delete Media.
+  rpc DeleteMedia(DeleteMediaRequest) returns (DeleteMediaResponse);
+  // List MediaAuthors.
+  rpc ListMediaAuthors(ListMediaAuthorsRequest) returns (ListMediaAuthorsResponse);
+  // Get MediaAuthor.
+  rpc GetMediaAuthor(GetMediaAuthorRequest) returns (GetMediaAuthorResponse);
+  // Create MediaAuthor.
+  rpc CreateMediaAuthor(CreateMediaAuthorRequest) returns (CreateMediaAuthorResponse);
+  // Update MediaAuthor.
+  rpc UpdateMediaAuthor(UpdateMediaAuthorRequest) returns (UpdateMediaAuthorResponse);
+  // Soft-delete MediaAuthor.
+  rpc DeleteMediaAuthor(DeleteMediaAuthorRequest) returns (DeleteMediaAuthorResponse);
+  // List MediaPublishers.
+  rpc ListMediaPublishers(ListMediaPublishersRequest) returns (ListMediaPublishersResponse);
+  // Get MediaPublisher.
+  rpc GetMediaPublisher(GetMediaPublisherRequest) returns (GetMediaPublisherResponse);
+  // Create MediaPublisher.
+  rpc CreateMediaPublisher(CreateMediaPublisherRequest) returns (CreateMediaPublisherResponse);
+  // Update MediaPublisher.
+  rpc UpdateMediaPublisher(UpdateMediaPublisherRequest) returns (UpdateMediaPublisherResponse);
+  // Soft-delete MediaPublisher.
+  rpc DeleteMediaPublisher(DeleteMediaPublisherRequest) returns (DeleteMediaPublisherResponse);
+  // List MediaCourses.
+  rpc ListMediaCourses(ListMediaCoursesRequest) returns (ListMediaCoursesResponse);
+  // Get MediaCourse.
+  rpc GetMediaCourse(GetMediaCourseRequest) returns (GetMediaCourseResponse);
+  // Create MediaCourse.
+  rpc CreateMediaCourse(CreateMediaCourseRequest) returns (CreateMediaCourseResponse);
+  // Update MediaCourse.
+  rpc UpdateMediaCourse(UpdateMediaCourseRequest) returns (UpdateMediaCourseResponse);
+  // Soft-delete MediaCourse.
+  rpc DeleteMediaCourse(DeleteMediaCourseRequest) returns (DeleteMediaCourseResponse);
+  // List MediaSubjects.
+  rpc ListMediaSubjects(ListMediaSubjectsRequest) returns (ListMediaSubjectsResponse);
+  // Get MediaSubject.
+  rpc GetMediaSubject(GetMediaSubjectRequest) returns (GetMediaSubjectResponse);
+  // Create MediaSubject.
+  rpc CreateMediaSubject(CreateMediaSubjectRequest) returns (CreateMediaSubjectResponse);
+  // Update MediaSubject.
+  rpc UpdateMediaSubject(UpdateMediaSubjectRequest) returns (UpdateMediaSubjectResponse);
+  // Soft-delete MediaSubject.
+  rpc DeleteMediaSubject(DeleteMediaSubjectRequest) returns (DeleteMediaSubjectResponse);
+  // List MediaUnits.
+  rpc ListMediaUnits(ListMediaUnitsRequest) returns (ListMediaUnitsResponse);
+  // Get MediaUnit.
+  rpc GetMediaUnit(GetMediaUnitRequest) returns (GetMediaUnitResponse);
+  // Create MediaUnit.
+  rpc CreateMediaUnit(CreateMediaUnitRequest) returns (CreateMediaUnitResponse);
+  // Update MediaUnit.
+  rpc UpdateMediaUnit(UpdateMediaUnitRequest) returns (UpdateMediaUnitResponse);
+  // Soft-delete MediaUnit.
+  rpc DeleteMediaUnit(DeleteMediaUnitRequest) returns (DeleteMediaUnitResponse);
+}
+
+// LibraryCardTypeService: operations on the LibraryCardType aggregate.
+service LibraryCardTypeService {
+  // List LibraryCardTypes.
+  rpc ListLibraryCardTypes(ListLibraryCardTypesRequest) returns (ListLibraryCardTypesResponse);
+  // Get LibraryCardType.
+  rpc GetLibraryCardType(GetLibraryCardTypeRequest) returns (GetLibraryCardTypeResponse);
+  // Create LibraryCardType.
+  rpc CreateLibraryCardType(CreateLibraryCardTypeRequest) returns (CreateLibraryCardTypeResponse);
+  // Update LibraryCardType.
+  rpc UpdateLibraryCardType(UpdateLibraryCardTypeRequest) returns (UpdateLibraryCardTypeResponse);
+  // Soft-delete LibraryCardType.
+  rpc DeleteLibraryCardType(DeleteLibraryCardTypeRequest) returns (DeleteLibraryCardTypeResponse);
+}
+
+// LibraryCardService: operations on the LibraryCard aggregate.
+service LibraryCardService {
+  // List LibraryCards.
+  rpc ListLibraryCards(ListLibraryCardsRequest) returns (ListLibraryCardsResponse);
+  // Get LibraryCard.
+  rpc GetLibraryCard(GetLibraryCardRequest) returns (GetLibraryCardResponse);
+  // Create LibraryCard.
+  rpc CreateLibraryCard(CreateLibraryCardRequest) returns (CreateLibraryCardResponse);
+  // Update LibraryCard.
+  rpc UpdateLibraryCard(UpdateLibraryCardRequest) returns (UpdateLibraryCardResponse);
+  // Soft-delete LibraryCard.
+  rpc DeleteLibraryCard(DeleteLibraryCardRequest) returns (DeleteLibraryCardResponse);
+}
+
+// LoanService: operations on the Loan aggregate.
+service LoanService {
+  // List Loans.
+  rpc ListLoans(ListLoansRequest) returns (ListLoansResponse);
+  // Get Loan.
+  rpc GetLoan(GetLoanRequest) returns (GetLoanResponse);
+  // Create Loan.
+  rpc CreateLoan(CreateLoanRequest) returns (CreateLoanResponse);
+  // Update Loan.
+  rpc UpdateLoan(UpdateLoanRequest) returns (UpdateLoanResponse);
+  // Soft-delete Loan.
+  rpc DeleteLoan(DeleteLoanRequest) returns (DeleteLoanResponse);
+  // Borrower drops the copy for return (status return_pending until checked).
+  rpc RequestLoanReturn(RequestLoanReturnRequest) returns (RequestLoanReturnResponse);
+  // Librarian checks the copy in (status returned); fine is computed.
+  rpc ReturnLoan(ReturnLoanRequest) returns (ReturnLoanResponse);
+  // Copy lost.
+  rpc MarkLoanLost(MarkLoanLostRequest) returns (MarkLoanLostResponse);
+  // Raise an invoice for the fine.
+  rpc InvoiceLoanFine(InvoiceLoanFineRequest) returns (InvoiceLoanFineResponse);
+}
+
+// ReservationService: operations on the Reservation aggregate.
+service ReservationService {
+  // List Reservations.
+  rpc ListReservations(ListReservationsRequest) returns (ListReservationsResponse);
+  // Get Reservation.
+  rpc GetReservation(GetReservationRequest) returns (GetReservationResponse);
+  // Create Reservation.
+  rpc CreateReservation(CreateReservationRequest) returns (CreateReservationResponse);
+  // Update Reservation.
+  rpc UpdateReservation(UpdateReservationRequest) returns (UpdateReservationResponse);
+  // Soft-delete Reservation.
+  rpc DeleteReservation(DeleteReservationRequest) returns (DeleteReservationResponse);
+  // Accept.
+  rpc AcceptReservation(AcceptReservationRequest) returns (AcceptReservationResponse);
+  // Reject.
+  rpc RejectReservation(RejectReservationRequest) returns (RejectReservationResponse);
+  // Re-request.
+  rpc RequestReservationAgain(RequestReservationAgainRequest) returns (RequestReservationAgainResponse);
+}
+
+// PurchaseRequestService: operations on the PurchaseRequest aggregate.
+service PurchaseRequestService {
+  // List PurchaseRequests.
+  rpc ListPurchaseRequests(ListPurchaseRequestsRequest) returns (ListPurchaseRequestsResponse);
+  // Get PurchaseRequest.
+  rpc GetPurchaseRequest(GetPurchaseRequestRequest) returns (GetPurchaseRequestResponse);
+  // Create PurchaseRequest.
+  rpc CreatePurchaseRequest(CreatePurchaseRequestRequest) returns (CreatePurchaseRequestResponse);
+  // Update PurchaseRequest.
+  rpc UpdatePurchaseRequest(UpdatePurchaseRequestRequest) returns (UpdatePurchaseRequestResponse);
+  // Soft-delete PurchaseRequest.
+  rpc DeletePurchaseRequest(DeletePurchaseRequestRequest) returns (DeletePurchaseRequestResponse);
+  // List PurchaseRequestCourses.
+  rpc ListPurchaseRequestCourses(ListPurchaseRequestCoursesRequest) returns (ListPurchaseRequestCoursesResponse);
+  // Get PurchaseRequestCourse.
+  rpc GetPurchaseRequestCourse(GetPurchaseRequestCourseRequest) returns (GetPurchaseRequestCourseResponse);
+  // Create PurchaseRequestCourse.
+  rpc CreatePurchaseRequestCourse(CreatePurchaseRequestCourseRequest) returns (CreatePurchaseRequestCourseResponse);
+  // Update PurchaseRequestCourse.
+  rpc UpdatePurchaseRequestCourse(UpdatePurchaseRequestCourseRequest) returns (UpdatePurchaseRequestCourseResponse);
+  // Soft-delete PurchaseRequestCourse.
+  rpc DeletePurchaseRequestCourse(DeletePurchaseRequestCourseRequest) returns (DeletePurchaseRequestCourseResponse);
+  // List PurchaseRequestSubjects.
+  rpc ListPurchaseRequestSubjects(ListPurchaseRequestSubjectsRequest) returns (ListPurchaseRequestSubjectsResponse);
+  // Get PurchaseRequestSubject.
+  rpc GetPurchaseRequestSubject(GetPurchaseRequestSubjectRequest) returns (GetPurchaseRequestSubjectResponse);
+  // Create PurchaseRequestSubject.
+  rpc CreatePurchaseRequestSubject(CreatePurchaseRequestSubjectRequest) returns (CreatePurchaseRequestSubjectResponse);
+  // Update PurchaseRequestSubject.
+  rpc UpdatePurchaseRequestSubject(UpdatePurchaseRequestSubjectRequest) returns (UpdatePurchaseRequestSubjectResponse);
+  // Soft-delete PurchaseRequestSubject.
+  rpc DeletePurchaseRequestSubject(DeletePurchaseRequestSubjectRequest) returns (DeletePurchaseRequestSubjectResponse);
+  // Send to the librarian.
+  rpc SubmitPurchaseRequest(SubmitPurchaseRequestRequest) returns (SubmitPurchaseRequestResponse);
+  // Accept.
+  rpc AcceptPurchaseRequest(AcceptPurchaseRequestRequest) returns (AcceptPurchaseRequestResponse);
+  // Reject.
+  rpc RejectPurchaseRequest(RejectPurchaseRequestRequest) returns (RejectPurchaseRequestResponse);
+}
+
+message ListMediaTypesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListMediaTypesResponse {
+  repeated MediaType items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetMediaTypeRequest {
+  // MediaType id (UUID).
+  string id = 1;
+}
+message GetMediaTypeResponse {
+  MediaType media_type = 1;
+}
+
+message CreateMediaTypeRequest {
+  MediaType media_type = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateMediaTypeResponse {
+  MediaType media_type = 1;
+}
+
+message UpdateMediaTypeRequest {
+  // Resource with id and etag set.
+  MediaType media_type = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateMediaTypeResponse {
+  MediaType media_type = 1;
+}
+
+message DeleteMediaTypeRequest {
+  // MediaType id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteMediaTypeResponse {
+}
+
+message ListMediaCategoriesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListMediaCategoriesResponse {
+  repeated MediaCategory items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetMediaCategoryRequest {
+  // MediaCategory id (UUID).
+  string id = 1;
+}
+message GetMediaCategoryResponse {
+  MediaCategory media_category = 1;
+}
+
+message CreateMediaCategoryRequest {
+  MediaCategory media_category = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateMediaCategoryResponse {
+  MediaCategory media_category = 1;
+}
+
+message UpdateMediaCategoryRequest {
+  // Resource with id and etag set.
+  MediaCategory media_category = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateMediaCategoryResponse {
+  MediaCategory media_category = 1;
+}
+
+message DeleteMediaCategoryRequest {
+  // MediaCategory id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteMediaCategoryResponse {
+}
+
+message ListAuthorsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListAuthorsResponse {
+  repeated Author items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetAuthorRequest {
+  // Author id (UUID).
+  string id = 1;
+}
+message GetAuthorResponse {
+  Author author = 1;
+}
+
+message CreateAuthorRequest {
+  Author author = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateAuthorResponse {
+  Author author = 1;
+}
+
+message UpdateAuthorRequest {
+  // Resource with id and etag set.
+  Author author = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateAuthorResponse {
+  Author author = 1;
+}
+
+message DeleteAuthorRequest {
+  // Author id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteAuthorResponse {
+}
+
+message ListPublishersRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListPublishersResponse {
+  repeated Publisher items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetPublisherRequest {
+  // Publisher id (UUID).
+  string id = 1;
+}
+message GetPublisherResponse {
+  Publisher publisher = 1;
+}
+
+message CreatePublisherRequest {
+  Publisher publisher = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreatePublisherResponse {
+  Publisher publisher = 1;
+}
+
+message UpdatePublisherRequest {
+  // Resource with id and etag set.
+  Publisher publisher = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdatePublisherResponse {
+  Publisher publisher = 1;
+}
+
+message DeletePublisherRequest {
+  // Publisher id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeletePublisherResponse {
+}
+
+message ListMediaRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListMediaResponse {
+  repeated Media items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetMediaRequest {
+  // Media id (UUID).
+  string id = 1;
+}
+message GetMediaResponse {
+  Media media = 1;
+}
+
+message CreateMediaRequest {
+  Media media = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateMediaResponse {
+  Media media = 1;
+}
+
+message UpdateMediaRequest {
+  // Resource with id and etag set.
+  Media media = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateMediaResponse {
+  Media media = 1;
+}
+
+message DeleteMediaRequest {
+  // Media id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteMediaResponse {
+}
+
+message ListMediaAuthorsRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListMediaAuthorsResponse {
+  repeated MediaAuthor items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetMediaAuthorRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // MediaAuthor id (UUID).
+  string id = 2;
+}
+message GetMediaAuthorResponse {
+  MediaAuthor media_author = 1;
+}
+
+message CreateMediaAuthorRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  MediaAuthor media_author = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateMediaAuthorResponse {
+  MediaAuthor media_author = 1;
+}
+
+message UpdateMediaAuthorRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // Resource with id and etag set.
+  MediaAuthor media_author = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateMediaAuthorResponse {
+  MediaAuthor media_author = 1;
+}
+
+message DeleteMediaAuthorRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // MediaAuthor id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteMediaAuthorResponse {
+}
+
+message ListMediaPublishersRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListMediaPublishersResponse {
+  repeated MediaPublisher items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetMediaPublisherRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // MediaPublisher id (UUID).
+  string id = 2;
+}
+message GetMediaPublisherResponse {
+  MediaPublisher media_publisher = 1;
+}
+
+message CreateMediaPublisherRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  MediaPublisher media_publisher = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateMediaPublisherResponse {
+  MediaPublisher media_publisher = 1;
+}
+
+message UpdateMediaPublisherRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // Resource with id and etag set.
+  MediaPublisher media_publisher = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateMediaPublisherResponse {
+  MediaPublisher media_publisher = 1;
+}
+
+message DeleteMediaPublisherRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // MediaPublisher id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteMediaPublisherResponse {
+}
+
+message ListMediaCoursesRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListMediaCoursesResponse {
+  repeated MediaCourse items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetMediaCourseRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // MediaCourse id (UUID).
+  string id = 2;
+}
+message GetMediaCourseResponse {
+  MediaCourse media_course = 1;
+}
+
+message CreateMediaCourseRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  MediaCourse media_course = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateMediaCourseResponse {
+  MediaCourse media_course = 1;
+}
+
+message UpdateMediaCourseRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // Resource with id and etag set.
+  MediaCourse media_course = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateMediaCourseResponse {
+  MediaCourse media_course = 1;
+}
+
+message DeleteMediaCourseRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // MediaCourse id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteMediaCourseResponse {
+}
+
+message ListMediaSubjectsRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListMediaSubjectsResponse {
+  repeated MediaSubject items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetMediaSubjectRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // MediaSubject id (UUID).
+  string id = 2;
+}
+message GetMediaSubjectResponse {
+  MediaSubject media_subject = 1;
+}
+
+message CreateMediaSubjectRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  MediaSubject media_subject = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateMediaSubjectResponse {
+  MediaSubject media_subject = 1;
+}
+
+message UpdateMediaSubjectRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // Resource with id and etag set.
+  MediaSubject media_subject = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateMediaSubjectResponse {
+  MediaSubject media_subject = 1;
+}
+
+message DeleteMediaSubjectRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // MediaSubject id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteMediaSubjectResponse {
+}
+
+message ListMediaUnitsRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListMediaUnitsResponse {
+  repeated MediaUnit items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetMediaUnitRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // MediaUnit id (UUID).
+  string id = 2;
+}
+message GetMediaUnitResponse {
+  MediaUnit media_unit = 1;
+}
+
+message CreateMediaUnitRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  MediaUnit media_unit = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateMediaUnitResponse {
+  MediaUnit media_unit = 1;
+}
+
+message UpdateMediaUnitRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // Resource with id and etag set.
+  MediaUnit media_unit = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateMediaUnitResponse {
+  MediaUnit media_unit = 1;
+}
+
+message DeleteMediaUnitRequest {
+  // Media id (UUID).
+  string media_id = 1;
+  // MediaUnit id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteMediaUnitResponse {
+}
+
+message ListLibraryCardTypesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListLibraryCardTypesResponse {
+  repeated LibraryCardType items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetLibraryCardTypeRequest {
+  // LibraryCardType id (UUID).
+  string id = 1;
+}
+message GetLibraryCardTypeResponse {
+  LibraryCardType library_card_type = 1;
+}
+
+message CreateLibraryCardTypeRequest {
+  LibraryCardType library_card_type = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateLibraryCardTypeResponse {
+  LibraryCardType library_card_type = 1;
+}
+
+message UpdateLibraryCardTypeRequest {
+  // Resource with id and etag set.
+  LibraryCardType library_card_type = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateLibraryCardTypeResponse {
+  LibraryCardType library_card_type = 1;
+}
+
+message DeleteLibraryCardTypeRequest {
+  // LibraryCardType id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteLibraryCardTypeResponse {
+}
+
+message ListLibraryCardsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListLibraryCardsResponse {
+  repeated LibraryCard items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetLibraryCardRequest {
+  // LibraryCard id (UUID).
+  string id = 1;
+}
+message GetLibraryCardResponse {
+  LibraryCard library_card = 1;
+}
+
+message CreateLibraryCardRequest {
+  LibraryCard library_card = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateLibraryCardResponse {
+  LibraryCard library_card = 1;
+}
+
+message UpdateLibraryCardRequest {
+  // Resource with id and etag set.
+  LibraryCard library_card = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateLibraryCardResponse {
+  LibraryCard library_card = 1;
+}
+
+message DeleteLibraryCardRequest {
+  // LibraryCard id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteLibraryCardResponse {
+}
+
+message ListLoansRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListLoansResponse {
+  repeated Loan items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetLoanRequest {
+  // Loan id (UUID).
+  string id = 1;
+}
+message GetLoanResponse {
+  Loan loan = 1;
+}
+
+message CreateLoanRequest {
+  Loan loan = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateLoanResponse {
+  Loan loan = 1;
+}
+
+message UpdateLoanRequest {
+  // Resource with id and etag set.
+  Loan loan = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateLoanResponse {
+  Loan loan = 1;
+}
+
+message DeleteLoanRequest {
+  // Loan id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteLoanResponse {
+}
+
+message ListReservationsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListReservationsResponse {
+  repeated Reservation items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetReservationRequest {
+  // Reservation id (UUID).
+  string id = 1;
+}
+message GetReservationResponse {
+  Reservation reservation = 1;
+}
+
+message CreateReservationRequest {
+  Reservation reservation = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateReservationResponse {
+  Reservation reservation = 1;
+}
+
+message UpdateReservationRequest {
+  // Resource with id and etag set.
+  Reservation reservation = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateReservationResponse {
+  Reservation reservation = 1;
+}
+
+message DeleteReservationRequest {
+  // Reservation id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteReservationResponse {
+}
+
+message ListPurchaseRequestsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListPurchaseRequestsResponse {
+  repeated PurchaseRequest items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetPurchaseRequestRequest {
+  // PurchaseRequest id (UUID).
+  string id = 1;
+}
+message GetPurchaseRequestResponse {
+  PurchaseRequest purchase_request = 1;
+}
+
+message CreatePurchaseRequestRequest {
+  PurchaseRequest purchase_request = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreatePurchaseRequestResponse {
+  PurchaseRequest purchase_request = 1;
+}
+
+message UpdatePurchaseRequestRequest {
+  // Resource with id and etag set.
+  PurchaseRequest purchase_request = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdatePurchaseRequestResponse {
+  PurchaseRequest purchase_request = 1;
+}
+
+message DeletePurchaseRequestRequest {
+  // PurchaseRequest id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeletePurchaseRequestResponse {
+}
+
+message ListPurchaseRequestCoursesRequest {
+  // PurchaseRequest id (UUID).
+  string purchase_request_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListPurchaseRequestCoursesResponse {
+  repeated PurchaseRequestCourse items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetPurchaseRequestCourseRequest {
+  // PurchaseRequest id (UUID).
+  string purchase_request_id = 1;
+  // PurchaseRequestCourse id (UUID).
+  string id = 2;
+}
+message GetPurchaseRequestCourseResponse {
+  PurchaseRequestCourse purchase_request_course = 1;
+}
+
+message CreatePurchaseRequestCourseRequest {
+  // PurchaseRequest id (UUID).
+  string purchase_request_id = 1;
+  PurchaseRequestCourse purchase_request_course = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreatePurchaseRequestCourseResponse {
+  PurchaseRequestCourse purchase_request_course = 1;
+}
+
+message UpdatePurchaseRequestCourseRequest {
+  // PurchaseRequest id (UUID).
+  string purchase_request_id = 1;
+  // Resource with id and etag set.
+  PurchaseRequestCourse purchase_request_course = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdatePurchaseRequestCourseResponse {
+  PurchaseRequestCourse purchase_request_course = 1;
+}
+
+message DeletePurchaseRequestCourseRequest {
+  // PurchaseRequest id (UUID).
+  string purchase_request_id = 1;
+  // PurchaseRequestCourse id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeletePurchaseRequestCourseResponse {
+}
+
+message ListPurchaseRequestSubjectsRequest {
+  // PurchaseRequest id (UUID).
+  string purchase_request_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListPurchaseRequestSubjectsResponse {
+  repeated PurchaseRequestSubject items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetPurchaseRequestSubjectRequest {
+  // PurchaseRequest id (UUID).
+  string purchase_request_id = 1;
+  // PurchaseRequestSubject id (UUID).
+  string id = 2;
+}
+message GetPurchaseRequestSubjectResponse {
+  PurchaseRequestSubject purchase_request_subject = 1;
+}
+
+message CreatePurchaseRequestSubjectRequest {
+  // PurchaseRequest id (UUID).
+  string purchase_request_id = 1;
+  PurchaseRequestSubject purchase_request_subject = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreatePurchaseRequestSubjectResponse {
+  PurchaseRequestSubject purchase_request_subject = 1;
+}
+
+message UpdatePurchaseRequestSubjectRequest {
+  // PurchaseRequest id (UUID).
+  string purchase_request_id = 1;
+  // Resource with id and etag set.
+  PurchaseRequestSubject purchase_request_subject = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdatePurchaseRequestSubjectResponse {
+  PurchaseRequestSubject purchase_request_subject = 1;
+}
+
+message DeletePurchaseRequestSubjectRequest {
+  // PurchaseRequest id (UUID).
+  string purchase_request_id = 1;
+  // PurchaseRequestSubject id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeletePurchaseRequestSubjectResponse {
+}
+
+message RequestLoanReturnRequest {
+  // Path parameter loanId.
+  string loan_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message RequestLoanReturnResponse {
+  Loan loan = 1;
+}
+
+message ReturnLoanRequest {
+  // Path parameter loanId.
+  string loan_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Return date. Required.
+  string returned_on = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message ReturnLoanResponse {
+  Loan loan = 1;
+}
+
+message MarkLoanLostRequest {
+  // Path parameter loanId.
+  string loan_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message MarkLoanLostResponse {
+  Loan loan = 1;
+}
+
+message InvoiceLoanFineRequest {
+  // Path parameter loanId.
+  string loan_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message InvoiceLoanFineResponse {
+  // The fine's invoice, in the shape REST answers (library's own Invoice schema, which mirrors finance's).
+  Invoice result = 1;
+}
+// Invoice raised to a student / guardian / user (fees, library fines, purchases): the REST contract's Invoice schema of
+// library, field for field the same as mysms.finance.v1.Invoice (same numbers), so library's contract stands alone.
+message Invoice {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  optional string institution_id = 2;
+  // Invoice number.
+  string invoice_number = 3;
+  // Billed student. [UUID]
+  optional string student_id = 4;
+  // Billed user (guardian / student). [UUID]
+  optional string bill_to_user_id = 5;
+  // Name on the invoice.
+  string bill_to_name = 6;
+  // Invoice date. [ISO-8601 date (YYYY-MM-DD)]
+  string invoice_date = 7;
+  // Due date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string due_date = 8;
+  // Currency. [UUID]
+  string currency_id = 9;
+  // Sum of line amounts. [Decimal string]
+  string subtotal = 10;
+  // Discounts. [Decimal string]
+  string discount_total = 11;
+  // Taxes. [Decimal string]
+  string tax_total = 12;
+  // Grand total. [Decimal string]
+  string total = 13;
+  // Paid so far. [Decimal string]
+  string amount_paid = 14;
+  // State. Changed only through the workflow operations. Output only.
+  Status status = 15;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 16;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 17;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 18;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 19;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 20;
+  // invoice or credit_note. A posted invoice is never edited; corrections are credit notes. Output only.
+  InvoiceType invoice_type = 21;
+  // Invoice a credit note corrects. [UUID] Output only.
+  optional string credit_for_invoice_id = 22;
+  // When the invoice became a posted (immutable) document. Output only.
+  google.protobuf.Timestamp posted_at = 23;
+  // When it was cancelled (allowed only while draft). Output only.
+  google.protobuf.Timestamp cancelled_at = 24;
+  // Rendered PDF of the issued document. [UUID] Output only.
+  optional string document_file_id = 25;
+  // Allowed values of invoice_type; REST/JSON uses the lowercase value shown in each comment.
+  enum InvoiceType {
+    INVOICE_TYPE_UNSPECIFIED = 0;
+    // "invoice"
+    INVOICE_TYPE_INVOICE = 1;
+    // "credit_note"
+    INVOICE_TYPE_CREDIT_NOTE = 2;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "posted"
+    STATUS_POSTED = 2;
+    // "partially_paid"
+    STATUS_PARTIALLY_PAID = 3;
+    // "paid"
+    STATUS_PAID = 4;
+    // "cancelled"
+    STATUS_CANCELLED = 5;
+  }
+}
+
+message AcceptReservationRequest {
+  // Path parameter reservationId.
+  string reservation_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message AcceptReservationResponse {
+  Reservation reservation = 1;
+}
+
+message RejectReservationRequest {
+  // Path parameter reservationId.
+  string reservation_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message RejectReservationResponse {
+  Reservation reservation = 1;
+}
+
+message RequestReservationAgainRequest {
+  // Path parameter reservationId.
+  string reservation_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message RequestReservationAgainResponse {
+  Reservation reservation = 1;
+}
+
+message SubmitPurchaseRequestRequest {
+  // Path parameter purchaseRequestId.
+  string purchase_request_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message SubmitPurchaseRequestResponse {
+  PurchaseRequest purchase_request = 1;
+}
+
+message AcceptPurchaseRequestRequest {
+  // Path parameter purchaseRequestId.
+  string purchase_request_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message AcceptPurchaseRequestResponse {
+  PurchaseRequest purchase_request = 1;
+}
+
+message RejectPurchaseRequestRequest {
+  // Path parameter purchaseRequestId.
+  string purchase_request_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message RejectPurchaseRequestResponse {
+  PurchaseRequest purchase_request = 1;
+}
+
+// Kind of library item (book, journal, DVD...).
+message MediaType {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Code.
+  string code = 2;
+  // Name.
+  string name = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+  // Display order.
+  optional int32 sort_order = 9;
+  // Whether offered for new picks.
+  optional bool is_active = 10;
+}
+
+// Subject category of library items.
+message MediaCategory {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Category.
+  string name = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 9;
+  // Display order.
+  optional int32 sort_order = 10;
+  // Whether offered for new picks.
+  optional bool is_active = 11;
+}
+
+// Author.
+message Author {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Author name.
+  string name = 2;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 3;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 4;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 5;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 6;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 7;
+}
+
+// Publisher.
+message Publisher {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Publisher name.
+  string name = 2;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 3;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 4;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 5;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 6;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 7;
+}
+
+// Catalogue title (one bibliographic record; copies are media_unit).
+message Media {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year the title was catalogued / acquired. [UUID]
+  optional string acquired_academic_year_id = 3;
+  // Title.
+  string title = 4;
+  // ISBN.
+  optional string isbn = 5;
+  // Library accession / call code.
+  optional string internal_code = 6;
+  // Edition.
+  optional string edition = 7;
+  // Description.
+  optional string description = 8;
+  // Type. [UUID]
+  optional string media_type_id = 9;
+  // Category. [UUID]
+  optional string media_category_id = 10;
+  // Cover image. [UUID]
+  optional string cover_image_file_id = 11;
+  // Whether in circulation.
+  bool is_active = 12;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 13;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 14;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 15;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 16;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 17;
+}
+
+// Author of a title.
+message MediaAuthor {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Title. [UUID] Set from the parent path on create.
+  string media_id = 2;
+  // Author. [UUID]
+  string author_id = 3;
+  // Author order.
+  int32 sort_order = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// Publisher of a title.
+message MediaPublisher {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Title. [UUID] Set from the parent path on create.
+  string media_id = 2;
+  // Publisher. [UUID]
+  string publisher_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// Course a title is recommended for.
+message MediaCourse {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Title. [UUID] Set from the parent path on create.
+  string media_id = 2;
+  // Course. [UUID]
+  string course_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// Subject a title supports.
+message MediaSubject {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Title. [UUID] Set from the parent path on create.
+  string media_id = 2;
+  // Subject. [UUID]
+  string subject_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// Physical copy of a title.
+message MediaUnit {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Title. [UUID] Set from the parent path on create.
+  string media_id = 2;
+  // Copy number.
+  string accession_number = 3;
+  // Barcode.
+  optional string barcode = 4;
+  // Copy state.
+  Status status = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "available"
+    STATUS_AVAILABLE = 1;
+    // "issued"
+    STATUS_ISSUED = 2;
+    // "reserved"
+    STATUS_RESERVED = 3;
+    // "lost"
+    STATUS_LOST = 4;
+    // "damaged"
+    STATUS_DAMAGED = 5;
+    // "withdrawn"
+    STATUS_WITHDRAWN = 6;
+  }
+}
+
+// Card type with borrowing rules.
+message LibraryCardType {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Card type.
+  string name = 2;
+  // Items that can be borrowed at once.
+  int32 max_items = 3;
+  // Loan period in days.
+  int32 loan_days = 4;
+  // Overdue fine per day. [Decimal string]
+  string fine_per_day = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 11;
+  // Display order.
+  optional int32 sort_order = 12;
+  // Whether offered for new picks.
+  optional bool is_active = 13;
+}
+
+// Library membership card of a student or staff member.
+message LibraryCard {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Card number.
+  string card_number = 3;
+  // Card type. [UUID]
+  string card_type_id = 4;
+  // Holder type.
+  HolderType holder_type = 5;
+  // Card holder. [UUID]
+  string person_id = 6;
+  // Holder as student. [UUID]
+  optional string student_id = 7;
+  // Holder as staff. [UUID]
+  optional string staff_id = 8;
+  // Item limit overriding the card type.
+  optional int32 max_items_override = 9;
+  // Issue date. [ISO-8601 date (YYYY-MM-DD)]
+  string issue_date = 10;
+  // Expiry date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string expiry_date = 11;
+  // State.
+  Status status = 12;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 13;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 14;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 15;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 16;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 17;
+  // Allowed values of holder_type; REST/JSON uses the lowercase value shown in each comment.
+  enum HolderType {
+    HOLDER_TYPE_UNSPECIFIED = 0;
+    // "student"
+    HOLDER_TYPE_STUDENT = 1;
+    // "staff"
+    HOLDER_TYPE_STAFF = 2;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "inactive"
+    STATUS_INACTIVE = 2;
+    // "expired"
+    STATUS_EXPIRED = 3;
+    // "lost"
+    STATUS_LOST = 4;
+  }
+}
+
+// Issue and return of a copy against a library card, with fines.
+message Loan {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Copy issued. [UUID]
+  string media_unit_id = 2;
+  // Title (denormalised from the copy for reporting). [UUID]
+  string media_id = 3;
+  // Card used. [UUID]
+  string library_card_id = 4;
+  // Borrower account. [UUID]
+  optional string borrower_user_id = 5;
+  // Issue date (NULL while only reserved / drafted). [ISO-8601 date (YYYY-MM-DD)]
+  optional string issued_on = 6;
+  // Due date (issued_on + card type loan_days when not given). [ISO-8601 date (YYYY-MM-DD)]
+  optional string due_on = 7;
+  // Actual return date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string returned_on = 8;
+  // Fine charged. [Decimal string]
+  string fine_amount = 9;
+  // Fine invoice. [UUID]
+  optional string invoice_id = 10;
+  // Librarian. [UUID]
+  optional string issued_by_user_id = 11;
+  // State. Changed only through the workflow operations. Output only.
+  Status status = 12;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 13;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 14;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 15;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 16;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 17;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "reserved"
+    STATUS_RESERVED = 2;
+    // "issued"
+    STATUS_ISSUED = 3;
+    // "return_pending"
+    STATUS_RETURN_PENDING = 4;
+    // "returned"
+    STATUS_RETURNED = 5;
+    // "lost"
+    STATUS_LOST = 6;
+    // "cancelled"
+    STATUS_CANCELLED = 7;
+  }
+}
+
+// Request to borrow a title when it becomes available.
+message Reservation {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Title. [UUID]
+  string media_id = 2;
+  // Request reference.
+  optional string reference = 3;
+  // Requester. [UUID]
+  optional string requested_by_person_id = 4;
+  // Requester account. [UUID]
+  optional string requested_by_user_id = 5;
+  // Wanted from. [ISO-8601 date (YYYY-MM-DD)]
+  string date_from = 6;
+  // Wanted until. [ISO-8601 date (YYYY-MM-DD)]
+  string date_to = 7;
+  // State. Changed only through the workflow operations. Output only.
+  Status status = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "requested"
+    STATUS_REQUESTED = 1;
+    // "accepted"
+    STATUS_ACCEPTED = 2;
+    // "rejected"
+    STATUS_REJECTED = 3;
+    // "fulfilled"
+    STATUS_FULFILLED = 4;
+    // "cancelled"
+    STATUS_CANCELLED = 5;
+  }
+}
+
+// Request to acquire a new title.
+message PurchaseRequest {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Request number.
+  optional string request_number = 2;
+  // Requested title.
+  string title = 3;
+  // Author(s).
+  string author_text = 4;
+  // Edition.
+  optional string edition = 5;
+  // Publisher.
+  optional string publisher_text = 6;
+  // Type. [UUID]
+  optional string media_type_id = 7;
+  // Requester. [UUID]
+  optional string requested_by_person_id = 8;
+  // Request date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string request_date = 9;
+  // State. Changed only through the workflow operations. Output only.
+  Status status = 10;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 11;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 12;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 14;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 15;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "requested"
+    STATUS_REQUESTED = 2;
+    // "accepted"
+    STATUS_ACCEPTED = 3;
+    // "rejected"
+    STATUS_REJECTED = 4;
+  }
+}
+
+// Course a purchase request is for.
+message PurchaseRequestCourse {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Request. [UUID] Set from the parent path on create.
+  string purchase_request_id = 2;
+  // Course. [UUID]
+  string course_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// Subject a purchase request is for.
+message PurchaseRequestSubject {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Request. [UUID] Set from the parent path on create.
+  string purchase_request_id = 2;
+  // Subject. [UUID]
+  string subject_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+

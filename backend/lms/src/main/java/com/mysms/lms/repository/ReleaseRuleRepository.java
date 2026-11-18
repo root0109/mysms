@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.release_rule (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.release_rule: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class ReleaseRuleRepository {
@@ -70,6 +67,40 @@ public class ReleaseRuleRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** lms.EnableReleaseRule: allowed while the rule is disabled. */
+    private static final String STEP_ENABLE = """
+            UPDATE lms.release_rule
+               SET is_disabled = false, updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** lms.DisableReleaseRule: allowed while the rule is enabled. */
+    private static final String STEP_DISABLE = """
+            UPDATE lms.release_rule
+               SET is_disabled = true, updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** The rules whose source is an item, in evaluation order. */
+    private static final String OF_SOURCE = SELECT_LIVE
+            + " AND r.source_content_item_id = :itemId ORDER BY r.sort_order, r.id";
+    /** The enabled rules that release an item, or the chapter it is in. */
+    private static final String RELEASING = SELECT_LIVE + """
+             AND NOT r.is_disabled
+             AND EXISTS (SELECT 1 FROM lms.release_rule_target t WHERE t.tenant_id = :tenantId
+                            AND t.release_rule_id = r.id AND t.deleted_at IS NULL
+                            AND (t.content_item_id = :itemId OR t.chapter_id = :chapterId))
+            ORDER BY r.sort_order, r.id
+            """;
+    private static final String SET_ENABLED_FOR_SOURCE = """
+            UPDATE lms.release_rule
+               SET is_disabled = :disabled, updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND source_content_item_id = :itemId AND deleted_at IS NULL
+               AND is_disabled <> :disabled
+            """;
+    private static final String PLACE = """
+            UPDATE lms.release_rule
+               SET sort_order = :sortOrder, updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND deleted_at IS NULL
+            """;
     private static final String INSERT = """
             INSERT INTO lms.release_rule
             (id, tenant_id, course_id, cohort_id, source_content_item_id, title, stop_if_true, is_disabled,
@@ -146,6 +177,37 @@ public class ReleaseRuleRepository {
 
     public ReleaseRuleRepository(@Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** Enables (true) or disables the rule under its version; 0 rows means it changed since it was read. */
+    public int setEnabled(UUID id, boolean enabled, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(enabled ? STEP_ENABLE : STEP_DISABLE).param("id", id).param("expected", expected)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    /** The item's rules (it is their source), in evaluation order. */
+    public List<ReleaseRuleEntity> ofSource(UUID itemId) {
+        return jdbc.sql(OF_SOURCE).param("itemId", itemId).query(ReleaseRuleRepository::map).list();
+    }
+
+    /** The enabled rules that release the item or its chapter, in evaluation order. */
+    public List<ReleaseRuleEntity> releasing(UUID itemId, UUID chapterId) {
+        return jdbc.sql(RELEASING).param("itemId", itemId).param("chapterId", chapterId)
+                .query(ReleaseRuleRepository::map).list();
+    }
+
+    /** Enables or disables every rule whose source is the item; answers how many changed. */
+    public int setEnabledForSource(UUID itemId, boolean enabled, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(SET_ENABLED_FOR_SOURCE).param("itemId", itemId).param("disabled", !enabled).param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Puts the rules in the listed order (0, 1, 2…). */
+    public void place(List<UUID> ids, OffsetDateTime now, UUID actor) {
+        for (int i = 0; i < ids.size(); i++) {
+            jdbc.sql(PLACE).param("id", ids.get(i)).param("sortOrder", i).param("now", now).param("actor", actor)
+                    .update();
+        }
     }
 
     public Optional<ReleaseRuleEntity> findById(UUID id) {
@@ -260,9 +322,16 @@ public class ReleaseRuleRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    private static final String OF_COURSE = SELECT_LIVE + " AND r.course_id = :courseId ORDER BY r.sort_order";
+
+    /** The course template's live rules, in order. */
+    public List<ReleaseRuleEntity> ofCourse(UUID courseId) {
+        return jdbc.sql(OF_COURSE).param("courseId", courseId).query(ReleaseRuleRepository::map).list();
     }
 
     private static List<Object> sortValues(SortSpec sort, ReleaseRuleEntity e) {

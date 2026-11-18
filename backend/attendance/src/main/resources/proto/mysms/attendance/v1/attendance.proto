@@ -1,0 +1,780 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.attendance.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "AttendanceProto";
+option java_package = "com.mysms.attendance.v1";
+
+// AttendanceTypeService: operations on the AttendanceType aggregate.
+service AttendanceTypeService {
+  // List AttendanceTypes.
+  rpc ListAttendanceTypes(ListAttendanceTypesRequest) returns (ListAttendanceTypesResponse);
+  // Get AttendanceType.
+  rpc GetAttendanceType(GetAttendanceTypeRequest) returns (GetAttendanceTypeResponse);
+  // Create AttendanceType.
+  rpc CreateAttendanceType(CreateAttendanceTypeRequest) returns (CreateAttendanceTypeResponse);
+  // Update AttendanceType.
+  rpc UpdateAttendanceType(UpdateAttendanceTypeRequest) returns (UpdateAttendanceTypeResponse);
+  // Soft-delete AttendanceType.
+  rpc DeleteAttendanceType(DeleteAttendanceTypeRequest) returns (DeleteAttendanceTypeResponse);
+}
+
+// AbsenceReasonService: operations on the AbsenceReason aggregate.
+service AbsenceReasonService {
+  // List AbsenceReasons.
+  rpc ListAbsenceReasons(ListAbsenceReasonsRequest) returns (ListAbsenceReasonsResponse);
+  // Get AbsenceReason.
+  rpc GetAbsenceReason(GetAbsenceReasonRequest) returns (GetAbsenceReasonResponse);
+  // Create AbsenceReason.
+  rpc CreateAbsenceReason(CreateAbsenceReasonRequest) returns (CreateAbsenceReasonResponse);
+  // Update AbsenceReason.
+  rpc UpdateAbsenceReason(UpdateAbsenceReasonRequest) returns (UpdateAbsenceReasonResponse);
+  // Soft-delete AbsenceReason.
+  rpc DeleteAbsenceReason(DeleteAbsenceReasonRequest) returns (DeleteAbsenceReasonResponse);
+}
+
+// AttendanceRegisterService: operations on the AttendanceRegister aggregate.
+service AttendanceRegisterService {
+  // List AttendanceRegisters.
+  rpc ListAttendanceRegisters(ListAttendanceRegistersRequest) returns (ListAttendanceRegistersResponse);
+  // Get AttendanceRegister.
+  rpc GetAttendanceRegister(GetAttendanceRegisterRequest) returns (GetAttendanceRegisterResponse);
+  // Create AttendanceRegister.
+  rpc CreateAttendanceRegister(CreateAttendanceRegisterRequest) returns (CreateAttendanceRegisterResponse);
+  // Update AttendanceRegister.
+  rpc UpdateAttendanceRegister(UpdateAttendanceRegisterRequest) returns (UpdateAttendanceRegisterResponse);
+  // Soft-delete AttendanceRegister.
+  rpc DeleteAttendanceRegister(DeleteAttendanceRegisterRequest) returns (DeleteAttendanceRegisterResponse);
+}
+
+// AttendanceSheetService: operations on the AttendanceSheet aggregate.
+service AttendanceSheetService {
+  // List AttendanceSheets.
+  rpc ListAttendanceSheets(ListAttendanceSheetsRequest) returns (ListAttendanceSheetsResponse);
+  // Get AttendanceSheet.
+  rpc GetAttendanceSheet(GetAttendanceSheetRequest) returns (GetAttendanceSheetResponse);
+  // Create AttendanceSheet.
+  rpc CreateAttendanceSheet(CreateAttendanceSheetRequest) returns (CreateAttendanceSheetResponse);
+  // Update AttendanceSheet.
+  rpc UpdateAttendanceSheet(UpdateAttendanceSheetRequest) returns (UpdateAttendanceSheetResponse);
+  // Soft-delete AttendanceSheet.
+  rpc DeleteAttendanceSheet(DeleteAttendanceSheetRequest) returns (DeleteAttendanceSheetResponse);
+  // List AttendanceRecords.
+  rpc ListAttendanceRecords(ListAttendanceRecordsRequest) returns (ListAttendanceRecordsResponse);
+  // Get AttendanceRecord.
+  rpc GetAttendanceRecord(GetAttendanceRecordRequest) returns (GetAttendanceRecordResponse);
+  // Start taking attendance.
+  rpc StartAttendanceSheet(StartAttendanceSheetRequest) returns (StartAttendanceSheetResponse);
+  // Attendance taken; guardians of absentees are notified.
+  rpc CompleteAttendanceSheet(CompleteAttendanceSheetRequest) returns (CompleteAttendanceSheetResponse);
+  // Cancel.
+  rpc CancelAttendanceSheet(CancelAttendanceSheetRequest) returns (CancelAttendanceSheetResponse);
+  // Back to draft.
+  rpc ResetAttendanceSheet(ResetAttendanceSheetRequest) returns (ResetAttendanceSheetResponse);
+  // Record or correct marks for many students in one call.
+  rpc RecordAttendance(RecordAttendanceRequest) returns (RecordAttendanceResponse);
+  // Get or create the sheet for a timetable session (pre-filled with expected students).
+  rpc TakeAttendanceForSession(TakeAttendanceForSessionRequest) returns (TakeAttendanceForSessionResponse);
+  // Attendance counts and percentages.
+  rpc SummarizeAttendance(SummarizeAttendanceRequest) returns (SummarizeAttendanceResponse);
+}
+
+message ListAttendanceTypesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListAttendanceTypesResponse {
+  repeated AttendanceType items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetAttendanceTypeRequest {
+  // AttendanceType id (UUID).
+  string id = 1;
+}
+message GetAttendanceTypeResponse {
+  AttendanceType attendance_type = 1;
+}
+
+message CreateAttendanceTypeRequest {
+  AttendanceType attendance_type = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateAttendanceTypeResponse {
+  AttendanceType attendance_type = 1;
+}
+
+message UpdateAttendanceTypeRequest {
+  // Resource with id and etag set.
+  AttendanceType attendance_type = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateAttendanceTypeResponse {
+  AttendanceType attendance_type = 1;
+}
+
+message DeleteAttendanceTypeRequest {
+  // AttendanceType id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteAttendanceTypeResponse {
+}
+
+message ListAbsenceReasonsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListAbsenceReasonsResponse {
+  repeated AbsenceReason items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetAbsenceReasonRequest {
+  // AbsenceReason id (UUID).
+  string id = 1;
+}
+message GetAbsenceReasonResponse {
+  AbsenceReason absence_reason = 1;
+}
+
+message CreateAbsenceReasonRequest {
+  AbsenceReason absence_reason = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateAbsenceReasonResponse {
+  AbsenceReason absence_reason = 1;
+}
+
+message UpdateAbsenceReasonRequest {
+  // Resource with id and etag set.
+  AbsenceReason absence_reason = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateAbsenceReasonResponse {
+  AbsenceReason absence_reason = 1;
+}
+
+message DeleteAbsenceReasonRequest {
+  // AbsenceReason id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteAbsenceReasonResponse {
+}
+
+message ListAttendanceRegistersRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListAttendanceRegistersResponse {
+  repeated AttendanceRegister items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetAttendanceRegisterRequest {
+  // AttendanceRegister id (UUID).
+  string id = 1;
+}
+message GetAttendanceRegisterResponse {
+  AttendanceRegister attendance_register = 1;
+}
+
+message CreateAttendanceRegisterRequest {
+  AttendanceRegister attendance_register = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateAttendanceRegisterResponse {
+  AttendanceRegister attendance_register = 1;
+}
+
+message UpdateAttendanceRegisterRequest {
+  // Resource with id and etag set.
+  AttendanceRegister attendance_register = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateAttendanceRegisterResponse {
+  AttendanceRegister attendance_register = 1;
+}
+
+message DeleteAttendanceRegisterRequest {
+  // AttendanceRegister id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteAttendanceRegisterResponse {
+}
+
+message ListAttendanceSheetsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListAttendanceSheetsResponse {
+  repeated AttendanceSheet items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetAttendanceSheetRequest {
+  // AttendanceSheet id (UUID).
+  string id = 1;
+}
+message GetAttendanceSheetResponse {
+  AttendanceSheet attendance_sheet = 1;
+}
+
+message CreateAttendanceSheetRequest {
+  AttendanceSheet attendance_sheet = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateAttendanceSheetResponse {
+  AttendanceSheet attendance_sheet = 1;
+}
+
+message UpdateAttendanceSheetRequest {
+  // Resource with id and etag set.
+  AttendanceSheet attendance_sheet = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateAttendanceSheetResponse {
+  AttendanceSheet attendance_sheet = 1;
+}
+
+message DeleteAttendanceSheetRequest {
+  // AttendanceSheet id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteAttendanceSheetResponse {
+}
+
+message ListAttendanceRecordsRequest {
+  // AttendanceSheet id (UUID).
+  string attendance_sheet_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListAttendanceRecordsResponse {
+  repeated AttendanceRecord items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetAttendanceRecordRequest {
+  // AttendanceSheet id (UUID).
+  string attendance_sheet_id = 1;
+  // AttendanceRecord id (UUID).
+  string id = 2;
+}
+message GetAttendanceRecordResponse {
+  AttendanceRecord attendance_record = 1;
+}
+
+message StartAttendanceSheetRequest {
+  // Path parameter attendanceSheetId.
+  string attendance_sheet_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message StartAttendanceSheetResponse {
+  AttendanceSheet attendance_sheet = 1;
+}
+
+message CompleteAttendanceSheetRequest {
+  // Path parameter attendanceSheetId.
+  string attendance_sheet_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CompleteAttendanceSheetResponse {
+  AttendanceSheet attendance_sheet = 1;
+}
+
+message CancelAttendanceSheetRequest {
+  // Path parameter attendanceSheetId.
+  string attendance_sheet_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CancelAttendanceSheetResponse {
+  AttendanceSheet attendance_sheet = 1;
+}
+
+message ResetAttendanceSheetRequest {
+  // Path parameter attendanceSheetId.
+  string attendance_sheet_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ResetAttendanceSheetResponse {
+  AttendanceSheet attendance_sheet = 1;
+}
+
+message RecordAttendanceRequest {
+  // Path parameter attendanceSheetId.
+  string attendance_sheet_id = 1;
+  // One mark per student (upsert). Required.
+  repeated mysms.common.v1.AttendanceMark marks = 2;
+  // Also complete the sheet.
+  optional bool complete = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+  // Concurrency token of the sheet from the last read (optional but recommended).
+  optional string etag = 5;
+}
+message RecordAttendanceResponse {
+  repeated AttendanceRecord items = 1;
+  // Fields 2 (next_page_token) removed: the operation returns every item it wrote in one
+  // response; it is not a page of a list.
+  reserved 2;
+  reserved "next_page_token";
+}
+
+message TakeAttendanceForSessionRequest {
+  // Session. Required.
+  string timetable_session_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message TakeAttendanceForSessionResponse {
+  AttendanceSheet attendance_sheet = 1;
+}
+
+message SummarizeAttendanceRequest {
+  // Institution. Required.
+  string institution_id = 1;
+  // From. Required.
+  string from_date = 2;
+  // To. Required.
+  string to_date = 3;
+  // Student.
+  optional string student_id = 4;
+  // Class.
+  optional string class_section_id = 5;
+  // Grouping. Required.
+  GroupBy group_by = 6;
+  // Allowed values of group_by; REST/JSON uses the lowercase value shown in each comment.
+  enum GroupBy {
+    GROUP_BY_UNSPECIFIED = 0;
+    // "student"
+    GROUP_BY_STUDENT = 1;
+    // "class_section"
+    GROUP_BY_CLASS_SECTION = 2;
+    // "date"
+    GROUP_BY_DATE = 3;
+  }
+  // The page to read: number, size and the cursor of a next page (api/README "Pagination"). Its sort is not taken:
+  // the rows come in their one fixed order, as over REST, which has no sort parameter here.
+  mysms.common.v1.PageableRequest pageable = 9;
+  // Fields 7 (page_size), 8 (page_token) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 7, 8;
+  reserved "page_size", "page_token";
+}
+message SummarizeAttendanceResponse {
+  repeated mysms.common.v1.AttendanceSummary items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 3;
+  // Fields 2 (next_page_token) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2;
+  reserved "next_page_token";
+}
+
+// Configurable attendance mark (Present, Absent, Late, Excused, Medical...).
+message AttendanceType {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Mark name.
+  string name = 3;
+  // Counts as present.
+  bool counts_present = 4;
+  // Counts as absent.
+  bool counts_absent = 5;
+  // Counts as excused.
+  bool counts_excused = 6;
+  // Counts as late.
+  bool counts_late = 7;
+  // Whether usable.
+  bool is_active = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 14;
+  // Display order.
+  optional int32 sort_order = 15;
+}
+
+// Reason category for an absence or staff leave.
+message AbsenceReason {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Reason.
+  string title = 2;
+  // Whether usable.
+  bool is_active = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 9;
+  // Display order.
+  optional int32 sort_order = 10;
+}
+
+// Register in which attendance is taken: a class section (K-12), a course batch, or a subject.
+message AttendanceRegister {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Register code.
+  string code = 3;
+  // Register name.
+  string name = 4;
+  // What the register covers.
+  RegisterScope register_scope = 5;
+  // Class section (scope class_section). [UUID]
+  optional string class_section_id = 6;
+  // Course (scope course_batch/subject). [UUID]
+  optional string course_id = 7;
+  // Batch (scope course_batch/subject). [UUID]
+  optional string batch_id = 8;
+  // Subject (scope subject). [UUID]
+  optional string subject_id = 9;
+  // Whether in use.
+  bool is_active = 10;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 11;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 12;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 14;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 15;
+  // Allowed values of register_scope; REST/JSON uses the lowercase value shown in each comment.
+  enum RegisterScope {
+    REGISTER_SCOPE_UNSPECIFIED = 0;
+    // "institution"
+    REGISTER_SCOPE_INSTITUTION = 1;
+    // "class_section"
+    REGISTER_SCOPE_CLASS_SECTION = 2;
+    // "course_batch"
+    REGISTER_SCOPE_COURSE_BATCH = 3;
+    // "subject"
+    REGISTER_SCOPE_SUBJECT = 4;
+  }
+}
+
+// One attendance-taking occasion: a register on a date for a timetable session or part of day.
+message AttendanceSheet {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Register. [UUID]
+  string register_id = 2;
+  // Academic year. [UUID]
+  optional string academic_year_id = 3;
+  // Date. [ISO-8601 date (YYYY-MM-DD)]
+  string attendance_date = 4;
+  // Timetable session the sheet is for. [UUID]
+  optional string timetable_session_id = 5;
+  // Part of the day (daily attendance).
+  DayPart day_part = 6;
+  // Sheet reference number.
+  optional string reference = 7;
+  // Staff member taking attendance. [UUID]
+  optional string taken_by_staff_id = 8;
+  // Sheet state. Changed only through the workflow operations. Output only.
+  Status status = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+  // Allowed values of day_part; REST/JSON uses the lowercase value shown in each comment.
+  enum DayPart {
+    DAY_PART_UNSPECIFIED = 0;
+    // "full_day"
+    DAY_PART_FULL_DAY = 1;
+    // "forenoon"
+    DAY_PART_FORENOON = 2;
+    // "afternoon"
+    DAY_PART_AFTERNOON = 3;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "in_progress"
+    STATUS_IN_PROGRESS = 2;
+    // "done"
+    STATUS_DONE = 3;
+    // "cancelled"
+    STATUS_CANCELLED = 4;
+  }
+}
+
+// Attendance of one student on one sheet.
+message AttendanceRecord {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Sheet. [UUID]
+  string sheet_id = 2;
+  // Student. [UUID]
+  string student_id = 3;
+  // Normalised status.
+  Status status = 4;
+  // Configured mark used. [UUID]
+  optional string attendance_type_id = 5;
+  // Reason when absent. [UUID]
+  optional string absence_reason_id = 6;
+  // Remark.
+  optional string remark = 7;
+  // Who recorded the mark. [UUID]
+  optional string recorded_by_user_id = 8;
+  // Date of the sheet; partition key. Kept equal to the sheet's date by a composite foreign key with ON UPDATE CASCADE, so the application only copies it on insert. Set by the server. [ISO-8601 date (YYYY-MM-DD)] Output only.
+  string attendance_date = 14;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "present"
+    STATUS_PRESENT = 1;
+    // "absent"
+    STATUS_ABSENT = 2;
+    // "late"
+    STATUS_LATE = 3;
+    // "excused"
+    STATUS_EXCUSED = 4;
+  }
+  // Approved student leave request that explains this absence. [UUID] Output only.
+  optional string leave_request_id = 15;
+}
+
+// Daily attendance of staff (manual, biometric import or bulk import).
+message StaffAttendance {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Staff member the day belongs to. [UUID]
+  string staff_id = 2;
+  // Attendance day.
+  string attendance_date = 3;
+  // Day status.
+  string status = 4;
+  // Clock-in time when captured.
+  google.protobuf.Timestamp check_in_at = 5;
+  // Clock-out time when captured.
+  google.protobuf.Timestamp check_out_at = 6;
+  // How the row was captured. Output only.
+  optional string source = 7;
+  // Approved leave application that explains an on_leave day. [UUID]
+  optional string leave_application_id = 8;
+  // User who recorded or corrected the day. [UUID] Output only.
+  optional string recorded_by_user_id = 9;
+  // Free-text remark.
+  optional string remark = 10;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 11;
+  // User account that created the row (audit reference). [UUID] Output only.
+  optional string created_by = 12;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // User account that last updated the row (audit reference). [UUID] Output only.
+  optional string updated_by = 14;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 15;
+}
+
+message ListStaffAttendancesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListStaffAttendancesResponse {
+  repeated StaffAttendance items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetStaffAttendanceRequest {
+  // StaffAttendance id (UUID).
+  string id = 1;
+}
+message GetStaffAttendanceResponse {
+  StaffAttendance staff_attendance = 1;
+}
+
+message CreateStaffAttendanceRequest {
+  StaffAttendance staff_attendance = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateStaffAttendanceResponse {
+  StaffAttendance staff_attendance = 1;
+}
+
+message UpdateStaffAttendanceRequest {
+  // Resource with id and etag set.
+  StaffAttendance staff_attendance = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStaffAttendanceResponse {
+  StaffAttendance staff_attendance = 1;
+}
+
+// StaffAttendanceService: operations on the StaffAttendance aggregate.
+service StaffAttendanceService {
+  // List StaffAttendances.
+  rpc ListStaffAttendances(ListStaffAttendancesRequest) returns (ListStaffAttendancesResponse);
+  // Get StaffAttendance.
+  rpc GetStaffAttendance(GetStaffAttendanceRequest) returns (GetStaffAttendanceResponse);
+  // Create StaffAttendance.
+  rpc CreateStaffAttendance(CreateStaffAttendanceRequest) returns (CreateStaffAttendanceResponse);
+  // Update StaffAttendance.
+  rpc UpdateStaffAttendance(UpdateStaffAttendanceRequest) returns (UpdateStaffAttendanceResponse);
+}

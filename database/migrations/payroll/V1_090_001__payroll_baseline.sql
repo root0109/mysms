@@ -469,6 +469,31 @@ COMMENT ON COLUMN payroll.staff_bank_account.row_version IS 'Optimistic-lock ver
 CREATE UNIQUE INDEX uq_staff_bank_account_primary ON payroll.staff_bank_account (staff_id) WHERE is_primary AND deleted_at IS NULL;
 CREATE UNIQUE INDEX uq_payslip_period ON payroll.payslip (tenant_id, staff_id, period_start, period_end) WHERE deleted_at IS NULL AND status <> 'cancelled';
 
+-- === Staff records of login accounts (owner-only payslips), kept from hr.staff events ===
+
+CREATE TABLE payroll.staff_member (
+    tenant_id uuid NOT NULL,
+    staff_id uuid NOT NULL,
+    user_id uuid,
+    is_deleted boolean NOT NULL DEFAULT false,
+    source_version integer NOT NULL,
+    synced_at timestamptz NOT NULL,
+    CONSTRAINT pk_payroll_staff_member PRIMARY KEY (tenant_id, staff_id),
+    CONSTRAINT ck_staff_member_source_version CHECK (source_version >= 1)
+);
+COMMENT ON TABLE payroll.staff_member IS 'Login account of each staff record, kept from hr.staff created/updated/deleted events (payroll never reads hr''s schema), so a staff member who is not a payroll officer reads only the payslips of their own staff records.';
+COMMENT ON COLUMN payroll.staff_member.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
+COMMENT ON COLUMN payroll.staff_member.staff_id IS 'hr.staff.id (logical, maintained from its events).';
+COMMENT ON COLUMN payroll.staff_member.user_id IS 'Login account of the staff record (iam.user_account.id); NULL when it has none.';
+COMMENT ON COLUMN payroll.staff_member.is_deleted IS 'The staff record was deleted in hr; kept so a late event cannot restore it.';
+COMMENT ON COLUMN payroll.staff_member.source_version IS 'Row version of the hr.staff row this entry reflects; an event with an older or equal version is ignored.';
+COMMENT ON COLUMN payroll.staff_member.synced_at IS 'When the row was last changed by an event.';
+CREATE INDEX ix_staff_member_user ON payroll.staff_member (tenant_id, user_id) WHERE NOT is_deleted AND user_id IS NOT NULL;
+COMMENT ON INDEX payroll.ix_staff_member_user IS 'Owner-only payslip reads: the staff records of the signed-in account.';
+ALTER TABLE payroll.staff_member ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payroll.staff_member FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON payroll.staff_member USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+
 -- === P1-13: transactional outbox / inbox ===
 
 CREATE TABLE payroll.outbox_event (
@@ -480,6 +505,7 @@ CREATE TABLE payroll.outbox_event (
     payload text NOT NULL,
     occurred_at timestamptz NOT NULL DEFAULT now(),
     published_at timestamptz,
+    publish_error text,
     CONSTRAINT pk_payroll_outbox_event PRIMARY KEY (id)
 );
 COMMENT ON TABLE payroll.outbox_event IS 'Transactional outbox of the payroll module: events written in the same transaction as the change, published to the bus by a relay, then pruned. Ordered by the identity column.';
@@ -491,7 +517,8 @@ COMMENT ON COLUMN payroll.outbox_event.aggregate_id IS 'Entity id the event is a
 COMMENT ON COLUMN payroll.outbox_event.payload IS 'Serialised event (opaque message envelope).';
 COMMENT ON COLUMN payroll.outbox_event.occurred_at IS 'When the change committed.';
 COMMENT ON COLUMN payroll.outbox_event.published_at IS 'When the relay published it (NULL = pending).';
-CREATE INDEX ix_payroll_outbox_event_pending ON payroll.outbox_event (id) WHERE published_at IS NULL;
+COMMENT ON COLUMN payroll.outbox_event.publish_error IS 'Why the relay could not turn the row into an event (set aside, not published); NULL otherwise.';
+CREATE INDEX ix_payroll_outbox_event_pending ON payroll.outbox_event (id) WHERE published_at IS NULL AND publish_error IS NULL;
 CREATE TABLE payroll.inbox_event (
     event_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
@@ -499,15 +526,16 @@ CREATE TABLE payroll.inbox_event (
     received_at timestamptz NOT NULL DEFAULT now(),
     processed_at timestamptz,
     processing_error text,
-    CONSTRAINT pk_payroll_inbox_event PRIMARY KEY (event_id)
+    CONSTRAINT pk_payroll_inbox_event PRIMARY KEY (tenant_id, event_id)
 );
 COMMENT ON TABLE payroll.inbox_event IS 'Inbox of the payroll module: ids of consumed events, kept so redeliveries are processed exactly once.';
-COMMENT ON COLUMN payroll.inbox_event.event_id IS 'Global id of the consumed event.';
+COMMENT ON COLUMN payroll.inbox_event.event_id IS 'Global id of the consumed event; recorded per tenant.';
 COMMENT ON COLUMN payroll.inbox_event.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
 COMMENT ON COLUMN payroll.inbox_event.event_type IS 'Event name.';
 COMMENT ON COLUMN payroll.inbox_event.received_at IS 'First delivery time.';
 COMMENT ON COLUMN payroll.inbox_event.processed_at IS 'When handling committed (NULL = in flight).';
 COMMENT ON COLUMN payroll.inbox_event.processing_error IS 'Last handling error, if any.';
+CREATE INDEX ix_payroll_inbox_event_processed ON payroll.inbox_event (processed_at) WHERE processed_at IS NOT NULL;
 
 -- === P1-15: business uniqueness ignores soft-deleted rows ===
 
@@ -629,6 +657,7 @@ CREATE TABLE payroll.operation (
     updated_by uuid,
     deleted_at timestamptz,
     row_version integer NOT NULL DEFAULT 0,
+    result text,
     CONSTRAINT pk_payroll_operation PRIMARY KEY (id),
     CONSTRAINT ck_payroll_operation_status CHECK (status IN ('running', 'succeeded', 'failed', 'cancelled'))
 );
@@ -653,6 +682,7 @@ COMMENT ON COLUMN payroll.operation.updated_at IS 'Last modification time (set b
 COMMENT ON COLUMN payroll.operation.updated_by IS 'User account that last modified the row (audit reference; not FK-constrained).';
 COMMENT ON COLUMN payroll.operation.deleted_at IS 'Soft-delete timestamp (NULL = live row).';
 COMMENT ON COLUMN payroll.operation.row_version IS 'Optimistic-lock version, incremented on every update; used as the ETag.';
+COMMENT ON COLUMN payroll.operation.result IS 'Outcome of a finished operation as a JSON object (counts, skipped items); NULL while it runs and when it has none.';
 ALTER TABLE payroll.operation ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payroll.operation FORCE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation ON payroll.operation USING (tenant_id = current_setting('app.tenant_id', true)::uuid);

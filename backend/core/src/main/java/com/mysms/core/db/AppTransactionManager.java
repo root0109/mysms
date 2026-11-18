@@ -1,41 +1,22 @@
 package com.mysms.core.db;
 
-import com.mysms.core.tx.Transactions;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
- * The base of every class that works in a database transaction (owner decision of 2026-11-10; JAVA-CODING-RULES §4):
- * a service extends it and hands each unit of work to {@link #doInReadTransaction} or {@link #doInWriteTransaction}
- * as a {@link CallBack} (a Template Method over the module's own {@link PlatformTransactionManager}; transactions
- * stay programmatic, never annotation-driven). The transaction is the module's
- * ({@link ModuleDatabase#readDefinition()} / {@link ModuleDatabase#writeDefinition()}: READ COMMITTED, the module's
- * timeout, read-only for reads), and the caller's tenant is bound to it before the work starts, so row-level security
- * applies to every statement of the work.
+ * Base of every service: a Template Method that runs each {@link CallBack} in a programmatic transaction of the
+ * module's {@link PlatformTransactionManager}, with the caller's tenant bound first so row-level security applies to
+ * every statement. Any {@link RuntimeException} or {@link Error} rolls back and is rethrown unchanged.
  *
- * <p>A read-only transaction reads from the module's replica when it has one ({@link RoutingDataSource}); every
- * write, and every read inside a write, uses the primary. A read from the replica may lag the primary by the
- * replication delay: a client that acts on what it read sends the ETag back, so a stale read is refused (412)
- * instead of overwriting newer data. A read that must see the latest committed state — a security decision such as
- * sign-in (a password just changed, an account just locked, a tenant just suspended), or a read right after a write
- * of the same call — uses {@link #doInPrimaryReadTransaction} / {@link #doInGlobalPrimaryReadTransaction}.
+ * <p>Read-only transactions use the replica when the module has one and may lag the primary; a read that must see the
+ * latest state (a security decision, a read after a write of the same call) uses a {@code …PrimaryRead…} variant.
+ * The {@code …Global…} variants bind no tenant, for global tables and reads before a tenant is known.
  *
- * <p>The work's value is committed and returned; any {@link RuntimeException} or {@link Error} rolls the transaction
- * back and is rethrown as it is — a failing rollback never hides it, and a failing commit is thrown instead of the
- * value. The {@code run…} variants are the same for work that answers nothing. The {@code …Global…} variants bind no
- * tenant: they are for global tables and for reads that happen before a tenant is known (database/README "Global
- * tables"); they do not set the caller's tenant aside — work on a global table runs inside
- * {@code CallContextHolder.withoutTenant()} where its policy requires that.
- *
- * <p><b>Work that calls other work.</b> A unit of work that calls another service of the same module joins the
- * transaction already running: nothing is committed until the outermost work ends, and a failure anywhere rolls all
- * of it back. Two combinations are programming errors and are refused with an {@link IllegalStateException} before
- * the inner work runs: writing inside a read-only transaction (the database would refuse the first statement with a
- * far less clear message), and tenant work inside a global transaction (the tenant would be bound half-way through
- * work that was meant to run without one). Global work inside a tenant transaction is allowed; the tenant stays
- * bound, which global tables do not look at.
+ * <p>Nested work joins the running transaction. Writing inside a read-only transaction, and tenant work inside a
+ * global one, are programming errors refused with {@link IllegalStateException} before the inner work runs.
  */
 public abstract class AppTransactionManager {
 
@@ -76,6 +57,16 @@ public abstract class AppTransactionManager {
         doInTransaction(valueless(work), moduleDatabase.writeDefinition(), true, DatabaseRole.PRIMARY);
     }
 
+    /**
+     * Runs the work in a savepoint of the running write transaction (a new one when none is): its failure rolls back
+     * only its own statements and is rethrown while the outer transaction carries on, as an import batch needs.
+     */
+    protected final <K> K doInNestedWriteTransaction(CallBack<K> callBack) {
+        DefaultTransactionDefinition nested = new DefaultTransactionDefinition(moduleDatabase.writeDefinition());
+        nested.setPropagationBehavior(TransactionDefinition.PROPAGATION_NESTED);
+        return doInTransaction(callBack, nested, true, DatabaseRole.PRIMARY);
+    }
+
     /** A read-only transaction that binds no tenant. */
     protected final <K> K doInGlobalReadTransaction(CallBack<K> callBack) {
         return doInTransaction(callBack, moduleDatabase.readDefinition(), false, DatabaseRole.REPLICA);
@@ -89,6 +80,11 @@ public abstract class AppTransactionManager {
     /** A read-write transaction that binds no tenant. */
     protected final <K> K doInGlobalWriteTransaction(CallBack<K> callBack) {
         return doInTransaction(callBack, moduleDatabase.writeDefinition(), false, DatabaseRole.PRIMARY);
+    }
+
+    /** {@link #doInGlobalWriteTransaction} under the caller's own definition (the outbox relay's batches). */
+    protected final <K> K doInGlobalWriteTransaction(TransactionDefinition definition, CallBack<K> callBack) {
+        return doInTransaction(callBack, definition, false, DatabaseRole.PRIMARY);
     }
 
     /** {@link #doInGlobalWriteTransaction} for work that answers nothing. */
@@ -114,17 +110,39 @@ public abstract class AppTransactionManager {
             }
             return callBack.execute();
         } catch (RuntimeException | Error failure) {
-            Transactions.rollback(platformTransactionManager, transaction, failure);
+            rollback(transaction, failure);
             throw failure;
         } finally {
             if (outermost) {
                 TransactionSynchronizationManager.unbindResourceIfPossible(platformTransactionManager);
             }
-            Transactions.commit(platformTransactionManager, transaction);
+            commit(transaction);
         }
     }
 
-    /** What the outermost work of this thread asked for, kept while its transaction runs (see the class comment). */
+    /**
+     * Commits on the way out of the work unless a rollback already completed the transaction (a failure rolls back
+     * first, so the {@code finally} commits nothing); a failing commit propagates instead of the value.
+     */
+    private void commit(TransactionStatus transaction) {
+        if (!transaction.isCompleted()) {
+            platformTransactionManager.commit(transaction);
+        }
+    }
+
+    /** Rolls back after {@code failure}; a failing rollback is attached to it as suppressed, so it stays the cause. */
+    private void rollback(TransactionStatus transaction, Throwable failure) {
+        if (transaction.isCompleted()) {
+            return;
+        }
+        try {
+            platformTransactionManager.rollback(transaction);
+        } catch (RuntimeException rollbackFailure) {
+            failure.addSuppressed(rollbackFailure);
+        }
+    }
+
+    /** What the outermost work of this thread asked for, kept while its transaction runs. */
     private record Running(boolean readOnly, boolean tenantBound) {
     }
 

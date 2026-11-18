@@ -25,7 +25,7 @@ CREATE TABLE assessment.homework (
     deleted_at timestamptz,
     row_version integer NOT NULL DEFAULT 0,
     CONSTRAINT pk_homework PRIMARY KEY (id),
-    CONSTRAINT ck_homework_status CHECK (status IN ('draft', 'published')),
+    CONSTRAINT ck_homework_status CHECK (status IN ('draft', 'pending', 'published')),
     CONSTRAINT uq_homework_id_tenant UNIQUE (id, tenant_id)
 );
 COMMENT ON TABLE assessment.homework IS 'Homework set for a class section.';
@@ -40,7 +40,7 @@ COMMENT ON COLUMN assessment.homework.description IS 'Instructions.';
 COMMENT ON COLUMN assessment.homework.attachment_file_id IS 'Attachment.';
 COMMENT ON COLUMN assessment.homework.assigned_on IS 'Assigned on.';
 COMMENT ON COLUMN assessment.homework.due_at IS 'Submission deadline.';
-COMMENT ON COLUMN assessment.homework.status IS 'Publication state.';
+COMMENT ON COLUMN assessment.homework.status IS 'Publication state: draft, pending (waiting for review) or published.';
 COMMENT ON COLUMN assessment.homework.created_at IS 'Row creation time.';
 COMMENT ON COLUMN assessment.homework.created_by IS 'User account that created the row (audit reference to iam.user_account; not FK-constrained).';
 COMMENT ON COLUMN assessment.homework.updated_at IS 'Last update time.';
@@ -79,6 +79,9 @@ COMMENT ON COLUMN assessment.homework_approval.updated_at IS 'Last update time.'
 COMMENT ON COLUMN assessment.homework_approval.updated_by IS 'User account that last updated the row (audit reference to iam.user_account; not FK-constrained).';
 COMMENT ON COLUMN assessment.homework_approval.deleted_at IS 'Soft-delete marker; NULL = live row.';
 COMMENT ON COLUMN assessment.homework_approval.row_version IS 'Optimistic-locking version.';
+-- Homework review (flow F5): a homework has at most one open review at a time, and the review queue is read by state.
+CREATE UNIQUE INDEX uq_homework_approval_pending ON assessment.homework_approval (homework_id) WHERE decision = 'pending' AND deleted_at IS NULL;
+CREATE INDEX ix_homework_pending ON assessment.homework (tenant_id, institution_id) WHERE status = 'pending' AND deleted_at IS NULL;
 
 CREATE TABLE assessment.homework_submission (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -765,7 +768,7 @@ CREATE TABLE assessment.exam_result (
     attendance_status varchar(20) NOT NULL DEFAULT 'expected',
     marks numeric(7,2),
     max_marks numeric(7,2),
-    grade_label varchar(20),
+    grade_label varchar(30),
     grade_point numeric(5,2),
     credits numeric(5,2),
     result_status varchar(20),
@@ -818,8 +821,8 @@ CREATE TABLE assessment.result_change_log (
     new_marks numeric(7,2),
     old_result_status varchar(20),
     new_result_status varchar(20),
-    old_grade_label varchar(20),
-    new_grade_label varchar(20),
+    old_grade_label varchar(30),
+    new_grade_label varchar(30),
     reason varchar(300) NOT NULL,
     CONSTRAINT pk_result_change_log PRIMARY KEY (id)
 );
@@ -861,6 +864,7 @@ CREATE TABLE assessment.outbox_event (
     payload text NOT NULL,
     occurred_at timestamptz NOT NULL DEFAULT now(),
     published_at timestamptz,
+    publish_error text,
     CONSTRAINT pk_assessment_outbox_event PRIMARY KEY (id)
 );
 COMMENT ON TABLE assessment.outbox_event IS 'Transactional outbox of the assessment module: events written in the same transaction as the change, published to the bus by a relay, then pruned. Ordered by the identity column.';
@@ -872,7 +876,8 @@ COMMENT ON COLUMN assessment.outbox_event.aggregate_id IS 'Entity id the event i
 COMMENT ON COLUMN assessment.outbox_event.payload IS 'Serialised event (opaque message envelope).';
 COMMENT ON COLUMN assessment.outbox_event.occurred_at IS 'When the change committed.';
 COMMENT ON COLUMN assessment.outbox_event.published_at IS 'When the relay published it (NULL = pending).';
-CREATE INDEX ix_assessment_outbox_event_pending ON assessment.outbox_event (id) WHERE published_at IS NULL;
+COMMENT ON COLUMN assessment.outbox_event.publish_error IS 'Why the relay could not turn the row into an event (set aside, not published); NULL otherwise.';
+CREATE INDEX ix_assessment_outbox_event_pending ON assessment.outbox_event (id) WHERE published_at IS NULL AND publish_error IS NULL;
 CREATE TABLE assessment.inbox_event (
     event_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
@@ -880,15 +885,16 @@ CREATE TABLE assessment.inbox_event (
     received_at timestamptz NOT NULL DEFAULT now(),
     processed_at timestamptz,
     processing_error text,
-    CONSTRAINT pk_assessment_inbox_event PRIMARY KEY (event_id)
+    CONSTRAINT pk_assessment_inbox_event PRIMARY KEY (tenant_id, event_id)
 );
 COMMENT ON TABLE assessment.inbox_event IS 'Inbox of the assessment module: ids of consumed events, kept so redeliveries are processed exactly once.';
-COMMENT ON COLUMN assessment.inbox_event.event_id IS 'Global id of the consumed event.';
+COMMENT ON COLUMN assessment.inbox_event.event_id IS 'Global id of the consumed event; recorded per tenant.';
 COMMENT ON COLUMN assessment.inbox_event.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
 COMMENT ON COLUMN assessment.inbox_event.event_type IS 'Event name.';
 COMMENT ON COLUMN assessment.inbox_event.received_at IS 'First delivery time.';
 COMMENT ON COLUMN assessment.inbox_event.processed_at IS 'When handling committed (NULL = in flight).';
 COMMENT ON COLUMN assessment.inbox_event.processing_error IS 'Last handling error, if any.';
+CREATE INDEX ix_assessment_inbox_event_processed ON assessment.inbox_event (processed_at) WHERE processed_at IS NOT NULL;
 
 -- === P1-15: business uniqueness ignores soft-deleted rows ===
 

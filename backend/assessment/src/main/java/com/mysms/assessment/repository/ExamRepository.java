@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to assessment.exam (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to assessment.exam: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class ExamRepository {
@@ -75,6 +72,8 @@ public class ExamRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** The row locked until the transaction ends, so two roster or room writes of one exam run one after the other. */
+    private static final String FIND_BY_ID_FOR_UPDATE = FIND_BY_ID + " FOR UPDATE";
     private static final String LIST_FOR_SESSION = SELECT_LIVE + " AND r.exam_session_id = :sessionId ORDER BY r.id";
     private static final String INSERT = """
             INSERT INTO assessment.exam
@@ -210,6 +209,11 @@ public class ExamRepository {
 
     public Optional<ExamEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(ExamRepository::map).optional();
+    }
+
+    /** The live row, locked until the transaction ends. */
+    public Optional<ExamEntity> findByIdForUpdate(UUID id) {
+        return jdbc.sql(FIND_BY_ID_FOR_UPDATE).param("id", id).query(ExamRepository::map).optional();
     }
 
     public List<ExamEntity> listForSession(UUID sessionId) {
@@ -366,7 +370,7 @@ public class ExamRepository {
                 .param("now", now).param("actor", actor).update();
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

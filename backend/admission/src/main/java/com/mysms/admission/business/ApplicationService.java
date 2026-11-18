@@ -8,6 +8,7 @@ import com.mysms.admission.api.model.ApplicationGuardianUpdate;
 import com.mysms.admission.api.model.ApplicationUpdate;
 import com.mysms.admission.config.AdmissionDatabaseConfig;
 import com.mysms.admission.config.AdmissionEventsConfig;
+import com.mysms.admission.domain.AdmissionCycleEntity;
 import com.mysms.admission.domain.ApplicationEmergencyContactEntity;
 import com.mysms.admission.domain.ApplicationEntity;
 import com.mysms.admission.domain.ApplicationGuardianEntity;
@@ -15,15 +16,18 @@ import com.mysms.admission.events.AdmissionEvents;
 import com.mysms.admission.mapper.ApplicationEmergencyContactMapper;
 import com.mysms.admission.mapper.ApplicationGuardianMapper;
 import com.mysms.admission.mapper.ApplicationMapper;
+import com.mysms.admission.repository.AdmissionCycleRepository;
 import com.mysms.admission.repository.ApplicationEmergencyContactRepository;
 import com.mysms.admission.repository.ApplicationGuardianRepository;
 import com.mysms.admission.repository.ApplicationRepository;
+import com.mysms.admission.repository.NumberSequenceRepository;
 import com.mysms.authclient.DataScope;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.crypto.FieldCipher;
 import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.error.ConflictException;
 import com.mysms.core.error.DuplicateResourceException;
 import com.mysms.core.error.FieldError;
 import com.mysms.core.error.InvalidStateException;
@@ -31,6 +35,7 @@ import com.mysms.core.error.PreconditionFailedException;
 import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.error.ValidationFailedException;
 import com.mysms.core.filter.FilterParser;
+import com.mysms.core.id.UuidV7;
 import com.mysms.core.mapping.WireValues;
 import com.mysms.core.outbox.AuditWriter;
 import com.mysms.core.outbox.OutboxWriter;
@@ -42,24 +47,32 @@ import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
 import com.mysms.core.web.UpdateMask;
 import java.time.Clock;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.regex.Pattern;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of admission.application (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Application
- * are served here too — ApplicationEmergencyContact, ApplicationGuardian.
+ * Business service of admission.application and of the records that exist only as part of a Application
+ * (ApplicationEmergencyContact, ApplicationGuardian. <p>Who reaches an application is {@link ApplicationAccess}: the
+ * office of its institution, and the applicant who started it in an admission cycle. The steps of its lifecycle are
+ * {@link ApplicationWorkflowService}; turning an admitted applicant into a student is {@link
+ * ApplicationEnrollmentService}): audit and domain event commit in the same transaction as every change. Rows outside
+ * the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class ApplicationService extends AppTransactionManager implements InitializingBean {
@@ -83,6 +96,27 @@ public class ApplicationService extends AppTransactionManager implements Initial
             "hasSiblings", "hasMedicalHistory", "medicalDetails", "hasExtracurricular", "extracurricularDetails",
             "transportMode", "transportDetails", "familyBusiness", "familyIncome", "applicationFee", "discountPercent",
             "feePlanId", "feeStartDate", "paymentDueDate", "paymentStatus", "remarks", "paymentStatusNote");
+
+    /**
+     * What the admissions office decides, and an applicant therefore never sets: where the applicant is placed, who
+     * they become, and everything about the fee.
+     */
+    private static final Map<String, Function<ApplicationEntity, Object>> OFFICE_FIELDS = officeFields();
+    /** On an update an applicant also cannot move the application to another school, cycle or number. */
+    private static final Set<String> OFFICE_FIELDS_OF_AN_UPDATE = officeFieldsOfAnUpdate();
+
+    /** The states in which enrolment owns the person and the student of an application. */
+    private static final Set<String> ENROLLING = Set.of("admitted", "done");
+    /** What enrolment writes, and the standard update therefore leaves alone from admission on. */
+    private static final Set<String> ENROLMENT_FIELDS = Set.of("applicantPersonId", "studentId");
+
+    /** A filter term on one of the office's notes. */
+    private static final Pattern OFFICE_NOTES = Pattern.compile("\\b(" + String.join("|",
+            ApplicationRepository.OFFICE_NOTE_FIELDS) + ")\\b");
+    /** The number series of application numbers in admission.number_sequence (per institution and year). */
+    static final String NUMBER_SEQUENCE = "application";
+    /** How many numbers of the series a self-service create tries before it gives up (office numbers in the way). */
+    private static final int MAX_NUMBER_ATTEMPTS = 20;
 
     public static final String APPLICATION_EMERGENCY_CONTACT_AGGREGATE = ApplicationEmergencyContactEntity.TABLE;
     static final String APPLICATION_EMERGENCY_CONTACT_PERMISSION_LIST = "admission.application_emergency_contact.read";
@@ -123,6 +157,8 @@ public class ApplicationService extends AppTransactionManager implements Initial
     private final ApplicationEmergencyContactMapper applicationEmergencyContactMapper;
     private final ApplicationGuardianRepository applicationGuardianRepository;
     private final ApplicationGuardianMapper applicationGuardianMapper;
+    private final AdmissionCycleRepository admissionCycleRepository;
+    private final NumberSequenceRepository numbers;
 
     public ApplicationService(ApplicationRepository repository,
             ApplicationMapper mapper,
@@ -136,7 +172,9 @@ public class ApplicationService extends AppTransactionManager implements Initial
             ApplicationEmergencyContactRepository applicationEmergencyContactRepository,
             ApplicationEmergencyContactMapper applicationEmergencyContactMapper,
             ApplicationGuardianRepository applicationGuardianRepository,
-            ApplicationGuardianMapper applicationGuardianMapper) {
+            ApplicationGuardianMapper applicationGuardianMapper,
+            AdmissionCycleRepository admissionCycleRepository,
+            NumberSequenceRepository numbers) {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
@@ -149,17 +187,20 @@ public class ApplicationService extends AppTransactionManager implements Initial
         this.applicationEmergencyContactMapper = applicationEmergencyContactMapper;
         this.applicationGuardianRepository = applicationGuardianRepository;
         this.applicationGuardianMapper = applicationGuardianMapper;
+        this.admissionCycleRepository = admissionCycleRepository;
+        this.numbers = numbers;
     }
 
-    /** Refuses to start without a master key: this resource stores secret columns (DEPLOYMENT.md "Secrets"). */
+    /** Refuses to start without a master key: this resource stores secret columns. */
     @Override
     public void afterPropertiesSet() {
         cipher.requireConfigured();
     }
 
     public Application getApplication(UUID id) {
+        ApplicationAccess access = ApplicationAccess.current(PERMISSION_GET);
         return doInReadTransaction(() -> {
-            return dto(loadVisible(DataScope.current(PERMISSION_GET), id));
+            return dtoFor(access, loadVisible(access, id));
         });
     }
 
@@ -167,13 +208,26 @@ public class ApplicationService extends AppTransactionManager implements Initial
             List<String> sortBy) {
         SortSpec sort = SortSpec.parse(sortBy, ApplicationRepository.SORT_FIELDS, ApplicationRepository.DEFAULT_ORDER,
                 ApplicationRepository.ID_COLUMN);
-        SqlFragment where = FilterParser.parse(filter, ApplicationRepository.FILTER_FIELDS)
-                .and(ApplicationRepository.scope(DataScope.current(PERMISSION_LIST)));
+        ApplicationAccess access = ApplicationAccess.current(PERMISSION_LIST);
+        SqlFragment where;
+        if (access.applicantOnly()) {
+            // the office's notes are no filter field for an applicant: 400 INVALID_FILTER, like any unknown field
+            where = FilterParser.parse(filter, ApplicationRepository.APPLICANT_FILTER_FIELDS).and(access.listFilter());
+        } else {
+            // a filter on the office's notes reads only the office's rows, never the caller's own applications elsewhere
+            where = FilterParser.parse(filter, ApplicationRepository.FILTER_FIELDS)
+                    .and(mentionsOfficeNotes(filter) ? access.officeFilter() : access.listFilter());
+        }
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
         return doInReadTransaction(() -> {
             Page<ApplicationEntity> rows = repository.list(page, where);
-            return rows.map(this::dto);
+            return rows.map(row -> dtoFor(access, row));
         });
+    }
+
+    /** Whether a filter names one of the office's notes (a quoted value that merely contains the word counts too). */
+    private static boolean mentionsOfficeNotes(String filter) {
+        return filter != null && OFFICE_NOTES.matcher(filter).find();
     }
 
     /** Creates the row; with validateOnly every check runs and nothing is written. */
@@ -183,10 +237,14 @@ public class ApplicationService extends AppTransactionManager implements Initial
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
         sealNationalId(entity, request.getNationalId());
-        DataScope scope = DataScope.current(PERMISSION_CREATE);
+        ApplicationAccess access = ApplicationAccess.current(PERMISSION_CREATE);
         return doInWriteTransaction(() -> {
             assertValid(entity, true);
-            scope.requireWritable(institutionOf(entity));
+            Optional<AdmissionCycleEntity> selfService = requireCreatable(access, entity);
+            if (selfService.isPresent() && validateOnly) {
+                return dtoFor(access, entity);
+            }
+            selfService.ifPresent(cycle -> number(entity, cycle));
             assertUnique(entity);
             if (validateOnly) {
                 return dto(entity);
@@ -195,33 +253,43 @@ public class ApplicationService extends AppTransactionManager implements Initial
             audit.recordCreate(AGGREGATE, stored.getId());
             outbox.publish(AGGREGATE + AdmissionEvents.CREATED, AGGREGATE, stored.getId(),
                     AdmissionEvents.payload(stored.getId()));
-            return dto(stored);
+            return dtoFor(access, stored);
         });
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Application updateApplication(UUID id, String ifMatch, ApplicationUpdate changes, String updateMask,
             boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
         List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
-            DataScope scope = DataScope.current(PERMISSION_UPDATE);
-            ApplicationEntity entity = loadVisible(scope, id);
-            scope.requireWritable(institutionOf(entity));
+            ApplicationAccess access = ApplicationAccess.current(PERMISSION_UPDATE);
+            ApplicationEntity entity = loadVisible(access, id);
+            boolean applicant = access.selfService(entity);
+            access.requireWritable(entity);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            if (applicant) {
+                requireApplicantFields(fields.stream().filter(OFFICE_FIELDS_OF_AN_UPDATE::contains).toList());
+            }
+            if (ENROLLING.contains(entity.getStatus()) && fields.stream().anyMatch(ENROLMENT_FIELDS::contains)) {
+                throw new InvalidStateException("The person and the student of an admitted application are kept by "
+                        + "its enrolment.");
             }
             apply(entity, changes, fields);
             validator.validateExcept(dto(entity), SECRETS);
             assertValid(entity, false);
-            scope.requireWritable(institutionOf(entity));
+            if (!applicant) {
+                access.scope().requireWritable(institutionOf(entity));
+            }
             assertUnique(entity);
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
-                return dto(entity);
+                return dtoFor(access, entity);
             }
             if (repository.update(entity, expected) == 0) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -229,7 +297,7 @@ public class ApplicationService extends AppTransactionManager implements Initial
             entity.setRowVersion(expected + 1);
             audit.recordUpdate(AGGREGATE, id, fields);
             outbox.publish(AGGREGATE + AdmissionEvents.UPDATED, AGGREGATE, id, AdmissionEvents.payload(id));
-            return dto(entity);
+            return dtoFor(access, entity);
         });
     }
 
@@ -237,11 +305,14 @@ public class ApplicationService extends AppTransactionManager implements Initial
     public void deleteApplication(UUID id, String ifMatch) {
         int expected = Etags.expectedVersion(ifMatch);
         runInWriteTransaction(() -> {
-            DataScope scope = DataScope.current(PERMISSION_DELETE);
-            ApplicationEntity entity = loadVisible(scope, id);
-            scope.requireWritable(institutionOf(entity));
+            ApplicationAccess access = ApplicationAccess.current(PERMISSION_DELETE);
+            ApplicationEntity entity = loadVisible(access, id);
+            access.requireWritable(entity);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            if (entity.getStudentId() != null && ENROLLING.contains(entity.getStatus())) {
+                throw new InvalidStateException("An application that has its student is kept.");
             }
             if (repository.referencedByApplicationEmergencyContactApplicationId(id)) {
                 throw new InvalidStateException(
@@ -262,35 +333,140 @@ public class ApplicationService extends AppTransactionManager implements Initial
         });
     }
 
-    /** Stores nationalId encrypted for the row's tenant and column (database/README "Secrets"); never the plaintext. */
+    private static Map<String, Function<ApplicationEntity, Object>> officeFields() {
+        Map<String, Function<ApplicationEntity, Object>> fields = new LinkedHashMap<>();
+        fields.put("applicationDate", ApplicationEntity::getApplicationDate);
+        fields.put("admissionDate", ApplicationEntity::getAdmissionDate);
+        fields.put("sectionId", ApplicationEntity::getSectionId);
+        fields.put("batchId", ApplicationEntity::getBatchId);
+        fields.put("applicantPersonId", ApplicationEntity::getApplicantPersonId);
+        fields.put("studentId", ApplicationEntity::getStudentId);
+        fields.put("isExistingStudent", ApplicationEntity::getIsExistingStudent);
+        fields.put("applicationFee", ApplicationEntity::getApplicationFee);
+        fields.put("discountPercent", ApplicationEntity::getDiscountPercent);
+        fields.put("feePlanId", ApplicationEntity::getFeePlanId);
+        fields.put("feeStartDate", ApplicationEntity::getFeeStartDate);
+        fields.put("paymentDueDate", ApplicationEntity::getPaymentDueDate);
+        fields.put("paymentStatus", ApplicationEntity::getPaymentStatus);
+        fields.put("remarks", ApplicationEntity::getRemarks);
+        fields.put("paymentStatusNote", ApplicationEntity::getPaymentStatusNote);
+        return Collections.unmodifiableMap(fields);
+    }
+
+    private static Set<String> officeFieldsOfAnUpdate() {
+        Set<String> fields = new HashSet<>(OFFICE_FIELDS.keySet());
+        fields.addAll(List.of("institutionId", "admissionCycleId", "applicationNumber"));
+        return Set.copyOf(fields);
+    }
+
+    /** Stores nationalId encrypted for the row's tenant and column; never the plaintext. */
     private void sealNationalId(ApplicationEntity entity, String plaintext) {
         entity.setNationalIdEnc(cipher.encrypt(plaintext, entity.getTenantId(), SECRET_NATIONAL_ID_ENC));
     }
 
+    /**
+     * The response as the caller may see it: an applicant reaching their own application never sees the office's
+     * notes on it (remarks, payment status note).
+     */
+    Application dtoFor(ApplicationAccess access, ApplicationEntity entity) {
+        Application dto = dto(entity);
+        if (access.selfService(entity)) {
+            dto.setRemarks(null);
+            dto.setPaymentStatusNote(null);
+        }
+        return dto;
+    }
+
     /** The response DTO with each secret's display form ("••••1234"); the plaintext itself is never returned. */
-    private Application dto(ApplicationEntity entity) {
+    Application dto(ApplicationEntity entity) {
         Application dto = mapper.toDto(entity);
         dto.setNationalIdMasked(
                 cipher.maskStored(entity.getNationalIdEnc(), entity.getTenantId(), SECRET_NATIONAL_ID_ENC));
         return dto;
     }
 
-    /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
-    private ApplicationEntity loadVisible(DataScope scope, UUID id) {
+    /** The live row, if the caller may see it: a row outside the caller's reach is 404. */
+    private ApplicationEntity loadVisible(ApplicationAccess access, UUID id) {
         ApplicationEntity entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
-        if (!scope.canRead(institutionOf(entity))) {
+        if (!access.reads(entity)) {
             throw new ResourceNotFoundException(AGGREGATE, id);
         }
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /**
+     * Who may create the application: the office of its institution — or, from outside the institution, an
+     * applicant, in a cycle of that institution that is open for applications and with the applicant's own fields
+     * only (403 anywhere else, as for any institution outside the caller's scope).
+     *
+     * @return the cycle of an applicant's own application (self-service); empty for the office
+     */
+    private Optional<AdmissionCycleEntity> requireCreatable(ApplicationAccess access, ApplicationEntity entity) {
+        DataScope scope = access.scope();
+        if (scope.canRead(institutionOf(entity))) {
+            scope.requireWritable(institutionOf(entity));
+            return Optional.empty();
+        }
+        Optional<AdmissionCycleEntity> openCycleOfTheInstitution = Optional.ofNullable(entity.getAdmissionCycleId())
+                .flatMap(admissionCycleRepository::findById)
+                .filter(cycle -> AdmissionCycleService.OPEN.equals(cycle.getStatus()))
+                .filter(cycle -> cycle.getInstitutionId().equals(entity.getInstitutionId()));
+        if (openCycleOfTheInstitution.isEmpty()) {
+            scope.requireWritable(institutionOf(entity));
+        }
+        requireApplicantFields(OFFICE_FIELDS.entrySet().stream().filter(field -> field.getValue().apply(entity) != null)
+                .map(Map.Entry::getKey).toList());
+        return openCycleOfTheInstitution;
+    }
+
+    /**
+     * The application number of an applicant's own application: the next of the institution's application series
+     * for the year the cycle starts (admission.number_sequence, locked for the rest of the transaction), written
+     * {@code APP-<year>-000001}. Whatever number the applicant sent is replaced: the number becomes the student's
+     * admission number, so it is the school's to give. A number the office already gave by hand is skipped.
+     */
+    private void number(ApplicationEntity entity, AdmissionCycleEntity cycle) {
+        String year = String.valueOf(cycle.getStartDate().getYear());
+        OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                .truncatedTo(ChronoUnit.MICROS);
+        UUID actor = Actor.current().orElse(null);
+        for (int attempt = 0; attempt < MAX_NUMBER_ATTEMPTS; attempt++) {
+            entity.setApplicationNumber(numbers.next(UuidV7.next(clock), entity.getInstitutionId(),
+                    NUMBER_SEQUENCE, year, "APP-" + year + "-", now, actor));
+            if (!repository.takenInstitutionIdApplicationNumber1(entity)) {
+                return;
+            }
+        }
+        throw new ConflictException("NUMBER_SEQUENCE_EXHAUSTED",
+                "The next application numbers of this institution are already in use; ask the office.");
+    }
+
+    /** An applicant never sets what the admissions office decides (422 naming each such field). */
+    private static void requireApplicantFields(List<String> officeFields) {
+        if (!officeFields.isEmpty()) {
+            throw new ValidationFailedException(officeFields.stream()
+                    .map(field -> new FieldError(field, "is set by the admissions office", "READ_ONLY")).toList());
+        }
+    }
+
+    /** Whether the caller reaches the application a guardian or emergency contact belongs to. */
+    private boolean readsParent(ApplicationAccess access, UUID applicationId) {
+        return repository.findById(applicationId).filter(access::reads).isPresent();
+    }
+
+    /** Refuses a change to a guardian or emergency contact of an application the caller may not change. */
+    private void requireParentWritable(ApplicationAccess access, UUID applicationId) {
+        access.requireWritable(repository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, applicationId)));
+    }
+
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(ApplicationEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected ApplicationUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected ApplicationUpdate fields; explicit per field so a mask can clear values. */
     private void apply(ApplicationEntity entity, ApplicationUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -419,25 +595,25 @@ public class ApplicationService extends AppTransactionManager implements Initial
         }
     }
 
-    // ---- ApplicationEmergencyContact: a record of the Application aggregate ----
+    // ---- ApplicationEmergencyContact ----
 
     public ApplicationEmergencyContact getApplicationEmergencyContact(UUID applicationId, UUID id) {
         return doInReadTransaction(() -> {
-            return applicationEmergencyContactMapper.toDto(loadVisibleApplicationEmergencyContact(DataScope.current(
+            return applicationEmergencyContactMapper.toDto(loadVisibleApplicationEmergencyContact(ApplicationAccess.current(
                     APPLICATION_EMERGENCY_CONTACT_PERMISSION_GET), applicationId, id));
         });
     }
 
     public Page<ApplicationEmergencyContact> listApplicationEmergencyContacts(UUID applicationId, Integer pageNumber,
             Integer pageSize, String cursor, String filter, List<String> sortBy) {
+        ApplicationAccess access = ApplicationAccess.current(APPLICATION_EMERGENCY_CONTACT_PERMISSION_LIST);
         SortSpec sort =
                 SortSpec.parse(sortBy, ApplicationEmergencyContactRepository.SORT_FIELDS,
                         ApplicationEmergencyContactRepository.DEFAULT_ORDER,
                 ApplicationEmergencyContactRepository.ID_COLUMN);
         SqlFragment where = FilterParser.parse(filter, ApplicationEmergencyContactRepository.FILTER_FIELDS)
                 .and(ApplicationEmergencyContactRepository.ofParent(applicationId))
-                        .and(ApplicationEmergencyContactRepository.scope(DataScope.current(
-                                APPLICATION_EMERGENCY_CONTACT_PERMISSION_LIST)));
+                        .and(ApplicationEmergencyContactRepository.reach(access.scope(), access.user()));
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + applicationId, clock);
         return doInReadTransaction(() -> {
             Page<ApplicationEmergencyContactEntity> rows = applicationEmergencyContactRepository.list(page, where);
@@ -453,16 +629,16 @@ public class ApplicationService extends AppTransactionManager implements Initial
         entity.setApplicationId(applicationId);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
-        DataScope scope = DataScope.current(APPLICATION_EMERGENCY_CONTACT_PERMISSION_CREATE);
+        ApplicationAccess access = ApplicationAccess.current(APPLICATION_EMERGENCY_CONTACT_PERMISSION_CREATE);
         return doInWriteTransaction(() -> {
             if (!applicationEmergencyContactRepository.existsApplicationId(entity.getApplicationId())) {
                 throw new ResourceNotFoundException("admission.application", entity.getApplicationId());
             }
-            if (!scope.canRead(institutionOfApplicationEmergencyContact(entity))) {
+            if (!readsParent(access, entity.getApplicationId())) {
                 throw new ResourceNotFoundException("admission.application", entity.getApplicationId());
             }
             assertValidApplicationEmergencyContact(entity, true);
-            scope.requireWritable(institutionOfApplicationEmergencyContact(entity));
+            requireParentWritable(access, entity.getApplicationId());
             assertUniqueApplicationEmergencyContact(entity);
             if (validateOnly) {
                 return applicationEmergencyContactMapper.toDto(entity);
@@ -477,24 +653,24 @@ public class ApplicationService extends AppTransactionManager implements Initial
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ApplicationEmergencyContact updateApplicationEmergencyContact(UUID applicationId, UUID id, String ifMatch,
             ApplicationEmergencyContactUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
         List<String> fields = UpdateMask.fields(updateMask, changes, APPLICATION_EMERGENCY_CONTACT_WRITABLE);
         return doInWriteTransaction(() -> {
-            DataScope scope = DataScope.current(APPLICATION_EMERGENCY_CONTACT_PERMISSION_UPDATE);
-            ApplicationEmergencyContactEntity entity = loadVisibleApplicationEmergencyContact(scope, applicationId, id);
-            scope.requireWritable(institutionOfApplicationEmergencyContact(entity));
+            ApplicationAccess access = ApplicationAccess.current(APPLICATION_EMERGENCY_CONTACT_PERMISSION_UPDATE);
+            ApplicationEmergencyContactEntity entity = loadVisibleApplicationEmergencyContact(access, applicationId, id);
+            requireParentWritable(access, entity.getApplicationId());
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
             applyApplicationEmergencyContact(entity, changes, fields);
             validator.validate(applicationEmergencyContactMapper.toDto(entity));
             assertValidApplicationEmergencyContact(entity, false);
-            scope.requireWritable(institutionOfApplicationEmergencyContact(entity));
+            requireParentWritable(access, entity.getApplicationId());
             assertUniqueApplicationEmergencyContact(entity);
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
@@ -515,9 +691,9 @@ public class ApplicationService extends AppTransactionManager implements Initial
     public void deleteApplicationEmergencyContact(UUID applicationId, UUID id, String ifMatch) {
         int expected = Etags.expectedVersion(ifMatch);
         runInWriteTransaction(() -> {
-            DataScope scope = DataScope.current(APPLICATION_EMERGENCY_CONTACT_PERMISSION_DELETE);
-            ApplicationEmergencyContactEntity entity = loadVisibleApplicationEmergencyContact(scope, applicationId, id);
-            scope.requireWritable(institutionOfApplicationEmergencyContact(entity));
+            ApplicationAccess access = ApplicationAccess.current(APPLICATION_EMERGENCY_CONTACT_PERMISSION_DELETE);
+            ApplicationEmergencyContactEntity entity = loadVisibleApplicationEmergencyContact(access, applicationId, id);
+            requireParentWritable(access, entity.getApplicationId());
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
@@ -532,26 +708,18 @@ public class ApplicationService extends AppTransactionManager implements Initial
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
-    private ApplicationEmergencyContactEntity loadVisibleApplicationEmergencyContact(DataScope scope, UUID applicationId,
+    private ApplicationEmergencyContactEntity loadVisibleApplicationEmergencyContact(ApplicationAccess access, UUID applicationId,
             UUID id) {
         ApplicationEmergencyContactEntity entity = applicationEmergencyContactRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(APPLICATION_EMERGENCY_CONTACT_AGGREGATE, id));
-        if (!scope.canRead(institutionOfApplicationEmergencyContact(entity))
+        if (!readsParent(access, entity.getApplicationId())
                 || !applicationId.equals(entity.getApplicationId())) {
             throw new ResourceNotFoundException(APPLICATION_EMERGENCY_CONTACT_AGGREGATE, id);
         }
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the admission.application it belongs to). */
-    private Optional<UUID> institutionOfApplicationEmergencyContact(ApplicationEmergencyContactEntity entity) {
-        return applicationEmergencyContactRepository.institutionOf(entity.getApplicationId());
-    }
-
-    /**
-     * Applies the selected ApplicationEmergencyContactUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected ApplicationEmergencyContactUpdate fields; explicit per field so a mask can clear values. */
     private static void applyApplicationEmergencyContact(ApplicationEmergencyContactEntity entity,
             ApplicationEmergencyContactUpdate changes,
             List<String> fields) {
@@ -596,24 +764,25 @@ public class ApplicationService extends AppTransactionManager implements Initial
         }
     }
 
-    // ---- ApplicationGuardian: a record of the Application aggregate ----
+    // ---- ApplicationGuardian ----
 
     public ApplicationGuardian getApplicationGuardian(UUID applicationId, UUID id) {
         return doInReadTransaction(() -> {
-            return dtoApplicationGuardian(loadVisibleApplicationGuardian(DataScope.current(
+            return dtoApplicationGuardian(loadVisibleApplicationGuardian(ApplicationAccess.current(
                     APPLICATION_GUARDIAN_PERMISSION_GET), applicationId, id));
         });
     }
 
     public Page<ApplicationGuardian> listApplicationGuardians(UUID applicationId, Integer pageNumber, Integer pageSize,
             String cursor, String filter, List<String> sortBy) {
+        ApplicationAccess access = ApplicationAccess.current(APPLICATION_GUARDIAN_PERMISSION_LIST);
         SortSpec sort =
                 SortSpec.parse(sortBy, ApplicationGuardianRepository.SORT_FIELDS,
                         ApplicationGuardianRepository.DEFAULT_ORDER,
                 ApplicationGuardianRepository.ID_COLUMN);
         SqlFragment where = FilterParser.parse(filter, ApplicationGuardianRepository.FILTER_FIELDS)
                 .and(ApplicationGuardianRepository.ofParent(applicationId))
-                        .and(ApplicationGuardianRepository.scope(DataScope.current(APPLICATION_GUARDIAN_PERMISSION_LIST)));
+                        .and(ApplicationGuardianRepository.reach(access.scope(), access.user()));
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + applicationId, clock);
         return doInReadTransaction(() -> {
             Page<ApplicationGuardianEntity> rows = applicationGuardianRepository.list(page, where);
@@ -630,16 +799,16 @@ public class ApplicationService extends AppTransactionManager implements Initial
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
         sealNationalIdApplicationGuardian(entity, request.getNationalId());
-        DataScope scope = DataScope.current(APPLICATION_GUARDIAN_PERMISSION_CREATE);
+        ApplicationAccess access = ApplicationAccess.current(APPLICATION_GUARDIAN_PERMISSION_CREATE);
         return doInWriteTransaction(() -> {
             if (!applicationGuardianRepository.existsApplicationId(entity.getApplicationId())) {
                 throw new ResourceNotFoundException("admission.application", entity.getApplicationId());
             }
-            if (!scope.canRead(institutionOfApplicationGuardian(entity))) {
+            if (!readsParent(access, entity.getApplicationId())) {
                 throw new ResourceNotFoundException("admission.application", entity.getApplicationId());
             }
             assertValidApplicationGuardian(entity, true);
-            scope.requireWritable(institutionOfApplicationGuardian(entity));
+            requireParentWritable(access, entity.getApplicationId());
             assertUniqueApplicationGuardian(entity);
             if (validateOnly) {
                 return dtoApplicationGuardian(entity);
@@ -654,24 +823,24 @@ public class ApplicationService extends AppTransactionManager implements Initial
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ApplicationGuardian updateApplicationGuardian(UUID applicationId, UUID id, String ifMatch,
             ApplicationGuardianUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
         List<String> fields = UpdateMask.fields(updateMask, changes, APPLICATION_GUARDIAN_WRITABLE);
         return doInWriteTransaction(() -> {
-            DataScope scope = DataScope.current(APPLICATION_GUARDIAN_PERMISSION_UPDATE);
-            ApplicationGuardianEntity entity = loadVisibleApplicationGuardian(scope, applicationId, id);
-            scope.requireWritable(institutionOfApplicationGuardian(entity));
+            ApplicationAccess access = ApplicationAccess.current(APPLICATION_GUARDIAN_PERMISSION_UPDATE);
+            ApplicationGuardianEntity entity = loadVisibleApplicationGuardian(access, applicationId, id);
+            requireParentWritable(access, entity.getApplicationId());
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
             applyApplicationGuardian(entity, changes, fields);
             validator.validateExcept(dtoApplicationGuardian(entity), APPLICATION_GUARDIAN_SECRETS);
             assertValidApplicationGuardian(entity, false);
-            scope.requireWritable(institutionOfApplicationGuardian(entity));
+            requireParentWritable(access, entity.getApplicationId());
             assertUniqueApplicationGuardian(entity);
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
@@ -692,9 +861,9 @@ public class ApplicationService extends AppTransactionManager implements Initial
     public void deleteApplicationGuardian(UUID applicationId, UUID id, String ifMatch) {
         int expected = Etags.expectedVersion(ifMatch);
         runInWriteTransaction(() -> {
-            DataScope scope = DataScope.current(APPLICATION_GUARDIAN_PERMISSION_DELETE);
-            ApplicationGuardianEntity entity = loadVisibleApplicationGuardian(scope, applicationId, id);
-            scope.requireWritable(institutionOfApplicationGuardian(entity));
+            ApplicationAccess access = ApplicationAccess.current(APPLICATION_GUARDIAN_PERMISSION_DELETE);
+            ApplicationGuardianEntity entity = loadVisibleApplicationGuardian(access, applicationId, id);
+            requireParentWritable(access, entity.getApplicationId());
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
@@ -708,7 +877,7 @@ public class ApplicationService extends AppTransactionManager implements Initial
         });
     }
 
-    /** Stores nationalId encrypted for the row's tenant and column (database/README "Secrets"); never the plaintext. */
+    /** Stores nationalId encrypted for the row's tenant and column; never the plaintext. */
     private void sealNationalIdApplicationGuardian(ApplicationGuardianEntity entity, String plaintext) {
         entity.setNationalIdEnc(cipher.encrypt(plaintext, entity.getTenantId(), APPLICATION_GUARDIAN_SECRET_NATIONAL_ID_ENC));
     }
@@ -722,24 +891,16 @@ public class ApplicationService extends AppTransactionManager implements Initial
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
-    private ApplicationGuardianEntity loadVisibleApplicationGuardian(DataScope scope, UUID applicationId, UUID id) {
+    private ApplicationGuardianEntity loadVisibleApplicationGuardian(ApplicationAccess access, UUID applicationId, UUID id) {
         ApplicationGuardianEntity entity = applicationGuardianRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(APPLICATION_GUARDIAN_AGGREGATE, id));
-        if (!scope.canRead(institutionOfApplicationGuardian(entity)) || !applicationId.equals(entity.getApplicationId())) {
+        if (!readsParent(access, entity.getApplicationId()) || !applicationId.equals(entity.getApplicationId())) {
             throw new ResourceNotFoundException(APPLICATION_GUARDIAN_AGGREGATE, id);
         }
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the admission.application it belongs to). */
-    private Optional<UUID> institutionOfApplicationGuardian(ApplicationGuardianEntity entity) {
-        return applicationGuardianRepository.institutionOf(entity.getApplicationId());
-    }
-
-    /**
-     * Applies the selected ApplicationGuardianUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected ApplicationGuardianUpdate fields; explicit per field so a mask can clear values. */
     private void applyApplicationGuardian(ApplicationGuardianEntity entity, ApplicationGuardianUpdate changes,
             List<String> fields) {
         for (String field : fields) {

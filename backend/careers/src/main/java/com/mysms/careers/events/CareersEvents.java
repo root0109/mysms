@@ -4,8 +4,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Domain events careers publishes through its outbox: {@code <schema>.<table>.created|updated|deleted} with the row id.
- * Dependent modules keep their copies and logical references fresh from these (database/logical-references.md).
+ * Domain events careers publishes through its outbox: {@code <schema>.<table>.created|updated|deleted} with the row id;
+ * dependent modules keep their copies and references fresh from these.
  */
 public final class CareersEvents {
 

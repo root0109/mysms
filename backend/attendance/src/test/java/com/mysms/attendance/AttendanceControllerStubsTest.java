@@ -11,9 +11,8 @@ import com.mysms.attendance.controller.StaffAttendanceController;
 import org.junit.jupiter.api.Test;
 
 /**
- * The contract operations attendance does not serve yet answer 501 NOT_IMPLEMENTED explicitly — none falls through, and
- * a
- * newly served operation changes the count on purpose.
+ * The operations attendance does not serve yet answer 501 explicitly; a newly served operation changes the count on
+ * purpose.
  */
 class AttendanceControllerStubsTest {
 

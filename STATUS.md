@@ -1,6 +1,6 @@
 # MySMS — project status
 
-Source status updated on 2026-11-11. To continue the work, start with [HANDOFF.md](HANDOFF.md). The exact state of every API operation is in
+Source status updated on 2026-11-17. To continue the work, start with [HANDOFF.md](HANDOFF.md). The exact state of every API operation is in
 [api/operations-status.md](api/operations-status.md). The build checks that file against the contracts and the controllers
 (`OperationStatusReport` in `backend/conformance`), so it always matches the code.
 
@@ -8,11 +8,11 @@ Source status updated on 2026-11-11. To continue the work, start with [HANDOFF.m
 
 | Area | State |
 |---|---|
-| Specifications | Done: database (21 schemas, Flyway), API (2,049 operations in 21 OpenAPI files, gRPC protos), UI (186 screens, flows, design system, frontend architecture), Java coding rules |
-| Backend operations | **1,729 of 2,049 served (84 %)**; the other **320 answer `501 NOT_IMPLEMENTED`** (listed with the reason in `api/operations-status.md`) |
-| Backend build | Last full success: `mvn clean install` on JDK 17 (2026-11-10). The requested full run on 2026-11-11 stopped in `core`: 80 tests, 0 assertion failures, 3 Testcontainers errors because no valid Docker environment was available; the other 27 reactor projects were skipped. Assessment-focused unit/conformance checks passed. Transactions run on each module's own `PlatformTransactionManager`; each module owns its `com.mysms.<module>.api` contract package and edge operation table, and springdoc writes `target/openapi/<module>.yaml` in every `mvn verify`. |
-| Clients | The pinned `pnpm verify` reached the repository-wide Prettier gate and reports 241 files out of style; assessment changes pass focused Prettier checks. The remaining Turbo graph passed **39 of 39 tasks** (generate, typecheck, lint, tests, builds) across 14 packages. |
-| Web screens | Built (99 of the 186 inventory screens; TT-03 My timetable and HR-04 Leave applications also on phone and tablet): sign-in (ACC-01), my profile (ACC-07), **security & sessions (ACC-08**: password change, authenticator app with one-time secret and recovery codes, turning a factor off, replacing recovery codes, ending sessions), notification preferences (ACC-10), my settings (ACC-14), records (ADM-11, a generic screen over all 327 record types), settings by scope (ADM-16), **attendance taking** (ATT-03 take attendance, ATT-04 student month, ATT-05 class summary & defaulters), **homework** (ASM-02 approval queue, ASM-03 homework check), **assessment** (ASM-01-13 web and tablet; the inventory phone screens ASM-01/03/04/05/06/07/10/12), and **69 list-manager screens** — one per record type the inventory gives its own screen (students, guardians, admission cycles, institutions, departments, academic years, programs, class sections, periods, attendance registers and sheets, staff attendance with its date range, homework, exams, staff, payroll, library, transport, front office, notices and events, LMS question bank and live classes…), each with its own route, heading, columns, status filter, create/edit/delete and the state transitions the role may use, grouped in the navigation as in ui/02 §2.1. Console: tenants, SaaS plans, sales enquiries, reserved keywords, notification types and system settings (PLT-01…05), operations and jobs, master data. Phone and tablet: sign-in, profile, settings, notification preferences, my timetable (TT-03), staff leave (HR-04), assessment screens ASM-01/03/04/05/06/07/10/12 on phones, and ASM-01-13 on tablet. The other screens are routed and show a placeholder naming the screen. |
+| Specifications | Done: database (21 schemas, Flyway), API (2,055 operations: each module's contract interfaces and protos, its OpenAPI document written by the build), UI (186 screens, flows, design system, frontend architecture), Java coding rules |
+| Backend operations | **2,004 of 2,055 served (97.5 %)** over REST and gRPC; the other **51 answer `501 NOT_IMPLEMENTED`** (comms 33, people 7, library 5, org 3, timetable 2, frontoffice 1; each listed with its reason in `api/operations-status.md`). lms (712), careers, finance, platform and iam: every operation served. |
+| Backend build | `mvn clean install -Dmaven.build.cache.enabled=false` **BUILD SUCCESS** on JDK 17 (2026-11-18): 28 reactor projects, **5,500 tests** (unit + component against real PostgreSQL 16 and RabbitMQ, REST/gRPC parity per module), Checkstyle, SpotBugs, JaCoCo and the conformance checks all green, 36 min on the 2-core build machine. |
+| Clients | `pnpm verify --concurrency=1`: **39 of 39 tasks green** (2026-11-18) — prettier, TypeScript SDK generated from the backend's OpenAPI documents, typecheck, lint, tests, builds; web initial JS 287.5 KB gzip of a 300 KB budget. (Default turbo concurrency runs out of memory on the 7 GB build machine.) |
+| Web screens | Built (93 of the 186 inventory screens; TT-03 My timetable, HR-03 leave balance, HR-04 Leave applications, HR-08 My payslips, SIS-02 student summary and SIS-06 discipline also on phone and tablet, SIS-10 subject registration on the student app, SIS-11 My children on the parent app): sign-in (ACC-01), my profile (ACC-07), **security & sessions (ACC-08**: password change, authenticator app with one-time secret and recovery codes, turning a factor off, replacing recovery codes, ending sessions), notification preferences (ACC-10), my settings (ACC-14), records (ADM-11, a generic screen over all 327 record types), settings by scope (ADM-16), **attendance taking** (ATT-03 take attendance, ATT-04 student month, ATT-05 class summary & defaulters), **homework** (ASM-02 approval queue, ASM-03 homework check), **students** (SIS-02 student 360° with SIS-09 bonafide certificate, SIS-03 promotion wizard), **admission** (ADMN-01 cycles with their stage timeline, ADMN-02 applications pipeline, ADMN-03 application detail with ADMN-04 enrolment, ADMN-05 application form), **staff** (HR-01 directory, HR-02 staff detail, HR-03 leave types & balances), **payroll** (HR-05 salary templates, HR-06 staff salary, HR-07 payslip run, HR-08 my payslips, HR-09 payroll payments), and **65 list-manager screens** — one per record type the inventory gives its own screen (students, guardians, admission cycles, institutions, departments, academic years, programs, class sections, periods, attendance registers and sheets, staff attendance with its date range, homework, exams, staff, payroll, library, transport, front office, notices and events, LMS question bank and live classes…), each with its own route, heading, columns, status filter, create/edit/delete and the state transitions the role may use, grouped in the navigation as in ui/02 §2.1. Console: tenants, SaaS plans, sales enquiries, reserved keywords, notification types and system settings (PLT-01…05), operations and jobs, master data. Phone and tablet: sign-in, profile, settings, notification preferences, my timetable (TT-03), staff leave (HR-04), leave balance (HR-03), my payslips (HR-08), student summary and open incidents (SIS-02, SIS-06), subject registration (SIS-10, student) and my children (SIS-11, parent). The other screens are routed and show a placeholder naming the screen. |
 | Deployment | [DEPLOYMENT.md](DEPLOYMENT.md). Every step was rehearsed on a fresh database: roles, keys, bootstrap, the monolith and separate microservices, the web app against the real backend. |
 
 ## What is served
@@ -79,7 +79,7 @@ Source status updated on 2026-11-11. To continue the work, start with [HANDOFF.m
 - **My timetable (TT-03)**. Hand-written, in timetable: `timetable.GetTimetable` answers the published timetable
   of a class, batch, teacher, student (a session's own list) or room — at least one — over up to 62 UTC days, in
   start order, page by page, inside the caller's institutions; drafts are left out and cancelled sessions stay
-  visible (migration V1_130_003 adds the indexes the view reads by). Web: a week day by day for the signed-in
+  visible (timetable's baseline has the indexes the view reads by). Web: a week day by day for the signed-in
   teacher or a chosen class, the week and class in the address. Phone: one day at a time from today; tablet: the
   week on one screen. Which sessions list one student (the `studentId` filter) also needs
   `timetable.session_student.read`.
@@ -93,7 +93,7 @@ Source status updated on 2026-11-11. To continue the work, start with [HANDOFF.m
     `assessment.homework.approve_homework` for its institution, otherwise it becomes `pending` with a pending
     review. `ApproveHomework` publishes it; `RejectHomework` makes it a draft again, the reason kept on the review
     record. Who needs a review is decided by the permissions of the role, not by a setting. A homework has at most
-    one open review (assessment migration V1_140_003 adds the `pending` state and the unique index). The text of a
+    one open review (assessment's baseline has the `pending` state and the unique index). The text of a
     homework under review cannot be changed, and a published one only by someone who may approve homework; review
     records are written by these steps alone (the contract has no create, update or delete of an approval).
   - `assessment.CheckHomeworkSubmission` marks a submission checked with the teacher's comments (checking again
@@ -112,7 +112,7 @@ Source status updated on 2026-11-11. To continue the work, start with [HANDOFF.m
   - Homework submissions have no answer-text field in the contract. File attachment support depends on `platform.CreateUploadUrl`, `platform.CompleteUpload` and `platform.GetDownloadUrl`, which still answer 501; the project has no storage provider. ASM-04 creates the supported submission receipt and supports feedback replies; students cannot add homework answer text or file uploads. Other file attachments share this platform limit.
 - **Attendance taking (flow F3)**. Hand-written, across attendance, sis, timetable and org:
   - `attendance.TakeAttendanceForSession` gets or creates the sheet of a timetable session (one sheet per session,
-    enforced by the unique index `uq_attendance_sheet_session`, attendance migration V1_110_003). The session, its
+    enforced by the unique index `uq_attendance_sheet_session` of attendance's baseline). The session, its
     students (the session's own list, else the class roster on that date) and the institution's time zone are read
     from timetable, sis and org through their SDK clients **with the caller's own token**, so the caller sees through
     attendance only what those modules let them read (403 names the missing permission; an unknown session is a 422
@@ -138,6 +138,77 @@ Source status updated on 2026-11-11. To continue the work, start with [HANDOFF.m
     lists exactly the students it was pre-filled with; a sheet made by hand lists the class as placed on its date.
   - Calls between modules (the SDK clients) now time out (2 s to connect, 10 s to answer) and never follow a
     redirect, so the caller's token reaches only the configured service.
+- **Students (sis), every operation served.** Hand-written (api/state-machines.md "sis"):
+  - `sis.ChangeStudentStatus` moves a student to any other status (409 for the same one); a leaving status
+    (withdrawn, transferred, graduated, alumni) needs an exit date not before admission or joining and closes the
+    open placement on it ("completed" for graduated and alumni, "left" otherwise); going back to active or inactive
+    clears the exit details. `sis.IssueBonafideCertificate` numbers a certificate per institution and calendar year
+    (`BC/<year>/000001`) under a row lock, for an active student only.
+  - Portal accounts: `sis.CreateStudentPortalAccount` and `sis.CreatePortalAccount` (guardian) check the record
+    (active student with an admission number; guardian with e-mail or mobile and an active child link), then open or
+    reuse the person's iam account **with the caller's own token** in the tenant's `student` / `guardian` role
+    (409 when the tenant has no such role), and link it; a guardian's account needs write access to every child's
+    institution (403 otherwise).
+  - `sis.GetStudentSummary` is readable by the student, their own guardians (active link) and anyone with
+    `sis.student.read` in the student's institution (404 otherwise); family and the student see only the incidents
+    shared with guardians. `sis.ListMyChildren` lists the caller's own active guardian links with the institution
+    name (org) and the class label (academics).
+  - Promotions: `sis.ProposePromotions` proposes for every student placed in a class (or the listed ones, each
+    checked); `sis.ApplyPromotions` applies 1–500 approved promotions all or nothing: the old placement ends
+    promoted (detained when the grade stays) and next year's starts in the class academics has for that year, grade
+    and section. `sis.ApproveSubjectRegistration`, `sis.LoadCourseSubjects` (the course's subjects from academics),
+    `sis.MarkIncidentActionTaken` and `sis.MarkIncidentSeen` (a guardian for their own child; an unshared incident
+    does not exist for them).
+  - Web: SIS-02 student 360° (profile, guardians, enrolment, health, discipline, activities and subject
+    registrations tabs; status change, bonafide certificate, student and guardian portal accounts), SIS-03 promotion
+    wizard, the discipline and registration steps in SIS-06 / SIS-10. Teacher phone and tablet: the student summary
+    and open incidents; student app: subject registration; parent app: my children.
+- **Admission (admission), every operation served.** Hand-written (api/state-machines.md "admission"):
+  - `admission.OpenApplications` and `StartAdmission` move a cycle on. The application steps (submit, confirm, mark
+    pending, approve, confirm admission, reject, cancel, reset) each check scope, permission, etag and state in one
+    version-guarded statement with audit and event. Submitting needs a guardian, an open locked cycle of the same
+    institution before its end date, a free place under the cycle's maximum (safe under concurrent submits) and the
+    cycle's minimum age; confirming admission needs the fee paid or waived.
+  - `admission.EnrollApplicant` creates the person (people), the student and the class or course placement (sis) and
+    each guardian with the caller's own token, one recorded step at a time with idempotency keys derived from the
+    application, so a retry completes a half-finished enrolment; an unavailable service answers 503 and the
+    application stays admitted.
+  - Applicant self-service: an account holding the permissions without the institution in scope reaches only the
+    applications it created, creates only in an open cycle, never sets office fields and may only submit or cancel.
+  - Web: ADMN-01 cycles with a stage timeline, ADMN-02 pipeline (board and table), ADMN-03 application detail with
+    every allowed step, ADMN-04 enrolment wizard, ADMN-05 application form for a signed-in applicant (saved as a
+    draft from the first step).
+- **Staff (hr), every operation served.** `hr.ChangeStaffStatus` (active ↔ inactive, either → exited, exited →
+  active; etag and scope checked) and `hr.CreateStaffPortalAccount` (opens or reuses the person's iam account with the
+  caller's token, login name = employee number; refused for staff who left or already have an account). The standard
+  create and update refuse a typed `userId` (it would hand someone a staff record through `iam.GetMe`). Web: HR-01
+  staff directory (search, filters in the address), HR-02 staff detail (profile, departments & subjects, leave and
+  salary tabs, status and login account), HR-03 leave types & balances; phone and tablet: one's own leave position.
+- **Assessment (assessment), every operation served** (the owner's commit of 2026-11-11, validated and
+  completed in review). Homework and assignment workflows (approvals, rejection, completion, change requests, reset,
+  grading only through the workflow); exams (scheduling, sis rosters and facility rooms read outside the write
+  transaction and re-checked, marks entry with an optional per-row etag, absent and exempted); results
+  (generation per result template with per-paper and overall percentages rounded half-up to 2 decimals, a student
+  who fails or misses any non-exempted paper fails overall, cancelled papers left out, credit-weighted SGPA/CGPA;
+  validation, publishing; cancelling a marksheet releases its results and returns its template to draft so marks
+  can be corrected and generated again); grading schemes and bands (locked while a template uses them). Submissions
+  and results are owner-only below staff: staff means a reviewing permission in the institution; anyone else sees
+  only their own student's (or child's) rows, proved through sis with the caller's token. Web: ASM-01…13; phone and
+  tablet: the assessment screens with student entries for ASM-04, ASM-07 and ASM-12. Needs `MYSMS_SIS_URL`,
+  `MYSMS_FACILITY_URL`, `MYSMS_ACADEMICS_URL`. Homework submissions carry no answer text or files yet (the platform
+  file store is built in the batch after this one).
+- **Payroll (payroll), every operation served.** `payroll.GeneratePayslips` writes one payslip per staff member of a
+  school whose salary is in force on the period's last day, for a period inside one calendar month (422
+  otherwise): each monthly component amount × the days a salary of that school was in force ÷ the days of the
+  month, rounded half-up to the cent (two half-month runs pay the month once); a payslip that exists for the
+  period is kept, an overlapping one skips the staff member, and the result names who was skipped and why. Payslips
+  and their lines are owner-only below the payroll officer: a caller without `payroll.payslip.generate_payslips`
+  in the payslip's institution sees only the payslips of their own staff records (payroll keeps which account owns
+  which staff record from hr's staff events in `payroll.staff_member`); any other is 404. `payroll.MarkPayslipPaid`
+  marks an unpaid payslip paid and records the payment of its net from an account of the payslip's school, in one
+  transaction. Web: HR-05 salary templates, HR-06 staff salary, HR-07 payslip run (generate, progress, mark paid or
+  cancel), HR-08 my payslips (also phone and tablet), HR-09 payroll payments and disbursement accounts (account
+  numbers only ever shown masked).
 - **Partitioned tables** (attendance records, staff attendance, outbound messages, content views: 12 operations),
   generated. A list must bound the partition key on both sides (`attendanceDate >= "…" AND attendanceDate < "…"`,
   at most 366 days, not inside OR or NOT), so the database reads only those partitions; without it the list answers
@@ -282,18 +353,58 @@ Source status updated on 2026-11-11. To continue the work, start with [HANDOFF.m
 17. **Deep pages follow links.** A page number without a cursor is read by offset and is refused beyond the first
     10,000 rows (400); deeper pages are reached through `next` links, whose cursor expires after 24 hours. Lists
     give no total count.
+18. **Students (sis).**
+    - No bonafide certificate document is produced (the number is issued and kept): the platform file store is not
+      served yet. `sendInvite: true` on a portal account is refused (422), as in hr: message delivery is not built.
+    - The student summary leaves attendance, open loans and outstanding fees empty: attendance, library and finance
+      depend on sis (ARCHITECTURE §2), so sis may not call them; the clients would have to read them themselves.
+    - The steps that call iam, people, org and academics are component-tested up to their refusals and the 503 of a
+      missing service; no test runs them end to end against the real services yet.
+    - Applying more than 500 promotions is done in batches; a subject registration's unit load is not checked on
+      approval; placements close and open on the UTC date. A parent sees a child's name on the apps only when their
+      role may read persons.
+    - Deployment: sis needs `MYSMS_IAM_URL`, `MYSMS_PEOPLE_URL`, `MYSMS_ACADEMICS_URL` and `MYSMS_ORG_URL`, and each
+      tenant needs roles coded `student` and `guardian` for the portal accounts.
+19. **Admission.**
+    - Enrolment does not create fee dues (operations.md says it should; finance is not called). An application
+      guardian is matched to an existing sis guardian by e-mail, then mobile (by name among the already-linked ones
+      when it has neither). Each enrolment step's Idempotency-Key is stable per application, caller and step; an
+      application edited after people took the person step's key answers 422 `IDEMPOTENCY_KEY_REUSED` rather than
+      creating a second person.
+    - The application form (ADMN-05) is for a signed-in applicant account: the contract has no public operation, and
+      the applicant role must never be granted tenant-wide (no role template for it exists yet). Uploads (photo,
+      documents) are not built. An applicant's application is numbered by the school (`APP-<year>-000001` from
+      `admission.number_sequence`); the number the applicant sends is replaced, because the contract requires one.
+      An applicant never sees the office's `remarks` and `paymentStatusNote` and cannot filter by them (400).
+    - The enrolment wizard names classes when the role may read class sections, grade levels and sections, else it
+      takes the class section or batch id (prefilled from the application); the classes are not narrowed to the
+      application's academic year.
+    - Not run end to end against people and sis yet (refusals, 503 and the already-enrolled answer are tested).
+20. **Staff (hr).** Reading one's own staff record still needs `hr.staff.read` (limits 14 and 15): no self-scoped
+    read exists in the contract. The staff documents tab is not built (no served operation). `sendInvite: true` on a
+    staff login account is refused (422) rather than ignored. Salary amounts on HR-02 have no currency (the contract
+    carries none).
+21. **Payroll.**
+    - "Payroll officer" is whoever holds `payroll.payslip.generate_payslips` in the institution (the owner-only
+      rule above). A staff member who moves school within a month is paid by each school for its own days only
+      when each school runs its own part of the month: a full-month run of the first school skips them
+      (`NO_SALARY`). Payroll does not know when someone has left hr (hr's events carry no status), so a salary in
+      force keeps being paid until it is ended.
+    - A payslip run ignores leave and attendance (pay percentage 100, no leave deduction) and pays the amounts stored
+      on each salary component; a template's "40 % of basic" rate is shown, not calculated (the schema has no
+      machine-readable calculation type). The run works inside the request, so it grows with the staff count.
+    - Template components cannot be reordered (the contract keeps no order); no payslip PDF (no served operation).
+    - Creating a salary writes the salary and each component separately (the contract's shape); if one fails, HR-06
+      shows the amount still to fill in.
 
 ## What is not built yet
 
 | Area | Operations | What it needs |
 |---|---:|---|
-| Workflow and custom operations with further effects (enrol, approve with approval records, issue, pay, grade, publish marks, import/export, password reset by link, e-mail/mobile verification, impersonation, role switching…) | 188 | Hand-written business logic per operation; several need message delivery (comms relay) first |
-| Public and platform-staff variants of standard operations (guest catalogue, institution finder, platform administration of plans and tenants) | 54 | Guest projections; outbox handling for global tables |
-| Read models without a table (dashboards, summaries, gradebook, outlines…) | 33 | Hand-written queries |
-| Global tables written by platform staff (tenants, SaaS plans, system settings, notification types…) | 35 | Started: the contract fix and the migrations for tenantless events and audit records are in and verified; the generator, the global audit storage and the tenant-directory sync remain (HANDOFF.md §5) |
-| Other contract/schema mismatches (no row_version, JSON content, read-only NOT NULL columns, a payment's allocations, singleton settings) | 49 | A contract or migration decision per resource |
-| Infrastructure | — | gRPC services (the protos are in api/proto and their stubs compile into `sdk` on every build; the resolvers, the gRPC auth and permission interceptor, the error-to-Status mapping and the proto↔DTO bridge are still to write), reference reconciliation (needs service-to-service identity, P1-34), message delivery (e-mail/SMS/push providers), gateway rate limiting |
-| Screens | 88 | The inventory screens that need more than a list manager: dashboards, wizards (promotion, enrolment), grids (timetable builder week view, gradebook), detail pages with tabs (student 360°), "my …" views and the phone/tablet surfaces. Lists show the record type's own fields: names held by another module (a student's name lives in people) need batch card reads (PRINCIPAL-REVIEW P1-34) |
+| comms | 33 | Messaging and mail workflows (send, compose, read marks, retry/cancel, test message), in-app notifications, reactions on posts and comments, feed and calendar reads |
+| people, library, org, timetable, frontoffice | 18 | Per operation in `api/operations-status.md` |
+| Infrastructure | — | Done since 2026-11-12: gRPC servers for all 21 modules with the edge (authentication, permission, idempotency, error trailers), inter-module gRPC clients, service tokens (client credentials). Still to build: reference reconciliation, message delivery to e-mail/SMS/push providers, gateway rate limiting |
+| Screens | about 45 | The LMS screens are built (LMS-01…55 on web, phone and tablet per the inventory, 2026-11-17). Left: inventory screens that need more than a list manager — dashboards, grids (timetable builder week view, gradebook), detail pages with tabs, "my …" views and the phone/tablet surfaces. Lists show the record type's own fields: names held by another module (a student's name lives in people) need batch card reads (PRINCIPAL-REVIEW P1-34) |
 
 ## How this was verified
 
@@ -317,7 +428,7 @@ Source status updated on 2026-11-11. To continue the work, start with [HANDOFF.m
   - A third Sonnet review covered this round (tenant filter, idempotency, partitions, conformance check, the new
     screens and the mocking rule). Fixed and test-covered:
     - a user reaches only their own sign-in sessions; another user's sessions need the permission tenant-wide (404
-      otherwise). A user's own factors and sessions are now self-service permissions (iam migration V1_030_005);
+      otherwise). A user's own factors and sessions are now self-service permissions (iam's permission catalogue);
     - a failure to keep an Idempotency-Key response after the request ran no longer frees the key, and the client
       always gets its answer; 408/425/429 answers are not kept; responses over 1 MB are kept without their body;
       expired keys are purged as the tenant claims new ones;
@@ -337,3 +448,35 @@ Source status updated on 2026-11-11. To continue the work, start with [HANDOFF.m
     only list operations require the partition range (a get by id probes every month's index).
   - The assessment batch received one independent review using GPT-6.1 Terra because Fable 5.2 was unavailable in the configured reviewers. All nine actionable findings were fixed. Suggestions not taken: split the native assessment screens into smaller components (no behavior defect depends on the file shape); add a second cancellation-specific test for the test-only Request shim (it removes AbortSignal to avoid the known Node/jsdom mismatch and does not change production transport); split the existing large Vite entry chunk (the bundle stays under the 300 KB gzip budget at 281.8 KB).
 - **Assessment batch verification (2026-11-11).** Focused assessment reactor tests: 3 unit tests passed, all 10 assessment test sources compiled; the two PostgreSQL lifecycle component tests could not run without Docker. Conformance checks: 7/7 passed. Client counts: core 120/120 (96.05% lines/statements, 94.87% branches, 99.46% functions), web-kit 11/11, web app 73/73, i18n 7/7 and platform console 13/13. The full client Turbo graph passed 39/39 tasks. Web and console gzip budgets passed at 282.0 KB and 242.9 KB respectively; Vite emitted its advisory about large uncompressed chunks. The full Maven run and the repo-wide Prettier gate remain blocked by the environment/workspace conditions stated above.
+
+## LMS batch (2026-11-17): decisions taken and known limits
+
+Decisions taken on the owner's behalf, within the rules:
+- Guests name their school with `X-Tenant-Code` (the code users type at sign-in); the edge resolves it through iam over gRPC (cached 60 s), binds that tenant and serves published rows only, with internal fields left out. An unknown, suspended or missing code is 404; iam unavailable is 503. careers' public job pages use the same mechanism.
+- Providers are real adapters behind ports chosen by configuration: Zoom (live classes, meeting events), CloudConvert (e-book conversion), Turnitin (plagiarism), Google Calendar OAuth (evaluator calendars), LTI 1.1 (tool launch and Basic Outcomes; LTI Advantage grade service answers 422). An unconfigured provider answers 503 with a code naming it.
+- Provider webhooks are verified before any tenant is bound: `X-Signature` = hex HMAC-SHA256 of `<X-Timestamp>.<raw body>`, 5-minute tolerance; the tenant comes only from the provider-attested payload. The LTI outcome endpoint verifies its own OAuth 1 signature (HMAC-SHA1 with body hash) at the edge, for that operation only.
+- Lesson content is stored as blocks (paragraph, heading, list, uploaded file, https link); unknown blocks are dropped and markup is never rendered.
+- Graders may delete any draft submission; owners their own.
+- Owner decisions (2026-11-17): admission and application numbers stay unique per institution without `tenant_id` in the index; the self-sign-up role is granted for one school, not tenant-wide (in progress).
+- Review fixes (2026-11-17): the records a person writes for themself (assignment submissions, forum posts, votes and
+  reports, certificate bookings, bookmarks, annotations, lesson notes, content views and ratings, cohort feedback,
+  course reviews and interest, enrolment requests, drive items, student alerts' sender) take their owner from the
+  token, and their grading, moderation, status and counter fields only from their workflows; the contract marks those
+  fields output only and the Update DTOs no longer carry them. Another person's row is 404. A cohort's *teaching
+  staff* (its active teachers and who holds lms.cohort.update in its institution) reach its students' submissions,
+  quiz attempts and plagiarism reports, and only they grade (gradebook, quiz answers, submissions) or launch a tool as
+  LTI Instructor; a student sees correctness, marks and feedback of their own answers only after submitting and as
+  the quiz shows them. `allowGuestAccess` false answers every guest read 404 (the sign-in page still gets its
+  settings). GetCohort, ListCohorts and ListCohortCourses serve the public open cohorts (published, self-enrolling,
+  not ended) in a guest projection; VerifyCertificate serves guests; GetMemberProfile is no longer public (lms keeps
+  no names and cannot honour a student's hideStudentInfo for a guest). A quiz attempt ends at its timer or when its
+  placement closes (due time, or the end of its late days); `maxViolations` ends it for violations.
+
+Known limits:
+- Tablet: no offline cache of lessons; SCORM packages open in the browser (no in-app web view); e-book pages are not rendered in the app (title, conversion state, notes and materials are).
+- No course-comparison screen (the operation is served); LMS-20 still composes its reads instead of the served teacher dashboard.
+- A paid course answers 409 PAYMENT_REQUIRED (course checkout is not part of finance yet).
+- Unread counts carry no notifications or mail until comms serves those reads; cohort announcements are one outbox event that comms will deliver.
+- Cross-module happy paths that need the platform file store running (question import by file, course-package import against real files) are covered by unit tests and the 503 paths, not end to end.
+- Native screens have no automated test harness.
+- An initiated gateway refund is reconciled on retry, on its webhook or before the next refund of the payment; there is no background sweep job yet.

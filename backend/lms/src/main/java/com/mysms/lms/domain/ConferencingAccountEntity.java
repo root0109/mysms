@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of lms.conferencing_account (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of lms.conferencing_account. */
 @Getter
 @Setter
 @SuperBuilder

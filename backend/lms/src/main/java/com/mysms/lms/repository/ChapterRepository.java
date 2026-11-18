@@ -24,11 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.chapter (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live rows
- * only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.chapter: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class ChapterRepository {
@@ -87,6 +84,30 @@ public class ChapterRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** The chapters at one level of a course or cohort outline, in order (the siblings a move renumbers). */
+    private static final String SIBLINGS = SELECT_LIVE + """
+             AND r.course_id = :courseId AND r.cohort_id IS NOT DISTINCT FROM :cohortId
+             AND r.parent_chapter_id IS NOT DISTINCT FROM :parentId
+            ORDER BY r.sort_order, r.id
+            """;
+    /** A course's template outline (no cohort), every level, in reading order of each level. */
+    private static final String TEMPLATE_OUTLINE = SELECT_LIVE
+            + " AND r.course_id = :courseId AND r.cohort_id IS NULL ORDER BY r.sort_order, r.id";
+    /**
+     * First step of a renumbering: the chapters move out of the way, far above any place, so the second step's
+     * places never meet a sibling still holding them (ix_chapter_1 is checked row by row).
+     */
+    private static final String PARK = """
+            UPDATE lms.chapter
+               SET sort_order = sort_order + 1000000
+             WHERE tenant_id = :tenantId AND id = ANY(:ids) AND deleted_at IS NULL
+            """;
+    private static final String PLACE = """
+            UPDATE lms.chapter
+               SET sort_order = :sortOrder, parent_chapter_id = :parentId, updated_at = :now, updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND deleted_at IS NULL
+            """;
     private static final String INSERT = """
             INSERT INTO lms.chapter
             (id, tenant_id, course_id, title, sort_order, is_scorm_package, scorm_package_file_id,
@@ -206,6 +227,26 @@ public class ChapterRepository {
 
     public Optional<ChapterEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(ChapterRepository::map).optional();
+    }
+
+    /** The chapters at one level of the outline of a course (cohort null: the template), in order. */
+    public List<ChapterEntity> siblings(UUID courseId, UUID cohortId, UUID parentId) {
+        return jdbc.sql(SIBLINGS).param("courseId", courseId).param("cohortId", cohortId).param("parentId", parentId)
+                .query(ChapterRepository::map).list();
+    }
+
+    /** The course's template chapters, every level, ordered by place. */
+    public List<ChapterEntity> templateOutline(UUID courseId) {
+        return jdbc.sql(TEMPLATE_OUTLINE).param("courseId", courseId).query(ChapterRepository::map).list();
+    }
+
+    /** Gives the chapters the places 0, 1, 2… in list order under one parent (null: the top level). */
+    public void renumber(List<UUID> ids, UUID parentId, OffsetDateTime now, UUID actor) {
+        jdbc.sql(PARK).param("ids", ids.toArray(UUID[]::new)).update();
+        for (int i = 0; i < ids.size(); i++) {
+            jdbc.sql(PLACE).param("id", ids.get(i)).param("sortOrder", i).param("parentId", parentId)
+                    .param("now", now).param("actor", actor).update();
+        }
     }
 
     public Page<ChapterEntity> list(PageRequest page, SqlFragment filter) {
@@ -372,12 +413,12 @@ public class ChapterRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.course_id = :parentId", Map.of("parentId", parentId));
     }

@@ -1,4 +1,4 @@
-// Owned API contract of people (JAVA-CODING-RULES §7); first materialized from api/openapi/people.yaml on 2026-11-10.
+// Owned API contract of people.
 package com.mysms.people.api.model;
 
 import java.net.URI;

@@ -1,5 +1,6 @@
 package com.mysms.platform.business;
 
+import com.mysms.authclient.AuthContext;
 import com.mysms.authclient.DataScope;
 import com.mysms.platform.api.model.StorageQuota;
 import com.mysms.platform.api.model.StorageQuotaUpdate;
@@ -7,6 +8,7 @@ import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.error.ConflictException;
 import com.mysms.core.error.FieldError;
 import com.mysms.core.error.PreconditionFailedException;
 import com.mysms.core.error.ResourceNotFoundException;
@@ -29,6 +31,9 @@ import com.mysms.platform.events.PlatformEvents;
 import com.mysms.platform.mapper.StorageQuotaMapper;
 import com.mysms.platform.repository.StorageQuotaRepository;
 import java.time.Clock;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,10 +43,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of platform.storage_quota (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of platform.storage_quota: audit and domain event in the same transaction as every change; rows
+ * outside the caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class StorageQuotaService extends AppTransactionManager {
@@ -52,6 +55,9 @@ public class StorageQuotaService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "platform.storage_quota.create";
     static final String PERMISSION_UPDATE = "platform.storage_quota.update";
     static final String PERMISSION_DELETE = "platform.storage_quota.delete";
+    /** 409 code of an upload or copy that would exceed the uploader's enforced quota. */
+    public static final String QUOTA_EXCEEDED = "QUOTA_EXCEEDED";
+    private static final List<String> USED_BYTES = List.of("usedBytes");
     /** The contract's StorageQuotaUpdate fields, in apply order. */
     static final List<String> WRITABLE = List.of("userId", "institutionId", "quotaBytes", "usedBytes", "isActive");
 
@@ -184,6 +190,53 @@ public class StorageQuotaService extends AppTransactionManager {
             audit.recordDelete(AGGREGATE, id);
             outbox.publish(AGGREGATE + PlatformEvents.DELETED, AGGREGATE, id, PlatformEvents.payload(id));
         });
+    }
+
+    /**
+     * platform.GetMyStorageUsage: the caller's own quota and the bytes their files take; 404 when no quota is set for
+     * them (storage is then limited only by the tenant's plan).
+     */
+    public StorageQuota getMyStorageUsage() {
+        UUID caller = AuthContext.require().userId();
+        return doInReadTransaction(() -> mapper.toDto(repository.findForUser(caller)
+                .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, caller))));
+    }
+
+    /**
+     * Counts a file's bytes against its uploader's quota, in the caller's transaction (the file workflow runs it as it
+     * makes the file available): 409 QUOTA_EXCEEDED when an enforced quota would be exceeded; nothing to count when
+     * the uploader has no quota. The quota change is audited like any update.
+     */
+    public void spend(UUID user, long bytes) {
+        OffsetDateTime now = now();
+        runInWriteTransaction(() -> {
+            if (repository.findForUser(user).isEmpty()) {
+                return;
+            }
+            List<UUID> changed = repository.spend(user, bytes, now, Actor.current().orElse(null));
+            if (changed.isEmpty()) {
+                throw new ConflictException(QUOTA_EXCEEDED, "The file would exceed your storage quota.");
+            }
+            changed.forEach(id -> audit.recordUpdate(AGGREGATE, id, USED_BYTES));
+        });
+    }
+
+    /** Whether {@code bytes} more still fit the user's enforced quota (the early check before an upload starts). */
+    public boolean fits(UUID user, long bytes) {
+        return doInReadTransaction(() -> repository.findForUser(user)
+                .map(q -> !Boolean.TRUE.equals(q.getIsActive()) || q.getUsedBytes() + bytes <= q.getQuotaBytes())
+                .orElse(true));
+    }
+
+    /** Gives a deleted file's bytes back to its uploader's quota, in the caller's transaction. */
+    public void release(UUID user, long bytes) {
+        OffsetDateTime now = now();
+        runInWriteTransaction(() -> repository.release(user, bytes, now, Actor.current().orElse(null))
+                .forEach(id -> audit.recordUpdate(AGGREGATE, id, USED_BYTES)));
+    }
+
+    private OffsetDateTime now() {
+        return OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */

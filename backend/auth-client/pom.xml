@@ -18,6 +18,11 @@
   <artifactId>auth-client</artifactId>
   <name>MySMS auth client</name>
 
+  <properties>
+    <!-- no layer packages here: SpotBugs analyses the module's own root package -->
+    <mysms.spotbugs.onlyAnalyze>com.mysms.authclient.-</mysms.spotbugs.onlyAnalyze>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>com.mysms</groupId>
@@ -26,6 +31,11 @@
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-oauth2-jose</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-inprocess</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

@@ -21,10 +21,8 @@ import com.mysms.iam.config.IamEventsConfig;
 import com.mysms.iam.events.IamEvents;
 import com.mysms.iam.mapper.UserAccountMapper;
 import com.mysms.iam.repository.AccountRepository;
-import com.mysms.iam.repository.AuthTokenRepository;
 import com.mysms.iam.repository.GrantRepository;
 import com.mysms.iam.repository.SignInAccount;
-import com.mysms.iam.repository.SignInSessionRepository;
 import com.mysms.iam.repository.UserAccountRepository;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -40,7 +38,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * The account's own credentials and an administrator's reset of them (iam.ChangePassword, iam.SetUserCredentials,
- * iam.AcceptTerms), JAVA-CODING-RULES §16:
+ * iam.AcceptTerms):
  * <ul>
  *   <li>passwords are 12 to 1024 characters and stored only as argon2id hashes;</li>
  *   <li>changing one's password needs the current one (a wrong one counts towards the sign-in lockout, and a
@@ -59,8 +57,7 @@ public class AccountSecurityService extends AppTransactionManager {
     private final AccountRepository accounts;
     private final UserAccountRepository rows;
     private final UserAccountMapper mapper;
-    private final AuthTokenRepository tokens;
-    private final SignInSessionRepository sessions;
+    private final AccountSignOutHandler signOut;
     private final GrantRepository grants;
     private final AccessRules rules;
     private final PasswordHasher passwords;
@@ -72,7 +69,7 @@ public class AccountSecurityService extends AppTransactionManager {
     public AccountSecurityService(@Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(IamDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
                                   AccountRepository accounts, UserAccountRepository rows, UserAccountMapper mapper,
-                                  AuthTokenRepository tokens, SignInSessionRepository sessions, GrantRepository grants,
+                                  AccountSignOutHandler signOut, GrantRepository grants,
                                   AccessRules rules, PasswordHasher passwords,
                                   @Qualifier(IamEventsConfig.OUTBOX) OutboxWriter outbox,
                                   @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator,
@@ -82,8 +79,7 @@ public class AccountSecurityService extends AppTransactionManager {
         this.accounts = accounts;
         this.rows = rows;
         this.mapper = mapper;
-        this.tokens = tokens;
-        this.sessions = sessions;
+        this.signOut = signOut;
         this.grants = grants;
         this.rules = rules;
         this.passwords = passwords;
@@ -111,6 +107,7 @@ public class AccountSecurityService extends AppTransactionManager {
     /** iam.ChangePassword: the caller's own password, given the current one. */
     public void changePassword(ChangePasswordRequest request) {
         validator.validate(request);
+        AccessRules.requireOwnIdentity();
         requireStrong("newPassword", request.getNewPassword());
         AuthContext caller = AuthContext.require();
         UUID user = caller.userId();
@@ -132,15 +129,13 @@ public class AccountSecurityService extends AppTransactionManager {
             if (accounts.setCredentials(user, hash, null, false, now, user) == 0) {
                 throw new ResourceNotFoundException(IamEvents.USER_ACCOUNT, user);
             }
-            tokens.revokeOneTime(user, now);
             Optional<UUID> session = caller.sessionId();
             if (session.isPresent()) {
-                tokens.revokeAllExcept(user, session.get(), now);
-                sessions.endAllExcept(user, session.get(), now);
+                signOut.everywhereExcept(user, session.get(), now);
             } else {
-                tokens.revokeAll(user, now);
-                sessions.endAll(user, now);
+                signOut.everywhere(user, now);
             }
+            signOut.forgetResetCodes(user, now);
             audit.recordUpdate(IamEvents.USER_ACCOUNT, user, List.of("password"));
             outbox.publish(IamEvents.PASSWORD_CHANGED, IamEvents.USER_ACCOUNT, user, IamEvents.payload(user));
         });
@@ -149,6 +144,7 @@ public class AccountSecurityService extends AppTransactionManager {
     /** iam.SetUserCredentials: an administrator sets another account's login name and a temporary password. */
     public UserAccount setUserCredentials(UUID userId, SetUserCredentialsRequest request) {
         validator.validate(request);
+        AccessRules.requireOwnIdentity();
         requireStrong("temporaryPassword", request.getTemporaryPassword());
         String requested = request.getUsername();
         String username = requested == null ? null : requested.trim();
@@ -174,10 +170,8 @@ public class AccountSecurityService extends AppTransactionManager {
                 throw new DuplicateResourceException("Another user account already signs in with this username.");
             }
             accounts.setCredentials(userId, hash, username, mustReset, now, actor);
-            tokens.revokeAll(userId, now);
-            tokens.revokeOneTime(userId, now);
-            sessions.deactivateDevices(userId, now);
-            sessions.endAll(userId, now);
+            signOut.everywhere(userId, now);
+            signOut.forgetResetCodes(userId, now);
             audit.recordUpdate(IamEvents.USER_ACCOUNT, userId, username == null ? List.of("password", "mustResetPassword")
                     : List.of("username", "password", "mustResetPassword"));
             outbox.publish(IamEvents.CREDENTIALS_SET, IamEvents.USER_ACCOUNT, userId, IamEvents.payload(userId));
@@ -188,6 +182,7 @@ public class AccountSecurityService extends AppTransactionManager {
     /** iam.AcceptTerms: records when the caller accepted the terms; the version accepted is kept in the audit. */
     public UserAccount acceptTerms(AcceptTermsRequest request) {
         validator.validate(request);
+        AccessRules.requireOwnIdentity();
         String version = request.getTermsVersion().trim();
         if (version.isEmpty() || version.length() > 50) {
             throw new ValidationFailedException(List.of(new FieldError("termsVersion", "must be 1 to 50 characters",

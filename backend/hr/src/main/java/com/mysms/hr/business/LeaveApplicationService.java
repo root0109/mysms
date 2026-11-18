@@ -52,10 +52,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of hr.leave_application (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of hr.leave_application: audit and domain event commit in the same transaction as every change. Rows
+ * outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class LeaveApplicationService extends AppTransactionManager {
@@ -145,8 +143,8 @@ public class LeaveApplicationService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public LeaveApplication updateLeaveApplication(UUID id, String ifMatch, LeaveApplicationUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -206,14 +204,11 @@ public class LeaveApplicationService extends AppTransactionManager {
     }
 
     /**
-     * hr.ApproveLeave: a pending application becomes approved — who decided, when and the comment are kept — and
-     * its days are counted against the staff member's balance for its leave type and year (opened with the type's
-     * yearly allowance if there is none yet). The application and the balance are locked for the decision, so two
-     * approvals at once cannot spend the same days; what other applications still ask for does not hold days back:
-     * the first approved gets them. An application that asks for more days than are left answers 409 and changes
-     * nothing; so does any state but pending, and an application without a leave type where the school has leave
-     * types. Nobody approves their own leave (403): not for their account, nor for another staff record of theirs,
-     * nor while acting as someone else.
+     * hr.ApproveLeave: a pending application becomes approved and its days are counted against the staff member's
+     * balance for its leave type and year (opened with the type's yearly allowance if missing). The application and the
+     * balance are locked, so two approvals cannot spend the same days; pending applications hold nothing back. Too few
+     * days left, any state but pending, or no leave type where the school keeps leave types answer 409. Nobody approves
+     * their own leave (403), by account, by another staff record of theirs, or acting as someone else.
      */
     public LeaveApplication approveLeave(UUID id, ApproveLeaveRequest request) {
         String comment = decisionComment(request == null ? null : request.getReason());
@@ -310,9 +305,8 @@ public class LeaveApplicationService extends AppTransactionManager {
     }
 
     /**
-     * hr.RejectLeave: Reject. The row must be visible and writable for the caller, and the step is allowed while status
-     * is pending; in any other state
-     * the answer is 409 and nothing changes.
+     * hr.RejectLeave: Reject. Allowed while status is pending, on a row the caller may see and write; otherwise 409 and
+     * nothing changes.
      */
     public LeaveApplication rejectLeave(UUID id, RejectLeaveRequest request) {
         String comment = decisionComment(request == null ? null : request.getReason());
@@ -347,11 +341,10 @@ public class LeaveApplicationService extends AppTransactionManager {
     }
 
     /**
-     * hr.CancelLeave: a pending application is withdrawn, and an approved leave is cancelled before it starts — its
-     * days go back to the balance they were counted against, in the same transaction (the application and the balance
-     * are locked, as for an approval). Once an approved leave has started it stays approved (409): the days taken are
-     * history. Any other state answers 409 and nothing changes. Only the applicant — their account, their person —
-     * or someone who may decide on leave in the institution calls an application off (403 for anyone else).
+     * hr.CancelLeave: withdraws a pending application, or cancels an approved leave before it starts and gives its days
+     * back to the balance in the same transaction (both locked, as for an approval). A started leave stays approved;
+     * that and any other state answer 409. Only the applicant or someone who may decide on leave in the institution may
+     * cancel (403 otherwise).
      */
     public LeaveApplication cancelLeave(UUID id, CancelLeaveRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CANCEL_LEAVE);
@@ -427,15 +420,12 @@ public class LeaveApplicationService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(LeaveApplicationEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /**
-     * Applies the selected LeaveApplicationUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected LeaveApplicationUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(LeaveApplicationEntity entity, LeaveApplicationUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

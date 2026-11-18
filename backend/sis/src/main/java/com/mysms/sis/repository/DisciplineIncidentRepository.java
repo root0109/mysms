@@ -23,11 +23,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to sis.discipline_incident (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to sis.discipline_incident: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. Every statement filters the caller's tenant itself; row-level security
+ * is the backstop.
  */
 @Repository
 public class DisciplineIncidentRepository {
@@ -124,6 +122,35 @@ public class DisciplineIncidentRepository {
     private static final String EXISTS_STUDENT_ID = """
             SELECT EXISTS (SELECT 1 FROM sis.student WHERE tenant_id = :tenantId AND id = :id AND deleted_at IS NULL)
             """;
+
+    /** sis.MarkIncidentActionTaken: allowed while action_taken is false; a response given replaces the stored one. */
+    private static final String TRANSITION_MARK_INCIDENT_ACTION_TAKEN = """
+            UPDATE sis.discipline_incident
+               SET action_taken = true,
+                   response = COALESCE(:response, response),
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+
+    /** sis.MarkIncidentSeen: allowed while the incident is shared with guardians and not yet seen. */
+    private static final String TRANSITION_MARK_INCIDENT_SEEN = """
+            UPDATE sis.discipline_incident
+               SET seen_by_guardian = true,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String COUNT_OPEN_OF_STUDENT = """
+            SELECT count(*) FROM sis.discipline_incident
+             WHERE tenant_id = :tenantId
+               AND student_id = :studentId AND deleted_at IS NULL AND NOT action_taken
+               AND (notify_guardians OR NOT :sharedOnly)
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
             """;
@@ -212,7 +239,36 @@ public class DisciplineIncidentRepository {
         return Boolean.TRUE.equals(jdbc.sql(EXISTS_STUDENT_ID).param("id", id).query(Boolean.class).single());
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** sis.MarkIncidentActionTaken; 0 rows means the row changed (or vanished) since it was read. */
+    public int markIncidentActionTaken(UUID id, int expected, String response, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_MARK_INCIDENT_ACTION_TAKEN)
+                .param("id", id)
+                .param("expected", expected)
+                .param("response", response)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** sis.MarkIncidentSeen; 0 rows means the row changed (or vanished) since it was read. */
+    public int markIncidentSeen(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_MARK_INCIDENT_SEEN)
+                .param("id", id)
+                .param("expected", expected)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /**
+     * The student's incidents no action was taken on yet.
+     *
+     * @param sharedOnly count only the incidents shared with guardians (what a guardian or the student may know of)
+     */
+    public int countOpenOfStudent(UUID studentId, boolean sharedOnly) {
+        return jdbc.sql(COUNT_OPEN_OF_STUDENT).param("studentId", studentId).param("sharedOnly", sharedOnly)
+                .query(Integer.class).single();
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -39,7 +39,7 @@ public class ForumPost {
   private @Nullable String body;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID authorUserId;
+  private @Nullable UUID authorUserId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -107,13 +107,6 @@ public class ForumPost {
 
   public ForumPost() {
     super();
-  }
-
-  /**
-   * Constructor with only required parameters
-   */
-  public ForumPost(UUID authorUserId) {
-    this.authorUserId = authorUserId;
   }
 
   public ForumPost id(@Nullable UUID id) {
@@ -216,23 +209,23 @@ public class ForumPost {
     this.body = body;
   }
 
-  public ForumPost authorUserId(UUID authorUserId) {
+  public ForumPost authorUserId(@Nullable UUID authorUserId) {
     this.authorUserId = authorUserId;
     return this;
   }
 
   /**
-   * Author.
+   * Author. Output only: the caller who wrote it.
    * @return authorUserId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("authorUserId")
-  public UUID getAuthorUserId() {
+  public @Nullable UUID getAuthorUserId() {
     return authorUserId;
   }
 
   @JsonProperty("authorUserId")
-  public void setAuthorUserId(UUID authorUserId) {
+  public void setAuthorUserId(@Nullable UUID authorUserId) {
     this.authorUserId = authorUserId;
   }
 
@@ -242,7 +235,7 @@ public class ForumPost {
   }
 
   /**
-   * Posted.
+   * Posted. Output only: set by the service and the moderation steps.
    * @return postedAt
    */
   @Valid 
@@ -282,7 +275,7 @@ public class ForumPost {
   }
 
   /**
-   * Written by a teacher.
+   * Written by a teacher. Output only: set by the service and the moderation steps.
    * @return isTeacherPost
    */
   
@@ -302,7 +295,7 @@ public class ForumPost {
   }
 
   /**
-   * Teacher marked it substantive (1) / non-substantive (0).
+   * Teacher marked it substantive (1) / non-substantive (0). Output only: set by the service and the moderation steps.
    * @return substantiveFlag
    */
   
@@ -322,7 +315,7 @@ public class ForumPost {
   }
 
   /**
-   * Hidden by a moderator.
+   * Hidden by a moderator. Output only: set by the service and the moderation steps.
    * @return isHidden
    */
   
@@ -342,7 +335,7 @@ public class ForumPost {
   }
 
   /**
-   * Hidden because a parent post was hidden.
+   * Hidden because a parent post was hidden. Output only: set by the service and the moderation steps.
    * @return isHiddenByParent
    */
   
@@ -362,7 +355,7 @@ public class ForumPost {
   }
 
   /**
-   * Flagged for follow-up.
+   * Flagged for follow-up. Output only: set by the service and the moderation steps.
    * @return isFlagged
    */
   
@@ -422,7 +415,7 @@ public class ForumPost {
   }
 
   /**
-   * Confirmed abusive.
+   * Confirmed abusive. Output only: set by the service and the moderation steps.
    * @return isAbusive
    */
   
@@ -442,7 +435,7 @@ public class ForumPost {
   }
 
   /**
-   * Reported by users.
+   * Reported by users. Output only: set by the service and the moderation steps.
    * @return abuseReported
    */
   
@@ -462,7 +455,7 @@ public class ForumPost {
   }
 
   /**
-   * Number of reports (cached).
+   * Number of reports (cached). Output only: set by the service and the moderation steps.
    * @return abuseReportCount
    */
   
@@ -482,7 +475,7 @@ public class ForumPost {
   }
 
   /**
-   * Moderator who confirmed the report.
+   * Moderator who confirmed the report. Output only: set by the service and the moderation steps.
    * @return abuseConfirmedBy
    */
   @Valid 
@@ -502,7 +495,7 @@ public class ForumPost {
   }
 
   /**
-   * When confirmed.
+   * When confirmed. Output only: set by the service and the moderation steps.
    * @return abuseConfirmedAt
    */
   @Valid 
@@ -522,7 +515,7 @@ public class ForumPost {
   }
 
   /**
-   * Likes (cached).
+   * Likes (cached). Output only: set by the service and the moderation steps.
    * @return likeCount
    */
   

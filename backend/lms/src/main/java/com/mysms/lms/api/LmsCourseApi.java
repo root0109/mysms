@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api;
 
 import com.mysms.lms.api.model.EvaluatorSlot;
@@ -46,6 +46,7 @@ import com.mysms.lms.api.model.LmsCourseUpdate;
 import java.time.LocalDate;
 import com.mysms.lms.api.model.MoveChapterRequest;
 import org.springframework.lang.Nullable;
+import com.mysms.lms.api.model.ImportCoursePackageRequest;
 import com.mysms.lms.api.model.Operation;
 import com.mysms.lms.api.model.PublishCatalogListingRequest;
 import com.mysms.lms.api.model.PublishCourseRequest;
@@ -1123,6 +1124,37 @@ public interface LmsCourseApi {
     ResponseEntity<Operation> exportCourse(
          @PathVariable("courseId") UUID courseId,
          @Valid @RequestBody Object body,
+         @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey
+    );
+
+
+    String PATH_IMPORT_COURSE_PACKAGE = "/v1/lms/courses/{courseId}:importPackage";
+    /**
+     * POST /v1/lms/courses/{courseId}:importPackage : Import a course package (zip) into the course
+     * Import a course package (zip) into the course: chapters, lessons, quizzes with their questions, assignments.
+     *
+     * @param courseId  (required)
+     * @param importCoursePackageRequest  (required)
+     * @param idempotencyKey Client-generated UUID; repeating a request with the same key returns the original result for 24 h. (optional)
+     * @return Accepted; poll the operation. (status code 202)
+     *         or Malformed request. (status code 400)
+     *         or Missing or invalid credentials. (status code 401)
+     *         or Authenticated but not permitted. (status code 403)
+     *         or Resource not found (or not visible to the caller). (status code 404)
+     *         or Conflict with the current state (duplicate, invalid state transition). (status code 409)
+     *         or Validation failed; see errors[]. (status code 422)
+     *         or Rate limit exceeded. (status code 429)
+     *         or Unexpected server error. (status code 500)
+     */
+    @RequestMapping(
+        method = RequestMethod.POST,
+        value = LmsCourseApi.PATH_IMPORT_COURSE_PACKAGE,
+        produces = { "application/json", "application/problem+json" },
+        consumes = { "application/json" }
+    )
+    ResponseEntity<Operation> importCoursePackage(
+         @PathVariable("courseId") UUID courseId,
+         @Valid @RequestBody ImportCoursePackageRequest importCoursePackageRequest,
          @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey
     );
 

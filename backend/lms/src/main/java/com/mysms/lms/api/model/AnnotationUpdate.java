@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -13,7 +13,6 @@ import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
-
 import java.util.*;
 
 /**
@@ -21,9 +20,6 @@ import java.util.*;
  */
 
 public class AnnotationUpdate {
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID contentItemId;
@@ -160,26 +156,6 @@ public class AnnotationUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID forumTopicId;
-
-  public AnnotationUpdate userId(@Nullable UUID userId) {
-    this.userId = userId;
-    return this;
-  }
-
-  /**
-   * Author.
-   * @return userId
-   */
-  @Valid 
-  @JsonProperty("userId")
-  public @Nullable UUID getUserId() {
-    return userId;
-  }
-
-  @JsonProperty("userId")
-  public void setUserId(@Nullable UUID userId) {
-    this.userId = userId;
-  }
 
   public AnnotationUpdate contentItemId(@Nullable UUID contentItemId) {
     this.contentItemId = contentItemId;
@@ -550,8 +526,7 @@ public class AnnotationUpdate {
       return false;
     }
     AnnotationUpdate annotationUpdate = (AnnotationUpdate) o;
-    return Objects.equals(this.userId, annotationUpdate.userId) &&
-        Objects.equals(this.contentItemId, annotationUpdate.contentItemId) &&
+    return Objects.equals(this.contentItemId, annotationUpdate.contentItemId) &&
         Objects.equals(this.cohortId, annotationUpdate.cohortId) &&
         Objects.equals(this.ebookId, annotationUpdate.ebookId) &&
         Objects.equals(this.fileId, annotationUpdate.fileId) &&
@@ -573,14 +548,13 @@ public class AnnotationUpdate {
 
   @Override
   public int hashCode() {
-    return Objects.hash(userId, contentItemId, cohortId, ebookId, fileId, annotationType, annotationSubtype, pageNumber, startCharPos, charCount, location, annotatedText, title, description, embedCode, url, mediaFileId, visibility, forumTopicId);
+    return Objects.hash(contentItemId, cohortId, ebookId, fileId, annotationType, annotationSubtype, pageNumber, startCharPos, charCount, location, annotatedText, title, description, embedCode, url, mediaFileId, visibility, forumTopicId);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class AnnotationUpdate {\n");
-    sb.append("    userId: ").append(toIndentedString(userId)).append("\n");
     sb.append("    contentItemId: ").append(toIndentedString(contentItemId)).append("\n");
     sb.append("    cohortId: ").append(toIndentedString(cohortId)).append("\n");
     sb.append("    ebookId: ").append(toIndentedString(ebookId)).append("\n");

@@ -23,6 +23,8 @@ import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
 import com.mysms.core.web.UpdateMask;
+import com.mysms.hr.api.model.ChangeStaffStatusRequest;
+import com.mysms.hr.api.model.CreateStaffPortalAccountRequest;
 import com.mysms.hr.api.model.LeaveBalanceSummary;
 import com.mysms.hr.api.model.Staff;
 import com.mysms.hr.api.model.StaffDepartment;
@@ -45,24 +47,25 @@ import com.mysms.hr.repository.StaffRepository;
 import com.mysms.hr.repository.StaffSubjectRepository;
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of hr.staff (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Staff
- * are served here too — StaffDepartment, StaffSubject.
+ * Business service of hr.staff and of the records that exist only as part of a Staff (StaffDepartment, StaffSubject):
+ * audit and domain event commit in the same transaction as every change. Rows outside the caller's institutions are
+ * invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class StaffService extends AppTransactionManager {
@@ -70,9 +73,11 @@ public class StaffService extends AppTransactionManager {
     public static final String AGGREGATE = StaffEntity.TABLE;
     static final String PERMISSION_LIST = "hr.staff.read";
     static final String PERMISSION_GET = "hr.staff.read";
-    static final String PERMISSION_CREATE = "hr.staff.create";
+    public static final String PERMISSION_CREATE = "hr.staff.create";
     static final String PERMISSION_UPDATE = "hr.staff.update";
     static final String PERMISSION_DELETE = "hr.staff.delete";
+    static final String PERMISSION_CHANGE_STATUS = "hr.staff.change_staff_status";
+    static final String PERMISSION_CREATE_PORTAL_ACCOUNT = "hr.staff.create_staff_portal_account";
     static final String PERMISSION_GET_LEAVE_BALANCE = "hr.staff.get_leave_balance";
     static final String PERMISSION_READ_LEAVE_BALANCES = "hr.leave_balance.read";
     /** The contract's StaffUpdate fields, in apply order. */
@@ -81,6 +86,19 @@ public class StaffService extends AppTransactionManager {
                     "employmentType",
             "joiningDate", "reportingToStaffId", "primaryDepartmentId", "highestQualificationId", "qualificationDetail",
             "specialization", "interests", "maxPeriodsPerWeek");
+
+    private static final String STATUS_ACTIVE = "active";
+    private static final String STATUS_INACTIVE = "inactive";
+    private static final String STATUS_EXITED = "exited";
+    /**
+     * hr.ChangeStaffStatus, from each status to the statuses it may become: a staff member is suspended and taken back,
+     * leaves from either state, and one who left comes back as active — the same record, because an institution keeps
+     * one staff record per person.
+     */
+    static final Map<String, Set<String>> STATUS_MOVES = Map.of(
+            STATUS_ACTIVE, Set.of(STATUS_INACTIVE, STATUS_EXITED),
+            STATUS_INACTIVE, Set.of(STATUS_ACTIVE, STATUS_EXITED),
+            STATUS_EXITED, Set.of(STATUS_ACTIVE));
 
     public static final String STAFF_DEPARTMENT_AGGREGATE = StaffDepartmentEntity.TABLE;
     static final String STAFF_DEPARTMENT_PERMISSION_LIST = "hr.staff_department.read";
@@ -111,6 +129,7 @@ public class StaffService extends AppTransactionManager {
     private final StaffDepartmentMapper staffDepartmentMapper;
     private final StaffSubjectRepository staffSubjectRepository;
     private final StaffSubjectMapper staffSubjectMapper;
+    private final StaffAccountLookup accounts;
 
     public StaffService(StaffRepository repository,
             StaffMapper mapper,
@@ -124,8 +143,10 @@ public class StaffService extends AppTransactionManager {
             StaffDepartmentMapper staffDepartmentMapper,
             StaffSubjectRepository staffSubjectRepository,
             StaffSubjectMapper staffSubjectMapper,
-            LeaveLedgerRepository leaveLedger) {
+            LeaveLedgerRepository leaveLedger,
+            StaffAccountLookup accounts) {
         super(database, transactions);
+        this.accounts = accounts;
         this.leaveLedger = leaveLedger;
         this.repository = repository;
         this.mapper = mapper;
@@ -161,6 +182,9 @@ public class StaffService extends AppTransactionManager {
     /** Creates the row; with validateOnly every check runs and nothing is written. */
     public Staff createStaff(Staff request, boolean validateOnly) {
         validator.validate(request);
+        if (request.getUserId() != null) {
+            throw accountGivenByItsOperation();
+        }
         StaffEntity entity = mapper.toEntity(request);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
@@ -180,8 +204,8 @@ public class StaffService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Staff updateStaff(UUID id, String ifMatch, StaffUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
@@ -192,6 +216,10 @@ public class StaffService extends AppTransactionManager {
             scope.requireWritable(institutionOf(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            UUID account = fields.contains("userId") ? changes.getUserId() : null;
+            if (account != null && !account.equals(entity.getUserId())) {
+                throw accountGivenByItsOperation();
             }
             apply(entity, changes, fields);
             validator.validate(mapper.toDto(entity));
@@ -251,6 +279,121 @@ public class StaffService extends AppTransactionManager {
         });
     }
 
+    /**
+     * hr.ChangeStaffStatus: activates, deactivates or exits a staff member, along {@link #STATUS_MOVES}. The row must
+     * be visible and writable for the caller; a move the current status does not allow — the status it already has
+     * included — answers 409 and nothing changes; a stale body etag is 412.
+     */
+    public Staff changeStaffStatus(UUID id, ChangeStaffStatusRequest request) {
+        validator.validate(request);
+        String status = request.getStatus().getValue();
+        DataScope scope = DataScope.current(PERMISSION_CHANGE_STATUS);
+        return doInWriteTransaction(() -> {
+            StaffEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            OptionalInt expected = Etags.bodyVersion(request.getEtag());
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!STATUS_MOVES.getOrDefault(entity.getStatus(), Set.of()).contains(status)) {
+                throw new InvalidStateException("A staff member who is " + entity.getStatus() + " cannot become "
+                        + status + ".");
+            }
+            if (repository.changeStatus(id, entity.getRowVersion(), status, now(), Actor.current().orElse(null))
+                    == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            StaffEntity changed = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            audit.recordTransition(AGGREGATE, id, "changeStaffStatus", List.of("status"), null);
+            outbox.publish(AGGREGATE + HrEvents.UPDATED, AGGREGATE, id, memberPayload(changed));
+            return mapper.toDto(changed);
+        });
+    }
+
+    /**
+     * hr.CreateStaffPortalAccount: gives a staff member without a login account one, created in iam with the caller's
+     * own token ({@link StaffAccountLookup}) and signing in with the employee number, then stored on the staff row. No
+     * transaction is held while iam is asked; a repeated call after a half-way failure finds and stores the account. An
+     * existing account or a staff member who left is 409, no employee number 422. iam sends no invitations yet, so
+     * asking for one is 422 rather than silently dropped.
+     */
+    public Staff createStaffPortalAccount(UUID id, CreateStaffPortalAccountRequest request) {
+        if (request != null && Boolean.TRUE.equals(request.getSendInvite())) {
+            throw new ValidationFailedException(List.of(new FieldError("sendInvite",
+                    "invitations cannot be sent yet; set the first password in user administration", "NOT_SUPPORTED")));
+        }
+        DataScope scope = DataScope.current(PERMISSION_CREATE_PORTAL_ACCOUNT);
+        StaffEntity member = doInPrimaryReadTransaction(() -> {
+            StaffEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            if (entity.getUserId() != null) {
+                throw new InvalidStateException("The staff member already has a login account.");
+            }
+            if (STATUS_EXITED.equals(entity.getStatus())) {
+                throw new InvalidStateException("A staff member who has left is not given a login account.");
+            }
+            if (entity.getEmployeeCode() == null || entity.getEmployeeCode().isBlank()) {
+                throw new ValidationFailedException(List.of(new FieldError("employeeCode",
+                        "the staff member needs an employee number: it becomes the login name", "NotNull")));
+            }
+            return entity;
+        });
+        UUID account = accounts.accountFor(member.getPersonId(), member.getEmployeeCode().trim(),
+                member.getJoiningDate());
+        return doInWriteTransaction(() -> {
+            // iam was asked outside any transaction: what was checked before is checked again on the row as it is now
+            StaffEntity current = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(current));
+            if (current.getUserId() != null) {
+                return sameAccount(current, account);
+            }
+            if (STATUS_EXITED.equals(current.getStatus())) {
+                throw new InvalidStateException("A staff member who has left is not given a login account.");
+            }
+            if (!current.getPersonId().equals(member.getPersonId())) {
+                throw new InvalidStateException("The staff record names another person since the account was asked for.");
+            }
+            if (repository.attachAccount(id, current.getRowVersion(), account, now(), Actor.current().orElse(null))
+                    == 0) {
+                // a concurrent call or change came between the read and the write
+                StaffEntity changed = loadVisible(scope, id);
+                if (changed.getUserId() != null) {
+                    return sameAccount(changed, account);
+                }
+                throw new PreconditionFailedException("The staff record changed while the account was created.");
+            }
+            StaffEntity stored = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            if (repository.takenInstitutionIdUserId2(stored)) {
+                throw new DuplicateResourceException(
+                        "Another staff record of this institution already has this person's login account.");
+            }
+            audit.recordUpdate(AGGREGATE, id, List.of("userId"));
+            outbox.publish(AGGREGATE + HrEvents.UPDATED, AGGREGATE, id, memberPayload(stored));
+            return mapper.toDto(stored);
+        });
+    }
+
+    /** The answer when the staff member has an account by now: this call's account is success, any other a conflict. */
+    private Staff sameAccount(StaffEntity current, UUID account) {
+        if (!account.equals(current.getUserId())) {
+            throw new InvalidStateException("The staff member already has a login account.");
+        }
+        return mapper.toDto(current);
+    }
+
+    /**
+     * The login account is what iam.GetMe names a staff record by, so only hr.CreateStaffPortalAccount gives it: the
+     * standard create and update refuse a value (422), though an update may clear a wrong one.
+     */
+    private static ValidationFailedException accountGivenByItsOperation() {
+        return new ValidationFailedException(List.of(new FieldError("userId",
+                "the login account is given by creating the staff member's portal account", "READ_ONLY")));
+    }
+
+    private OffsetDateTime now() {
+        return OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+    }
+
     /** The event payload of a staff record as stored: whose it is, where, and its row version. */
     private static Map<String, Object> memberPayload(StaffEntity staff) {
         return HrEvents.member(staff.getId(), staff.getUserId(), staff.getPersonId(), staff.getInstitutionId(),
@@ -258,12 +401,10 @@ public class StaffService extends AppTransactionManager {
     }
 
     /**
-     * hr.GetStaffLeaveBalance: the staff member's position per active leave type of their institution for one
-     * academic year — entitled, taken (approved), pending (asked for) and available (what is left after both, never
-     * below zero; an approval itself looks only at what is taken, so of several pending applications the first
-     * approved gets the days). The staff member reads their own; anyone else also needs the permission to read
-     * leave balances in the staff member's institution. hr does not know which academic year is the current one
-     * (org owns that), so the caller names the year.
+     * hr.GetStaffLeaveBalance: the staff member's position per active leave type for one academic year: entitled,
+     * taken, pending and available (after both, never below zero). The staff member reads their own; anyone else needs
+     * the permission to read leave balances in that institution. hr does not know the current academic year, so the
+     * caller names it.
      */
     public Page<LeaveBalanceSummary> getStaffLeaveBalance(UUID staffId, UUID academicYearId, Integer pageNumber,
             Integer pageSize, String cursor) {
@@ -297,12 +438,12 @@ public class StaffService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(StaffEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected StaffUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected StaffUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(StaffEntity entity, StaffUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -360,7 +501,7 @@ public class StaffService extends AppTransactionManager {
         }
     }
 
-    // ---- StaffDepartment: a record of the Staff aggregate ----
+    // ---- StaffDepartment ----
 
     public StaffDepartment getStaffDepartment(UUID staffId, UUID id) {
         return doInReadTransaction(() -> {
@@ -414,8 +555,8 @@ public class StaffService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public StaffDepartment updateStaffDepartment(UUID staffId, UUID id, String ifMatch, StaffDepartmentUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -476,14 +617,12 @@ public class StaffService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the hr.staff it belongs to). */
+    /** The institution of the hr.staff the row belongs to. */
     private Optional<UUID> institutionOfStaffDepartment(StaffDepartmentEntity entity) {
         return staffDepartmentRepository.institutionOf(entity.getStaffId());
     }
 
-    /**
-     * Applies the selected StaffDepartmentUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected StaffDepartmentUpdate fields; explicit per field so a mask can clear values. */
     private static void applyStaffDepartment(StaffDepartmentEntity entity, StaffDepartmentUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -517,7 +656,7 @@ public class StaffService extends AppTransactionManager {
         }
     }
 
-    // ---- StaffSubject: a record of the Staff aggregate ----
+    // ---- StaffSubject ----
 
     public StaffSubject getStaffSubject(UUID staffId, UUID id) {
         return doInReadTransaction(() -> {
@@ -571,8 +710,8 @@ public class StaffService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public StaffSubject updateStaffSubject(UUID staffId, UUID id, String ifMatch, StaffSubjectUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -633,14 +772,12 @@ public class StaffService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the hr.staff it belongs to). */
+    /** The institution of the hr.staff the row belongs to. */
     private Optional<UUID> institutionOfStaffSubject(StaffSubjectEntity entity) {
         return staffSubjectRepository.institutionOf(entity.getStaffId());
     }
 
-    /**
-     * Applies the selected StaffSubjectUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected StaffSubjectUpdate fields; explicit per field so a mask can clear values. */
     private static void applyStaffSubject(StaffSubjectEntity entity, StaffSubjectUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

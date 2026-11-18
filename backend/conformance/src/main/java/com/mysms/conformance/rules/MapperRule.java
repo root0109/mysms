@@ -15,10 +15,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * M1 (JAVA-CODING-RULES §8): one {@code @MapperConfig} per module, named {@code <Module>MapperConfig}, with
- * {@code unmappedTargetPolicy = ERROR}, used by every {@code @Mapper}; mappers are stateless interfaces — no
- * componentModel, no null-value strategies, no {@code @MappingTarget}, no injected fields; a DTO → entity method
- * ignores the id, the tenant and the whole audit set, so a client can never set them.
+ * M1: one {@code @MapperConfig} per module, named {@code <Module>MapperConfig}, with
+ * {@code unmappedTargetPolicy = ERROR}, used by every {@code @Mapper}; mappers are stateless interfaces (no
+ * componentModel, null-value strategies, {@code @MappingTarget} or injected fields); a DTO → entity method ignores the
+ * id, the tenant and the audit set, so a client can never set them.
  */
 public final class MapperRule implements ConformanceRule {
 

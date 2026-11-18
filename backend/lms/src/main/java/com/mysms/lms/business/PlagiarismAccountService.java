@@ -47,13 +47,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.plagiarism_account (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a PlagiarismAccount
- * are served here too — PlagiarismUserLink.
+ * Business service of lms.plagiarism_account and of the records that exist only as part of a PlagiarismAccount
+ * (PlagiarismUserLink): audit and domain event commit in the same transaction as every change. Rows outside the
+ * caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class PlagiarismAccountService extends AppTransactionManager implements InitializingBean {
@@ -115,7 +111,7 @@ public class PlagiarismAccountService extends AppTransactionManager implements I
         this.plagiarismUserLinkMapper = plagiarismUserLinkMapper;
     }
 
-    /** Refuses to start without a master key: this resource stores secret columns (DEPLOYMENT.md "Secrets"). */
+    /** Refuses to start without a master key: this resource stores secret columns. */
     @Override
     public void afterPropertiesSet() {
         cipher.requireConfigured();
@@ -164,8 +160,8 @@ public class PlagiarismAccountService extends AppTransactionManager implements I
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public PlagiarismAccount updatePlagiarismAccount(UUID id, String ifMatch, PlagiarismAccountUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -231,9 +227,7 @@ public class PlagiarismAccountService extends AppTransactionManager implements I
         });
     }
 
-    /**
-     * Stores sharedSecret encrypted for the row's tenant and column (database/README "Secrets"); never the plaintext.
-     */
+    /** Stores sharedSecret encrypted for the row's tenant and column; never the plaintext. */
     private void sealSharedSecret(PlagiarismAccountEntity entity, String plaintext) {
         entity.setSharedSecretEnc(cipher.encrypt(plaintext, entity.getTenantId(), SECRET_SHARED_SECRET_ENC));
     }
@@ -256,15 +250,12 @@ public class PlagiarismAccountService extends AppTransactionManager implements I
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(PlagiarismAccountEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected PlagiarismAccountUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected PlagiarismAccountUpdate fields; explicit per field so a mask can clear values. */
     private void apply(PlagiarismAccountEntity entity, PlagiarismAccountUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -357,8 +348,8 @@ public class PlagiarismAccountService extends AppTransactionManager implements I
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public PlagiarismUserLink updatePlagiarismUserLink(UUID plagiarismAccountId, UUID id, String ifMatch,
             PlagiarismUserLinkUpdate changes, String updateMask, boolean validateOnly) {
@@ -422,15 +413,12 @@ public class PlagiarismAccountService extends AppTransactionManager implements I
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfPlagiarismUserLink(PlagiarismUserLinkEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected PlagiarismUserLinkUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected PlagiarismUserLinkUpdate fields; explicit per field so a mask can clear values. */
     private static void applyPlagiarismUserLink(PlagiarismUserLinkEntity entity, PlagiarismUserLinkUpdate changes,
             List<String> fields) {
         for (String field : fields) {

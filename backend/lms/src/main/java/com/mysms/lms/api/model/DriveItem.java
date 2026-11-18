@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -27,7 +27,7 @@ public class DriveItem {
   private @Nullable UUID id;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID ownerUserId;
+  private @Nullable UUID ownerUserId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID fileId;
@@ -93,8 +93,7 @@ public class DriveItem {
   /**
    * Constructor with only required parameters
    */
-  public DriveItem(UUID ownerUserId, String title) {
-    this.ownerUserId = ownerUserId;
+  public DriveItem(String title) {
     this.title = title;
   }
 
@@ -118,23 +117,23 @@ public class DriveItem {
     this.id = id;
   }
 
-  public DriveItem ownerUserId(UUID ownerUserId) {
+  public DriveItem ownerUserId(@Nullable UUID ownerUserId) {
     this.ownerUserId = ownerUserId;
     return this;
   }
 
   /**
-   * Owner.
+   * Owner. Output only: the caller, from the token.
    * @return ownerUserId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("ownerUserId")
-  public UUID getOwnerUserId() {
+  public @Nullable UUID getOwnerUserId() {
     return ownerUserId;
   }
 
   @JsonProperty("ownerUserId")
-  public void setOwnerUserId(UUID ownerUserId) {
+  public void setOwnerUserId(@Nullable UUID ownerUserId) {
     this.ownerUserId = ownerUserId;
   }
 
@@ -364,7 +363,7 @@ public class DriveItem {
   }
 
   /**
-   * Cached likes.
+   * Cached likes. Output only: set by the service.
    * @return likeCount
    */
   
@@ -384,7 +383,7 @@ public class DriveItem {
   }
 
   /**
-   * Cached dislikes.
+   * Cached dislikes. Output only: set by the service.
    * @return dislikeCount
    */
   

@@ -11,17 +11,9 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
- * Turns a repository {@link Page} into the {@link PagingInfo} a list operation returns, with the navigation links
- * built from the request being served. A link is the request's own path and query with {@code page}, {@code size}
- * and {@code cursor} replaced, so the filter, sort and field mask the caller chose carry over byte for byte:
- * <ul>
- * <li>{@code first}: page 1;</li>
- * <li>{@code previous}: page n-1 by OFFSET — omitted on page 1, and when page n-1 lies beyond
- * {@link PageRequest#MAX_OFFSET} (the caller got there through cursors and goes back by its own history);</li>
- * <li>{@code next}: page n+1 with the cursor after this page's last item — omitted on the last page.</li>
- * </ul>
- * Links are relative (path and query), so they stay right behind any gateway host or scheme; they carry the path the
- * service was asked for, which is the public one because the edge routes {@code /v1/<module>/…} unchanged.
+ * Turns a repository {@link Page} into the {@link PagingInfo} a list operation returns. Links are the request's own
+ * relative path and query with only {@code page}, {@code size} and {@code cursor} replaced, so filter, sort and mask
+ * carry over; {@code previous} is omitted beyond {@link PageRequest#MAX_OFFSET} and {@code next} on the last page.
  */
 public final class PagingUtil {
 

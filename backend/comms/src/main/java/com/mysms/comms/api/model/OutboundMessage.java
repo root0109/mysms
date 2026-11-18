@@ -1,4 +1,4 @@
-// Owned API contract of comms (JAVA-CODING-RULES §7); first materialized from api/openapi/comms.yaml on 2026-11-10.
+// Owned API contract of comms.
 package com.mysms.comms.api.model;
 
 import java.net.URI;
@@ -28,7 +28,7 @@ import java.util.*;
 public class OutboundMessage {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<String> templateParams = new ArrayList<>();
+  private @Nullable List<String> templateParams = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String actionUrl;

@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -27,10 +27,10 @@ import java.util.*;
 public class CopyCourseOutlineToCohortRequest {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID courseId;
+  private @Nullable UUID courseId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<UUID> chapterIds = new ArrayList<>();
+  private @Nullable List<UUID> chapterIds = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -56,9 +56,9 @@ public class CopyCourseOutlineToCohortRequest {
    * Course template.
    * @return courseId
    */
-  @NotNull @Valid 
+  @Valid
   @JsonProperty("courseId")
-  public UUID getCourseId() {
+  public @Nullable UUID getCourseId() {
     return courseId;
   }
 

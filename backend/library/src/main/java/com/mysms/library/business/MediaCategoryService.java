@@ -39,10 +39,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of library.media_category (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of library.media_category: audit and domain event commit in the same transaction as every change.
+ * Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class MediaCategoryService extends AppTransactionManager {
@@ -123,8 +121,8 @@ public class MediaCategoryService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public MediaCategory updateMediaCategory(UUID id, String ifMatch, MediaCategoryUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -189,14 +187,12 @@ public class MediaCategoryService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(MediaCategoryEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /**
-     * Applies the selected MediaCategoryUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected MediaCategoryUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(MediaCategoryEntity entity, MediaCategoryUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

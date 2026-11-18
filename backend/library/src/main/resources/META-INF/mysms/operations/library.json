@@ -5,7 +5,8 @@
   "permission" : "library.purchase_request.accept_purchase_request",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.AcceptReservation",
   "method" : "POST",
@@ -13,7 +14,8 @@
   "permission" : "library.reservation.accept_reservation",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreateAuthor",
   "method" : "POST",
@@ -21,7 +23,8 @@
   "permission" : "library.author.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreateLibraryCard",
   "method" : "POST",
@@ -29,7 +32,8 @@
   "permission" : "library.library_card.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreateLibraryCardType",
   "method" : "POST",
@@ -37,7 +41,8 @@
   "permission" : "library.library_card_type.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreateLoan",
   "method" : "POST",
@@ -45,7 +50,8 @@
   "permission" : "library.loan.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreateMedia",
   "method" : "POST",
@@ -53,7 +59,8 @@
   "permission" : "library.media.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreateMediaAuthor",
   "method" : "POST",
@@ -61,7 +68,8 @@
   "permission" : "library.media_author.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreateMediaCategory",
   "method" : "POST",
@@ -69,7 +77,8 @@
   "permission" : "library.media_category.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreateMediaCourse",
   "method" : "POST",
@@ -77,7 +86,8 @@
   "permission" : "library.media_course.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreateMediaPublisher",
   "method" : "POST",
@@ -85,7 +95,8 @@
   "permission" : "library.media_publisher.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreateMediaSubject",
   "method" : "POST",
@@ -93,7 +104,8 @@
   "permission" : "library.media_subject.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreateMediaType",
   "method" : "POST",
@@ -101,7 +113,8 @@
   "permission" : "library.media_type.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreateMediaUnit",
   "method" : "POST",
@@ -109,7 +122,8 @@
   "permission" : "library.media_unit.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreatePublisher",
   "method" : "POST",
@@ -117,7 +131,8 @@
   "permission" : "library.publisher.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreatePurchaseRequest",
   "method" : "POST",
@@ -125,7 +140,8 @@
   "permission" : "library.purchase_request.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreatePurchaseRequestCourse",
   "method" : "POST",
@@ -133,7 +149,8 @@
   "permission" : "library.purchase_request_course.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreatePurchaseRequestSubject",
   "method" : "POST",
@@ -141,7 +158,8 @@
   "permission" : "library.purchase_request_subject.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.CreateReservation",
   "method" : "POST",
@@ -149,245 +167,280 @@
   "permission" : "library.reservation.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.DeleteAuthor",
   "method" : "DELETE",
   "path" : "/v1/library/authors/{authorId}",
   "permission" : "library.author.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeleteLibraryCard",
   "method" : "DELETE",
   "path" : "/v1/library/library-cards/{libraryCardId}",
   "permission" : "library.library_card.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeleteLibraryCardType",
   "method" : "DELETE",
   "path" : "/v1/library/library-card-types/{libraryCardTypeId}",
   "permission" : "library.library_card_type.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeleteLoan",
   "method" : "DELETE",
   "path" : "/v1/library/loans/{loanId}",
   "permission" : "library.loan.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeleteMedia",
   "method" : "DELETE",
   "path" : "/v1/library/media/{mediaId}",
   "permission" : "library.media.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeleteMediaAuthor",
   "method" : "DELETE",
   "path" : "/v1/library/media/{mediaId}/authors/{mediaAuthorId}",
   "permission" : "library.media_author.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeleteMediaCategory",
   "method" : "DELETE",
   "path" : "/v1/library/media-categories/{mediaCategoryId}",
   "permission" : "library.media_category.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeleteMediaCourse",
   "method" : "DELETE",
   "path" : "/v1/library/media/{mediaId}/courses/{mediaCourseId}",
   "permission" : "library.media_course.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeleteMediaPublisher",
   "method" : "DELETE",
   "path" : "/v1/library/media/{mediaId}/publishers/{mediaPublisherId}",
   "permission" : "library.media_publisher.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeleteMediaSubject",
   "method" : "DELETE",
   "path" : "/v1/library/media/{mediaId}/subjects/{mediaSubjectId}",
   "permission" : "library.media_subject.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeleteMediaType",
   "method" : "DELETE",
   "path" : "/v1/library/media-types/{mediaTypeId}",
   "permission" : "library.media_type.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeleteMediaUnit",
   "method" : "DELETE",
   "path" : "/v1/library/media/{mediaId}/units/{mediaUnitId}",
   "permission" : "library.media_unit.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeletePublisher",
   "method" : "DELETE",
   "path" : "/v1/library/publishers/{publisherId}",
   "permission" : "library.publisher.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeletePurchaseRequest",
   "method" : "DELETE",
   "path" : "/v1/library/purchase-requests/{purchaseRequestId}",
   "permission" : "library.purchase_request.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeletePurchaseRequestCourse",
   "method" : "DELETE",
   "path" : "/v1/library/purchase-requests/{purchaseRequestId}/courses/{purchaseRequestCourseId}",
   "permission" : "library.purchase_request_course.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeletePurchaseRequestSubject",
   "method" : "DELETE",
   "path" : "/v1/library/purchase-requests/{purchaseRequestId}/subjects/{purchaseRequestSubjectId}",
   "permission" : "library.purchase_request_subject.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.DeleteReservation",
   "method" : "DELETE",
   "path" : "/v1/library/reservations/{reservationId}",
   "permission" : "library.reservation.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetAuthor",
   "method" : "GET",
   "path" : "/v1/library/authors/{authorId}",
   "permission" : "library.author.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetLibraryCard",
   "method" : "GET",
   "path" : "/v1/library/library-cards/{libraryCardId}",
   "permission" : "library.library_card.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetLibraryCardType",
   "method" : "GET",
   "path" : "/v1/library/library-card-types/{libraryCardTypeId}",
   "permission" : "library.library_card_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetLoan",
   "method" : "GET",
   "path" : "/v1/library/loans/{loanId}",
   "permission" : "library.loan.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetMedia",
   "method" : "GET",
   "path" : "/v1/library/media/{mediaId}",
   "permission" : "library.media.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetMediaAuthor",
   "method" : "GET",
   "path" : "/v1/library/media/{mediaId}/authors/{mediaAuthorId}",
   "permission" : "library.media_author.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetMediaCategory",
   "method" : "GET",
   "path" : "/v1/library/media-categories/{mediaCategoryId}",
   "permission" : "library.media_category.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetMediaCourse",
   "method" : "GET",
   "path" : "/v1/library/media/{mediaId}/courses/{mediaCourseId}",
   "permission" : "library.media_course.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetMediaPublisher",
   "method" : "GET",
   "path" : "/v1/library/media/{mediaId}/publishers/{mediaPublisherId}",
   "permission" : "library.media_publisher.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetMediaSubject",
   "method" : "GET",
   "path" : "/v1/library/media/{mediaId}/subjects/{mediaSubjectId}",
   "permission" : "library.media_subject.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetMediaType",
   "method" : "GET",
   "path" : "/v1/library/media-types/{mediaTypeId}",
   "permission" : "library.media_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetMediaUnit",
   "method" : "GET",
   "path" : "/v1/library/media/{mediaId}/units/{mediaUnitId}",
   "permission" : "library.media_unit.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetPublisher",
   "method" : "GET",
   "path" : "/v1/library/publishers/{publisherId}",
   "permission" : "library.publisher.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetPurchaseRequest",
   "method" : "GET",
   "path" : "/v1/library/purchase-requests/{purchaseRequestId}",
   "permission" : "library.purchase_request.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetPurchaseRequestCourse",
   "method" : "GET",
   "path" : "/v1/library/purchase-requests/{purchaseRequestId}/courses/{purchaseRequestCourseId}",
   "permission" : "library.purchase_request_course.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetPurchaseRequestSubject",
   "method" : "GET",
   "path" : "/v1/library/purchase-requests/{purchaseRequestId}/subjects/{purchaseRequestSubjectId}",
   "permission" : "library.purchase_request_subject.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.GetReservation",
   "method" : "GET",
   "path" : "/v1/library/reservations/{reservationId}",
   "permission" : "library.reservation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.InvoiceLoanFine",
   "method" : "POST",
@@ -395,126 +448,144 @@
   "permission" : "library.loan.invoice_loan_fine",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.ListAuthors",
   "method" : "GET",
   "path" : "/v1/library/authors",
   "permission" : "library.author.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListLibraryCardTypes",
   "method" : "GET",
   "path" : "/v1/library/library-card-types",
   "permission" : "library.library_card_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListLibraryCards",
   "method" : "GET",
   "path" : "/v1/library/library-cards",
   "permission" : "library.library_card.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListLoans",
   "method" : "GET",
   "path" : "/v1/library/loans",
   "permission" : "library.loan.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListMedia",
   "method" : "GET",
   "path" : "/v1/library/media",
   "permission" : "library.media.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListMediaAuthors",
   "method" : "GET",
   "path" : "/v1/library/media/{mediaId}/authors",
   "permission" : "library.media_author.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListMediaCategories",
   "method" : "GET",
   "path" : "/v1/library/media-categories",
   "permission" : "library.media_category.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListMediaCourses",
   "method" : "GET",
   "path" : "/v1/library/media/{mediaId}/courses",
   "permission" : "library.media_course.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListMediaPublishers",
   "method" : "GET",
   "path" : "/v1/library/media/{mediaId}/publishers",
   "permission" : "library.media_publisher.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListMediaSubjects",
   "method" : "GET",
   "path" : "/v1/library/media/{mediaId}/subjects",
   "permission" : "library.media_subject.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListMediaTypes",
   "method" : "GET",
   "path" : "/v1/library/media-types",
   "permission" : "library.media_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListMediaUnits",
   "method" : "GET",
   "path" : "/v1/library/media/{mediaId}/units",
   "permission" : "library.media_unit.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListPublishers",
   "method" : "GET",
   "path" : "/v1/library/publishers",
   "permission" : "library.publisher.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListPurchaseRequestCourses",
   "method" : "GET",
   "path" : "/v1/library/purchase-requests/{purchaseRequestId}/courses",
   "permission" : "library.purchase_request_course.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListPurchaseRequestSubjects",
   "method" : "GET",
   "path" : "/v1/library/purchase-requests/{purchaseRequestId}/subjects",
   "permission" : "library.purchase_request_subject.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListPurchaseRequests",
   "method" : "GET",
   "path" : "/v1/library/purchase-requests",
   "permission" : "library.purchase_request.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.ListReservations",
   "method" : "GET",
   "path" : "/v1/library/reservations",
   "permission" : "library.reservation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.MarkLoanLost",
   "method" : "POST",
@@ -522,7 +593,8 @@
   "permission" : "library.loan.mark_loan_lost",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.RejectPurchaseRequest",
   "method" : "POST",
@@ -530,7 +602,8 @@
   "permission" : "library.purchase_request.reject_purchase_request",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.RejectReservation",
   "method" : "POST",
@@ -538,7 +611,8 @@
   "permission" : "library.reservation.reject_reservation",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.RequestLoanReturn",
   "method" : "POST",
@@ -546,7 +620,8 @@
   "permission" : "library.loan.request_loan_return",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.RequestReservationAgain",
   "method" : "POST",
@@ -554,7 +629,8 @@
   "permission" : "library.reservation.request_reservation_again",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.ReturnLoan",
   "method" : "POST",
@@ -562,7 +638,8 @@
   "permission" : "library.loan.return_loan",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.SubmitPurchaseRequest",
   "method" : "POST",
@@ -570,124 +647,142 @@
   "permission" : "library.purchase_request.submit_purchase_request",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdateAuthor",
   "method" : "PATCH",
   "path" : "/v1/library/authors/{authorId}",
   "permission" : "library.author.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdateLibraryCard",
   "method" : "PATCH",
   "path" : "/v1/library/library-cards/{libraryCardId}",
   "permission" : "library.library_card.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdateLibraryCardType",
   "method" : "PATCH",
   "path" : "/v1/library/library-card-types/{libraryCardTypeId}",
   "permission" : "library.library_card_type.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdateLoan",
   "method" : "PATCH",
   "path" : "/v1/library/loans/{loanId}",
   "permission" : "library.loan.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdateMedia",
   "method" : "PATCH",
   "path" : "/v1/library/media/{mediaId}",
   "permission" : "library.media.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdateMediaAuthor",
   "method" : "PATCH",
   "path" : "/v1/library/media/{mediaId}/authors/{mediaAuthorId}",
   "permission" : "library.media_author.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdateMediaCategory",
   "method" : "PATCH",
   "path" : "/v1/library/media-categories/{mediaCategoryId}",
   "permission" : "library.media_category.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdateMediaCourse",
   "method" : "PATCH",
   "path" : "/v1/library/media/{mediaId}/courses/{mediaCourseId}",
   "permission" : "library.media_course.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdateMediaPublisher",
   "method" : "PATCH",
   "path" : "/v1/library/media/{mediaId}/publishers/{mediaPublisherId}",
   "permission" : "library.media_publisher.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdateMediaSubject",
   "method" : "PATCH",
   "path" : "/v1/library/media/{mediaId}/subjects/{mediaSubjectId}",
   "permission" : "library.media_subject.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdateMediaType",
   "method" : "PATCH",
   "path" : "/v1/library/media-types/{mediaTypeId}",
   "permission" : "library.media_type.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdateMediaUnit",
   "method" : "PATCH",
   "path" : "/v1/library/media/{mediaId}/units/{mediaUnitId}",
   "permission" : "library.media_unit.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdatePublisher",
   "method" : "PATCH",
   "path" : "/v1/library/publishers/{publisherId}",
   "permission" : "library.publisher.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdatePurchaseRequest",
   "method" : "PATCH",
   "path" : "/v1/library/purchase-requests/{purchaseRequestId}",
   "permission" : "library.purchase_request.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdatePurchaseRequestCourse",
   "method" : "PATCH",
   "path" : "/v1/library/purchase-requests/{purchaseRequestId}/courses/{purchaseRequestCourseId}",
   "permission" : "library.purchase_request_course.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdatePurchaseRequestSubject",
   "method" : "PATCH",
   "path" : "/v1/library/purchase-requests/{purchaseRequestId}/subjects/{purchaseRequestSubjectId}",
   "permission" : "library.purchase_request_subject.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "library.UpdateReservation",
   "method" : "PATCH",
   "path" : "/v1/library/reservations/{reservationId}",
   "permission" : "library.reservation.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 } ]

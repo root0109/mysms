@@ -1,4 +1,4 @@
-// Owned API contract of careers (JAVA-CODING-RULES §7); first materialized from api/openapi/careers.yaml on 2026-11-10.
+// Owned API contract of careers.
 package com.mysms.careers.api;
 
 import com.mysms.core.paging.PagingInfo;

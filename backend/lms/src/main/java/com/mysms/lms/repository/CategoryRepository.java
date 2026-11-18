@@ -22,11 +22,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.category (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live rows
- * only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.category: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class CategoryRepository {
@@ -50,6 +47,8 @@ public class CategoryRepository {
             field("name", "r.name", ValueType.STRING));
 
     public static final String DEFAULT_ORDER = "createTime";
+    /** The categories the public sees. */
+    public static final SqlFragment ACTIVE = new SqlFragment("r.is_active", Map.of());
     public static final String ID_COLUMN = "r.id";
 
     private static final Map<String, Function<CategoryEntity, Object>> SORT_VALUES = Map.ofEntries(

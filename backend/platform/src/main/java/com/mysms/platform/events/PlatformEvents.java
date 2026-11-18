@@ -5,8 +5,7 @@ import java.util.UUID;
 
 /**
  * Domain events platform publishes through its outbox: {@code <schema>.<table>.created|updated|deleted} with the row
- * id.
- * Dependent modules keep their copies and logical references fresh from these (database/logical-references.md).
+ * id. Dependent modules keep their copies and logical references fresh from these.
  */
 public final class PlatformEvents {
 

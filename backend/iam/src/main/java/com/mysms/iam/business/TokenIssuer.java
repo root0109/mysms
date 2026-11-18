@@ -35,6 +35,9 @@ import java.util.UUID;
 public final class TokenIssuer {
 
     public static final String TENANT_AUDIENCE = "mysms";
+    /** Service tokens (client credentials) are for MySMS services only. */
+    public static final String SERVICE_AUDIENCE = com.mysms.authclient.AuthClientProperties.INTERNAL_AUDIENCE;
+    private static final String SERVICE_SUBJECT_PREFIX = com.mysms.authclient.AuthContext.SERVICE_SUBJECT_PREFIX;
     private static final int MIN_KEY_BITS = 2048;
 
     private final String issuer;
@@ -103,8 +106,22 @@ public final class TokenIssuer {
 
     /** As {@link #issue(AccessClaims)}, naming how the user authenticated (`amr`: pwd, mfa). */
     public IssuedToken issue(AccessClaims claims, List<String> authMethods) {
+        return sign(claims, authMethods, accessTokenTtl, null);
+    }
+
+    /**
+     * An access token for an administrator acting as the claims' user (iam.StartImpersonation): RFC 8693 `act`
+     * names the administrator (`act.sub`), the lifetime is the given one (at most the access-token lifetime), and no
+     * refresh token goes with it.
+     */
+    public IssuedToken issueActing(AccessClaims claims, List<String> authMethods, UUID actor, Duration lifetime) {
+        Duration ttl = lifetime.compareTo(accessTokenTtl) < 0 ? lifetime : accessTokenTtl;
+        return sign(claims, authMethods, ttl, actor);
+    }
+
+    private IssuedToken sign(AccessClaims claims, List<String> authMethods, Duration ttl, UUID actor) {
         Instant now = clock.instant();
-        Instant expires = now.plus(accessTokenTtl);
+        Instant expires = now.plus(ttl);
         String tokenId = UUID.randomUUID().toString();
         JWTClaimsSet.Builder set = new JWTClaimsSet.Builder()
                 .issuer(issuer)
@@ -122,12 +139,44 @@ public final class TokenIssuer {
                 .claim("tperms", claims.tenantWidePermissions().stream().sorted().toList())
                 .claim("roles", claims.roles());
         claims.personId().ifPresent(person -> set.claim("pid", person.toString()));
+        if (actor != null) {
+            set.claim("act", Map.of("sub", actor.toString()));
+        }
         SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(publicJwk.getKeyID()).build(),
                 set.build());
         try {
             jwt.sign(signer);
         } catch (JOSEException e) {
             throw new IllegalStateException("cannot sign an access token", e);
+        }
+        return new IssuedToken(jwt.serialize(), tokenId, expires);
+    }
+
+    /**
+     * A service token for a module's client (client credentials): {@code sub =
+     * service:<module>}, audience {@code mysms-internal}, the client's permissions, no tenant and no person — the
+     * edge admits it only on operations of audience internal, in the tenant the call names.
+     */
+    public IssuedToken issueService(String module, List<String> permissions, Duration ttl) {
+        Instant now = clock.instant();
+        Instant expires = now.plus(ttl);
+        String tokenId = UUID.randomUUID().toString();
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .issuer(issuer)
+                .subject(SERVICE_SUBJECT_PREFIX + module)
+                .audience(SERVICE_AUDIENCE)
+                .issueTime(Date.from(now))
+                .notBeforeTime(Date.from(now))
+                .expirationTime(Date.from(expires))
+                .jwtID(tokenId)
+                .claim("perms", permissions.stream().sorted().toList())
+                .build();
+        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(publicJwk.getKeyID()).build(),
+                claims);
+        try {
+            jwt.sign(signer);
+        } catch (JOSEException e) {
+            throw new IllegalStateException("cannot sign a service token", e);
         }
         return new IssuedToken(jwt.serialize(), tokenId, expires);
     }

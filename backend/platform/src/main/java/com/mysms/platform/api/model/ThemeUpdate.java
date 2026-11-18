@@ -1,4 +1,4 @@
-// Owned API contract of platform (JAVA-CODING-RULES §7); first materialized from api/openapi/platform.yaml on 2026-11-10.
+// Owned API contract of platform.
 package com.mysms.platform.api.model;
 
 import java.net.URI;
@@ -33,6 +33,13 @@ public class ThemeUpdate {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID thumbnailAltFileId;
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID logoFileId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable Boolean isDefault;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Object tokens = null;
 
   public ThemeUpdate name(@Nullable String name) {
@@ -115,6 +122,46 @@ public class ThemeUpdate {
     this.thumbnailAltFileId = thumbnailAltFileId;
   }
 
+  public ThemeUpdate logoFileId(@Nullable UUID logoFileId) {
+    this.logoFileId = logoFileId;
+    return this;
+  }
+
+  /**
+   * Logo shown on sign-in pages, the app shell and the PWA manifest (the branding of the tenant's default theme).
+   * @return logoFileId
+   */
+  @Valid 
+  @JsonProperty("logoFileId")
+  public @Nullable UUID getLogoFileId() {
+    return logoFileId;
+  }
+
+  @JsonProperty("logoFileId")
+  public void setLogoFileId(@Nullable UUID logoFileId) {
+    this.logoFileId = logoFileId;
+  }
+
+  public ThemeUpdate isDefault(@Nullable Boolean isDefault) {
+    this.isDefault = isDefault;
+    return this;
+  }
+
+  /**
+   * The tenant's own theme: the one public branding uses. At most one per tenant; setting it moves the mark.
+   * @return isDefault
+   */
+  
+  @JsonProperty("isDefault")
+  public @Nullable Boolean getIsDefault() {
+    return isDefault;
+  }
+
+  @JsonProperty("isDefault")
+  public void setIsDefault(@Nullable Boolean isDefault) {
+    this.isDefault = isDefault;
+  }
+
   public ThemeUpdate tokens(@Nullable Object tokens) {
     this.tokens = tokens;
     return this;
@@ -148,12 +195,14 @@ public class ThemeUpdate {
         Objects.equals(this.description, themeUpdate.description) &&
         Objects.equals(this.thumbnailFileId, themeUpdate.thumbnailFileId) &&
         Objects.equals(this.thumbnailAltFileId, themeUpdate.thumbnailAltFileId) &&
+        Objects.equals(this.logoFileId, themeUpdate.logoFileId) &&
+        Objects.equals(this.isDefault, themeUpdate.isDefault) &&
         Objects.equals(this.tokens, themeUpdate.tokens);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, description, thumbnailFileId, thumbnailAltFileId, tokens);
+    return Objects.hash(name, description, thumbnailFileId, thumbnailAltFileId, logoFileId, isDefault, tokens);
   }
 
   @Override
@@ -164,6 +213,8 @@ public class ThemeUpdate {
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
     sb.append("    thumbnailFileId: ").append(toIndentedString(thumbnailFileId)).append("\n");
     sb.append("    thumbnailAltFileId: ").append(toIndentedString(thumbnailAltFileId)).append("\n");
+    sb.append("    logoFileId: ").append(toIndentedString(logoFileId)).append("\n");
+    sb.append("    isDefault: ").append(toIndentedString(isDefault)).append("\n");
     sb.append("    tokens: ").append(toIndentedString(tokens)).append("\n");
     sb.append("}");
     return sb.toString();

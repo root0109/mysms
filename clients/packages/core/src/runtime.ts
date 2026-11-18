@@ -24,6 +24,8 @@ export interface RuntimeConfig {
   /** Tenant default locale; the user's own locale wins (ui/04 §7). */
   defaultLocale?: string;
   fetch?: FetchFn;
+  /** The school this deployment serves to readers without a session (the public catalogue). */
+  tenantCode?: string;
 }
 
 /** Everything a client app needs, created once at startup. */
@@ -66,6 +68,7 @@ export function createRuntime(config: RuntimeConfig): Runtime {
       call(accounts().logout({ logoutRequest: { allDevices: false } }, bearer(accessToken))),
     me: (accessToken) => call(accounts().getMe(bearer(accessToken))),
     mySettings: async (accessToken) => (await call(accounts().listMySettings(bearer(accessToken)))).items,
+    stopImpersonation: (accessToken) => call(accounts().stopImpersonation({ body: {} }, bearer(accessToken))),
   };
   const session = createSession({ auth, vault: config.vault ?? memoryVault() });
   holder.session = session;
@@ -75,11 +78,13 @@ export function createRuntime(config: RuntimeConfig): Runtime {
     tokens: session,
     locale,
     fetch: fetchImpl,
+    tenantCode: () => config.tenantCode ?? null,
   });
   const queryClient = createQueryClient();
   // Permission-dependent data must not survive a change of user (ui/05 §3 persona switch / sign-out).
   session.store.subscribe((state, previous) => {
-    if (state.me?.user?.id !== previous.me?.user?.id) queryClient.clear();
+    const role = (s: typeof state) => `${s.me?.activeRole?.roleId ?? ''}/${s.me?.activeRole?.scopeId ?? ''}`;
+    if (state.me?.user?.id !== previous.me?.user?.id || role(state) !== role(previous)) queryClient.clear();
   });
   return { api, session, queryClient, locale };
 }

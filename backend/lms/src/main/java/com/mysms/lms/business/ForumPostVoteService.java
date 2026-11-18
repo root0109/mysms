@@ -38,10 +38,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.forum_post_vote (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of lms.forum_post_vote: audit and domain event commit in the same transaction as every change. Rows
+ * outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class ForumPostVoteService extends AppTransactionManager {
@@ -52,7 +50,7 @@ public class ForumPostVoteService extends AppTransactionManager {
     static final String PERMISSION_UPDATE = "lms.forum_post_vote.update";
     static final String PERMISSION_DELETE = "lms.forum_post_vote.delete";
     /** The contract's ForumPostVoteUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("forumPostId", "userId", "isLike", "votedAt");
+    static final List<String> WRITABLE = List.of("forumPostId", "isLike");
 
 
     private final ForumPostVoteRepository repository;
@@ -95,6 +93,8 @@ public class ForumPostVoteService extends AppTransactionManager {
     public ForumPostVote createForumPostVote(ForumPostVote request, boolean validateOnly) {
         validator.validate(request);
         ForumPostVoteEntity entity = mapper.toEntity(request);
+        entity.setUserId(OwnRows.caller());
+        entity.setVotedAt(null);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
         DataScope scope = DataScope.current(PERMISSION_CREATE);
@@ -113,8 +113,8 @@ public class ForumPostVoteService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ForumPostVote updateForumPostVote(UUID id, String ifMatch, ForumPostVoteUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -123,6 +123,7 @@ public class ForumPostVoteService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             ForumPostVoteEntity entity = loadVisible(scope, id);
+            OwnRows.require(entity.getUserId(), AGGREGATE, id);
             scope.requireWritable(institutionOf(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -152,6 +153,7 @@ public class ForumPostVoteService extends AppTransactionManager {
         runInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_DELETE);
             ForumPostVoteEntity entity = loadVisible(scope, id);
+            OwnRows.require(entity.getUserId(), AGGREGATE, id);
             scope.requireWritable(institutionOf(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -183,16 +185,12 @@ public class ForumPostVoteService extends AppTransactionManager {
         return repository.institutionOf(entity.getForumPostId());
     }
 
-    /**
-     * Applies the selected ForumPostVoteUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected ForumPostVoteUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(ForumPostVoteEntity entity, ForumPostVoteUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
                 case "forumPostId" -> entity.setForumPostId(changes.getForumPostId());
-                case "userId" -> entity.setUserId(changes.getUserId());
                 case "isLike" -> entity.setIsLike(changes.getIsLike());
-                case "votedAt" -> entity.setVotedAt(changes.getVotedAt());
                 default -> throw new IllegalStateException("unhandled writable field " + field);
             }
         }

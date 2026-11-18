@@ -34,13 +34,14 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * {@link TokenVerifier} for JWT access tokens of an OIDC issuer (today the iam module; later any issuer). Verifies
- * the signature against the issuer's JWKS (cached, rotated), the issuer, expiry (60 s skew) and audience, then maps
- * the MySMS claims: sub, tid, perms, ins, jti, act, amr, pid, sid. Implementation detail of auth-client.
+ * {@link TokenVerifier} for an OIDC issuer's JWTs: signature against the cached JWKS, issuer, expiry (60 s skew) and
+ * audience, then the MySMS claims. A service token becomes a service principal with no tenant of its own; a token
+ * that mixes the two kinds is invalid.
  */
 public final class JwtTokenVerifier implements TokenVerifier {
 
     private static final String MFA = "mfa";
+    private static final java.util.regex.Pattern MODULE = java.util.regex.Pattern.compile("[a-z]+");
     private static final Duration CLOCK_SKEW = Duration.ofSeconds(60);
     private static final Duration JWKS_TIMEOUT = Duration.ofSeconds(5);
 
@@ -100,6 +101,11 @@ public final class JwtTokenVerifier implements TokenVerifier {
         try {
             Set<String> audiences = Set.copyOf(Optional.ofNullable(jwt.getAudience()).orElse(List.of()));
             Set<String> amr = Set.copyOf(Optional.ofNullable(jwt.getClaimAsStringList("amr")).orElse(List.of()));
+            String subject = jwt.getSubject();
+            boolean service = subject != null && subject.startsWith(AuthContext.SERVICE_SUBJECT_PREFIX);
+            if (service || audiences.contains(AuthClientProperties.INTERNAL_AUDIENCE)) {
+                return toService(jwt, audiences, amr);
+            }
             boolean platform = audiences.contains(AuthClientProperties.PLATFORM_AUDIENCE) && amr.contains(MFA);
             Set<UUID> institutions = new HashSet<>();
             List<String> ins = Optional.ofNullable(jwt.getClaimAsStringList("ins")).orElse(List.of());
@@ -110,7 +116,6 @@ public final class JwtTokenVerifier implements TokenVerifier {
                     .map(Object::toString)
                     .map(UUID::fromString);
             String tokenId = jwt.getId();
-            String subject = jwt.getSubject();
             if (tokenId == null || tokenId.isBlank() || subject == null || jwt.getExpiresAt() == null) {
                 throw new IllegalArgumentException("sub, jti and exp are required");
             }
@@ -132,6 +137,21 @@ public final class JwtTokenVerifier implements TokenVerifier {
         } catch (IllegalArgumentException e) {
             throw new InvalidTokenException(InvalidTokenException.UNAUTHENTICATED, "The access token claims are not valid.", e);
         }
+    }
+
+    /** A service token: sub service:&lt;module&gt;, audience mysms-internal only, no tenant, no person claims. */
+    private static VerifiedToken toService(Jwt jwt, Set<String> audiences, Set<String> amr) {
+        String subject = jwt.getSubject();
+        String module = subject == null || !subject.startsWith(AuthContext.SERVICE_SUBJECT_PREFIX) ? ""
+                : subject.substring(AuthContext.SERVICE_SUBJECT_PREFIX.length());
+        if (!MODULE.matcher(module).matches() || !audiences.equals(Set.of(AuthClientProperties.INTERNAL_AUDIENCE))
+                || jwt.getClaim("tid") != null || jwt.getClaim("pid") != null || jwt.getClaim("act") != null
+                || jwt.getId() == null || jwt.getId().isBlank() || jwt.getExpiresAt() == null) {
+            throw new IllegalArgumentException("not a service token");
+        }
+        Set<String> permissions = Set.copyOf(Optional.ofNullable(jwt.getClaimAsStringList("perms")).orElse(List.of()));
+        return new VerifiedToken(AuthContext.service(module, permissions, jwt.getId()), jwt.getExpiresAt(), audiences,
+                amr);
     }
 
     static RSAPublicKey rsaPublicKey(String pem) {

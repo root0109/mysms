@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of comms.outbound_message (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of comms.outbound_message. */
 @Getter
 @Setter
 @SuperBuilder

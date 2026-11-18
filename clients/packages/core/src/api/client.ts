@@ -31,6 +31,8 @@ export interface TransportConfig {
   locale?: () => string;
   /** Omitted for the unauthenticated transport the session itself uses. */
   tokens?: TokenSource;
+  /** The school a reader without a session browses (sent as X-Tenant-Code; ignored by the server next to a token). */
+  tenantCode?: () => string | null;
   fetch?: FetchFn;
 }
 
@@ -55,6 +57,10 @@ export function createTransport(config: TransportConfig): FetchAPI {
     if (!request.headers.has('Authorization')) {
       const token = await tokens.accessToken();
       if (token) request.headers.set('Authorization', `Bearer ${token}`);
+      else {
+        const school = config.tenantCode?.()?.trim();
+        if (school) request.headers.set('X-Tenant-Code', school);
+      }
     }
     if (isAuthPath(request.url)) return fetchImpl(request);
     const original = request.clone();

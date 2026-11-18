@@ -18,11 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Institution operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/org.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Institution operations; authentication and the permission check already happened in the auth-client
+ * filter; operations not served yet answer 501 NOT_IMPLEMENTED.
  */
 @RestController
 public class InstitutionController implements InstitutionApi {
@@ -109,6 +106,13 @@ public class InstitutionController implements InstitutionApi {
                 PagingUtil.pagingInfo(institutionService.listInstitutions(page, size, cursor, filter, sort));
         list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<Institution>> listActiveInstitutions(Integer page, Integer size, String cursor,
+            String filter) {
+        return ResponseEntity.ok(PagingUtil.pagingInfo(
+                institutionService.listActiveInstitutions(page, size, cursor, filter)));
     }
 
     @Override

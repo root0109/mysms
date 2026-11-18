@@ -25,11 +25,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.live_class (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.live_class: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class LiveClassRepository {
@@ -95,6 +92,15 @@ public class LiveClassRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** The coming live classes of the cohorts a student is actively enrolled in (the student dashboard). */
+    private static final String UPCOMING_FOR_STUDENT = SELECT_LIVE + """
+             AND r.is_active AND r.ended_at IS NULL AND r.class_date >= :today
+             AND r.cohort_id IN (SELECT e.cohort_id FROM lms.cohort_enrollment e WHERE e.tenant_id = :tenantId
+                                    AND e.user_id = :userId AND e.is_active AND e.removed_at IS NULL
+                                    AND e.deleted_at IS NULL)
+            ORDER BY r.class_date, r.start_time, r.id
+            LIMIT :limit
+            """;
     private static final String INSERT = """
             INSERT INTO lms.live_class
             (id, tenant_id, cohort_id, title, description, class_date, start_time, duration_minutes, timezone,
@@ -197,6 +203,12 @@ public class LiveClassRepository {
 
     public LiveClassRepository(@Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** The coming live classes of the student's active cohorts, soonest first, at most {@code limit}. */
+    public List<LiveClassEntity> upcomingForStudent(UUID userId, LocalDate today, int limit) {
+        return jdbc.sql(UPCOMING_FOR_STUDENT).param("userId", userId).param("today", today).param("limit", limit)
+                .query(LiveClassRepository::map).list();
     }
 
     public Optional<LiveClassEntity> findById(UUID id) {
@@ -343,7 +355,7 @@ public class LiveClassRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

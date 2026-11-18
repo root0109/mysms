@@ -1,4 +1,4 @@
-// Owned API contract of comms (JAVA-CODING-RULES §7); first materialized from api/openapi/comms.yaml on 2026-11-10.
+// Owned API contract of comms.
 package com.mysms.comms.api;
 
 import com.mysms.comms.api.model.CalendarItem;

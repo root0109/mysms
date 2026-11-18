@@ -11,7 +11,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /**
- * The no-escalation rules of access management (api/README "Role grants"): nobody hands out a permission they do not
+ * The no-escalation rules of access management: nobody hands out a permission they do not
  * hold themselves, at a reach they do not have, and nobody changes their own access. Shared by the role, role-permission,
  * role-grant and direct-permission rules.
  */
@@ -64,6 +64,16 @@ public class AccessRules {
             } else {
                 requireTenantWide(code);
             }
+        }
+    }
+
+    /**
+     * What only the account holder may do, never an administrator acting as them (iam.StartImpersonation): their
+     * password, second factors, terms, tokens that outlive the impersonation, and another impersonation.
+     */
+    public static void requireOwnIdentity() {
+        if (AuthContext.require().impersonatorId().isPresent()) {
+            throw new PermissionDeniedException("This is not possible while acting as another user.");
         }
     }
 

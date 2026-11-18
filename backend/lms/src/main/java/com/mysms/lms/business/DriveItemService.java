@@ -36,6 +36,16 @@ import com.mysms.lms.mapper.DriveItemShareMapper;
 import com.mysms.lms.repository.DriveItemRepository;
 import com.mysms.lms.repository.DriveItemShareRepository;
 import java.time.Clock;
+import java.util.Set;
+import java.util.LinkedHashSet;
+import java.time.temporal.ChronoUnit;
+import java.time.ZoneOffset;
+import java.time.OffsetDateTime;
+import com.mysms.lms.repository.DriveSharingRepository;
+import com.mysms.lms.api.model.ShareDriveItemRequest;
+import com.mysms.lms.api.model.DriveItemShareList;
+import com.mysms.core.id.UuidV7;
+import com.mysms.authclient.AuthContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -45,13 +55,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.drive_item (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a DriveItem
- * are served here too — DriveItemShare.
+ * Business service of lms.drive_item and of the records that exist only as part of a DriveItem (DriveItemShare): audit
+ * and domain event commit in the same transaction as every change. Rows outside the caller's institutions are
+ * invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class DriveItemService extends AppTransactionManager {
@@ -62,11 +68,13 @@ public class DriveItemService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "lms.drive_item.create";
     static final String PERMISSION_UPDATE = "lms.drive_item.update";
     static final String PERMISSION_DELETE = "lms.drive_item.delete";
+    static final String PERMISSION_SHARE = "lms.drive_item.share_drive_item";
+    static final int MAX_SHARE = 100;
     /** The contract's DriveItemUpdate fields, in apply order. */
     static final List<String> WRITABLE =
-            List.of("ownerUserId", "fileId", "itemType", "icon", "title", "description", "keywords", "sizeBytes",
+            List.of("fileId", "itemType", "icon", "title", "description", "keywords", "sizeBytes",
                     "linkUrl",
-            "uploadedAt", "courseId", "isShared", "likeCount", "dislikeCount");
+            "uploadedAt", "courseId", "isShared");
 
     public static final String DRIVE_ITEM_SHARE_AGGREGATE = DriveItemShareEntity.TABLE;
     static final String DRIVE_ITEM_SHARE_PERMISSION_LIST = "lms.drive_item_share.read";
@@ -84,6 +92,7 @@ public class DriveItemService extends AppTransactionManager {
     private final Clock clock;
     private final DriveItemShareRepository driveItemShareRepository;
     private final DriveItemShareMapper driveItemShareMapper;
+    private final DriveSharingRepository sharing;
 
     public DriveItemService(DriveItemRepository repository,
             DriveItemMapper mapper,
@@ -94,8 +103,10 @@ public class DriveItemService extends AppTransactionManager {
             DtoValidator validator,
             Clock clock,
             DriveItemShareRepository driveItemShareRepository,
-            DriveItemShareMapper driveItemShareMapper) {
+            DriveItemShareMapper driveItemShareMapper,
+            DriveSharingRepository sharing) {
         super(database, transactions);
+        this.sharing = sharing;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
@@ -134,6 +145,9 @@ public class DriveItemService extends AppTransactionManager {
             throw new ValidationFailedException(wire);
         }
         DriveItemEntity entity = mapper.toEntity(request);
+        entity.setOwnerUserId(OwnRows.caller());
+        entity.setLikeCount(null);
+        entity.setDislikeCount(null);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
         DataScope scope = DataScope.current(PERMISSION_CREATE);
@@ -152,8 +166,8 @@ public class DriveItemService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public DriveItem updateDriveItem(UUID id, String ifMatch, DriveItemUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -167,6 +181,7 @@ public class DriveItemService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             DriveItemEntity entity = loadVisible(scope, id);
+            OwnRows.require(entity.getOwnerUserId(), AGGREGATE, id);
             scope.requireWritable(institutionOf(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -196,6 +211,7 @@ public class DriveItemService extends AppTransactionManager {
         runInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_DELETE);
             DriveItemEntity entity = loadVisible(scope, id);
+            OwnRows.require(entity.getOwnerUserId(), AGGREGATE, id);
             scope.requireWritable(institutionOf(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -223,16 +239,15 @@ public class DriveItemService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOf(DriveItemEntity entity) {
         return repository.institutionOf(entity.getCourseId());
     }
 
-    /** Applies the selected DriveItemUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected DriveItemUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(DriveItemEntity entity, DriveItemUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
-                case "ownerUserId" -> entity.setOwnerUserId(changes.getOwnerUserId());
                 case "fileId" -> entity.setFileId(changes.getFileId());
                 case "itemType" -> entity.setItemType(changes.getItemType());
                 case "icon" -> entity.setIcon(changes.getIcon());
@@ -244,8 +259,6 @@ public class DriveItemService extends AppTransactionManager {
                 case "uploadedAt" -> entity.setUploadedAt(changes.getUploadedAt());
                 case "courseId" -> entity.setCourseId(changes.getCourseId());
                 case "isShared" -> entity.setIsShared(changes.getIsShared());
-                case "likeCount" -> entity.setLikeCount(changes.getLikeCount());
-                case "dislikeCount" -> entity.setDislikeCount(changes.getDislikeCount());
                 default -> throw new IllegalStateException("unhandled writable field " + field);
             }
         }
@@ -331,8 +344,8 @@ public class DriveItemService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public DriveItemShare updateDriveItemShare(UUID driveItemId, UUID id, String ifMatch, DriveItemShareUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -398,9 +411,7 @@ public class DriveItemService extends AppTransactionManager {
         return driveItemShareRepository.institutionOf(entity.getDriveItemId());
     }
 
-    /**
-     * Applies the selected DriveItemShareUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected DriveItemShareUpdate fields; explicit per field so a mask can clear values. */
     private static void applyDriveItemShare(DriveItemShareEntity entity, DriveItemShareUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -434,5 +445,62 @@ public class DriveItemService extends AppTransactionManager {
             throw new DuplicateResourceException(
                     "A drive item share with the same drive item id and user id already exists.");
         }
+    }
+
+    // ---- ShareDriveItem ----
+
+    /**
+     * Sets who the caller's own item is shared with (at most 100 users, never the owner): the list replaces the
+     * current one — a user who stays keeps their share and reaction, a user left out loses it, an empty list unshares
+     * the item. Anyone else's item is 404, as a drive is personal. Answers the item's shares as they now stand.
+     */
+    public DriveItemShareList shareDriveItem(UUID id, ShareDriveItemRequest request) {
+        validator.validate(request);
+        Set<UUID> users = new LinkedHashSet<>(request.getUserIds());
+        UUID owner = AuthContext.require().userId();
+        List<FieldError> errors = new ArrayList<>();
+        if (users.size() > MAX_SHARE) {
+            errors.add(new FieldError("userIds", "must name at most " + MAX_SHARE + " users", "Size"));
+        }
+        if (users.contains(owner)) {
+            errors.add(new FieldError("userIds", "an item is not shared with its owner", "INVALID"));
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
+        }
+        return doInWriteTransaction(() -> {
+            DriveSharingRepository.Owned item = sharing.lock(id).filter(o -> owner.equals(o.ownerUserId()))
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            List<UUID> current = sharing.sharedWith(id);
+            for (UUID user : current) {
+                if (!users.contains(user)) {
+                    for (UUID ended : sharing.unshare(id, user, now, owner)) {
+                        audit.recordDelete(DRIVE_ITEM_SHARE_AGGREGATE, ended);
+                        outbox.publish(DRIVE_ITEM_SHARE_AGGREGATE + LmsEvents.DELETED, DRIVE_ITEM_SHARE_AGGREGATE,
+                                ended, LmsEvents.payload(ended));
+                    }
+                }
+            }
+            for (UUID user : users) {
+                if (!current.contains(user)) {
+                    UUID shareId = UuidV7.next(clock);
+                    sharing.share(shareId, id, user, now, owner);
+                    audit.recordCreate(DRIVE_ITEM_SHARE_AGGREGATE, shareId);
+                    outbox.publish(DRIVE_ITEM_SHARE_AGGREGATE + LmsEvents.CREATED, DRIVE_ITEM_SHARE_AGGREGATE,
+                            shareId, LmsEvents.payload(shareId));
+                }
+            }
+            if (sharing.markShared(id, item.rowVersion(), !users.isEmpty(), now, owner) == 0) {
+                throw new PreconditionFailedException("The item changed meanwhile; share it again.");
+            }
+            audit.recordTransition(AGGREGATE, id, "share", List.of("isShared"), null);
+            outbox.publish(AGGREGATE + ".share", AGGREGATE, id, LmsEvents.payload(id));
+            DriveItemShareList list = new DriveItemShareList();
+            list.setItems(sharing.shares(id).stream().map(s -> driveItemShareRepository.findById(s).orElseThrow())
+                    .map(driveItemShareMapper::toDto).toList());
+            return list;
+        });
     }
 }

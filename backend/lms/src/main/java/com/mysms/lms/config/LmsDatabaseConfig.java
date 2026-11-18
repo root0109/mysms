@@ -9,8 +9,8 @@ import org.springframework.core.env.Environment;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * The module's own database: pool, transaction manager and Flyway history for schema "lms" only,
- * bound from mysms.lms.datasource.* (every transaction binds the caller's tenant for row-level security).
+ * The module's own database: pool, transaction manager and Flyway history for schema "lms" only; every transaction
+ * binds the caller's tenant for row-level security.
  */
 @Configuration(proxyBeanMethods = false)
 public class LmsDatabaseConfig {
@@ -18,7 +18,7 @@ public class LmsDatabaseConfig {
     /** Bean name; every repository of this module injects the database by this qualifier. */
     public static final String DATABASE = "lmsDatabase";
 
-    /** Bean name of the module's transaction manager; every service injects it by this qualifier (§4). */
+    /** Bean name of the module's transaction manager; every service injects it by this qualifier. */
     public static final String TRANSACTIONS = "lmsTransactions";
 
     @Bean(name = DATABASE, destroyMethod = "close")
@@ -27,8 +27,7 @@ public class LmsDatabaseConfig {
     }
 
     /**
-     * The transaction manager of this module's own connection pool. Services open every transaction on it
-     * themselves; the database binds the call's tenant inside each one (JAVA-CODING-RULES §4).
+     * The transaction manager of the module's own pool; the database binds the call's tenant inside each transaction.
      */
     @Bean(name = TRANSACTIONS)
     public PlatformTransactionManager lmsTransactions(@Qualifier(DATABASE) ModuleDatabase database) {

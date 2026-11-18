@@ -1,4 +1,4 @@
-// Owned API contract of careers (JAVA-CODING-RULES §7); first materialized from api/openapi/careers.yaml on 2026-11-10.
+// Owned API contract of careers.
 package com.mysms.careers.api.model;
 
 import java.net.URI;
@@ -31,7 +31,7 @@ public class JobApplication {
   private @Nullable UUID jobOpeningId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID applicantUserId;
+  private @Nullable UUID applicantUserId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private UUID resumeFileId;
@@ -104,8 +104,7 @@ public class JobApplication {
   /**
    * Constructor with only required parameters
    */
-  public JobApplication(UUID applicantUserId, UUID resumeFileId) {
-    this.applicantUserId = applicantUserId;
+  public JobApplication(UUID resumeFileId) {
     this.resumeFileId = resumeFileId;
   }
 
@@ -149,23 +148,23 @@ public class JobApplication {
     this.jobOpeningId = jobOpeningId;
   }
 
-  public JobApplication applicantUserId(UUID applicantUserId) {
+  public JobApplication applicantUserId(@Nullable UUID applicantUserId) {
     this.applicantUserId = applicantUserId;
     return this;
   }
 
   /**
-   * Applicant.
+   * Applicant. Output only: the caller, from the token.
    * @return applicantUserId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("applicantUserId")
-  public UUID getApplicantUserId() {
+  public @Nullable UUID getApplicantUserId() {
     return applicantUserId;
   }
 
   @JsonProperty("applicantUserId")
-  public void setApplicantUserId(UUID applicantUserId) {
+  public void setApplicantUserId(@Nullable UUID applicantUserId) {
     this.applicantUserId = applicantUserId;
   }
 

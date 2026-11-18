@@ -1,4 +1,4 @@
-// Owned API contract of comms (JAVA-CODING-RULES §7); first materialized from api/openapi/comms.yaml on 2026-11-10.
+// Owned API contract of comms.
 package com.mysms.comms.api.model;
 
 import java.net.URI;
@@ -25,10 +25,10 @@ import java.util.*;
 public class ComposeMailRequest {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<UUID> toUserIds = new ArrayList<>();
+  private @Nullable List<UUID> toUserIds = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<String> toAddresses = new ArrayList<>();
+  private @Nullable List<String> toAddresses = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID aboutStudentId;
@@ -40,7 +40,7 @@ public class ComposeMailRequest {
   private String body;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<UUID> attachmentFileIds = new ArrayList<>();
+  private @Nullable List<UUID> attachmentFileIds = new ArrayList<>();
 
   public ComposeMailRequest() {
     super();

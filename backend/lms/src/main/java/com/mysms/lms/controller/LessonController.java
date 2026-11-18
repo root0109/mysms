@@ -16,7 +16,6 @@ import com.mysms.lms.api.model.LessonUpdate;
 import com.mysms.lms.api.model.MoveLessonRequest;
 import com.mysms.lms.api.model.TrackVideoWatchRequest;
 import com.mysms.lms.api.model.VideoWatch;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -24,10 +23,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Lesson operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Lesson operations; authentication and the permission check already ran in the auth-client filter.
+ * Operations not served yet answer 501.
  */
 @RestController
 public class LessonController implements LessonApi {
@@ -41,7 +38,13 @@ public class LessonController implements LessonApi {
 
     @Override
     public ResponseEntity<Lesson> createLesson(Lesson lesson, UUID idempotencyKey, Boolean validateOnly) {
-        throw new NotImplementedException();
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        Lesson created = lessonService.createLesson(lesson, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(URI.create("/v1/lms/lessons/" + created.getId())).eTag(created.getEtag())
+                .body(created);
     }
 
     @Override
@@ -59,12 +62,19 @@ public class LessonController implements LessonApi {
     @Override
     public ResponseEntity<LessonNote> createLessonNote(UUID lessonId, LessonNote lessonNote,
             UUID idempotencyKey, Boolean validateOnly) {
-        throw new NotImplementedException();
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        LessonNote created = lessonService.createLessonNote(lessonId, lessonNote, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(URI.create("/v1/lms/lessons/" + lessonId + "/notes/" + created.getId()))
+                .eTag(created.getEtag()).body(created);
     }
 
     @Override
     public ResponseEntity<Void> deleteLesson(UUID lessonId, String ifMatch) {
-        throw new NotImplementedException();
+        lessonService.deleteLesson(lessonId, ifMatch);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
@@ -76,12 +86,14 @@ public class LessonController implements LessonApi {
 
     @Override
     public ResponseEntity<Void> deleteLessonNote(UUID lessonId, UUID lessonNoteId, String ifMatch) {
-        throw new NotImplementedException();
+        lessonService.deleteLessonNote(lessonId, lessonNoteId, ifMatch);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<Lesson> getLesson(UUID lessonId, String fields) {
-        throw new NotImplementedException();
+        Lesson found = lessonService.getLesson(lessonId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
@@ -93,12 +105,13 @@ public class LessonController implements LessonApi {
 
     @Override
     public ResponseEntity<LessonContent> getLessonContent(UUID lessonId) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(lessonService.getLessonContent(lessonId));
     }
 
     @Override
     public ResponseEntity<LessonNote> getLessonNote(UUID lessonId, UUID lessonNoteId, String fields) {
-        throw new NotImplementedException();
+        LessonNote found = lessonService.getLessonNote(lessonId, lessonNoteId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
@@ -119,13 +132,18 @@ public class LessonController implements LessonApi {
     @Override
     public ResponseEntity<PagingInfo<LessonNote>> listLessonNotes(UUID lessonId, Integer page, Integer size,
             String cursor, String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<LessonNote> list =
+                PagingUtil.pagingInfo(lessonService.listLessonNotes(lessonId, page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
     public ResponseEntity<PagingInfo<Lesson>> listLessons(Integer page, Integer size, String cursor, String filter,
             List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<Lesson> list = PagingUtil.pagingInfo(lessonService.listLessons(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
@@ -140,25 +158,28 @@ public class LessonController implements LessonApi {
     @Override
     public ResponseEntity<LessonProgress> markLessonComplete(UUID lessonId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(lessonService.markLessonComplete(lessonId));
     }
 
     @Override
     public ResponseEntity<Lesson> moveLesson(UUID lessonId, MoveLessonRequest moveLessonRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Lesson moved = lessonService.moveLesson(lessonId, moveLessonRequest);
+        return ResponseEntity.ok().eTag(moved.getEtag()).body(moved);
     }
 
     @Override
     public ResponseEntity<VideoWatch> trackVideoWatch(UUID lessonId,
             TrackVideoWatchRequest trackVideoWatchRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(lessonService.trackVideoWatch(lessonId, trackVideoWatchRequest));
     }
 
     @Override
     public ResponseEntity<Lesson> updateLesson(UUID lessonId, String ifMatch, LessonUpdate lessonUpdate,
             String updateMask, Boolean validateOnly) {
-        throw new NotImplementedException();
+        Lesson updated = lessonService.updateLesson(lessonId, ifMatch, lessonUpdate, updateMask,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
@@ -174,6 +195,8 @@ public class LessonController implements LessonApi {
     @Override
     public ResponseEntity<LessonNote> updateLessonNote(UUID lessonId, UUID lessonNoteId, String ifMatch,
             LessonNoteUpdate lessonNoteUpdate, String updateMask, Boolean validateOnly) {
-        throw new NotImplementedException();
+        LessonNote updated = lessonService.updateLessonNote(lessonId, lessonNoteId, ifMatch, lessonNoteUpdate, updateMask,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 }

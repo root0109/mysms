@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of platform.tag_assignment (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of platform.tag_assignment. */
 @Getter
 @Setter
 @SuperBuilder

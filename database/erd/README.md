@@ -12,7 +12,7 @@ Every diagram here is generated from the SQL migrations in `../migrations/` alon
 - **Standard columns** (`tenant_id` and the audit / soft-delete / version columns `created_at`, `created_by`, `updated_at`, `updated_by`, `deleted_at`, `row_version`) are omitted; every table has them (see the database README).
 - **Large modules** (LMS, Communication) are split into sub-areas. A box that shows only `id` is a table of the same module drawn on the sub-area named in its note.
 
-Totals: 460 tables, 458 intra-module foreign keys drawn as lines, 494 cross-module logical references noted in rows.
+Totals: 460 tables drawn (the other two, `iam.member_record` and `payroll.staff_member`, are copies kept from other modules' events with no relationships to draw), 458 intra-module foreign keys drawn as lines, 494 cross-module logical references noted in rows.
 
 ## Diagrams
 
@@ -317,6 +317,7 @@ erDiagram
         uuid id PK
         varchar(50) storage_disk "NN"
         text storage_key "NN"
+        bigint storage_generation
         varchar(255) file_name "NN"
         varchar(255) original_name
         varchar(150) mime_type

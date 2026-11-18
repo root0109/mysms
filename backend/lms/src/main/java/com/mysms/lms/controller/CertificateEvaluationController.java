@@ -8,7 +8,6 @@ import com.mysms.lms.api.model.Certificate;
 import com.mysms.lms.api.model.CertificateEvaluation;
 import com.mysms.lms.api.model.CertificateEvaluationUpdate;
 import com.mysms.lms.api.model.IssueCertificateFromEvaluationRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.CertificateEvaluationService;
 import java.net.URI;
@@ -17,11 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the CertificateEvaluation operations: implements the generated contract interface, so paths, parameters
- * and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the CertificateEvaluation operations; authentication and the permission check already ran in the
+ * auth-client filter. Operations not served yet answer 501.
  */
 @RestController
 public class CertificateEvaluationController implements CertificateEvaluationApi {
@@ -62,7 +58,11 @@ public class CertificateEvaluationController implements CertificateEvaluationApi
     @Override
     public ResponseEntity<Certificate> issueCertificateFromEvaluation(UUID certificateEvaluationId,
             IssueCertificateFromEvaluationRequest issueCertificateFromEvaluationRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Certificate issued = certificateEvaluationService.issueCertificateFromEvaluation(certificateEvaluationId,
+                issueCertificateFromEvaluationRequest.getTemplateCode(), issueCertificateFromEvaluationRequest.getIssueDate(),
+                issueCertificateFromEvaluationRequest.getExpiryDate(),
+                Boolean.TRUE.equals(issueCertificateFromEvaluationRequest.getPublish()));
+        return ResponseEntity.ok().eTag(issued.getEtag()).body(issued);
     }
 
     @Override

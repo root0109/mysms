@@ -1,8 +1,12 @@
 package com.mysms.sis.business;
 
+import com.mysms.authclient.AuthContext;
 import com.mysms.authclient.DataScope;
 import com.mysms.sis.api.model.DisciplineIncident;
 import com.mysms.sis.api.model.DisciplineIncidentUpdate;
+import com.mysms.sis.api.model.MarkIncidentActionTakenRequest;
+import com.mysms.sis.api.model.MarkIncidentSeenRequest;
+import com.mysms.core.error.InvalidStateException;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.AppTransactionManager;
@@ -27,20 +31,23 @@ import com.mysms.sis.domain.DisciplineIncidentEntity;
 import com.mysms.sis.events.SisEvents;
 import com.mysms.sis.mapper.DisciplineIncidentMapper;
 import com.mysms.sis.repository.DisciplineIncidentRepository;
+import com.mysms.sis.repository.FamilyLinkRepository;
 import java.time.Clock;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of sis.discipline_incident (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of sis.discipline_incident: audit and domain event in the same transaction as every change; rows
+ * outside the caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class DisciplineIncidentService extends AppTransactionManager {
@@ -56,7 +63,8 @@ public class DisciplineIncidentService extends AppTransactionManager {
             List.of("institutionId", "academicYearId", "classSectionId", "studentId", "incidentAt", "reportedByUserId",
             "incidentType", "details", "response", "actionTaken", "evidenceMediaType", "evidenceFileId",
             "notifyGuardians", "seenByGuardian");
-
+    static final String PERMISSION_MARK_ACTION_TAKEN = "sis.discipline_incident.mark_incident_action_taken";
+    static final String PERMISSION_MARK_SEEN = "sis.discipline_incident.mark_incident_seen";
 
     private final DisciplineIncidentRepository repository;
     private final DisciplineIncidentMapper mapper;
@@ -64,14 +72,16 @@ public class DisciplineIncidentService extends AppTransactionManager {
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
+    private final FamilyLinkRepository families;
 
     public DisciplineIncidentService(DisciplineIncidentRepository repository, DisciplineIncidentMapper mapper,
             @Qualifier(SisDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(SisDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(SisEventsConfig.OUTBOX) OutboxWriter outbox, @Qualifier(SisEventsConfig.AUDIT) AuditWriter audit,
-            DtoValidator validator, Clock clock) {
+            DtoValidator validator, Clock clock, FamilyLinkRepository families) {
 
         super(database, transactions);
+        this.families = families;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
@@ -173,6 +183,88 @@ public class DisciplineIncidentService extends AppTransactionManager {
             audit.recordDelete(AGGREGATE, id);
             outbox.publish(AGGREGATE + SisEvents.DELETED, AGGREGATE, id, SisEvents.payload(id));
         });
+    }
+
+    /**
+     * sis.MarkIncidentActionTaken: the school records that it acted on the incident, with what it did (the response;
+     * when the request carries none, the stored one stays). The row must be visible and writable for the caller, and
+     * the step is allowed while no action is recorded; after that the answer is 409 and nothing changes.
+     */
+    public DisciplineIncident markIncidentActionTaken(UUID id, MarkIncidentActionTakenRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_MARK_ACTION_TAKEN);
+        String given = request == null ? null : request.getResponse();
+        String response = given == null || given.isBlank() ? null : given.strip();
+        return doInWriteTransaction(() -> {
+            DisciplineIncidentEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            requireCurrent(entity, request == null ? null : request.getEtag());
+            if (Boolean.TRUE.equals(entity.getActionTaken())) {
+                throw new InvalidStateException("Action has already been recorded for the incident.");
+            }
+            if (repository.markIncidentActionTaken(id, entity.getRowVersion(), response, now(),
+                    Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, "markActionTaken",
+                    response == null ? List.of("actionTaken") : List.of("actionTaken", "response"), null);
+            outbox.publish(AGGREGATE + ".markActionTaken", AGGREGATE, id, SisEvents.payload(id));
+            return mapper.toDto(repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    /**
+     * sis.MarkIncidentSeen: a guardian acknowledges an incident the school shared with guardians. A guardian of the
+     * incident's student (an active link of the caller's account or person) may do it for their own child, wherever
+     * the child goes to school; anyone else records the acknowledgement for the guardian (a signed slip, say) and
+     * needs, besides the operation's permission, to be able to read and write incidents of the institution. To
+     * everyone else the incident does not exist (404) — and to a guardian, an incident the school did not share does
+     * not exist either. An incident already seen, or (for staff) one not shared with guardians, answers 409.
+     */
+    public DisciplineIncident markIncidentSeen(UUID id, MarkIncidentSeenRequest request) {
+        AuthContext caller = AuthContext.require();
+        DataScope scope = DataScope.current(PERMISSION_MARK_SEEN);
+        return doInWriteTransaction(() -> {
+            DisciplineIncidentEntity entity = repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            boolean shared = Boolean.TRUE.equals(entity.getNotifyGuardians());
+            if (families.isGuardianOf(entity.getStudentId(), caller.userId(), caller.personId())) {
+                if (!shared) {
+                    throw new ResourceNotFoundException(AGGREGATE, id);
+                }
+            } else {
+                if (!caller.hasPermission(PERMISSION_GET) || !scope.canRead(institutionOf(entity))) {
+                    throw new ResourceNotFoundException(AGGREGATE, id);
+                }
+                scope.requireWritable(institutionOf(entity));
+            }
+            requireCurrent(entity, request == null ? null : request.getEtag());
+            if (!shared) {
+                throw new InvalidStateException("The incident is not shared with guardians.");
+            }
+            if (Boolean.TRUE.equals(entity.getSeenByGuardian())) {
+                throw new InvalidStateException("The incident has already been acknowledged.");
+            }
+            if (repository.markIncidentSeen(id, entity.getRowVersion(), now(), Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, "markSeen", List.of("seenByGuardian"), null);
+            outbox.publish(AGGREGATE + ".markSeen", AGGREGATE, id, SisEvents.payload(id));
+            return mapper.toDto(repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    /** A body etag, when the request carries one, must name the row's current version (412 otherwise). */
+    private static void requireCurrent(DisciplineIncidentEntity entity, String etag) {
+        OptionalInt expected = Etags.bodyVersion(etag);
+        if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+            throw new PreconditionFailedException("The etag does not match the current version.");
+        }
+    }
+
+    private OffsetDateTime now() {
+        return OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */

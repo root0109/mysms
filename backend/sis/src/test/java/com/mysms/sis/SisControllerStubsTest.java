@@ -27,17 +27,17 @@ class SisControllerStubsTest {
     @Test
     void unservedOperationsAnswerNotImplemented() {
         assertThat(ControllerStubs.count(ActivityTypeController.class)).as("ActivityType").isEqualTo(0);
-        assertThat(ControllerStubs.count(DisciplineIncidentController.class)).as("DisciplineIncident").isEqualTo(2);
-        assertThat(ControllerStubs.count(GuardianController.class)).as("Guardian").isEqualTo(2);
+        assertThat(ControllerStubs.count(DisciplineIncidentController.class)).as("DisciplineIncident").isEqualTo(0);
+        assertThat(ControllerStubs.count(GuardianController.class)).as("Guardian").isEqualTo(0);
         assertThat(ControllerStubs.count(ProgramEnrollmentController.class)).as("ProgramEnrollment").isEqualTo(0);
-        assertThat(ControllerStubs.count(PromotionController.class)).as("Promotion").isEqualTo(2);
+        assertThat(ControllerStubs.count(PromotionController.class)).as("Promotion").isEqualTo(0);
         assertThat(ControllerStubs.count(RelationshipTypeController.class)).as("RelationshipType").isEqualTo(0);
-        assertThat(ControllerStubs.count(StudentController.class)).as("Student").isEqualTo(4);
+        assertThat(ControllerStubs.count(StudentController.class)).as("Student").isEqualTo(0);
         assertThat(ControllerStubs.count(StudentActivityController.class)).as("StudentActivity").isEqualTo(0);
         assertThat(ControllerStubs.count(StudentCategoryController.class)).as("StudentCategory").isEqualTo(0);
         assertThat(ControllerStubs.count(StudentEnrollmentController.class)).as("StudentEnrollment").isEqualTo(0);
         assertThat(ControllerStubs.count(StudentHealthRecordController.class)).as("StudentHealthRecord").isEqualTo(0);
         assertThat(ControllerStubs.count(StudentLeaveRequestController.class)).as("StudentLeaveRequest").isEqualTo(0);
-        assertThat(ControllerStubs.count(SubjectRegistrationController.class)).as("SubjectRegistration").isEqualTo(2);
+        assertThat(ControllerStubs.count(SubjectRegistrationController.class)).as("SubjectRegistration").isEqualTo(0);
     }
 }

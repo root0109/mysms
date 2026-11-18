@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.quiz_submission (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.quiz_submission: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class QuizSubmissionRepository {
@@ -167,6 +164,15 @@ public class QuizSubmissionRepository {
                  AND (p0.institution_id = ANY(:scopeIds) OR
              p0.institution_id IS NULL)))
             """;
+
+    private static final String TAUGHT = """
+             COALESCE(r.cohort_id, (SELECT COALESCE(ci.cohort_id, ch.cohort_id) FROM lms.content_item ci
+                                      LEFT JOIN lms.chapter ch ON ch.id = ci.chapter_id AND ch.tenant_id = :tenantId
+                                     WHERE ci.tenant_id = :tenantId AND ci.id = r.content_item_id))
+                 IN (""" + TeachingReach.TAUGHT_COHORT_IDS + ")";
+    private static final String IS_TAUGHT = """
+            SELECT EXISTS (SELECT 1 FROM lms.quiz_submission r WHERE r.tenant_id = :tenantId AND r.id = :id
+                              AND r.deleted_at IS NULL AND\s""" + TAUGHT + ")";
 
     private final JdbcClient jdbc;
 
@@ -311,9 +317,56 @@ public class QuizSubmissionRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** The caller's own attempts and those of the cohorts they teach. */
+    public static SqlFragment ownOrTaught(TeachingReach reach) {
+        return new SqlFragment("r.user_id = :reachUser OR " + TAUGHT, reach.params());
+    }
+
+    /** Whether the attempt belongs to a cohort the caller teaches. */
+    public boolean taught(UUID id, TeachingReach reach) {
+        return Boolean.TRUE.equals(jdbc.sql(IS_TAUGHT).params(reach.params()).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    private static final String START_ATTEMPT = """
+            UPDATE lms.quiz_submission
+               SET status = 'in_progress', started_at = :startedAt, attempt_number = :attemptNumber,
+                   updated_at = :startedAt, row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND deleted_at IS NULL
+            """;
+
+    /** Marks a fresh submission as the started attempt (workflow columns the generic insert leaves alone). */
+    public void startAttempt(UUID id, int attemptNumber, OffsetDateTime startedAt) {
+        jdbc.sql(START_ATTEMPT).param("id", id).param("attemptNumber", attemptNumber).param("startedAt", startedAt)
+                .update();
+    }
+
+    private static final String OPEN_ATTEMPT = SELECT_LIVE + " AND r.quiz_id = :quizId AND r.user_id = :userId"
+            + " AND r.content_item_id = :itemId"
+            + " AND r.status IN ('in_progress', 'paused') ORDER BY r.created_at DESC LIMIT 1";
+    private static final String ATTEMPTS_USED = """
+            SELECT count(*) FROM lms.quiz_submission r
+             WHERE r.tenant_id = :tenantId AND r.deleted_at IS NULL
+               AND r.quiz_id = :quizId AND r.user_id = :userId AND r.content_item_id = :itemId
+               AND r.status IN ('submitted', 'graded')
+            """;
+
+    /** The user's open (in-progress or paused) attempt on the placement, newest first. */
+    public Optional<QuizSubmissionEntity> openAttempt(UUID quizId, UUID userId, UUID itemId) {
+        return jdbc.sql(OPEN_ATTEMPT).param("quizId", quizId).param("userId", userId).param("itemId", itemId)
+                .query(QuizSubmissionRepository::map).optional();
+    }
+
+    /** How many attempts on the placement the user has handed in. */
+    public int attemptsUsed(UUID quizId, UUID userId, UUID itemId) {
+        return jdbc.sql(ATTEMPTS_USED).param("quizId", quizId).param("userId", userId).param("itemId", itemId)
+                .query(Integer.class).single();
     }
 
     private static List<Object> sortValues(SortSpec sort, QuizSubmissionEntity e) {

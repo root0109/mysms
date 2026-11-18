@@ -28,12 +28,10 @@ import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
-import com.mysms.core.error.FieldError;
 import com.mysms.core.error.InvalidStateException;
+import com.mysms.core.error.PermissionDeniedException;
 import com.mysms.core.error.PreconditionFailedException;
 import com.mysms.core.error.ResourceNotFoundException;
-import com.mysms.core.error.ValidationFailedException;
-import com.mysms.core.id.UuidV7;
 import com.mysms.core.outbox.AuditWriter;
 import com.mysms.core.outbox.OutboxWriter;
 import java.math.BigDecimal;
@@ -53,11 +51,18 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
-/** Computes a session marksheet from finalized assessment rows and records its pollable operation. */
+/**
+ * Computes a session marksheet from the finalized results of its papers and records its pollable operation (the
+ * aggregation rules are on {@link #aggregate}).
+ */
 @Service
 public class ResultsGenerationService extends AppTransactionManager {
 
     private static final String PERMISSION = "assessment.result_template.generate_results";
+    private static final String CANCELLED = "cancelled";
+    private static final String EXEMPTED = "exempted";
+    private static final String PASS_FAIL = "pass_fail";
+    private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
     private final ResultTemplateRepository templates;
     private final ExamRepository exams;
     private final ExamResultRepository examResults;
@@ -96,10 +101,17 @@ public class ResultsGenerationService extends AppTransactionManager {
         this.clock = clock;
     }
 
+    /**
+     * assessment.GenerateResults, in one transaction: the template locked (a second generation of it waits, then
+     * finds it generated: 409), its grading scheme held unchanged (FOR SHARE) while its bands are read, the session's
+     * results refused when they already belong to a live marksheet (409), the marksheet and its lines written, every
+     * result linked to its line under its row-version guard, the template marked generated, and a finished operation
+     * recorded.
+     */
     public Operation generateResults(UUID templateId) {
         DataScope scope = DataScope.current(PERMISSION);
         return doInWriteTransaction(() -> {
-            ResultTemplateEntity template = templates.findById(templateId)
+            ResultTemplateEntity template = templates.findByIdForUpdate(templateId)
                     .orElseThrow(() -> new ResourceNotFoundException(ResultTemplateService.AGGREGATE, templateId));
             Optional<UUID> institution = templates.institutionOf(template.getExamSessionId());
             if (!scope.canRead(institution)) {
@@ -109,7 +121,22 @@ public class ResultsGenerationService extends AppTransactionManager {
             if (!"draft".equals(template.getStatus())) {
                 throw new InvalidStateException("Results can only be generated once from a draft template.");
             }
-            List<ExamEntity> sessionExams = exams.listForSession(template.getExamSessionId());
+            UUID actor = Actor.current().orElseThrow(
+                    () -> new PermissionDeniedException("Generating results needs a signed-in user."));
+            String gradingMethod = null;
+            if (template.getGradingSchemeId() != null) {
+                if (!schemes.lockForShare(template.getGradingSchemeId())) {
+                    throw new InvalidStateException("The template's grading scheme no longer exists.");
+                }
+                gradingMethod = schemes.findById(template.getGradingSchemeId()).map(GradingSchemeEntity::getGradingMethod)
+                        .orElseThrow(() -> new InvalidStateException("The template's grading scheme no longer exists."));
+            }
+            if (examResults.linkedToLiveMarksheet(template.getExamSessionId())) {
+                throw new InvalidStateException(
+                        "The session's results already belong to a marksheet; cancel it before generating again.");
+            }
+            List<ExamEntity> sessionExams = exams.listForSession(template.getExamSessionId()).stream()
+                    .filter(exam -> !CANCELLED.equals(exam.getStatus())).toList();
             if (sessionExams.isEmpty()) {
                 throw new InvalidStateException("The exam session has no papers.");
             }
@@ -123,23 +150,16 @@ public class ResultsGenerationService extends AppTransactionManager {
                     throw new InvalidStateException("Every paper must have registered attendees before results are generated.");
                 }
                 for (ExamResultEntity row : rows) {
-                    if (row.getResultStatus() == null || Set.of("pending", "withheld").contains(row.getResultStatus())
-                            || "expected".equals(row.getAttendanceStatus())
-                            || ("present".equals(row.getAttendanceStatus()) && row.getMarks() == null)) {
+                    if (!isFinal(row)) {
                         throw new InvalidStateException("Every attendee must have final attendance and marks before generation.");
                     }
                     byStudent.computeIfAbsent(row.getStudentId(), ignored -> new ArrayList<>()).add(row);
                 }
             }
-            List<GradingBandEntity> applicableBands = applicableBands(template);
-            List<StudentAggregate> aggregates = aggregate(sessionExams, byStudent, applicableBands,
-                    template.getGradingSchemeId() == null ? null : schemes.findById(template.getGradingSchemeId())
-                            .orElseThrow(() -> new ResourceNotFoundException("assessment.grading_scheme",
-                                    template.getGradingSchemeId())).getGradingMethod());
+            List<StudentAggregate> aggregates = aggregate(byStudent, applicableBands(template), gradingMethod);
             long passed = aggregates.stream().filter(StudentAggregate::passed).count();
             int totalPassed = Math.toIntExact(passed);
             int totalFailed = aggregates.size() - totalPassed;
-            UUID actor = Actor.current().orElseThrow(() -> new IllegalStateException("Authenticated actor is missing."));
             OffsetDateTime now = now();
             UUID tenantId = CallContextHolder.require().tenantId().orElseThrow();
 
@@ -207,6 +227,16 @@ public class ResultsGenerationService extends AppTransactionManager {
         });
     }
 
+    /** An attendee is final when exempted, or when attendance is taken and a final result (with marks) is set. */
+    static boolean isFinal(ExamResultEntity row) {
+        if (EXEMPTED.equals(row.getAttendanceStatus())) {
+            return true;
+        }
+        return row.getResultStatus() != null && !Set.of("pending", "withheld").contains(row.getResultStatus())
+                && !"expected".equals(row.getAttendanceStatus())
+                && !("present".equals(row.getAttendanceStatus()) && row.getMarks() == null);
+    }
+
     private List<GradingBandEntity> applicableBands(ResultTemplateEntity template) {
         if (template.getGradingSchemeId() == null) {
             return List.of();
@@ -215,41 +245,52 @@ public class ResultsGenerationService extends AppTransactionManager {
         if (selected.isEmpty()) {
             return bands.listForScheme(template.getGradingSchemeId());
         }
-        Set<UUID> ids = selected.stream().map(ResultTemplateBandEntity::getGradingBandId).collect(java.util.stream.Collectors.toSet());
+        Set<UUID> ids = selected.stream().map(ResultTemplateBandEntity::getGradingBandId)
+                .collect(java.util.stream.Collectors.toSet());
         return bands.listForScheme(template.getGradingSchemeId()).stream().filter(band -> ids.contains(band.getId())).toList();
     }
 
-    static List<StudentAggregate> aggregate(List<ExamEntity> exams,
-            Map<UUID, List<ExamResultEntity>> byStudent, List<GradingBandEntity> bands, String gradingMethod) {
+    /**
+     * Each student's line, computed from their results, each against the maximum snapshotted on it (409 without one):
+     * <ul>
+     * <li>an exempted paper counts for nothing — no maximum, no credits, no grade; a student exempted from every
+     *     paper gets no line;</li>
+     * <li>a paper's percentage, and the overall one, are rounded to 2 places half-up (the scale of the bands, whose
+     *     edges are inclusive, so no percentage falls between two bands); the paper's band gives its grade and grade
+     *     point, the overall band the line's grade;</li>
+     * <li>credits are attempted on every graded paper and earned on a passed one; the grade points weight each
+     *     paper's grade point by its credits, and the SGPA divides them by the credits attempted;</li>
+     * <li>the student passes only when no paper was failed or missed (absent) and the overall band, if it says,
+     *     is a passing one — a good average never hides a failed paper; the pass/fail label of a pass_fail scheme is
+     *     taken from that final decision, so label and status always agree.</li>
+     * </ul>
+     */
+    static List<StudentAggregate> aggregate(Map<UUID, List<ExamResultEntity>> byStudent,
+            List<GradingBandEntity> bands, String gradingMethod) {
         List<StudentAggregate> output = new ArrayList<>();
         for (Map.Entry<UUID, List<ExamResultEntity>> entry : byStudent.entrySet()) {
-            List<ExamResultEntity> rows = entry.getValue();
-            List<GeneratedResult> gradedResults = new ArrayList<>(rows.size());
+            List<GeneratedResult> gradedResults = new ArrayList<>(entry.getValue().size());
             BigDecimal total = BigDecimal.ZERO;
             BigDecimal maximum = BigDecimal.ZERO;
-            boolean passed = true;
+            boolean papersPassed = true;
+            boolean graded = false;
             BigDecimal creditsAttempted = BigDecimal.ZERO;
             BigDecimal creditsEarned = BigDecimal.ZERO;
             BigDecimal gradePoints = BigDecimal.ZERO;
             boolean hasCredits = false;
             boolean hasPoints = true;
-            for (ExamResultEntity result : rows) {
+            for (ExamResultEntity result : entry.getValue()) {
+                if (EXEMPTED.equals(result.getAttendanceStatus())) {
+                    gradedResults.add(new GeneratedResult(result, null));
+                    continue;
+                }
+                graded = true;
                 if ("fail".equals(result.getResultStatus()) || "absent".equals(result.getResultStatus())) {
-                    passed = false;
+                    papersPassed = false;
                 }
-                BigDecimal max = result.getMaxMarks();
-                if (max == null) {
-                    max = exams.stream().filter(exam -> exam.getId().equals(result.getExamId()))
-                            .map(ExamEntity::getTotalMarks).findFirst().orElse(null);
-                }
-                if (max == null || max.signum() <= 0) {
-                    throw new ValidationFailedException(List.of(new FieldError("examResults.maxMarks",
-                            "every result needs a positive maximum-mark snapshot", "NOT_NULL")));
-                }
+                BigDecimal max = maximumOf(result);
                 maximum = maximum.add(max);
-                BandGrade grade = result.getMarks() == null ? null
-                        : bandFor(result.getMarks().multiply(BigDecimal.valueOf(100))
-                                .divide(max, 4, RoundingMode.HALF_UP), bands);
+                BandGrade grade = result.getMarks() == null ? null : bandFor(percent(result.getMarks(), max), bands);
                 gradedResults.add(new GeneratedResult(result, grade));
                 if (result.getMarks() != null) {
                     total = total.add(result.getMarks());
@@ -267,15 +308,14 @@ public class ResultsGenerationService extends AppTransactionManager {
                     }
                 }
             }
-            BigDecimal percentage = total.multiply(BigDecimal.valueOf(100)).divide(maximum, 2, RoundingMode.HALF_UP);
+            if (!graded) {
+                continue;
+            }
+            BigDecimal percentage = percent(total, maximum);
             BandGrade overallBand = bandFor(percentage, bands);
-            String gradeLabel = overallBand == null ? null : overallBand.label();
-            if ("pass_fail".equals(gradingMethod)) {
-                gradeLabel = passed ? "Pass" : "Fail";
-            }
-            if (overallBand != null && overallBand.isPass() != null) {
-                passed = overallBand.isPass();
-            }
+            boolean passed = papersPassed && (overallBand == null || !Boolean.FALSE.equals(overallBand.isPass()));
+            String gradeLabel = PASS_FAIL.equals(gradingMethod) ? (passed ? "Pass" : "Fail")
+                    : overallBand == null ? null : overallBand.label();
             BigDecimal attempted = hasCredits ? creditsAttempted : null;
             BigDecimal earned = hasCredits ? creditsEarned : null;
             BigDecimal points = hasCredits && hasPoints ? gradePoints : null;
@@ -285,6 +325,23 @@ public class ResultsGenerationService extends AppTransactionManager {
                     attempted, earned, points, sgpa));
         }
         return output;
+    }
+
+    /** marks of maximum as a percentage at the bands' scale (2 places, half-up). */
+    static BigDecimal percent(BigDecimal marks, BigDecimal maximum) {
+        return marks.multiply(HUNDRED).divide(maximum, 2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * The maximum a result is marked against: the snapshot taken when the attendee was registered or marked. A
+     * result without one cannot be graded (409): the paper's current total may have changed since it was marked.
+     */
+    private static BigDecimal maximumOf(ExamResultEntity result) {
+        BigDecimal max = result.getMaxMarks();
+        if (max == null || max.signum() <= 0) {
+            throw new InvalidStateException("Every exam result needs a positive maximum mark before generation.");
+        }
+        return max;
     }
 
     private static BandGrade bandFor(BigDecimal percentage, List<GradingBandEntity> bands) {

@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.testkit.ModuleChecks;
-import com.mysms.core.testkit.OpenApiDocuments;
 import com.mysms.core.testkit.TestDatabase;
 import com.mysms.iam.config.IamDatabaseConfig;
 import java.io.InputStream;
@@ -25,9 +24,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The iam microservice runs alone on its own database (JAVA-CODING-RULES §2, §12):
- * it migrates schema "iam" with its own Flyway history, reports its database in health,
- * and its edge refuses undeclared routes and missing tokens.
+ * The iam microservice runs alone on its own database: it migrates schema "iam" with its own Flyway history, reports
+ * its database in health, and its edge refuses undeclared routes and missing tokens.
  */
 @SpringBootTest(classes = IamApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = "management.endpoint.health.show-components=always")
@@ -114,14 +112,5 @@ class IamServiceComponentTest {
             }
         }
         throw new IllegalStateException("iam has no operation that requires a token");
-    }
-
-    /** The OpenAPI document is written from the contract interfaces by springdoc and kept as a build artifact. */
-    @Test
-    void writesItsOpenApiDocumentFromTheCode() throws Exception {
-        HttpResponse<String> doc = send("GET", "/v3/api-docs.yaml", null);
-        assertThat(doc.statusCode()).isEqualTo(200);
-        String document = OpenApiDocuments.write("iam", doc.body());
-        assertThat(document).contains("operationId: iam.AcceptTerms").contains("x-permission:");
     }
 }

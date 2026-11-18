@@ -110,6 +110,20 @@ public class GradingSchemeRepository {
             SELECT EXISTS (SELECT 1 FROM assessment.result_template
                             WHERE tenant_id = :tenantId AND grading_scheme_id = :id AND deleted_at IS NULL)
             """;
+    /** The live scheme locked against change (FOR SHARE: generations read it together) or for one (FOR UPDATE). */
+    private static final String LOCK_SHARE = """
+            SELECT id FROM assessment.grading_scheme WHERE tenant_id = :tenantId AND id = :id AND deleted_at IS NULL
+               FOR SHARE
+            """;
+    private static final String LOCK_UPDATE = """
+            SELECT id FROM assessment.grading_scheme WHERE tenant_id = :tenantId AND id = :id AND deleted_at IS NULL
+               FOR UPDATE
+            """;
+    private static final String USED_BY_GENERATED_TEMPLATE = """
+            SELECT EXISTS (SELECT 1 FROM assessment.result_template
+                            WHERE tenant_id = :tenantId AND grading_scheme_id = :id AND deleted_at IS NULL
+                              AND status <> 'draft')
+            """;
     private static final String SCOPE = "(:scopeAll OR r.institution_id = ANY(:scopeIds))";
 
     private final JdbcClient jdbc;
@@ -189,6 +203,21 @@ public class GradingSchemeRepository {
 
     public boolean referencedByGradingBand(UUID id) {
         return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_BAND).param("id", id).query(Boolean.class).single());
+    }
+
+    /** Holds the scheme unchanged until the transaction ends; false when it is not live. */
+    public boolean lockForShare(UUID id) {
+        return jdbc.sql(LOCK_SHARE).param("id", id).query(UUID.class).optional().isPresent();
+    }
+
+    /** Locks the scheme for a change of it or of its bands; false when it is not live. */
+    public boolean lockForUpdate(UUID id) {
+        return jdbc.sql(LOCK_UPDATE).param("id", id).query(UUID.class).optional().isPresent();
+    }
+
+    /** Whether a result template that is no longer a draft grades with the scheme (its results were generated). */
+    public boolean usedByGeneratedTemplate(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(USED_BY_GENERATED_TEMPLATE).param("id", id).query(Boolean.class).single());
     }
 
     public boolean referencedByResultTemplate(UUID id) {

@@ -10,19 +10,19 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Entities and repositories (JAVA-CODING-RULES §5, §6):
+ * Entities and repositories:
  * <ul>
  * <li>§5 — every entity extends BaseEntity and names its TABLE in the module's own schema.</li>
- * <li>N1 — domain/ holds entities only (projections are records in repository/); an entity carries exactly the
- * Lombok set of §5.2 and no Jackson or mapping annotations, no Map column, no LocalDateTime; BaseEntity's audit set
- * is exact, ids are UUIDv7; the lifecycle hooks are called from business/ only.</li>
- * <li>R5 — repositories are plain classes with constant SQL: no repository interface, no String.format or
- * formatted SQL, no OFFSET paging; migrations define no database functions or procedures.</li>
+ * <li>N1 — domain/ holds entities only (projections are records in repository/); an entity carries exactly the allowed
+ * Lombok set and no Jackson or mapping annotations, no Map column, no LocalDateTime; BaseEntity's audit set is exact,
+ * ids are UUIDv7; the lifecycle hooks are called from business/ only.</li>
+ * <li>R5 — repositories are plain classes with constant SQL: no repository interface, no String.format or formatted
+ * SQL, no OFFSET paging; migrations define no database functions or procedures.</li>
  * </ul>
  */
 public final class PersistenceRule implements ConformanceRule {
 
-    /** The audit set of BaseEntity, in declaration order (§5.1). */
+    /** The audit set of BaseEntity, in declaration order. */
     static final List<String> AUDIT_SET =
             List.of("id", "createdAt", "createdBy", "updatedAt", "updatedBy", "deletedAt", "rowVersion");
     private static final List<String> ENTITY_LOMBOK = List.of("@Getter", "@Setter", "@SuperBuilder",

@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -35,7 +35,7 @@ public class CertificateRequest {
   private UUID courseId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID userId;
+  private @Nullable UUID userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID cohortId;
@@ -171,9 +171,8 @@ public class CertificateRequest {
   /**
    * Constructor with only required parameters
    */
-  public CertificateRequest(UUID courseId, UUID userId, LocalDate requestDate, String startTime, String endTime) {
+  public CertificateRequest(UUID courseId, LocalDate requestDate, String startTime, String endTime) {
     this.courseId = courseId;
-    this.userId = userId;
     this.requestDate = requestDate;
     this.startTime = startTime;
     this.endTime = endTime;
@@ -239,23 +238,23 @@ public class CertificateRequest {
     this.courseId = courseId;
   }
 
-  public CertificateRequest userId(UUID userId) {
+  public CertificateRequest userId(@Nullable UUID userId) {
     this.userId = userId;
     return this;
   }
 
   /**
-   * Student.
+   * Student. Output only: the caller, from the token.
    * @return userId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("userId")
-  public UUID getUserId() {
+  public @Nullable UUID getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(UUID userId) {
+  public void setUserId(@Nullable UUID userId) {
     this.userId = userId;
   }
 
@@ -425,7 +424,7 @@ public class CertificateRequest {
   }
 
   /**
-   * State. Changed only through the workflow operations.
+   * State. Changed only through the workflow operations. Output only: set by the service and its workflow.
    * @return status
    */
   

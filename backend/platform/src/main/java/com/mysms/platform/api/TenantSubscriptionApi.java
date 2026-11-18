@@ -1,8 +1,9 @@
-// Owned API contract of platform (JAVA-CODING-RULES §7); first materialized from api/openapi/platform.yaml on 2026-11-10.
+// Owned API contract of platform.
 package com.mysms.platform.api;
 
 import com.mysms.core.paging.PagingInfo;
 import com.mysms.platform.api.model.CancelSubscriptionRequest;
+import com.mysms.platform.api.model.ConfirmSubscriptionCheckoutRequest;
 import org.springframework.lang.Nullable;
 import com.mysms.platform.api.model.StartSubscriptionCheckoutRequest;
 import com.mysms.platform.api.model.SubscriptionCheckout;
@@ -49,6 +50,36 @@ public interface TenantSubscriptionApi {
     ResponseEntity<TenantSubscription> cancelSubscription(
          @PathVariable("tenantSubscriptionId") UUID tenantSubscriptionId,
          @Valid @RequestBody CancelSubscriptionRequest cancelSubscriptionRequest,
+         @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey
+    );
+
+
+    String PATH_CONFIRM_SUBSCRIPTION_CHECKOUT =
+        "/v1/platform/tenant-subscriptions/{tenantSubscriptionId}:confirmCheckout";
+    /**
+     * POST /v1/platform/tenant-subscriptions/{tenantSubscriptionId}:confirmCheckout : Confirm a subscription payment
+     * with the gateway's checkout signature. The signature over the gateway order and payment ids proves the order was
+     * paid; the pending subscription becomes active.
+     *
+     * @param tenantSubscriptionId  (required)
+     * @param confirmSubscriptionCheckoutRequest  (required)
+     * @param idempotencyKey Client-generated UUID; repeating a request with the same key returns the original result for 24 h. (optional)
+     * @return OK (status code 200)
+     *         or Malformed request. (status code 400)
+     *         or Authenticated but not permitted. (status code 403)
+     *         or Resource not found (or not visible to the caller). (status code 404)
+     *         or Conflict with the current state (duplicate, invalid state transition). (status code 409)
+     *         or Validation failed; see errors[]. (status code 422)
+     */
+    @RequestMapping(
+        method = RequestMethod.POST,
+        value = TenantSubscriptionApi.PATH_CONFIRM_SUBSCRIPTION_CHECKOUT,
+        produces = { "application/json", "application/problem+json" },
+        consumes = { "application/json" }
+    )
+    ResponseEntity<TenantSubscription> confirmSubscriptionCheckout(
+         @PathVariable("tenantSubscriptionId") UUID tenantSubscriptionId,
+         @Valid @RequestBody ConfirmSubscriptionCheckoutRequest confirmSubscriptionCheckoutRequest,
          @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey
     );
 
@@ -139,6 +170,30 @@ public interface TenantSubscriptionApi {
     ResponseEntity<SubscriptionCheckout> startSubscriptionCheckout(
         @NotNull  @RequestHeader(value = "Idempotency-Key", required = true) UUID idempotencyKey,
          @Valid @RequestBody StartSubscriptionCheckoutRequest startSubscriptionCheckoutRequest
+    );
+
+
+    String PATH_RECEIVE_SUBSCRIPTION_WEBHOOK = "/v1/platform/tenant-subscriptions:webhook";
+    /**
+     * POST /v1/platform/tenant-subscriptions:webhook : Gateway callback for subscription payments; a captured payment
+     * activates the pending subscription its order was opened for. Authenticated by the gateway signature over the raw
+     * body, not by a token; the tenant is resolved from the order's notes the signature covers. Public.
+     *
+     * @param signature The gateway's HMAC-SHA256 of the raw body with the webhook secret. (required)
+     * @param body Raw provider payload, passed through unchanged for signature verification. (required)
+     * @return Done (status code 204)
+     *         or Malformed request. (status code 400)
+     *         or Missing or invalid credentials. (status code 401)
+     */
+    @RequestMapping(
+        method = RequestMethod.POST,
+        value = TenantSubscriptionApi.PATH_RECEIVE_SUBSCRIPTION_WEBHOOK,
+        produces = { "application/problem+json" },
+        consumes = { "application/json" }
+    )
+    ResponseEntity<Void> receiveSubscriptionWebhook(
+        @NotNull @RequestHeader(value = "X-Razorpay-Signature", required = true) String signature,
+        @RequestBody byte[] body
     );
 
 }

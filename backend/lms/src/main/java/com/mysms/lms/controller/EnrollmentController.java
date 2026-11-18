@@ -9,26 +9,25 @@ import com.mysms.lms.api.model.EnrollmentUpdate;
 import com.mysms.lms.api.model.LmsStatistics;
 import com.mysms.lms.api.model.MemberProfile;
 import com.mysms.lms.api.model.StudentDashboard;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.EnrollmentService;
+import com.mysms.lms.business.MemberProfileService;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Enrollment operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Enrollment operations; authentication and the permission check already ran in the auth-client
+ * filter. Operations not served yet answer 501.
  */
 @RestController
 public class EnrollmentController implements EnrollmentApi {
 
     private final EnrollmentService enrollmentService;
+    private final MemberProfileService memberProfileService;
 
-    public EnrollmentController(EnrollmentService enrollmentService) {
+    public EnrollmentController(EnrollmentService enrollmentService, MemberProfileService memberProfileService) {
+        this.memberProfileService = memberProfileService;
         this.enrollmentService = enrollmentService;
     }
 
@@ -46,17 +45,17 @@ public class EnrollmentController implements EnrollmentApi {
 
     @Override
     public ResponseEntity<LmsStatistics> getLmsStatistics() {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(enrollmentService.getLmsStatistics());
     }
 
     @Override
     public ResponseEntity<MemberProfile> getMemberProfile(UUID userId) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(memberProfileService.getMemberProfile(userId));
     }
 
     @Override
     public ResponseEntity<StudentDashboard> getStudentDashboard() {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(enrollmentService.getStudentDashboard());
     }
 
     @Override

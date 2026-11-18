@@ -48,7 +48,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * Second factors (iam.EnrollMfa, iam.CompleteMfa's code check, iam.DisableMfa, iam.RegenerateRecoveryCodes,
- * iam.ListMfaCredentials), JAVA-CODING-RULES §16 security floor:
+ * iam.ListMfaCredentials):
  * <ul>
  *   <li>authenticator-app codes (TOTP, RFC 6238); the shared secret is stored only as a per-tenant envelope
  *       ({@link FieldCipher}) and shown once, at enrollment;</li>
@@ -97,7 +97,7 @@ public class MfaService extends AppTransactionManager implements InitializingBea
         this.clock = clock;
     }
 
-    /** MFA secrets are stored encrypted: iam does not start without a master key (DEPLOYMENT.md "Secrets"). */
+    /** MFA secrets are stored encrypted: iam does not start without a master key. */
     @Override
     public void afterPropertiesSet() {
         cipher.requireConfigured();
@@ -126,6 +126,7 @@ public class MfaService extends AppTransactionManager implements InitializingBea
      * token. An unfinished earlier enrollment is discarded.
      */
     public MfaEnrollment enroll(EnrollMfaRequest request) {
+        AccessRules.requireOwnIdentity();
         validator.validate(request);
         if (!MfaRepository.TOTP.equals(request.getCredentialType().getValue())) {
             throw new NotImplementedException("Only authenticator-app (totp) factors can be enrolled in this release.");
@@ -169,6 +170,7 @@ public class MfaService extends AppTransactionManager implements InitializingBea
 
     /** iam.DisableMfa: ends one of the caller's factors, given a current code (or recovery code). */
     public void disable(DisableMfaRequest request) {
+        AccessRules.requireOwnIdentity();
         validator.validate(request);
         AuthContext caller = AuthContext.require();
         UUID user = caller.userId();
@@ -205,6 +207,7 @@ public class MfaService extends AppTransactionManager implements InitializingBea
 
     /** iam.RegenerateRecoveryCodes: a fresh set (shown once) replaces every earlier code, given a current code. */
     public RecoveryCodes regenerateRecoveryCodes(RegenerateRecoveryCodesRequest request) {
+        AccessRules.requireOwnIdentity();
         validator.validate(request);
         AuthContext caller = AuthContext.require();
         UUID user = caller.userId();

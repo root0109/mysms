@@ -37,12 +37,17 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import com.mysms.core.error.ConflictException;
+import com.mysms.lms.api.model.BadgeAward;
+import com.mysms.lms.domain.BadgeAwardEntity;
+import com.mysms.lms.mapper.BadgeAwardMapper;
+import com.mysms.lms.repository.BadgeAwardRepository;
+import com.mysms.lms.repository.CertificationRepository;
+import java.time.LocalDate;
 
 /**
- * Business service of lms.badge (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of lms.badge: audit and domain event commit in the same transaction as every change. Rows outside
+ * the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class BadgeService extends AppTransactionManager {
@@ -66,14 +71,21 @@ public class BadgeService extends AppTransactionManager {
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
+    private final BadgeAwardRepository awards;
+    private final BadgeAwardMapper awardMapper;
+    private final CertificationRepository certification;
 
     public BadgeService(BadgeRepository repository, BadgeMapper mapper,
             @Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(LmsDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(LmsEventsConfig.OUTBOX) OutboxWriter outbox, @Qualifier(LmsEventsConfig.AUDIT) AuditWriter audit,
-            DtoValidator validator, Clock clock) {
+            DtoValidator validator, Clock clock, BadgeAwardRepository awards, BadgeAwardMapper awardMapper,
+            CertificationRepository certification) {
 
         super(database, transactions);
+        this.awards = awards;
+        this.awardMapper = awardMapper;
+        this.certification = certification;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
@@ -122,8 +134,8 @@ public class BadgeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Badge updateBadge(UUID id, String ifMatch, BadgeUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
@@ -186,12 +198,12 @@ public class BadgeService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(BadgeEntity entity) {
         return Optional.empty();
     }
 
-    /** Applies the selected BadgeUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected BadgeUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(BadgeEntity entity, BadgeUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -250,5 +262,36 @@ public class BadgeService extends AppTransactionManager {
         if (repository.takenTitle1(entity)) {
             throw new DuplicateResourceException("A badge with the same title already exists.");
         }
+    }
+
+    // ---- awarding a badge by hand ----
+
+    static final String PERMISSION_AWARD = "lms.badge.award_badge";
+    private static final String AWARD = "lms.badge_award";
+
+    /**
+     * lms.AwardBadge: awards the badge to a user today. The badge must be enabled (409 BADGE_DISABLED); a badge
+     * granted only once is not awarded to the same user twice (409 ALREADY_AWARDED). Badges are tenant-level: awarding
+     * one does not change it, so the operation's permission is enough.
+     */
+    public BadgeAward awardBadge(UUID id, UUID userId) {
+        DataScope scope = DataScope.current(PERMISSION_AWARD);
+        return doInWriteTransaction(() -> {
+            BadgeEntity badge = loadVisible(scope, id);
+            if (!Boolean.TRUE.equals(badge.getIsEnabled())) {
+                throw new ConflictException("BADGE_DISABLED", "The badge is disabled.");
+            }
+            if (Boolean.TRUE.equals(badge.getGrantOnlyOnce()) && certification.awarded(id, userId)) {
+                throw new ConflictException("ALREADY_AWARDED", "The user already holds the badge.");
+            }
+            BadgeAwardEntity award = BadgeAwardEntity.builder().badgeId(id).userId(userId)
+                    .issuedOn(LocalDate.now(clock)).build();
+            award.onCreatingData(Actor.current(), clock);
+            award.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
+            BadgeAwardEntity stored = awards.insert(award);
+            audit.recordCreate(AWARD, stored.getId());
+            outbox.publish(AWARD + LmsEvents.CREATED, AWARD, stored.getId(), LmsEvents.payload(stored.getId()));
+            return awardMapper.toDto(stored);
+        });
     }
 }

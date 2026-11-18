@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -15,7 +15,6 @@ import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
-
 import java.util.*;
 
 /**
@@ -26,9 +25,6 @@ public class CertificateRequestUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID courseId;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID cohortId;
@@ -118,26 +114,6 @@ public class CertificateRequestUpdate {
   @JsonProperty("courseId")
   public void setCourseId(@Nullable UUID courseId) {
     this.courseId = courseId;
-  }
-
-  public CertificateRequestUpdate userId(@Nullable UUID userId) {
-    this.userId = userId;
-    return this;
-  }
-
-  /**
-   * Student.
-   * @return userId
-   */
-  @Valid 
-  @JsonProperty("userId")
-  public @Nullable UUID getUserId() {
-    return userId;
-  }
-
-  @JsonProperty("userId")
-  public void setUserId(@Nullable UUID userId) {
-    this.userId = userId;
   }
 
   public CertificateRequestUpdate cohortId(@Nullable UUID cohortId) {
@@ -310,7 +286,6 @@ public class CertificateRequestUpdate {
     }
     CertificateRequestUpdate certificateRequestUpdate = (CertificateRequestUpdate) o;
     return Objects.equals(this.courseId, certificateRequestUpdate.courseId) &&
-        Objects.equals(this.userId, certificateRequestUpdate.userId) &&
         Objects.equals(this.cohortId, certificateRequestUpdate.cohortId) &&
         Objects.equals(this.evaluatorUserId, certificateRequestUpdate.evaluatorUserId) &&
         Objects.equals(this.requestDate, certificateRequestUpdate.requestDate) &&
@@ -323,7 +298,7 @@ public class CertificateRequestUpdate {
 
   @Override
   public int hashCode() {
-    return Objects.hash(courseId, userId, cohortId, evaluatorUserId, requestDate, weekday, startTime, endTime, timezone, meetingLink);
+    return Objects.hash(courseId, cohortId, evaluatorUserId, requestDate, weekday, startTime, endTime, timezone, meetingLink);
   }
 
   @Override
@@ -331,7 +306,6 @@ public class CertificateRequestUpdate {
     StringBuilder sb = new StringBuilder();
     sb.append("class CertificateRequestUpdate {\n");
     sb.append("    courseId: ").append(toIndentedString(courseId)).append("\n");
-    sb.append("    userId: ").append(toIndentedString(userId)).append("\n");
     sb.append("    cohortId: ").append(toIndentedString(cohortId)).append("\n");
     sb.append("    evaluatorUserId: ").append(toIndentedString(evaluatorUserId)).append("\n");
     sb.append("    requestDate: ").append(toIndentedString(requestDate)).append("\n");

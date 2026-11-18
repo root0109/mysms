@@ -1,0 +1,927 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.careers.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "CareersProto";
+option java_package = "com.mysms.careers.v1";
+
+// FunctionAreaService: operations on the FunctionArea aggregate.
+service FunctionAreaService {
+  // List FunctionAreas.
+  rpc ListFunctionAreas(ListFunctionAreasRequest) returns (ListFunctionAreasResponse);
+  // Get FunctionArea.
+  rpc GetFunctionArea(GetFunctionAreaRequest) returns (GetFunctionAreaResponse);
+  // Create FunctionArea.
+  rpc CreateFunctionArea(CreateFunctionAreaRequest) returns (CreateFunctionAreaResponse);
+  // Update FunctionArea.
+  rpc UpdateFunctionArea(UpdateFunctionAreaRequest) returns (UpdateFunctionAreaResponse);
+  // Soft-delete FunctionArea.
+  rpc DeleteFunctionArea(DeleteFunctionAreaRequest) returns (DeleteFunctionAreaResponse);
+}
+
+// IndustryService: operations on the Industry aggregate.
+service IndustryService {
+  // List Industries.
+  rpc ListIndustries(ListIndustriesRequest) returns (ListIndustriesResponse);
+  // Get Industry.
+  rpc GetIndustry(GetIndustryRequest) returns (GetIndustryResponse);
+  // Create Industry.
+  rpc CreateIndustry(CreateIndustryRequest) returns (CreateIndustryResponse);
+  // Update Industry.
+  rpc UpdateIndustry(UpdateIndustryRequest) returns (UpdateIndustryResponse);
+  // Soft-delete Industry.
+  rpc DeleteIndustry(DeleteIndustryRequest) returns (DeleteIndustryResponse);
+}
+
+// JobOpeningService: operations on the JobOpening aggregate.
+service JobOpeningService {
+  // List JobOpenings.
+  rpc ListJobOpenings(ListJobOpeningsRequest) returns (ListJobOpeningsResponse);
+  // Get JobOpening.
+  rpc GetJobOpening(GetJobOpeningRequest) returns (GetJobOpeningResponse);
+  // Create JobOpening.
+  rpc CreateJobOpening(CreateJobOpeningRequest) returns (CreateJobOpeningResponse);
+  // Update JobOpening.
+  rpc UpdateJobOpening(UpdateJobOpeningRequest) returns (UpdateJobOpeningResponse);
+  // Soft-delete JobOpening.
+  rpc DeleteJobOpening(DeleteJobOpeningRequest) returns (DeleteJobOpeningResponse);
+  // List JobApplications.
+  rpc ListJobApplications(ListJobApplicationsRequest) returns (ListJobApplicationsResponse);
+  // Get JobApplication.
+  rpc GetJobApplication(GetJobApplicationRequest) returns (GetJobApplicationResponse);
+  // Create JobApplication.
+  rpc CreateJobApplication(CreateJobApplicationRequest) returns (CreateJobApplicationResponse);
+  // Update JobApplication.
+  rpc UpdateJobApplication(UpdateJobApplicationRequest) returns (UpdateJobApplicationResponse);
+  // Soft-delete JobApplication.
+  rpc DeleteJobApplication(DeleteJobApplicationRequest) returns (DeleteJobApplicationResponse);
+  // Close.
+  rpc CloseJobOpening(CloseJobOpeningRequest) returns (CloseJobOpeningResponse);
+  // Reopen.
+  rpc ReopenJobOpening(ReopenJobOpeningRequest) returns (ReopenJobOpeningResponse);
+  // Report a listing to moderators.
+  rpc ReportJobOpening(ReportJobOpeningRequest) returns (ReportJobOpeningResponse);
+  // E-mail the applicant.
+  rpc EmailApplicant(EmailApplicantRequest) returns (EmailApplicantResponse);
+  // Shortlist / reject / hire.
+  rpc UpdateApplicationStatus(UpdateApplicationStatusRequest) returns (UpdateApplicationStatusResponse);
+}
+
+// CandidatePreferenceService: operations on the CandidatePreference aggregate.
+service CandidatePreferenceService {
+  // List CandidatePreferences.
+  rpc ListCandidatePreferences(ListCandidatePreferencesRequest) returns (ListCandidatePreferencesResponse);
+  // Get CandidatePreference.
+  rpc GetCandidatePreference(GetCandidatePreferenceRequest) returns (GetCandidatePreferenceResponse);
+  // Create CandidatePreference.
+  rpc CreateCandidatePreference(CreateCandidatePreferenceRequest) returns (CreateCandidatePreferenceResponse);
+  // Update CandidatePreference.
+  rpc UpdateCandidatePreference(UpdateCandidatePreferenceRequest) returns (UpdateCandidatePreferenceResponse);
+  // Soft-delete CandidatePreference.
+  rpc DeleteCandidatePreference(DeleteCandidatePreferenceRequest) returns (DeleteCandidatePreferenceResponse);
+  // List CandidatePreferredFunctions.
+  rpc ListCandidatePreferredFunctions(ListCandidatePreferredFunctionsRequest) returns (ListCandidatePreferredFunctionsResponse);
+  // Get CandidatePreferredFunction.
+  rpc GetCandidatePreferredFunction(GetCandidatePreferredFunctionRequest) returns (GetCandidatePreferredFunctionResponse);
+  // Create CandidatePreferredFunction.
+  rpc CreateCandidatePreferredFunction(CreateCandidatePreferredFunctionRequest) returns (CreateCandidatePreferredFunctionResponse);
+  // Update CandidatePreferredFunction.
+  rpc UpdateCandidatePreferredFunction(UpdateCandidatePreferredFunctionRequest) returns (UpdateCandidatePreferredFunctionResponse);
+  // Soft-delete CandidatePreferredFunction.
+  rpc DeleteCandidatePreferredFunction(DeleteCandidatePreferredFunctionRequest) returns (DeleteCandidatePreferredFunctionResponse);
+  // List CandidatePreferredIndustries.
+  rpc ListCandidatePreferredIndustries(ListCandidatePreferredIndustriesRequest) returns (ListCandidatePreferredIndustriesResponse);
+  // Get CandidatePreferredIndustry.
+  rpc GetCandidatePreferredIndustry(GetCandidatePreferredIndustryRequest) returns (GetCandidatePreferredIndustryResponse);
+  // Create CandidatePreferredIndustry.
+  rpc CreateCandidatePreferredIndustry(CreateCandidatePreferredIndustryRequest) returns (CreateCandidatePreferredIndustryResponse);
+  // Update CandidatePreferredIndustry.
+  rpc UpdateCandidatePreferredIndustry(UpdateCandidatePreferredIndustryRequest) returns (UpdateCandidatePreferredIndustryResponse);
+  // Soft-delete CandidatePreferredIndustry.
+  rpc DeleteCandidatePreferredIndustry(DeleteCandidatePreferredIndustryRequest) returns (DeleteCandidatePreferredIndustryResponse);
+}
+
+message ListFunctionAreasRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListFunctionAreasResponse {
+  repeated FunctionArea items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetFunctionAreaRequest {
+  // FunctionArea id (UUID).
+  string id = 1;
+}
+message GetFunctionAreaResponse {
+  FunctionArea function_area = 1;
+}
+
+message CreateFunctionAreaRequest {
+  FunctionArea function_area = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateFunctionAreaResponse {
+  FunctionArea function_area = 1;
+}
+
+message UpdateFunctionAreaRequest {
+  // Resource with id and etag set.
+  FunctionArea function_area = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateFunctionAreaResponse {
+  FunctionArea function_area = 1;
+}
+
+message DeleteFunctionAreaRequest {
+  // FunctionArea id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteFunctionAreaResponse {
+}
+
+message ListIndustriesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListIndustriesResponse {
+  repeated Industry items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetIndustryRequest {
+  // Industry id (UUID).
+  string id = 1;
+}
+message GetIndustryResponse {
+  Industry industry = 1;
+}
+
+message CreateIndustryRequest {
+  Industry industry = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateIndustryResponse {
+  Industry industry = 1;
+}
+
+message UpdateIndustryRequest {
+  // Resource with id and etag set.
+  Industry industry = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateIndustryResponse {
+  Industry industry = 1;
+}
+
+message DeleteIndustryRequest {
+  // Industry id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteIndustryResponse {
+}
+
+message ListJobOpeningsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListJobOpeningsResponse {
+  repeated JobOpening items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetJobOpeningRequest {
+  // JobOpening id (UUID).
+  string id = 1;
+}
+message GetJobOpeningResponse {
+  JobOpening job_opening = 1;
+}
+
+message CreateJobOpeningRequest {
+  JobOpening job_opening = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateJobOpeningResponse {
+  JobOpening job_opening = 1;
+}
+
+message UpdateJobOpeningRequest {
+  // Resource with id and etag set.
+  JobOpening job_opening = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateJobOpeningResponse {
+  JobOpening job_opening = 1;
+}
+
+message DeleteJobOpeningRequest {
+  // JobOpening id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteJobOpeningResponse {
+}
+
+message ListJobApplicationsRequest {
+  // JobOpening id (UUID).
+  string job_opening_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListJobApplicationsResponse {
+  repeated JobApplication items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetJobApplicationRequest {
+  // JobOpening id (UUID).
+  string job_opening_id = 1;
+  // JobApplication id (UUID).
+  string id = 2;
+}
+message GetJobApplicationResponse {
+  JobApplication job_application = 1;
+}
+
+message CreateJobApplicationRequest {
+  // JobOpening id (UUID).
+  string job_opening_id = 1;
+  JobApplication job_application = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateJobApplicationResponse {
+  JobApplication job_application = 1;
+}
+
+message UpdateJobApplicationRequest {
+  // JobOpening id (UUID).
+  string job_opening_id = 1;
+  // Resource with id and etag set.
+  JobApplication job_application = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateJobApplicationResponse {
+  JobApplication job_application = 1;
+}
+
+message DeleteJobApplicationRequest {
+  // JobOpening id (UUID).
+  string job_opening_id = 1;
+  // JobApplication id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteJobApplicationResponse {
+}
+
+message ListCandidatePreferencesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListCandidatePreferencesResponse {
+  repeated CandidatePreference items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetCandidatePreferenceRequest {
+  // CandidatePreference id (UUID).
+  string id = 1;
+}
+message GetCandidatePreferenceResponse {
+  CandidatePreference candidate_preference = 1;
+}
+
+message CreateCandidatePreferenceRequest {
+  CandidatePreference candidate_preference = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateCandidatePreferenceResponse {
+  CandidatePreference candidate_preference = 1;
+}
+
+message UpdateCandidatePreferenceRequest {
+  // Resource with id and etag set.
+  CandidatePreference candidate_preference = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateCandidatePreferenceResponse {
+  CandidatePreference candidate_preference = 1;
+}
+
+message DeleteCandidatePreferenceRequest {
+  // CandidatePreference id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteCandidatePreferenceResponse {
+}
+
+message ListCandidatePreferredFunctionsRequest {
+  // CandidatePreference id (UUID).
+  string candidate_preference_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListCandidatePreferredFunctionsResponse {
+  repeated CandidatePreferredFunction items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetCandidatePreferredFunctionRequest {
+  // CandidatePreference id (UUID).
+  string candidate_preference_id = 1;
+  // CandidatePreferredFunction id (UUID).
+  string id = 2;
+}
+message GetCandidatePreferredFunctionResponse {
+  CandidatePreferredFunction candidate_preferred_function = 1;
+}
+
+message CreateCandidatePreferredFunctionRequest {
+  // CandidatePreference id (UUID).
+  string candidate_preference_id = 1;
+  CandidatePreferredFunction candidate_preferred_function = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateCandidatePreferredFunctionResponse {
+  CandidatePreferredFunction candidate_preferred_function = 1;
+}
+
+message UpdateCandidatePreferredFunctionRequest {
+  // CandidatePreference id (UUID).
+  string candidate_preference_id = 1;
+  // Resource with id and etag set.
+  CandidatePreferredFunction candidate_preferred_function = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateCandidatePreferredFunctionResponse {
+  CandidatePreferredFunction candidate_preferred_function = 1;
+}
+
+message DeleteCandidatePreferredFunctionRequest {
+  // CandidatePreference id (UUID).
+  string candidate_preference_id = 1;
+  // CandidatePreferredFunction id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteCandidatePreferredFunctionResponse {
+}
+
+message ListCandidatePreferredIndustriesRequest {
+  // CandidatePreference id (UUID).
+  string candidate_preference_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListCandidatePreferredIndustriesResponse {
+  repeated CandidatePreferredIndustry items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetCandidatePreferredIndustryRequest {
+  // CandidatePreference id (UUID).
+  string candidate_preference_id = 1;
+  // CandidatePreferredIndustry id (UUID).
+  string id = 2;
+}
+message GetCandidatePreferredIndustryResponse {
+  CandidatePreferredIndustry candidate_preferred_industry = 1;
+}
+
+message CreateCandidatePreferredIndustryRequest {
+  // CandidatePreference id (UUID).
+  string candidate_preference_id = 1;
+  CandidatePreferredIndustry candidate_preferred_industry = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateCandidatePreferredIndustryResponse {
+  CandidatePreferredIndustry candidate_preferred_industry = 1;
+}
+
+message UpdateCandidatePreferredIndustryRequest {
+  // CandidatePreference id (UUID).
+  string candidate_preference_id = 1;
+  // Resource with id and etag set.
+  CandidatePreferredIndustry candidate_preferred_industry = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateCandidatePreferredIndustryResponse {
+  CandidatePreferredIndustry candidate_preferred_industry = 1;
+}
+
+message DeleteCandidatePreferredIndustryRequest {
+  // CandidatePreference id (UUID).
+  string candidate_preference_id = 1;
+  // CandidatePreferredIndustry id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteCandidatePreferredIndustryResponse {
+}
+
+message CloseJobOpeningRequest {
+  // Path parameter jobOpeningId.
+  string job_opening_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CloseJobOpeningResponse {
+  JobOpening job_opening = 1;
+}
+
+message ReopenJobOpeningRequest {
+  // Path parameter jobOpeningId.
+  string job_opening_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ReopenJobOpeningResponse {
+  JobOpening job_opening = 1;
+}
+
+message ReportJobOpeningRequest {
+  // Path parameter jobOpeningId.
+  string job_opening_id = 1;
+  // Why it is inappropriate. Required.
+  string reason = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ReportJobOpeningResponse {
+}
+
+message EmailApplicantRequest {
+  // Path parameter applicationId.
+  string application_id = 1;
+  // Subject. Required.
+  string subject = 2;
+  // Body. Required.
+  string message = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message EmailApplicantResponse {
+}
+
+message UpdateApplicationStatusRequest {
+  // Path parameter jobOpeningId.
+  string job_opening_id = 1;
+  // Path parameter jobApplicationId.
+  string job_application_id = 2;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 3;
+  // Status. Required.
+  Status status = 4;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 5;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "submitted"
+    STATUS_SUBMITTED = 1;
+    // "shortlisted"
+    STATUS_SHORTLISTED = 2;
+    // "rejected"
+    STATUS_REJECTED = 3;
+    // "hired"
+    STATUS_HIRED = 4;
+    // "withdrawn"
+    STATUS_WITHDRAWN = 5;
+  }
+}
+message UpdateApplicationStatusResponse {
+  JobApplication job_application = 1;
+}
+
+// Job function catalogue (Engineering, Sales...).
+message FunctionArea {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Function.
+  string name = 2;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 3;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 4;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 5;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 6;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 7;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 8;
+  // Display order.
+  optional int32 sort_order = 9;
+  // Whether offered for new picks.
+  optional bool is_active = 10;
+}
+
+// Industry catalogue.
+message Industry {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Industry.
+  string name = 2;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 3;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 4;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 5;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 6;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 7;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 8;
+  // Display order.
+  optional int32 sort_order = 9;
+  // Whether offered for new picks.
+  optional bool is_active = 10;
+}
+
+// Job posted on the job board.
+message JobOpening {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Poster. [UUID]
+  optional string posted_by_user_id = 2;
+  // Job title.
+  string title = 3;
+  // Location.
+  string location = 4;
+  // Country. [UUID]
+  string country_id = 5;
+  // Employment type.
+  EmploymentType employment_type = 6;
+  // Work mode.
+  optional WorkMode work_mode = 7;
+  // State. Changed only through the workflow operations. Output only.
+  Status status = 8;
+  // Description.
+  string description = 9;
+  // Company.
+  string company_name = 10;
+  // Company website.
+  string company_website = 11;
+  // Company e-mail.
+  string company_email = 12;
+  // Company logo. [UUID]
+  string company_logo_file_id = 13;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 14;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 15;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 16;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 17;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 18;
+  // Allowed values of employment_type; REST/JSON uses the lowercase value shown in each comment.
+  enum EmploymentType {
+    EMPLOYMENT_TYPE_UNSPECIFIED = 0;
+    // "full_time"
+    EMPLOYMENT_TYPE_FULL_TIME = 1;
+    // "part_time"
+    EMPLOYMENT_TYPE_PART_TIME = 2;
+    // "freelance"
+    EMPLOYMENT_TYPE_FREELANCE = 3;
+    // "contract"
+    EMPLOYMENT_TYPE_CONTRACT = 4;
+  }
+  // Allowed values of work_mode; REST/JSON uses the lowercase value shown in each comment.
+  enum WorkMode {
+    WORK_MODE_UNSPECIFIED = 0;
+    // "remote"
+    WORK_MODE_REMOTE = 1;
+    // "hybrid"
+    WORK_MODE_HYBRID = 2;
+    // "on_site"
+    WORK_MODE_ON_SITE = 3;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "open"
+    STATUS_OPEN = 1;
+    // "closed"
+    STATUS_CLOSED = 2;
+  }
+}
+
+// Application to a job opening.
+message JobApplication {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Job. [UUID] Set from the parent path on create.
+  string job_opening_id = 2;
+  // Applicant. [UUID] Output only: the caller, from the token.
+  string applicant_user_id = 3;
+  // Résumé. [UUID]
+  string resume_file_id = 4;
+  // State. Changed only through the workflow operations. Output only.
+  Status status = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "submitted"
+    STATUS_SUBMITTED = 1;
+    // "shortlisted"
+    STATUS_SHORTLISTED = 2;
+    // "rejected"
+    STATUS_REJECTED = 3;
+    // "hired"
+    STATUS_HIRED = 4;
+    // "withdrawn"
+    STATUS_WITHDRAWN = 5;
+  }
+}
+
+// A person's job-search preferences.
+message CandidatePreference {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person. [UUID]
+  string person_id = 2;
+  // Open to work or hiring.
+  optional OpenTo open_to = 3;
+  // Preferred location.
+  optional string preferred_location = 4;
+  // Dream companies.
+  optional string dream_companies = 5;
+  // Attire preference.
+  optional Attire attire = 6;
+  // Collaboration preference.
+  optional Collaboration collaboration = 7;
+  // Role-structure preference.
+  optional RoleClarity role_clarity = 8;
+  // Travel / commute preference.
+  optional LocationPreference location_preference = 9;
+  // Working-hours preference.
+  optional WorkHours work_hours = 10;
+  // Company-type preference.
+  optional CompanyType company_type = 11;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 12;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 13;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 14;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 15;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 16;
+  // Allowed values of open_to; REST/JSON uses the lowercase value shown in each comment.
+  enum OpenTo {
+    OPEN_TO_UNSPECIFIED = 0;
+    // "work"
+    OPEN_TO_WORK = 1;
+    // "hiring"
+    OPEN_TO_HIRING = 2;
+  }
+  // Allowed values of attire; REST/JSON uses the lowercase value shown in each comment.
+  enum Attire {
+    ATTIRE_UNSPECIFIED = 0;
+    // "casual"
+    ATTIRE_CASUAL = 1;
+    // "formal"
+    ATTIRE_FORMAL = 2;
+  }
+  // Allowed values of collaboration; REST/JSON uses the lowercase value shown in each comment.
+  enum Collaboration {
+    COLLABORATION_UNSPECIFIED = 0;
+    // "individual"
+    COLLABORATION_INDIVIDUAL = 1;
+    // "team"
+    COLLABORATION_TEAM = 2;
+    // "both"
+    COLLABORATION_BOTH = 3;
+  }
+  // Allowed values of role_clarity; REST/JSON uses the lowercase value shown in each comment.
+  enum RoleClarity {
+    ROLE_CLARITY_UNSPECIFIED = 0;
+    // "clearly_defined"
+    ROLE_CLARITY_CLEARLY_DEFINED = 1;
+    // "unstructured"
+    ROLE_CLARITY_UNSTRUCTURED = 2;
+  }
+  // Allowed values of location_preference; REST/JSON uses the lowercase value shown in each comment.
+  enum LocationPreference {
+    LOCATION_PREFERENCE_UNSPECIFIED = 0;
+    // "travel"
+    LOCATION_PREFERENCE_TRAVEL = 1;
+    // "near_home"
+    LOCATION_PREFERENCE_NEAR_HOME = 2;
+  }
+  // Allowed values of work_hours; REST/JSON uses the lowercase value shown in each comment.
+  enum WorkHours {
+    WORK_HOURS_UNSPECIFIED = 0;
+    // "flexible"
+    WORK_HOURS_FLEXIBLE = 1;
+    // "fixed"
+    WORK_HOURS_FIXED = 2;
+  }
+  // Allowed values of company_type; REST/JSON uses the lowercase value shown in each comment.
+  enum CompanyType {
+    COMPANY_TYPE_UNSPECIFIED = 0;
+    // "corporate"
+    COMPANY_TYPE_CORPORATE = 1;
+    // "startup"
+    COMPANY_TYPE_STARTUP = 2;
+  }
+}
+
+// Job function a candidate prefers.
+message CandidatePreferredFunction {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Preference profile. [UUID] Set from the parent path on create.
+  string candidate_preference_id = 2;
+  // Function. [UUID]
+  string function_area_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// Industry a candidate prefers.
+message CandidatePreferredIndustry {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Preference profile. [UUID] Set from the parent path on create.
+  string candidate_preference_id = 2;
+  // Industry. [UUID]
+  string industry_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+

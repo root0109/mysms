@@ -51,7 +51,6 @@ import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
 import com.mysms.core.web.UpdateMask;
-import com.mysms.assessment.domain.AssignmentApprovalEntity;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -67,13 +66,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of assessment.assignment (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Assignment
- * are served here too — AssignmentAllocation, AssignmentApproval, AssignmentSubject.
+ * Business service of assessment.assignment and of the records that exist only as part of a Assignment
+ * (AssignmentAllocation, AssignmentApproval, AssignmentSubject): audit and domain event commit in the same transaction
+ * as every change. Rows outside the caller's institutions are invisible; tenant-level rows change only through a
+ * tenant-wide grant.
  */
 @Service
 public class AssignmentService extends AppTransactionManager {
@@ -207,8 +203,8 @@ public class AssignmentService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Assignment updateAssignment(UUID id, String ifMatch, AssignmentUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -280,9 +276,8 @@ public class AssignmentService extends AppTransactionManager {
     }
 
     /**
-     * assessment.PublishAssignment: Publish (status published; becomes ongoing automatically at issued_on). The row
-     * must be visible and writable for the caller, and the step is allowed while status is draft; in any other state
-     * the answer is 409 and nothing changes.
+     * assessment.PublishAssignment: Publish (status published; becomes ongoing automatically at issued_on). Allowed
+     * while status is draft, on a row the caller may see and write; otherwise 409 and nothing changes.
      */
     public Assignment publishAssignment(UUID id, PublishAssignmentRequest request) {
         DataScope scope = DataScope.current(PERMISSION_PUBLISH_ASSIGNMENT);
@@ -363,6 +358,7 @@ public class AssignmentService extends AppTransactionManager {
 
     /**
      * assessment.RejectAssignment: reject the newest pending review while keeping the draft available to its author.
+     * Only the approval changes (its audit record and event); the assignment stays a draft, so it gets neither.
      */
     public Assignment rejectAssignment(UUID id, RejectAssignmentRequest request) {
         DataScope scope = DataScope.current(PERMISSION_REJECT_ASSIGNMENT);
@@ -398,7 +394,6 @@ public class AssignmentService extends AppTransactionManager {
                             : request.getReason());
             outbox.publish(ASSIGNMENT_APPROVAL_AGGREGATE + ".reject", ASSIGNMENT_APPROVAL_AGGREGATE,
                     approval.getId(), AssessmentEvents.payload(approval.getId()));
-            outbox.publish(AGGREGATE + ".reject", AGGREGATE, id, AssessmentEvents.payload(id));
             return mapper.toDto(entity);
         });
     }
@@ -438,9 +433,8 @@ public class AssignmentService extends AppTransactionManager {
     }
 
     /**
-     * assessment.CancelAssignment: Cancel. The row must be visible and writable for the caller, and the step is allowed
-     * while status is draft or published or ongoing; in any other state
-     * the answer is 409 and nothing changes.
+     * assessment.CancelAssignment: Cancel. Allowed while status is draft or published or ongoing, on a row the caller
+     * may see and write; otherwise 409 and nothing changes.
      */
     public Assignment cancelAssignment(UUID id, CancelAssignmentRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CANCEL_ASSIGNMENT);
@@ -472,9 +466,8 @@ public class AssignmentService extends AppTransactionManager {
     }
 
     /**
-     * assessment.ResetAssignment: Back to draft. The row must be visible and writable for the caller, and the step is
-     * allowed while status is cancelled; in any other state
-     * the answer is 409 and nothing changes.
+     * assessment.ResetAssignment: Back to draft. Allowed while status is cancelled, on a row the caller may see and
+     * write; otherwise 409 and nothing changes.
      */
     public Assignment resetAssignment(UUID id, ResetAssignmentRequest request) {
         DataScope scope = DataScope.current(PERMISSION_RESET_ASSIGNMENT);
@@ -514,12 +507,12 @@ public class AssignmentService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(AssignmentEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected AssignmentUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected AssignmentUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(AssignmentEntity entity, AssignmentUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -564,7 +557,7 @@ public class AssignmentService extends AppTransactionManager {
 
     }
 
-    // ---- AssignmentAllocation: a record of the Assignment aggregate ----
+    // ---- AssignmentAllocation ----
 
     public AssignmentAllocation getAssignmentAllocation(UUID assignmentId, UUID id) {
         return doInReadTransaction(() -> {
@@ -621,8 +614,8 @@ public class AssignmentService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public AssignmentAllocation updateAssignmentAllocation(UUID assignmentId, UUID id, String ifMatch,
             AssignmentAllocationUpdate changes, String updateMask, boolean validateOnly) {
@@ -685,15 +678,12 @@ public class AssignmentService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the assessment.assignment it belongs to). */
+    /** The institution of the assessment.assignment the row belongs to. */
     private Optional<UUID> institutionOfAssignmentAllocation(AssignmentAllocationEntity entity) {
         return assignmentAllocationRepository.institutionOf(entity.getAssignmentId());
     }
 
-    /**
-     * Applies the selected AssignmentAllocationUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected AssignmentAllocationUpdate fields; explicit per field so a mask can clear values. */
     private static void applyAssignmentAllocation(AssignmentAllocationEntity entity, AssignmentAllocationUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -728,7 +718,7 @@ public class AssignmentService extends AppTransactionManager {
         }
     }
 
-    // ---- AssignmentApproval: a record of the Assignment aggregate ----
+    // ---- AssignmentApproval ----
 
     public AssignmentApproval getAssignmentApproval(UUID assignmentId, UUID id) {
         return doInReadTransaction(() -> {
@@ -785,8 +775,8 @@ public class AssignmentService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public AssignmentApproval updateAssignmentApproval(UUID assignmentId, UUID id, String ifMatch,
             AssignmentApprovalUpdate changes, String updateMask, boolean validateOnly) {
@@ -849,15 +839,12 @@ public class AssignmentService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the assessment.assignment it belongs to). */
+    /** The institution of the assessment.assignment the row belongs to. */
     private Optional<UUID> institutionOfAssignmentApproval(AssignmentApprovalEntity entity) {
         return assignmentApprovalRepository.institutionOf(entity.getAssignmentId());
     }
 
-    /**
-     * Applies the selected AssignmentApprovalUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected AssignmentApprovalUpdate fields; explicit per field so a mask can clear values. */
     private static void applyAssignmentApproval(AssignmentApprovalEntity entity, AssignmentApprovalUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -893,7 +880,7 @@ public class AssignmentService extends AppTransactionManager {
 
     }
 
-    // ---- AssignmentSubject: a record of the Assignment aggregate ----
+    // ---- AssignmentSubject ----
 
     public AssignmentSubject getAssignmentSubject(UUID assignmentId, UUID id) {
         return doInReadTransaction(() -> {
@@ -949,8 +936,8 @@ public class AssignmentService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public AssignmentSubject updateAssignmentSubject(UUID assignmentId, UUID id, String ifMatch,
             AssignmentSubjectUpdate changes, String updateMask, boolean validateOnly) {
@@ -1013,15 +1000,12 @@ public class AssignmentService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the assessment.assignment it belongs to). */
+    /** The institution of the assessment.assignment the row belongs to. */
     private Optional<UUID> institutionOfAssignmentSubject(AssignmentSubjectEntity entity) {
         return assignmentSubjectRepository.institutionOf(entity.getAssignmentId());
     }
 
-    /**
-     * Applies the selected AssignmentSubjectUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected AssignmentSubjectUpdate fields; explicit per field so a mask can clear values. */
     private static void applyAssignmentSubject(AssignmentSubjectEntity entity, AssignmentSubjectUpdate changes,
             List<String> fields) {
         for (String field : fields) {

@@ -1,4 +1,4 @@
-// Owned API contract of hr (JAVA-CODING-RULES §7); first materialized from api/openapi/hr.yaml on 2026-11-10.
+// Owned API contract of hr.
 package com.mysms.hr.api;
 
 import com.mysms.hr.api.model.LeaveBalanceSummary;

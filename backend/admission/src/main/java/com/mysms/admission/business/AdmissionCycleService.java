@@ -7,7 +7,9 @@ import com.mysms.admission.api.model.AdmissionCycleUpdate;
 import com.mysms.admission.api.model.CancelAdmissionCycleRequest;
 import com.mysms.admission.api.model.CloseAdmissionCycleRequest;
 import com.mysms.admission.api.model.ConfirmAdmissionCycleRequest;
+import com.mysms.admission.api.model.OpenApplicationsRequest;
 import com.mysms.admission.api.model.ResetAdmissionCycleRequest;
+import com.mysms.admission.api.model.StartAdmissionRequest;
 import com.mysms.admission.config.AdmissionDatabaseConfig;
 import com.mysms.admission.config.AdmissionEventsConfig;
 import com.mysms.admission.domain.AdmissionCycleEntity;
@@ -53,13 +55,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of admission.admission_cycle (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a AdmissionCycle
- * are served here too — AdmissionCycleFee.
+ * Business service of admission.admission_cycle and of the records that exist only as part of a AdmissionCycle
+ * (AdmissionCycleFee): audit and domain event commit in the same transaction as every change. Rows outside the caller's
+ * institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class AdmissionCycleService extends AppTransactionManager {
@@ -74,6 +72,12 @@ public class AdmissionCycleService extends AppTransactionManager {
     static final String PERMISSION_CLOSE_ADMISSION_CYCLE = "admission.admission_cycle.close_admission_cycle";
     static final String PERMISSION_CANCEL_ADMISSION_CYCLE = "admission.admission_cycle.cancel_admission_cycle";
     static final String PERMISSION_RESET_ADMISSION_CYCLE = "admission.admission_cycle.reset_admission_cycle";
+    static final String PERMISSION_OPEN_APPLICATIONS = "admission.admission_cycle.open_applications";
+    static final String PERMISSION_START_ADMISSION = "admission.admission_cycle.start_admission";
+    /** The cycle takes applications. */
+    static final String OPEN = "open";
+    /** The cycle takes no more applications; the ones it has are decided and admitted. */
+    static final String ADMISSION = "admission";
     /** The contract's AdmissionCycleUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("institutionId", "name", "admissionBasis", "programId", "courseId", "gradeLevelId",
@@ -120,9 +124,20 @@ public class AdmissionCycleService extends AppTransactionManager {
         this.admissionCycleFeeMapper = admissionCycleFeeMapper;
     }
 
+    /**
+     * The cycle, for the office of its institution — and, while it is open for applications, for every holder of
+     * the permission in the tenant: an applicant is not a member of the school they apply to, and what a cycle says
+     * (its name, its dates, what it admits to) is what the school publishes to invite applications.
+     */
     public AdmissionCycle getAdmissionCycle(UUID id) {
+        DataScope scope = DataScope.current(PERMISSION_GET);
         return doInReadTransaction(() -> {
-            return mapper.toDto(loadVisible(DataScope.current(PERMISSION_GET), id));
+            AdmissionCycleEntity entity = repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            if (!scope.canRead(institutionOf(entity)) && !OPEN.equals(entity.getStatus())) {
+                throw new ResourceNotFoundException(AGGREGATE, id);
+            }
+            return mapper.toDto(entity);
         });
     }
 
@@ -163,8 +178,8 @@ public class AdmissionCycleService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public AdmissionCycle updateAdmissionCycle(UUID id, String ifMatch, AdmissionCycleUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -225,9 +240,8 @@ public class AdmissionCycleService extends AppTransactionManager {
     }
 
     /**
-     * admission.ConfirmAdmissionCycle: Confirm the cycle. The row must be visible and writable for the caller, and the
-     * step is allowed while status is draft; in any other state
-     * the answer is 409 and nothing changes.
+     * admission.ConfirmAdmissionCycle: Confirm the cycle. Allowed while status is draft, on a row the caller may see
+     * and write; otherwise 409 and nothing changes.
      */
     public AdmissionCycle confirmAdmissionCycle(UUID id, ConfirmAdmissionCycleRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CONFIRM_ADMISSION_CYCLE);
@@ -258,9 +272,8 @@ public class AdmissionCycleService extends AppTransactionManager {
     }
 
     /**
-     * admission.CloseAdmissionCycle: Close. The row must be visible and writable for the caller, and the step is
-     * allowed while status is open or admission; in any other state
-     * the answer is 409 and nothing changes.
+     * admission.CloseAdmissionCycle: Close. Allowed while status is open or admission, on a row the caller may see and
+     * write; otherwise 409 and nothing changes.
      */
     public AdmissionCycle closeAdmissionCycle(UUID id, CloseAdmissionCycleRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CLOSE_ADMISSION_CYCLE);
@@ -291,9 +304,8 @@ public class AdmissionCycleService extends AppTransactionManager {
     }
 
     /**
-     * admission.CancelAdmissionCycle: Cancel. The row must be visible and writable for the caller, and the step is
-     * allowed while status is draft or confirmed or open; in any other state
-     * the answer is 409 and nothing changes.
+     * admission.CancelAdmissionCycle: Cancel. Allowed while status is draft or confirmed or open, on a row the caller
+     * may see and write; otherwise 409 and nothing changes.
      */
     public AdmissionCycle cancelAdmissionCycle(UUID id, CancelAdmissionCycleRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CANCEL_ADMISSION_CYCLE);
@@ -325,9 +337,8 @@ public class AdmissionCycleService extends AppTransactionManager {
     }
 
     /**
-     * admission.ResetAdmissionCycle: Back to draft. The row must be visible and writable for the caller, and the step
-     * is allowed while status is cancelled; in any other state
-     * the answer is 409 and nothing changes.
+     * admission.ResetAdmissionCycle: Back to draft. Allowed while status is cancelled, on a row the caller may see and
+     * write; otherwise 409 and nothing changes.
      */
     public AdmissionCycle resetAdmissionCycle(UUID id, ResetAdmissionCycleRequest request) {
         DataScope scope = DataScope.current(PERMISSION_RESET_ADMISSION_CYCLE);
@@ -357,6 +368,70 @@ public class AdmissionCycleService extends AppTransactionManager {
         });
     }
 
+    /**
+     * admission.OpenApplications: Start accepting applications. Allowed while status is confirmed, on a row the caller
+     * may see and write; otherwise 409 and nothing changes.
+     */
+    public AdmissionCycle openApplications(UUID id, OpenApplicationsRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_OPEN_APPLICATIONS);
+        return doInWriteTransaction(() -> {
+            AdmissionCycleEntity entity = repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            if (!scope.canRead(institutionOf(entity))) {
+                throw new ResourceNotFoundException(AGGREGATE, id);
+            }
+            scope.requireWritable(institutionOf(entity));
+            OptionalInt expected = Etags.bodyVersion(request == null ? null : request.getEtag());
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!(Set.of("confirmed").contains(entity.getStatus()))) {
+                throw new InvalidStateException("The admission cycle cannot be changed this way in its current state.");
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            if (repository.openApplications(id, entity.getRowVersion(), now, Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, "openApplications", List.of("status"), null);
+            outbox.publish(AGGREGATE + ".openApplications", AGGREGATE, id, AdmissionEvents.payload(id));
+            return mapper.toDto(repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    /**
+     * admission.StartAdmission: Move to the admission stage. Allowed while status is open, on a row the caller may see
+     * and write; otherwise 409 and nothing changes.
+     */
+    public AdmissionCycle startAdmission(UUID id, StartAdmissionRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_START_ADMISSION);
+        return doInWriteTransaction(() -> {
+            AdmissionCycleEntity entity = repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            if (!scope.canRead(institutionOf(entity))) {
+                throw new ResourceNotFoundException(AGGREGATE, id);
+            }
+            scope.requireWritable(institutionOf(entity));
+            OptionalInt expected = Etags.bodyVersion(request == null ? null : request.getEtag());
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!(Set.of(OPEN).contains(entity.getStatus()))) {
+                throw new InvalidStateException("The admission cycle cannot be changed this way in its current state.");
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            if (repository.startAdmission(id, entity.getRowVersion(), now, Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, "startAdmission", List.of("status"), null);
+            outbox.publish(AGGREGATE + ".startAdmission", AGGREGATE, id, AdmissionEvents.payload(id));
+            return mapper.toDto(repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
     private AdmissionCycleEntity loadVisible(DataScope scope, UUID id) {
         AdmissionCycleEntity entity = repository.findById(id)
@@ -367,14 +442,12 @@ public class AdmissionCycleService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(AdmissionCycleEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /**
-     * Applies the selected AdmissionCycleUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected AdmissionCycleUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(AdmissionCycleEntity entity, AdmissionCycleUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -422,7 +495,7 @@ public class AdmissionCycleService extends AppTransactionManager {
 
     }
 
-    // ---- AdmissionCycleFee: a record of the AdmissionCycle aggregate ----
+    // ---- AdmissionCycleFee ----
 
     public AdmissionCycleFee getAdmissionCycleFee(UUID admissionCycleId, UUID id) {
         return doInReadTransaction(() -> {
@@ -478,8 +551,8 @@ public class AdmissionCycleService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public AdmissionCycleFee updateAdmissionCycleFee(UUID admissionCycleId, UUID id, String ifMatch,
             AdmissionCycleFeeUpdate changes, String updateMask, boolean validateOnly) {
@@ -542,15 +615,12 @@ public class AdmissionCycleService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the admission.admission_cycle it belongs to). */
+    /** The institution of the admission.admission_cycle the row belongs to. */
     private Optional<UUID> institutionOfAdmissionCycleFee(AdmissionCycleFeeEntity entity) {
         return admissionCycleFeeRepository.institutionOf(entity.getAdmissionCycleId());
     }
 
-    /**
-     * Applies the selected AdmissionCycleFeeUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected AdmissionCycleFeeUpdate fields; explicit per field so a mask can clear values. */
     private static void applyAdmissionCycleFee(AdmissionCycleFeeEntity entity, AdmissionCycleFeeUpdate changes,
             List<String> fields) {
         for (String field : fields) {

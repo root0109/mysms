@@ -15,6 +15,7 @@ const runtime = createRuntime({
   clientId: appConfig.clientId,
   defaultLocale: appConfig.defaultLocale,
   vault: memoryVault(),
+  tenantCode: appConfig.tenantCode,
 });
 
 const root = document.getElementById('root');

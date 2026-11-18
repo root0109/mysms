@@ -1,7 +1,12 @@
 import {
   can,
+  currentSessionId,
   isApiError,
   useChangePassword,
+  useCreateApiToken,
+  useEndOtherSessions,
+  useMyApiTokens,
+  useRevokeApiToken,
   useDisableMfa,
   useEndSession,
   useEnrollMfa,
@@ -13,6 +18,7 @@ import {
   useVerifyMfaEnrollment,
   type MfaCredential,
   type MfaEnrollment,
+  type AuthToken,
   type UserSession,
 } from '@mysms/core';
 import { Banner, Button, Card, DataTable, Skeleton, StatusChip, TextInput, type Column } from '@mysms/ui-web';
@@ -37,7 +43,8 @@ function errorText(t: Translate, error: unknown): string {
 
 /**
  * ACC-08 Security & sessions: change the password, add an authenticator app (its secret and recovery codes are
- * shown once), turn a factor off with a current code, replace the recovery codes, and end sign-in sessions. Every
+ * shown once), turn a factor off with a current code, replace the recovery codes, end sign-in sessions (one, or every
+ * one but this), and create and revoke personal API tokens (the secret is shown once). Every
  * check happens on the server; this screen only collects what the operations need.
  */
 export function SecurityScreen() {
@@ -47,6 +54,7 @@ export function SecurityScreen() {
       <PasswordCard t={t} />
       <MfaCard t={t} />
       <SessionsCard t={t} />
+      <ApiTokensCard t={t} />
     </div>
   );
 }
@@ -371,10 +379,20 @@ function SessionsCard({ t }: { t: Translate }) {
   const mayEnd = can(permissions, 'iam.user_session.delete');
   const sessions = useMySessions(mayRead);
   const end = useEndSession();
+  const endOthers = useEndOtherSessions();
+  const current = currentSessionId(useSession((s) => s.accessToken));
   if (!mayRead) return null;
   const rows = (sessions.data?.items ?? []).filter((s) => !s.endedAt);
+  const others = rows.filter((s) => s.id !== current);
   const columns: Column<UserSession>[] = [
-    { key: 'userAgent', header: t('acc.security.sessions.device'), render: (s) => s.userAgent ?? '—' },
+    {
+      key: 'userAgent',
+      header: t('acc.security.sessions.device'),
+      render: (s) =>
+        s.id === current
+          ? t('acc.security.sessions.thisDevice', { device: s.userAgent ?? '—' })
+          : (s.userAgent ?? '—'),
+    },
     { key: 'ipAddress', header: t('acc.security.sessions.address'), render: (s) => s.ipAddress ?? '—' },
     {
       key: 'startedAt',
@@ -391,23 +409,34 @@ function SessionsCard({ t }: { t: Translate }) {
           {
             key: 'actions',
             header: t('adm.records.actions'),
-            render: (s: UserSession) => (
-              <Button
-                variant="ghost"
-                loading={end.isPending && end.variables?.id === s.id}
-                onClick={() => s.id && s.etag && end.mutate({ id: s.id, etag: s.etag })}
-              >
-                {t('acc.security.sessions.end')}
-              </Button>
-            ),
+            render: (s: UserSession) =>
+              s.id === current ? null : (
+                <Button
+                  variant="ghost"
+                  loading={end.isPending && end.variables?.id === s.id}
+                  onClick={() => s.id && s.etag && end.mutate({ id: s.id, etag: s.etag })}
+                >
+                  {t('acc.security.sessions.end')}
+                </Button>
+              ),
           },
         ]
       : []),
   ];
   return (
-    <Card title={t('acc.security.sessions.title')}>
+    <Card
+      title={t('acc.security.sessions.title')}
+      actions={
+        mayEnd && others.length > 0 ? (
+          <Button variant="secondary" loading={endOthers.isPending} onClick={() => endOthers.mutate(others)}>
+            {t('acc.security.sessions.endOthers')}
+          </Button>
+        ) : null
+      }
+    >
       <p className="hint">{t('acc.security.sessions.intro')}</p>
       {end.isError ? <Banner intent="danger">{errorText(t, end.error)}</Banner> : null}
+      {endOthers.isError ? <Banner intent="danger">{errorText(t, endOthers.error)}</Banner> : null}
       {sessions.isError ? (
         <Banner intent="danger">{errorText(t, sessions.error)}</Banner>
       ) : (
@@ -421,6 +450,122 @@ function SessionsCard({ t }: { t: Translate }) {
           emptyText={t('common.state.empty')}
         />
       )}
+    </Card>
+  );
+}
+
+/**
+ * Personal API tokens: listed without their secrets, created with a name and an optional expiry (the secret is shown
+ * once, right after creation), and revoked at once. Creating needs its own permission; listing and revoking one's own
+ * tokens are self-service.
+ */
+function ApiTokensCard({ t }: { t: Translate }) {
+  const { format } = useI18n();
+  const permissions = useSession((s) => s.me?.permissions);
+  const mayRead = can(permissions, 'iam.auth_token.read');
+  const mayCreate = can(permissions, 'iam.user_account.create_api_token');
+  const mayRevoke = can(permissions, 'iam.auth_token.delete');
+  const tokens = useMyApiTokens(mayRead);
+  const create = useCreateApiToken();
+  const revoke = useRevokeApiToken();
+  const [name, setName] = useState('');
+  const [days, setDays] = useState('90');
+  const [touched, setTouched] = useState(false);
+  if (!mayRead) return null;
+  const lifetime = Number(days);
+  const lifetimeValid = Number.isInteger(lifetime) && lifetime >= 1 && lifetime <= 365;
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    setTouched(true);
+    if (!name.trim() || !lifetimeValid) return;
+    create.mutate(
+      { name: name.trim(), expiresAt: new Date(Date.now() + lifetime * 86_400_000).toISOString() },
+      {
+        onSuccess: () => {
+          setName('');
+          setTouched(false);
+        },
+      },
+    );
+  };
+  const columns: Column<AuthToken>[] = [
+    { key: 'name', header: t('acc.security.tokens.name'), render: (row) => row.name ?? '—' },
+    {
+      key: 'expiresAt',
+      header: t('acc.security.tokens.expires'),
+      render: (row) => (row.expiresAt ? format.dateTime(row.expiresAt) : '—'),
+    },
+    {
+      key: 'lastUsedAt',
+      header: t('acc.security.tokens.lastUsed'),
+      render: (row) => (row.lastUsedAt ? format.dateTime(row.lastUsedAt) : t('acc.security.tokens.never')),
+    },
+    ...(mayRevoke
+      ? [
+          {
+            key: 'actions',
+            header: t('adm.records.actions'),
+            render: (row: AuthToken) => (
+              <Button
+                variant="ghost"
+                loading={revoke.isPending && revoke.variables?.id === row.id}
+                onClick={() => row.id && row.etag && revoke.mutate({ id: row.id, etag: row.etag })}
+              >
+                {t('acc.security.tokens.revoke')}
+              </Button>
+            ),
+          },
+        ]
+      : []),
+  ];
+  return (
+    <Card title={t('acc.security.tokens.title')}>
+      <p className="hint">{t('acc.security.tokens.intro')}</p>
+      {create.data ? (
+        <Banner intent="warning" title={t('acc.security.tokens.copyNow')}>
+          <code className="secret-once">{create.data.token}</code>
+        </Banner>
+      ) : null}
+      {create.isError ? <Banner intent="danger">{errorText(t, create.error)}</Banner> : null}
+      {revoke.isError ? <Banner intent="danger">{errorText(t, revoke.error)}</Banner> : null}
+      {tokens.isError ? (
+        <Banner intent="danger">{errorText(t, tokens.error)}</Banner>
+      ) : (
+        <DataTable
+          caption={t('common.list.count', { count: tokens.data?.items.length ?? 0 })}
+          columns={columns}
+          rows={tokens.data?.items}
+          rowKey={(row) => row.id ?? row.name ?? ''}
+          loading={tokens.isPending}
+          loadingLabel={t('common.state.loading')}
+          emptyText={t('acc.security.tokens.empty')}
+        />
+      )}
+      {mayCreate ? (
+        <form className="form" onSubmit={submit} noValidate>
+          <TextInput
+            label={t('acc.security.tokens.name')}
+            maxLength={120}
+            value={name}
+            error={touched && !name.trim() ? t('common.validation.required') : undefined}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <TextInput
+            label={t('acc.security.tokens.days')}
+            type="number"
+            min={1}
+            max={365}
+            value={days}
+            error={lifetimeValid ? undefined : t('acc.security.tokens.daysRange')}
+            onChange={(e) => setDays(e.target.value)}
+          />
+          <div className="form__actions">
+            <Button type="submit" loading={create.isPending}>
+              {t('acc.security.tokens.create')}
+            </Button>
+          </div>
+        </form>
+      ) : null}
     </Card>
   );
 }

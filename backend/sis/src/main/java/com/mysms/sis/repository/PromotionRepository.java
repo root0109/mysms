@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,11 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to sis.promotion (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live rows
- * only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to sis.promotion: live rows only, keyset paging over an allowlisted order and the row_version guard
+ * on every update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class PromotionRepository {
@@ -71,6 +69,9 @@ public class PromotionRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String STANDING_OF_STUDENTS = SELECT_LIVE
+            + " AND r.student_id = ANY(:studentIds) AND r.from_academic_year_id = :fromAcademicYearId"
+            + " AND r.status <> 'rejected'";
     private static final String INSERT = """
             INSERT INTO sis.promotion
             (id, tenant_id, student_id, institution_id, from_academic_year_id, from_grade_level_id, from_section_id,
@@ -134,6 +135,16 @@ public class PromotionRepository {
                    row_version = row_version + 1
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** sis.ApplyPromotions: an approved promotion whose placements were written. */
+    private static final String TRANSITION_APPLY_PROMOTION = """
+            UPDATE sis.promotion
+               SET status = 'applied',
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND status = 'approved' AND deleted_at IS NULL
             """;
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
@@ -233,7 +244,22 @@ public class PromotionRepository {
                 .param("actor", actor).update();
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** The promotions of these students out of the year that still stand (every state but rejected). */
+    public List<PromotionEntity> standingOfStudents(Collection<UUID> studentIds, UUID fromAcademicYearId) {
+        return jdbc.sql(STANDING_OF_STUDENTS).param("studentIds", studentIds.toArray(UUID[]::new))
+                .param("fromAcademicYearId", fromAcademicYearId).query(PromotionRepository::map).list();
+    }
+
+    /** sis.ApplyPromotions; 0 rows means the row changed, or is no longer approved, since it was read. */
+    public int applyPromotion(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_APPLY_PROMOTION)
+                .param("id", id)
+                .param("expected", expected)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

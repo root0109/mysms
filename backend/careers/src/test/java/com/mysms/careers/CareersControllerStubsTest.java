@@ -10,8 +10,8 @@ import com.mysms.careers.controller.JobOpeningController;
 import org.junit.jupiter.api.Test;
 
 /**
- * The contract operations careers does not serve yet answer 501 NOT_IMPLEMENTED explicitly — none falls through, and a
- * newly served operation changes the count on purpose.
+ * The operations careers does not serve yet answer 501 explicitly; a newly served operation changes the count on
+ * purpose.
  */
 class CareersControllerStubsTest {
 
@@ -20,6 +20,6 @@ class CareersControllerStubsTest {
         assertThat(ControllerStubs.count(CandidatePreferenceController.class)).as("CandidatePreference").isEqualTo(0);
         assertThat(ControllerStubs.count(FunctionAreaController.class)).as("FunctionArea").isEqualTo(0);
         assertThat(ControllerStubs.count(IndustryController.class)).as("Industry").isEqualTo(0);
-        assertThat(ControllerStubs.count(JobOpeningController.class)).as("JobOpening").isEqualTo(5);
+        assertThat(ControllerStubs.count(JobOpeningController.class)).as("JobOpening").isEqualTo(0);
     }
 }

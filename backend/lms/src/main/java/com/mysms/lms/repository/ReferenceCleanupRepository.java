@@ -10,8 +10,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * The statements of lms's reference cleanup (database/logical-references.md): each changes the rows of one logical
- * reference to a deleted owner, inside the event's tenant, and returns their ids.
+ * The statements of lms's reference cleanup: each changes the rows of one logical reference to a deleted owner, inside
+ * the event's tenant, and returns their ids.
  */
 @Repository
 public class ReferenceCleanupRepository {

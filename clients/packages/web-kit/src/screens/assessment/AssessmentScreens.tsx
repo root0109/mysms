@@ -1,6 +1,7 @@
 import {
   RESOURCES,
   isApiError,
+  buildPath,
   useCan,
   useExamResults,
   useExamStep,
@@ -9,8 +10,8 @@ import {
   useMarksheetLines,
   useRecord,
   useRecordExamMarks,
+  useStudentNames,
   useStudentResults,
-  type ExamResult,
   type MarkEntry,
   type RecordRow,
   type ResultCard,
@@ -28,67 +29,13 @@ import {
   type Column,
 } from '@mysms/ui-web';
 import { useEffect, useState } from 'react';
+import { useOnline } from './assessmentText';
+import { mergeRows, RECORDED, sameAs, type MarkRow } from './marksGrid';
+import { ErrorState, OfflineBanner } from './assessmentUi';
 import { Link, useParams } from 'react-router';
 import { ResourceScreen } from '../ResourceScreen';
 import { RESOURCE_SCREENS } from '../resourceScreens';
 import { ManagedResourcePanel } from './ManagedResourcePanel';
-
-function useOnline() {
-  const [online, setOnline] = useState(() => typeof navigator === 'undefined' || navigator.onLine);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const on = () => setOnline(true);
-    const off = () => setOnline(false);
-    window.addEventListener('online', on);
-    window.addEventListener('offline', off);
-    return () => {
-      window.removeEventListener('online', on);
-      window.removeEventListener('offline', off);
-    };
-  }, []);
-  return online;
-}
-
-function OfflineBanner() {
-  const online = useOnline();
-  const { t } = useI18n();
-  return online ? null : <Banner intent="warning">{t('common.state.offline')}</Banner>;
-}
-
-function failureText(error: unknown, t: ReturnType<typeof useI18n>['t']): string {
-  if (isApiError(error)) {
-    if (error.status === 412) return t('common.conflict.body');
-    if (error.status === 403) return t('adm.records.forbidden');
-    if (error.status === 404) return t('common.state.notAvailable');
-    if (error.status === 409) return error.detail ?? t('common.error.generic');
-    if (error.status === 422)
-      return error.errors.map((item) => item.message).join(' ') || t('common.validation.pattern');
-  }
-  return t('common.error.generic');
-}
-
-function ErrorState({ error, retry }: { error: unknown; retry: () => void }) {
-  const { t } = useI18n();
-  return (
-    <Banner
-      intent="danger"
-      action={
-        <Button variant="secondary" onClick={retry}>
-          {t('common.action.retry')}
-        </Button>
-      }
-    >
-      {failureText(error, t)}
-    </Banner>
-  );
-}
-
-interface MarkRow extends Omit<MarkEntry, 'attendanceStatus'> {
-  attendanceStatus: string;
-  label: string;
-  existing: ExamResult;
-  error?: string;
-}
 
 export function ExamMarksScreen() {
   const { t } = useI18n();
@@ -108,18 +55,11 @@ export function ExamMarksScreen() {
   const [failureAction, setFailureAction] = useState<'save' | 'finalize'>('save');
   const online = useOnline();
   useEffect(() => {
-    if (!results.data?.items) return;
-    setRows(
-      results.data.items.map((item) => ({
-        studentId: item.studentId,
-        label: item.studentId,
-        existing: item,
-        attendanceStatus: item.attendanceStatus ?? 'expected',
-        ...(item.marks !== undefined ? { marksObtained: item.marks } : {}),
-        ...(item.note ? { note: item.note } : {}),
-      })),
-    );
+    const items = results.data?.items;
+    if (!items) return;
+    setRows((current) => mergeRows(current, items));
   }, [results.data]);
+  const names = useStudentNames(rows.map((row) => row.studentId));
   if (!mayRead || !mayReadExam)
     return (
       <Card title={t('screen.ASM10.title')}>
@@ -136,28 +76,32 @@ export function ExamMarksScreen() {
         <p>{t('asm.web.noExam')}</p>
       </Card>
     );
-  const canEnter = mayWrite && detail.status === 'held';
+  // marks are entered once the exam is held, and corrected after results were updated (that reopens entry)
+  const canEnter = mayWrite && (detail.status === 'held' || detail.status === 'result_updated');
   const onField = (studentId: string, key: 'marksObtained' | 'note', value: string) => {
     setRows((current) =>
       current.map((row) => (row.studentId === studentId ? { ...row, [key]: value } : row)),
     );
   };
   const onAttendance = (studentId: string, value: string) => {
-    if (value !== 'present' && value !== 'absent') return;
+    if (!RECORDED.includes(value)) return;
     setRows((current) =>
-      current.map((row) => (row.studentId === studentId ? { ...row, attendanceStatus: value } : row)),
+      current.map((row) => {
+        if (row.studentId !== studentId) return row;
+        // only a present student has marks
+        const { marksObtained: _dropped, ...rest } = row;
+        return value === 'present'
+          ? { ...row, attendanceStatus: value }
+          : { ...rest, attendanceStatus: value };
+      }),
     );
   };
-  const isEdited = (row: MarkRow) =>
-    row.attendanceStatus !== (row.existing.attendanceStatus ?? 'expected') ||
-    (row.marksObtained ?? '') !== (row.existing.marks ?? '') ||
-    (row.note ?? '') !== (row.existing.note ?? '');
-  const dirtyRows = rows.filter(isEdited);
+  const dirtyRows = rows.filter((row) => !sameAs(row, row.existing));
   const canSave =
     canEnter &&
     online &&
     dirtyRows.length > 0 &&
-    dirtyRows.every((row) => row.attendanceStatus === 'present' || row.attendanceStatus === 'absent');
+    dirtyRows.every((row) => RECORDED.includes(row.attendanceStatus) && Boolean(row.existing.etag));
   const resultsAreValid =
     rows.length > 0 &&
     rows.every(
@@ -178,10 +122,12 @@ export function ExamMarksScreen() {
           attendanceStatus: row.attendanceStatus as MarkEntry['attendanceStatus'],
           ...(row.marksObtained?.trim() ? { marksObtained: row.marksObtained.trim() } : {}),
           ...(row.note?.trim() ? { note: row.note.trim() } : {}),
+          // the version each row was read at: a row changed by someone else since is refused (412)
+          etag: row.existing.etag as string,
         })),
       });
       setNotice(t('asm.native.markEntrySaved'));
-      await results.refetch();
+      await Promise.all([results.refetch(), exam.refetch()]);
     } catch (error) {
       setFailureAction('save');
       setFailure(error);
@@ -199,9 +145,10 @@ export function ExamMarksScreen() {
   const finalize = async () => {
     setFailure(null);
     setNotice(null);
-    if (!canFinalize || !online) return;
+    const etag = exam.data?.etag;
+    if (!canFinalize || !online || !etag) return;
     try {
-      await updateExam.mutateAsync({ examId, step: 'resultsUpdated', etag: exam.data?.etag ?? null });
+      await updateExam.mutateAsync({ examId, step: 'resultsUpdated', etag });
       setNotice(t('asm.web.resultsUpdated'));
       await exam.refetch();
     } catch (error) {
@@ -210,7 +157,11 @@ export function ExamMarksScreen() {
     }
   };
   const columns: Column<MarkRow>[] = [
-    { key: 'student', header: t('asm.native.student'), render: (row) => row.label },
+    {
+      key: 'student',
+      header: t('asm.native.student'),
+      render: (row) => names.get(row.studentId) ?? row.studentId,
+    },
     {
       key: 'attendance',
       header: t('asm.native.attendance'),
@@ -218,14 +169,12 @@ export function ExamMarksScreen() {
         <SelectField
           label={t('asm.native.attendance')}
           value={row.attendanceStatus}
-          disabled={!canEnter || row.existing.attendanceStatus === 'exempted'}
+          disabled={!canEnter}
           options={[
             { value: 'expected', label: t('asm.web.attendanceExpected') },
             { value: 'present', label: t('enum.attendance.present') },
             { value: 'absent', label: t('enum.attendance.absent') },
-            ...(row.existing.attendanceStatus === 'exempted'
-              ? [{ value: 'exempted', label: t('enum.attendance.exempted') }]
-              : []),
+            { value: 'exempted', label: t('enum.attendance.exempted') },
           ]}
           onChange={(event) => onAttendance(row.studentId, event.target.value)}
         />
@@ -241,7 +190,7 @@ export function ExamMarksScreen() {
             label={t('asm.native.marks')}
             inputMode="decimal"
             value={row.marksObtained ?? ''}
-            disabled={!canEnter || row.existing.attendanceStatus === 'exempted'}
+            disabled={!canEnter || row.attendanceStatus !== 'present'}
             onChange={(event) => onField(row.studentId, 'marksObtained', event.target.value)}
           />
           <span className="hint">
@@ -258,7 +207,7 @@ export function ExamMarksScreen() {
           <TextInput
             label={t('asm.native.note')}
             value={row.note ?? ''}
-            disabled={!canEnter || row.existing.attendanceStatus === 'exempted'}
+            disabled={!canEnter}
             onChange={(event) => onField(row.studentId, 'note', event.target.value)}
           />
           {row.error ? (
@@ -363,6 +312,8 @@ function MarksheetLinesPanel() {
   const sheets = useInfiniteRecords(mayReadSheets ? markSheetDef : undefined, { size: 100 });
   const [marksheetId, setMarksheetId] = useState('');
   const lines = useMarksheetLines(mayReadLines ? marksheetId || null : null);
+  const mayReadResults = useCan('assessment.marksheet_line.get_student_results');
+  const names = useStudentNames(marksheetId ? (lines.data?.items ?? []).map((line) => line.studentId) : []);
   const sheetRows = sheets.data?.pages.flatMap((page) => page.data) ?? [];
   if (!mayReadSheets || !mayReadLines)
     return (
@@ -374,7 +325,21 @@ function MarksheetLinesPanel() {
   if (sheets.isError) return <ErrorState error={sheets.error} retry={() => void sheets.refetch()} />;
   const lineRows = lines.data?.items ?? [];
   const columns: Column<(typeof lineRows)[number]>[] = [
-    { key: 'student', header: t('asm.native.student'), render: (row) => row.studentId },
+    {
+      key: 'student',
+      header: t('asm.native.student'),
+      // staff open the student's report card (ASM-12) from the line
+      render: (row) => {
+        const name = names.get(row.studentId) ?? row.studentId;
+        return mayReadResults ? (
+          <Link to={'/app' + buildPath('/assessment/results/{studentId}', { studentId: row.studentId })}>
+            {name}
+          </Link>
+        ) : (
+          name
+        );
+      },
+    },
     {
       key: 'total',
       header: t('asm.native.marks'),
@@ -513,7 +478,11 @@ export function StudentResultsScreen() {
   const { t } = useI18n();
   const { studentId = '' } = useParams();
   const mayRead = useCan('assessment.marksheet_line.get_student_results');
+  // staff read every validated result of a student of their school, published or not; students and guardians
+  // read published ones only (the service decides; the screen says which view it shows)
+  const staff = useCan('assessment.marksheet_line.read');
   const results = useStudentResults(mayRead ? studentId : null);
+  const names = useStudentNames(mayRead && studentId ? [studentId] : []);
   const rows = resultRows(results.data?.items ?? []);
   if (!mayRead)
     return (
@@ -525,7 +494,11 @@ export function StudentResultsScreen() {
   if (results.isError) return <ErrorState error={results.error} retry={() => void results.refetch()} />;
   const columns: Column<StudentResultRow>[] = [
     { key: 'session', header: t('asm.native.examSession'), render: (row) => row.session },
-    { key: 'student', header: t('asm.native.student'), render: (row) => row.student },
+    {
+      key: 'student',
+      header: t('asm.native.student'),
+      render: (row) => names.get(row.student) ?? row.student,
+    },
     {
       key: 'total',
       header: t('asm.native.marks'),
@@ -547,13 +520,13 @@ export function StudentResultsScreen() {
       <OfflineBanner />
       <header className="page__header">
         <h1 className="page__title">{t('screen.ASM12.title')}</h1>
-        <p className="page__subtitle">
-          {t('asm.web.studentResults')}: {studentId}
-        </p>
+        <p className="page__subtitle">{names.get(studentId) ?? studentId}</p>
+        {staff ? <Link to="/app/assessment/marksheets">{t('screen.ASM11.title')}</Link> : null}
       </header>
-      <Card title={t('asm.web.studentResults')}>
+      {staff ? <p className="hint">{t('asm.web.staffResults')}</p> : null}
+      <Card title={t(staff ? 'asm.web.validatedResults' : 'asm.web.studentResults')}>
         <DataTable
-          caption={t('asm.web.studentResults')}
+          caption={t(staff ? 'asm.web.validatedResults' : 'asm.web.studentResults')}
           rows={rows}
           rowKey={(row) => row.id}
           loading={false}

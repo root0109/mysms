@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -30,7 +30,7 @@ public class CohortFeedback {
   private @Nullable UUID cohortId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID userId;
+  private @Nullable UUID userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private String feedback;
@@ -68,8 +68,7 @@ public class CohortFeedback {
   /**
    * Constructor with only required parameters
    */
-  public CohortFeedback(UUID userId, String feedback) {
-    this.userId = userId;
+  public CohortFeedback(String feedback) {
     this.feedback = feedback;
   }
 
@@ -113,23 +112,23 @@ public class CohortFeedback {
     this.cohortId = cohortId;
   }
 
-  public CohortFeedback userId(UUID userId) {
+  public CohortFeedback userId(@Nullable UUID userId) {
     this.userId = userId;
     return this;
   }
 
   /**
-   * Student.
+   * Student. Output only: the caller, from the token.
    * @return userId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("userId")
-  public UUID getUserId() {
+  public @Nullable UUID getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(UUID userId) {
+  public void setUserId(@Nullable UUID userId) {
     this.userId = userId;
   }
 

@@ -179,8 +179,7 @@
    ],
    "create": {
     "assignmentId": "dc24f09f-bdf4-55ef-895e-768f30579b9c",
-    "studentId": "7ed39e3a-c31f-5635-ae4d-919643586ec0",
-    "submittedAt": "2026-01-10T09:00:00Z"
+    "studentId": "7ed39e3a-c31f-5635-ae4d-919643586ec0"
    },
    "update": {
     "content": "Updated content"

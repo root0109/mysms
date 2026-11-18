@@ -13,20 +13,12 @@ import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * One domain event on the bus, as a CloudEvents 1.0 structured JSON message (PRINCIPAL-REVIEW P1-36): `id`,
- * `source` (`/mysms/<module>`), `type` (`<module>.<entity>.<verb>`), `time`, `subject` (the aggregate id) and the
- * MySMS extensions `tenantid` (absent for global master data), `aggregatetype` and `traceparent`. `data` is the
- * outbox payload: ids and codes, never personal data.
+ * One domain event on the bus as a CloudEvents 1.0 structured JSON message, with the MySMS extensions {@code tenantid},
+ * {@code aggregatetype} and {@code traceparent}. {@code data} carries ids and codes, never personal data.
  *
- * @param id            globally unique and stable across redeliveries (derived from the module and outbox row)
- * @param module        the publishing module
- * @param type          event name
- * @param tenantId      owning tenant; empty for global master data
- * @param aggregateType entity kind, e.g. `hr.staff`
- * @param aggregateId   entity id
- * @param time          when the change committed
- * @param data          the payload as JSON text
- * @param traceId       W3C trace id of the request that made the change, when known
+ * @param id globally unique and stable across redeliveries (derived from the module and outbox row)
+ * @param tenantId empty for global master data
+ * @param traceId W3C trace id of the request that made the change, when known
  */
 public record EventEnvelope(UUID id, String module, String type, Optional<UUID> tenantId, String aggregateType,
                             UUID aggregateId, Instant time, String data, Optional<String> traceId) {

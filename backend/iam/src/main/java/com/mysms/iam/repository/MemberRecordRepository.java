@@ -10,8 +10,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * iam.member_record: the staff and student records of each login account and person, kept from hr's and sis's events
- * (database/migrations/iam V1_030_009). A row changes only to a newer source row version, so a late or repeated event
+ * iam.member_record: the staff and student records of each login account and person, kept from hr's and sis's events.
+ * A row changes only to a newer source row version, so a late or repeated event
  * changes nothing, and a deleted record stays as a tombstone a late event cannot bring back.
  */
 @Repository

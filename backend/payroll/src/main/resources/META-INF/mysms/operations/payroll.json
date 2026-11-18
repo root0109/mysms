@@ -5,7 +5,8 @@
   "permission" : "payroll.operation.cancel_operation",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.CancelPayslip",
   "method" : "POST",
@@ -13,7 +14,8 @@
   "permission" : "payroll.payslip.cancel_payslip",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.CreateDisbursementAccount",
   "method" : "POST",
@@ -21,7 +23,8 @@
   "permission" : "payroll.disbursement_account.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.CreatePayCategory",
   "method" : "POST",
@@ -29,7 +32,8 @@
   "permission" : "payroll.pay_category.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.CreatePayComponent",
   "method" : "POST",
@@ -37,7 +41,8 @@
   "permission" : "payroll.pay_component.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.CreatePaymentType",
   "method" : "POST",
@@ -45,7 +50,8 @@
   "permission" : "payroll.payment_type.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.CreatePayrollPayment",
   "method" : "POST",
@@ -53,7 +59,8 @@
   "permission" : "payroll.payroll_payment.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.CreateSalaryTemplate",
   "method" : "POST",
@@ -61,7 +68,8 @@
   "permission" : "payroll.salary_template.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.CreateSalaryTemplateComponent",
   "method" : "POST",
@@ -69,7 +77,8 @@
   "permission" : "payroll.salary_template_component.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.CreateStaffBankAccount",
   "method" : "POST",
@@ -77,7 +86,8 @@
   "permission" : "payroll.staff_bank_account.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.CreateStaffSalary",
   "method" : "POST",
@@ -85,7 +95,8 @@
   "permission" : "payroll.staff_salary.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.CreateStaffSalaryComponent",
   "method" : "POST",
@@ -93,70 +104,80 @@
   "permission" : "payroll.staff_salary_component.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.DeleteDisbursementAccount",
   "method" : "DELETE",
   "path" : "/v1/payroll/disbursement-accounts/{disbursementAccountId}",
   "permission" : "payroll.disbursement_account.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.DeletePayCategory",
   "method" : "DELETE",
   "path" : "/v1/payroll/pay-categories/{payCategoryId}",
   "permission" : "payroll.pay_category.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.DeletePayComponent",
   "method" : "DELETE",
   "path" : "/v1/payroll/pay-components/{payComponentId}",
   "permission" : "payroll.pay_component.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.DeletePaymentType",
   "method" : "DELETE",
   "path" : "/v1/payroll/payment-types/{paymentTypeId}",
   "permission" : "payroll.payment_type.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.DeleteSalaryTemplate",
   "method" : "DELETE",
   "path" : "/v1/payroll/salary-templates/{salaryTemplateId}",
   "permission" : "payroll.salary_template.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.DeleteSalaryTemplateComponent",
   "method" : "DELETE",
   "path" : "/v1/payroll/salary-templates/{salaryTemplateId}/components/{salaryTemplateComponentId}",
   "permission" : "payroll.salary_template_component.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.DeleteStaffBankAccount",
   "method" : "DELETE",
   "path" : "/v1/payroll/staff-bank-accounts/{staffBankAccountId}",
   "permission" : "payroll.staff_bank_account.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.DeleteStaffSalary",
   "method" : "DELETE",
   "path" : "/v1/payroll/staff-salaries/{staffSalaryId}",
   "permission" : "payroll.staff_salary.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.DeleteStaffSalaryComponent",
   "method" : "DELETE",
   "path" : "/v1/payroll/staff-salaries/{staffSalaryId}/components/{staffSalaryComponentId}",
   "permission" : "payroll.staff_salary_component.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GeneratePayslips",
   "method" : "POST",
@@ -164,189 +185,216 @@
   "permission" : "payroll.payslip.generate_payslips",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "required"
+  "idempotency" : "required",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GetDisbursementAccount",
   "method" : "GET",
   "path" : "/v1/payroll/disbursement-accounts/{disbursementAccountId}",
   "permission" : "payroll.disbursement_account.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GetOperation",
   "method" : "GET",
   "path" : "/v1/payroll/operations/{operationId}",
   "permission" : "payroll.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GetPayCategory",
   "method" : "GET",
   "path" : "/v1/payroll/pay-categories/{payCategoryId}",
   "permission" : "payroll.pay_category.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GetPayComponent",
   "method" : "GET",
   "path" : "/v1/payroll/pay-components/{payComponentId}",
   "permission" : "payroll.pay_component.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GetPaymentType",
   "method" : "GET",
   "path" : "/v1/payroll/payment-types/{paymentTypeId}",
   "permission" : "payroll.payment_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GetPayrollPayment",
   "method" : "GET",
   "path" : "/v1/payroll/payroll-payments/{payrollPaymentId}",
   "permission" : "payroll.payroll_payment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GetPayslip",
   "method" : "GET",
   "path" : "/v1/payroll/payslips/{payslipId}",
   "permission" : "payroll.payslip.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GetPayslipLine",
   "method" : "GET",
   "path" : "/v1/payroll/payslips/{payslipId}/lines/{payslipLineId}",
   "permission" : "payroll.payslip_line.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GetSalaryTemplate",
   "method" : "GET",
   "path" : "/v1/payroll/salary-templates/{salaryTemplateId}",
   "permission" : "payroll.salary_template.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GetSalaryTemplateComponent",
   "method" : "GET",
   "path" : "/v1/payroll/salary-templates/{salaryTemplateId}/components/{salaryTemplateComponentId}",
   "permission" : "payroll.salary_template_component.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GetStaffBankAccount",
   "method" : "GET",
   "path" : "/v1/payroll/staff-bank-accounts/{staffBankAccountId}",
   "permission" : "payroll.staff_bank_account.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GetStaffSalary",
   "method" : "GET",
   "path" : "/v1/payroll/staff-salaries/{staffSalaryId}",
   "permission" : "payroll.staff_salary.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.GetStaffSalaryComponent",
   "method" : "GET",
   "path" : "/v1/payroll/staff-salaries/{staffSalaryId}/components/{staffSalaryComponentId}",
   "permission" : "payroll.staff_salary_component.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.ListDisbursementAccounts",
   "method" : "GET",
   "path" : "/v1/payroll/disbursement-accounts",
   "permission" : "payroll.disbursement_account.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.ListOperations",
   "method" : "GET",
   "path" : "/v1/payroll/operations",
   "permission" : "payroll.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.ListPayCategories",
   "method" : "GET",
   "path" : "/v1/payroll/pay-categories",
   "permission" : "payroll.pay_category.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.ListPayComponents",
   "method" : "GET",
   "path" : "/v1/payroll/pay-components",
   "permission" : "payroll.pay_component.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.ListPaymentTypes",
   "method" : "GET",
   "path" : "/v1/payroll/payment-types",
   "permission" : "payroll.payment_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.ListPayrollPayments",
   "method" : "GET",
   "path" : "/v1/payroll/payroll-payments",
   "permission" : "payroll.payroll_payment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.ListPayslipLines",
   "method" : "GET",
   "path" : "/v1/payroll/payslips/{payslipId}/lines",
   "permission" : "payroll.payslip_line.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.ListPayslips",
   "method" : "GET",
   "path" : "/v1/payroll/payslips",
   "permission" : "payroll.payslip.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.ListSalaryTemplateComponents",
   "method" : "GET",
   "path" : "/v1/payroll/salary-templates/{salaryTemplateId}/components",
   "permission" : "payroll.salary_template_component.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.ListSalaryTemplates",
   "method" : "GET",
   "path" : "/v1/payroll/salary-templates",
   "permission" : "payroll.salary_template.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.ListStaffBankAccounts",
   "method" : "GET",
   "path" : "/v1/payroll/staff-bank-accounts",
   "permission" : "payroll.staff_bank_account.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.ListStaffSalaries",
   "method" : "GET",
   "path" : "/v1/payroll/staff-salaries",
   "permission" : "payroll.staff_salary.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.ListStaffSalaryComponents",
   "method" : "GET",
   "path" : "/v1/payroll/staff-salaries/{staffSalaryId}/components",
   "permission" : "payroll.staff_salary_component.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.MarkPayslipPaid",
   "method" : "POST",
@@ -354,68 +402,78 @@
   "permission" : "payroll.payslip.mark_payslip_paid",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "payroll.UpdateDisbursementAccount",
   "method" : "PATCH",
   "path" : "/v1/payroll/disbursement-accounts/{disbursementAccountId}",
   "permission" : "payroll.disbursement_account.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.UpdatePayCategory",
   "method" : "PATCH",
   "path" : "/v1/payroll/pay-categories/{payCategoryId}",
   "permission" : "payroll.pay_category.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.UpdatePayComponent",
   "method" : "PATCH",
   "path" : "/v1/payroll/pay-components/{payComponentId}",
   "permission" : "payroll.pay_component.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.UpdatePaymentType",
   "method" : "PATCH",
   "path" : "/v1/payroll/payment-types/{paymentTypeId}",
   "permission" : "payroll.payment_type.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.UpdateSalaryTemplate",
   "method" : "PATCH",
   "path" : "/v1/payroll/salary-templates/{salaryTemplateId}",
   "permission" : "payroll.salary_template.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.UpdateSalaryTemplateComponent",
   "method" : "PATCH",
   "path" : "/v1/payroll/salary-templates/{salaryTemplateId}/components/{salaryTemplateComponentId}",
   "permission" : "payroll.salary_template_component.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.UpdateStaffBankAccount",
   "method" : "PATCH",
   "path" : "/v1/payroll/staff-bank-accounts/{staffBankAccountId}",
   "permission" : "payroll.staff_bank_account.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.UpdateStaffSalary",
   "method" : "PATCH",
   "path" : "/v1/payroll/staff-salaries/{staffSalaryId}",
   "permission" : "payroll.staff_salary.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "payroll.UpdateStaffSalaryComponent",
   "method" : "PATCH",
   "path" : "/v1/payroll/staff-salaries/{staffSalaryId}/components/{staffSalaryComponentId}",
   "permission" : "payroll.staff_salary_component.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 } ]

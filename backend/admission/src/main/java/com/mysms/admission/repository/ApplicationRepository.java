@@ -11,12 +11,14 @@ import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.paging.ValueType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,11 +26,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to admission.application (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to admission.application: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class ApplicationRepository {
@@ -106,6 +105,13 @@ public class ApplicationRepository {
             field("paymentStatusNote", "r.payment_status_note", ValueType.STRING),
             field("createTime", "r.created_at", ValueType.TIMESTAMP),
             field("updateTime", "r.updated_at", ValueType.TIMESTAMP));
+
+    /** The office's notes on an application: never filtered on by an applicant (they would probe them). */
+    public static final Set<String> OFFICE_NOTE_FIELDS = Set.of("remarks", "paymentStatusNote");
+    /** What an applicant may filter their own applications by: everything but the office's notes. */
+    public static final Map<String, FieldSpec> APPLICANT_FILTER_FIELDS = FILTER_FIELDS.entrySet().stream()
+            .filter(field -> !OFFICE_NOTE_FIELDS.contains(field.getKey()))
+            .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
 
     /** Fields clients may order by; NOT NULL expressions, so keyset paging can compare them. */
     public static final Map<String, FieldSpec> SORT_FIELDS = fields(
@@ -270,8 +276,8 @@ public class ApplicationRepository {
     private static final String UQ_APPLICATION_1_TAKEN = """
             SELECT EXISTS (SELECT 1 FROM admission.application
                             WHERE tenant_id = :tenantId
-                              AND institution_id = :institutionId AND application_number = :applicationNumber AND id <>
-                                  :id)
+                              AND institution_id = :institutionId AND application_number = :applicationNumber
+                              AND id <> :id AND deleted_at IS NULL)
             """;
     private static final String EXISTS_ADMISSION_CYCLE_ID = """
             SELECT EXISTS (SELECT 1 FROM admission.admission_cycle WHERE tenant_id = :tenantId
@@ -285,8 +291,67 @@ public class ApplicationRepository {
             SELECT EXISTS (SELECT 1 FROM admission.application_guardian WHERE tenant_id = :tenantId
                 AND application_id = :id AND deleted_at IS NULL)
             """;
-    private static final String SCOPE = """
+    /**
+     * A step of the application's lifecycle: the new status, and the two dates a step may stamp — the application date
+     * on submitting, the admission date (when still empty) on confirming admission.
+     */
+    private static final String TRANSITION = """
+            UPDATE admission.application
+               SET status = :status,
+                   application_date = COALESCE(CAST(:applicationDate AS timestamptz), application_date),
+                   admission_date = COALESCE(admission_date, CAST(:admissionDate AS date)),
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** The applications that count against a cycle's number of places: handed in and neither refused nor withdrawn. */
+    private static final String COUNT_IN_CYCLE = """
+            SELECT count(*) FROM admission.application
+             WHERE tenant_id = :tenantId
+               AND admission_cycle_id = :admissionCycleId AND deleted_at IS NULL
+               AND status NOT IN ('draft', 'rejected', 'cancelled')
+            """;
+    /** Enrolment, first half: the person the applicant has become, kept so a retry never creates a second one. */
+    private static final String RECORD_APPLICANT_PERSON = """
+            UPDATE admission.application
+               SET applicant_person_id = :personId,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND status = 'admitted' AND deleted_at IS NULL
+            """;
+    /** Enrolment, second half: the student, kept while the application is still admitted (a half-finished enrolment). */
+    private static final String RECORD_STUDENT = """
+            UPDATE admission.application
+               SET student_id = :studentId,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND status = 'admitted' AND deleted_at IS NULL
+            """;
+    /** admission.EnrollApplicant, the last step: done only for an admitted application that has its student. */
+    private static final String COMPLETE_ENROLLMENT = """
+            UPDATE admission.application
+               SET status = 'done',
+                   section_id = COALESCE(CAST(:sectionId AS uuid), section_id),
+                   batch_id = COALESCE(CAST(:batchId AS uuid), batch_id),
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND status = 'admitted' AND student_id IS NOT NULL
+               AND deleted_at IS NULL
+            """;
+    private static final String IN_SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
+            """;
+    private static final String REACH = """
+             (:scopeAll OR r.institution_id = ANY(:scopeIds)
+                 OR (r.created_by = :applicant AND r.admission_cycle_id IS NOT NULL))
             """;
 
     private final JdbcClient jdbc;
@@ -476,7 +541,7 @@ public class ApplicationRepository {
                 .update();
     }
 
-    /** uq_application_1: institution_id, application_number. */
+    /** uq_application_1: institution_id, application_number, among live rows. */
     public boolean takenInstitutionIdApplicationNumber1(ApplicationEntity e) {
         return Boolean.TRUE.equals(jdbc.sql(UQ_APPLICATION_1_TAKEN)
                 .param("institutionId", e.getInstitutionId())
@@ -502,9 +567,73 @@ public class ApplicationRepository {
                 .query(Boolean.class).single());
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
-    public static SqlFragment scope(DataScope scope) {
-        return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    /**
+     * One lifecycle step; 0 rows means the row changed (or vanished) since it was read.
+     *
+     * @param applicationDate the submission time, or null to keep the application date
+     * @param admissionDate   the admission date for an application that has none yet, or null
+     */
+    public int transition(UUID id, int expected, String status, OffsetDateTime applicationDate,
+            LocalDate admissionDate, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION)
+                .param("id", id)
+                .param("expected", expected)
+                .param("status", status)
+                .param("applicationDate", applicationDate, Types.TIMESTAMP_WITH_TIMEZONE)
+                .param("admissionDate", admissionDate, Types.DATE)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** How many applications of the cycle count against its number of places. */
+    public long countInCycle(UUID admissionCycleId) {
+        return jdbc.sql(COUNT_IN_CYCLE).param("admissionCycleId", admissionCycleId).query(Long.class).single();
+    }
+
+    /** Keeps the applicant's person on an admitted application; 0 rows means the row changed since it was read. */
+    public int recordApplicantPerson(UUID id, int expected, UUID personId, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(RECORD_APPLICANT_PERSON)
+                .param("id", id)
+                .param("expected", expected)
+                .param("personId", personId)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Keeps the student on an admitted application; 0 rows means the row changed since it was read. */
+    public int recordStudent(UUID id, int expected, UUID studentId, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(RECORD_STUDENT)
+                .param("id", id)
+                .param("expected", expected)
+                .param("studentId", studentId)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Marks an admitted application with a student done; 0 rows means it changed, or has no student. */
+    public int completeEnrollment(UUID id, int expected, UUID sectionId, UUID batchId, OffsetDateTime now,
+            UUID actor) {
+        return jdbc.sql(COMPLETE_ENROLLMENT)
+                .param("id", id)
+                .param("expected", expected)
+                .param("sectionId", sectionId, Types.OTHER)
+                .param("batchId", batchId, Types.OTHER)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Rows of the caller's institutions only — without their own applications elsewhere. */
+    public static SqlFragment inScope(DataScope scope) {
+        return new SqlFragment(IN_SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    /**
+     * Rows of the caller's institutions, and the applications the caller started themselves in an admission cycle (an
+     * applicant's own, whatever their institutions).
+     */
+    public static SqlFragment reach(DataScope scope, UUID applicant) {
+        return new SqlFragment(REACH,
+                Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray(), "applicant", applicant));
     }
 
     private static List<Object> sortValues(SortSpec sort, ApplicationEntity e) {

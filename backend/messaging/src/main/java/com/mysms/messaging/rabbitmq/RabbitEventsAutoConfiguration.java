@@ -11,10 +11,9 @@ import org.springframework.core.env.Environment;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * `mysms.events.bus=rabbitmq` (the default): the bus is {@link RabbitEventBus} on `mysms.events.rabbitmq.uri`
- * (MYSMS_RABBITMQ_URI). A service refuses to start without the URI rather than run without events. Events are accepted
- * from the broker user `mysms.events.rabbitmq.publisher-user` names for their module (`mysms-{module}` by default;
- * `self` in the monolith, where one user publishes for every module).
+ * {@code mysms.events.bus=rabbitmq} (the default) on {@code mysms.events.rabbitmq.uri}; a service refuses to start
+ * without the URI rather than run without events. Events are accepted from the broker user
+ * {@code mysms.events.rabbitmq.publisher-user} names for their module ({@code self} in the monolith).
  */
 @AutoConfiguration
 @ConditionalOnProperty(name = "mysms.events.bus", havingValue = "rabbitmq", matchIfMissing = true)

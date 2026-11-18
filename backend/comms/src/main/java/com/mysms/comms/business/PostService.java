@@ -56,13 +56,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of comms.post (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Post
- * are served here too — PostAudienceClass, PostComment.
+ * Business service of comms.post and of the records that exist only as part of a Post (PostAudienceClass, PostComment):
+ * audit and domain event commit in the same transaction as every change. Rows outside the caller's institutions are
+ * invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class PostService extends AppTransactionManager {
@@ -177,8 +173,8 @@ public class PostService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Post updatePost(UUID id, String ifMatch, PostUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
@@ -241,9 +237,8 @@ public class PostService extends AppTransactionManager {
     }
 
     /**
-     * comms.ApprovePost: Approve and publish. The row must be visible and writable for the caller, and the step is
-     * allowed while status is pending; in any other state
-     * the answer is 409 and nothing changes.
+     * comms.ApprovePost: Approve and publish. Allowed while status is pending, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public Post approvePost(UUID id, ApprovePostRequest request) {
         DataScope scope = DataScope.current(PERMISSION_APPROVE_POST);
@@ -273,9 +268,8 @@ public class PostService extends AppTransactionManager {
     }
 
     /**
-     * comms.CancelPost: Withdraw. The row must be visible and writable for the caller, and the step is allowed while
-     * status is draft or pending or posted; in any other state
-     * the answer is 409 and nothing changes.
+     * comms.CancelPost: Withdraw. Allowed while status is draft or pending or posted, on a row the caller may see and
+     * write; otherwise 409 and nothing changes.
      */
     public Post cancelPost(UUID id, CancelPostRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CANCEL_POST);
@@ -314,12 +308,12 @@ public class PostService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(PostEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected PostUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected PostUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(PostEntity entity, PostUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -366,7 +360,7 @@ public class PostService extends AppTransactionManager {
 
     }
 
-    // ---- PostAudienceClass: a record of the Post aggregate ----
+    // ---- PostAudienceClass ----
 
     public PostAudienceClass getPostAudienceClass(UUID postId, UUID id) {
         return doInReadTransaction(() -> {
@@ -421,8 +415,8 @@ public class PostService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public PostAudienceClass updatePostAudienceClass(UUID postId, UUID id, String ifMatch,
             PostAudienceClassUpdate changes, String updateMask, boolean validateOnly) {
@@ -485,15 +479,12 @@ public class PostService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the comms.post it belongs to). */
+    /** The institution of the comms.post the row belongs to. */
     private Optional<UUID> institutionOfPostAudienceClass(PostAudienceClassEntity entity) {
         return postAudienceClassRepository.institutionOf(entity.getPostId());
     }
 
-    /**
-     * Applies the selected PostAudienceClassUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected PostAudienceClassUpdate fields; explicit per field so a mask can clear values. */
     private static void applyPostAudienceClass(PostAudienceClassEntity entity, PostAudienceClassUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -528,7 +519,7 @@ public class PostService extends AppTransactionManager {
         }
     }
 
-    // ---- PostComment: a record of the Post aggregate ----
+    // ---- PostComment ----
 
     public PostComment getPostComment(UUID postId, UUID id) {
         return doInReadTransaction(() -> {
@@ -580,8 +571,8 @@ public class PostService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public PostComment updatePostComment(UUID postId, UUID id, String ifMatch, PostCommentUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -650,12 +641,12 @@ public class PostService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the comms.post it belongs to). */
+    /** The institution of the comms.post the row belongs to. */
     private Optional<UUID> institutionOfPostComment(PostCommentEntity entity) {
         return postCommentRepository.institutionOf(entity.getPostId());
     }
 
-    /** Applies the selected PostCommentUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected PostCommentUpdate fields; explicit per field so a mask can clear values. */
     private static void applyPostComment(PostCommentEntity entity, PostCommentUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

@@ -1620,25 +1620,27 @@ CREATE INDEX ix_notice_tenant_updated_at ON comms.notice (tenant_id, updated_at)
 
 CREATE TABLE comms.outbox_event (
     id bigint GENERATED ALWAYS AS IDENTITY,
-    tenant_id uuid NOT NULL,
+    tenant_id uuid,
     event_type varchar(120) NOT NULL,
     aggregate_type varchar(80) NOT NULL,
     aggregate_id uuid NOT NULL,
     payload text NOT NULL,
     occurred_at timestamptz NOT NULL DEFAULT now(),
     published_at timestamptz,
+    publish_error text,
     CONSTRAINT pk_comms_outbox_event PRIMARY KEY (id)
 );
 COMMENT ON TABLE comms.outbox_event IS 'Transactional outbox of the comms module: events written in the same transaction as the change, published to the bus by a relay, then pruned. Ordered by the identity column.';
 COMMENT ON COLUMN comms.outbox_event.id IS 'Monotonic sequence; publish order.';
-COMMENT ON COLUMN comms.outbox_event.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
+COMMENT ON COLUMN comms.outbox_event.tenant_id IS 'Owning tenant (customer organisation). Row-level security key. NULL for global data changed by platform staff: such rows are invisible to every tenant session.';
 COMMENT ON COLUMN comms.outbox_event.event_type IS 'Event name (module.entity.verb).';
 COMMENT ON COLUMN comms.outbox_event.aggregate_type IS 'Entity kind the event is about.';
 COMMENT ON COLUMN comms.outbox_event.aggregate_id IS 'Entity id the event is about.';
 COMMENT ON COLUMN comms.outbox_event.payload IS 'Serialised event (opaque message envelope).';
 COMMENT ON COLUMN comms.outbox_event.occurred_at IS 'When the change committed.';
 COMMENT ON COLUMN comms.outbox_event.published_at IS 'When the relay published it (NULL = pending).';
-CREATE INDEX ix_comms_outbox_event_pending ON comms.outbox_event (id) WHERE published_at IS NULL;
+COMMENT ON COLUMN comms.outbox_event.publish_error IS 'Why the relay could not turn the row into an event (set aside, not published); NULL otherwise.';
+CREATE INDEX ix_comms_outbox_event_pending ON comms.outbox_event (id) WHERE published_at IS NULL AND publish_error IS NULL;
 CREATE TABLE comms.inbox_event (
     event_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
@@ -1646,15 +1648,16 @@ CREATE TABLE comms.inbox_event (
     received_at timestamptz NOT NULL DEFAULT now(),
     processed_at timestamptz,
     processing_error text,
-    CONSTRAINT pk_comms_inbox_event PRIMARY KEY (event_id)
+    CONSTRAINT pk_comms_inbox_event PRIMARY KEY (tenant_id, event_id)
 );
 COMMENT ON TABLE comms.inbox_event IS 'Inbox of the comms module: ids of consumed events, kept so redeliveries are processed exactly once.';
-COMMENT ON COLUMN comms.inbox_event.event_id IS 'Global id of the consumed event.';
+COMMENT ON COLUMN comms.inbox_event.event_id IS 'Global id of the consumed event; recorded per tenant.';
 COMMENT ON COLUMN comms.inbox_event.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
 COMMENT ON COLUMN comms.inbox_event.event_type IS 'Event name.';
 COMMENT ON COLUMN comms.inbox_event.received_at IS 'First delivery time.';
 COMMENT ON COLUMN comms.inbox_event.processed_at IS 'When handling committed (NULL = in flight).';
 COMMENT ON COLUMN comms.inbox_event.processing_error IS 'Last handling error, if any.';
+CREATE INDEX ix_comms_inbox_event_processed ON comms.inbox_event (processed_at) WHERE processed_at IS NOT NULL;
 
 -- === P1-07: monthly partitions for outbound_message (2026-2027; later months by the maintenance job) ===
 
@@ -1831,7 +1834,15 @@ ALTER TABLE comms.outbound_message FORCE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation ON comms.outbound_message USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
 ALTER TABLE comms.outbox_event ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comms.outbox_event FORCE ROW LEVEL SECURITY;
-CREATE POLICY tenant_isolation ON comms.outbox_event USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+-- a tenant's rows, to that tenant only (NULLIF: a pooled connection that bound a tenant before reads back '')
+CREATE POLICY tenant_isolation ON comms.outbox_event
+    USING (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid);
+-- a row of global data, written only by a transaction that binds no tenant; no tenant session can forge one
+CREATE POLICY global_insert ON comms.outbox_event FOR INSERT
+    WITH CHECK (tenant_id IS NULL AND NULLIF(current_setting('app.tenant_id', true), '') IS NULL);
+-- readable by a transaction that binds no tenant (the insert reads its row back); never by a tenant session
+CREATE POLICY global_read ON comms.outbox_event FOR SELECT
+    USING (tenant_id IS NULL AND NULLIF(current_setting('app.tenant_id', true), '') IS NULL);
 ALTER TABLE comms.page_category ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comms.page_category FORCE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation ON comms.page_category USING (tenant_id = current_setting('app.tenant_id', true)::uuid);

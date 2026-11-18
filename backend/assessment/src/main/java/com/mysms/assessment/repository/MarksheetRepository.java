@@ -24,11 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to assessment.marksheet (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to assessment.marksheet: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class MarksheetRepository {
@@ -74,6 +71,10 @@ public class MarksheetRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /**
+     * A marksheet is complete when it has lines, every paper of its session is finalized or cancelled, and every
+     * result of a paper that is not cancelled — exempted attendees aside — is final and belongs to a line of it.
+     */
     private static final String HAS_COMPLETE_RESULTS = """
             SELECT EXISTS (SELECT 1 FROM assessment.marksheet_line ml
                             WHERE ml.tenant_id = :tenantId AND ml.marksheet_id = m.id AND ml.deleted_at IS NULL)
@@ -82,15 +83,17 @@ public class MarksheetRepository {
                     JOIN assessment.exam e ON e.tenant_id = er.tenant_id AND e.tenant_id = :tenantId
                                         AND e.id = er.exam_id
                     WHERE er.tenant_id = :tenantId AND e.exam_session_id = m.exam_session_id
-                      AND er.deleted_at IS NULL
-                      AND (er.result_status IS NULL OR er.result_status = 'pending' OR er.marksheet_line_id IS NULL
+                      AND er.deleted_at IS NULL AND e.deleted_at IS NULL AND e.status <> 'cancelled'
+                      AND er.attendance_status <> 'exempted'
+                      AND (er.result_status IS NULL OR er.result_status IN ('pending', 'withheld')
+                           OR er.marksheet_line_id IS NULL
                            OR NOT EXISTS (SELECT 1 FROM assessment.marksheet_line ml
                                           WHERE ml.tenant_id = :tenantId AND ml.id = er.marksheet_line_id
                                             AND ml.marksheet_id = m.id AND ml.student_id = er.student_id
                                             AND ml.deleted_at IS NULL)))
                AND NOT EXISTS (SELECT 1 FROM assessment.exam e WHERE e.tenant_id = :tenantId
                     AND e.exam_session_id = m.exam_session_id AND e.deleted_at IS NULL
-                    AND e.status NOT IN ('result_updated', 'done'))
+                    AND e.status NOT IN ('result_updated', 'done', 'cancelled'))
               FROM assessment.marksheet m WHERE m.tenant_id = :tenantId AND m.id = :id
                 AND m.deleted_at IS NULL
             """;
@@ -319,7 +322,7 @@ public class MarksheetRepository {
                 .param("now", now).param("actor", actor).param("visibleToGuardians", visibleToGuardians).update();
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

@@ -24,11 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to admission.admission_cycle (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to admission.admission_cycle: live rows only, keyset paging, and the row_version guard on every
+ * update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class AdmissionCycleRepository {
@@ -177,6 +174,29 @@ public class AdmissionCycleRepository {
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
+
+    /** admission.OpenApplications: allowed while status is confirmed. */
+    private static final String TRANSITION_OPEN_APPLICATIONS = """
+            UPDATE admission.admission_cycle
+               SET status = 'open',
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+
+    /** admission.StartAdmission: allowed while status is open. */
+    private static final String TRANSITION_START_ADMISSION = """
+            UPDATE admission.admission_cycle
+               SET status = 'admission',
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String LOCK_BY_ID = FIND_BY_ID + " FOR UPDATE";
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
             """;
@@ -189,6 +209,14 @@ public class AdmissionCycleRepository {
 
     public Optional<AdmissionCycleEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(AdmissionCycleRepository::map).optional();
+    }
+
+    /**
+     * The live row, locked until the transaction ends: an application is submitted against the cycle as it stands,
+     * so two submissions can never both take the last place and a cycle cannot close under one.
+     */
+    public Optional<AdmissionCycleEntity> lockById(UUID id) {
+        return jdbc.sql(LOCK_BY_ID).param("id", id).query(AdmissionCycleRepository::map).optional();
     }
 
     public Page<AdmissionCycleEntity> list(PageRequest page, SqlFragment filter) {
@@ -308,7 +336,25 @@ public class AdmissionCycleRepository {
                 .param("actor", actor).update();
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** admission.OpenApplications; 0 rows means the row changed (or vanished) since it was read. */
+    public int openApplications(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_OPEN_APPLICATIONS)
+                .param("id", id)
+                .param("expected", expected)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** admission.StartAdmission; 0 rows means the row changed (or vanished) since it was read. */
+    public int startAdmission(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_START_ADMISSION)
+                .param("id", id)
+                .param("expected", expected)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

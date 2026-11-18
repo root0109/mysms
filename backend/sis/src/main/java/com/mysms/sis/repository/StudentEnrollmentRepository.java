@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,11 +25,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to sis.student_enrollment (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to sis.student_enrollment: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. Every statement filters the caller's tenant itself; row-level security
+ * is the backstop.
  */
 @Repository
 public class StudentEnrollmentRepository {
@@ -117,6 +116,51 @@ public class StudentEnrollmentRepository {
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
+    private static final String OPEN_OF_STUDENT = SELECT_LIVE
+            + " AND r.student_id = :studentId AND r.effective_to IS NULL AND r.enrollment_status = 'enrolled'"
+            + " ORDER BY r.created_at, r.id";
+    private static final String OPEN_OF_STUDENT_IN_YEAR = SELECT_LIVE
+            + " AND r.student_id = :studentId AND r.academic_year_id = :academicYearId AND r.effective_to IS NULL"
+            + " FOR UPDATE";
+    private static final String CURRENT_OF_STUDENT = SELECT_LIVE
+            + " AND r.student_id = :studentId AND (r.academic_year_id = :academicYearId OR NOT :inYear)"
+            + " ORDER BY (r.effective_to IS NULL) DESC, r.effective_from DESC NULLS LAST, r.created_at DESC, r.id"
+            + " LIMIT 1";
+    private static final String CURRENT_OF_STUDENTS = SELECT_LIVE
+            + " AND r.student_id = ANY(:studentIds) AND r.effective_to IS NULL AND r.enrollment_status = 'enrolled'"
+            + " ORDER BY r.created_at, r.id";
+    private static final String ROSTER_OF_CLASS = SELECT_LIVE
+            + " AND r.class_section_id = :classSectionId AND r.enrollment_status = 'enrolled'"
+            + " AND r.effective_to IS NULL ORDER BY r.roll_number NULLS LAST, r.created_at, r.id";
+
+    /** Ends a placement: its outcome, the day it ended, and (for a student who left) the leaving date. */
+    private static final String CLOSE = """
+            UPDATE sis.student_enrollment
+               SET enrollment_status = :status,
+                   effective_to = :endedOn,
+                   left_on = :leftOn,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+
+    /** sis.ApplyPromotions: the next year's placement, following the one the promotion closed. */
+    private static final String INSERT_FOLLOWING = """
+            INSERT INTO sis.student_enrollment
+            (id, tenant_id, effective_from, previous_enrollment_id, change_reason, student_id, academic_year_id,
+             class_section_id, enrollment_status, result_status, enrolled_on, created_at, created_by, updated_at,
+             updated_by, row_version)
+            VALUES (:id, :tenantId, :effectiveFrom, :previousEnrollmentId, 'promotion', :studentId, :academicYearId,
+                    :classSectionId, 'enrolled', 'pending', :effectiveFrom, :createdAt, :createdBy, :updatedAt,
+                    :updatedBy, :rowVersion)
+            RETURNING id, tenant_id, effective_from, effective_to, previous_enrollment_id, change_reason, student_id,
+                      academic_year_id, class_section_id, roll_number, id_card_number, board_registration_number,
+                      enrollment_status, result_status, enrolled_on, left_on, created_at, created_by, updated_at,
+                      updated_by, deleted_at, row_version
+            """;
+
     private static final String EXISTS_PREVIOUS_ENROLLMENT_ID = """
             SELECT EXISTS (SELECT 1 FROM sis.student_enrollment WHERE tenant_id = :tenantId
                 AND id = :id AND deleted_at IS NULL)
@@ -214,6 +258,70 @@ public class StudentEnrollmentRepository {
                 .update();
     }
 
+    /** The student's open placements (enrolled, not ended), oldest first. */
+    public List<StudentEnrollmentEntity> openOfStudent(UUID studentId) {
+        return jdbc.sql(OPEN_OF_STUDENT).param("studentId", studentId).query(StudentEnrollmentRepository::map).list();
+    }
+
+    /** The student's placement of the year that has not ended, locked for the transaction that will close it. */
+    public Optional<StudentEnrollmentEntity> lockOpenOfStudentInYear(UUID studentId, UUID academicYearId) {
+        return jdbc.sql(OPEN_OF_STUDENT_IN_YEAR).param("studentId", studentId)
+                .param("academicYearId", academicYearId).query(StudentEnrollmentRepository::map).optional();
+    }
+
+    /**
+     * The placement a summary shows: of the given year when one is named, otherwise the open one, otherwise the
+     * most recent.
+     */
+    public Optional<StudentEnrollmentEntity> currentOfStudent(UUID studentId, Optional<UUID> academicYearId) {
+        return jdbc.sql(CURRENT_OF_STUDENT).param("studentId", studentId)
+                .param("academicYearId", academicYearId.orElse(studentId)).param("inYear", academicYearId.isPresent())
+                .query(StudentEnrollmentRepository::map).optional();
+    }
+
+    /** The open placements of these students, oldest first. */
+    public List<StudentEnrollmentEntity> openOfStudents(Collection<UUID> studentIds) {
+        return jdbc.sql(CURRENT_OF_STUDENTS).param("studentIds", studentIds.toArray(UUID[]::new))
+                .query(StudentEnrollmentRepository::map).list();
+    }
+
+    /** Everyone placed in the class section now, in roll order. */
+    public List<StudentEnrollmentEntity> rosterOfClass(UUID classSectionId) {
+        return jdbc.sql(ROSTER_OF_CLASS).param("classSectionId", classSectionId)
+                .query(StudentEnrollmentRepository::map).list();
+    }
+
+    /** Ends the placement; 0 rows means the row changed (or vanished) since it was read. */
+    public int close(UUID id, int expected, String status, LocalDate endedOn, LocalDate leftOn, OffsetDateTime now,
+            UUID actor) {
+        return jdbc.sql(CLOSE)
+                .param("id", id)
+                .param("expected", expected)
+                .param("status", status)
+                .param("endedOn", endedOn)
+                .param("leftOn", leftOn)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Inserts the placement that follows {@code previousEnrollmentId} (a promotion) and returns it as stored. */
+    public StudentEnrollmentEntity insertFollowing(StudentEnrollmentEntity e) {
+        return jdbc.sql(INSERT_FOLLOWING)
+                .param("id", e.getId())
+                .param("tenantId", e.getTenantId())
+                .param("effectiveFrom", e.getEffectiveFrom())
+                .param("previousEnrollmentId", e.getPreviousEnrollmentId())
+                .param("studentId", e.getStudentId())
+                .param("academicYearId", e.getAcademicYearId())
+                .param("classSectionId", e.getClassSectionId())
+                .param("createdAt", e.getCreatedAt())
+                .param("createdBy", e.getCreatedBy())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("rowVersion", e.getRowVersion())
+                .query(StudentEnrollmentRepository::map).single();
+    }
+
     /** Whether the referenced sis.student_enrollment row exists (live). */
     public boolean existsPreviousEnrollmentId(UUID id) {
         return Boolean.TRUE.equals(jdbc.sql(EXISTS_PREVIOUS_ENROLLMENT_ID).param("id", id).query(Boolean.class)
@@ -246,7 +354,7 @@ public class StudentEnrollmentRepository {
         return new SqlFragment(ROSTER, Map.of("rosterClassSectionId", classSectionId));
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

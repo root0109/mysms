@@ -45,13 +45,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of payroll.salary_template (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a SalaryTemplate
- * are served here too — SalaryTemplateComponent.
+ * Business service of payroll.salary_template and of the records that exist only as part of a SalaryTemplate
+ * (SalaryTemplateComponent): audit and domain event commit in the same transaction as every change. Rows outside the
+ * caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class SalaryTemplateService extends AppTransactionManager {
@@ -147,8 +143,8 @@ public class SalaryTemplateService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public SalaryTemplate updateSalaryTemplate(UUID id, String ifMatch, SalaryTemplateUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -218,14 +214,12 @@ public class SalaryTemplateService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(SalaryTemplateEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /**
-     * Applies the selected SalaryTemplateUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected SalaryTemplateUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(SalaryTemplateEntity entity, SalaryTemplateUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -261,7 +255,7 @@ public class SalaryTemplateService extends AppTransactionManager {
         }
     }
 
-    // ---- SalaryTemplateComponent: a record of the SalaryTemplate aggregate ----
+    // ---- SalaryTemplateComponent ----
 
     public SalaryTemplateComponent getSalaryTemplateComponent(UUID salaryTemplateId, UUID id) {
         return doInReadTransaction(() -> {
@@ -319,8 +313,8 @@ public class SalaryTemplateService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public SalaryTemplateComponent updateSalaryTemplateComponent(UUID salaryTemplateId, UUID id, String ifMatch,
             SalaryTemplateComponentUpdate changes, String updateMask, boolean validateOnly) {
@@ -389,15 +383,12 @@ public class SalaryTemplateService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the payroll.salary_template it belongs to). */
+    /** The institution of the payroll.salary_template the row belongs to. */
     private Optional<UUID> institutionOfSalaryTemplateComponent(SalaryTemplateComponentEntity entity) {
         return salaryTemplateComponentRepository.institutionOf(entity.getSalaryTemplateId());
     }
 
-    /**
-     * Applies the selected SalaryTemplateComponentUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected SalaryTemplateComponentUpdate fields; explicit per field so a mask can clear values. */
     private static void applySalaryTemplateComponent(SalaryTemplateComponentEntity entity, SalaryTemplateComponentUpdate changes,
             List<String> fields) {
         for (String field : fields) {

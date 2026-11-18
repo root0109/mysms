@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of sis.student_leave_request (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of sis.student_leave_request. */
 @Getter
 @Setter
 @SuperBuilder

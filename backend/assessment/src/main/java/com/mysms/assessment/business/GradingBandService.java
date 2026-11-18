@@ -6,6 +6,7 @@ import com.mysms.assessment.domain.GradingBandEntity;
 import com.mysms.assessment.events.AssessmentEvents;
 import com.mysms.assessment.mapper.GradingBandMapper;
 import com.mysms.assessment.repository.GradingBandRepository;
+import com.mysms.assessment.repository.GradingSchemeRepository;
 import com.mysms.authclient.DataScope;
 import com.mysms.assessment.api.model.GradingBand;
 import com.mysms.assessment.api.model.GradingBandUpdate;
@@ -40,10 +41,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of assessment.grading_band (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of assessment.grading_band: audit and domain event commit in the same transaction as every change;
+ * rows outside the caller's institutions are invisible, tenant-level rows change only through a tenant-wide grant.
+ * <p>The bands are what generated results were graded with: every change takes the scheme row FOR UPDATE (a generation
+ * holds it FOR SHARE while reading, so the two never interleave) and is refused (409) while a non-draft result template
+ * grades with the scheme.
  */
 @Service
 public class GradingBandService extends AppTransactionManager {
@@ -61,12 +63,14 @@ public class GradingBandService extends AppTransactionManager {
 
     private final GradingBandRepository repository;
     private final GradingBandMapper mapper;
+    private final GradingSchemeRepository schemes;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
 
     public GradingBandService(GradingBandRepository repository, GradingBandMapper mapper,
+            GradingSchemeRepository schemes,
             @Qualifier(AssessmentDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(AssessmentDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(AssessmentEventsConfig.OUTBOX) OutboxWriter outbox,
@@ -76,6 +80,7 @@ public class GradingBandService extends AppTransactionManager {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
+        this.schemes = schemes;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -111,6 +116,7 @@ public class GradingBandService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             assertValid(entity, true);
             scope.requireWritable(institutionOf(entity));
+            requireSchemeChangeable(entity.getGradingSchemeId());
             assertUnique(entity);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -124,8 +130,8 @@ public class GradingBandService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public GradingBand updateGradingBand(UUID id, String ifMatch, GradingBandUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -138,10 +144,12 @@ public class GradingBandService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
+            requireSchemeChangeable(entity.getGradingSchemeId());
             apply(entity, changes, fields);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
+            requireSchemeChangeable(entity.getGradingSchemeId());
             assertUnique(entity);
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
@@ -167,6 +175,7 @@ public class GradingBandService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
+            requireSchemeChangeable(entity.getGradingSchemeId());
             if (repository.referencedByResultTemplateBandGradingBandId(id)) {
                 throw new InvalidStateException(
                         "The grading band is still referenced by assessment.result_template_band rows; remove those "
@@ -181,6 +190,14 @@ public class GradingBandService extends AppTransactionManager {
         });
     }
 
+    /** Locks the scheme against generation and refuses (409) a change of the bands of a scheme results were graded with. */
+    private void requireSchemeChangeable(UUID schemeId) {
+        if (schemeId != null && schemes.lockForUpdate(schemeId) && schemes.usedByGeneratedTemplate(schemeId)) {
+            throw new InvalidStateException(
+                    "The grading scheme has generated results; cancel their marksheets before changing its bands.");
+        }
+    }
+
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
     private GradingBandEntity loadVisible(DataScope scope, UUID id) {
         GradingBandEntity entity = repository.findById(id)
@@ -191,12 +208,12 @@ public class GradingBandService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the assessment.grading_scheme it belongs to). */
+    /** The institution of the assessment.grading_scheme the row belongs to. */
     private Optional<UUID> institutionOf(GradingBandEntity entity) {
         return repository.institutionOf(entity.getGradingSchemeId());
     }
 
-    /** Applies the selected GradingBandUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected GradingBandUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(GradingBandEntity entity, GradingBandUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

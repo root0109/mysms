@@ -32,41 +32,30 @@ import org.slf4j.LoggerFactory;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * {@link EventBus} on RabbitMQ (the default bus). One durable topic exchange carries every event, routed by its type
- * (`hr.staff.deleted`). Each consuming module has one durable quorum queue, `mysms.<module>.events`, bound to the
- * types it handles: replicas of the module share it, other modules have their own.
+ * {@link EventBus} on RabbitMQ. One durable topic exchange carries every event, routed by type; each consuming module
+ * has one durable quorum queue, {@code mysms.<module>.events}, shared by its replicas.
  *
  * <ul>
- *   <li><b>Never lost on the way in.</b> Publishing waits for the broker's confirm, so the relay marks an outbox row
- *   published only once the event is safe. An event no queue is bound to yet (its consumer was never started) goes to
- *   the exchange's alternate exchange and waits in `<exchange>.unrouted` for {@link #replayUnrouted(int)}, instead
- *   of being dropped. A failed publish closes the publishing channel; the next publish opens a new one.</li>
- *   <li><b>Authentic.</b> Every message carries the AMQP `user-id` of the connection that published it, which the
- *   broker verifies. A consumer accepts an event only from the broker user of the module it claims to come from
- *   ({@link Settings#publisherUser()}, `mysms-<module>` by default), and the broker's topic permissions limit each
- *   user to its own module's routing keys (DEPLOYMENT.md "Events").</li>
- *   <li><b>Retried with a growing delay.</b> Deliveries are acknowledged only after the module's inbox transaction
- *   committed. A failure is returned to the queue after a delay that doubles with each delivery, up to
- *   {@link Settings#maxRetryDelay()}; after the delivery limit the message goes to `mysms.<module>.dead` through the
- *   dead-letter exchange, for {@link #replayDead(String, int)} once the cause is fixed. An unreadable, unauthentic or
+ *   <li><b>Never lost on the way in.</b> Publishing waits for the broker's confirm. An event no queue is bound to yet
+ *   goes through the alternate exchange to {@code <exchange>.unrouted} for {@link #replayUnrouted(int)}.</li>
+ *   <li><b>Authentic.</b> The broker verifies each message's AMQP {@code user-id}; a consumer accepts an event only
+ *   from the broker user of the module it claims to come from ({@link Settings#publisherUser()}).</li>
+ *   <li><b>Retried with a growing delay.</b> Deliveries are acknowledged only after the inbox transaction commits. A
+ *   failure returns to the queue after a doubling delay up to {@link Settings#maxRetryDelay()}; past the delivery limit
+ *   it goes to {@code mysms.<module>.dead} for {@link #replayDead(String, int)}. An unreadable, unauthentic or
  *   {@link RejectedEventException rejected} event is dead-lettered at once.</li>
- *   <li><b>Self-healing consumers.</b> Connection loss is recovered by the client; a consumer the broker cancels (its
- *   queue deleted or moved) or whose channel failed subscribes again.</li>
+ *   <li><b>Self-healing consumers.</b> A consumer the broker cancels, or whose channel failed, subscribes again.</li>
  * </ul>
  */
 public final class RabbitEventBus implements EventBus {
 
     /**
-     * @param uri               `amqp(s)://user:password@host:port/vhost` (from the environment)
-     * @param exchange          the events exchange
-     * @param deliveryLimit     returns of one message to its queue before it is dead-lettered (it is delivered
-     *                          once more than this)
-     * @param prefetch          unacknowledged deliveries per consumer
-     * @param publishTimeout    how long a publish waits for its confirm
-     * @param retryDelay        delay before a failed delivery is returned, doubled at each further delivery
-     * @param maxRetryDelay     the longest such delay
-     * @param publisherUser     the broker user each module publishes as: `{module}` is replaced by the source module;
-     *                          {@link #SELF} accepts only this bus's own user (one process, the monolith)
+     * @param uri {@code amqp(s)://user:password@host:port/vhost}
+     * @param deliveryLimit returns of one message to its queue before it is dead-lettered (it is delivered once more
+     *     than this)
+     * @param retryDelay delay before a failed delivery is returned, doubled at each further delivery
+     * @param publisherUser {@code {module}} is replaced by the source module; {@link #SELF} accepts only this bus's own
+     *     user (the monolith)
      * @param unroutedRetention how long an event no queue was bound to is kept for replay
      */
     public record Settings(URI uri, String exchange, int deliveryLimit, int prefetch, Duration publishTimeout,
@@ -159,9 +148,8 @@ public final class RabbitEventBus implements EventBus {
     }
 
     /**
-     * The exchanges and the unrouted queue, declared (idempotently) by publishers and consumers alike. The unrouted
-     * queue is created by the first process with its retention and then left as it is, so a process with another
-     * setting (the operator command) still starts; change the retention on the broker with a policy.
+     * Declares the exchanges and the unrouted queue idempotently. The unrouted queue keeps the retention of the first
+     * process that created it, so a process with another setting still starts; change it on the broker with a policy.
      */
     private void declareExchanges(Channel channel) throws IOException {
         channel.exchangeDeclare(unrouted, BuiltinExchangeType.FANOUT, true);
@@ -444,9 +432,8 @@ public final class RabbitEventBus implements EventBus {
     }
 
     /**
-     * Returns up to {@code max} dead-lettered events of a consumer to its queue, once the cause of their failure is
-     * fixed; each is delivered afresh (and handled once, through the inbox). Run as a broker user that may set the
-     * original publisher's `user-id` (the `impersonator` tag, DEPLOYMENT.md "Events").
+     * Returns up to {@code max} dead-lettered events of a consumer to its queue once their cause is fixed. Needs a
+     * broker user with the {@code impersonator} tag, to keep the original publisher's {@code user-id}.
      *
      * @return the number of events returned
      */
@@ -458,8 +445,8 @@ public final class RabbitEventBus implements EventBus {
     }
 
     /**
-     * Publishes again up to {@code max} events that no queue was bound to when they were first published (their
-     * consumer has been started since); one still unroutable waits again. Same broker user as {@link #replayDead}.
+     * Publishes again up to {@code max} events no queue was bound to when first published; one still unroutable waits
+     * again. Same broker user as {@link #replayDead}.
      *
      * @return the number of events published again
      */

@@ -117,3 +117,116 @@ export function useEndSession() {
     onSuccess: () => void qc.invalidateQueries({ queryKey: queryKey('iam', 'me', { part: 'sessions' }) }),
   });
 }
+
+export type AuthToken = iam.AuthToken;
+export type ApiTokenCreated = iam.ApiTokenCreated;
+
+const API_TOKENS = (userId: string | undefined) => queryKey('iam', 'me', { part: 'apiTokens', userId });
+
+/**
+ * The sign-in session the current access token belongs to (its `sid` claim), so a list of sessions can tell "this
+ * device" from the others. Read from the token only to label rows; the server decides everything.
+ */
+export function currentSessionId(accessToken: string | null): string | null {
+  const payload = accessToken?.split('.')[1];
+  if (!payload) return null;
+  try {
+    const sid = (JSON.parse(decodeBase64Url(payload)) as { sid?: unknown }).sid;
+    return typeof sid === 'string' ? sid : null;
+  } catch {
+    return null;
+  }
+}
+
+const BASE64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+
+/** Base64url to text, without `atob` (not in every React Native runtime); the claims read here are ASCII. */
+function decodeBase64Url(value: string): string {
+  const bytes: number[] = [];
+  let bits = 0;
+  let buffer = 0;
+  for (const char of value) {
+    const index = BASE64.indexOf(char);
+    if (index < 0) throw new Error('not base64url');
+    buffer = (buffer << 6) | index;
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      bytes.push((buffer >> bits) & 0xff);
+    }
+  }
+  return String.fromCharCode(...bytes);
+}
+
+/** Ends every other session of the caller (iam.DeleteUserSession each, with its ETag); this one stays. */
+export function useEndOtherSessions() {
+  const { api } = useRuntime();
+  const qc = useQueryClient();
+  const userId = useSession((s) => s.me?.user?.id);
+  return useMutation({
+    mutationFn: async (others: readonly UserSession[]) => {
+      for (const other of others) {
+        if (!other.id || !other.etag) continue;
+        await call(
+          api.get(UserAccountApi).deleteUserSession({
+            userAccountId: userId as string,
+            userSessionId: other.id,
+            ifMatch: other.etag,
+          }),
+        );
+      }
+    },
+    onSettled: () => void qc.invalidateQueries({ queryKey: queryKey('iam', 'me', { part: 'sessions' }) }),
+  });
+}
+
+/** ACC-08: the caller's personal API tokens (iam.ListAuthTokens); their secrets are never returned. */
+export function useMyApiTokens(enabled: boolean) {
+  const { api } = useRuntime();
+  const userId = useSession((s) => s.me?.user?.id);
+  return useQuery({
+    queryKey: API_TOKENS(userId),
+    queryFn: () =>
+      allPages((page) =>
+        call(
+          api
+            .get(UserAccountApi)
+            .listAuthTokens({ userAccountId: userId as string, size: 100, ...pageQuery(page) }),
+        ),
+      ),
+    enabled: enabled && Boolean(userId),
+    staleTime: STALE_TIME.list,
+  });
+}
+
+/** iam.CreateApiToken for the caller: the answer holds the secret, which is shown once and never again. */
+export function useCreateApiToken() {
+  const { api } = useRuntime();
+  const qc = useQueryClient();
+  const userId = useSession((s) => s.me?.user?.id);
+  return useMutation({
+    mutationFn: (body: { name: string; expiresAt?: string; abilities?: string[] }) =>
+      call(
+        api
+          .get(UserAccountApi)
+          .createApiToken({ userAccountId: userId as string, createApiTokenRequest: body }),
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: API_TOKENS(userId) }),
+  });
+}
+
+/** iam.DeleteAuthToken: the token stops working at once. */
+export function useRevokeApiToken() {
+  const { api } = useRuntime();
+  const qc = useQueryClient();
+  const userId = useSession((s) => s.me?.user?.id);
+  return useMutation({
+    mutationFn: ({ id, etag }: { id: string; etag: string }) =>
+      call(
+        api
+          .get(UserAccountApi)
+          .deleteAuthToken({ userAccountId: userId as string, authTokenId: id, ifMatch: etag }),
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: API_TOKENS(userId) }),
+  });
+}

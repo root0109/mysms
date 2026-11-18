@@ -1,0 +1,447 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.master.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "MasterProto";
+option java_package = "com.mysms.master.v1";
+
+// CountryService: operations on the Country aggregate.
+service CountryService {
+  // List Countries.
+  rpc ListCountries(ListCountriesRequest) returns (ListCountriesResponse);
+  // Get Country.
+  rpc GetCountry(GetCountryRequest) returns (GetCountryResponse);
+  // Create Country.
+  rpc CreateCountry(CreateCountryRequest) returns (CreateCountryResponse);
+  // Update Country.
+  rpc UpdateCountry(UpdateCountryRequest) returns (UpdateCountryResponse);
+  // Soft-delete Country.
+  rpc DeleteCountry(DeleteCountryRequest) returns (DeleteCountryResponse);
+}
+
+// StateProvinceService: operations on the StateProvince aggregate.
+service StateProvinceService {
+  // List StateProvinces.
+  rpc ListStateProvinces(ListStateProvincesRequest) returns (ListStateProvincesResponse);
+  // Get StateProvince.
+  rpc GetStateProvince(GetStateProvinceRequest) returns (GetStateProvinceResponse);
+  // Create StateProvince.
+  rpc CreateStateProvince(CreateStateProvinceRequest) returns (CreateStateProvinceResponse);
+  // Update StateProvince.
+  rpc UpdateStateProvince(UpdateStateProvinceRequest) returns (UpdateStateProvinceResponse);
+  // Soft-delete StateProvince.
+  rpc DeleteStateProvince(DeleteStateProvinceRequest) returns (DeleteStateProvinceResponse);
+}
+
+// CityService: operations on the City aggregate.
+service CityService {
+  // List Cities.
+  rpc ListCities(ListCitiesRequest) returns (ListCitiesResponse);
+  // Get City.
+  rpc GetCity(GetCityRequest) returns (GetCityResponse);
+  // Create City.
+  rpc CreateCity(CreateCityRequest) returns (CreateCityResponse);
+  // Update City.
+  rpc UpdateCity(UpdateCityRequest) returns (UpdateCityResponse);
+  // Soft-delete City.
+  rpc DeleteCity(DeleteCityRequest) returns (DeleteCityResponse);
+}
+
+// LocalityService: operations on the Locality aggregate.
+
+// CurrencyService: operations on the Currency aggregate.
+service CurrencyService {
+  // List Currencies.
+  rpc ListCurrencies(ListCurrenciesRequest) returns (ListCurrenciesResponse);
+  // Get Currency.
+  rpc GetCurrency(GetCurrencyRequest) returns (GetCurrencyResponse);
+  // Create Currency.
+  rpc CreateCurrency(CreateCurrencyRequest) returns (CreateCurrencyResponse);
+  // Update Currency.
+  rpc UpdateCurrency(UpdateCurrencyRequest) returns (UpdateCurrencyResponse);
+  // Soft-delete Currency.
+  rpc DeleteCurrency(DeleteCurrencyRequest) returns (DeleteCurrencyResponse);
+}
+
+// TimezoneService: operations on the Timezone aggregate.
+
+message ListCountriesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListCountriesResponse {
+  repeated Country items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetCountryRequest {
+  // Country id (UUID).
+  string id = 1;
+}
+message GetCountryResponse {
+  Country country = 1;
+}
+
+message CreateCountryRequest {
+  Country country = 1;
+  // Field 2 (request_id) removed: master data has no idempotency store; a retried create is detected by
+  // the unique natural key (ALREADY_EXISTS).
+  reserved 2;
+  reserved "request_id";
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateCountryResponse {
+  Country country = 1;
+}
+
+message UpdateCountryRequest {
+  // Resource with id and etag set.
+  Country country = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateCountryResponse {
+  Country country = 1;
+}
+
+message DeleteCountryRequest {
+  // Country id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteCountryResponse {
+}
+
+message ListStateProvincesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListStateProvincesResponse {
+  repeated StateProvince items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetStateProvinceRequest {
+  // StateProvince id (UUID).
+  string id = 1;
+}
+message GetStateProvinceResponse {
+  StateProvince state_province = 1;
+}
+
+message CreateStateProvinceRequest {
+  StateProvince state_province = 1;
+  // Field 2 (request_id) removed: master data has no idempotency store; a retried create is detected by
+  // the unique natural key (ALREADY_EXISTS).
+  reserved 2;
+  reserved "request_id";
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateStateProvinceResponse {
+  StateProvince state_province = 1;
+}
+
+message UpdateStateProvinceRequest {
+  // Resource with id and etag set.
+  StateProvince state_province = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStateProvinceResponse {
+  StateProvince state_province = 1;
+}
+
+message DeleteStateProvinceRequest {
+  // StateProvince id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteStateProvinceResponse {
+}
+
+message ListCitiesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListCitiesResponse {
+  repeated City items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetCityRequest {
+  // City id (UUID).
+  string id = 1;
+}
+message GetCityResponse {
+  City city = 1;
+}
+
+message CreateCityRequest {
+  City city = 1;
+  // Field 2 (request_id) removed: master data has no idempotency store; a retried create is detected by
+  // the unique natural key (ALREADY_EXISTS).
+  reserved 2;
+  reserved "request_id";
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateCityResponse {
+  City city = 1;
+}
+
+message UpdateCityRequest {
+  // Resource with id and etag set.
+  City city = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateCityResponse {
+  City city = 1;
+}
+
+message DeleteCityRequest {
+  // City id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteCityResponse {
+}
+
+message ListCurrenciesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListCurrenciesResponse {
+  repeated Currency items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetCurrencyRequest {
+  // Currency id (UUID).
+  string id = 1;
+}
+message GetCurrencyResponse {
+  Currency currency = 1;
+}
+
+message CreateCurrencyRequest {
+  Currency currency = 1;
+  // Field 2 (request_id) removed: master data has no idempotency store; a retried create is detected by
+  // the unique natural key (ALREADY_EXISTS).
+  reserved 2;
+  reserved "request_id";
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateCurrencyResponse {
+  Currency currency = 1;
+}
+
+message UpdateCurrencyRequest {
+  // Resource with id and etag set.
+  Currency currency = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateCurrencyResponse {
+  Currency currency = 1;
+}
+
+message DeleteCurrencyRequest {
+  // Currency id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteCurrencyResponse {
+}
+
+// Country master (ISO 3166-1).
+message Country {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // ISO 3166-1 alpha-2 code.
+  optional string iso2 = 2;
+  // ISO 3166-1 alpha-3 code.
+  optional string iso3 = 3;
+  // Country name.
+  string name = 4;
+  // Short/common name.
+  optional string short_name = 5;
+  // International dialling prefix, e.g. +91.
+  optional string phone_prefix = 6;
+  // Display order in pick-lists.
+  optional int32 sort_order = 7;
+  // Whether the country is selectable.
+  bool is_active = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+}
+
+// First-level administrative division of a country.
+message StateProvince {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Country the state belongs to. [UUID]
+  string country_id = 2;
+  // Official subdivision code (ISO 3166-2 suffix).
+  optional string code = 3;
+  // State / province name.
+  string name = 4;
+  // Whether selectable.
+  bool is_active = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+}
+
+// City / town master used by addresses.
+message City {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Country of the city. [UUID]
+  string country_id = 2;
+  // State / province of the city. [UUID]
+  optional string state_province_id = 3;
+  // City name.
+  string name = 4;
+  // Whether selectable.
+  bool is_active = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+}
+
+// Named locality / area values offered in address pick-lists.
+message Locality {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Locality name.
+  string name = 2;
+  // Display order.
+  optional int32 sort_order = 3;
+  // Whether selectable.
+  bool is_active = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// Currency master (ISO 4217).
+message Currency {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // ISO 4217 code, e.g. INR, USD.
+  string code = 2;
+  // Currency name.
+  string name = 3;
+  // Display symbol.
+  optional string symbol = 4;
+  // Number of decimal places.
+  int32 minor_units = 5;
+  // Whether usable.
+  bool is_active = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+}
+

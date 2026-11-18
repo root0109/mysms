@@ -48,7 +48,6 @@ class JsonMappersTest {
 
     @Test
     void bootBacksOffForTheMapperCoreDeclares() {
-        // core declares the mapper as a bean (CoreAutoConfiguration, ordered before Boot's Jackson configuration)
         new ApplicationContextRunner()
                 .withConfiguration(AutoConfigurations.of(JacksonAutoConfiguration.class))
                 .withBean(JsonMapper.class, new CoreAutoConfiguration()::jsonMapper)

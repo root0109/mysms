@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -27,7 +27,7 @@ import java.util.*;
 public class TeacherDashboard {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid Cohort> cohorts = new ArrayList<>();
+  private @Nullable List<@Valid Cohort> cohorts = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private Integer toGrade;
@@ -36,13 +36,13 @@ public class TeacherDashboard {
   private Integer unreadPosts;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid CalendarItem> upcomingDue = new ArrayList<>();
+  private @Nullable List<@Valid CalendarItem> upcomingDue = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid CalendarItem> upcomingSessions = new ArrayList<>();
+  private @Nullable List<@Valid CalendarItem> upcomingSessions = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid StudentAlert> alerts = new ArrayList<>();
+  private @Nullable List<@Valid StudentAlert> alerts = new ArrayList<>();
 
   public TeacherDashboard() {
     super();

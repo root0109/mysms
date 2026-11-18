@@ -7,7 +7,6 @@ import com.mysms.lms.api.LmsAssignmentSubmissionApi;
 import com.mysms.lms.api.model.GradeLearningSubmissionRequest;
 import com.mysms.lms.api.model.LmsAssignmentSubmission;
 import com.mysms.lms.api.model.LmsAssignmentSubmissionUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.LmsAssignmentSubmissionService;
 import java.net.URI;
@@ -16,11 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the LmsAssignmentSubmission operations: implements the generated contract interface, so paths,
- * parameters and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the LmsAssignmentSubmission operations; authentication and the permission check already ran in the
+ * auth-client filter. Operations not served yet answer 501.
  */
 @RestController
 public class LmsAssignmentSubmissionController implements LmsAssignmentSubmissionApi {
@@ -47,13 +43,15 @@ public class LmsAssignmentSubmissionController implements LmsAssignmentSubmissio
     @Override
     public ResponseEntity<Void> deleteLmsAssignmentSubmission(UUID assignmentSubmissionId,
             String ifMatch) {
-        throw new NotImplementedException();
+        lmsAssignmentSubmissionService.deleteLmsAssignmentSubmission(assignmentSubmissionId, ifMatch);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<LmsAssignmentSubmission> finalizeSubmission(UUID assignmentSubmissionId,
             Object body, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LmsAssignmentSubmission changed = lmsAssignmentSubmissionService.finalizeSubmission(assignmentSubmissionId);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -67,7 +65,9 @@ public class LmsAssignmentSubmissionController implements LmsAssignmentSubmissio
     @Override
     public ResponseEntity<LmsAssignmentSubmission> gradeLearningSubmission(UUID assignmentSubmissionId,
             GradeLearningSubmissionRequest gradeLearningSubmissionRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LmsAssignmentSubmission changed = lmsAssignmentSubmissionService.gradeLearningSubmission(
+                assignmentSubmissionId, gradeLearningSubmissionRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

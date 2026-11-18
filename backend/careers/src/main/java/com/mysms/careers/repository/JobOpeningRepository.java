@@ -22,11 +22,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to careers.job_opening (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to careers.job_opening: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class JobOpeningRepository {
@@ -62,6 +59,9 @@ public class JobOpeningRepository {
             Map.entry("createTime", JobOpeningEntity::getCreatedAt),
             Map.entry("updateTime", JobOpeningEntity::getUpdatedAt),
             Map.entry("title", JobOpeningEntity::getTitle));
+
+    /** The openings the public sees: open ones (added to the caller's filter for guests). */
+    public static final SqlFragment OPEN_ONLY = new SqlFragment("r.status = 'open'", Map.of());
 
     private static final String SELECT_LIVE = """
             SELECT r.id, r.tenant_id, r.posted_by_user_id, r.title, r.location, r.country_id, r.employment_type,

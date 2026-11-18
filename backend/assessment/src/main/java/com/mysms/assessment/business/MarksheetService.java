@@ -5,7 +5,9 @@ import com.mysms.assessment.config.AssessmentEventsConfig;
 import com.mysms.assessment.domain.MarksheetEntity;
 import com.mysms.assessment.events.AssessmentEvents;
 import com.mysms.assessment.mapper.MarksheetMapper;
+import com.mysms.assessment.repository.ExamResultRepository;
 import com.mysms.assessment.repository.MarksheetRepository;
+import com.mysms.assessment.repository.ResultTemplateRepository;
 import com.mysms.authclient.DataScope;
 import com.mysms.assessment.api.model.CancelMarksheetRequest;
 import com.mysms.assessment.api.model.Marksheet;
@@ -47,10 +49,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of assessment.marksheet (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of assessment.marksheet: audit and domain event commit in the same transaction as every change; rows
+ * outside the caller's institutions are invisible, tenant-level rows change only through a tenant-wide grant.
+ * <p>Cancelling a marksheet releases what generation fixed: its exam results leave it and can be corrected again, and
+ * its result template returns to draft once none of its marksheets is live, so results can be generated anew.
  */
 @Service
 public class MarksheetService extends AppTransactionManager {
@@ -74,12 +76,15 @@ public class MarksheetService extends AppTransactionManager {
 
     private final MarksheetRepository repository;
     private final MarksheetMapper mapper;
+    private final ExamResultRepository examResults;
+    private final ResultTemplateRepository templates;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
 
-    public MarksheetService(MarksheetRepository repository, MarksheetMapper mapper,
+    public MarksheetService(MarksheetRepository repository, MarksheetMapper mapper, ExamResultRepository examResults,
+            ResultTemplateRepository templates,
             @Qualifier(AssessmentDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(AssessmentDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(AssessmentEventsConfig.OUTBOX) OutboxWriter outbox,
@@ -89,6 +94,8 @@ public class MarksheetService extends AppTransactionManager {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
+        this.examResults = examResults;
+        this.templates = templates;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -137,8 +144,8 @@ public class MarksheetService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Marksheet updateMarksheet(UUID id, String ifMatch, MarksheetUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -195,8 +202,8 @@ public class MarksheetService extends AppTransactionManager {
 
     /**
      * assessment.CancelMarksheet: Cancel. The row must be visible and writable for the caller, and the step is allowed
-     * while status is draft or validated; in any other state
-     * the answer is 409 and nothing changes.
+     * while status is draft or validated; in any other state the answer is 409 and nothing changes. The marksheet's
+     * exam results are released and its template reopened, in the same transaction.
      */
     public Marksheet cancelMarksheet(UUID id, CancelMarksheetRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CANCEL_MARKSHEET);
@@ -216,13 +223,26 @@ public class MarksheetService extends AppTransactionManager {
             }
             OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
                     .truncatedTo(ChronoUnit.MICROS);
-            if (repository.cancelMarksheet(id, entity.getRowVersion(), now, Actor.current().orElse(null)) == 0) {
+            UUID actor = Actor.current().orElse(null);
+            String reason = request == null ? null : request.getReason();
+            if (repository.cancelMarksheet(id, entity.getRowVersion(), now, actor) == 0) {
                 throw new PreconditionFailedException("The row changed since it was read.");
             }
             audit.recordTransition(AGGREGATE, id, "cancel",
-                    List.of("status", "publishedAt", "publishedByUserId", "visibleToGuardians"),
-                    request == null ? null : request.getReason());
+                    List.of("status", "publishedAt", "publishedByUserId", "visibleToGuardians"), reason);
             outbox.publish(AGGREGATE + ".cancel", AGGREGATE, id, AssessmentEvents.payload(id));
+            for (UUID result : examResults.unlinkMarksheet(id, now, actor)) {
+                audit.recordTransition(ExamResultService.AGGREGATE, result, "releaseResult",
+                        List.of("marksheetLineId", "gradeLabel", "gradePoint"), reason);
+                outbox.publish(ExamResultService.AGGREGATE + ".resultReleased", ExamResultService.AGGREGATE, result,
+                        AssessmentEvents.payload(result));
+            }
+            UUID template = entity.getResultTemplateId();
+            if (templates.reopen(template, now, actor) > 0) {
+                audit.recordTransition(ResultTemplateService.AGGREGATE, template, "reopen", List.of("status"), reason);
+                outbox.publish(ResultTemplateService.AGGREGATE + ".reopened", ResultTemplateService.AGGREGATE, template,
+                        AssessmentEvents.payload(template));
+            }
             return mapper.toDto(repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
         });
@@ -230,8 +250,8 @@ public class MarksheetService extends AppTransactionManager {
 
     /**
      * assessment.ResetMarksheet: Back to draft. The row must be visible and writable for the caller, and the step is
-     * allowed while status is cancelled; in any other state
-     * the answer is 409 and nothing changes.
+     * allowed while status is cancelled and the marksheet has no generated lines (cancelling released their results);
+     * otherwise the answer is 409 and nothing changes.
      */
     public Marksheet resetMarksheet(UUID id, ResetMarksheetRequest request) {
         DataScope scope = DataScope.current(PERMISSION_RESET_MARKSHEET);
@@ -248,6 +268,10 @@ public class MarksheetService extends AppTransactionManager {
             }
             if (!(Set.of("cancelled").contains(entity.getStatus()))) {
                 throw new InvalidStateException("The marksheet cannot be changed this way in its current state.");
+            }
+            if (repository.referencedByMarksheetLineMarksheetId(id)) {
+                throw new InvalidStateException(
+                        "A cancelled marksheet with generated lines stays cancelled; generate the results again.");
             }
             OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
                     .truncatedTo(ChronoUnit.MICROS);
@@ -329,12 +353,12 @@ public class MarksheetService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the assessment.exam_session it belongs to). */
+    /** The institution of the assessment.exam_session the row belongs to. */
     private Optional<UUID> institutionOf(MarksheetEntity entity) {
         return repository.institutionOf(entity.getExamSessionId());
     }
 
-    /** Applies the selected MarksheetUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected MarksheetUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(MarksheetEntity entity, MarksheetUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

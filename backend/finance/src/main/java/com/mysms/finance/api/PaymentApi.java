@@ -1,4 +1,4 @@
-// Owned API contract of finance (JAVA-CODING-RULES §7); first materialized from api/openapi/finance.yaml on 2026-11-10.
+// Owned API contract of finance.
 package com.mysms.finance.api;
 
 import com.mysms.core.paging.PagingInfo;
@@ -123,6 +123,8 @@ public interface PaymentApi {
      *
      * @param gateway  (required)
      * @param body Raw provider payload, passed through unchanged for signature verification. (required)
+     * @param signature The gateway's signature of the raw body (Razorpay: X-Razorpay-Signature). (optional)
+     * @param eventId The gateway's id of the event, the same on every redelivery (Razorpay: X-Razorpay-Event-Id). (optional)
      * @return Done (status code 204)
      *         or Malformed request. (status code 400)
      *         or Missing or invalid credentials. (status code 401)
@@ -141,7 +143,9 @@ public interface PaymentApi {
     )
     ResponseEntity<Void> receiveGatewayWebhook(
          @PathVariable("gateway") String gateway,
-         @Valid @RequestBody Object body
+         @RequestBody byte[] body,
+         @RequestHeader(value = "X-Razorpay-Signature", required = false) @Nullable String signature,
+         @RequestHeader(value = "X-Razorpay-Event-Id", required = false) @Nullable String eventId
     );
 
 

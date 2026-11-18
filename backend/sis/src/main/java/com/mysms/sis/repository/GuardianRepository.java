@@ -22,11 +22,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to sis.guardian (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live rows
- * only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to sis.guardian: live rows only, keyset paging over an allowlisted order and the row_version guard
+ * on every update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class GuardianRepository {
@@ -122,6 +119,18 @@ public class GuardianRepository {
                 AND guardian_id = :id AND deleted_at IS NULL)
             """;
 
+
+    /** sis.CreatePortalAccount: links the login account, only while the guardian has none. */
+    private static final String LINK_ACCOUNT = """
+            UPDATE sis.guardian
+               SET user_id = :userId,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND user_id IS NULL AND deleted_at IS NULL
+            """;
+
     private final JdbcClient jdbc;
 
     public GuardianRepository(@Qualifier(SisDatabaseConfig.DATABASE) ModuleDatabase database) {
@@ -211,6 +220,16 @@ public class GuardianRepository {
     public boolean referencedByStudentGuardianGuardianId(UUID id) {
         return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_STUDENT_GUARDIAN_GUARDIAN_ID).param("id", id)
                 .query(Boolean.class).single());
+    }
+
+    /** Links the login account; 0 rows means the row changed, or got an account, since it was read. */
+    public int linkAccount(UUID id, int expected, UUID userId, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(LINK_ACCOUNT)
+                .param("id", id)
+                .param("expected", expected)
+                .param("userId", userId)
+                .param("now", now)
+                .param("actor", actor).update();
     }
 
     private static List<Object> sortValues(SortSpec sort, GuardianEntity e) {

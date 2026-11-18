@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import type { assessment, sis } from '@mysms/sdk';
+import type { assessment } from '@mysms/sdk';
 import { AssignmentApi } from '@mysms/sdk/assessment/apis/AssignmentApi';
 import { AssignmentSubmissionApi } from '@mysms/sdk/assessment/apis/AssignmentSubmissionApi';
 import { ExamApi } from '@mysms/sdk/assessment/apis/ExamApi';
@@ -11,7 +11,6 @@ import { HomeworkSubmissionApi } from '@mysms/sdk/assessment/apis/HomeworkSubmis
 import { MarksheetApi } from '@mysms/sdk/assessment/apis/MarksheetApi';
 import { MarksheetLineApi } from '@mysms/sdk/assessment/apis/MarksheetLineApi';
 import { ResultTemplateApi } from '@mysms/sdk/assessment/apis/ResultTemplateApi';
-import { StudentApi } from '@mysms/sdk/sis/apis/StudentApi';
 import { allPages, pageQuery } from '../api/pages';
 import { call } from '../api/unwrap';
 import { queryKey } from '../query/keys';
@@ -22,7 +21,6 @@ import { useSession } from './session';
 export type Assignment = assessment.Assignment;
 export type AssignmentApproval = assessment.AssignmentApproval;
 export type AssignmentSubmission = assessment.AssignmentSubmission;
-export type AssessmentStudent = sis.Student;
 export type Exam = assessment.Exam;
 export type ExamResult = assessment.ExamResult;
 export type ExamResultList = assessment.ExamResultList;
@@ -70,40 +68,34 @@ function staleAssessment(qc: QueryClient, resource: string, id: string): void {
   void qc.invalidateQueries({ queryKey: queryKey('assessment', resource, id) });
 }
 
-/** Resolves only the signed-in user's SIS student through the person link in GetMe. */
-export function useMyStudent() {
-  const { api } = useRuntime();
-  const personId = useSession((state) => state.me?.user?.personId ?? null);
-  return useQuery({
-    queryKey: queryKey('sis', 'me-student', personId),
-    queryFn: async () => {
-      const students = await allPages((page) =>
-        call(
-          api.get(StudentApi).listStudents({
-            size: 500,
-            filter: 'personId = "' + (personId as string) + '"',
-            ...pageQuery(page),
-          }),
-        ),
-      );
-      return students.items[0] ?? null;
-    },
-    enabled: personId !== null,
-    staleTime: STALE_TIME.reference,
-  });
+const NO_STUDENTS: readonly string[] = [];
+
+/**
+ * The student records of the signed-in person, as iam.GetMe names them in the session. No sis read is needed (a
+ * student holds no sis.student.read); the assessment service confirms ownership itself on every request.
+ */
+export function useMyStudentIds(): readonly string[] {
+  return useSession((state) => state.me?.studentIds ?? NO_STUDENTS);
 }
 
-/** assessment.ListAssignmentSubmissions for one assignment. */
-export function useAssignmentSubmissions(assignmentId: string | null) {
+/**
+ * assessment.ListAssignmentSubmissions for one assignment; with a student, only that student's submission (a student
+ * or guardian asks for their own rows only — the service refuses everyone else's anyway).
+ */
+export function useAssignmentSubmissions(assignmentId: string | null, studentId: string | null = null) {
   const { api } = useRuntime();
   return useQuery({
-    queryKey: ASSIGNMENT_SUBMISSIONS(assignmentId),
+    queryKey: [...ASSIGNMENT_SUBMISSIONS(assignmentId), studentId] as const,
     queryFn: () =>
       allPages((page) =>
         call(
           api.get(AssignmentSubmissionApi).listAssignmentSubmissions({
             size: 500,
-            filter: 'assignmentId = "' + (assignmentId as string) + '"',
+            filter:
+              'assignmentId = "' +
+              (assignmentId as string) +
+              '"' +
+              (studentId === null ? '' : ' AND studentId = "' + studentId + '"'),
             sort: ['createTime,asc'],
             ...pageQuery(page),
           }),
@@ -173,11 +165,11 @@ export function useAssignmentStep() {
     }: {
       assignmentId: string;
       step: AssignmentStep;
-      etag: string | null;
+      etag: string;
       reason?: string;
     }) => {
       const assignments = api.get(AssignmentApi);
-      const version = etag ? { etag } : {};
+      const version = { etag };
       const decided = { ...version, ...(reason?.trim() ? { reason: reason.trim() } : {}) };
       switch (step) {
         case 'publish':
@@ -216,14 +208,14 @@ export function useAssignmentSubmissionStep() {
     }: {
       submissionId: string;
       step: AssignmentSubmissionStep;
-      etag: string | null;
+      etag: string;
       reason?: string;
       marks?: string;
       feedback?: string;
-      assignmentId?: string;
+      assignmentId: string;
     }) => {
       const submissions = api.get(AssignmentSubmissionApi);
-      const version = etag ? { etag } : {};
+      const version = { etag };
       const decided = { ...version, ...(reason?.trim() ? { reason: reason.trim() } : {}) };
       switch (step) {
         case 'submit':
@@ -262,12 +254,13 @@ export function useAssignmentSubmissionStep() {
             }),
           );
         case 'grade':
+          if (marks === undefined) throw new Error('Grading needs the marks.');
           return call(
             submissions.gradeAssignmentSubmission({
               assignmentSubmissionId: submissionId,
               gradeAssignmentSubmissionRequest: {
                 ...version,
-                marks: marks ?? '',
+                marks,
                 ...(feedback?.trim() ? { feedback: feedback.trim() } : {}),
               },
             }),
@@ -276,8 +269,7 @@ export function useAssignmentSubmissionStep() {
     },
     onSettled: (_result, _error, variables) => {
       staleRecords(qc, 'assessment.AssignmentSubmission');
-      if (variables.assignmentId)
-        void qc.invalidateQueries({ queryKey: ASSIGNMENT_SUBMISSIONS(variables.assignmentId) });
+      void qc.invalidateQueries({ queryKey: ASSIGNMENT_SUBMISSIONS(variables.assignmentId) });
     },
   });
 }
@@ -319,11 +311,11 @@ export function useExamSessionStep() {
     }: {
       examSessionId: string;
       step: ExamSessionStep;
-      etag: string | null;
+      etag: string;
       reason?: string;
     }) => {
       const sessions = api.get(ExamSessionApi);
-      const version = etag ? { etag } : {};
+      const version = { etag };
       const decided = { ...version, ...(reason?.trim() ? { reason: reason.trim() } : {}) };
       switch (step) {
         case 'schedule':
@@ -355,11 +347,11 @@ export function useExamStep() {
     }: {
       examId: string;
       step: ExamStep;
-      etag: string | null;
+      etag: string;
       reason?: string;
     }) => {
       const exams = api.get(ExamApi);
-      const version = etag ? { etag } : {};
+      const version = { etag };
       const decided = { ...version, ...(reason?.trim() ? { reason: reason.trim() } : {}) };
       switch (step) {
         case 'schedule':
@@ -461,12 +453,12 @@ export function useMarksheetStep() {
     }: {
       marksheetId: string;
       step: MarksheetStep;
-      etag: string | null;
+      etag: string;
       reason?: string;
       visibleToGuardians?: boolean;
     }) => {
       const marksheets = api.get(MarksheetApi);
-      const version = etag ? { etag } : {};
+      const version = { etag };
       switch (step) {
         case 'validate':
           return call(marksheets.validateMarksheet({ marksheetId, validateMarksheetRequest: version }));
@@ -474,7 +466,7 @@ export function useMarksheetStep() {
           return call(
             marksheets.publishMarksheet({
               marksheetId,
-              ifMatch: etag ?? '',
+              ifMatch: etag,
               publishMarksheetRequest: visibleToGuardians === undefined ? {} : { visibleToGuardians },
             }),
           );
@@ -489,7 +481,17 @@ export function useMarksheetStep() {
           return call(marksheets.resetMarksheet({ marksheetId, resetMarksheetRequest: version }));
       }
     },
-    onSettled: (_result, _error, variables) => staleAssessment(qc, 'Marksheet', variables.marksheetId),
+    onSettled: (_result, _error, variables) => {
+      staleAssessment(qc, 'Marksheet', variables.marksheetId);
+      // what students read follows validation and publication; a cancelled marksheet releases its results
+      void qc.invalidateQueries({ queryKey: queryKey('assessment', 'student-results') });
+      if (variables.step === 'cancel') {
+        staleRecords(qc, 'assessment.ExamResult');
+        staleRecords(qc, 'assessment.ResultTemplate');
+        void qc.invalidateQueries({ queryKey: queryKey('assessment', 'exam-results') });
+        void qc.invalidateQueries({ queryKey: queryKey('assessment', 'marksheet-lines') });
+      }
+    },
   });
 }
 
@@ -526,7 +528,11 @@ export function useResultTemplateGenerateResults() {
       call(api.get(ResultTemplateApi).generateResults({ resultTemplateId, body: {} })),
     onSettled: () => {
       staleRecords(qc, 'assessment.ResultTemplate');
-      return qc.invalidateQueries({ queryKey: queryKey('records', 'assessment.Marksheet') });
+      staleRecords(qc, 'assessment.Marksheet');
+      staleRecords(qc, 'assessment.ExamResult');
+      // generation links every result of the session to a new marksheet line
+      void qc.invalidateQueries({ queryKey: queryKey('assessment', 'exam-results') });
+      return qc.invalidateQueries({ queryKey: queryKey('assessment', 'marksheet-lines') });
     },
   });
 }
@@ -571,14 +577,14 @@ export function useReplyToHomeworkFeedback() {
     }: {
       homeworkId: string;
       submissionId: string;
-      etag: string | null;
+      etag: string;
       studentReply: string;
     }) =>
       call(
         api.get(HomeworkSubmissionApi).replyToHomeworkFeedback({
           homeworkSubmissionId: submissionId,
           replyToHomeworkFeedbackRequest: {
-            ...(etag ? { etag } : {}),
+            etag,
             studentReply: studentReply.trim(),
           },
         }),

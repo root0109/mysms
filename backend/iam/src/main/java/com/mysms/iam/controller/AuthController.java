@@ -18,8 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the second-factor operations (api/openapi/iam.yaml, tag Auth). Thin: delegate, then shape the
- * response. Answers that carry secrets, codes or tokens are never cached.
+ * REST edge of the second-factor operations (tag Auth). Answers that carry secrets, codes or tokens are never cached.
  */
 @RestController
 public class AuthController implements AuthApi {

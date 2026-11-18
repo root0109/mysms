@@ -25,11 +25,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.certificate_request (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.certificate_request: live rows only, keyset paging, and the row_version guard on every
+ * update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class CertificateRequestRepository {
@@ -223,9 +220,29 @@ public class CertificateRequestRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    private static final String BOOKED = """
+            SELECT r.request_date, r.start_time, r.end_time FROM lms.certificate_request r
+             WHERE r.tenant_id = :tenantId AND r.deleted_at IS NULL AND r.status = 'upcoming'
+               AND r.evaluator_user_id = :evaluator AND r.request_date BETWEEN :fromDate AND :toDate
+            """;
+
+    /** An evaluation slot already booked with the evaluator. */
+    public record Booked(java.time.LocalDate date, java.time.LocalTime start, java.time.LocalTime end) {
+    }
+
+    /** The evaluator's upcoming bookings in the date range. */
+    public List<Booked> booked(UUID evaluatorUserId, java.time.LocalDate fromDate, java.time.LocalDate toDate) {
+        return jdbc.sql(BOOKED).param("evaluator", evaluatorUserId).param("fromDate", fromDate)
+                .param("toDate", toDate)
+                .query((rs, row) -> new Booked(rs.getObject("request_date", java.time.LocalDate.class),
+                        rs.getObject("start_time", java.time.LocalTime.class),
+                        rs.getObject("end_time", java.time.LocalTime.class)))
+                .list();
     }
 
     private static List<Object> sortValues(SortSpec sort, CertificateRequestEntity e) {

@@ -27,11 +27,9 @@ import org.springframework.stereotype.Repository;
 public class LeaveLedgerRepository {
 
     /**
-     * The days an application takes, for the application aliased {@code a}: the calendar days from the day it starts
-     * to the day it ends, both counted (a leave from Monday to Wednesday is three), halved for a half-day part. The
-     * days are UTC days — hr does not know an institution's time zone — which is exact for the clients' convention
-     * (a leave is sent as the UTC midnights of its first and last day). Weekends and holidays inside the leave are
-     * counted: hr has no calendar of them.
+     * The days the application aliased {@code a} takes: calendar days from start to end, both counted, halved for a
+     * half day. Days are UTC days, exact for the clients' convention of sending UTC midnights; weekends and holidays
+     * count, as hr has no calendar of them.
      */
     private static final String LEAVE_DAYS = """
             ((((a.to_at AT TIME ZONE 'UTC')::date - (a.from_at AT TIME ZONE 'UTC')::date) + 1)

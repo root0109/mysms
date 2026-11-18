@@ -6,27 +6,27 @@ import com.mysms.core.paging.PagingInfo;
 import com.mysms.lms.api.ConferencingAccountApi;
 import com.mysms.lms.api.model.ConferencingAccount;
 import com.mysms.lms.api.model.ConferencingAccountUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.ConferencingAccountService;
+import com.mysms.lms.business.ConferencingWebhookService;
 import java.net.URI;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the ConferencingAccount operations: implements the generated contract interface, so paths, parameters
- * and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the ConferencingAccount operations; authentication and the permission check already ran in the
+ * auth-client filter. Operations not served yet answer 501.
  */
 @RestController
 public class ConferencingAccountController implements ConferencingAccountApi {
 
     private final ConferencingAccountService conferencingAccountService;
+    private final ConferencingWebhookService conferencingWebhookService;
 
-    public ConferencingAccountController(ConferencingAccountService conferencingAccountService) {
+    public ConferencingAccountController(ConferencingAccountService conferencingAccountService,
+            ConferencingWebhookService conferencingWebhookService) {
+        this.conferencingWebhookService = conferencingWebhookService;
         this.conferencingAccountService = conferencingAccountService;
     }
 
@@ -66,8 +66,10 @@ public class ConferencingAccountController implements ConferencingAccountApi {
     }
 
     @Override
-    public ResponseEntity<Void> receiveConferencingWebhook(String provider, Object body) {
-        throw new NotImplementedException();
+    public ResponseEntity<Void> receiveConferencingWebhook(String provider, String xSignature, String xTimestamp,
+            byte[] body) {
+        conferencingWebhookService.receiveConferencingWebhook(provider, xSignature, xTimestamp, body);
+        return ResponseEntity.noContent().build();
     }
 
     @Override

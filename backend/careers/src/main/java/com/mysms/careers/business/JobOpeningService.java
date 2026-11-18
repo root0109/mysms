@@ -1,7 +1,17 @@
 package com.mysms.careers.business;
 
+import com.mysms.authclient.AuthContext;
 import com.mysms.authclient.DataScope;
+import com.mysms.authclient.Guest;
 import com.mysms.careers.api.model.CloseJobOpeningRequest;
+import com.mysms.careers.api.model.EmailApplicantRequest;
+import com.mysms.careers.api.model.ReportJobOpeningRequest;
+import com.mysms.careers.api.model.UpdateApplicationStatusRequest;
+import com.mysms.careers.config.CareersMailConfig;
+import com.mysms.careers.integration.IamGrpcClient;
+import com.mysms.core.error.ConflictException;
+import com.mysms.core.mail.MailDelivery;
+import java.util.Map;
 import com.mysms.careers.api.model.JobApplication;
 import com.mysms.careers.api.model.JobApplicationUpdate;
 import com.mysms.careers.api.model.JobOpening;
@@ -29,6 +39,7 @@ import com.mysms.core.error.ValidationFailedException;
 import com.mysms.core.filter.FilterParser;
 import com.mysms.core.outbox.AuditWriter;
 import com.mysms.core.outbox.OutboxWriter;
+import com.mysms.core.paging.FieldSpec;
 import com.mysms.core.paging.Page;
 import com.mysms.core.paging.PageRequest;
 import com.mysms.core.paging.SortSpec;
@@ -45,29 +56,42 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of careers.job_opening (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a JobOpening
- * are served here too — JobApplication.
+ * Business service of careers.job_opening and of the records that exist only as part of a JobOpening (JobApplication):
+ * audit and domain event commit in the same transaction as every change. Rows outside the caller's institutions are
+ * invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class JobOpeningService extends AppTransactionManager {
 
     public static final String AGGREGATE = JobOpeningEntity.TABLE;
+    static final String PERMISSION_READ = "careers.job_opening.read";
     static final String PERMISSION_CREATE = "careers.job_opening.create";
     static final String PERMISSION_UPDATE = "careers.job_opening.update";
     static final String PERMISSION_DELETE = "careers.job_opening.delete";
     static final String PERMISSION_CLOSE_JOB_OPENING = "careers.job_opening.close_job_opening";
     static final String PERMISSION_REOPEN_JOB_OPENING = "careers.job_opening.reopen_job_opening";
+    private static final String OPEN = "open";
+    static final String PERMISSION_REPORT_JOB_OPENING = "careers.job_opening.report_job_opening";
+    static final String JOB_APPLICATION_PERMISSION_EMAIL = "careers.job_application.email_applicant";
+    static final String JOB_APPLICATION_PERMISSION_SET_STATUS = "careers.job_application.update_application_status";
+    /**
+     * The hiring steps: an application moves forward from submitted through shortlisted to
+     * hired, may be rejected or withdrawn before it is decided, and a decided application (rejected, hired,
+     * withdrawn) does not move again.
+     */
+    static final Map<String, Set<String>> JOB_APPLICATION_NEXT = Map.of(
+            "submitted", Set.of("shortlisted", "rejected", "withdrawn"),
+            "shortlisted", Set.of("hired", "rejected", "withdrawn"));
+    /** Mail headers and bodies stay within what any SMTP relay accepts. */
+    private static final int MAX_SUBJECT = 200;
+    private static final int MAX_MESSAGE = 10_000;
     /** The contract's JobOpeningUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("postedByUserId", "title", "location", "countryId", "employmentType", "workMode", "description",
@@ -79,8 +103,12 @@ public class JobOpeningService extends AppTransactionManager {
     static final String JOB_APPLICATION_PERMISSION_CREATE = "careers.job_application.create";
     static final String JOB_APPLICATION_PERMISSION_UPDATE = "careers.job_application.update";
     static final String JOB_APPLICATION_PERMISSION_DELETE = "careers.job_application.delete";
-    /** The contract's JobApplicationUpdate fields, in apply order. */
-    static final List<String> JOB_APPLICATION_WRITABLE = List.of("applicantUserId", "resumeFileId");
+    /** The contract's JobApplicationUpdate fields, in apply order; the applicant is the caller, from the token. */
+    static final List<String> JOB_APPLICATION_WRITABLE = List.of("resumeFileId");
+    /** The public's filter fields: none on what {@link #guestProjection} leaves out. */
+    private static final Map<String, FieldSpec> GUEST_FILTER_FIELDS = JobOpeningRepository.FILTER_FIELDS.entrySet()
+            .stream().filter(e -> !Set.of("postedByUserId", "createdBy", "updatedBy").contains(e.getKey()))
+            .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
 
     private final JobOpeningRepository repository;
     private final JobOpeningMapper mapper;
@@ -90,6 +118,8 @@ public class JobOpeningService extends AppTransactionManager {
     private final Clock clock;
     private final JobApplicationRepository jobApplicationRepository;
     private final JobApplicationMapper jobApplicationMapper;
+    private final IamGrpcClient iam;
+    private final MailDelivery mail;
 
     public JobOpeningService(JobOpeningRepository repository,
             JobOpeningMapper mapper,
@@ -100,7 +130,9 @@ public class JobOpeningService extends AppTransactionManager {
             DtoValidator validator,
             Clock clock,
             JobApplicationRepository jobApplicationRepository,
-            JobApplicationMapper jobApplicationMapper) {
+            JobApplicationMapper jobApplicationMapper,
+            IamGrpcClient iam,
+            @Qualifier(CareersMailConfig.MAIL) MailDelivery mail) {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
@@ -110,6 +142,61 @@ public class JobOpeningService extends AppTransactionManager {
         this.clock = clock;
         this.jobApplicationRepository = jobApplicationRepository;
         this.jobApplicationMapper = jobApplicationMapper;
+        this.iam = iam;
+        this.mail = mail;
+    }
+
+    /**
+     * A job opening. A holder of {@code careers.job_opening.read} sees every opening; anyone else sees open ones only,
+     * in the guest projection, and a closed one is 404 to them.
+     */
+    public JobOpening getJobOpening(UUID id) {
+        if (mayReadAll()) {
+            DataScope scope = DataScope.current(PERMISSION_READ);
+            return doInReadTransaction(() -> mapper.toDto(loadVisible(scope, id)));
+        }
+        requireTenant();
+        return doInReadTransaction(() -> repository.findById(id).filter(e -> OPEN.equals(e.getStatus()))
+                .map(e -> guestProjection(mapper.toDto(e)))
+                .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+    }
+
+    /** The tenant's job openings, page by page; open ones only for the public. */
+    public Page<JobOpening> listJobOpenings(Integer pageNumber, Integer pageSize, String cursor, String filter,
+            List<String> sortBy) {
+        boolean all = mayReadAll();
+        if (!all) {
+            requireTenant();
+        }
+        SortSpec sort = SortSpec.parse(sortBy, JobOpeningRepository.SORT_FIELDS, JobOpeningRepository.DEFAULT_ORDER,
+                JobOpeningRepository.ID_COLUMN);
+        SqlFragment where = FilterParser.parse(filter, all ? JobOpeningRepository.FILTER_FIELDS : GUEST_FILTER_FIELDS);
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+        if (all) {
+            return doInReadTransaction(() -> repository.list(page, where).map(mapper::toDto));
+        }
+        return doInReadTransaction(() -> repository.list(page, where.and(JobOpeningRepository.OPEN_ONLY))
+                .map(e -> guestProjection(mapper.toDto(e))));
+    }
+
+    /** Whether the caller reads the whole tenant (signed in with the read permission) rather than the public. */
+    private static boolean mayReadAll() {
+        return AuthContext.current().map(c -> c.hasPermission(PERMISSION_READ)).orElse(false);
+    }
+
+    /** A guest must have named its school (404 otherwise); a signed-in caller reads its own tenant. */
+    private static void requireTenant() {
+        if (Guest.isGuest()) {
+            Guest.requireTenant();
+        }
+    }
+
+    /** The public's view of an opening: who posted it and who changed it are internal. */
+    private static JobOpening guestProjection(JobOpening opening) {
+        opening.setPostedByUserId(null);
+        opening.setCreatedBy(null);
+        opening.setUpdatedBy(null);
+        return opening;
     }
 
     /** Creates the row; with validateOnly every check runs and nothing is written. */
@@ -135,8 +222,8 @@ public class JobOpeningService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public JobOpening updateJobOpening(UUID id, String ifMatch, JobOpeningUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -192,9 +279,8 @@ public class JobOpeningService extends AppTransactionManager {
     }
 
     /**
-     * careers.CloseJobOpening: Close. The row must be visible and writable for the caller, and the step is allowed
-     * while status is open; in any other state
-     * the answer is 409 and nothing changes.
+     * careers.CloseJobOpening: Close. Allowed while status is open, on a row the caller may see and write; otherwise
+     * 409 and nothing changes.
      */
     public JobOpening closeJobOpening(UUID id, CloseJobOpeningRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CLOSE_JOB_OPENING);
@@ -225,9 +311,8 @@ public class JobOpeningService extends AppTransactionManager {
     }
 
     /**
-     * careers.ReopenJobOpening: Reopen. The row must be visible and writable for the caller, and the step is allowed
-     * while status is closed; in any other state
-     * the answer is 409 and nothing changes.
+     * careers.ReopenJobOpening: Reopen. Allowed while status is closed, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public JobOpening reopenJobOpening(UUID id, ReopenJobOpeningRequest request) {
         DataScope scope = DataScope.current(PERMISSION_REOPEN_JOB_OPENING);
@@ -257,6 +342,26 @@ public class JobOpeningService extends AppTransactionManager {
         });
     }
 
+    /**
+     * careers.ReportJobOpening: someone flags an opening as inappropriate. The opening must be one the caller may see
+     * (an open one, for a caller who does not read every opening); the report is an audit record keeping the reason and
+     * a {@code careers.job_opening.report} event (ids only) for whoever moderates the board. Nothing on the row changes.
+     */
+    public void reportJobOpening(UUID id, ReportJobOpeningRequest request) {
+        validator.validate(request);
+        if (request.getReason().isBlank()) {
+            throw new ValidationFailedException(List.of(new FieldError("reason", "must not be blank", "NotBlank")));
+        }
+        boolean all = mayReadAll();
+        runInWriteTransaction(() -> {
+            JobOpeningEntity entity = repository.findById(id)
+                    .filter(e -> all || OPEN.equals(e.getStatus()))
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            audit.recordTransition(AGGREGATE, entity.getId(), "report", List.of(), request.getReason().trim());
+            outbox.publish(AGGREGATE + ".report", AGGREGATE, id, CareersEvents.payload(id));
+        });
+    }
+
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
     private JobOpeningEntity loadVisible(DataScope scope, UUID id) {
         JobOpeningEntity entity = repository.findById(id)
@@ -267,12 +372,12 @@ public class JobOpeningService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(JobOpeningEntity entity) {
         return Optional.empty();
     }
 
-    /** Applies the selected JobOpeningUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected JobOpeningUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(JobOpeningEntity entity, JobOpeningUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -349,18 +454,23 @@ public class JobOpeningService extends AppTransactionManager {
                 JobApplicationRepository.ID_COLUMN);
         SqlFragment where = FilterParser.parse(filter, JobApplicationRepository.FILTER_FIELDS)
                 .and(JobApplicationRepository.ofParent(jobOpeningId));
+        if (!recruiting()) {
+            where = where.and(JobApplicationRepository.ofApplicant(AuthContext.require().userId()));
+        }
+        SqlFragment visible = where;
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + jobOpeningId, clock);
         return doInReadTransaction(() -> {
-            Page<JobApplicationEntity> rows = jobApplicationRepository.list(page, where);
+            Page<JobApplicationEntity> rows = jobApplicationRepository.list(page, visible);
             return rows.map(jobApplicationMapper::toDto);
         });
     }
 
-    /** Creates the row; with validateOnly every check runs and nothing is written. */
+    /** Creates the caller's application; with validateOnly every check runs and nothing is written. */
     public JobApplication createJobApplication(UUID jobOpeningId, JobApplication request, boolean validateOnly) {
         validator.validate(request);
         JobApplicationEntity entity = jobApplicationMapper.toEntity(request);
         entity.setJobOpeningId(jobOpeningId);
+        entity.setApplicantUserId(AuthContext.require().userId());
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
         DataScope scope = DataScope.current(JOB_APPLICATION_PERMISSION_CREATE);
@@ -383,8 +493,8 @@ public class JobOpeningService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public JobApplication updateJobApplication(UUID jobOpeningId, UUID id, String ifMatch, JobApplicationUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -437,28 +547,110 @@ public class JobOpeningService extends AppTransactionManager {
         });
     }
 
-    /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
+    /**
+     * careers.UpdateApplicationStatus: moves an application along {@link #JOB_APPLICATION_NEXT} under its body etag.
+     * A step the current status does not allow, the same status included, is 409 and changes nothing.
+     */
+    public JobApplication updateApplicationStatus(UUID jobOpeningId, UUID id, UpdateApplicationStatusRequest request) {
+        validator.validate(request);
+        String status = request.getStatus().getValue();
+        DataScope scope = DataScope.current(JOB_APPLICATION_PERMISSION_SET_STATUS);
+        return doInWriteTransaction(() -> {
+            JobApplicationEntity entity = loadVisibleJobApplication(scope, jobOpeningId, id);
+            scope.requireWritable(institutionOfJobApplication(entity));
+            OptionalInt expected = Etags.bodyVersion(request.getEtag());
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!JOB_APPLICATION_NEXT.getOrDefault(entity.getStatus(), Set.of()).contains(status)) {
+                throw new InvalidStateException("The application cannot move from " + entity.getStatus() + " to "
+                        + status + ".");
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            if (jobApplicationRepository.setStatus(id, entity.getRowVersion(), status, now,
+                    Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(JOB_APPLICATION_AGGREGATE, id, "set_status", List.of("status"),
+                    entity.getStatus() + " -> " + status);
+            outbox.publish(JOB_APPLICATION_AGGREGATE + ".set_status", JOB_APPLICATION_AGGREGATE, id,
+                    CareersEvents.payload(id));
+            return jobApplicationMapper.toDto(jobApplicationRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(JOB_APPLICATION_AGGREGATE, id)));
+        });
+    }
+
+    /**
+     * careers.EmailApplicant: writes to the applicant at their iam address; iam and SMTP are called outside any
+     * transaction, and the message itself is not kept. 503 NOT_CONFIGURED without SMTP, 409 NO_EMAIL when the account
+     * has no address.
+     */
+    public void emailApplicant(UUID id, EmailApplicantRequest request) {
+        validator.validate(request);
+        List<FieldError> errors = new ArrayList<>();
+        if (request.getSubject().isBlank() || request.getSubject().length() > MAX_SUBJECT
+                || request.getSubject().contains("\n") || request.getSubject().contains("\r")) {
+            errors.add(new FieldError("subject", "must be one line of 1 to " + MAX_SUBJECT + " characters", "Size"));
+        }
+        if (request.getMessage().isBlank() || request.getMessage().length() > MAX_MESSAGE) {
+            errors.add(new FieldError("message", "must be 1 to " + MAX_MESSAGE + " characters", "Size"));
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
+        }
+        mail.requireConfigured();
+        DataScope scope = DataScope.current(JOB_APPLICATION_PERMISSION_EMAIL);
+        UUID applicant = doInReadTransaction(() -> jobApplicationRepository.findById(id)
+                .filter(e -> scope.canRead(institutionOfJobApplication(e)) && reaches(e))
+                .orElseThrow(() -> new ResourceNotFoundException(JOB_APPLICATION_AGGREGATE, id))
+                .getApplicantUserId());
+        String address = iam.emailOf(applicant).orElseThrow(() -> new ConflictException("NO_EMAIL",
+                "The applicant's account has no e-mail address."));
+        mail.send(new MailDelivery.Message(address, request.getSubject().trim(), request.getMessage(), null));
+        runInWriteTransaction(() -> {
+            audit.recordTransition(JOB_APPLICATION_AGGREGATE, id, "email", List.of(), null);
+            outbox.publish(JOB_APPLICATION_AGGREGATE + ".email", JOB_APPLICATION_AGGREGATE, id,
+                    CareersEvents.payload(id));
+        });
+    }
+
+    /**
+     * The live row, if the caller may see it: another parent's row, a row outside the caller's scope, or another
+     * applicant's application for a caller who is not recruiting, is 404.
+     */
     private JobApplicationEntity loadVisibleJobApplication(DataScope scope, UUID jobOpeningId, UUID id) {
         JobApplicationEntity entity = jobApplicationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(JOB_APPLICATION_AGGREGATE, id));
-        if (!scope.canRead(institutionOfJobApplication(entity)) || !jobOpeningId.equals(entity.getJobOpeningId())) {
+        if (!scope.canRead(institutionOfJobApplication(entity)) || !jobOpeningId.equals(entity.getJobOpeningId())
+                || !reaches(entity)) {
             throw new ResourceNotFoundException(JOB_APPLICATION_AGGREGATE, id);
         }
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** An applicant reaches their own applications only; recruiting staff reach every one. */
+    private static boolean reaches(JobApplicationEntity entity) {
+        return recruiting() || AuthContext.require().userId().equals(entity.getApplicantUserId());
+    }
+
+    /**
+     * Recruiting staff move applications through hiring; applications are tenant-level rows, so only a tenant-wide
+     * grant of that step reaches them all.
+     */
+    private static boolean recruiting() {
+        return AuthContext.require().hasTenantWidePermission(JOB_APPLICATION_PERMISSION_SET_STATUS);
+    }
+
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfJobApplication(JobApplicationEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected JobApplicationUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected JobApplicationUpdate fields; explicit per field so a mask can clear values. */
     private static void applyJobApplication(JobApplicationEntity entity, JobApplicationUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
-                case "applicantUserId" -> entity.setApplicantUserId(changes.getApplicantUserId());
                 case "resumeFileId" -> entity.setResumeFileId(changes.getResumeFileId());
                 default -> throw new IllegalStateException("unhandled writable field " + field);
             }
@@ -470,9 +662,6 @@ public class JobOpeningService extends AppTransactionManager {
         List<FieldError> errors = new ArrayList<>();
         if (entity.getJobOpeningId() == null) {
             errors.add(new FieldError("jobOpeningId", "must not be null", "NotNull"));
-        }
-        if (entity.getApplicantUserId() == null) {
-            errors.add(new FieldError("applicantUserId", "must not be null", "NotNull"));
         }
         if (entity.getResumeFileId() == null) {
             errors.add(new FieldError("resumeFileId", "must not be null", "NotNull"));

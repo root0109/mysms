@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Locale;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -14,16 +15,22 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
- * A fresh, empty PostgreSQL database for one test class (JAVA-CODING-RULES §12: real PostgreSQL and the real Flyway
- * migrations, never H2). Two fresh login roles, neither superuser nor BYPASSRLS, as in production
- * (database/README "Roles"): the owner, which Flyway migrates as, and the application role, which only receives
- * DML grants — so row-level security is enforced and cannot be switched off by the application.
+ * A fresh PostgreSQL database for one test class, with the real Flyway migrations and production's roles (an owner and
+ * a DML-only application role, neither superuser nor BYPASSRLS), so row-level security is enforced.
  *
  * <p>The server is a Testcontainers PostgreSQL 16 by default. Set {@code MYSMS_TEST_JDBC_URL} (an admin connection
  * such as {@code jdbc:postgresql://localhost:5432/postgres}), {@code MYSMS_TEST_JDBC_USER} and
  * {@code MYSMS_TEST_JDBC_PASSWORD} to use an existing server instead (CI without Docker).
  */
 public final class TestDatabase implements AutoCloseable {
+
+    /**
+     * The services of MySMS, one per domain module: a test points the gRPC client of each one it does not run at an
+     * absent in-process server.
+     */
+    public static final List<String> SERVICES = List.of("academics", "admission", "assessment", "attendance", "careers",
+            "comms", "facility", "finance", "frontoffice", "hr", "iam", "library", "lms", "master", "org", "payroll",
+            "people", "platform", "sis", "timetable", "transport");
 
     private static final String TEST_SECRET_KEY = randomKey();
 
@@ -60,7 +67,7 @@ public final class TestDatabase implements AutoCloseable {
                     + password + "'");
             statement.execute("CREATE ROLE " + name + "_app LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEROLE PASSWORD '"
                     + appPassword + "'");
-            // the outbox relay's role (database/README "Roles": mysms_platform_admin): reads every tenant's outbox
+            // the outbox relay's role (mysms_relay): reads every tenant's outbox
             statement.execute("CREATE ROLE " + name + "_relay LOGIN NOSUPERUSER BYPASSRLS NOCREATEROLE PASSWORD '"
                     + appPassword + "'");
             statement.execute("CREATE DATABASE " + name + " OWNER " + name);
@@ -146,6 +153,15 @@ public final class TestDatabase implements AutoCloseable {
             registry.add(prefix + "maximum-pool-size", () -> "2");
             registry.add(prefix + "relay-username", this::relayUsername);
             registry.add(prefix + "relay-password", this::relayPassword);
+        }
+        // no gRPC port in a test JVM (a test that calls gRPC names an in-process server, GrpcParity); the services
+        // this test does not run are absent: a call to one is answered UNAVAILABLE at once, never by a guessed address
+        registry.add("grpc.server.port", () -> "-1");
+        List<String> running = List.of(modules);
+        for (String service : SERVICES) {
+            if (!running.contains(service)) {
+                registry.add("grpc.client." + service + "-service.address", () -> "in-process:absent-" + service);
+            }
         }
         registry.add("mysms.events.bus", () -> "in-process");
         registry.add("mysms.events.relay.interval", () -> "100ms");

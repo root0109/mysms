@@ -8,9 +8,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Appends events to the module's own `outbox_event` table, inside the caller's transaction (JAVA-CODING-RULES §4):
- * the event commits or rolls back with the business row, and a relay publishes it afterwards. Payloads carry ids and
- * codes, never personal data.
+ * Appends events to the module's `outbox_event` inside the caller's transaction, so they commit or roll back with the
+ * business row; a relay publishes them afterwards. Payloads carry ids and codes, never personal data.
  */
 public final class OutboxWriter {
 

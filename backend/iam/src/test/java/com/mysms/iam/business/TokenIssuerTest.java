@@ -126,7 +126,7 @@ class TokenIssuerTest {
 
     @Test
     void defaultsAndBootstrapSwitch() {
-        IamProperties properties = new IamProperties(null, null, null);
+        IamProperties properties = new IamProperties(null, null);
         assertThat(properties.token().accessTokenTtl()).isEqualTo(Duration.ofMinutes(15));
         assertThat(properties.token().refreshTokenTtl()).isEqualTo(Duration.ofDays(30));
         assertThat(properties.bootstrap().enabled()).isFalse();

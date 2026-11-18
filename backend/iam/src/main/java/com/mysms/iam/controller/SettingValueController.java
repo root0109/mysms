@@ -13,7 +13,7 @@ import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-/** REST edge of iam.setting_value: thin — delegate, then shape the HTTP response (JAVA-CODING-RULES §9). */
+/** REST edge of iam.setting_value. */
 @RestController
 public class SettingValueController implements SettingValueApi {
 

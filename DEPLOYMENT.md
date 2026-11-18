@@ -53,6 +53,8 @@ GRANT CONNECT ON DATABASE mysms TO mysms_app, mysms_relay, mysms_platform_admin;
 
 That is all. On every start each module runs its own Flyway history (`<schema>.flyway_schema_history`) as `mysms_migrate` and then grants `mysms_app` exactly `USAGE` on the schema, DML on its tables and use of its sequences. Flyway logs a harmless warning `schema "<module>" already exists, skipping` on the first start, because Flyway creates the schema just before the baseline's `CREATE SCHEMA IF NOT EXISTS`.
 
+Each module has exactly one Flyway script, its baseline (`database/migrations/<module>/V1_<order>_001__<module>_baseline.sql`): until the first release a schema change edits the baseline in place (owner decision of 2026-11-10), so a database migrated from an earlier build fails Flyway's checksum validation and must be dropped and created again. Incremental migrations start after the first release (`database/README.md` "Applying the schema").
+
 If `MYSMS_DB_MIGRATE_USER` is left empty the migrations run as the application user — acceptable on a developer machine, **never in production**, because the application would then own its tables and bypass row-level security.
 
 ### 2.2 Schema smoke test (throwaway databases only)
@@ -95,7 +97,10 @@ Set `MYSMS_SECRETS_KEYS` to that value (`<key id>:<base64 key>`). Every service 
 
 ## 4. Configuration reference
 
-Everything comes from the environment; no secret is in the repository.
+Each module's jar carries its own `application.properties` (JAVA-CODING-RULES §2.1) in which every value is a default
+over one of the environment variables below; the monolith combines every module's file under its own. Set the
+variables (or put an `application.properties` beside the jar, or pass `--key=value`): any of them overrides the file.
+No secret is in the repository — a secret is only ever named by its variable.
 
 ### 4.1 Every service (and the monolith)
 
@@ -128,6 +133,14 @@ Everything comes from the environment; no secret is in the repository.
 | `MYSMS_EVENTS_OUTBOX_RETENTION` | no | how long published outbox rows are kept for diagnosis, default `7d` |
 | `MYSMS_EVENTS_INBOX_RETENTION` | no | how long processed inbox rows (the ids that make handling exactly-once) are kept, default `30d`; keep it longer than you would wait before replaying a dead-lettered event |
 | `PORT` | no | HTTP port, default 8080 |
+| `MYSMS_GRPC_SERVER_PORT` | no | the gRPC port (§5.8), default `9112`. One server per process: a microservice serves its module's gRPC services, the monolith every module's |
+| `MYSMS_NAMESPACE` | no | the Kubernetes namespace the services' DNS names are in (`<module>-service.<namespace>.svc.cluster.local`), default `mysms` |
+| `MYSMS_<MODULE>_SERVICE_PORT_RPC` | no | the gRPC port of the `<module>` service a module calls, default `9112` (Kubernetes sets it for a service port named `rpc`) |
+| `MYSMS_<MODULE>_GRPC_ADDRESS` | no | the whole target of a called service, overriding the two above (e.g. `static://10.0.0.5:9112`); in the monolith the default is the in-process server |
+| `MYSMS_GRPC_CLIENT_DEADLINE` | no | how long a call to another module may take when its stub sets no deadline, default `10s` |
+| `MYSMS_GRPC_REFLECTION` | no | `true` serves gRPC server reflection (for grpcurl and similar tools). Off by default: like the OpenAPI document it maps every service and message |
+| `MYSMS_AUTH_TOKEN_URI` | for service calls | iam's token endpoint, `<iam base URL>/oauth2/token`, where a module obtains its service token (§5.9). Blank = the module makes no service calls; one that needs to answers 503 |
+| `MYSMS_<MODULE>_SERVICE_CLIENT_SECRET` | for service calls | **secret**, the module's client secret for that endpoint (e.g. `MYSMS_FINANCE_SERVICE_CLIENT_SECRET`), at least 32 random characters; iam holds only its SHA-256 (§4.2). Never logged |
 
 ### 4.2 iam (and the monolith, which contains it)
 
@@ -137,6 +150,9 @@ Everything comes from the environment; no secret is in the repository.
 | `MYSMS_IAM_SIGNING_KEY_ID` | no | `kid`; default the key's RFC 7638 thumbprint |
 | `MYSMS_IAM_PREVIOUS_PUBLIC_KEY` | no | the retiring public key during rotation |
 | `MYSMS_IAM_ACCESS_TOKEN_TTL`, `MYSMS_IAM_REFRESH_TOKEN_TTL` | no | ISO-8601 durations, default `PT15M` and `P30D` |
+| `MYSMS_IAM_SERVICECLIENTS_<MODULE>_SECRETSHA256` | for service calls | the lower-case hex SHA-256 of that module's client secret (`printf %s "$SECRET" \| sha256sum`); a module without one cannot obtain a service token (§5.9). Property form: `mysms.iam.service-clients.<module>.secret-sha256` |
+| `MYSMS_IAM_SERVICECLIENTS_<MODULE>_PERMISSIONS` | no | comma-separated permission codes the module's service tokens carry: the operations of audience `internal` it may call. Default none |
+| `MYSMS_IAM_SERVICE_TOKEN_TTL` | no | lifetime of a service token, ISO-8601, default `PT5M`, at most `PT1H` |
 | `MYSMS_PEOPLE_URL` | no | base URL of the people service (for the monolith: its own URL) so `GetMe` includes the person record |
 | `MYSMS_TIMETABLE_URL`, `MYSMS_SIS_URL`, `MYSMS_ORG_URL` | no | read by attendance: base URLs of the timetable, sis and org services (for the monolith: its own URL, three times). Without all three, `attendance.TakeAttendanceForSession` and a mark for a student a sheet has no record of yet answer 503; everything else in attendance works. Assessment also reads SIS for exam rosters and student/guardian result access |
 | `MYSMS_FACILITY_URL`, `MYSMS_ACADEMICS_URL` | no | read by assessment: Facility supplies exam room capacities; Academics supplies course-plan credits for higher-education exam results. The operation that needs an unset service answers 503 |
@@ -158,17 +174,37 @@ Everything comes from the environment; no secret is in the repository.
 | `EXPO_PUBLIC_API_BASE_URL` | the API origin the app calls (must be reachable from the device, so not `localhost` on a phone) |
 | `APP_VARIANT` | phone app only: `student` (default), `parent` or `teacher` |
 
+### 4.5 External providers
+
+A provider left unconfigured never breaks the service: the operations that need it answer `503` with a code that
+names what is missing, and everything else works.
+
+| Variable | Module | Meaning |
+|---|---|---|
+| `MYSMS_SMTP_HOST`, `_PORT` (587), `_USERNAME`, `_PASSWORD` (**secret**), `_FROM`, `_STARTTLS_REQUIRED` (true) | iam | the mail server for sign-up, password reset and verification mail; no host = those operations answer 503 |
+| `MYSMS_APP_URL` | iam | the web app's public URL the links in those mails point to |
+| `MYSMS_FILES_BUCKET`, `MYSMS_FILES_PROJECT`, `MYSMS_FILES_CREDENTIALS_FILE`, `MYSMS_FILES_ENDPOINT` | platform | Google Cloud Storage for files (signed upload/download URLs); `ENDPOINT` only for a local emulator; no bucket = file operations answer 503 |
+| `MYSMS_FILES_MAX_SIZE_BYTES` | platform | the largest upload, default 100 MB |
+| `MYSMS_PLATFORM_RAZORPAY_KEY_ID`, `_KEY_SECRET` (**secret**), `_WEBHOOK_SECRET` (**secret**), `_CURRENCY` (INR), `MYSMS_PLATFORM_RAZORPAY_URL` | platform | MySMS's own Razorpay account for tenant subscriptions |
+| `MYSMS_RAZORPAY_URL`, `MYSMS_RAZORPAY_TIMEOUT` (20 s) | finance | Razorpay's API (default `https://api.razorpay.com/v1/`); each school's own key, secret and webhook secret are its payment-gateway account in finance, stored encrypted |
+| `MYSMS_PEXELS_API_KEY`, `MYSMS_PEXELS_URL` | platform | stock image search; no key = the search answers 503 |
+
+**Razorpay webhooks.** Point the account's webhook at `<public base URL>/v1/finance/payment-gateways/razorpay:webhook`
+(each school's account) or `<public base URL>/v1/platform/tenant-subscriptions:webhook` (MySMS's own account), with
+the webhook secret set above, and subscribe to `order.paid`, `payment.captured`, `payment.failed`,
+`refund.processed` and `refund.failed`. Money is recorded only from a verified webhook or checkout signature.
+
 ## 5. The backend
 
 ### 5.1 Build
 
 ```bash
 cd backend
-mvn verify                          # generate contracts + SDK, compile, unit + component tests, Checkstyle, SpotBugs, JaCoCo
+mvn verify                          # compile protos, compile, unit + component tests, Checkstyle, SpotBugs, JaCoCo
 mvn -pl app -am package -DskipTests # just the monolith jar, when the tests already ran
 ```
 
-Outputs: `app/target/app-0.1.0-SNAPSHOT-exec.jar` (the monolith) and `<module>/target/<module>-0.1.0-SNAPSHOT-exec.jar` for each of the 21 services. After a change under `/api`, the next build regenerates the contracts and the SDK.
+Outputs: `app/target/app-0.1.0-SNAPSHOT-exec.jar` (the monolith) and `<module>/target/<module>-0.1.0-SNAPSHOT-exec.jar` for each of the 21 services. Every build writes each module's OpenAPI document to `<module>/target/openapi/api-docs.yml` (its OpenAPI component test) and its gRPC descriptor set to `<module>/target/docs/protos/grpc.protobin`.
 
 ### 5.2 Run as one monolith (recommended start)
 
@@ -202,7 +238,7 @@ export MYSMS_IAM_BOOTSTRAP_ADMIN_USERNAME=admin
 export MYSMS_IAM_BOOTSTRAP_ADMIN_PASSWORD='<at least 12 characters>'
 ```
 
-iam then makes sure the tenant code exists, that the tenant has a system role `administrator` holding every permission, and that the account exists and holds it. It is idempotent and never changes an existing account's password. **Remove the password from the environment once the administrator has signed in.**
+iam then makes sure the tenant code (2–50 of `a-z`, `0-9` and `-`) exists, that the tenant has a system role `administrator` holding every permission, and that the account exists and holds it. It also announces the tenant (`iam.tenant_directory.bootstrapped`), and the platform registers it in `platform.tenant` (named by its code until platform staff rename it), so the tenant's audit trail can refer to it: start the platform service before or with iam (events published while no platform queue was bound wait in `mysms.events.unrouted`, §5.7). It is idempotent and never changes an existing account's password. **Remove the password from the environment once the administrator has signed in.**
 
 Check it:
 
@@ -228,14 +264,17 @@ PORT=8103 java -jar backend/master/target/master-0.1.0-SNAPSHOT-exec.jar
 # … one per module
 ```
 
-Put a gateway or reverse proxy in front that routes by the first path segment after `/v1/` (`/v1/iam/` → iam, `/v1/finance/` → finance, …) and routes `/oauth2/jwks` to iam. `MYSMS_AUTH_ISSUER` must be the same public URL in every service.
+Put a gateway or reverse proxy in front that routes by the first path segment after `/v1/` (`/v1/iam/` → iam, `/v1/finance/` → finance, …) and routes `/oauth2/jwks` to iam. `MYSMS_AUTH_ISSUER` must be the same public URL in every service. Do **not** route `/oauth2/token` from the internet: only services fetch service tokens, over the internal network. For gRPC, each service listens on `MYSMS_GRPC_SERVER_PORT` (9112); route by the service name's module (`mysms.<module>.v1.*` → that module's gRPC port), HTTP/2 end to end.
 
 ### 5.5 Edge behaviour you can rely on
 
-- Every request outside `/actuator/health/**`, `/actuator/info` and `/oauth2/jwks` must match a contract operation (else 404), carry a valid bearer token for the right tenant (else 401), cover the requested institution (`X-Institution-Id`) and hold the operation's permission (else 403).
+- Every request outside `/actuator/health/**`, `/actuator/info`, `/oauth2/jwks` and `/oauth2/token` (iam) must match a contract operation (else 404), carry a valid bearer token for the right tenant (else 401), cover the requested institution (`X-Institution-Id`) and hold the operation's permission (else 403).
 - Errors are `application/problem+json` with a stable `code`.
 - Writes to existing rows need `If-Match` with the row's `ETag` (428 without it, 412 on a stale one).
 - Settings that users may not change (for example `security.sessionTimeoutMinutes`) are invisible — 404 — to anyone who does not administer settings at one of the scopes the setting allows.
+
+- Operations carry an **audience**: `public` (people: tenant users, or platform staff where the operation says so), `platform` (platform staff only) or `internal` (MySMS services only, with a service token). A service token is refused (403) on every other operation, and a person's token on an internal one. No operation of this release is internal; the first ones come with the batch reads of PRINCIPAL-REVIEW P1-34/P2-02.
+- The gRPC edge (§5.8) applies exactly the same rules through the same decision, with the same codes in `google.rpc.ErrorInfo.reason`.
 
 ### 5.6 Partition maintenance
 
@@ -336,7 +375,9 @@ declared by an earlier release without the alternate exchange is refused the sam
 'alternate-exchange'`): delete `mysms.events` once (the queues and their bindings are declared again at startup).
 
 What flows today: every module's audit records (`audit.recorded`) into the platform's `platform.audit_log` (a module
-may audit only its own entities), and the reference cleanup of database/logical-references.md (an owner's `*.deleted`
+may audit only its own entities; a record of a tenant the platform does not know fails its foreign key and is
+dead-lettered after the delivery limit), the bootstrap tenant from iam into `platform.tenant` (§5.3), the platform's
+tenant events into `iam.tenant_directory`, and the reference cleanup of database/logical-references.md (an owner's `*.deleted`
 event clears or archives the rows that referenced it in other modules).
 
 #### Google Cloud Pub/Sub
@@ -382,6 +423,40 @@ The adapter uses plaintext gRPC and no Google credentials in emulator mode. Reso
 The emulator supports publish, receive, filters, retries and dead-letter forwarding, but does not support configurable
 topic retention or `UpdateTopic`; retention-window backfill therefore requires a real Pub/Sub project.
 
+### 5.8 gRPC
+
+Every operation is also a gRPC method (api/README; service `mysms.<module>.v1.<Root>Service`). The process listens on `MYSMS_GRPC_SERVER_PORT` (default 9112) (plaintext HTTP/2: terminate TLS at the proxy or service mesh, as for REST) and serves every module it runs plus the standard health service `grpc.health.v1.Health` (per service name and overall; NOT_SERVING while shutting down). Calls send the access token in the `authorization` metadata (`Bearer …`), the institution in `x-institution-id`, a trace in `traceparent`; the trace id comes back as `x-trace-id`. Refusals are `google.rpc.Status` with `ErrorInfo` (`reason` = the REST problem `code`, metadata `status` = the HTTP status, `traceId`), `BadRequest` for field errors and `PreconditionFailure` for 412/428; the gRPC codes follow api/README's table. Idempotent operations take `request_id` (the REST `Idempotency-Key`), kept in the same store with the same rules; a replay carries the response header `idempotent-replayed: true`. On shutdown running calls get up to 20 s to finish.
+
+Served over gRPC in this release: all 21 modules — every operation REST serves is served over gRPC through the same operation-table row (each module's `<Module>GrpcParityComponentTest` proves the answers match); an operation REST answers 501 answers `UNIMPLEMENTED`.
+
+Modules call each other only over gRPC (JAVA-CODING-RULES §10): a split deployment addresses each called module by its Kubernetes DNS name (`MYSMS_NAMESPACE`, `MYSMS_<MODULE>_SERVICE_PORT_RPC`, or `MYSMS_<MODULE>_GRPC_ADDRESS`), plaintext; the monolith calls its own in-process server. Each module configures a client only for the modules it calls (its `application.properties`).
+
+```bash
+java -jar backend/app/target/app-0.1.0-SNAPSHOT-exec.jar
+grpcurl -plaintext -d '{"service":"mysms.org.v1.InstitutionService"}' localhost:9112 grpc.health.v1.Health/Check
+```
+
+### 5.9 Service identity (service-to-service calls)
+
+A call that no person makes — a background job, an operation of audience `internal` — is made with the calling module's **service token**: iam issues it at `POST /oauth2/token` (OAuth 2.0 client credentials, `client_secret_post`: form fields `grant_type=client_credentials`, `client_id=<module>`, `client_secret`). The token says `sub = service:<module>`, audience `mysms-internal`, lives `MYSMS_IAM_SERVICE_TOKEN_TTL` (5 minutes), carries the permissions configured for the client and no tenant; the call names the tenant it acts in with `X-Tenant-Id` (gRPC `x-tenant-id`), which the edge accepts from service tokens only. The module keeps its token until a minute before it expires (half its lifetime if shorter) and then fetches a new one. Every other cross-module call keeps using the caller's own token.
+
+To give a module a service identity:
+
+```bash
+SECRET=$(openssl rand -base64 48)                 # the module's secret, into the module's secret store
+printf %s "$SECRET" | sha256sum                   # its hash, into iam's configuration
+# the finance service
+MYSMS_AUTH_TOKEN_URI=http://iam.internal:8101/oauth2/token
+MYSMS_FINANCE_SERVICE_CLIENT_SECRET="$SECRET"
+# iam
+MYSMS_IAM_SERVICECLIENTS_FINANCE_SECRETSHA256=<hex hash>
+MYSMS_IAM_SERVICECLIENTS_FINANCE_PERMISSIONS=<internal operations' permissions, comma-separated>
+```
+
+Self sign-up (`iam.SignUp`, `iam.ListSignUpInstitutions`) reads the tenant's active schools from org as iam's own service principal, so a deployment that opens sign-up gives iam a service identity too: `MYSMS_IAM_SERVICE_CLIENT_SECRET` at iam, the hash in `MYSMS_IAM_SERVICECLIENTS_IAM_SECRETSHA256` and `MYSMS_IAM_SERVICECLIENTS_IAM_PERMISSIONS=org.institution.list_active`. Without it both operations answer 503.
+
+iam never holds the plaintext secret; rotating it means setting a new secret on the module and the new hash at iam (restart both; the module's cached token stays valid until it expires). If `MYSMS_AUTH_AUDIENCES` (`mysms.auth.audiences`) is set explicitly, include `mysms-internal`.
+
 ## 6. Production checklist
 
 - [ ] Three database roles as in §2.1; the application connects as `mysms_app`, migrations as `mysms_migrate`.
@@ -399,6 +474,8 @@ topic retention or `UpdateTopic`; retention-window backfill therefore requires a
 - [ ] For RabbitMQ, TLS (`amqps://`), one broker user per service with the permissions of §5.7, and alerts on `mysms.*.dead` and `mysms.events.unrouted`. For Pub/Sub, per-service identities and topic/subscription IAM as in §5.7, plus dead-letter metrics and delivery health.
 - [ ] `MYSMS_DB_RELAY_USER` set to `mysms_relay`: without it events stay in the outboxes (ERROR `has no relay-username`).
 - [ ] An alert on the ERROR log line `set outbox row … aside` and on `/actuator/health` component `events` DOWN.
+- [ ] gRPC: `MYSMS_GRPC_SERVER_PORT` reachable only through the proxy or mesh (TLS there), reflection off, the load balancer's gRPC health check on `grpc.health.v1.Health`.
+- [ ] Service identity: one secret per module from the secret store, only its SHA-256 at iam, `/oauth2/token` not routed from the internet, and an alert on the WARN log line `service token refused`.
 
 ## 7. Web apps (school web app and platform console)
 
@@ -495,7 +572,7 @@ Web components are rendered in jsdom against the fake backend and each passes an
 ### Contracts and schema
 
 ```bash
-cd api/openapi && npx @redocly/cli lint attendance.yaml     # any module's contract (one file per module)
+npx @redocly/cli lint backend/attendance/target/openapi/api-docs.yml   # any module's contract, after mvn verify
 psql -v ON_ERROR_STOP=1 -d mysms_scratch -f database/verification/smoke.sql
 ```
 

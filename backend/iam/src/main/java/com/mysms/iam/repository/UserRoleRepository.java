@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to iam.user_role (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live rows
- * only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to iam.user_role: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class UserRoleRepository {
@@ -65,6 +62,7 @@ public class UserRoleRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String FIND_BY_USER = SELECT_LIVE + " AND r.user_id = :user ORDER BY r.created_at, r.id";
     private static final String INSERT = """
             INSERT INTO iam.user_role
             (id, tenant_id, user_id, role_id, scope_type, scope_id, valid_from, valid_to, is_active, created_at,
@@ -117,6 +115,11 @@ public class UserRoleRepository {
 
     public UserRoleRepository(@Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** Every live grant of one user, oldest first (iam.SetUserRoles replaces them as a set). */
+    public List<UserRoleEntity> findByUser(UUID user) {
+        return jdbc.sql(FIND_BY_USER).param("user", user).query(UserRoleRepository::map).list();
     }
 
     public Optional<UserRoleEntity> findById(UUID id) {
@@ -198,7 +201,7 @@ public class UserRoleRepository {
         return Boolean.TRUE.equals(jdbc.sql(EXISTS_USER_ID).param("id", id).query(Boolean.class).single());
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.user_id = :parentId", Map.of("parentId", parentId));
     }

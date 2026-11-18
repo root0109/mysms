@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of careers.candidate_preferred_industry (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of careers.candidate_preferred_industry. */
 @Getter
 @Setter
 @SuperBuilder

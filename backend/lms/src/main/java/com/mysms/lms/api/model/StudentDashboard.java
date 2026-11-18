@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -29,16 +29,16 @@ import java.util.*;
 public class StudentDashboard {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid Enrollment> enrollments = new ArrayList<>();
+  private @Nullable List<@Valid Enrollment> enrollments = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid CohortEnrollment> cohortEnrollments = new ArrayList<>();
+  private @Nullable List<@Valid CohortEnrollment> cohortEnrollments = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID continueLessonId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid LiveClass> upcomingLiveClasses = new ArrayList<>();
+  private @Nullable List<@Valid LiveClass> upcomingLiveClasses = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private Integer streakDays;
@@ -47,7 +47,7 @@ public class StudentDashboard {
   private Integer longestStreakDays;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid DailyCount> activityHeatmap = new ArrayList<>();
+  private @Nullable List<@Valid DailyCount> activityHeatmap = new ArrayList<>();
 
   public StudentDashboard() {
     super();

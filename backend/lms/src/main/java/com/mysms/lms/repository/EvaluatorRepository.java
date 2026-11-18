@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.evaluator (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live rows
- * only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.evaluator: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class EvaluatorRepository {
@@ -54,7 +51,8 @@ public class EvaluatorRepository {
             Map.entry("updateTime", EvaluatorEntity::getUpdatedAt));
 
     private static final String SELECT_LIVE = """
-            SELECT r.id, r.tenant_id, r.user_id, r.unavailable_from, r.unavailable_to, r.created_at, r.created_by,
+            SELECT r.id, r.tenant_id, r.user_id, r.unavailable_from, r.unavailable_to, r.calendar_provider,
+                   r.calendar_state, r.calendar_requested_at, r.calendar_connected_at, r.created_at, r.created_by,
                    r.updated_at, r.updated_by, r.deleted_at, r.row_version
               FROM lms.evaluator r
              WHERE r.tenant_id = :tenantId
@@ -67,7 +65,8 @@ public class EvaluatorRepository {
              updated_by, row_version)
             VALUES (:id, :tenantId, :userId, :unavailableFrom, :unavailableTo, :createdAt, :createdBy, :updatedAt,
                     :updatedBy, :rowVersion)
-            RETURNING id, tenant_id, user_id, unavailable_from, unavailable_to, created_at, created_by, updated_at,
+            RETURNING id, tenant_id, user_id, unavailable_from, unavailable_to, calendar_provider, calendar_state,
+                      calendar_requested_at, calendar_connected_at, created_at, created_by, updated_at,
                       updated_by, deleted_at, row_version
             """;
     private static final String SOFT_DELETE = """
@@ -86,6 +85,22 @@ public class EvaluatorRepository {
                    unavailable_to = :unavailableTo,
                    updated_at = :updatedAt,
                    updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String CONNECT_CALENDAR = """
+            UPDATE lms.evaluator
+               SET calendar_provider = :provider, calendar_state = :state, calendar_requested_at = :now,
+                   calendar_connected_at = NULL, updated_at = :now, updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String DISCONNECT_CALENDAR = """
+            UPDATE lms.evaluator
+               SET calendar_provider = NULL, calendar_state = NULL, calendar_requested_at = NULL,
+                   calendar_connected_at = NULL, updated_at = :now, updated_by = :actor,
                    row_version = row_version + 1
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
@@ -159,6 +174,19 @@ public class EvaluatorRepository {
                 .update();
     }
 
+    /** Starts an OAuth link attempt: remembers the provider and state, clears any earlier connection. */
+    public int connectCalendar(UUID id, int expectedVersion, String provider, String state, OffsetDateTime now,
+            UUID actor) {
+        return jdbc.sql(CONNECT_CALENDAR).param("id", id).param("provider", provider).param("state", state)
+                .param("now", now).param("actor", actor).param("expected", expectedVersion).update();
+    }
+
+    /** Unlinks the calendar. */
+    public int disconnectCalendar(UUID id, int expectedVersion, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(DISCONNECT_CALENDAR).param("id", id).param("now", now).param("actor", actor)
+                .param("expected", expectedVersion).update();
+    }
+
     public int softDelete(EvaluatorEntity e, int expectedVersion) {
         return jdbc.sql(SOFT_DELETE)
                 .param("id", e.getId())
@@ -210,6 +238,10 @@ public class EvaluatorRepository {
                 .userId(rs.getObject("user_id", UUID.class))
                 .unavailableFrom(rs.getObject("unavailable_from", LocalDate.class))
                 .unavailableTo(rs.getObject("unavailable_to", LocalDate.class))
+                .calendarProvider(rs.getString("calendar_provider"))
+                .calendarState(rs.getString("calendar_state"))
+                .calendarRequestedAt(rs.getObject("calendar_requested_at", OffsetDateTime.class))
+                .calendarConnectedAt(rs.getObject("calendar_connected_at", OffsetDateTime.class))
                 .createdAt(rs.getObject("created_at", OffsetDateTime.class))
                 .createdBy(rs.getObject("created_by", UUID.class))
                 .updatedAt(rs.getObject("updated_at", OffsetDateTime.class))

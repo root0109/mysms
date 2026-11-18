@@ -1,2 +1,3 @@
 com.mysms.core.config.CoreAutoConfiguration
 com.mysms.core.config.OpenApiConfiguration
+com.mysms.core.grpc.GrpcEdgeAutoConfiguration

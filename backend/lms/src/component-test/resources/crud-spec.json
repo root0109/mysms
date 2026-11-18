@@ -18,7 +18,6 @@
     "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
    ],
    "create": {
-    "userId": "e072f3fa-b63d-5927-ac4f-ecd1b5abfc3d",
     "cohortId": "b57373c4-1219-5a6b-bdc7-d3e05a9d6cce",
     "annotationType": "highlight"
    },
@@ -224,7 +223,6 @@
     "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
    ],
    "create": {
-    "userId": "ccaee769-ac60-57e4-8c32-75bb06342853",
     "title": "t-title-c77bafbd",
     "url": "https://example.org/26962e41",
     "cohortId": "b57373c4-1219-5a6b-bdc7-d3e05a9d6cce"
@@ -241,6 +239,7 @@
     "Create",
     "Delete",
     "Get",
+    "List",
     "Update"
    ],
    "collection": "/v1/lms/courses/affca88e-9a3d-5ad4-8f6b-621b239891b4/banners",
@@ -262,6 +261,8 @@
    "ops": [
     "Create",
     "Delete",
+    "Get",
+    "List",
     "Update"
    ],
    "collection": "/v1/lms/categories",
@@ -348,7 +349,6 @@
    ],
    "create": {
     "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4",
-    "userId": "415d040d-53af-53a0-8222-d9f5ad3ac3e3",
     "requestDate": "2026-01-10",
     "startTime": "09:00",
     "endTime": "10:00",
@@ -362,9 +362,33 @@
     {
      "field": "meetingLink",
      "masked": "meetingLinkMasked",
-     "mask": "\u2022\u2022\u2022\u20221234",
+     "mask": "••••1234",
      "rotated": "Rotated-secret-5678",
      "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM lms.certificate_request WHERE id = '{id}' AND (meeting_link_enc IS NULL OR meeting_link_enc NOT LIKE 'v1.%' OR strpos(meeting_link_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
+    }
+   ],
+   "transitions": [
+    {
+     "operation": "lms.CancelCertificateRequest",
+     "path": "/v1/lms/certificate-requests/{id}:cancel",
+     "permission": "lms.certificate_request.cancel_certificate_request",
+     "guard": {
+      "status": [
+       "upcoming"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.certificate_request SET status = 'upcoming' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Test reason"
+     },
+     "sets": {
+      "status": "cancelled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
     }
    ]
   },
@@ -395,11 +419,49 @@
    "duplicateConflicts": false
   },
   {
+   "name": "Lesson",
+   "table": "lms.lesson",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/lms/lessons",
+   "item": "/v1/lms/lessons/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, id) VALUES (:tenant, 'affca88e-9a3d-5ad4-8f6b-621b239891b4', 't-title-94a546bc', 1, 1, '54fd9eee-473b-5b70-920d-db4d54b5ac56') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "chapterId": "54fd9eee-473b-5b70-920d-db4d54b5ac56",
+    "title": "t-lesson-5b1e",
+    "sortOrder": 7,
+    "body": "Lesson body",
+    "content": {
+     "blocks": [
+      {
+       "type": "paragraph",
+       "text": "Hello"
+      }
+     ]
+    }
+   },
+   "update": {
+    "title": "Updated lesson"
+   },
+   "duplicateConflicts": false
+  },
+  {
    "name": "Cohort",
    "table": "lms.cohort",
    "ops": [
     "Create",
     "Delete",
+    "Get",
+    "List",
     "Update"
    ],
    "collection": "/v1/lms/cohorts",
@@ -416,7 +478,119 @@
    "update": {
     "title": "Updated title"
    },
-   "duplicateConflicts": false
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "lms.PublishCohort",
+     "path": "/v1/lms/cohorts/{id}:publish",
+     "permission": "lms.cohort.publish_cohort",
+     "guard": {
+      "isPublished": [
+       false
+      ],
+      "lifecycleStatus": [
+       "draft",
+       "active"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.cohort SET is_published = false, lifecycle_status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "isPublished": true
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.UnpublishCohort",
+     "path": "/v1/lms/cohorts/{id}:unpublish",
+     "permission": "lms.cohort.unpublish_cohort",
+     "guard": {
+      "isPublished": [
+       true
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.cohort SET is_published = true WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "isPublished": false
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.ActivateCohort",
+     "path": "/v1/lms/cohorts/{id}:activate",
+     "permission": "lms.cohort.activate_cohort",
+     "guard": {
+      "lifecycleStatus": [
+       "draft",
+       "suspended"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.cohort SET lifecycle_status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "lifecycleStatus": "active"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.DeactivateCohort",
+     "path": "/v1/lms/cohorts/{id}:deactivate",
+     "permission": "lms.cohort.deactivate_cohort",
+     "guard": {
+      "lifecycleStatus": [
+       "active"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.cohort SET lifecycle_status = 'active' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Test reason"
+     },
+     "sets": {
+      "lifecycleStatus": "suspended"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.ArchiveCohort",
+     "path": "/v1/lms/cohorts/{id}:archive",
+     "permission": "lms.cohort.archive_cohort",
+     "guard": {
+      "lifecycleStatus": [
+       "active",
+       "suspended",
+       "completed"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.cohort SET lifecycle_status = 'active' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "lifecycleStatus": "archived",
+      "isPublished": false
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
   },
   {
    "name": "CohortCourse",
@@ -425,6 +599,7 @@
     "Create",
     "Delete",
     "Get",
+    "List",
     "Update"
    ],
    "collection": "/v1/lms/cohorts/b57373c4-1219-5a6b-bdc7-d3e05a9d6cce/courses",
@@ -487,7 +662,6 @@
    ],
    "create": {
     "cohortId": "b57373c4-1219-5a6b-bdc7-d3e05a9d6cce",
-    "userId": "6f596cd0-ad1e-59f7-860e-35ecc4bb0920",
     "feedback": "t-feedback-0b1b33be"
    },
    "update": {
@@ -653,7 +827,7 @@
     {
      "field": "clientSecret",
      "masked": "clientSecretMasked",
-     "mask": "\u2022\u2022\u2022\u20221234",
+     "mask": "••••1234",
      "rotated": "Rotated-secret-5678",
      "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM lms.conferencing_account WHERE id = '{id}' AND (client_secret_enc IS NULL OR client_secret_enc NOT LIKE 'v1.%' OR strpos(client_secret_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
     }
@@ -733,8 +907,7 @@
    ],
    "create": {
     "contentItemId": "33f45148-7c83-54fd-8625-2b783212edb7",
-    "cohortId": "b57373c4-1219-5a6b-bdc7-d3e05a9d6cce",
-    "userId": "4fa14247-49d9-54c0-96d1-28a6d0e5deab"
+    "cohortId": "b57373c4-1219-5a6b-bdc7-d3e05a9d6cce"
    },
    "update": {
     "isLike": true
@@ -757,7 +930,6 @@
     "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-ac4167e1', '2026-01-10', '2026-01-20', 't-timezone-285bbe63', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING"
    ],
    "create": {
-    "userId": "e6533018-02fe-5bc4-b7ae-2a7e7bdfdb56",
     "cohortId": "b57373c4-1219-5a6b-bdc7-d3e05a9d6cce",
     "startedAt": "2026-01-10T09:00:00Z"
    },
@@ -774,6 +946,7 @@
     "Create",
     "Delete",
     "Get",
+    "List",
     "Update"
    ],
    "collection": "/v1/lms/courses/affca88e-9a3d-5ad4-8f6b-621b239891b4/author-profiles",
@@ -808,8 +981,7 @@
     "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING"
    ],
    "create": {
-    "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4",
-    "userId": "4f99a819-df2d-5c47-b510-c12ffbbd564e"
+    "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4"
    },
    "update": {
     "emailSent": true
@@ -846,6 +1018,7 @@
     "Create",
     "Delete",
     "Get",
+    "List",
     "Update"
    ],
    "collection": "/v1/lms/courses/affca88e-9a3d-5ad4-8f6b-621b239891b4/previews",
@@ -871,6 +1044,7 @@
     "Create",
     "Delete",
     "Get",
+    "List",
     "Update"
    ],
    "collection": "/v1/lms/courses/affca88e-9a3d-5ad4-8f6b-621b239891b4/reviews",
@@ -881,7 +1055,6 @@
    ],
    "create": {
     "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4",
-    "userId": "d9422bfe-8293-528c-a7a7-3e2e050e1962",
     "rating": "1"
    },
    "update": {
@@ -919,6 +1092,7 @@
     "Create",
     "Delete",
     "Get",
+    "List",
     "Update"
    ],
    "collection": "/v1/lms/courses/affca88e-9a3d-5ad4-8f6b-621b239891b4/testimonials",
@@ -975,7 +1149,6 @@
     "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING"
    ],
    "create": {
-    "ownerUserId": "5d3883e5-5b26-5613-b889-26c352236b51",
     "title": "t-title-333494c2",
     "linkUrl": "https://example.org/drive",
     "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4"
@@ -1074,8 +1247,7 @@
     "INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-23808069', 1, 'affca88e-9a3d-5ad4-8f6b-621b239891b4') ON CONFLICT (id) DO NOTHING"
    ],
    "create": {
-    "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4",
-    "userId": "68ad1de7-febf-5eec-8f4a-1aea1b3e79fd"
+    "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4"
    },
    "update": {},
    "duplicateConflicts": false,
@@ -1125,7 +1297,27 @@
     "userId": "be28c4c2-c946-582e-85f2-4f966ef892f2"
    },
    "update": {},
-   "duplicateConflicts": true
+   "duplicateConflicts": true,
+   "transitions": [
+    {
+     "operation": "lms.DisconnectEvaluatorCalendar",
+     "path": "/v1/lms/evaluators/{id}:disconnectCalendar",
+     "permission": "lms.evaluator.disconnect_evaluator_calendar",
+     "guard": {
+      "calendarProvider": [
+       "google"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.evaluator SET calendar_provider = 'google', calendar_state = 'abc', calendar_requested_at = now() WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {},
+     "stamps": [],
+     "etag": false,
+     "ifMatch": false
+    }
+   ]
   },
   {
    "name": "EvaluatorAvailability",
@@ -1396,7 +1588,7 @@
     {
      "field": "secretValue",
      "masked": "secretValueMasked",
-     "mask": "\u2022\u2022\u2022\u20221234",
+     "mask": "••••1234",
      "rotated": "Rotated-secret-5678",
      "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM lms.external_tool_setting WHERE id = '{id}' AND (secret_value_enc IS NULL OR secret_value_enc NOT LIKE 'v1.%' OR strpos(secret_value_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
     }
@@ -1442,16 +1634,103 @@
    "scope": "chain",
    "fixtures": [
     "INSERT INTO lms.discussion_prompt (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-73ba1d03', 1, '47898a3b-d4d4-5be5-a231-c92b51a4c64a') ON CONFLICT (id) DO NOTHING",
-    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, row_version, id) VALUES (:tenant, 't-title-a5e5f6d1', '47898a3b-d4d4-5be5-a231-c92b51a4c64a', 1, '97dac196-c22c-58dc-b99b-595c90a429ae') ON CONFLICT (id) DO NOTHING"
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-forum', '2026-01-10', '2026-01-20', 'UTC', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum (tenant_id, cohort_id, title, row_version, id) VALUES (:tenant, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 't-title-forum', 1, '6d0f5a1e-3c2b-5d4e-9f8a-7b6c5d4e3f21') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_section (tenant_id, forum_id, title, row_version, id) VALUES (:tenant, '6d0f5a1e-3c2b-5d4e-9f8a-7b6c5d4e3f21', 't-title-section', 1, '7e1a6b2f-4d3c-5e5f-8a9b-8c7d6e5f4a32') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, forum_section_id, row_version, id) VALUES (:tenant, 't-title-a5e5f6d1', '47898a3b-d4d4-5be5-a231-c92b51a4c64a', '7e1a6b2f-4d3c-5e5f-8a9b-8c7d6e5f4a32', 1, '97dac196-c22c-58dc-b99b-595c90a429ae') ON CONFLICT (id) DO NOTHING"
    ],
    "create": {
-    "forumTopicId": "97dac196-c22c-58dc-b99b-595c90a429ae",
-    "authorUserId": "fcb7c25f-6816-57d5-8b02-50096d981cce"
+    "forumTopicId": "97dac196-c22c-58dc-b99b-595c90a429ae"
    },
    "update": {
     "title": "Updated title"
    },
-   "duplicateConflicts": false
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "lms.HideForumPost",
+     "path": "/v1/lms/forum-topics/97dac196-c22c-58dc-b99b-595c90a429ae/posts/{id}:hide",
+     "permission": "lms.forum_post.hide_forum_post",
+     "guard": {
+      "isHidden": [
+       false
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.forum_post SET is_hidden = false WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Test reason"
+     },
+     "sets": {
+      "isHidden": true
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.UnhideForumPost",
+     "path": "/v1/lms/forum-topics/97dac196-c22c-58dc-b99b-595c90a429ae/posts/{id}:unhide",
+     "permission": "lms.forum_post.unhide_forum_post",
+     "guard": {
+      "isHidden": [
+       true
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.forum_post SET is_hidden = true WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "isHidden": false
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.ConfirmPostAbuse",
+     "path": "/v1/lms/forum-topics/97dac196-c22c-58dc-b99b-595c90a429ae/posts/{id}:confirmAbuse",
+     "permission": "lms.forum_post.confirm_post_abuse",
+     "guard": {
+      "isAbusive": [
+       false
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.forum_post SET is_abusive = false, abuse_report_count = 1 WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Test reason"
+     },
+     "sets": {
+      "isAbusive": true,
+      "isHidden": true
+     },
+     "stamps": [
+      "abuseConfirmedAt"
+     ],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.MarkPostSubstantive",
+     "path": "/v1/lms/forum-topics/97dac196-c22c-58dc-b99b-595c90a429ae/posts/{id}:markSubstantive",
+     "permission": "lms.forum_post.mark_post_substantive",
+     "guard": {},
+     "prepare": [],
+     "body": {
+      "substantive": true
+     },
+     "sets": {
+      "substantiveFlag": 1
+     },
+     "stamps": [],
+     "etag": false,
+     "ifMatch": false
+    }
+   ]
   },
   {
    "name": "ForumPostReport",
@@ -1468,12 +1747,14 @@
    "scope": "chain",
    "fixtures": [
     "INSERT INTO lms.discussion_prompt (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-73ba1d03', 1, '47898a3b-d4d4-5be5-a231-c92b51a4c64a') ON CONFLICT (id) DO NOTHING",
-    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, row_version, id) VALUES (:tenant, 't-title-a5e5f6d1', '47898a3b-d4d4-5be5-a231-c92b51a4c64a', 1, '97dac196-c22c-58dc-b99b-595c90a429ae') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-forum', '2026-01-10', '2026-01-20', 'UTC', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum (tenant_id, cohort_id, title, row_version, id) VALUES (:tenant, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 't-title-forum', 1, '6d0f5a1e-3c2b-5d4e-9f8a-7b6c5d4e3f21') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_section (tenant_id, forum_id, title, row_version, id) VALUES (:tenant, '6d0f5a1e-3c2b-5d4e-9f8a-7b6c5d4e3f21', 't-title-section', 1, '7e1a6b2f-4d3c-5e5f-8a9b-8c7d6e5f4a32') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, forum_section_id, row_version, id) VALUES (:tenant, 't-title-a5e5f6d1', '47898a3b-d4d4-5be5-a231-c92b51a4c64a', '7e1a6b2f-4d3c-5e5f-8a9b-8c7d6e5f4a32', 1, '97dac196-c22c-58dc-b99b-595c90a429ae') ON CONFLICT (id) DO NOTHING",
     "INSERT INTO lms.forum_post (tenant_id, forum_topic_id, author_user_id, row_version, id) VALUES (:tenant, '97dac196-c22c-58dc-b99b-595c90a429ae', 'ac6d6a38-5a18-50f4-a9ae-b8e68663c25d', 1, '39402d73-87b9-58c3-a79e-1f1466748a95') ON CONFLICT (id) DO NOTHING"
    ],
    "create": {
-    "forumPostId": "39402d73-87b9-58c3-a79e-1f1466748a95",
-    "reportedBy": "c1cc1c55-c71b-53b9-9dfe-f1d477cac8b2"
+    "forumPostId": "39402d73-87b9-58c3-a79e-1f1466748a95"
    },
    "update": {
     "description": "Updated description"
@@ -1494,12 +1775,14 @@
    "scope": "chain",
    "fixtures": [
     "INSERT INTO lms.discussion_prompt (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-73ba1d03', 1, '47898a3b-d4d4-5be5-a231-c92b51a4c64a') ON CONFLICT (id) DO NOTHING",
-    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, row_version, id) VALUES (:tenant, 't-title-a5e5f6d1', '47898a3b-d4d4-5be5-a231-c92b51a4c64a', 1, '97dac196-c22c-58dc-b99b-595c90a429ae') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-forum', '2026-01-10', '2026-01-20', 'UTC', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum (tenant_id, cohort_id, title, row_version, id) VALUES (:tenant, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 't-title-forum', 1, '6d0f5a1e-3c2b-5d4e-9f8a-7b6c5d4e3f21') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_section (tenant_id, forum_id, title, row_version, id) VALUES (:tenant, '6d0f5a1e-3c2b-5d4e-9f8a-7b6c5d4e3f21', 't-title-section', 1, '7e1a6b2f-4d3c-5e5f-8a9b-8c7d6e5f4a32') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, forum_section_id, row_version, id) VALUES (:tenant, 't-title-a5e5f6d1', '47898a3b-d4d4-5be5-a231-c92b51a4c64a', '7e1a6b2f-4d3c-5e5f-8a9b-8c7d6e5f4a32', 1, '97dac196-c22c-58dc-b99b-595c90a429ae') ON CONFLICT (id) DO NOTHING",
     "INSERT INTO lms.forum_post (tenant_id, forum_topic_id, author_user_id, row_version, id) VALUES (:tenant, '97dac196-c22c-58dc-b99b-595c90a429ae', 'ac6d6a38-5a18-50f4-a9ae-b8e68663c25d', 1, '39402d73-87b9-58c3-a79e-1f1466748a95') ON CONFLICT (id) DO NOTHING"
    ],
    "create": {
     "forumPostId": "39402d73-87b9-58c3-a79e-1f1466748a95",
-    "userId": "2ac76746-d176-5861-9332-cb372c9d4823",
     "isLike": false
    },
    "update": {
@@ -1518,7 +1801,10 @@
    "scope": "chain",
    "fixtures": [
     "INSERT INTO lms.discussion_prompt (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-73ba1d03', 1, '47898a3b-d4d4-5be5-a231-c92b51a4c64a') ON CONFLICT (id) DO NOTHING",
-    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, row_version, id) VALUES (:tenant, 't-title-a5e5f6d1', '47898a3b-d4d4-5be5-a231-c92b51a4c64a', 1, '97dac196-c22c-58dc-b99b-595c90a429ae') ON CONFLICT (id) DO NOTHING"
+    "INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, timezone, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-forum', '2026-01-10', '2026-01-20', 'UTC', 1, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum (tenant_id, cohort_id, title, row_version, id) VALUES (:tenant, 'b57373c4-1219-5a6b-bdc7-d3e05a9d6cce', 't-title-forum', 1, '6d0f5a1e-3c2b-5d4e-9f8a-7b6c5d4e3f21') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_section (tenant_id, forum_id, title, row_version, id) VALUES (:tenant, '6d0f5a1e-3c2b-5d4e-9f8a-7b6c5d4e3f21', 't-title-section', 1, '7e1a6b2f-4d3c-5e5f-8a9b-8c7d6e5f4a32') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO lms.forum_topic (tenant_id, title, discussion_prompt_id, forum_section_id, row_version, id) VALUES (:tenant, 't-title-a5e5f6d1', '47898a3b-d4d4-5be5-a231-c92b51a4c64a', '7e1a6b2f-4d3c-5e5f-8a9b-8c7d6e5f4a32', 1, '97dac196-c22c-58dc-b99b-595c90a429ae') ON CONFLICT (id) DO NOTHING"
    ],
    "create": {
     "userId": "04f6cfba-6f51-564c-a2b9-51861a8084d2",
@@ -1835,6 +2121,8 @@
    "ops": [
     "Create",
     "Delete",
+    "Get",
+    "List",
     "Update"
    ],
    "collection": "/v1/lms/learning-programs",
@@ -1987,14 +2275,14 @@
     {
      "field": "meetingPassword",
      "masked": "meetingPasswordMasked",
-     "mask": "\u2022\u2022\u2022\u20221234",
+     "mask": "••••1234",
      "rotated": "Rotated-secret-5678",
      "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM lms.live_class WHERE id = '{id}' AND (meeting_password_enc IS NULL OR meeting_password_enc NOT LIKE 'v1.%' OR strpos(meeting_password_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
     },
     {
      "field": "moderatorPassword",
      "masked": "moderatorPasswordMasked",
-     "mask": "\u2022\u2022\u2022\u20221234",
+     "mask": "••••1234",
      "rotated": "Rotated-secret-5678",
      "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM lms.live_class WHERE id = '{id}' AND (moderator_password_enc IS NULL OR moderator_password_enc NOT LIKE 'v1.%' OR strpos(moderator_password_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
     }
@@ -2033,6 +2321,7 @@
    "table": "lms.assignment",
    "ops": [
     "Create",
+    "Delete",
     "Get",
     "List",
     "Update"
@@ -2057,6 +2346,7 @@
    "table": "lms.assignment_submission",
    "ops": [
     "Create",
+    "Delete",
     "Get",
     "List",
     "Update"
@@ -2068,8 +2358,7 @@
     "INSERT INTO lms.assignment (tenant_id, title, question, submission_type, institution_id, row_version, id) VALUES (:tenant, 't-title-46b6177a', 't-question-960d03c7', 'document', '0196f000-0000-7000-8000-00000000a001', 1, '32250c36-1e2f-51da-b0fc-0ad53922b101') ON CONFLICT (id) DO NOTHING"
    ],
    "create": {
-    "assignmentId": "32250c36-1e2f-51da-b0fc-0ad53922b101",
-    "userId": "30dfeb2e-e94c-5e49-bf31-b6fcba26219a"
+    "assignmentId": "32250c36-1e2f-51da-b0fc-0ad53922b101"
    },
    "update": {
     "questionSnapshot": "Updated question_snapshot"
@@ -2081,6 +2370,9 @@
    "table": "lms.course",
    "ops": [
     "Create",
+    "Delete",
+    "Get",
+    "List",
     "Update"
    ],
    "collection": "/v1/lms/courses",
@@ -2094,7 +2386,176 @@
    "update": {
     "title": "Updated title"
    },
-   "duplicateConflicts": false
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "lms.SubmitCourseForReview",
+     "path": "/v1/lms/courses/{id}:submitForReview",
+     "permission": "lms.course.submit_course_for_review",
+     "guard": {
+      "status": [
+       "in_progress"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.course SET status = 'in_progress' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "under_review"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.ApproveCourse",
+     "path": "/v1/lms/courses/{id}:approve",
+     "permission": "lms.course.approve_course",
+     "guard": {
+      "status": [
+       "under_review"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.course SET status = 'under_review' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "approved"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.PublishCourse",
+     "path": "/v1/lms/courses/{id}:publish",
+     "permission": "lms.course.publish_course",
+     "guard": {
+      "lifecycleStatus": [
+       "draft"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.course SET lifecycle_status = 'draft', status = 'approved' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "lifecycleStatus": "published",
+      "isPublished": true
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.DeactivateCourse",
+     "path": "/v1/lms/courses/{id}:deactivate",
+     "permission": "lms.course.deactivate_course",
+     "guard": {
+      "lifecycleStatus": [
+       "published"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.course SET lifecycle_status = 'published', is_published = true WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "lifecycleStatus": "deactivated",
+      "isPublished": false
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.ReactivateCourse",
+     "path": "/v1/lms/courses/{id}:reactivate",
+     "permission": "lms.course.reactivate_course",
+     "guard": {
+      "lifecycleStatus": [
+       "deactivated"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.course SET lifecycle_status = 'deactivated', is_published = false WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "lifecycleStatus": "published",
+      "isPublished": true
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.PublishCatalogListing",
+     "path": "/v1/lms/courses/{id}:publishCatalogListing",
+     "permission": "lms.course.publish_catalog_listing",
+     "guard": {
+      "catalogStatus": [
+       "draft",
+       "archived"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.course SET catalog_status = 'draft', lifecycle_status = 'published', is_published = true WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "catalogStatus": "published",
+      "isInCatalog": true
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.HideCatalogListing",
+     "path": "/v1/lms/courses/{id}:hideCatalogListing",
+     "permission": "lms.course.hide_catalog_listing",
+     "guard": {
+      "catalogStatus": [
+       "published"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.course SET catalog_status = 'published' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "catalogStatus": "archived",
+      "isInCatalog": false
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.UnpublishCourse",
+     "path": "/v1/lms/courses/{id}:unpublish",
+     "permission": "lms.course.unpublish_course",
+     "guard": {
+      "lifecycleStatus": [
+       "published"
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.course SET lifecycle_status = 'published', is_published = true WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "lifecycleStatus": "draft",
+      "isPublished": false
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
   },
   {
    "name": "Mentorship",
@@ -2195,7 +2656,7 @@
     {
      "field": "sharedSecret",
      "masked": "sharedSecretMasked",
-     "mask": "\u2022\u2022\u2022\u20221234",
+     "mask": "••••1234",
      "rotated": "Rotated-secret-5678",
      "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM lms.plagiarism_account WHERE id = '{id}' AND (shared_secret_enc IS NULL OR shared_secret_enc NOT LIKE 'v1.%' OR strpos(shared_secret_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
     }
@@ -2618,7 +3079,8 @@
    "seedId": "00e33b73-ba83-5ccc-a11a-e4cf7aef6828",
    "seed": [
     "INSERT INTO lms.quiz_answer (quiz_submission_id, tenant_id, row_version, id) VALUES ('f93f52ac-d3a9-5609-9f26-8e445360a014', :tenant, 1, '00e33b73-ba83-5ccc-a11a-e4cf7aef6828')"
-   ]
+   ],
+   "ownerOnly": "1e854681-bd11-5687-aa73-eb2802f404a1"
   },
   {
    "name": "QuizQuestion",
@@ -2692,7 +3154,8 @@
    "seedId": "0d27eba7-e19a-5ab9-aa08-1d24c14a8d5b",
    "seed": [
     "INSERT INTO lms.quiz_submission (quiz_id, user_id, tenant_id, row_version, id) VALUES ('40dfc79a-bb66-5e67-948b-8d634687edb4', '063d7969-a111-5e02-86fb-af1930e53eba', :tenant, 1, '0d27eba7-e19a-5ab9-aa08-1d24c14a8d5b')"
-   ]
+   ],
+   "ownerOnly": "063d7969-a111-5e02-86fb-af1930e53eba"
   },
   {
    "name": "QuizViolation",
@@ -2718,7 +3181,8 @@
    "seedId": "dc68f56f-22c0-543f-b654-061eb57c54ee",
    "seed": [
     "INSERT INTO lms.quiz_violation (quiz_submission_id, event_type, severity, tenant_id, row_version, id) VALUES ('f93f52ac-d3a9-5609-9f26-8e445360a014', 'tab_switch', 'violation', :tenant, 1, 'dc68f56f-22c0-543f-b654-061eb57c54ee')"
-   ]
+   ],
+   "ownerOnly": "1e854681-bd11-5687-aa73-eb2802f404a1"
   },
   {
    "name": "ReassignmentLog",
@@ -2756,6 +3220,7 @@
     "Create",
     "Delete",
     "Get",
+    "List",
     "Update"
    ],
    "collection": "/v1/lms/courses/affca88e-9a3d-5ad4-8f6b-621b239891b4/related-courses",
@@ -2851,7 +3316,49 @@
    "update": {
     "title": "Updated title"
    },
-   "duplicateConflicts": false
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "lms.DisableReleaseRule",
+     "path": "/v1/lms/release-rules/{id}:disable",
+     "permission": "lms.release_rule.disable_release_rule",
+     "guard": {
+      "isDisabled": [
+       false
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.release_rule SET is_disabled = false WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "isDisabled": true
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "lms.EnableReleaseRule",
+     "path": "/v1/lms/release-rules/{id}:enable",
+     "permission": "lms.release_rule.enable_release_rule",
+     "guard": {
+      "isDisabled": [
+       true
+      ]
+     },
+     "prepare": [
+      "UPDATE lms.release_rule SET is_disabled = true WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "isDisabled": false
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
   },
   {
    "name": "ReleaseRuleCondition",

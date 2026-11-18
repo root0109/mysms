@@ -16,7 +16,7 @@ clients/
 │   │                         #   ~90 % shared code, per-target entry config
 │   └── tablet/               # B — Expo (React Native), landscape-first, offline store (§7)
 ├── packages/
-│   ├── sdk/                  # generated TypeScript client from ../api/openapi (never hand-edited)
+│   ├── sdk/                  # generated TypeScript client from ../backend/*/target/openapi/api-docs.yml (never hand-edited)
 │   ├── core/                 # auth/session, api-client wrapper, query hooks, offline engine,
 │   │                         #   deep-link table, permission helpers, notification handling
 │   ├── tokens/               # design tokens (JSON → CSS vars + RN theme)

@@ -6,10 +6,12 @@ import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.id.UuidV7;
 import com.mysms.core.outbox.AuditWriter;
+import com.mysms.core.outbox.OutboxWriter;
 import com.mysms.iam.config.IamDatabaseConfig;
 import com.mysms.iam.config.IamEventsConfig;
 import com.mysms.iam.config.IamProperties;
 import com.mysms.iam.domain.MeAccountEntity;
+import com.mysms.iam.events.IamEvents;
 import com.mysms.iam.repository.AccountRepository;
 import com.mysms.iam.repository.RoleSeedRepository;
 import com.mysms.iam.repository.TenantDirectoryRepository;
@@ -17,6 +19,7 @@ import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -32,14 +35,16 @@ import org.springframework.transaction.PlatformTransactionManager;
  * First start of a new installation: when mysms.iam.bootstrap.* are all set, makes sure the tenant code exists in the
  * tenant directory, the tenant has a system role "administrator" holding every permission, and an administrator
  * account with that role exists. Idempotent — nothing is changed when they already exist (an existing account's
- * password is never overwritten). The password comes from the environment and must be at least 12 characters.
+ * password is never overwritten). The password comes from the environment and must be at least 12 characters. Every
+ * run announces the tenant ({@link IamEvents#TENANT_BOOTSTRAPPED}) so the platform registers it: its audit trail
+ * refers to the tenant.
  */
 @Component
 public class IamBootstrap extends AppTransactionManager implements ApplicationRunner {
 
     public static final String ADMIN_ROLE = "administrator";
     static final int MIN_PASSWORD = 12;
-    private static final Pattern CODE = Pattern.compile("[a-z0-9][a-z0-9-]{1,59}");
+    private static final Pattern CODE = Pattern.compile("[a-z0-9][a-z0-9-]{1,49}");
     private static final Logger LOG = LoggerFactory.getLogger(IamBootstrap.class);
 
     private final IamProperties.Bootstrap settings;
@@ -47,13 +52,15 @@ public class IamBootstrap extends AppTransactionManager implements ApplicationRu
     private final RoleSeedRepository roles;
     private final AccountRepository users;
     private final PasswordHasher passwords;
+    private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final Clock clock;
 
     public IamBootstrap(IamProperties properties, @Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(IamDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
                         TenantDirectoryRepository tenants, RoleSeedRepository roles, AccountRepository users,
-                        PasswordHasher passwords, @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, Clock clock) {
+                        PasswordHasher passwords, @Qualifier(IamEventsConfig.OUTBOX) OutboxWriter outbox,
+                        @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, Clock clock) {
 
         super(database, transactions);
         this.settings = properties.bootstrap();
@@ -61,6 +68,7 @@ public class IamBootstrap extends AppTransactionManager implements ApplicationRu
         this.roles = roles;
         this.users = users;
         this.passwords = passwords;
+        this.outbox = outbox;
         this.audit = audit;
         this.clock = clock;
     }
@@ -76,7 +84,7 @@ public class IamBootstrap extends AppTransactionManager implements ApplicationRu
     void bootstrap() {
         String code = settings.tenantCode().trim().toLowerCase(java.util.Locale.ROOT);
         if (!CODE.matcher(code).matches()) {
-            throw new IllegalStateException("mysms.iam.bootstrap.tenant-code must be 2-60 of a-z, 0-9 and '-'");
+            throw new IllegalStateException("mysms.iam.bootstrap.tenant-code must be 2-50 of a-z, 0-9 and '-'");
         }
         if (settings.adminPassword().length() < MIN_PASSWORD) {
             throw new IllegalStateException("mysms.iam.bootstrap.admin-password must be at least " + MIN_PASSWORD
@@ -107,6 +115,9 @@ public class IamBootstrap extends AppTransactionManager implements ApplicationRu
             if (tenants.findTenant(code).isEmpty()) {
                 tenants.insert(tenant, code);
             }
+            // first in the outbox, so the platform knows the tenant before this run's audit records reach it
+            outbox.publish(IamEvents.TENANT_BOOTSTRAPPED, IamEvents.TENANT_DIRECTORY, tenant,
+                    Map.of("id", tenant.toString(), "code", code));
             Optional<UUID> existing = roles.findByCode(ADMIN_ROLE);
             UUID role = existing.orElseGet(() -> UuidV7.next(clock));
             if (existing.isEmpty()) {

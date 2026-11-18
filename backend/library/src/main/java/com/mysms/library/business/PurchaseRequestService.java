@@ -57,13 +57,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of library.purchase_request (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a PurchaseRequest
- * are served here too — PurchaseRequestCourse, PurchaseRequestSubject.
+ * Business service of library.purchase_request and of the records that exist only as part of a PurchaseRequest
+ * (PurchaseRequestCourse, PurchaseRequestSubject): audit and domain event commit in the same transaction as every
+ * change. Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide
+ * grant.
  */
 @Service
 public class PurchaseRequestService extends AppTransactionManager {
@@ -179,8 +176,8 @@ public class PurchaseRequestService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public PurchaseRequest updatePurchaseRequest(UUID id, String ifMatch, PurchaseRequestUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -242,9 +239,8 @@ public class PurchaseRequestService extends AppTransactionManager {
     }
 
     /**
-     * library.SubmitPurchaseRequest: Send to the librarian. The row must be visible and writable for the caller, and
-     * the step is allowed while status is draft; in any other state
-     * the answer is 409 and nothing changes.
+     * library.SubmitPurchaseRequest: Send to the librarian. Allowed while status is draft, on a row the caller may see
+     * and write; otherwise 409 and nothing changes.
      */
     public PurchaseRequest submitPurchaseRequest(UUID id, SubmitPurchaseRequestRequest request) {
         DataScope scope = DataScope.current(PERMISSION_SUBMIT_PURCHASE_REQUEST);
@@ -276,9 +272,8 @@ public class PurchaseRequestService extends AppTransactionManager {
     }
 
     /**
-     * library.AcceptPurchaseRequest: Accept. The row must be visible and writable for the caller, and the step is
-     * allowed while status is requested; in any other state
-     * the answer is 409 and nothing changes.
+     * library.AcceptPurchaseRequest: Accept. Allowed while status is requested, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public PurchaseRequest acceptPurchaseRequest(UUID id, AcceptPurchaseRequestRequest request) {
         DataScope scope = DataScope.current(PERMISSION_ACCEPT_PURCHASE_REQUEST);
@@ -310,9 +305,8 @@ public class PurchaseRequestService extends AppTransactionManager {
     }
 
     /**
-     * library.RejectPurchaseRequest: Reject. The row must be visible and writable for the caller, and the step is
-     * allowed while status is requested; in any other state
-     * the answer is 409 and nothing changes.
+     * library.RejectPurchaseRequest: Reject. Allowed while status is requested, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public PurchaseRequest rejectPurchaseRequest(UUID id, RejectPurchaseRequestRequest request) {
         DataScope scope = DataScope.current(PERMISSION_REJECT_PURCHASE_REQUEST);
@@ -354,14 +348,12 @@ public class PurchaseRequestService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(PurchaseRequestEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected PurchaseRequestUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected PurchaseRequestUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(PurchaseRequestEntity entity, PurchaseRequestUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -399,7 +391,7 @@ public class PurchaseRequestService extends AppTransactionManager {
 
     }
 
-    // ---- PurchaseRequestCourse: a record of the PurchaseRequest aggregate ----
+    // ---- PurchaseRequestCourse ----
 
     public PurchaseRequestCourse getPurchaseRequestCourse(UUID purchaseRequestId, UUID id) {
         return doInReadTransaction(() -> {
@@ -452,8 +444,8 @@ public class PurchaseRequestService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public PurchaseRequestCourse updatePurchaseRequestCourse(UUID purchaseRequestId, UUID id, String ifMatch,
             PurchaseRequestCourseUpdate changes, String updateMask, boolean validateOnly) {
@@ -517,15 +509,12 @@ public class PurchaseRequestService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfPurchaseRequestCourse(PurchaseRequestCourseEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected PurchaseRequestCourseUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected PurchaseRequestCourseUpdate fields; explicit per field so a mask can clear values. */
     private static void applyPurchaseRequestCourse(PurchaseRequestCourseEntity entity, PurchaseRequestCourseUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -561,7 +550,7 @@ public class PurchaseRequestService extends AppTransactionManager {
         }
     }
 
-    // ---- PurchaseRequestSubject: a record of the PurchaseRequest aggregate ----
+    // ---- PurchaseRequestSubject ----
 
     public PurchaseRequestSubject getPurchaseRequestSubject(UUID purchaseRequestId, UUID id) {
         return doInReadTransaction(() -> {
@@ -614,8 +603,8 @@ public class PurchaseRequestService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public PurchaseRequestSubject updatePurchaseRequestSubject(UUID purchaseRequestId, UUID id, String ifMatch,
             PurchaseRequestSubjectUpdate changes, String updateMask, boolean validateOnly) {
@@ -679,15 +668,12 @@ public class PurchaseRequestService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfPurchaseRequestSubject(PurchaseRequestSubjectEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected PurchaseRequestSubjectUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected PurchaseRequestSubjectUpdate fields; explicit per field so a mask can clear values. */
     private static void applyPurchaseRequestSubject(PurchaseRequestSubjectEntity entity, PurchaseRequestSubjectUpdate changes,
             List<String> fields) {
         for (String field : fields) {

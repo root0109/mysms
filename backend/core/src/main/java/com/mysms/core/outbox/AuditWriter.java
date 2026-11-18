@@ -9,9 +9,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Writes the audit record of a change as an `audit.recorded` event into the module's own outbox, in the same
- * transaction as the change (JAVA-CODING-RULES §4: audit is never optional and never annotation-driven). The platform
- * module materialises these events into `platform.audit_log`. Records hold ids and field names only — no values.
+ * Writes a change's audit record as an `audit.recorded` event into the module's outbox, in the change's transaction;
+ * platform materialises it into `platform.audit_log`. Records hold ids and field names only, never values.
  */
 public final class AuditWriter {
 
@@ -57,6 +56,8 @@ public final class AuditWriter {
         payload.put("entityType", entityType);
         payload.put("entityId", entityId.toString());
         payload.put("actorUserId", context.userId().map(UUID::toString).orElse(null));
+        // an administrator acting as the user (impersonation): the record names both identities
+        context.impersonatorId().ifPresent(impersonator -> payload.put("impersonatorUserId", impersonator.toString()));
         payload.put("changedFields", List.copyOf(changedFields));
         if (reason != null) {
             payload.put("reason", reason);

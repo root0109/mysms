@@ -41,14 +41,19 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import com.mysms.authclient.AuthContext;
+import com.mysms.core.crypto.FieldCipher;
+import com.mysms.core.error.PermissionDeniedException;
+import com.mysms.lms.api.model.Settings;
+import com.mysms.lms.api.model.SettingsUpdate;
+import com.mysms.lms.domain.SettingsEntity;
+import com.mysms.lms.mapper.SettingsMapper;
+import com.mysms.lms.repository.SettingsRepository;
 
 /**
- * Business service of the Settings aggregate of lms (JAVA-CODING-RULES §4): the records that exist only as
- * part of a Settings are served here, each with explicit methods; audit and domain event are written in the
- * transaction of every change, under the data-level rules of api/README "Authorization".
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Settings
- * are served here too — SettingsPrimaryCountry, SettingsSidebarItem.
+ * Business service of lms.settings and of the records that exist only as part of a Settings (SettingsPrimaryCountry,
+ * SettingsSidebarItem): audit and domain event commit in the same transaction as every change. Rows outside the
+ * caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class SettingsService extends AppTransactionManager {
@@ -79,6 +84,9 @@ public class SettingsService extends AppTransactionManager {
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
+    private final SettingsRepository settingsRepository;
+    private final SettingsMapper settingsMapper;
+    private final FieldCipher cipher;
     private final SettingsSidebarItemRepository settingsSidebarItemRepository;
     private final SettingsSidebarItemMapper settingsSidebarItemMapper;
 
@@ -91,8 +99,14 @@ public class SettingsService extends AppTransactionManager {
             DtoValidator validator,
             Clock clock,
             SettingsSidebarItemRepository settingsSidebarItemRepository,
-            SettingsSidebarItemMapper settingsSidebarItemMapper) {
+            SettingsSidebarItemMapper settingsSidebarItemMapper,
+            SettingsRepository settingsRepository,
+            SettingsMapper settingsMapper,
+            FieldCipher cipher) {
         super(database, transactions);
+        this.settingsRepository = settingsRepository;
+        this.settingsMapper = settingsMapper;
+        this.cipher = cipher;
         this.settingsPrimaryCountryRepository = settingsPrimaryCountryRepository;
         this.settingsPrimaryCountryMapper = settingsPrimaryCountryMapper;
         this.outbox = outbox;
@@ -155,8 +169,8 @@ public class SettingsService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public SettingsPrimaryCountry updateSettingsPrimaryCountry(UUID settingsId, UUID id, String ifMatch,
             SettingsPrimaryCountryUpdate changes, String updateMask, boolean validateOnly) {
@@ -219,15 +233,12 @@ public class SettingsService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfSettingsPrimaryCountry(SettingsPrimaryCountryEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected SettingsPrimaryCountryUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected SettingsPrimaryCountryUpdate fields; explicit per field so a mask can clear values. */
     private static void applySettingsPrimaryCountry(SettingsPrimaryCountryEntity entity, SettingsPrimaryCountryUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -314,8 +325,8 @@ public class SettingsService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public SettingsSidebarItem updateSettingsSidebarItem(UUID settingsId, UUID id, String ifMatch,
             SettingsSidebarItemUpdate changes, String updateMask, boolean validateOnly) {
@@ -378,15 +389,12 @@ public class SettingsService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfSettingsSidebarItem(SettingsSidebarItemEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected SettingsSidebarItemUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected SettingsSidebarItemUpdate fields; explicit per field so a mask can clear values. */
     private static void applySettingsSidebarItem(SettingsSidebarItemEntity entity, SettingsSidebarItemUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -439,5 +447,195 @@ public class SettingsService extends AppTransactionManager {
 
     private void assertUniqueSettingsSidebarItem(SettingsSidebarItemEntity entity) {
 
+    }
+
+    // ---- the tenant's settings ----
+
+    public static final String SETTINGS_AGGREGATE = SettingsEntity.TABLE;
+    static final String SETTINGS_PERMISSION_GET = "lms.settings.read";
+    static final String SETTINGS_PERMISSION_UPDATE = "lms.settings.update";
+    private static final String SECRET_UNSPLASH = "lms.settings.unsplash_access_key_enc";
+    /** The contract's SettingsUpdate fields, in apply order. */
+    static final List<String> SETTINGS_WRITABLE =
+            List.of("livecodeUrl", "defaultCurrencyId", "applyGst", "showUsdEquivalent", "applyRounding",
+            "paymentGateway", "identifyUserCategory", "personaCaptured", "lmsIsDefaultHome",
+            "sendCalendarInviteForEvaluations", "allowGuestAccess", "disableSignup", "disablePwa", "allowJobPosting",
+            "certifiedMembersPage", "preventSkippingVideos", "lessonDwellSeconds", "enforceVideoCompletion",
+            "enforceQuizCompletion", "enforceQuizPassing", "enforceOpenEndedQuizPassing",
+            "enforceAssignmentCompletion", "enforceAssignmentPassing", "enforceExerciseCompletion",
+            "enforceExercisePassing", "showCourses", "showStudents", "showAssessments", "showLiveClass",
+            "showDiscussions", "showEmails", "showDashboard", "showDayView", "textDirection",
+            "notifyPublishedCourses", "notifyPublishedCohorts", "sendPaymentRemindersCohort",
+            "sendPaymentRemindersCourse", "mentorRequestTemplateId", "mentorStatusTemplateId",
+            "cohortConfirmationTemplateId", "certificateTemplateId", "paymentReminderTemplateId",
+            "customSignupContent", "metaDescription", "metaKeywords", "metaImageFileId", "contactUsEmail",
+            "contactUsUrl", "unsplashAccessKey", "demoDataPresent");
+
+    /**
+     * The tenant's LMS settings; until they are first saved, the column defaults with ETag "0". Tenant-level: only a
+     * tenant-wide grant may read them (403 otherwise).
+     */
+    public Settings getSettings() {
+        requireTenantWide(SETTINGS_PERMISSION_GET);
+        return doInReadTransaction(() -> settingsDto(settingsRepository.find().orElseGet(this::defaults)));
+    }
+
+    /**
+     * Partial update under If-Match (ETag "0" saves the first row). The image-search key is stored encrypted and
+     * only its mask is returned; leaving it out keeps the stored one, naming it in the mask with no value clears it.
+     * Tenant-wide grant only (403).
+     */
+    public Settings updateSettings(String ifMatch, SettingsUpdate changes, String updateMask, boolean validateOnly) {
+        requireTenantWide(SETTINGS_PERMISSION_UPDATE);
+        int expected = Etags.expectedVersion(ifMatch);
+        List<String> fields = UpdateMask.fields(updateMask, changes, SETTINGS_WRITABLE);
+        if (changes.getUnsplashAccessKey() != null) {
+            cipher.requireConfigured();
+        }
+        return doInWriteTransaction(() -> {
+            Optional<SettingsEntity> stored = settingsRepository.find();
+            SettingsEntity entity = stored.orElseGet(this::defaults);
+            if (entity.getRowVersion() != expected) {
+                throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            applySettings(entity, changes, fields);
+            if (changes.getUnsplashAccessKey() != null) {
+                entity.setUnsplashAccessKeyEnc(cipher.encrypt(changes.getUnsplashAccessKey(), entity.getTenantId(),
+                        SECRET_UNSPLASH));
+            }
+            validator.validate(settingsDto(entity));
+            if (entity.getLessonDwellSeconds() == null || entity.getLessonDwellSeconds() < 0) {
+                throw new ValidationFailedException(List.of(new FieldError("lessonDwellSeconds",
+                        "must be zero or more", "Min")));
+            }
+            if (validateOnly) {
+                return settingsDto(entity);
+            }
+            SettingsEntity saved;
+            if (stored.isEmpty()) {
+                entity.onCreatingData(Actor.current(), clock);
+                saved = settingsRepository.insert(entity);
+                audit.recordCreate(SETTINGS_AGGREGATE, saved.getId());
+            } else {
+                entity.onUpdatingData(Actor.current(), clock);
+                if (settingsRepository.update(entity, expected) == 0) {
+                    throw new PreconditionFailedException("If-Match does not match the current ETag.");
+                }
+                entity.setRowVersion(expected + 1);
+                saved = entity;
+                audit.recordUpdate(SETTINGS_AGGREGATE, saved.getId(), fields);
+            }
+            outbox.publish(SETTINGS_AGGREGATE + LmsEvents.UPDATED, SETTINGS_AGGREGATE, saved.getId(),
+                    LmsEvents.payload(saved.getId()));
+            return settingsDto(saved);
+        });
+    }
+
+    private static void requireTenantWide(String permission) {
+        if (!AuthContext.require().hasTenantWidePermission(permission)) {
+            throw new PermissionDeniedException("Only a tenant-wide administrator may use the tenant's LMS settings.");
+        }
+    }
+
+    /** The unsaved settings: the column defaults, version 0. */
+    private SettingsEntity defaults() {
+        return SettingsEntity.builder().tenantId(CallContextHolder.require().tenantId().orElseThrow())
+                .applyGst(false).showUsdEquivalent(false).applyRounding(false).identifyUserCategory(false)
+                .personaCaptured(false).lmsIsDefaultHome(false).sendCalendarInviteForEvaluations(false)
+                .allowGuestAccess(true).disableSignup(true).disablePwa(false).allowJobPosting(true)
+                .certifiedMembersPage(false).preventSkippingVideos(false).lessonDwellSeconds(30)
+                .enforceVideoCompletion(true).enforceQuizCompletion(true).enforceQuizPassing(true)
+                .enforceOpenEndedQuizPassing(true).enforceAssignmentCompletion(true).enforceAssignmentPassing(false)
+                .enforceExerciseCompletion(false).enforceExercisePassing(false).showCourses(true).showStudents(true)
+                .showAssessments(true).showLiveClass(true).showDiscussions(true).showEmails(true).showDashboard(true)
+                .showDayView(false).textDirection("auto").sendPaymentRemindersCohort(false)
+                .sendPaymentRemindersCourse(false).demoDataPresent(false).rowVersion(0).build();
+    }
+
+    private Settings settingsDto(SettingsEntity entity) {
+        Settings dto = settingsMapper.toDto(entity);
+        if (entity.getUnsplashAccessKeyEnc() != null) {
+            dto.setUnsplashAccessKeyMasked(cipher.maskStored(entity.getUnsplashAccessKeyEnc(), entity.getTenantId(),
+                    SECRET_UNSPLASH));
+        }
+        return dto;
+    }
+
+    private static void applySettings(SettingsEntity entity, SettingsUpdate changes, List<String> fields) {
+        for (String field : fields) {
+            switch (field) {
+                case "livecodeUrl" -> entity.setLivecodeUrl(changes.getLivecodeUrl());
+                case "defaultCurrencyId" -> entity.setDefaultCurrencyId(changes.getDefaultCurrencyId());
+                case "applyGst" -> entity.setApplyGst(changes.getApplyGst());
+                case "showUsdEquivalent" -> entity.setShowUsdEquivalent(changes.getShowUsdEquivalent());
+                case "applyRounding" -> entity.setApplyRounding(changes.getApplyRounding());
+                case "paymentGateway" -> entity.setPaymentGateway(changes.getPaymentGateway());
+                case "identifyUserCategory" -> entity.setIdentifyUserCategory(changes.getIdentifyUserCategory());
+                case "personaCaptured" -> entity.setPersonaCaptured(changes.getPersonaCaptured());
+                case "lmsIsDefaultHome" -> entity.setLmsIsDefaultHome(changes.getLmsIsDefaultHome());
+                case "sendCalendarInviteForEvaluations" ->
+                        entity.setSendCalendarInviteForEvaluations(changes.getSendCalendarInviteForEvaluations());
+                case "allowGuestAccess" -> entity.setAllowGuestAccess(changes.getAllowGuestAccess());
+                case "disableSignup" -> entity.setDisableSignup(changes.getDisableSignup());
+                case "disablePwa" -> entity.setDisablePwa(changes.getDisablePwa());
+                case "allowJobPosting" -> entity.setAllowJobPosting(changes.getAllowJobPosting());
+                case "certifiedMembersPage" -> entity.setCertifiedMembersPage(changes.getCertifiedMembersPage());
+                case "preventSkippingVideos" -> entity.setPreventSkippingVideos(changes.getPreventSkippingVideos());
+                case "lessonDwellSeconds" -> entity.setLessonDwellSeconds(changes.getLessonDwellSeconds());
+                case "enforceVideoCompletion" -> entity.setEnforceVideoCompletion(changes.getEnforceVideoCompletion());
+                case "enforceQuizCompletion" -> entity.setEnforceQuizCompletion(changes.getEnforceQuizCompletion());
+                case "enforceQuizPassing" -> entity.setEnforceQuizPassing(changes.getEnforceQuizPassing());
+                case "enforceOpenEndedQuizPassing" ->
+                        entity.setEnforceOpenEndedQuizPassing(changes.getEnforceOpenEndedQuizPassing());
+                case "enforceAssignmentCompletion" ->
+                        entity.setEnforceAssignmentCompletion(changes.getEnforceAssignmentCompletion());
+                case "enforceAssignmentPassing" -> entity.setEnforceAssignmentPassing(changes.getEnforceAssignmentPassing());
+                case "enforceExerciseCompletion" -> entity.setEnforceExerciseCompletion(changes.getEnforceExerciseCompletion());
+                case "enforceExercisePassing" -> entity.setEnforceExercisePassing(changes.getEnforceExercisePassing());
+                case "showCourses" -> entity.setShowCourses(changes.getShowCourses());
+                case "showStudents" -> entity.setShowStudents(changes.getShowStudents());
+                case "showAssessments" -> entity.setShowAssessments(changes.getShowAssessments());
+                case "showLiveClass" -> entity.setShowLiveClass(changes.getShowLiveClass());
+                case "showDiscussions" -> entity.setShowDiscussions(changes.getShowDiscussions());
+                case "showEmails" -> entity.setShowEmails(changes.getShowEmails());
+                case "showDashboard" -> entity.setShowDashboard(changes.getShowDashboard());
+                case "showDayView" -> entity.setShowDayView(changes.getShowDayView());
+                case "textDirection" -> {
+                    var direction = changes.getTextDirection();
+                    entity.setTextDirection(direction == null ? null : direction.getValue());
+                }
+                case "notifyPublishedCourses" -> {
+                    var notify = changes.getNotifyPublishedCourses();
+                    entity.setNotifyPublishedCourses(notify == null ? null : notify.getValue());
+                }
+                case "notifyPublishedCohorts" -> {
+                    var notify = changes.getNotifyPublishedCohorts();
+                    entity.setNotifyPublishedCohorts(notify == null ? null : notify.getValue());
+                }
+                case "sendPaymentRemindersCohort" ->
+                        entity.setSendPaymentRemindersCohort(changes.getSendPaymentRemindersCohort());
+                case "sendPaymentRemindersCourse" ->
+                        entity.setSendPaymentRemindersCourse(changes.getSendPaymentRemindersCourse());
+                case "mentorRequestTemplateId" -> entity.setMentorRequestTemplateId(changes.getMentorRequestTemplateId());
+                case "mentorStatusTemplateId" -> entity.setMentorStatusTemplateId(changes.getMentorStatusTemplateId());
+                case "cohortConfirmationTemplateId" ->
+                        entity.setCohortConfirmationTemplateId(changes.getCohortConfirmationTemplateId());
+                case "certificateTemplateId" -> entity.setCertificateTemplateId(changes.getCertificateTemplateId());
+                case "paymentReminderTemplateId" -> entity.setPaymentReminderTemplateId(changes.getPaymentReminderTemplateId());
+                case "customSignupContent" -> entity.setCustomSignupContent(changes.getCustomSignupContent());
+                case "metaDescription" -> entity.setMetaDescription(changes.getMetaDescription());
+                case "metaKeywords" -> entity.setMetaKeywords(changes.getMetaKeywords());
+                case "metaImageFileId" -> entity.setMetaImageFileId(changes.getMetaImageFileId());
+                case "contactUsEmail" -> entity.setContactUsEmail(changes.getContactUsEmail());
+                case "contactUsUrl" -> entity.setContactUsUrl(changes.getContactUsUrl());
+                case "demoDataPresent" -> entity.setDemoDataPresent(changes.getDemoDataPresent());
+                case "unsplashAccessKey" -> {
+                    if (changes.getUnsplashAccessKey() == null) {
+                        entity.setUnsplashAccessKeyEnc(null);
+                    }
+                }
+                default -> throw new IllegalStateException("unhandled writable field " + field);
+            }
+        }
     }
 }

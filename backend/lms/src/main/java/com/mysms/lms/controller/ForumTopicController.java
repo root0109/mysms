@@ -17,7 +17,6 @@ import com.mysms.lms.api.model.MarkPostSubstantiveRequest;
 import com.mysms.lms.api.model.MarkTopicReadRequest;
 import com.mysms.lms.api.model.UnhideForumPostRequest;
 import com.mysms.lms.api.model.UnhideForumTopicRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.ForumTopicService;
 import java.net.URI;
@@ -26,11 +25,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the ForumTopic operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the ForumTopic operations; authentication and the permission check already ran in the auth-client
+ * filter. Operations not served yet answer 501.
  */
 @RestController
 public class ForumTopicController implements ForumTopicApi {
@@ -44,7 +40,10 @@ public class ForumTopicController implements ForumTopicApi {
     @Override
     public ResponseEntity<ForumPost> confirmPostAbuse(UUID forumTopicId, UUID forumPostId,
             ConfirmPostAbuseRequest confirmPostAbuseRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        ForumPost changed = forumTopicService.confirmPostAbuse(forumTopicId, forumPostId,
+                confirmPostAbuseRequest == null ? null : confirmPostAbuseRequest.getEtag(),
+                confirmPostAbuseRequest == null ? null : confirmPostAbuseRequest.getReason());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -86,7 +85,8 @@ public class ForumTopicController implements ForumTopicApi {
     @Override
     public ResponseEntity<Void> flagForumPost(UUID forumTopicId, UUID forumPostId,
             FlagForumPostRequest flagForumPostRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        forumTopicService.flagForumPost(forumTopicId, forumPostId, Boolean.TRUE.equals(flagForumPostRequest.getFlagged()));
+        return ResponseEntity.noContent().build();
     }
 
     @Override
@@ -104,7 +104,10 @@ public class ForumTopicController implements ForumTopicApi {
     @Override
     public ResponseEntity<ForumPost> hideForumPost(UUID forumTopicId, UUID forumPostId,
             HideForumPostRequest hideForumPostRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        ForumPost changed = forumTopicService.hideForumPost(forumTopicId, forumPostId,
+                hideForumPostRequest == null ? null : hideForumPostRequest.getEtag(),
+                hideForumPostRequest == null ? null : hideForumPostRequest.getReason());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -145,19 +148,25 @@ public class ForumTopicController implements ForumTopicApi {
     @Override
     public ResponseEntity<ForumPost> markPostSubstantive(UUID forumTopicId, UUID forumPostId,
             MarkPostSubstantiveRequest markPostSubstantiveRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        ForumPost changed = forumTopicService.markPostSubstantive(forumTopicId, forumPostId,
+                Boolean.TRUE.equals(markPostSubstantiveRequest.getSubstantive()));
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<Void> markTopicRead(UUID forumTopicId,
             MarkTopicReadRequest markTopicReadRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        forumTopicService.markTopicRead(forumTopicId,
+                markTopicReadRequest == null ? null : markTopicReadRequest.getForumPostIds());
+        return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<ForumPost> unhideForumPost(UUID forumTopicId, UUID forumPostId,
             UnhideForumPostRequest unhideForumPostRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        ForumPost changed = forumTopicService.unhideForumPost(forumTopicId, forumPostId,
+                unhideForumPostRequest == null ? null : unhideForumPostRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

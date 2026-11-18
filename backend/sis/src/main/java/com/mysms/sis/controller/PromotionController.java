@@ -12,33 +12,34 @@ import com.mysms.sis.api.model.PromotionList;
 import com.mysms.sis.api.model.PromotionUpdate;
 import com.mysms.sis.api.model.ProposePromotionsRequest;
 import com.mysms.sis.api.model.RejectPromotionRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.sis.business.PromotionService;
+import com.mysms.sis.business.PromotionWorkflowService;
 import java.net.URI;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Promotion operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/sis.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Promotion operations; authentication and the permission check already happened in the auth-client
+ * filter. Proposing and applying promotions are served by the promotion workflow.
  */
 @RestController
 public class PromotionController implements PromotionApi {
 
     private final PromotionService promotionService;
+    private final PromotionWorkflowService workflowService;
 
-    public PromotionController(PromotionService promotionService) {
+    public PromotionController(PromotionService promotionService, PromotionWorkflowService workflowService) {
         this.promotionService = promotionService;
+        this.workflowService = workflowService;
     }
 
     @Override
     public ResponseEntity<Operation> applyPromotions(ApplyPromotionsRequest applyPromotionsRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(workflowService.applyPromotions(applyPromotionsRequest));
     }
 
     @Override
@@ -84,7 +85,7 @@ public class PromotionController implements PromotionApi {
     @Override
     public ResponseEntity<PromotionList> proposePromotions(
             ProposePromotionsRequest proposePromotionsRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(workflowService.proposePromotions(proposePromotionsRequest));
     }
 
     @Override

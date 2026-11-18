@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -31,13 +31,13 @@ public class MemberProfile {
   private @Nullable MemberCard member;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid Certificate> certificates = new ArrayList<>();
+  private @Nullable List<@Valid Certificate> certificates = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid BadgeAward> badges = new ArrayList<>();
+  private @Nullable List<@Valid BadgeAward> badges = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid Enrollment> enrollments = new ArrayList<>();
+  private @Nullable List<@Valid Enrollment> enrollments = new ArrayList<>();
 
   public MemberProfile member(@Nullable MemberCard member) {
     this.member = member;

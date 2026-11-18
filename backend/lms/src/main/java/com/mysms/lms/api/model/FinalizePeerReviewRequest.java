@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -25,7 +25,7 @@ import java.util.*;
 public class FinalizePeerReviewRequest {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid PeerPoints> points = new ArrayList<>();
+  private @Nullable List<@Valid PeerPoints> points = new ArrayList<>();
 
   public FinalizePeerReviewRequest points(List<@Valid PeerPoints> points) {
     this.points = points;

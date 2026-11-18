@@ -4,7 +4,8 @@
   "path" : "/v1/finance/fee-structures/{feeStructureId}:archive",
   "permission" : "finance.fee_structure.archive",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.CancelInvoice",
   "method" : "POST",
@@ -12,7 +13,8 @@
   "permission" : "finance.invoice.cancel_invoice",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.CancelOperation",
   "method" : "POST",
@@ -20,7 +22,8 @@
   "permission" : "finance.operation.cancel_operation",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.CreateAcquisitionSource",
   "method" : "POST",
@@ -28,7 +31,8 @@
   "permission" : "finance.acquisition_source.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.CreateCoupon",
   "method" : "POST",
@@ -36,7 +40,8 @@
   "permission" : "finance.coupon.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.CreateCouponScope",
   "method" : "POST",
@@ -44,7 +49,8 @@
   "permission" : "finance.coupon_scope.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.CreateFeeConcession",
   "method" : "POST",
@@ -52,7 +58,8 @@
   "permission" : "finance.fee_concession.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.CreateFeeHead",
   "method" : "POST",
@@ -60,7 +67,8 @@
   "permission" : "finance.fee_head.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.CreateFeePlan",
   "method" : "POST",
@@ -68,7 +76,8 @@
   "permission" : "finance.fee_plan.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.CreateFeePlanInstallment",
   "method" : "POST",
@@ -76,7 +85,8 @@
   "permission" : "finance.fee_plan_installment.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.CreateFeePlanInstallmentComponent",
   "method" : "POST",
@@ -84,7 +94,8 @@
   "permission" : "finance.fee_plan_installment_component.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.CreateFeeStructure",
   "method" : "POST",
@@ -92,7 +103,8 @@
   "permission" : "finance.fee_structure.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.CreateInvoice",
   "method" : "POST",
@@ -100,7 +112,8 @@
   "permission" : "finance.invoice.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.CreateInvoiceFromDues",
   "method" : "POST",
@@ -108,7 +121,8 @@
   "permission" : "finance.invoice.create_invoice_from_dues",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "required"
+  "idempotency" : "required",
+  "audience" : "public"
 }, {
   "operationId" : "finance.CreatePaymentGatewayAccount",
   "method" : "POST",
@@ -116,77 +130,88 @@
   "permission" : "finance.payment_gateway_account.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.DeleteAcquisitionSource",
   "method" : "DELETE",
   "path" : "/v1/finance/acquisition-sources/{acquisitionSourceId}",
   "permission" : "finance.acquisition_source.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.DeleteCoupon",
   "method" : "DELETE",
   "path" : "/v1/finance/coupons/{couponId}",
   "permission" : "finance.coupon.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.DeleteCouponScope",
   "method" : "DELETE",
   "path" : "/v1/finance/coupons/{couponId}/scopes/{couponScopeId}",
   "permission" : "finance.coupon_scope.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.DeleteFeeConcession",
   "method" : "DELETE",
   "path" : "/v1/finance/fee-concessions/{feeConcessionId}",
   "permission" : "finance.fee_concession.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.DeleteFeeHead",
   "method" : "DELETE",
   "path" : "/v1/finance/fee-heads/{feeHeadId}",
   "permission" : "finance.fee_head.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.DeleteFeePlan",
   "method" : "DELETE",
   "path" : "/v1/finance/fee-plans/{feePlanId}",
   "permission" : "finance.fee_plan.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.DeleteFeePlanInstallment",
   "method" : "DELETE",
   "path" : "/v1/finance/fee-plans/{feePlanId}/installments/{feePlanInstallmentId}",
   "permission" : "finance.fee_plan_installment.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.DeleteFeePlanInstallmentComponent",
   "method" : "DELETE",
   "path" : "/v1/finance/fee-plan-installment-components/{feePlanInstallmentComponentId}",
   "permission" : "finance.fee_plan_installment_component.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.DeleteFeeStructure",
   "method" : "DELETE",
   "path" : "/v1/finance/fee-structures/{feeStructureId}",
   "permission" : "finance.fee_structure.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.DeletePaymentGatewayAccount",
   "method" : "DELETE",
   "path" : "/v1/finance/payment-gateway-accounts/{paymentGatewayAccountId}",
   "permission" : "finance.payment_gateway_account.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GenerateFeeDues",
   "method" : "POST",
@@ -194,238 +219,272 @@
   "permission" : "finance.student_fee_due.generate_fee_dues",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "required"
+  "idempotency" : "required",
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetAcquisitionSource",
   "method" : "GET",
   "path" : "/v1/finance/acquisition-sources/{acquisitionSourceId}",
   "permission" : "finance.acquisition_source.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetCoupon",
   "method" : "GET",
   "path" : "/v1/finance/coupons/{couponId}",
   "permission" : "finance.coupon.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetCouponScope",
   "method" : "GET",
   "path" : "/v1/finance/coupons/{couponId}/scopes/{couponScopeId}",
   "permission" : "finance.coupon_scope.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetFeeConcession",
   "method" : "GET",
   "path" : "/v1/finance/fee-concessions/{feeConcessionId}",
   "permission" : "finance.fee_concession.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetFeeHead",
   "method" : "GET",
   "path" : "/v1/finance/fee-heads/{feeHeadId}",
   "permission" : "finance.fee_head.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetFeePlan",
   "method" : "GET",
   "path" : "/v1/finance/fee-plans/{feePlanId}",
   "permission" : "finance.fee_plan.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetFeePlanInstallment",
   "method" : "GET",
   "path" : "/v1/finance/fee-plans/{feePlanId}/installments/{feePlanInstallmentId}",
   "permission" : "finance.fee_plan_installment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetFeePlanInstallmentComponent",
   "method" : "GET",
   "path" : "/v1/finance/fee-plan-installment-components/{feePlanInstallmentComponentId}",
   "permission" : "finance.fee_plan_installment_component.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetFeeStatement",
   "method" : "GET",
   "path" : "/v1/finance/students/{studentId}/fee-statement",
   "permission" : "finance.invoice.get_fee_statement",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetFeeStructure",
   "method" : "GET",
   "path" : "/v1/finance/fee-structures/{feeStructureId}",
   "permission" : "finance.fee_structure.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetInvoice",
   "method" : "GET",
   "path" : "/v1/finance/invoices/{invoiceId}",
   "permission" : "finance.invoice.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetInvoiceLine",
   "method" : "GET",
   "path" : "/v1/finance/invoices/{invoiceId}/lines/{invoiceLineId}",
   "permission" : "finance.invoice_line.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetOperation",
   "method" : "GET",
   "path" : "/v1/finance/operations/{operationId}",
   "permission" : "finance.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetPayment",
   "method" : "GET",
   "path" : "/v1/finance/payments/{paymentId}",
   "permission" : "finance.payment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetPaymentGatewayAccount",
   "method" : "GET",
   "path" : "/v1/finance/payment-gateway-accounts/{paymentGatewayAccountId}",
   "permission" : "finance.payment_gateway_account.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetRefund",
   "method" : "GET",
   "path" : "/v1/finance/refunds/{refundId}",
   "permission" : "finance.refund.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.GetStudentFeeDue",
   "method" : "GET",
   "path" : "/v1/finance/student-fee-dues/{studentFeeDueId}",
   "permission" : "finance.student_fee_due.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListAcquisitionSources",
   "method" : "GET",
   "path" : "/v1/finance/acquisition-sources",
   "permission" : "finance.acquisition_source.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListCouponScopes",
   "method" : "GET",
   "path" : "/v1/finance/coupons/{couponId}/scopes",
   "permission" : "finance.coupon_scope.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListCoupons",
   "method" : "GET",
   "path" : "/v1/finance/coupons",
   "permission" : "finance.coupon.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListFeeConcessions",
   "method" : "GET",
   "path" : "/v1/finance/fee-concessions",
   "permission" : "finance.fee_concession.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListFeeHeads",
   "method" : "GET",
   "path" : "/v1/finance/fee-heads",
   "permission" : "finance.fee_head.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListFeePlanInstallmentComponents",
   "method" : "GET",
   "path" : "/v1/finance/fee-plan-installment-components",
   "permission" : "finance.fee_plan_installment_component.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListFeePlanInstallments",
   "method" : "GET",
   "path" : "/v1/finance/fee-plans/{feePlanId}/installments",
   "permission" : "finance.fee_plan_installment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListFeePlans",
   "method" : "GET",
   "path" : "/v1/finance/fee-plans",
   "permission" : "finance.fee_plan.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListFeeStructures",
   "method" : "GET",
   "path" : "/v1/finance/fee-structures",
   "permission" : "finance.fee_structure.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListInvoiceLines",
   "method" : "GET",
   "path" : "/v1/finance/invoices/{invoiceId}/lines",
   "permission" : "finance.invoice_line.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListInvoices",
   "method" : "GET",
   "path" : "/v1/finance/invoices",
   "permission" : "finance.invoice.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListOperations",
   "method" : "GET",
   "path" : "/v1/finance/operations",
   "permission" : "finance.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListPaymentGatewayAccounts",
   "method" : "GET",
   "path" : "/v1/finance/payment-gateway-accounts",
   "permission" : "finance.payment_gateway_account.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListPayments",
   "method" : "GET",
   "path" : "/v1/finance/payments",
   "permission" : "finance.payment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListRefunds",
   "method" : "GET",
   "path" : "/v1/finance/refunds",
   "permission" : "finance.refund.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.ListStudentFeeDues",
   "method" : "GET",
   "path" : "/v1/finance/student-fee-dues",
   "permission" : "finance.student_fee_due.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.PostInvoice",
   "method" : "POST",
@@ -433,7 +492,8 @@
   "permission" : "finance.invoice.post_invoice",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.PublishFeeStructure",
   "method" : "POST",
@@ -441,7 +501,8 @@
   "permission" : "finance.fee_structure.publish",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.QuoteCheckout",
   "method" : "POST",
@@ -449,14 +510,16 @@
   "permission" : "finance.payment.quote_checkout",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.ReceiveGatewayWebhook",
   "method" : "POST",
   "path" : "/v1/finance/payment-gateways/{gateway}:webhook",
   "permission" : "finance.gateway_event.receive_webhook",
   "schemes" : [ ],
-  "anonymous" : true
+  "anonymous" : true,
+  "audience" : "public"
 }, {
   "operationId" : "finance.RecordPayment",
   "method" : "POST",
@@ -464,7 +527,8 @@
   "permission" : "finance.payment.record",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "required"
+  "idempotency" : "required",
+  "audience" : "public"
 }, {
   "operationId" : "finance.RefundPayment",
   "method" : "POST",
@@ -472,7 +536,8 @@
   "permission" : "finance.payment.refund_payment",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "required"
+  "idempotency" : "required",
+  "audience" : "public"
 }, {
   "operationId" : "finance.SendFeeReminders",
   "method" : "POST",
@@ -480,7 +545,8 @@
   "permission" : "finance.invoice.send_fee_reminders",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "finance.StartCheckout",
   "method" : "POST",
@@ -488,89 +554,102 @@
   "permission" : "finance.payment.start_checkout",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "required"
+  "idempotency" : "required",
+  "audience" : "public"
 }, {
   "operationId" : "finance.UpdateAcquisitionSource",
   "method" : "PATCH",
   "path" : "/v1/finance/acquisition-sources/{acquisitionSourceId}",
   "permission" : "finance.acquisition_source.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.UpdateCoupon",
   "method" : "PATCH",
   "path" : "/v1/finance/coupons/{couponId}",
   "permission" : "finance.coupon.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.UpdateCouponScope",
   "method" : "PATCH",
   "path" : "/v1/finance/coupons/{couponId}/scopes/{couponScopeId}",
   "permission" : "finance.coupon_scope.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.UpdateFeeConcession",
   "method" : "PATCH",
   "path" : "/v1/finance/fee-concessions/{feeConcessionId}",
   "permission" : "finance.fee_concession.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.UpdateFeeHead",
   "method" : "PATCH",
   "path" : "/v1/finance/fee-heads/{feeHeadId}",
   "permission" : "finance.fee_head.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.UpdateFeePlan",
   "method" : "PATCH",
   "path" : "/v1/finance/fee-plans/{feePlanId}",
   "permission" : "finance.fee_plan.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.UpdateFeePlanInstallment",
   "method" : "PATCH",
   "path" : "/v1/finance/fee-plans/{feePlanId}/installments/{feePlanInstallmentId}",
   "permission" : "finance.fee_plan_installment.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.UpdateFeePlanInstallmentComponent",
   "method" : "PATCH",
   "path" : "/v1/finance/fee-plan-installment-components/{feePlanInstallmentComponentId}",
   "permission" : "finance.fee_plan_installment_component.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.UpdateFeeStructure",
   "method" : "PATCH",
   "path" : "/v1/finance/fee-structures/{feeStructureId}",
   "permission" : "finance.fee_structure.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.UpdateInvoice",
   "method" : "PATCH",
   "path" : "/v1/finance/invoices/{invoiceId}",
   "permission" : "finance.invoice.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.UpdatePaymentGatewayAccount",
   "method" : "PATCH",
   "path" : "/v1/finance/payment-gateway-accounts/{paymentGatewayAccountId}",
   "permission" : "finance.payment_gateway_account.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "finance.UpdateStudentFeeDue",
   "method" : "PATCH",
   "path" : "/v1/finance/student-fee-dues/{studentFeeDueId}",
   "permission" : "finance.student_fee_due.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 } ]

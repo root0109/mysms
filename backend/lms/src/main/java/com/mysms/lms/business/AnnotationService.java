@@ -44,13 +44,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.annotation (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Annotation
- * are served here too — AnnotationShare.
+ * Business service of lms.annotation and of the records that exist only as part of a Annotation (AnnotationShare):
+ * audit and domain event commit in the same transaction as every change. Rows outside the caller's institutions are
+ * invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class AnnotationService extends AppTransactionManager {
@@ -63,7 +59,7 @@ public class AnnotationService extends AppTransactionManager {
     static final String PERMISSION_DELETE = "lms.annotation.delete";
     /** The contract's AnnotationUpdate fields, in apply order. */
     static final List<String> WRITABLE =
-            List.of("userId", "contentItemId", "cohortId", "ebookId", "fileId", "annotationType", "annotationSubtype",
+            List.of("contentItemId", "cohortId", "ebookId", "fileId", "annotationType", "annotationSubtype",
             "pageNumber", "startCharPos", "charCount", "location", "annotatedText", "title", "description", "embedCode",
             "url", "mediaFileId", "visibility", "forumTopicId");
 
@@ -117,7 +113,8 @@ public class AnnotationService extends AppTransactionManager {
         SortSpec sort = SortSpec.parse(sortBy, AnnotationRepository.SORT_FIELDS, AnnotationRepository.DEFAULT_ORDER,
                 AnnotationRepository.ID_COLUMN);
         SqlFragment where = FilterParser.parse(filter, AnnotationRepository.FILTER_FIELDS)
-                .and(AnnotationRepository.scope(DataScope.current(PERMISSION_LIST)));
+                .and(AnnotationRepository.scope(DataScope.current(PERMISSION_LIST)))
+                .and(AnnotationRepository.ownedBy(OwnRows.caller()));
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
         return doInReadTransaction(() -> {
             Page<AnnotationEntity> rows = repository.list(page, where);
@@ -129,6 +126,7 @@ public class AnnotationService extends AppTransactionManager {
     public Annotation createAnnotation(Annotation request, boolean validateOnly) {
         validator.validate(request);
         AnnotationEntity entity = mapper.toEntity(request);
+        entity.setUserId(OwnRows.caller());
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
         DataScope scope = DataScope.current(PERMISSION_CREATE);
@@ -147,8 +145,8 @@ public class AnnotationService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Annotation updateAnnotation(UUID id, String ifMatch, AnnotationUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -210,19 +208,19 @@ public class AnnotationService extends AppTransactionManager {
         if (!scope.canRead(institutionOf(entity))) {
             throw new ResourceNotFoundException(AGGREGATE, id);
         }
+        OwnRows.require(entity.getUserId(), AGGREGATE, id);
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.cohort it belongs to). */
+    /** The institution of the lms.cohort the row belongs to. */
     private Optional<UUID> institutionOf(AnnotationEntity entity) {
         return repository.institutionOf(entity.getCohortId());
     }
 
-    /** Applies the selected AnnotationUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected AnnotationUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(AnnotationEntity entity, AnnotationUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
-                case "userId" -> entity.setUserId(changes.getUserId());
                 case "contentItemId" -> entity.setContentItemId(changes.getContentItemId());
                 case "cohortId" -> entity.setCohortId(changes.getCohortId());
                 case "ebookId" -> entity.setEbookId(changes.getEbookId());
@@ -335,8 +333,8 @@ public class AnnotationService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public AnnotationShare updateAnnotationShare(UUID annotationId, UUID id, String ifMatch,
             AnnotationShareUpdate changes, String updateMask, boolean validateOnly) {
@@ -402,9 +400,7 @@ public class AnnotationService extends AppTransactionManager {
         return annotationShareRepository.institutionOf(entity.getAnnotationId());
     }
 
-    /**
-     * Applies the selected AnnotationShareUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected AnnotationShareUpdate fields; explicit per field so a mask can clear values. */
     private static void applyAnnotationShare(AnnotationShareEntity entity, AnnotationShareUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

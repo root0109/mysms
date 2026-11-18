@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of assessment.exam_result (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of assessment.exam_result. */
 @Getter
 @Setter
 @SuperBuilder

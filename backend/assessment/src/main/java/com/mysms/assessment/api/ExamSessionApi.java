@@ -1,4 +1,4 @@
-// Owned API contract of assessment (JAVA-CODING-RULES §7); first materialized from api/openapi/assessment.yaml on 2026-11-10.
+// Owned API contract of assessment.
 package com.mysms.assessment.api;
 
 import com.mysms.core.paging.PagingInfo;

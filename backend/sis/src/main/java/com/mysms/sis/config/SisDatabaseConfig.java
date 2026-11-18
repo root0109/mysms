@@ -18,7 +18,7 @@ public class SisDatabaseConfig {
     /** Bean name; every repository of this module injects the database by this qualifier. */
     public static final String DATABASE = "sisDatabase";
 
-    /** Bean name of the module's transaction manager; every service injects it by this qualifier (§4). */
+    /** Bean name of the module's transaction manager; every service injects it by this qualifier. */
     public static final String TRANSACTIONS = "sisTransactions";
 
     @Bean(name = DATABASE, destroyMethod = "close")
@@ -27,8 +27,7 @@ public class SisDatabaseConfig {
     }
 
     /**
-     * The transaction manager of this module's own connection pool. Services open every transaction on it
-     * themselves; the database binds the call's tenant inside each one (JAVA-CODING-RULES §4).
+     * The transaction manager of this module's own pool; the database binds the call's tenant inside each transaction.
      */
     @Bean(name = TRANSACTIONS)
     public PlatformTransactionManager sisTransactions(@Qualifier(DATABASE) ModuleDatabase database) {

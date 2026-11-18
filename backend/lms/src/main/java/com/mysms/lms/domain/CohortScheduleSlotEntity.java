@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of lms.cohort_schedule_slot (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of lms.cohort_schedule_slot. */
 @Getter
 @Setter
 @SuperBuilder

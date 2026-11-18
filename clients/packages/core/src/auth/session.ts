@@ -7,6 +7,13 @@ export type LoginRequest = iam.LoginRequest;
 export type LoginResult = iam.LoginResult;
 export type TokenPair = iam.TokenPair;
 export type EffectiveSetting = iam.EffectiveSetting;
+export type ImpersonationToken = iam.ImpersonationToken;
+
+/** An administrator acting as another user (iam.StartImpersonation): whom, and until when (epoch ms). */
+export interface Impersonation {
+  userId: string;
+  expiresAt: number;
+}
 
 export type SessionStatus = 'signedOut' | 'mfaPending' | 'signedIn' | 'expired';
 
@@ -22,6 +29,11 @@ export interface SessionState {
    * motion and language apply before the shell renders (ui/04 §9). Null until loaded or when the server has none.
    */
   settings: EffectiveSetting[] | null;
+  /**
+   * Set while an administrator acts as another user: requests carry the impersonation token and `me` is that
+   * user's; the administrator's own session waits and comes back when it ends (ui/02 ADM-09 banner).
+   */
+  impersonation: Impersonation | null;
 }
 
 /** Where the refresh token is kept: secure storage on devices, memory (or an httpOnly cookie flow) on the web. */
@@ -52,6 +64,7 @@ export interface AuthTransport {
   logout(accessToken: string): Promise<void>;
   me(accessToken: string): Promise<Me>;
   mySettings(accessToken: string): Promise<EffectiveSetting[]>;
+  stopImpersonation(accessToken: string): Promise<void>;
 }
 
 /** Refresh this long before the access token expires (clock-skew tolerance, ui/05 §3). */
@@ -70,6 +83,12 @@ export interface Session {
   reloadMe(): Promise<void>;
   /** Re-reads the effective settings, e.g. after the user changed one. */
   reloadSettings(): Promise<void>;
+  /** A role switch (iam.SwitchRole) answered: its tokens replace the session's and its Me becomes the caller's. */
+  adopt(tokens: TokenPair, me: Me): Promise<void>;
+  /** Act as another user with an impersonation token (no refresh token); the own session waits. */
+  impersonate(token: ImpersonationToken): Promise<void>;
+  /** Ends acting as another user (iam.StopImpersonation, best effort) and returns to the own session. */
+  endImpersonation(): Promise<void>;
   signOut(): Promise<void>;
 }
 
@@ -80,13 +99,25 @@ const EMPTY: SessionState = {
   accessToken: null,
   accessExpiresAt: null,
   settings: null,
+  impersonation: null,
 };
+
+/** What waits while an administrator acts as another user. */
+type OwnSession = Pick<SessionState, 'me' | 'settings' | 'accessToken' | 'accessExpiresAt'>;
 
 export function createSession(deps: { auth: AuthTransport; vault: TokenVault; now?: () => number }): Session {
   const { auth, vault } = deps;
   const now = deps.now ?? (() => Date.now());
   const store = createStore<SessionState>(() => ({ ...EMPTY }));
   let inflight: Promise<boolean> | null = null;
+  let own: OwnSession | null = null;
+
+  /** Back to the administrator's own session; its access token is refreshed as usual when needed. */
+  function restoreOwn(): void {
+    if (!own) return;
+    store.setState({ ...own, impersonation: null });
+    own = null;
+  }
 
   async function applyTokens(t: TokenPair): Promise<void> {
     await vault.save(t.refreshToken);
@@ -113,6 +144,8 @@ export function createSession(deps: { auth: AuthTransport; vault: TokenVault; no
   }
 
   async function doRefresh(): Promise<boolean> {
+    // an impersonation token is never refreshed: when it runs out (or is refused) the own session comes back
+    restoreOwn();
     const refreshToken = await vault.load();
     if (!refreshToken) {
       if (store.getState().status === 'signedIn') store.setState({ ...EMPTY, status: 'expired' });
@@ -180,7 +213,40 @@ export function createSession(deps: { auth: AuthTransport; vault: TokenVault; no
       const settings = await loadSettings(token);
       if (settings) store.setState({ settings });
     },
+    async adopt(tokens, me) {
+      await applyTokens(tokens);
+      store.setState({ me });
+    },
+    async impersonate(token) {
+      const s = store.getState();
+      const me = await auth.me(token.accessToken);
+      own ??= {
+        me: s.me,
+        settings: s.settings,
+        accessToken: s.accessToken,
+        accessExpiresAt: s.accessExpiresAt,
+      };
+      const expiresAt = now() + token.expiresInSeconds * 1000;
+      store.setState({
+        me,
+        accessToken: token.accessToken,
+        accessExpiresAt: expiresAt,
+        impersonation: { userId: token.impersonatedUserId, expiresAt },
+      });
+    },
+    async endImpersonation() {
+      const { impersonation, accessToken } = store.getState();
+      if (!impersonation) return;
+      try {
+        if (accessToken) await auth.stopImpersonation(accessToken);
+      } catch {
+        // the token ends on its own within minutes; the own session comes back either way
+      } finally {
+        restoreOwn();
+      }
+    },
     async signOut() {
+      await session.endImpersonation();
       // a fresh token, so an expired one cannot leave the server-side session open
       const token = await session.accessToken().catch(() => store.getState().accessToken);
       try {

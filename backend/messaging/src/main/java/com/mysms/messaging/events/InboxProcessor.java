@@ -2,8 +2,8 @@ package com.mysms.messaging.events;
 
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
+import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
-import com.mysms.core.tx.Transactions;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -12,22 +12,17 @@ import java.util.HexFormat;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
 
 /**
- * Exactly-once handling of delivered events in one consuming module (database/README "Events"): inside the event's
- * tenant transaction the event id is recorded in the module's `inbox_event`, the handler runs, and the row is marked
- * processed — a redelivery of a processed event is dropped. A failing handler rolls back its own work, the failure is
- * noted on the inbox row (class and message only), and the exception goes back to the bus for a later redelivery.
+ * Exactly-once handling of delivered events in one consuming module: inside the event's tenant transaction the event id
+ * is recorded in {@code inbox_event}, the handler runs and the row is marked processed, so a redelivery is dropped. A
+ * failing handler rolls back, the failure is noted on the inbox row and the exception goes back to the bus.
  *
- * <p>The inbox is keyed by tenant and event id, so an event recorded for one tenant never stands in for another
- * tenant's. Processed rows are pruned by the module's relay after the inbox retention. Events of global master data
- * carry no tenant and are not recorded here; their handlers must be idempotent.
+ * <p>The inbox is keyed by tenant and event id, so one tenant's event never stands in for another's. Global master data
+ * events carry no tenant and are not recorded; their handlers must be idempotent.
  */
-public final class InboxProcessor {
+public final class InboxProcessor extends AppTransactionManager {
 
-    /** What a delivery came to. */
     public enum Outcome { PROCESSED, DUPLICATE }
 
     private static final Logger LOG = LoggerFactory.getLogger(InboxProcessor.class);
@@ -56,7 +51,6 @@ public final class InboxProcessor {
             """;
 
     private final ModuleDatabase database;
-    private final PlatformTransactionManager transactions;
     private final Clock clock;
     private final String record;
     private final String processedAt;
@@ -64,8 +58,8 @@ public final class InboxProcessor {
     private final String failed;
 
     public InboxProcessor(ModuleDatabase database, Clock clock) {
+        super(database, database.transactionManager());
         this.database = database;
-        this.transactions = database.transactionManager();
         this.clock = clock;
         String schema = database.module();
         this.record = RECORD.replace("{schema}", schema);
@@ -90,9 +84,7 @@ public final class InboxProcessor {
                 return Outcome.PROCESSED;
             }
             try {
-                TransactionStatus transaction = transactions.getTransaction(database.writeDefinition());
-                try {
-                    database.bindTenant();
+                return doInWriteTransaction(() -> {
                     OffsetDateTime now = now();
                     database.jdbc().sql(record).param("eventId", event.id()).param("eventType", event.type())
                             .param("now", now).update();
@@ -104,12 +96,7 @@ public final class InboxProcessor {
                     handler.handle(event);
                     database.jdbc().sql(mark).param("eventId", event.id()).param("now", now()).update();
                     return Outcome.PROCESSED;
-                } catch (RuntimeException | Error failure) {
-                    Transactions.rollback(transactions, transaction, failure);
-                    throw failure;
-                } finally {
-                    Transactions.commit(transactions, transaction);
-                }
+                });
             } catch (RuntimeException e) {
                 noteFailure(event, e);
                 throw e;
@@ -124,17 +111,8 @@ public final class InboxProcessor {
         String kept = error.length() > MAX_ERROR ? error.substring(0, MAX_ERROR) : error;
         LOG.warn("module {} could not handle event {} ({}): {}", database.module(), event.id(), event.type(), kept);
         try {
-            TransactionStatus transaction = transactions.getTransaction(database.writeDefinition());
-            try {
-                database.bindTenant();
-                database.jdbc().sql(failed).param("eventId", event.id()).param("eventType", event.type())
-                        .param("now", now()).param("error", kept).update();
-            } catch (RuntimeException | Error noting) {
-                Transactions.rollback(transactions, transaction, noting);
-                throw noting;
-            } finally {
-                Transactions.commit(transactions, transaction);
-            }
+            runInWriteTransaction(() -> database.jdbc().sql(failed).param("eventId", event.id())
+                    .param("eventType", event.type()).param("now", now()).param("error", kept).update());
         } catch (RuntimeException e) {
             LOG.warn("module {} could not note the failure of event {}", database.module(), event.id(), e);
         }

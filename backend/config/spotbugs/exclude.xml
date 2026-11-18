@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- SpotBugs exclusions. Each entry carries a one-line reason (JAVA-CODING-RULES §13). -->
 <FindBugsFilter>
-  <!-- the contract layer (kept in the generator's shape), the generated SDK and MapStruct implementations -->
+  <!-- the contract layer (kept in the generator's shape), the generated gRPC classes and MapStruct implementations -->
   <Match>
     <Or>
       <Package name="~com\.mysms\.[a-z]+\.api(\..*)?"/>
-      <Package name="~com\.mysms\.sdk\..*"/>
       <Package name="~com\.mysms\.[a-z]+\.v1(\..*)?"/>
       <Class name="~.*MapperImpl"/>
     </Or>
   </Match>
   <!-- Spring injects collaborators by constructor and owns their lifecycle; storing the injected reference is the design
-       (RoutingDataSource keeps the pools the module database created and closes) -->
+       (RoutingDataSource keeps the pools the module database created and closes; a GrpcClient keeps the stubs the
+       gRPC starter injects through its @GrpcClient setters) -->
   <Match>
     <Bug pattern="EI_EXPOSE_REP2"/>
     <Or>
-      <Class name="~com\.mysms\..*(Controller|Service|Repository|Config|Configuration|Filter|Executor|Writer|Store|Checker|Verifier|Factory|Indicator|Handler|Bootstrap|Scopes|Rules|Bus|Relay|Processor|Runtime|Trail|Cleanup|Sync|Lookup|AppTransactionManager|RoutingDataSource)"/>
+      <Class name="~com\.mysms\..*(Controller|Service|Repository|Config|Configuration|Filter|Executor|Writer|Store|Checker|Verifier|Factory|Indicator|Handler|Bootstrap|Scopes|Rules|Bus|Relay|Processor|Runtime|Trail|Cleanup|Sync|Lookup|Provider|Interceptor|Ledger|Bridge|Server|Status|Statuses|Resolver|Client|Codec|AppTransactionManager|RoutingDataSource)"/>
     </Or>
   </Match>
   <!-- ModuleDatabase exists to hand the module's own pool, transaction manager and executor to its repositories -->
@@ -23,10 +23,45 @@
     <Bug pattern="EI_EXPOSE_REP"/>
     <Class name="com.mysms.core.db.ModuleDatabase"/>
   </Match>
+  <!-- a gRPC client's value records carry what the callee answered; their collections are copied immutable -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    <Class name="~com\.mysms\.[a-z]+\.integration\.[A-Za-z]+Client\$[A-Za-z]+"/>
+  </Match>
+  <!-- read models in a module's model package carry contract DTOs for the controller to render; nothing else holds them -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    <Package name="~com\.mysms\.[a-z]+\.model"/>
+  </Match>
   <!-- entities are mutable Lombok beans by rule (§5); their collections and dates are owned by the business layer -->
   <Match>
     <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
     <Package name="~com\.mysms\.[a-z]+\.domain"/>
+  </Match>
+  <!-- lms read-model records and access helper hand their collaborators and lists to the service that built them;
+       they never cross the API -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    <Or>
+      <Class name="com.mysms.lms.model.ReleaseRuleRow"/>
+      <Class name="com.mysms.lms.repository.CohortOutlineRepository$Pairs"/>
+      <Class name="com.mysms.lms.business.CohortGradebookService$GradebookPage"/>
+      <Class name="com.mysms.lms.business.CohortAccess"/>
+    </Or>
+  </Match>
+  <!-- a file's bytes travel in value records (an upload to a provider, a read from the file store); copying
+       buffers of up to hundreds of megabytes to satisfy the detector would double the memory of every transfer -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    <Or>
+      <Class name="com.mysms.lms.business.PlagiarismProvider$Upload"/>
+      <Class name="com.mysms.lms.business.PlatformFiles$Read"/>
+    </Or>
+  </Match>
+  <!-- GradebookPostings stores the Spring-injected repository it writes through, like every service -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP2"/>
+    <Class name="com.mysms.lms.business.GradebookPostings"/>
   </Match>
   <!-- Spring calls package-private/protected test fixtures reflectively; tests are not production code -->
   <Match>

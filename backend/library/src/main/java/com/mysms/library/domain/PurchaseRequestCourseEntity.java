@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of library.purchase_request_course (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of library.purchase_request_course. */
 @Getter
 @Setter
 @SuperBuilder

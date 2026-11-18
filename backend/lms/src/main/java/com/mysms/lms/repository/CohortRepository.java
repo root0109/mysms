@@ -25,11 +25,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.cohort (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live rows
- * only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.cohort: live rows only, keyset paging, and the row_version guard on every update and delete.
+ * Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class CohortRepository {
@@ -122,6 +119,13 @@ public class CohortRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** Published cohorts that take self-enrolment and have not ended (the catalogue's "open for enrolment"). */
+    private static final String OPEN_FOR_ENROLLMENT = SELECT_LIVE + """
+             AND r.is_published AND r.allow_self_enrollment AND r.end_date >= :today
+             AND (CAST(:categoryId AS uuid) IS NULL OR r.category_id = :categoryId)
+            ORDER BY r.start_date, r.id
+            LIMIT :limit
+            """;
     private static final String INSERT = """
             INSERT INTO lms.cohort
             (id, tenant_id, class_subject_id, batch_id, academic_year_id, institution_id, title, description,
@@ -371,6 +375,12 @@ public class CohortRepository {
 
     public CohortRepository(@Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** Published, self-enrolling cohorts that have not ended, soonest first (optionally of one category). */
+    public List<CohortEntity> openForEnrollment(LocalDate today, UUID categoryId, int limit) {
+        return jdbc.sql(OPEN_FOR_ENROLLMENT).param("today", today).param("categoryId", categoryId)
+                .param("limit", limit).query(CohortRepository::map).list();
     }
 
     public Optional<CohortEntity> findById(UUID id) {
@@ -725,9 +735,122 @@ public class CohortRepository {
                 .query(Boolean.class).single());
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    // ---- the cohort's workflow: state transitions, the student access window, seat locking, member visibility ----
+
+    private static final String FIND_FOR_UPDATE = FIND_BY_ID + " FOR UPDATE";
+    private static final String TRANSITION_PUBLISH = """
+            UPDATE lms.cohort
+               SET is_published = true, updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String TRANSITION_UNPUBLISH = """
+            UPDATE lms.cohort
+               SET is_published = false, updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String TRANSITION_LIFECYCLE = """
+            UPDATE lms.cohort
+               SET lifecycle_status = :status, updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String TRANSITION_ARCHIVE = """
+            UPDATE lms.cohort
+               SET lifecycle_status = 'archived', is_published = false, updated_at = :now, updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String SET_STUDENT_ACCESS = """
+            UPDATE lms.cohort
+               SET student_access_from = :accessFrom, student_access_until = :accessUntil, updated_at = :now,
+                   updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String MEMBER_VISIBLE = """
+             (:manageAll OR r.institution_id = ANY(:manageIds) OR r.is_published
+              OR EXISTS (SELECT 1 FROM lms.cohort_enrollment ce WHERE ce.tenant_id = :tenantId
+                            AND ce.cohort_id = r.id AND ce.user_id = :member AND ce.deleted_at IS NULL)
+              OR EXISTS (SELECT 1 FROM lms.cohort_teacher ct WHERE ct.tenant_id = :tenantId
+                            AND ct.cohort_id = r.id AND ct.user_id = :member AND ct.deleted_at IS NULL))
+            """;
+
+    private static final String OPEN_TO_GUESTS = """
+             r.is_published AND r.allow_self_enrollment AND r.end_date >= :guestToday
+            """;
+    private static final String IS_STUDENT = """
+            SELECT EXISTS (SELECT 1 FROM lms.cohort_enrollment WHERE tenant_id = :tenantId AND cohort_id = :id
+                              AND user_id = :user AND is_active AND deleted_at IS NULL)
+            """;
+    private static final String IS_TEACHER = """
+            SELECT EXISTS (SELECT 1 FROM lms.cohort_teacher WHERE tenant_id = :tenantId AND cohort_id = :id
+                              AND user_id = :user AND is_active AND deleted_at IS NULL)
+            """;
+
+    /** Whether the user is an active student of the cohort. */
+    public boolean isStudent(UUID cohortId, UUID userId) {
+        return Boolean.TRUE.equals(jdbc.sql(IS_STUDENT).param("id", cohortId).param("user", userId)
+                .query(Boolean.class).single());
+    }
+
+    /** Whether the user is an active teacher (staff member) of the cohort. */
+    public boolean isTeacher(UUID cohortId, UUID userId) {
+        return Boolean.TRUE.equals(jdbc.sql(IS_TEACHER).param("id", cohortId).param("user", userId)
+                .query(Boolean.class).single());
+    }
+
+    /** The live row, locked until the transaction ends: enrolments count seats against it one at a time. */
+    public Optional<CohortEntity> findForUpdate(UUID id) {
+        return jdbc.sql(FIND_FOR_UPDATE).param("id", id).query(CohortRepository::map).optional();
+    }
+
+    /** lms.PublishCohort: is_published = true under the row_version guard. */
+    public int publish(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return transition(TRANSITION_PUBLISH, id, expected, now, actor).update();
+    }
+
+    /** lms.UnpublishCohort: is_published = false under the row_version guard. */
+    public int unpublish(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return transition(TRANSITION_UNPUBLISH, id, expected, now, actor).update();
+    }
+
+    /** lms.ActivateCohort / lms.DeactivateCohort: the lifecycle status under the row_version guard. */
+    public int setLifecycle(UUID id, int expected, String status, OffsetDateTime now, UUID actor) {
+        return transition(TRANSITION_LIFECYCLE, id, expected, now, actor).param("status", status).update();
+    }
+
+    /** lms.ArchiveCohort: archived and taken out of the catalogue under the row_version guard. */
+    public int archive(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return transition(TRANSITION_ARCHIVE, id, expected, now, actor).update();
+    }
+
+    /** lms.SetStudentAccess: the students' access window (both ends may be open) under the row_version guard. */
+    public int setStudentAccess(UUID id, int expected, OffsetDateTime from, OffsetDateTime until, OffsetDateTime now,
+            UUID actor) {
+        return transition(SET_STUDENT_ACCESS, id, expected, now, actor).param("accessFrom", from)
+                .param("accessUntil", until).update();
+    }
+
+    private JdbcClient.StatementSpec transition(String sql, UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(sql).param("id", id).param("expected", expected).param("now", now).param("actor", actor);
+    }
+
+    /**
+     * The cohorts a member sees (on top of the read scope): every cohort of the institutions where the caller manages
+     * cohorts ({@code manage}: the scope of lms.cohort.update), and elsewhere only published cohorts and those the
+     * caller teaches or is enrolled in — a draft is never shown to a student who has not been placed in it.
+     */
+    /** What a guest sees of the tenant's cohorts: the published, self-enrolling ones that have not ended. */
+    public static SqlFragment openToGuests(LocalDate today) {
+        return new SqlFragment(OPEN_TO_GUESTS, Map.of("guestToday", today));
+    }
+
+    public static SqlFragment visibleToMember(DataScope manage, UUID member) {
+        return new SqlFragment(MEMBER_VISIBLE, Map.of("manageAll", manage.all(), "manageIds", manage.institutionArray(),
+                "member", member));
     }
 
     private static List<Object> sortValues(SortSpec sort, CohortEntity e) {

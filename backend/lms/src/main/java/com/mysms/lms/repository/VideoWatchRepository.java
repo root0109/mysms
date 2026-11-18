@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.video_watch (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.video_watch: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class VideoWatchRepository {
@@ -62,6 +59,22 @@ public class VideoWatchRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /**
+     * Records watch time: one row per lesson, student and video (uq_video_watch_1 decides between concurrent first
+     * calls); the time kept is the longest reported, so a replayed or out-of-order report never lowers it.
+     */
+    private static final String UPSERT = """
+            INSERT INTO lms.video_watch
+            (id, tenant_id, lesson_id, user_id, video_source, watch_seconds, created_at, created_by, updated_at,
+             updated_by, row_version)
+            VALUES (:id, :tenantId, :lessonId, :userId, :videoSource, :watchSeconds, :now, :actor, :now, :actor, 1)
+            ON CONFLICT (lesson_id, user_id, video_source) WHERE deleted_at IS NULL
+            DO UPDATE SET watch_seconds = GREATEST(lms.video_watch.watch_seconds, EXCLUDED.watch_seconds),
+                          updated_at = :now, updated_by = :actor, row_version = lms.video_watch.row_version + 1
+             WHERE lms.video_watch.tenant_id = :tenantId
+            RETURNING id, tenant_id, lesson_id, user_id, video_source, watch_seconds, created_at, created_by,
+                      updated_at, updated_by, deleted_at, row_version
+            """;
     private static final String INSERT = """
             INSERT INTO lms.video_watch
             (id, tenant_id, lesson_id, user_id, video_source, watch_seconds, created_at, created_by, updated_at,
@@ -192,12 +205,26 @@ public class VideoWatchRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Records the watch time (see {@link #UPSERT}) and returns the row as stored. */
+    public VideoWatchEntity upsert(VideoWatchEntity e, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(UPSERT)
+                .param("id", e.getId())
+                .param("tenantId", e.getTenantId())
+                .param("lessonId", e.getLessonId())
+                .param("userId", e.getUserId())
+                .param("videoSource", e.getVideoSource())
+                .param("watchSeconds", e.getWatchSeconds())
+                .param("now", now)
+                .param("actor", actor)
+                .query(VideoWatchRepository::map).single();
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.lesson_id = :parentId", Map.of("parentId", parentId));
     }

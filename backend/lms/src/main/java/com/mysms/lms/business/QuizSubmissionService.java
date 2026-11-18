@@ -28,25 +28,25 @@ import com.mysms.lms.mapper.QuizAnswerMapper;
 import com.mysms.lms.mapper.QuizSubmissionMapper;
 import com.mysms.lms.mapper.QuizViolationMapper;
 import com.mysms.lms.repository.QuizAnswerRepository;
+import com.mysms.lms.repository.QuizRepository;
 import com.mysms.lms.repository.QuizSubmissionRepository;
+import com.mysms.lms.repository.TeachingReach;
+import com.mysms.lms.domain.QuizEntity;
 import com.mysms.lms.repository.QuizViolationRepository;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.quiz_submission (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a QuizSubmission
- * are served here too — QuizAnswer, QuizViolation.
+ * Business service of lms.quiz_submission and of the records that exist only as part of a QuizSubmission (QuizAnswer,
+ * QuizViolation): audit and domain event commit in the same transaction as every change. Rows outside the caller's
+ * institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class QuizSubmissionService extends AppTransactionManager {
@@ -62,6 +62,8 @@ public class QuizSubmissionService extends AppTransactionManager {
     public static final String QUIZ_VIOLATION_AGGREGATE = QuizViolationEntity.TABLE;
     static final String QUIZ_VIOLATION_PERMISSION_LIST = "lms.quiz_violation.read";
     static final String QUIZ_VIOLATION_PERMISSION_GET = "lms.quiz_violation.read";
+    /** The states of an attempt that has been handed in. */
+    private static final Set<String> SUBMITTED = Set.of("submitted", "graded");
 
     private final QuizSubmissionRepository repository;
     private final QuizSubmissionMapper mapper;
@@ -73,6 +75,7 @@ public class QuizSubmissionService extends AppTransactionManager {
     private final QuizAnswerMapper quizAnswerMapper;
     private final QuizViolationRepository quizViolationRepository;
     private final QuizViolationMapper quizViolationMapper;
+    private final QuizRepository quizzes;
 
     public QuizSubmissionService(QuizSubmissionRepository repository,
             QuizSubmissionMapper mapper,
@@ -85,8 +88,10 @@ public class QuizSubmissionService extends AppTransactionManager {
             QuizAnswerRepository quizAnswerRepository,
             QuizAnswerMapper quizAnswerMapper,
             QuizViolationRepository quizViolationRepository,
-            QuizViolationMapper quizViolationMapper) {
+            QuizViolationMapper quizViolationMapper,
+            QuizRepository quizzes) {
         super(database, transactions);
+        this.quizzes = quizzes;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
@@ -99,10 +104,11 @@ public class QuizSubmissionService extends AppTransactionManager {
         this.quizViolationMapper = quizViolationMapper;
     }
 
+    /** An attempt of the caller's own or of a cohort they teach; anybody else's is 404. */
     public QuizSubmission getQuizSubmission(UUID id) {
-        return doInReadTransaction(() -> {
-            return mapper.toDto(loadVisible(DataScope.current(PERMISSION_GET), id));
-        });
+        TeachingReach reach = CohortAccess.reach();
+        return doInReadTransaction(() -> mapper.toDto(reached(DataScope.current(PERMISSION_GET), id, reach)
+                .submission()));
     }
 
     public Page<QuizSubmission> listQuizSubmissions(Integer pageNumber, Integer pageSize, String cursor, String filter,
@@ -111,7 +117,8 @@ public class QuizSubmissionService extends AppTransactionManager {
                 SortSpec.parse(sortBy, QuizSubmissionRepository.SORT_FIELDS, QuizSubmissionRepository.DEFAULT_ORDER,
                 QuizSubmissionRepository.ID_COLUMN);
         SqlFragment where = FilterParser.parse(filter, QuizSubmissionRepository.FILTER_FIELDS)
-                .and(QuizSubmissionRepository.scope(DataScope.current(PERMISSION_LIST)));
+                .and(QuizSubmissionRepository.scope(DataScope.current(PERMISSION_LIST)))
+                .and(QuizSubmissionRepository.ownOrTaught(CohortAccess.reach()));
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
         return doInReadTransaction(() -> {
             Page<QuizSubmissionEntity> rows = repository.list(page, where);
@@ -129,7 +136,43 @@ public class QuizSubmissionService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.quiz it belongs to). */
+    /** An attempt and how the caller reaches it: as its teaching staff, or as its own student; else 404. */
+    private Reached reached(DataScope scope, UUID id, TeachingReach reach) {
+        QuizSubmissionEntity entity = loadVisible(scope, id);
+        if (repository.taught(id, reach)) {
+            return new Reached(entity, true);
+        }
+        if (!reach.user().equals(entity.getUserId())) {
+            throw new ResourceNotFoundException(AGGREGATE, id);
+        }
+        return new Reached(entity, false);
+    }
+
+    private record Reached(QuizSubmissionEntity submission, boolean teacher) {
+    }
+
+    /**
+     * An answer as its student may see it: correctness and marks once their attempt is submitted and the quiz shows
+     * answers, feedback once it also shows feedback; teaching staff see everything.
+     */
+    private QuizAnswer reviewed(QuizAnswer answer, Reached reached, Optional<QuizEntity> quiz) {
+        if (reached.teacher()) {
+            return answer;
+        }
+        boolean done = SUBMITTED.contains(reached.submission().getStatus());
+        boolean answers = done && quiz.map(QuizEntity::getShowAnswers).orElse(false);
+        if (!answers) {
+            answer.setIsCorrect(null);
+            answer.setMarksAwarded(null);
+            answer.setGradedBy(null);
+        }
+        if (!answers || !quiz.map(QuizEntity::getShowFeedback).orElse(false)) {
+            answer.setFeedback(null);
+        }
+        return answer;
+    }
+
+    /** The institution of the lms.quiz the row belongs to. */
     private Optional<UUID> institutionOf(QuizSubmissionEntity entity) {
         return repository.institutionOf(entity.getQuizId());
     }
@@ -175,10 +218,14 @@ public class QuizSubmissionService extends AppTransactionManager {
 
     // ---- QuizAnswer: a record of the QuizSubmission aggregate ----
 
+    /** An answer of an attempt the caller reaches, as {@link #reviewed} shows it. */
     public QuizAnswer getQuizAnswer(UUID quizSubmissionId, UUID id) {
+        TeachingReach reach = CohortAccess.reach();
         return doInReadTransaction(() -> {
-            return quizAnswerMapper.toDto(loadVisibleQuizAnswer(DataScope.current(QUIZ_ANSWER_PERMISSION_GET),
-                    quizSubmissionId, id));
+            DataScope scope = DataScope.current(QUIZ_ANSWER_PERMISSION_GET);
+            Reached reached = reached(scope, quizSubmissionId, reach);
+            return reviewed(quizAnswerMapper.toDto(loadVisibleQuizAnswer(scope, quizSubmissionId, id)), reached,
+                    quizzes.findById(reached.submission().getQuizId()));
         });
     }
 
@@ -190,9 +237,12 @@ public class QuizSubmissionService extends AppTransactionManager {
                 .and(QuizAnswerRepository.ofParent(quizSubmissionId))
                         .and(QuizAnswerRepository.scope(DataScope.current(QUIZ_ANSWER_PERMISSION_LIST)));
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + quizSubmissionId, clock);
+        TeachingReach reach = CohortAccess.reach();
         return doInReadTransaction(() -> {
+            Reached reached = reached(DataScope.current(QUIZ_ANSWER_PERMISSION_LIST), quizSubmissionId, reach);
+            Optional<QuizEntity> quiz = quizzes.findById(reached.submission().getQuizId());
             Page<QuizAnswerEntity> rows = quizAnswerRepository.list(page, where);
-            return rows.map(quizAnswerMapper::toDto);
+            return rows.map(quizAnswerMapper::toDto).map(answer -> reviewed(answer, reached, quiz));
         });
     }
 
@@ -241,9 +291,11 @@ public class QuizSubmissionService extends AppTransactionManager {
     // ---- QuizViolation: a record of the QuizSubmission aggregate ----
 
     public QuizViolation getQuizViolation(UUID quizSubmissionId, UUID id) {
+        TeachingReach reach = CohortAccess.reach();
         return doInReadTransaction(() -> {
-            return quizViolationMapper.toDto(loadVisibleQuizViolation(DataScope.current(QUIZ_VIOLATION_PERMISSION_GET),
-                    quizSubmissionId, id));
+            DataScope scope = DataScope.current(QUIZ_VIOLATION_PERMISSION_GET);
+            reached(scope, quizSubmissionId, reach);
+            return quizViolationMapper.toDto(loadVisibleQuizViolation(scope, quizSubmissionId, id));
         });
     }
 
@@ -256,7 +308,9 @@ public class QuizSubmissionService extends AppTransactionManager {
                 .and(QuizViolationRepository.ofParent(quizSubmissionId))
                         .and(QuizViolationRepository.scope(DataScope.current(QUIZ_VIOLATION_PERMISSION_LIST)));
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + quizSubmissionId, clock);
+        TeachingReach reach = CohortAccess.reach();
         return doInReadTransaction(() -> {
+            reached(DataScope.current(QUIZ_VIOLATION_PERMISSION_LIST), quizSubmissionId, reach);
             Page<QuizViolationEntity> rows = quizViolationRepository.list(page, where);
             return rows.map(quizViolationMapper::toDto);
         });

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   iam: the Identity and Access microservice, owner of database schema "iam" (JAVA-CODING-RULES §2).
-  Depends on core, sdk, auth-client and the messaging runtime; only event consumers compile against the
+  Depends on core, auth-client and the messaging runtime; only event consumers compile against the
   narrow messaging API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
   Its Flyway migrations are database/migrations/iam, applied to its own schema only.
 -->
@@ -24,10 +24,6 @@
     </dependency>
     <dependency>
       <groupId>com.mysms</groupId>
-      <artifactId>sdk</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
       <artifactId>auth-client</artifactId>
     </dependency>
     <dependency>
@@ -43,6 +39,16 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk18on</artifactId>
+    </dependency>
+    <!-- account e-mail (password reset, verification, sign-up) over SMTP: JavaMailSender -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-mail</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.icegreen</groupId>
+      <artifactId>greenmail</artifactId>
+      <scope>test</scope>
     </dependency>
     <!-- messaging runtime relay; event consumers compile against its narrow API -->
     <dependency>
@@ -80,6 +86,11 @@
       </resource>
     </resources>
     <plugins>
+      <!-- its protos (src/main/resources/proto: its own, and copies of the callees' it calls) into its jar -->
+      <plugin>
+        <groupId>org.xolstice.maven.plugins</groupId>
+        <artifactId>protobuf-maven-plugin</artifactId>
+      </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
@@ -87,13 +98,6 @@
           <mainClass>com.mysms.iam.IamApplication</mainClass>
           <classifier>exec</classifier>
         </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

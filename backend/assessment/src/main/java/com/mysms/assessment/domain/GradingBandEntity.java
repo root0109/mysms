@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of assessment.grading_band (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of assessment.grading_band. */
 @Getter
 @Setter
 @SuperBuilder

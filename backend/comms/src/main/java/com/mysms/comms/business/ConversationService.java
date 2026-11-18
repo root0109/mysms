@@ -49,13 +49,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of comms.conversation (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Conversation
- * are served here too — ConversationMessage, ConversationParticipant.
+ * Business service of comms.conversation and of the records that exist only as part of a Conversation
+ * (ConversationMessage, ConversationParticipant): audit and domain event commit in the same transaction as every
+ * change. Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide
+ * grant.
  */
 @Service
 public class ConversationService extends AppTransactionManager {
@@ -167,8 +164,8 @@ public class ConversationService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Conversation updateConversation(UUID id, String ifMatch, ConversationUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -238,14 +235,12 @@ public class ConversationService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(ConversationEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /**
-     * Applies the selected ConversationUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected ConversationUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(ConversationEntity entity, ConversationUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -278,7 +273,7 @@ public class ConversationService extends AppTransactionManager {
 
     }
 
-    // ---- ConversationMessage: a record of the Conversation aggregate ----
+    // ---- ConversationMessage ----
 
     public ConversationMessage getConversationMessage(UUID conversationId, UUID id) {
         return doInReadTransaction(() -> {
@@ -334,8 +329,8 @@ public class ConversationService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ConversationMessage updateConversationMessage(UUID conversationId, UUID id, String ifMatch,
             ConversationMessageUpdate changes, String updateMask, boolean validateOnly) {
@@ -403,15 +398,12 @@ public class ConversationService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the comms.conversation it belongs to). */
+    /** The institution of the comms.conversation the row belongs to. */
     private Optional<UUID> institutionOfConversationMessage(ConversationMessageEntity entity) {
         return conversationMessageRepository.institutionOf(entity.getConversationId());
     }
 
-    /**
-     * Applies the selected ConversationMessageUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected ConversationMessageUpdate fields; explicit per field so a mask can clear values. */
     private static void applyConversationMessage(ConversationMessageEntity entity, ConversationMessageUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -452,7 +444,7 @@ public class ConversationService extends AppTransactionManager {
 
     }
 
-    // ---- ConversationParticipant: a record of the Conversation aggregate ----
+    // ---- ConversationParticipant ----
 
     public ConversationParticipant getConversationParticipant(UUID conversationId, UUID id) {
         return doInReadTransaction(() -> {
@@ -510,8 +502,8 @@ public class ConversationService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ConversationParticipant updateConversationParticipant(UUID conversationId, UUID id, String ifMatch,
             ConversationParticipantUpdate changes, String updateMask, boolean validateOnly) {
@@ -574,15 +566,12 @@ public class ConversationService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the comms.conversation it belongs to). */
+    /** The institution of the comms.conversation the row belongs to. */
     private Optional<UUID> institutionOfConversationParticipant(ConversationParticipantEntity entity) {
         return conversationParticipantRepository.institutionOf(entity.getConversationId());
     }
 
-    /**
-     * Applies the selected ConversationParticipantUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected ConversationParticipantUpdate fields; explicit per field so a mask can clear values. */
     private static void applyConversationParticipant(ConversationParticipantEntity entity, ConversationParticipantUpdate changes,
             List<String> fields) {
         for (String field : fields) {

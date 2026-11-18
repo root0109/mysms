@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of finance.coupon_scope (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of finance.coupon_scope. */
 @Getter
 @Setter
 @SuperBuilder

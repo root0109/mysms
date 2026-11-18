@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -235,7 +235,7 @@ public class StudentAlert {
   }
 
   /**
-   * Sender (NULL = automatic).
+   * Sender (NULL = automatic). Output only: the caller, from the token.
    * @return sentBy
    */
   @Valid 

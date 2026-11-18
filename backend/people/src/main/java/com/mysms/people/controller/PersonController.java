@@ -42,11 +42,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Person operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/people.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED. Standard operations follow the module's resource pattern; getMyPerson and
- * updateMyPerson carry their own rules.
+ * REST edge of the Person operations; authentication and the permission check already happened in the auth-client
+ * filter; operations not served yet answer 501 NOT_IMPLEMENTED. getMyPerson and updateMyPerson carry their own rules.
  */
 @RestController
 public class PersonController implements PersonApi {

@@ -49,7 +49,7 @@ public final class CallContextHolder {
         if (before == null || before.tenantId().isEmpty()) {
             return () -> { };
         }
-        CURRENT.set(new CallContext(Optional.empty(), before.userId(), before.traceId()));
+        CURRENT.set(new CallContext(Optional.empty(), before.userId(), before.traceId(), before.impersonatorId()));
         return () -> CURRENT.set(before);
     }
 

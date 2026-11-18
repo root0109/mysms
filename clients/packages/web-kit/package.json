@@ -2,10 +2,14 @@
   "name": "@mysms/web-kit",
   "version": "0.1.0",
   "private": true,
-  "description": "What the two web apps (W and the platform console C) share: sign-in, session guard and boot, inventory-driven routing, placeholders. ui/02 \u00a71.2: C is the W shell with a platform band.",
+  "description": "What the two web apps (W and the platform console C) share: sign-in, session guard and boot, inventory-driven routing, placeholders. ui/02 §1.2: C is the W shell with a platform band.",
   "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     ".": "./src/index.ts",
+    "./screens/*": "./src/screens/*.tsx",
     "./kit.css": "./src/kit.css"
   },
   "scripts": {

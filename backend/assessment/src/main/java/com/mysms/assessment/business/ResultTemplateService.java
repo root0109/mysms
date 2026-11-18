@@ -44,14 +44,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of assessment.result_template (JAVA-CODING-RULES §4): one plain class, explicit methods,
- * transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a ResultTemplate
- * are served here too — ResultTemplateBand.
+ * Business service of assessment.result_template and of the records that exist only as part of a ResultTemplate
+ * (ResultTemplateBand): audit and domain event commit in the same transaction as every change. Rows outside the
+ * caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class ResultTemplateService extends AppTransactionManager {
@@ -147,8 +142,8 @@ public class ResultTemplateService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ResultTemplate updateResultTemplate(UUID id, String ifMatch, ResultTemplateUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -218,14 +213,12 @@ public class ResultTemplateService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the assessment.exam_session it belongs to). */
+    /** The institution of the assessment.exam_session the row belongs to. */
     private Optional<UUID> institutionOf(ResultTemplateEntity entity) {
         return repository.institutionOf(entity.getExamSessionId());
     }
 
-    /**
-     * Applies the selected ResultTemplateUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected ResultTemplateUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(ResultTemplateEntity entity, ResultTemplateUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -270,7 +263,7 @@ public class ResultTemplateService extends AppTransactionManager {
 
     }
 
-    // ---- ResultTemplateBand: a record of the ResultTemplate aggregate ----
+    // ---- ResultTemplateBand ----
 
     public ResultTemplateBand getResultTemplateBand(UUID resultTemplateId, UUID id) {
         return doInReadTransaction(() -> {
@@ -327,8 +320,8 @@ public class ResultTemplateService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ResultTemplateBand updateResultTemplateBand(UUID resultTemplateId, UUID id, String ifMatch,
             ResultTemplateBandUpdate changes, String updateMask, boolean validateOnly) {
@@ -391,18 +384,12 @@ public class ResultTemplateService extends AppTransactionManager {
         return entity;
     }
 
-    /**
-     * The institution that owns the row (the institution of the assessment.result_template → assessment.exam_session it
-     * belongs to).
-     */
+    /** The institution of the assessment.result_template → assessment.exam_session the row belongs to. */
     private Optional<UUID> institutionOfResultTemplateBand(ResultTemplateBandEntity entity) {
         return resultTemplateBandRepository.institutionOf(entity.getResultTemplateId());
     }
 
-    /**
-     * Applies the selected ResultTemplateBandUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected ResultTemplateBandUpdate fields; explicit per field so a mask can clear values. */
     private static void applyResultTemplateBand(ResultTemplateBandEntity entity, ResultTemplateBandUpdate changes,
             List<String> fields) {
         for (String field : fields) {

@@ -13,20 +13,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The boundaries of the 21 domain modules (ARCHITECTURE.md §1, JAVA-CODING-RULES §2–§3, database/README):
+ * The boundaries of the domain modules:
  * <ul>
- * <li>A1 — a domain module depends only on core, sdk, auth-client and messaging. Messaging is runtime-only,
- * except for a module that uses its event API (EventEnvelope, EventHandler, EventSubscriptions,
- * RejectedEventException); no module imports RabbitMQ, Google Cloud Pub/Sub or messaging adapter/runtime types.</li>
- * <li>§3 — the packages of a module are the layer roles only.</li>
+ * <li>A1 — a domain module depends only on core, auth-client and messaging. Messaging is runtime-only, except for a
+ * module that uses its event API (EventEnvelope, EventHandler, EventSubscriptions, RejectedEventException); no module
+ * imports RabbitMQ, Google Cloud Pub/Sub or messaging adapter/runtime types.</li>
+ * <li>§3 — a module's packages are the layer roles only, and SpotBugs analyses every one of them (the parent POM's
+ * {@code mysms.spotbugs.onlyAnalyze} names each layer; a domain module does not narrow it).</li>
  * <li>§14 — a module's migrations live in database/migrations/&lt;module&gt; and touch only its own schema.</li>
  * </ul>
  */
 public final class ModuleBoundaryRule implements ConformanceRule {
 
-    private static final Set<String> ALLOWED_DEPENDENCIES = Set.of("core", "sdk", "auth-client", "mysms");
-    private static final Set<String> LAYERS = Set.of("api", "controller", "grpc", "business", "repository", "domain", "model",
-            "mapper", "validation", "errors", "events", "config", "constants");
+    private static final Set<String> ALLOWED_DEPENDENCIES = Set.of("core", "auth-client", "mysms");
+    private static final Set<String> LAYERS = Set.of("api", "controller", "grpc", "integration", "business",
+            "repository", "domain", "model", "mapper", "validation", "errors", "events", "config", "constants");
     private static final String EVENT_API = "(EventEnvelope|EventHandler|EventSubscriptions|RejectedEventException)";
     private static final Pattern USES_EVENT_API =
             Pattern.compile("(?m)^import com\\.mysms\\.messaging\\.events\\." + EVENT_API + ";");
@@ -37,6 +38,8 @@ public final class ModuleBoundaryRule implements ConformanceRule {
     private static final Pattern DEPENDENCY = Pattern.compile("<dependency>(.*?)</dependency>", Pattern.DOTALL);
     private static final Pattern MYSMS_ARTIFACT =
             Pattern.compile("<groupId>com\\.mysms</groupId>\\s*<artifactId>([\\w-]+)</artifactId>");
+    private static final String ANALYSED_PROPERTY = "mysms.spotbugs.onlyAnalyze";
+    private static final Pattern ANALYSED = Pattern.compile("<" + ANALYSED_PROPERTY + ">([^<]*)</");
     private static final Pattern SQL_COMMENT = Pattern.compile("--[^\\n]*");
     private static final Pattern SQL_STRING = Pattern.compile("'(?:[^']|'')*'");
     private static final Pattern NAMED_SCHEMA = Pattern.compile(
@@ -52,6 +55,7 @@ public final class ModuleBoundaryRule implements ConformanceRule {
             packages(tree, module, found);
             migrations(tree, module, found);
         }
+        analysedLayers(tree, found);
         return found;
     }
 
@@ -82,6 +86,28 @@ public final class ModuleBoundaryRule implements ConformanceRule {
             if (BROKER_IMPORT.matcher(source).find() || RUNTIME_IMPORT.matcher(source).find()) {
                 found.add(new Violation("A1", tree.relative(file),
                         "imports a broker/runtime type; modules may use only the messaging event API"));
+            }
+        }
+    }
+
+    /** SpotBugs skips the generated proto classes by naming the packages it analyses, so it must name each layer. */
+    private static void analysedLayers(SourceTree tree, List<Violation> found) {
+        Path parent = tree.backend().resolve("pom.xml");
+        Matcher analysed = ANALYSED.matcher(tree.read(parent));
+        if (!analysed.find()) {
+            found.add(new Violation("§3", tree.relative(parent), "no " + ANALYSED_PROPERTY + " property"));
+            return;
+        }
+        Set<String> named = Set.of(analysed.group(1).split(","));
+        for (String layer : LAYERS) {
+            if (!named.contains("com.mysms.${project.artifactId}." + layer + ".-")) {
+                found.add(new Violation("§3", tree.relative(parent), "SpotBugs does not analyse the " + layer + " layer"));
+            }
+        }
+        for (String module : tree.domainModules()) {
+            Path pom = tree.backend().resolve(module).resolve("pom.xml");
+            if (tree.read(pom).contains("<" + ANALYSED_PROPERTY + ">")) {
+                found.add(new Violation("§3", tree.relative(pom), "narrows the packages SpotBugs analyses"));
             }
         }
     }

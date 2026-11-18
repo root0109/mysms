@@ -7,8 +7,10 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.http.server.PathContainer;
@@ -31,9 +33,13 @@ public final class OperationTable {
             Comparator.comparing(Entry::pattern, PathPattern.SPECIFICITY_COMPARATOR);
 
     private final List<Entry> entries;
+    private final Map<String, OperationRule> byId;
 
     private OperationTable(List<Entry> entries) {
         this.entries = List.copyOf(entries);
+        Map<String, OperationRule> rules = new HashMap<>();
+        entries.forEach(e -> rules.put(e.rule().operationId(), e.rule()));
+        this.byId = Map.copyOf(rules);
     }
 
     /** Loads the operation tables of the given modules from the classpath. */
@@ -57,7 +63,9 @@ public final class OperationTable {
                     OperationRule rule = new OperationRule(row.get("operationId").asString(), row.get("method").asString(),
                             row.get("path").asString(), row.get("permission").asString(), schemes,
                             row.get("anonymous").asBoolean(),
-                            row.has("idempotency") ? row.get("idempotency").asString() : null);
+                            row.has("idempotency") ? row.get("idempotency").asString() : null,
+                            row.has("audience") ? row.get("audience").asString() : null,
+                            row.path("ownAuthorization").asBoolean(false));
                     if (!seen.add(rule.method() + " " + rule.path())) {
                         throw new IllegalStateException("duplicate operation " + rule.method() + " " + rule.path());
                     }
@@ -77,6 +85,19 @@ public final class OperationTable {
                 .filter(e -> e.rule().method().equals(method) && e.pattern().matches(container))
                 .min(MOST_SPECIFIC_FIRST)
                 .map(Entry::rule);
+    }
+
+    /**
+     * The operation a gRPC call addresses, by its full method name: {@code mysms.<module>.v1.<Service>/<Method>} is
+     * operation {@code <module>.<Method>}; empty for anything else.
+     */
+    public Optional<OperationRule> forGrpcMethod(String fullMethodName) {
+        int slash = fullMethodName.indexOf('/');
+        String[] service = slash < 0 ? new String[0] : fullMethodName.substring(0, slash).split("\\.");
+        if (service.length != 4 || !"mysms".equals(service[0])) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(byId.get(service[1] + "." + fullMethodName.substring(slash + 1)));
     }
 
     public int size() {

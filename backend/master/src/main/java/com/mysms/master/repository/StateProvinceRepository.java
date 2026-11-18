@@ -22,9 +22,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * Plain-JDBC access to master.state_province (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live rows
- * only, keyset paging over an allowlisted order, and the row_version guard on every update and delete.
- * Master data is global: there is no tenant column.
+ * Plain-JDBC access to master.state_province: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. Master data is global: there is no tenant column.
  */
 @Repository
 public class StateProvinceRepository {

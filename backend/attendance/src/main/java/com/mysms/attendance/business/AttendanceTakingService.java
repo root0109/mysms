@@ -57,15 +57,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Taking attendance on a sheet (ui/03 flow F3): open the sheet of a timetable session with its expected students
- * marked present, record or correct marks while the sheet is in progress, and complete it. A sheet and its marks are
- * one aggregate: every write locks the sheet row first, so recording and completing never interleave, and every
- * recording gives the sheet a new version — a client recording or completing with a stale etag is told to reload
- * (412).
- *
- * <p>Like every business service (JAVA-CODING-RULES §4) it drives the module's PlatformTransactionManager itself and
- * writes the audit record and the domain events in the transaction of the change. The data rules are the sheet's: a
- * sheet outside the caller's institutions does not exist for them (404), and a change needs the institution in scope.
+ * Taking attendance on a sheet: open the sheet of a timetable session with its expected students marked present, record
+ * or correct marks while it is in progress, and complete it. A sheet and its marks are one aggregate: every write locks
+ * the sheet row first, so recording and completing never interleave, and every recording gives the sheet a new version,
+ * so a stale etag is told to reload (412). A sheet outside the caller's institutions is 404; a change needs the
+ * institution in scope.
  */
 @Service
 public class AttendanceTakingService extends AppTransactionManager {
@@ -74,7 +70,7 @@ public class AttendanceTakingService extends AppTransactionManager {
     static final String PERMISSION_RECORD = "attendance.attendance_sheet.record_attendance";
     static final String PERMISSION_COMPLETE = "attendance.attendance_sheet.complete_attendance_sheet";
     static final String PERMISSION_TAKE_FOR_SESSION = "attendance.attendance_sheet.take_attendance_for_session";
-    /** Marks one call may carry: a page of the roster (ui/03 F3 "save in pages"), the list page size limit. */
+    /** Marks one call may carry: a page of the roster, the list page size limit. */
     static final int MAX_MARKS = 500;
     /** Width of attendance.attendance_record.remark. */
     static final int MAX_REMARK = 255;
@@ -114,20 +110,13 @@ public class AttendanceTakingService extends AppTransactionManager {
     }
 
     /**
-     * attendance.RecordAttendance: sets one mark per student on a sheet in progress — a first mark for a student
-     * without one, a correction otherwise; a mark that changes nothing is not written. The call is all-or-nothing: one
-     * invalid mark refuses every mark, with a field error per problem ({@code marks[i].field}).
-     *
-     * <p>A first mark names a student the sheet does not know yet, so the id is a reference into sis and is checked
-     * there before anything is written (JAVA-CODING-RULES §2): it must be a student of the sheet's institution that
-     * the caller can see (422 otherwise). That read happens between a first, read-only look at the sheet and the
-     * transaction that writes, so no lock is held across it.
-     *
-     * <p>The optional etag is the sheet's: every stored call gives the sheet a new version, so a second device
-     * saving over marks it has not seen is told to reload (412). With {@code complete} the sheet is completed in the
-     * same transaction, which the caller must also be allowed to do on its own: without the completing permission for
-     * the sheet's institution the whole call is refused (403) and no mark is stored. Answers the records of the
-     * marked students, in the order of the request.
+     * attendance.RecordAttendance: sets one mark per student on a sheet in progress (a first mark or a correction; an
+     * unchanged mark is not written). All-or-nothing: one invalid mark refuses every mark, with a field error per
+     * problem ({@code marks[i].field}). <p>A first mark for a student the sheet does not know is checked with sis as a
+     * student of the sheet's institution the caller can see (422 otherwise), between a read-only look at the sheet and
+     * the writing transaction, so no lock is held across it. <p>The optional etag is the sheet's (412 when stale). With
+     * {@code complete} the sheet is completed in the same transaction, which needs the completing permission too (403,
+     * nothing stored). Answers the marked students' records in request order.
      */
     public AttendanceRecordList recordAttendance(UUID sheetId, RecordAttendanceRequest request) {
         validator.validate(request);

@@ -15,10 +15,9 @@ import org.springframework.core.env.Environment;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The event bus of this process (`mysms.events.bus`): `rabbitmq` (default), `google-pubsub`, `in-process` (one JVM),
- * or `none` (no relay and no consumers: events stay in the outboxes — for tests that do not exercise events). The
- * API, runtime and adapters live together in the `messaging` module. This configuration starts a relay per module
- * database and an inbox subscription per consuming module.
+ * The event bus of this process ({@code mysms.events.bus}): {@code rabbitmq} (default), {@code google-pubsub},
+ * {@code in-process}, or {@code none} (events stay in the outboxes, for tests that do not exercise events). Starts a
+ * relay per module database and an inbox subscription per consuming module.
  */
 @AutoConfiguration(after = CoreAutoConfiguration.class,
         afterName = {"com.mysms.messaging.rabbitmq.RabbitEventsAutoConfiguration",
@@ -62,7 +61,7 @@ public class EventsAutoConfiguration {
                 environment.getProperty("mysms.events.relay.interval", Duration.class, Duration.ofMillis(500)), clock);
     }
 
-    /** `/actuator/health` (readiness): down when the bus is disconnected or a relay keeps failing. */
+    /** Readiness: down when the bus is disconnected or a relay keeps failing. */
     @Bean
     public EventsHealthIndicator eventsHealthIndicator(EventRuntime runtime) {
         return new EventsHealthIndicator(runtime);

@@ -33,7 +33,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Access management cannot be used to escalate (api/README "Role grants"), end to end over HTTP against real
+ * Access management cannot be used to escalate, end to end over HTTP against real
  * PostgreSQL: a permission goes into a role only from someone holding it tenant-wide, a role is granted only by someone
  * holding all its permissions at the grant's reach, nobody changes their own access, system roles are fixed, and a
  * deleted account is signed out everywhere in the same transaction.

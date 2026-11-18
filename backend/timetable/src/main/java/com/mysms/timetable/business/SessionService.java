@@ -57,13 +57,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of timetable.session (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Session
- * are served here too — SessionStudent.
+ * Business service of timetable.session and of the records that exist only as part of a Session (SessionStudent): audit
+ * and domain event commit in the same transaction as every change. Rows outside the caller's institutions are
+ * invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class SessionService extends AppTransactionManager {
@@ -145,17 +141,12 @@ public class SessionService extends AppTransactionManager {
     }
 
     /**
-     * timetable.GetTimetable: the published timetable of a class, a batch, a teacher, a student or a room — at least
-     * one of them — over the days fromDate to toDate, in the order the sessions start. The days are UTC days: this
-     * module does not know an institution's time zone (org owns it), so a client that shows local days asks for one
-     * day more on each side and keeps what falls on the days it shows. Only sessions of the caller's institutions
-     * are answered; drafts are not part of a timetable. The names of subject, teacher and room are other modules'
-     * data and are not filled here.
-     *
-     * <p>Who may read whose: the permission of the view covers the timetables a school shares — a class's, a
-     * teacher's, a room's. Which sessions list one student is that student's own, so the student filter also needs
-     * the permission to read session students (403 without it). The view does not yet know the caller's own student
-     * or staff record, so it is a grant for staff roles until those rules exist (STATUS, known limit 14).
+     * timetable.GetTimetable: the published timetable of a class, batch, teacher, student or room (at least one) from
+     * fromDate to toDate, in start order. Days are UTC days, since this module does not know an institution's time
+     * zone: a client showing local days asks for one more day on each side. Only the caller's institutions are
+     * answered; drafts are left out, and other modules' names are not filled. The student filter also needs the
+     * permission to read session students (403 without it), because which sessions list a student is that student's own
+     * data. Until the view knows the caller's own student or staff record it is a grant for staff roles.
      */
     public Page<TimetableView> getTimetable(LocalDate fromDate, LocalDate toDate, UUID classSectionId, UUID batchId,
             UUID staffId, UUID studentId, UUID roomId, Integer pageNumber, Integer pageSize, String cursor) {
@@ -241,8 +232,8 @@ public class SessionService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Session updateSession(UUID id, String ifMatch, SessionUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -298,9 +289,8 @@ public class SessionService extends AppTransactionManager {
     }
 
     /**
-     * timetable.ConfirmSession: Confirm. The row must be visible and writable for the caller, and the step is allowed
-     * while status is draft; in any other state
-     * the answer is 409 and nothing changes.
+     * timetable.ConfirmSession: Confirm. Allowed while status is draft, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public Session confirmSession(UUID id, ConfirmSessionRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CONFIRM_SESSION);
@@ -331,9 +321,8 @@ public class SessionService extends AppTransactionManager {
     }
 
     /**
-     * timetable.CompleteSession: Mark done. The row must be visible and writable for the caller, and the step is
-     * allowed while status is confirmed; in any other state
-     * the answer is 409 and nothing changes.
+     * timetable.CompleteSession: Mark done. Allowed while status is confirmed, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public Session completeSession(UUID id, CompleteSessionRequest request) {
         DataScope scope = DataScope.current(PERMISSION_COMPLETE_SESSION);
@@ -364,9 +353,8 @@ public class SessionService extends AppTransactionManager {
     }
 
     /**
-     * timetable.CancelSession: Cancel. The row must be visible and writable for the caller, and the step is allowed
-     * while status is draft or confirmed; in any other state
-     * the answer is 409 and nothing changes.
+     * timetable.CancelSession: Cancel. Allowed while status is draft or confirmed, on a row the caller may see and
+     * write; otherwise 409 and nothing changes.
      */
     public Session cancelSession(UUID id, CancelSessionRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CANCEL_SESSION);
@@ -398,9 +386,8 @@ public class SessionService extends AppTransactionManager {
     }
 
     /**
-     * timetable.ResetSession: Back to draft. The row must be visible and writable for the caller, and the step is
-     * allowed while status is cancelled; in any other state
-     * the answer is 409 and nothing changes.
+     * timetable.ResetSession: Back to draft. Allowed while status is cancelled, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public Session resetSession(UUID id, ResetSessionRequest request) {
         DataScope scope = DataScope.current(PERMISSION_RESET_SESSION);
@@ -439,12 +426,12 @@ public class SessionService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(SessionEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected SessionUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected SessionUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(SessionEntity entity, SessionUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -491,7 +478,7 @@ public class SessionService extends AppTransactionManager {
 
     }
 
-    // ---- SessionStudent: a record of the Session aggregate ----
+    // ---- SessionStudent ----
 
     public SessionStudent getSessionStudent(UUID sessionId, UUID id) {
         return doInReadTransaction(() -> {
@@ -545,8 +532,8 @@ public class SessionService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public SessionStudent updateSessionStudent(UUID sessionId, UUID id, String ifMatch, SessionStudentUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -609,14 +596,12 @@ public class SessionService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the timetable.session it belongs to). */
+    /** The institution of the timetable.session the row belongs to. */
     private Optional<UUID> institutionOfSessionStudent(SessionStudentEntity entity) {
         return sessionStudentRepository.institutionOf(entity.getSessionId());
     }
 
-    /**
-     * Applies the selected SessionStudentUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected SessionStudentUpdate fields; explicit per field so a mask can clear values. */
     private static void applySessionStudent(SessionStudentEntity entity, SessionStudentUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

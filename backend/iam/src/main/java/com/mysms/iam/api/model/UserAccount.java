@@ -1,4 +1,4 @@
-// Owned API contract of iam (JAVA-CODING-RULES §7); first materialized from api/openapi/iam.yaml on 2026-11-10.
+// Owned API contract of iam.
 package com.mysms.iam.api.model;
 
 import java.net.URI;
@@ -82,7 +82,7 @@ public class UserAccount {
   private @Nullable UUID personId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private String username;
+  private @Nullable String username;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String email;
@@ -208,13 +208,6 @@ public class UserAccount {
     super();
   }
 
-  /**
-   * Constructor with only required parameters
-   */
-  public UserAccount(String username) {
-    this.username = username;
-  }
-
   public UserAccount userType(@Nullable UserTypeEnum userType) {
     this.userType = userType;
     return this;
@@ -275,7 +268,7 @@ public class UserAccount {
     this.personId = personId;
   }
 
-  public UserAccount username(String username) {
+  public UserAccount username(@Nullable String username) {
     this.username = username;
     return this;
   }
@@ -284,14 +277,14 @@ public class UserAccount {
    * Login name, unique per tenant ignoring case (optional when the user logs in by e-mail or mobile).
    * @return username
    */
-  @NotNull @Size(max = 150) 
+  @Size(max = 150) 
   @JsonProperty("username")
-  public String getUsername() {
+  public @Nullable String getUsername() {
     return username;
   }
 
   @JsonProperty("username")
-  public void setUsername(String username) {
+  public void setUsername(@Nullable String username) {
     this.username = username;
   }
 

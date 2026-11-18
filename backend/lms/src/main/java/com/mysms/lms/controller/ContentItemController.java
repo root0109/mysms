@@ -1,5 +1,6 @@
 package com.mysms.lms.controller;
 
+import com.mysms.lms.business.ReleaseRuleService;
 import java.util.List;
 import com.mysms.core.paging.PagingUtil;
 import com.mysms.core.paging.PagingInfo;
@@ -37,40 +38,41 @@ import com.mysms.lms.api.model.SetContentItemVisibilityRequest;
 import com.mysms.lms.api.model.SetGroupMembersRequest;
 import com.mysms.lms.api.model.SetReleaseRulesEnabledRequest;
 import com.mysms.lms.api.model.SubmitPeerReviewRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.ContentItemService;
 import java.net.URI;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the ContentItem operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the ContentItem operations; authentication and the permission check already ran in the auth-client
+ * filter. Operations not served yet answer 501.
  */
 @RestController
 public class ContentItemController implements ContentItemApi {
 
     private final ContentItemService contentItemService;
+    private final ReleaseRuleService releaseRuleService;
 
-    public ContentItemController(ContentItemService contentItemService) {
+    public ContentItemController(ContentItemService contentItemService, ReleaseRuleService releaseRuleService) {
         this.contentItemService = contentItemService;
+        this.releaseRuleService = releaseRuleService;
     }
 
     @Override
     public ResponseEntity<ContentItemList> addFromRepository(
             AddFromRepositoryRequest addFromRepositoryRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(contentItemService.addFromRepository(addFromRepositoryRequest));
     }
 
     @Override
     public ResponseEntity<ContentItem> copyContentItem(UUID contentItemId,
             CopyContentItemRequest copyContentItemRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        ContentItem copied = contentItemService.copyContentItem(contentItemId, copyContentItemRequest);
+        return ResponseEntity.created(URI.create("/v1/lms/content-items/" + copied.getId()))
+                .eTag(copied.getEtag()).body(copied);
     }
 
     @Override
@@ -162,13 +164,15 @@ public class ContentItemController implements ContentItemApi {
     @Override
     public ResponseEntity<Operation> downloadSubmissions(UUID contentItemId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body(contentItemService.downloadSubmissions(contentItemId));
     }
 
     @Override
     public ResponseEntity<GradebookEntryList> finalizePeerReview(UUID contentItemId,
             UUID assignmentGroupId, FinalizePeerReviewRequest finalizePeerReviewRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(contentItemService.finalizePeerReview(contentItemId, assignmentGroupId,
+                finalizePeerReviewRequest));
     }
 
     @Override
@@ -207,18 +211,18 @@ public class ContentItemController implements ContentItemApi {
 
     @Override
     public ResponseEntity<ReleaseStatus> getReleaseStatus(UUID contentItemId, UUID userId) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(contentItemService.getReleaseStatus(contentItemId, userId));
     }
 
     @Override
     public ResponseEntity<ExternalLink> getWebResourceLaunch(UUID contentItemId) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(contentItemService.getWebResourceLaunch(contentItemId));
     }
 
     @Override
     public ResponseEntity<ReleaseGrantList> grantItemAccess(UUID contentItemId,
             GrantItemAccessRequest grantItemAccessRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(contentItemService.grantItemAccess(contentItemId, grantItemAccessRequest));
     }
 
     @Override
@@ -273,61 +277,67 @@ public class ContentItemController implements ContentItemApi {
     @Override
     public ResponseEntity<ContentItem> moveContentItem(UUID contentItemId,
             MoveContentItemRequest moveContentItemRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        ContentItem moved = contentItemService.moveContentItem(contentItemId, moveContentItemRequest);
+        return ResponseEntity.ok().eTag(moved.getEtag()).body(moved);
     }
 
     @Override
     public ResponseEntity<GradebookEntryList> publishItemGrades(UUID contentItemId,
             PublishItemGradesRequest publishItemGradesRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(contentItemService.publishItemGrades(contentItemId, publishItemGradesRequest));
     }
 
     @Override
     public ResponseEntity<ReassignmentLogList> reassignItem(UUID contentItemId,
             ReassignItemRequest reassignItemRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(contentItemService.reassignItem(contentItemId, reassignItemRequest));
     }
 
     @Override
     public ResponseEntity<ContentItem> recordItemView(UUID contentItemId,
             RecordItemViewRequest recordItemViewRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(contentItemService.recordItemView(contentItemId, recordItemViewRequest));
     }
 
     @Override
     public ResponseEntity<ReleaseRuleList> reorderReleaseRules(UUID contentItemId,
             ReorderReleaseRulesRequest reorderReleaseRulesRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(releaseRuleService.reorderReleaseRules(contentItemId, reorderReleaseRulesRequest));
     }
 
     @Override
     public ResponseEntity<AssignmentGroupMember> requestToJoinGroup(UUID contentItemId,
             UUID assignmentGroupId, Object body, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        AssignmentGroupMember member = contentItemService.requestToJoinGroup(contentItemId, assignmentGroupId);
+        return ResponseEntity.ok().eTag(member.getEtag()).body(member);
     }
 
     @Override
     public ResponseEntity<ContentItem> setContentItemVisibility(UUID contentItemId,
             SetContentItemVisibilityRequest setContentItemVisibilityRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        ContentItem changed = contentItemService.setContentItemVisibility(contentItemId, setContentItemVisibilityRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<AssignmentGroupMemberList> setGroupMembers(UUID contentItemId,
             UUID assignmentGroupId, SetGroupMembersRequest setGroupMembersRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(contentItemService.setGroupMembers(contentItemId, assignmentGroupId,
+                setGroupMembersRequest));
     }
 
     @Override
     public ResponseEntity<ReleaseRuleList> setReleaseRulesEnabled(UUID contentItemId,
             SetReleaseRulesEnabledRequest setReleaseRulesEnabledRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(releaseRuleService.setReleaseRulesEnabled(contentItemId,
+                setReleaseRulesEnabledRequest));
     }
 
     @Override
     public ResponseEntity<PeerReviewList> submitPeerReview(UUID contentItemId, UUID assignmentGroupId,
             SubmitPeerReviewRequest submitPeerReviewRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(contentItemService.submitPeerReview(contentItemId, assignmentGroupId,
+                submitPeerReviewRequest));
     }
 
     @Override

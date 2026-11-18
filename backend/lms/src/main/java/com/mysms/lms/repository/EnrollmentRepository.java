@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.enrollment (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.enrollment: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class EnrollmentRepository {
@@ -69,6 +66,32 @@ public class EnrollmentRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** A user's live enrolment in a course (enrolments are unique per course and user). */
+    private static final String FIND_OWN = SELECT_LIVE + " AND r.course_id = :courseId AND r.user_id = :userId";
+    /** A user's live enrolments, newest first (the student dashboard). */
+    private static final String LIST_OWN = SELECT_LIVE + " AND r.user_id = :userId ORDER BY r.updated_at DESC, r.id"
+            + " LIMIT :limit";
+    /**
+     * Recomputes a student's progress in a course from their completed lessons and SCORM chapters over the course's
+     * lessons and SCORM chapters (template chapters only), capped at 100, and remembers where they are.
+     */
+    private static final String RECORD_PROGRESS = """
+            UPDATE lms.enrollment
+               SET progress_percent = LEAST(100, ROUND(100.0 * (
+                       SELECT count(*) FROM lms.lesson_progress p
+                        WHERE p.tenant_id = :tenantId AND p.course_id = :courseId AND p.user_id = :userId
+                          AND p.status = 'complete' AND p.deleted_at IS NULL) / GREATEST(1, (
+                       SELECT count(*) FROM lms.lesson l JOIN lms.chapter c ON c.tenant_id = :tenantId
+                              AND c.id = l.chapter_id AND c.deleted_at IS NULL AND c.cohort_id IS NULL
+                        WHERE l.tenant_id = :tenantId AND l.deleted_at IS NULL AND c.course_id = :courseId
+                          AND NOT c.is_scorm_package) + (
+                       SELECT count(*) FROM lms.chapter c
+                        WHERE c.tenant_id = :tenantId AND c.course_id = :courseId AND c.deleted_at IS NULL
+                          AND c.cohort_id IS NULL AND c.is_scorm_package)), 2)),
+                   current_lesson_id = COALESCE(:lessonId, current_lesson_id),
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND course_id = :courseId AND user_id = :userId AND deleted_at IS NULL
+            """;
     private static final String INSERT = """
             INSERT INTO lms.enrollment
             (id, tenant_id, course_id, user_id, member_type, member_role, progress_percent, current_lesson_id,
@@ -228,7 +251,25 @@ public class EnrollmentRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** The user's live enrolment in the course. */
+    public Optional<EnrollmentEntity> findOwn(UUID courseId, UUID userId) {
+        return jdbc.sql(FIND_OWN).param("courseId", courseId).param("userId", userId)
+                .query(EnrollmentRepository::map).optional();
+    }
+
+    /** The user's live enrolments, most recently active first, at most {@code limit}. */
+    public List<EnrollmentEntity> listOwn(UUID userId, int limit) {
+        return jdbc.sql(LIST_OWN).param("userId", userId).param("limit", limit)
+                .query(EnrollmentRepository::map).list();
+    }
+
+    /** Recomputes the student's progress in the course (and where they are, when a lesson is given). */
+    public void recordProgress(UUID courseId, UUID userId, UUID lessonId, OffsetDateTime now, UUID actor) {
+        jdbc.sql(RECORD_PROGRESS).param("courseId", courseId).param("userId", userId).param("lessonId", lessonId)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

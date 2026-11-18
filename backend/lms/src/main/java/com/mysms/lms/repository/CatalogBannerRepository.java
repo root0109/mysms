@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.catalog_banner (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.catalog_banner: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class CatalogBannerRepository {
@@ -64,6 +61,17 @@ public class CatalogBannerRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** The banners of the courses listed in the catalogue, by placement and order (the catalogue home). */
+    private static final String OF_LISTED_COURSES = SELECT_LIVE + """
+             AND r.placement = :placement
+             AND r.course_id IN (SELECT c.id FROM lms.course c WHERE c.tenant_id = :tenantId AND c.deleted_at IS NULL
+                                    AND c.is_published AND c.lifecycle_status = 'published' AND c.is_in_catalog
+                                    AND c.catalog_status = 'published'
+                                    AND (c.catalog_visible_from IS NULL OR c.catalog_visible_from <= :now)
+                                    AND (c.catalog_visible_until IS NULL OR c.catalog_visible_until > :now))
+            ORDER BY r.sort_order, r.id
+            LIMIT :limit
+            """;
     private static final String INSERT = """
             INSERT INTO lms.catalog_banner
             (id, tenant_id, course_id, placement, image_file_id, sort_order, created_at, created_by, updated_at,
@@ -109,6 +117,12 @@ public class CatalogBannerRepository {
 
     public CatalogBannerRepository(@Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** The banners of one placement of the courses listed in the catalogue now, in order. */
+    public List<CatalogBannerEntity> ofListedCourses(String placement, OffsetDateTime now, int limit) {
+        return jdbc.sql(OF_LISTED_COURSES).param("placement", placement).param("now", now).param("limit", limit)
+                .query(CatalogBannerRepository::map).list();
     }
 
     public Optional<CatalogBannerEntity> findById(UUID id) {
@@ -178,12 +192,12 @@ public class CatalogBannerRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.course_id = :parentId", Map.of("parentId", parentId));
     }

@@ -1,5 +1,4 @@
 package com.mysms.finance.repository;
-import com.mysms.authclient.DataScope;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.paging.FieldSpec;
 import com.mysms.core.paging.Page;
@@ -23,11 +22,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to finance.invoice_line (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to finance.invoice_line: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. Every statement filters the caller's tenant itself; row-level security
+ * is the backstop.
  */
 @Repository
 public class InvoiceLineRepository {
@@ -97,22 +94,6 @@ public class InvoiceLineRepository {
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
-    private static final String EXISTS_FEE_HEAD_ID = """
-            SELECT EXISTS (SELECT 1 FROM finance.fee_head WHERE tenant_id = :tenantId
-                AND id = :id AND deleted_at IS NULL)
-            """;
-    private static final String EXISTS_INVOICE_ID = """
-            SELECT EXISTS (SELECT 1 FROM finance.invoice WHERE tenant_id = :tenantId
-                AND id = :id AND deleted_at IS NULL)
-            """;
-    private static final String INSTITUTION_OF = """
-            SELECT p0.institution_id FROM finance.invoice p0 WHERE p0.tenant_id = :tenantId AND p0.id = :ref
-            """;
-    private static final String SCOPE = """
-             (:scopeAll OR r.invoice_id IN (SELECT p0.id FROM finance.invoice p0 WHERE p0.tenant_id = :tenantId
-                 AND (p0.institution_id =
-             ANY(:scopeIds) OR p0.institution_id IS NULL)))
-            """;
 
     private final JdbcClient jdbc;
 
@@ -172,31 +153,6 @@ public class InvoiceLineRepository {
                 .param("updatedBy", e.getUpdatedBy())
                 .param("expected", expectedVersion)
                 .update();
-    }
-
-    /** Whether the referenced finance.fee_head row exists (live). */
-    public boolean existsFeeHeadId(UUID id) {
-        return Boolean.TRUE.equals(jdbc.sql(EXISTS_FEE_HEAD_ID).param("id", id).query(Boolean.class).single());
-    }
-
-    /** Whether the referenced finance.invoice row exists (live). */
-    public boolean existsInvoiceId(UUID id) {
-        return Boolean.TRUE.equals(jdbc.sql(EXISTS_INVOICE_ID).param("id", id).query(Boolean.class).single());
-    }
-
-    /** The institution owning the row reached through invoice_id (empty: a tenant-level row, or none). */
-    public Optional<UUID> institutionOf(UUID ref) {
-        if (ref == null) {
-            return Optional.empty();
-        }
-        return jdbc.sql(INSTITUTION_OF).param("ref", ref)
-                .query((rs, row) -> Optional.ofNullable(rs.getObject(1, UUID.class)))
-                .optional().flatMap(found -> found);
-    }
-
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
-    public static SqlFragment scope(DataScope scope) {
-        return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
     /** Children of one parent row (the parent id of the path). */

@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -33,7 +33,7 @@ public class ContentItemRating {
   private @Nullable UUID cohortId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID userId;
+  private @Nullable UUID userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Boolean isLike;
@@ -60,13 +60,6 @@ public class ContentItemRating {
 
   public ContentItemRating() {
     super();
-  }
-
-  /**
-   * Constructor with only required parameters
-   */
-  public ContentItemRating(UUID userId) {
-    this.userId = userId;
   }
 
   public ContentItemRating id(@Nullable UUID id) {
@@ -129,23 +122,23 @@ public class ContentItemRating {
     this.cohortId = cohortId;
   }
 
-  public ContentItemRating userId(UUID userId) {
+  public ContentItemRating userId(@Nullable UUID userId) {
     this.userId = userId;
     return this;
   }
 
   /**
-   * Student.
+   * Student. Output only: the caller, from the token.
    * @return userId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("userId")
-  public UUID getUserId() {
+  public @Nullable UUID getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(UUID userId) {
+  public void setUserId(@Nullable UUID userId) {
     this.userId = userId;
   }
 

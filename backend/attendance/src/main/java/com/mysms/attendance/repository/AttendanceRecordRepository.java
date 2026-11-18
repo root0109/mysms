@@ -25,11 +25,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to attendance.attendance_record (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to attendance.attendance_record: live rows only, keyset paging, and the row_version guard on every
+ * update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class AttendanceRecordRepository {
@@ -156,8 +153,8 @@ public class AttendanceRecordRepository {
                       updated_at, updated_by, deleted_at, row_version
             """;
     /**
-     * The first marks of many students of one sheet in one statement (JAVA-CODING-RULES §6 "Batch"): the
-     * application-generated ids paired with each student and mark.
+     * The first marks of many students of one sheet in one statement: the application-generated ids paired with each
+     * student and mark.
      */
     private static final String INSERT_MARKS = """
             INSERT INTO attendance.attendance_record
@@ -193,8 +190,8 @@ public class AttendanceRecordRepository {
     }
 
     /**
-     * A configured attendance mark as the workflow checks it (a projection, JAVA-CODING-RULES §5.4): where it may be
-     * used and which normalised status it stands for.
+     * A configured attendance mark as the workflow checks it (a projection): where it may be used and which normalised
+     * status it stands for.
      */
     public record MarkType(UUID id, UUID institutionId, boolean countsPresent, boolean countsAbsent,
                            boolean countsExcused, boolean countsLate) {
@@ -372,12 +369,12 @@ public class AttendanceRecordRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.sheet_id = :parentId", Map.of("parentId", parentId));
     }

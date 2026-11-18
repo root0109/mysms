@@ -1,4 +1,4 @@
-// Owned API contract of comms (JAVA-CODING-RULES §7); first materialized from api/openapi/comms.yaml on 2026-11-10.
+// Owned API contract of comms.
 package com.mysms.comms.api.model;
 
 import java.net.URI;
@@ -25,7 +25,7 @@ import java.util.*;
 public class ArchiveNotificationsRequest {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<UUID> notificationIds = new ArrayList<>();
+  private @Nullable List<UUID> notificationIds = new ArrayList<>();
 
   public ArchiveNotificationsRequest notificationIds(List<UUID> notificationIds) {
     this.notificationIds = notificationIds;

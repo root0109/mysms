@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -13,7 +13,6 @@ import org.springframework.lang.Nullable;
 import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-
 
 import java.util.*;
 
@@ -31,13 +30,6 @@ public class ForumPostReportUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String description;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID reportedBy;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime reportedAt;
 
   public ForumPostReportUpdate forumPostId(@Nullable UUID forumPostId) {
     this.forumPostId = forumPostId;
@@ -99,46 +91,6 @@ public class ForumPostReportUpdate {
     this.description = description;
   }
 
-  public ForumPostReportUpdate reportedBy(@Nullable UUID reportedBy) {
-    this.reportedBy = reportedBy;
-    return this;
-  }
-
-  /**
-   * Reporter.
-   * @return reportedBy
-   */
-  @Valid 
-  @JsonProperty("reportedBy")
-  public @Nullable UUID getReportedBy() {
-    return reportedBy;
-  }
-
-  @JsonProperty("reportedBy")
-  public void setReportedBy(@Nullable UUID reportedBy) {
-    this.reportedBy = reportedBy;
-  }
-
-  public ForumPostReportUpdate reportedAt(@Nullable OffsetDateTime reportedAt) {
-    this.reportedAt = reportedAt;
-    return this;
-  }
-
-  /**
-   * When.
-   * @return reportedAt
-   */
-  @Valid 
-  @JsonProperty("reportedAt")
-  public @Nullable OffsetDateTime getReportedAt() {
-    return reportedAt;
-  }
-
-  @JsonProperty("reportedAt")
-  public void setReportedAt(@Nullable OffsetDateTime reportedAt) {
-    this.reportedAt = reportedAt;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -150,14 +102,12 @@ public class ForumPostReportUpdate {
     ForumPostReportUpdate forumPostReportUpdate = (ForumPostReportUpdate) o;
     return Objects.equals(this.forumPostId, forumPostReportUpdate.forumPostId) &&
         Objects.equals(this.reportCategoryId, forumPostReportUpdate.reportCategoryId) &&
-        Objects.equals(this.description, forumPostReportUpdate.description) &&
-        Objects.equals(this.reportedBy, forumPostReportUpdate.reportedBy) &&
-        Objects.equals(this.reportedAt, forumPostReportUpdate.reportedAt);
+        Objects.equals(this.description, forumPostReportUpdate.description);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(forumPostId, reportCategoryId, description, reportedBy, reportedAt);
+    return Objects.hash(forumPostId, reportCategoryId, description);
   }
 
   @Override
@@ -167,8 +117,6 @@ public class ForumPostReportUpdate {
     sb.append("    forumPostId: ").append(toIndentedString(forumPostId)).append("\n");
     sb.append("    reportCategoryId: ").append(toIndentedString(reportCategoryId)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
-    sb.append("    reportedBy: ").append(toIndentedString(reportedBy)).append("\n");
-    sb.append("    reportedAt: ").append(toIndentedString(reportedAt)).append("\n");
     sb.append("}");
     return sb.toString();
   }

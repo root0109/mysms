@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of lms.grade_change_log (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of lms.grade_change_log. */
 @Getter
 @Setter
 @SuperBuilder

@@ -40,12 +40,22 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import com.mysms.authclient.AuthContext;
+import com.mysms.core.error.ConflictException;
+import com.mysms.core.error.PermissionDeniedException;
+import com.mysms.lms.api.model.CertificateEvaluation;
+import com.mysms.lms.domain.CertificateEvaluationEntity;
+import com.mysms.lms.mapper.CertificateEvaluationMapper;
+import com.mysms.lms.repository.CertificateEvaluationRepository;
+import com.mysms.lms.repository.CertificationRepository;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.OptionalInt;
 
 /**
- * Business service of lms.certificate_request (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of lms.certificate_request: audit and domain event commit in the same transaction as every change.
+ * Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class CertificateRequestService extends AppTransactionManager implements InitializingBean {
@@ -56,9 +66,10 @@ public class CertificateRequestService extends AppTransactionManager implements 
     static final String PERMISSION_CREATE = "lms.certificate_request.create";
     static final String PERMISSION_UPDATE = "lms.certificate_request.update";
     static final String PERMISSION_DELETE = "lms.certificate_request.delete";
+    static final String PERMISSION_STAFF = "lms.evaluator.update";
     /** The contract's CertificateRequestUpdate fields, in apply order. */
     static final List<String> WRITABLE =
-            List.of("courseId", "userId", "cohortId", "evaluatorUserId", "requestDate", "weekday", "startTime",
+            List.of("courseId", "cohortId", "evaluatorUserId", "requestDate", "weekday", "startTime",
                     "endTime",
             "timezone", "meetingLink");
 
@@ -69,6 +80,9 @@ public class CertificateRequestService extends AppTransactionManager implements 
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
+    private final CertificationRepository certification;
+    private final CertificateEvaluationRepository evaluations;
+    private final CertificateEvaluationMapper evaluationMapper;
     /** The write-only secrets: never in a response, so not validated on the merged model. */
     private static final Set<String> SECRETS = Set.of("meetingLink");
     private static final String SECRET_MEETING_LINK_ENC = "lms.certificate_request.meeting_link_enc";
@@ -78,9 +92,13 @@ public class CertificateRequestService extends AppTransactionManager implements 
             @Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(LmsDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(LmsEventsConfig.OUTBOX) OutboxWriter outbox, @Qualifier(LmsEventsConfig.AUDIT) AuditWriter audit,
-            DtoValidator validator, Clock clock, FieldCipher cipher) {
+            DtoValidator validator, Clock clock, FieldCipher cipher, CertificationRepository certification,
+            CertificateEvaluationRepository evaluations, CertificateEvaluationMapper evaluationMapper) {
 
         super(database, transactions);
+        this.certification = certification;
+        this.evaluations = evaluations;
+        this.evaluationMapper = evaluationMapper;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
@@ -90,7 +108,7 @@ public class CertificateRequestService extends AppTransactionManager implements 
         this.cipher = cipher;
     }
 
-    /** Refuses to start without a master key: this resource stores secret columns (DEPLOYMENT.md "Secrets"). */
+    /** Refuses to start without a master key: this resource stores secret columns. */
     @Override
     public void afterPropertiesSet() {
         cipher.requireConfigured();
@@ -117,7 +135,10 @@ public class CertificateRequestService extends AppTransactionManager implements 
         });
     }
 
-    /** Creates the row; with validateOnly every check runs and nothing is written. */
+    /**
+     * Books an evaluation slot for the caller (status upcoming, set by the service); with validateOnly every check runs
+     * and nothing is written.
+     */
     public CertificateRequest createCertificateRequest(CertificateRequest request, boolean validateOnly) {
         validator.validate(request);
         List<FieldError> wire = new ArrayList<>();
@@ -127,6 +148,7 @@ public class CertificateRequestService extends AppTransactionManager implements 
             throw new ValidationFailedException(wire);
         }
         CertificateRequestEntity entity = mapper.toEntity(request);
+        entity.setUserId(OwnRows.caller());
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
         sealMeetingLink(entity, request.getMeetingLink());
@@ -146,8 +168,8 @@ public class CertificateRequestService extends AppTransactionManager implements 
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CertificateRequest updateCertificateRequest(UUID id, String ifMatch, CertificateRequestUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -162,6 +184,7 @@ public class CertificateRequestService extends AppTransactionManager implements 
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             CertificateRequestEntity entity = loadVisible(scope, id);
+            requireReached(entity);
             scope.requireWritable(institutionOf(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -191,6 +214,7 @@ public class CertificateRequestService extends AppTransactionManager implements 
         runInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_DELETE);
             CertificateRequestEntity entity = loadVisible(scope, id);
+            requireReached(entity);
             scope.requireWritable(institutionOf(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -209,9 +233,7 @@ public class CertificateRequestService extends AppTransactionManager implements 
         });
     }
 
-    /**
-     * Stores meetingLink encrypted for the row's tenant and column (database/README "Secrets"); never the plaintext.
-     */
+    /** Stores meetingLink encrypted for the row's tenant and column; never the plaintext. */
     private void sealMeetingLink(CertificateRequestEntity entity, String plaintext) {
         entity.setMeetingLinkEnc(cipher.encrypt(plaintext, entity.getTenantId(), SECRET_MEETING_LINK_ENC));
     }
@@ -234,20 +256,16 @@ public class CertificateRequestService extends AppTransactionManager implements 
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOf(CertificateRequestEntity entity) {
         return repository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected CertificateRequestUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected CertificateRequestUpdate fields; explicit per field so a mask can clear values. */
     private void apply(CertificateRequestEntity entity, CertificateRequestUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
                 case "courseId" -> entity.setCourseId(changes.getCourseId());
-                case "userId" -> entity.setUserId(changes.getUserId());
                 case "cohortId" -> entity.setCohortId(changes.getCohortId());
                 case "evaluatorUserId" -> entity.setEvaluatorUserId(changes.getEvaluatorUserId());
                 case "requestDate" -> entity.setRequestDate(changes.getRequestDate());
@@ -293,5 +311,109 @@ public class CertificateRequestService extends AppTransactionManager implements 
 
     private void assertUnique(CertificateRequestEntity entity) {
 
+    }
+
+    // ---- the booking's workflow: cancelling it, and starting its evaluation ----
+
+    static final String PERMISSION_CANCEL = "lms.certificate_request.cancel_certificate_request";
+    static final String PERMISSION_START_EVALUATION = "lms.certificate_request.start_evaluation";
+    private static final String EVALUATION = "lms.certificate_evaluation";
+    private static final String UPCOMING = "upcoming";
+
+    /**
+     * lms.CancelCertificateRequest: cancels an upcoming booking; the reason is kept with the audit record. The student
+     * who booked, the evaluator of the slot or a holder of lms.certificate_request.update in the course's institution
+     * may cancel (403 for anybody else who sees it); a booking already completed or cancelled is 409.
+     */
+    public CertificateRequest cancelCertificateRequest(UUID id, String etag, String reason) {
+        AuthContext caller = AuthContext.require();
+        DataScope scope = DataScope.current(PERMISSION_CANCEL);
+        OptionalInt expected = Etags.bodyVersion(etag);
+        return doInWriteTransaction(() -> {
+            CertificateRequestEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            requireParty(caller, entity);
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!UPCOMING.equals(entity.getStatus())) {
+                throw new InvalidStateException("Only an upcoming booking can be cancelled.");
+            }
+            if (certification.setRequestStatus(id, entity.getRowVersion(), "cancelled", now(), caller.userId()) == 0) {
+                throw new PreconditionFailedException("The booking changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, "cancel", List.of("status"), reason);
+            outbox.publish(AGGREGATE + ".cancel", AGGREGATE, id, LmsEvents.payload(id));
+            return dto(repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    /**
+     * lms.StartEvaluation: the evaluator (or a holder of lms.certificate_request.update) opens the evaluation of an
+     * upcoming booking: an in-progress evaluation of the booked slot is created and the booking is completed. A booking
+     * that is not upcoming, or already has an evaluation, is 409.
+     */
+    public CertificateEvaluation startEvaluation(UUID id) {
+        AuthContext caller = AuthContext.require();
+        DataScope scope = DataScope.current(PERMISSION_START_EVALUATION);
+        return doInWriteTransaction(() -> {
+            CertificateRequestEntity booking = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(booking));
+            if (!caller.userId().equals(booking.getEvaluatorUserId()) && !staff(caller, booking)) {
+                throw new PermissionDeniedException("Only the booking's evaluator may start its evaluation.");
+            }
+            if (!UPCOMING.equals(booking.getStatus())) {
+                throw new InvalidStateException("Only an upcoming booking can be evaluated.");
+            }
+            if (certification.hasEvaluation(id)) {
+                throw new ConflictException("EVALUATION_EXISTS", "The booking already has an evaluation.");
+            }
+            CertificateEvaluationEntity evaluation = CertificateEvaluationEntity.builder()
+                    .courseId(booking.getCourseId()).userId(booking.getUserId()).cohortId(booking.getCohortId())
+                    .certificateRequestId(id).evaluatorUserId(booking.getEvaluatorUserId() != null
+                            ? booking.getEvaluatorUserId() : caller.userId())
+                    .evaluationDate(booking.getRequestDate()).startTime(booking.getStartTime())
+                    .endTime(booking.getEndTime()).status("in_progress").build();
+            evaluation.onCreatingData(Actor.current(), clock);
+            evaluation.setTenantId(booking.getTenantId());
+            CertificateEvaluationEntity stored = evaluations.insert(evaluation);
+            if (certification.setRequestStatus(id, booking.getRowVersion(), "completed", now(), caller.userId())
+                    == 0) {
+                throw new PreconditionFailedException("The booking changed since it was read.");
+            }
+            audit.recordCreate(EVALUATION, stored.getId());
+            outbox.publish(EVALUATION + LmsEvents.CREATED, EVALUATION, stored.getId(), LmsEvents.payload(stored.getId()));
+            audit.recordTransition(AGGREGATE, id, "start_evaluation", List.of("status"), null);
+            outbox.publish(AGGREGATE + ".start_evaluation", AGGREGATE, id, LmsEvents.payload(id));
+            return evaluationMapper.toDto(stored);
+        });
+    }
+
+    /** The booking's student, its evaluator, or staff of its course's institution (403 for anybody else). */
+    private void requireParty(AuthContext caller, CertificateRequestEntity entity) {
+        if (!caller.userId().equals(entity.getUserId()) && !caller.userId().equals(entity.getEvaluatorUserId())
+                && !staff(caller, entity)) {
+            throw new PermissionDeniedException("Only the student, the evaluator or staff may change this booking.");
+        }
+    }
+
+    /** Who manages evaluators in the booking's institution (the update permission is the student's own too). */
+    private boolean staff(AuthContext caller, CertificateRequestEntity entity) {
+        return caller.hasPermission(PERMISSION_STAFF)
+                && DataScope.of(caller, PERMISSION_STAFF).canRead(institutionOf(entity))
+                && (institutionOf(entity).isPresent() || caller.hasTenantWidePermission(PERMISSION_STAFF));
+    }
+
+    /** The booking's student, its evaluator or staff may change it; to anybody else it is absent (404). */
+    private void requireReached(CertificateRequestEntity entity) {
+        AuthContext caller = AuthContext.require();
+        if (!caller.userId().equals(entity.getUserId()) && !caller.userId().equals(entity.getEvaluatorUserId())
+                && !staff(caller, entity)) {
+            throw new ResourceNotFoundException(AGGREGATE, entity.getId());
+        }
+    }
+
+    private OffsetDateTime now() {
+        return OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
     }
 }

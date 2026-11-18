@@ -5,19 +5,39 @@
   "permission" : "authtest.widget.create",
   "schemes" : [ "platformAdminAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "platform"
 }, {
   "operationId" : "authtest.GetWidget",
   "method" : "GET",
   "path" : "/v1/authtest/widgets/{widgetId}",
   "permission" : "authtest.widget.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "authtest.ListWidgets",
   "method" : "GET",
   "path" : "/v1/authtest/widgets",
   "permission" : "authtest.widget.read",
   "schemes" : [ ],
-  "anonymous" : true
+  "anonymous" : true,
+  "audience" : "public"
+}, {
+  "operationId" : "authtest.ReceiveWidgetOutcome",
+  "method" : "POST",
+  "path" : "/v1/authtest/widgets:outcome",
+  "permission" : "authtest.webhook.receive",
+  "schemes" : [ ],
+  "anonymous" : true,
+  "audience" : "public",
+  "ownAuthorization" : true
+} , {
+  "operationId" : "authtest.SyncWidgets",
+  "method" : "POST",
+  "path" : "/v1/authtest/widgets:sync",
+  "permission" : "authtest.widget.sync",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "internal"
 } ]

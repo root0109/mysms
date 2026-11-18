@@ -3,14 +3,11 @@ package com.mysms.messaging.events;
 import java.util.Set;
 
 /**
- * The message bus between modules, behind MySMS's own interface so the broker can change by configuration
- * (`mysms.events.bus`). Implementations are supplied together by the `messaging` module: RabbitMQ (the default),
- * Google Cloud Pub/Sub, and an in-process adapter for one JVM. Delivery is at least once; consumers make it
- * exactly-once with their inbox ({@link InboxProcessor}).
+ * The message bus between modules, chosen by {@code mysms.events.bus}: RabbitMQ (default), Google Cloud Pub/Sub or
+ * in-process. Delivery is at least once; consumers make it exactly-once with their {@link InboxProcessor}.
  */
 public interface EventBus extends AutoCloseable {
 
-    /** The implementation's name, as configured in `mysms.events.bus`. */
     String name();
 
     /**
@@ -20,11 +17,9 @@ public interface EventBus extends AutoCloseable {
     void publish(EventEnvelope event);
 
     /**
-     * Delivers every event of the given types to the consumer module's handler. Each consumer module has its own
-     * durable queue or subscription: replicas of one module share its deliveries, different modules each get every
-     * event. A handler that throws gets the event again later, after a growing delay; after repeated failures the
-     * event is parked for an operator (the consumer's dead-letter queue or topic). A
-     * {@link RejectedEventException} parks it at once.
+     * Delivers every event of the given types to the consumer module's handler. Replicas of one module share its
+     * deliveries; different modules each get every event. A throwing handler gets the event again after a growing delay
+     * and it is parked after repeated failures; a {@link RejectedEventException} parks it at once.
      */
     Subscription subscribe(String consumer, Set<String> eventTypes, EventHandler handler);
 

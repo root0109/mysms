@@ -18,10 +18,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
- * payroll keeps its logical references consistent when their owners are deleted (database/logical-references.md, "Events
- * drive cleanup"; references are not checked against the owner when written). For each owner's `.deleted` event it
- * clears the referencing column or soft-deletes the referencing row, audits each changed row and announces it on its
- * own outbox, inside the event's tenant (messaging's InboxProcessor: exactly once per event).
+ * Keeps payroll's logical references consistent when their owners are deleted (references are not checked when
+ * written). For each owner's {@code .deleted} event it clears the referencing column or soft-deletes the referencing
+ * row, audited and announced on the outbox, inside the event's tenant; the inbox delivers each event exactly once. As
+ * the module's one handler of {@code hr.staff.deleted} it first hands that event to {@link StaffMemberSync} in the same
+ * transaction.
  */
 @Component
 public class PayrollReferenceCleanup implements EventSubscriptions {
@@ -41,14 +42,16 @@ public class PayrollReferenceCleanup implements EventSubscriptions {
                     "payroll.payslip", "documentFileId"))));
 
     private final ReferenceCleanupRepository repository;
+    private final StaffMemberSync staffMembers;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final Clock clock;
 
-    public PayrollReferenceCleanup(ReferenceCleanupRepository repository,
+    public PayrollReferenceCleanup(ReferenceCleanupRepository repository, StaffMemberSync staffMembers,
             @Qualifier(PayrollEventsConfig.OUTBOX) OutboxWriter outbox,
             @Qualifier(PayrollEventsConfig.AUDIT) AuditWriter audit, Clock clock) {
         this.repository = repository;
+        this.staffMembers = staffMembers;
         this.outbox = outbox;
         this.audit = audit;
         this.clock = clock;
@@ -66,6 +69,9 @@ public class PayrollReferenceCleanup implements EventSubscriptions {
 
     /** Applies every step of the deleted owner; returns how many rows changed. */
     public int handle(EventEnvelope event) {
+        if (StaffMemberSync.DELETED.equals(event.type())) {
+            staffMembers.apply(event);
+        }
         OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC);
         int changed = 0;
         for (Step step : STEPS.getOrDefault(event.type(), List.of())) {

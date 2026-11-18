@@ -1,5 +1,4 @@
 import {
-  isApiError,
   RESOURCES,
   useAllocateExamRooms,
   useAssignmentApprovals,
@@ -22,26 +21,11 @@ import { Button, SelectField, StatusChip, Switch, TextInput } from '@mysms/ui-we
 import { enumLabel } from '@mysms/i18n';
 import { useState } from 'react';
 
-type T = ReturnType<typeof useI18n>['t'];
-function actionError(t: T, error: unknown): string | null {
-  if (!error) return null;
-  if (isApiError(error)) {
-    if (error.status === 412) return t('common.conflict.body');
-    if (error.status === 403) return t('adm.records.forbidden');
-    if (error.status === 409) return error.detail ?? t('common.conflict.body');
-    if (error.status === 422)
-      return error.errors.map((item) => item.message).join(' ') || t('common.validation.pattern');
-  }
-  return t('common.error.generic');
-}
+import { RowError } from './assessmentUi';
 
-function RowError({ error, t }: { error: unknown; t: T }) {
-  const message = actionError(t, error);
-  return message ? (
-    <p className="sms-field__error" role="alert">
-      {message}
-    </p>
-  ) : null;
+/** The row's entity tag as last read; a step is offered only with one (it is sent with every step). */
+function etagOf(row: RecordRow): string | undefined {
+  return typeof row.etag === 'string' && row.etag ? row.etag : undefined;
 }
 
 export function HomeworkBoardTools({ row }: { row: RecordRow }) {
@@ -64,7 +48,7 @@ export function HomeworkBoardTools({ row }: { row: RecordRow }) {
       >
         {t('asm.native.publish')}
       </Button>
-      <RowError error={action.error} t={t} />
+      <RowError error={action.error} />
     </>
   );
 }
@@ -119,7 +103,7 @@ export function HomeworkApprovalTools({ row }: { row: RecordRow }) {
           {t('asm.native.reject')}
         </Button>
       ) : null}
-      <RowError error={error} t={t} />
+      <RowError error={error} />
     </>
   );
 }
@@ -143,6 +127,7 @@ export function AssignmentTools({ row }: { row: RecordRow }) {
   const [approvalError, setApprovalError] = useState<unknown>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const status = String(row.status);
+  const etag = etagOf(row);
   const pendingApproval = approvals.data?.items.find((item) => item.decision === 'pending');
   const available: {
     step: 'publish' | 'finish' | 'cancel' | 'reset';
@@ -165,13 +150,14 @@ export function AssignmentTools({ row }: { row: RecordRow }) {
     }
   };
   const review = async (step: 'approve' | 'reject') => {
+    if (!etag) return;
     setApprovalError(null);
     setNotice(null);
     try {
       await action.mutateAsync({
         assignmentId: row.id,
         step,
-        etag: typeof row.etag === 'string' ? row.etag : null,
+        etag,
         ...(step === 'reject' ? { reason } : {}),
       });
       setReason('');
@@ -201,12 +187,13 @@ export function AssignmentTools({ row }: { row: RecordRow }) {
             key={button.step}
             variant={button.step === 'cancel' ? 'danger' : 'secondary'}
             loading={action.isPending}
-            disabled={button.step === 'cancel' && !reason.trim()}
+            disabled={!etag || (button.step === 'cancel' && !reason.trim())}
             onClick={() =>
+              etag &&
               action.mutate({
                 assignmentId: row.id,
                 step: button.step,
-                etag: typeof row.etag === 'string' ? row.etag : null,
+                etag,
                 ...(button.step === 'cancel' ? { reason } : {}),
               })
             }
@@ -224,7 +211,7 @@ export function AssignmentTools({ row }: { row: RecordRow }) {
         <div className="assessment-approvals">
           <strong>{t('asm.web.assignmentApprovals')}</strong>
           {approvals.isPending ? <p>{t('common.state.loading')}</p> : null}
-          {approvals.isError ? <RowError error={approvals.error} t={t} /> : null}
+          {approvals.isError ? <RowError error={approvals.error} /> : null}
           {approvals.data?.items.length === 0 ? (
             <p className="hint">{t('asm.web.noApprovalRecords')}</p>
           ) : null}
@@ -239,7 +226,12 @@ export function AssignmentTools({ row }: { row: RecordRow }) {
               />
               {approval.comments ? <p>{approval.comments}</p> : null}
               {approval.decision === 'pending' && status === 'draft' && may.approve ? (
-                <Button variant="secondary" loading={action.isPending} onClick={() => void review('approve')}>
+                <Button
+                  variant="secondary"
+                  loading={action.isPending}
+                  disabled={!etag}
+                  onClick={() => void review('approve')}
+                >
                   {t('asm.native.approve')}
                 </Button>
               ) : null}
@@ -247,7 +239,7 @@ export function AssignmentTools({ row }: { row: RecordRow }) {
                 <Button
                   variant="danger"
                   loading={action.isPending}
-                  disabled={!reason.trim()}
+                  disabled={!etag || !reason.trim()}
                   onClick={() => void review('reject')}
                 >
                   {t('asm.native.reject')}
@@ -258,7 +250,7 @@ export function AssignmentTools({ row }: { row: RecordRow }) {
         </div>
       ) : null}
       {notice ? <p role="status">{notice}</p> : null}
-      <RowError error={approvalError ?? action.error ?? createApproval.error} t={t} />
+      <RowError error={approvalError ?? action.error ?? createApproval.error} />
     </>
   );
 }
@@ -282,9 +274,10 @@ export function ExamSessionTools({ row }: { row: RecordRow }) {
     { step: 'schedule', label: t('asm.native.schedule'), states: ['draft'] },
     { step: 'markHeld', label: t('asm.native.markHeld'), states: ['scheduled'] },
     { step: 'complete', label: t('asm.native.complete'), states: ['held'] },
-    { step: 'cancel', label: t('common.action.cancel'), states: ['draft', 'scheduled', 'held'] },
+    { step: 'cancel', label: t('common.action.cancel'), states: ['draft', 'scheduled'] },
     { step: 'reset', label: t('asm.native.reset'), states: ['cancelled'] },
   ];
+  const etag = etagOf(row);
   return (
     <>
       {available.map((button) =>
@@ -293,11 +286,13 @@ export function ExamSessionTools({ row }: { row: RecordRow }) {
             key={button.step}
             variant={button.step === 'cancel' ? 'danger' : 'secondary'}
             loading={action.isPending}
+            disabled={!etag}
             onClick={() =>
+              etag &&
               action.mutate({
                 examSessionId: row.id,
                 step: button.step,
-                etag: typeof row.etag === 'string' ? row.etag : null,
+                etag,
               })
             }
           >
@@ -305,7 +300,7 @@ export function ExamSessionTools({ row }: { row: RecordRow }) {
           </Button>
         ) : null,
       )}
-      <RowError error={action.error} t={t} />
+      <RowError error={action.error} />
     </>
   );
 }
@@ -346,6 +341,7 @@ export function ExamTools({ row }: { row: RecordRow }) {
     { step: 'reset', label: t('asm.native.reset'), states: ['cancelled'] },
   ];
   const busy = transitions.isPending || populate.isPending || allocate.isPending;
+  const etag = etagOf(row);
   const runPopulate = async () => {
     setError(null);
     try {
@@ -370,11 +366,13 @@ export function ExamTools({ row }: { row: RecordRow }) {
             key={button.step}
             variant={button.step === 'cancel' ? 'danger' : 'secondary'}
             loading={busy}
+            disabled={!etag}
             onClick={() =>
+              etag &&
               transitions.mutate({
                 examId: row.id,
                 step: button.step,
-                etag: typeof row.etag === 'string' ? row.etag : null,
+                etag,
               })
             }
           >
@@ -389,7 +387,7 @@ export function ExamTools({ row }: { row: RecordRow }) {
       ) : null}
       {may.allocate ? (
         <>
-          {rooms.isError ? <RowError error={rooms.error} t={t} /> : null}
+          {rooms.isError ? <RowError error={rooms.error} /> : null}
           <SelectField
             label={t('asm.native.chooseRoom')}
             multiple
@@ -412,7 +410,7 @@ export function ExamTools({ row }: { row: RecordRow }) {
           </Button>
         </>
       ) : null}
-      <RowError error={error ?? transitions.error ?? populate.error ?? allocate.error} t={t} />
+      <RowError error={error ?? transitions.error ?? populate.error ?? allocate.error} />
     </>
   );
 }
@@ -427,6 +425,9 @@ export function MarksheetTools({ row }: { row: RecordRow }) {
     reset: useCan('assessment.marksheet.reset_marksheet'),
   };
   const status = String(row.status);
+  const etag = etagOf(row);
+  // a validated marksheet is published once: publishing again is refused (409), so it is not offered
+  const published = typeof row.publishedAt === 'string' && row.publishedAt !== '';
   const [visible, setVisible] = useState(row.visibleToGuardians === true);
   const available: { step: 'validate' | 'publish' | 'cancel' | 'reset'; label: string; states: string[] }[] =
     [
@@ -437,20 +438,22 @@ export function MarksheetTools({ row }: { row: RecordRow }) {
     ];
   return (
     <>
-      {status === 'validated' && may.publish ? (
+      {status === 'validated' && may.publish && !published ? (
         <Switch label={t('asm.native.visibleToGuardians')} checked={visible} onChange={setVisible} />
       ) : null}
       {available.map((button) =>
-        may[button.step] && button.states.includes(status) ? (
+        may[button.step] && button.states.includes(status) && !(button.step === 'publish' && published) ? (
           <Button
             key={button.step}
             variant={button.step === 'cancel' ? 'danger' : 'secondary'}
             loading={action.isPending}
+            disabled={!etag}
             onClick={() =>
+              etag &&
               action.mutate({
                 marksheetId: row.id,
                 step: button.step,
-                etag: typeof row.etag === 'string' ? row.etag : null,
+                etag,
                 ...(button.step === 'publish' ? { visibleToGuardians: visible } : {}),
               })
             }
@@ -459,7 +462,7 @@ export function MarksheetTools({ row }: { row: RecordRow }) {
           </Button>
         ) : null,
       )}
-      <RowError error={action.error} t={t} />
+      <RowError error={action.error} />
     </>
   );
 }
@@ -470,7 +473,8 @@ export function GenerateResultsTool({ row }: { row: RecordRow }) {
   const generate = useResultTemplateGenerateResults();
   const [job, setJob] = useState<Pick<Operation, 'module' | 'operationId'> | null>(null);
   const monitor = useOperation(job);
-  if (!mayGenerate) return null;
+  // results are generated once from a draft template (409 otherwise); cancelling its marksheet makes it a draft again
+  if (!mayGenerate || (row.status !== 'draft' && job === null)) return null;
   const start = async () => {
     try {
       const operation = await generate.mutateAsync(row.id);
@@ -494,7 +498,7 @@ export function GenerateResultsTool({ row }: { row: RecordRow }) {
           {monitor.data.errorMessage ? <p className="sms-field__error">{monitor.data.errorMessage}</p> : null}
         </>
       ) : null}
-      <RowError error={generate.error ?? monitor.error} t={t} />
+      <RowError error={generate.error ?? monitor.error} />
     </>
   );
 }

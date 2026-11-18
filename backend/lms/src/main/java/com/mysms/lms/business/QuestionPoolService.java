@@ -44,13 +44,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.question_pool (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a QuestionPool
- * are served here too — QuestionPoolItem.
+ * Business service of lms.question_pool and of the records that exist only as part of a QuestionPool
+ * (QuestionPoolItem): audit and domain event commit in the same transaction as every change. Rows outside the caller's
+ * institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class QuestionPoolService extends AppTransactionManager {
@@ -144,8 +140,8 @@ public class QuestionPoolService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public QuestionPool updateQuestionPool(UUID id, String ifMatch, QuestionPoolUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -210,14 +206,12 @@ public class QuestionPoolService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(QuestionPoolEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected QuestionPoolUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected QuestionPoolUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(QuestionPoolEntity entity, QuestionPoolUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -295,8 +289,8 @@ public class QuestionPoolService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public QuestionPoolItem updateQuestionPoolItem(UUID questionPoolId, UUID id, String ifMatch,
             QuestionPoolItemUpdate changes, String updateMask, boolean validateOnly) {
@@ -359,15 +353,12 @@ public class QuestionPoolService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfQuestionPoolItem(QuestionPoolItemEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected QuestionPoolItemUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected QuestionPoolItemUpdate fields; explicit per field so a mask can clear values. */
     private static void applyQuestionPoolItem(QuestionPoolItemEntity entity, QuestionPoolItemUpdate changes,
             List<String> fields) {
         for (String field : fields) {

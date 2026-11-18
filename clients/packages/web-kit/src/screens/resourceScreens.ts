@@ -26,13 +26,15 @@ export interface ResourceScreenDef {
   /** Something each row can start besides its editor; the tools are named in `ResourceScreen`. */
   tool?:
     | 'takeAttendance'
+    | 'cycleTimeline'
     | 'homeworkBoard'
     | 'homeworkApproval'
     | 'assignment'
     | 'examSession'
     | 'exam'
     | 'marksheet'
-    | 'generateResults';
+    | 'generateResults'
+    | 'clearDemoData';
 }
 
 export const NAV_GROUPS: readonly NavGroupId[] = [
@@ -47,10 +49,10 @@ export const NAV_GROUPS: readonly NavGroupId[] = [
 ];
 
 export const RESOURCE_SCREENS: readonly ResourceScreenDef[] = [
-  { id: 'SIS-01', resource: 'sis.Student', group: 'people' },
+  { id: 'SIS-01', resource: 'sis.Student', group: 'people', detail: 'SIS-02' },
   { id: 'SIS-04', resource: 'sis.Guardian', group: 'people' },
-  { id: 'ADMN-01', resource: 'admission.AdmissionCycle', group: 'people' },
-  { id: 'ADMN-02', resource: 'admission.Application', group: 'people' },
+  { id: 'ADMN-01', resource: 'admission.AdmissionCycle', group: 'people', tool: 'cycleTimeline' },
+  { id: 'ADMN-02', resource: 'admission.Application', group: 'people', detail: 'ADMN-03' },
   { id: 'SIS-03', resource: 'sis.StudentEnrollment', group: 'people' },
   { id: 'SIS-06', resource: 'sis.DisciplineIncident', group: 'people' },
   { id: 'SIS-05', resource: 'sis.StudentHealthRecord', group: 'people' },
@@ -109,10 +111,6 @@ export const RESOURCE_SCREENS: readonly ResourceScreenDef[] = [
   { id: 'FIN-09', resource: 'finance.Coupon', group: 'setup' },
   { id: 'HR-01', resource: 'hr.Staff', group: 'people' },
   { id: 'HR-03', resource: 'hr.LeaveType', group: 'setup' },
-  { id: 'HR-05', resource: 'payroll.SalaryTemplate', group: 'setup' },
-  { id: 'HR-06', resource: 'payroll.StaffSalary', group: 'money' },
-  { id: 'HR-07', resource: 'payroll.Payslip', group: 'money' },
-  { id: 'HR-09', resource: 'payroll.PayrollPayment', group: 'money' },
   { id: 'LIB-01', resource: 'library.Media', group: 'services' },
   { id: 'LIB-03', resource: 'library.Loan', group: 'services' },
   { id: 'LIB-04', resource: 'library.LibraryCard', group: 'services' },
@@ -137,5 +135,5 @@ export const RESOURCE_SCREENS: readonly ResourceScreenDef[] = [
   { id: 'ADM-05', resource: 'org.AcademicYear', group: 'setup' },
   { id: 'ADM-06', resource: 'org.Holiday', group: 'setup' },
   { id: 'ADM-10', resource: 'iam.Role', group: 'setup' },
-  { id: 'ADM-14', resource: 'platform.TenantSubscription', group: 'setup' },
+  { id: 'LMS-34', resource: 'lms.ItemOverride', group: 'learning' },
 ];

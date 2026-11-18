@@ -37,10 +37,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.content_view_session (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of lms.content_view_session: audit and domain event commit in the same transaction as every change.
+ * Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class ContentViewSessionService extends AppTransactionManager {
@@ -52,7 +50,7 @@ public class ContentViewSessionService extends AppTransactionManager {
     static final String PERMISSION_UPDATE = "lms.content_view_session.update";
     /** The contract's ContentViewSessionUpdate fields, in apply order. */
     static final List<String> WRITABLE =
-            List.of("userId", "contentItemId", "fileId", "cohortId", "startedAt", "endedAt", "location", "sessionRef");
+            List.of("contentItemId", "fileId", "cohortId", "startedAt", "endedAt", "location", "sessionRef");
 
 
     private final ContentViewSessionRepository repository;
@@ -104,6 +102,7 @@ public class ContentViewSessionService extends AppTransactionManager {
     public ContentViewSession createContentViewSession(ContentViewSession request, boolean validateOnly) {
         validator.validate(request);
         ContentViewSessionEntity entity = mapper.toEntity(request);
+        entity.setUserId(OwnRows.caller());
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
         DataScope scope = DataScope.current(PERMISSION_CREATE);
@@ -122,8 +121,8 @@ public class ContentViewSessionService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ContentViewSession updateContentViewSession(UUID id, String ifMatch, ContentViewSessionUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -132,6 +131,7 @@ public class ContentViewSessionService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             ContentViewSessionEntity entity = loadVisible(scope, id);
+            OwnRows.require(entity.getUserId(), AGGREGATE, id);
             scope.requireWritable(institutionOf(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -165,19 +165,15 @@ public class ContentViewSessionService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.cohort it belongs to). */
+    /** The institution of the lms.cohort the row belongs to. */
     private Optional<UUID> institutionOf(ContentViewSessionEntity entity) {
         return repository.institutionOf(entity.getCohortId());
     }
 
-    /**
-     * Applies the selected ContentViewSessionUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected ContentViewSessionUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(ContentViewSessionEntity entity, ContentViewSessionUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
-                case "userId" -> entity.setUserId(changes.getUserId());
                 case "contentItemId" -> entity.setContentItemId(changes.getContentItemId());
                 case "fileId" -> entity.setFileId(changes.getFileId());
                 case "cohortId" -> entity.setCohortId(changes.getCohortId());

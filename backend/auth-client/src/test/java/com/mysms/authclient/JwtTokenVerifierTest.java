@@ -22,6 +22,37 @@ class JwtTokenVerifierTest {
             new AuthClientProperties(TestTokens.ISSUER, null, tokens.publicKeyPem(), null, List.of("master"), null, false));
 
     @Test
+    void mapsAServiceTokenToAServicePrincipal() {
+        AuthContext service = verifier.verify(tokens.service("finance", "org.institution.read")).context();
+        assertThat(service.isService()).isTrue();
+        assertThat(service.service()).contains("finance");
+        assertThat(service.tenantId()).isEmpty();
+        assertThat(service.permissions()).containsExactly("org.institution.read");
+        assertThat(service.hasTenantWidePermission("org.institution.read")).isTrue();
+        assertThat(service.userId()).isEqualTo(AuthContext.serviceUserId("finance"))
+                .isNotEqualTo(AuthContext.serviceUserId("platform"));
+        assertThat(service.withTenant(TENANT).tenantId()).contains(TENANT);
+        AuthContext person = verifier.verify(tokens.tenantUser(TENANT, USER)).context();
+        assertThat(person.isService()).isFalse();
+        assertThatThrownBy(() -> person.withTenant(UUID.randomUUID())).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void refusesTokensThatMixAServiceAndAPerson() {
+        Instant expiry = Instant.now().plusSeconds(300);
+        for (Map<String, Object> claims : List.of(
+                Map.<String, Object>of("sub", "service:finance", "aud", "mysms-internal", "tid", TENANT.toString()),
+                Map.<String, Object>of("sub", "service:finance", "aud", "mysms"),
+                Map.<String, Object>of("sub", "service:finance", "aud", List.of("mysms-internal", "mysms")),
+                Map.<String, Object>of("sub", USER.toString(), "aud", "mysms-internal"),
+                Map.<String, Object>of("sub", "service:Finance-1", "aud", "mysms-internal"),
+                Map.<String, Object>of("sub", "service:finance", "aud", "mysms-internal", "pid", PERSON.toString()))) {
+            assertThatThrownBy(() -> verifier.verify(tokens.custom(claims, expiry))).as(claims.toString())
+                    .isInstanceOf(InvalidTokenException.class);
+        }
+    }
+
+    @Test
     void mapsTheMySmsClaims() {
         UUID institution = UUID.randomUUID();
         UUID admin = UUID.randomUUID();
@@ -95,7 +126,7 @@ class JwtTokenVerifierTest {
         assertThat(JwtTokenVerifier.from(new AuthClientProperties("https://x", "https://x/jwks", null, null, null, null, false)))
                 .isNotNull();
         AuthClientProperties defaults = new AuthClientProperties("https://x", null, null, null, null, null, false);
-        assertThat(defaults.audiences()).containsExactly("mysms", "mysms-platform-admin");
+        assertThat(defaults.audiences()).containsExactly("mysms", "mysms-platform-admin", "mysms-internal");
         assertThat(defaults.infrastructurePaths()).contains("/actuator/health");
         assertThat(defaults.modules()).isEmpty();
     }

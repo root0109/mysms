@@ -20,8 +20,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * Plain-JDBC access to admission.operation (JAVA-CODING-RULES §6): constant SQL, the tenant filtered in every statement,
- * live rows only, newest first with keyset paging, the row_version guard on cancel.
+ * Plain-JDBC access to admission.operation: constant SQL, the tenant filtered in every statement, live rows only,
+ * newest first with keyset paging, the row_version guard on cancel.
  */
 @Repository
 public class OperationRepository {
@@ -50,6 +50,22 @@ public class OperationRepository {
                AND id = :id AND row_version = :expected AND status = 'running' AND deleted_at IS NULL
             """;
 
+    private static final String INSERT = """
+            INSERT INTO admission.operation
+            (id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent, started_by_user_id,
+             started_at, created_at, created_by, updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :operationName, :resourceType, :resourceId, 'running', 0, :startedBy,
+                    :startedAt, :createdAt, :createdBy, :updatedAt, :updatedBy, :rowVersion)
+            """;
+    private static final String FINISH = """
+            UPDATE admission.operation
+               SET status = :status, progress_percent = 100, error_code = :errorCode, error_message = :errorMessage,
+                   result_entity_type = :resultType, result_entity_id = :resultId, finished_at = :now,
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND status = 'running' AND deleted_at IS NULL
+            """;
+
     private final JdbcClient jdbc;
 
     public OperationRepository(@Qualifier(AdmissionDatabaseConfig.DATABASE) ModuleDatabase database) {
@@ -72,6 +88,41 @@ public class OperationRepository {
     public int cancel(UUID id, int expected, OffsetDateTime now, UUID actor) {
         return jdbc.sql(CANCEL).param("id", id).param("expected", expected).param("now", now).param("actor", actor)
                 .update();
+    }
+
+    /** Records a running operation the caller starts (its id, stamps and version come from the entity). */
+    public void insert(OperationEntity e) {
+        jdbc.sql(INSERT)
+                .param("id", e.getId())
+                .param("tenantId", e.getTenantId())
+                .param("operationName", e.getOperationName())
+                .param("resourceType", e.getResourceType())
+                .param("resourceId", e.getResourceId())
+                .param("startedBy", e.getStartedByUserId())
+                .param("startedAt", e.getStartedAt())
+                .param("createdAt", e.getCreatedAt())
+                .param("createdBy", e.getCreatedBy())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("rowVersion", e.getRowVersion())
+                .update();
+    }
+
+    /**
+     * Ends a running operation as succeeded or failed with its result; 0 when it is no longer running (cancelled
+     * meanwhile), which keeps the cancellation.
+     */
+    public int finish(UUID id, String status, String errorCode, String errorMessage, String resultType,
+            UUID resultId, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(FINISH)
+                .param("id", id)
+                .param("status", status)
+                .param("errorCode", errorCode)
+                .param("errorMessage", errorMessage)
+                .param("resultType", resultType)
+                .param("resultId", resultId)
+                .param("now", now)
+                .param("actor", actor).update();
     }
 
     /** Only the caller's own operations, unless every operation of the tenant may be seen. */

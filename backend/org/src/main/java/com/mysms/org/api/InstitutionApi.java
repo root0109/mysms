@@ -1,4 +1,4 @@
-// Owned API contract of org (JAVA-CODING-RULES §7); first materialized from api/openapi/org.yaml on 2026-11-10.
+// Owned API contract of org.
 package com.mysms.org.api;
 
 import com.mysms.org.api.model.InstitutionCard;
@@ -304,6 +304,24 @@ public interface InstitutionApi {
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
          @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
+    );
+
+
+    String PATH_LIST_ACTIVE_INSTITUTIONS = "/v1/org/institutions:active";
+    /**
+     * GET /v1/org/institutions:active : the active institutions of the call's tenant, by name. Internal: MySMS services
+     * only (iam offers them to self sign-up).
+     */
+    @RequestMapping(
+        method = RequestMethod.GET,
+        value = InstitutionApi.PATH_LIST_ACTIVE_INSTITUTIONS,
+        produces = { "application/json", "application/problem+json" }
+    )
+    ResponseEntity<PagingInfo<Institution>> listActiveInstitutions(
+        @Min(value = 1)  @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+        @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
+         @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
+        @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter
     );
 
 

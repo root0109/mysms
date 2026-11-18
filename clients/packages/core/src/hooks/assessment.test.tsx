@@ -22,7 +22,7 @@ import {
   useGradingBands,
   useGradingSchemes,
   useMarksheetStep,
-  useMyStudent,
+  useMyStudentIds,
   usePopulateExamResults,
   useRecordExamMarks,
   useReplyToHomeworkFeedback,
@@ -55,7 +55,7 @@ function setup() {
   ];
   const api = fakeApi({
     'POST /v1/iam/auth:login': () => json({ tokens, user }),
-    'GET /v1/iam/me': () => json({ user, permissions: [] }),
+    'GET /v1/iam/me': () => json({ user, permissions: [], studentIds: ['student-a'] }),
     'GET /v1/assessment/assignment-submissions': (request) => onePage(request, assignmentSubmissions),
     'GET /v1/assessment/exam-results': (request) => onePage(request, examResults),
     'GET /v1/assessment/marksheet-lines': (request) => onePage(request, marksheetLines),
@@ -116,7 +116,6 @@ describe('assessment hook operations', () => {
     const calls: { api: string; method: string; args: unknown[] }[] = [];
     let resultPageCalls = 0;
     const listResults: Record<string, { data: unknown[]; paging: { page: number; next?: string } }> = {
-      listStudents: { data: [{ id: 'student-1', personId: 'person-1' }], paging: { page: 1 } },
       listAssignmentSubmissions: { data: [], paging: { page: 1 } },
       listAssignmentApprovals: { data: [], paging: { page: 1 } },
       listExamResults: { data: [], paging: { page: 1 } },
@@ -156,7 +155,7 @@ describe('assessment hook operations', () => {
     );
     const { result } = renderHook(
       () => ({
-        myStudent: useMyStudent(),
+        myStudents: useMyStudentIds(),
         submissions: useAssignmentSubmissions('a1'),
         approvals: useAssignmentApprovals('a1'),
         examResults: useExamResults('e1'),
@@ -190,7 +189,6 @@ describe('assessment hook operations', () => {
     );
 
     await waitFor(() => {
-      expect(result.current.myStudent.data?.id).toBe('student-1');
       expect(result.current.studentResults.data?.items).toHaveLength(2);
       expect(result.current.schemes.data?.items).toHaveLength(1);
       expect(result.current.bands.data?.items).toHaveLength(1);
@@ -223,7 +221,7 @@ describe('assessment hook operations', () => {
         await result.current.assignmentStep.mutateAsync({
           assignmentId: 'a1',
           step,
-          etag: step === 'approve' ? null : 'v1',
+          etag: 'v1',
           ...(reason === undefined ? {} : { reason }),
         });
       }
@@ -239,7 +237,7 @@ describe('assessment hook operations', () => {
           assignmentId: 'a1',
           submissionId: 'sub-1',
           step,
-          etag: step === 'accept' ? null : 'v1',
+          etag: 'v1',
           ...(reason === undefined ? {} : { reason }),
           ...(step === 'grade' ? { marks: '8', feedback: ' good ' } : {}),
         });
@@ -254,7 +252,7 @@ describe('assessment hook operations', () => {
         await result.current.sessionStep.mutateAsync({
           examSessionId: 'session-1',
           step,
-          etag: step === 'markHeld' ? null : 'v1',
+          etag: 'v1',
           ...(reason === undefined ? {} : { reason }),
         });
       }
@@ -269,7 +267,7 @@ describe('assessment hook operations', () => {
         await result.current.examStep.mutateAsync({
           examId: 'e1',
           step,
-          etag: step === 'resultsUpdated' ? null : 'v1',
+          etag: 'v1',
           ...(reason === undefined ? {} : { reason }),
         });
       }
@@ -277,7 +275,7 @@ describe('assessment hook operations', () => {
       await result.current.allocateRooms.mutateAsync({ examId: 'e1', roomIds: ['room-1'] });
       await result.current.recordMarks.mutateAsync({
         examId: 'e1',
-        entries: [{ studentId: 'student-1', attendanceStatus: 'present', marksObtained: '8' }],
+        entries: [{ studentId: 'student-1', attendanceStatus: 'present', marksObtained: '8', etag: 'v3' }],
       });
       for (const [step, visibleToGuardians, reason] of [
         ['validate', undefined, undefined],
@@ -320,6 +318,19 @@ describe('assessment hook operations', () => {
       });
       await result.current.deleteBand.mutateAsync({ gradingBandId: 'band-1', etag: 'v1' });
     });
+
+    expect(result.current.myStudents).toEqual(['student-a']);
+    const versions = calls
+      .filter((entry) =>
+        /Assignment$|AssignmentSubmission$|Exam$|ExamSession$|Marksheet$|Changes$/.test(entry.method),
+      )
+      .filter((entry) => !entry.method.startsWith('create'))
+      .map((entry) => JSON.stringify(entry.args[0]));
+    for (const request of versions) expect(request, 'every step carries the etag').toContain('v1');
+    const marks = calls.find((entry) => entry.method === 'recordExamMarks');
+    expect(JSON.stringify(marks?.args[0])).toContain('"etag":"v3"');
+    const publish = calls.find((entry) => entry.method === 'publishMarksheet');
+    expect(publish?.args[0]).toMatchObject({ ifMatch: 'v1' });
 
     const methods = new Set(calls.map((entry) => entry.method));
     for (const method of [
@@ -366,5 +377,62 @@ describe('assessment hook operations', () => {
     ]) {
       expect(methods.has(method), method).toBe(true);
     }
+  });
+});
+
+describe('own rows, own students and what goes stale', () => {
+  it("lists only the given student's submission and takes own students from the session", async () => {
+    const { api, runtime } = setup();
+    await runtime.session.signIn({ tenantCode: 'demo', identifier: 'student', password: 'pw' });
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <MySmsProvider runtime={runtime}>{children}</MySmsProvider>
+    );
+    const { result } = renderHook(
+      () => ({ own: useAssignmentSubmissions('a1', 'student-a'), mine: useMyStudentIds() }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.own.isSuccess).toBe(true));
+    const request = api.calls.find((call) => call.path === '/v1/assessment/assignment-submissions');
+    expect(new URLSearchParams(request?.search).get('filter')).toBe(
+      'assignmentId = "a1" AND studentId = "student-a"',
+    );
+    expect(result.current.mine).toEqual(['student-a']);
+    expect(api.calls.some((call) => call.path.startsWith('/v1/sis/'))).toBe(false);
+  });
+
+  it('refreshes results, lines and report cards after generation and marksheet steps', async () => {
+    const { api, runtime } = setup();
+    await runtime.session.signIn({ tenantCode: 'demo', identifier: 'teacher', password: 'pw' });
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <MySmsProvider runtime={runtime}>{children}</MySmsProvider>
+    );
+    const { result } = renderHook(
+      () => ({
+        results: useExamResults('e1'),
+        lines: useMarksheetLines('m1'),
+        generate: useResultTemplateGenerateResults(),
+        step: useMarksheetStep(),
+      }),
+      { wrapper },
+    );
+    await waitFor(() =>
+      expect(result.current.lines.isSuccess && result.current.results.isSuccess).toBe(true),
+    );
+    const reads = (path: string) => api.calls.filter((call) => call.path === path).length;
+    const before = [reads('/v1/assessment/exam-results'), reads('/v1/assessment/marksheet-lines')];
+    await act(async () => {
+      await result.current.generate.mutateAsync('t1').catch(() => undefined);
+    });
+    await waitFor(() => {
+      expect(reads('/v1/assessment/exam-results')).toBeGreaterThan(before[0] ?? 0);
+      expect(reads('/v1/assessment/marksheet-lines')).toBeGreaterThan(before[1] ?? 0);
+    });
+    const after = reads('/v1/assessment/exam-results');
+    await act(async () => {
+      await result.current.step
+        .mutateAsync({ marksheetId: 'm1', step: 'cancel', etag: 'v1' })
+        .catch(() => undefined);
+    });
+    await waitFor(() => expect(reads('/v1/assessment/exam-results')).toBeGreaterThan(after));
   });
 });

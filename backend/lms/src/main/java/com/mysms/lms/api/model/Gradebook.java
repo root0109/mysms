@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import com.mysms.core.paging.NavigationInfo;
@@ -35,7 +35,7 @@ public class Gradebook {
   private List<@Valid GradebookColumn> columns = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid GradingCategory> categories = new ArrayList<>();
+  private @Nullable List<@Valid GradingCategory> categories = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private List<@Valid GradebookRow> rows = new ArrayList<>();

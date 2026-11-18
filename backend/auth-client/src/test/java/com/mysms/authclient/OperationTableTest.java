@@ -6,18 +6,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * Loading and matching semantics of the operation table, on this module's own test fixtures
- * (src/test/resources/META-INF/mysms/operations: a hand-written table plus frozen copies of master and org). The live
- * tables are each domain module's own resource; the app module checks all of them against the contracts, and every
- * module's service component test exercises its own at the real edge.
- */
+/** Loading and matching of the operation table, on this module's own test fixtures. */
 class OperationTableTest {
 
     @Test
     void matchesTheConcreteUrlToItsOwnRule() {
         OperationTable table = OperationTable.load(List.of("authtest"));
-        assertThat(table.size()).isEqualTo(3);
+        assertThat(table.size()).isEqualTo(5);
         OperationRule create = table.match("POST", "/v1/authtest/widgets").orElseThrow();
         assertThat(create.operationId()).isEqualTo("authtest.CreateWidget");
         assertThat(create.permission()).isEqualTo("authtest.widget.create");
@@ -26,6 +21,31 @@ class OperationTableTest {
         OperationRule get = table.match("GET", "/v1/authtest/widgets/6d5c9d41-9d1a-4f8e-9f93-1ad2cf6a1f55").orElseThrow();
         assertThat(get.operationId()).isEqualTo("authtest.GetWidget");
         assertThat(get.isPublic()).isFalse();
+        assertThat(get.audience()).isEqualTo(OperationRule.PUBLIC);
+        assertThat(create.audience()).isEqualTo(OperationRule.PLATFORM);
+        assertThat(table.match("POST", "/v1/authtest/widgets:sync").orElseThrow().isInternal()).isTrue();
+        assertThat(get.ownAuthorization()).isFalse();
+        assertThat(table.match("POST", "/v1/authtest/widgets:outcome").orElseThrow().ownAuthorization())
+                .as("read from the table").isTrue();
+    }
+
+    @Test
+    void findsTheOperationOfAGrpcMethod() {
+        OperationTable table = OperationTable.load(List.of("master", "authtest"));
+        assertThat(table.forGrpcMethod("mysms.master.v1.CountryService/ListCountries"))
+                .map(OperationRule::operationId).contains("master.ListCountries");
+        assertThat(table.forGrpcMethod("mysms.authtest.v1.WidgetService/SyncWidgets"))
+                .map(OperationRule::operationId).contains("authtest.SyncWidgets");
+        assertThat(table.forGrpcMethod("mysms.master.v1.CountryService/Nope")).isEmpty();
+        assertThat(table.forGrpcMethod("mysms.finance.v1.InvoiceService/ListInvoices")).isEmpty();
+        assertThat(table.forGrpcMethod("grpc.health.v1.Health/Check")).isEmpty();
+        assertThat(table.forGrpcMethod("no-slash")).isEmpty();
+    }
+
+    @Test
+    void refusesAnUnknownAudience() {
+        assertThatThrownBy(() -> new OperationRule("x.Y", "GET", "/v1/x", "x.y.read", java.util.Set.of(), true, null,
+                "everyone")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

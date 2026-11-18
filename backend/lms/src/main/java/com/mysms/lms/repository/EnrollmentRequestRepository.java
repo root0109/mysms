@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.enrollment_request (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.enrollment_request: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class EnrollmentRequestRepository {
@@ -209,14 +206,33 @@ public class EnrollmentRequestRepository {
                 .param("actor", actor).update();
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.course_id = :parentId", Map.of("parentId", parentId));
+    }
+
+    /** lms.ApproveEnrollmentRequest: allowed while status is pending. */
+    private static final String TRANSITION_APPROVE_ENROLLMENT_REQUEST = """
+            UPDATE lms.enrollment_request
+               SET status = 'approved',
+                   decided_by = :actor,
+                   decided_at = :now,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+
+    /** Approves the pending request; 0 rows means it changed since it was read. */
+    public int approve(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_APPROVE_ENROLLMENT_REQUEST).param("id", id).param("expected", expected)
+                .param("now", now).param("actor", actor).update();
     }
 
     private static List<Object> sortValues(SortSpec sort, EnrollmentRequestEntity e) {

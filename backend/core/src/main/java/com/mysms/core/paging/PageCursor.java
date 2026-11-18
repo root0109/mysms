@@ -18,16 +18,11 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The opaque {@code cursor} carried by a list's {@code next} link (api/README "Pagination"): the page number it
- * opens and the sort keys of the last row before it, bound to the sort and the view (filter and parent) it was
- * issued for and valid for 24 hours. Following it reads the next page by keyset — an index seek, however deep the
- * page — instead of skipping rows with OFFSET. A cursor presented for another page, sort or view, or after expiry,
- * is rejected with 400.
+ * The opaque {@code cursor} of a list's {@code next} link: the page it opens and the last row's sort keys, bound to the
+ * sort and view it was issued for and valid for 24 hours; anything else is 400.
  *
- * <p>The cursor is not signed, and need not be: it only says where in a list to continue. The tenant, the caller's
- * scope and the list's parent are predicates of every query, never values of the cursor, so an altered cursor can
- * only move within rows the caller may read anyway; the bindings above catch mistakes (a cursor sent with another
- * sort or filter), not adversaries.
+ * <p>Not signed, and need not be: tenant, scope and parent are predicates of every query, never cursor values, so an
+ * altered cursor only moves within rows the caller may read anyway.
  */
 public final class PageCursor {
 

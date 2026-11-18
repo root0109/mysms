@@ -1,0 +1,1643 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.academics.v1;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "AcademicsProto";
+option java_package = "com.mysms.academics.v1";
+
+// ProgramLevelService: operations on the ProgramLevel aggregate.
+service ProgramLevelService {
+  // List ProgramLevels.
+  rpc ListProgramLevels(ListProgramLevelsRequest) returns (ListProgramLevelsResponse);
+  // Get ProgramLevel.
+  rpc GetProgramLevel(GetProgramLevelRequest) returns (GetProgramLevelResponse);
+  // Create ProgramLevel.
+  rpc CreateProgramLevel(CreateProgramLevelRequest) returns (CreateProgramLevelResponse);
+  // Update ProgramLevel.
+  rpc UpdateProgramLevel(UpdateProgramLevelRequest) returns (UpdateProgramLevelResponse);
+  // Soft-delete ProgramLevel.
+  rpc DeleteProgramLevel(DeleteProgramLevelRequest) returns (DeleteProgramLevelResponse);
+}
+
+// ProgramService: operations on the Program aggregate.
+service ProgramService {
+  // List Programs.
+  rpc ListPrograms(ListProgramsRequest) returns (ListProgramsResponse);
+  // Get Program.
+  rpc GetProgram(GetProgramRequest) returns (GetProgramResponse);
+  // Create Program.
+  rpc CreateProgram(CreateProgramRequest) returns (CreateProgramResponse);
+  // Update Program.
+  rpc UpdateProgram(UpdateProgramRequest) returns (UpdateProgramResponse);
+  // Soft-delete Program.
+  rpc DeleteProgram(DeleteProgramRequest) returns (DeleteProgramResponse);
+}
+
+// CourseService: operations on the Course aggregate.
+service CourseService {
+  // List Courses.
+  rpc ListCourses(ListCoursesRequest) returns (ListCoursesResponse);
+  // Get Course.
+  rpc GetCourse(GetCourseRequest) returns (GetCourseResponse);
+  // Create Course.
+  rpc CreateCourse(CreateCourseRequest) returns (CreateCourseResponse);
+  // Update Course.
+  rpc UpdateCourse(UpdateCourseRequest) returns (UpdateCourseResponse);
+  // Soft-delete Course.
+  rpc DeleteCourse(DeleteCourseRequest) returns (DeleteCourseResponse);
+  // List CourseSubjects.
+  rpc ListCourseSubjects(ListCourseSubjectsRequest) returns (ListCourseSubjectsResponse);
+  // Get CourseSubject.
+  rpc GetCourseSubject(GetCourseSubjectRequest) returns (GetCourseSubjectResponse);
+  // Create CourseSubject.
+  rpc CreateCourseSubject(CreateCourseSubjectRequest) returns (CreateCourseSubjectResponse);
+  // Update CourseSubject.
+  rpc UpdateCourseSubject(UpdateCourseSubjectRequest) returns (UpdateCourseSubjectResponse);
+  // Soft-delete CourseSubject.
+  rpc DeleteCourseSubject(DeleteCourseSubjectRequest) returns (DeleteCourseSubjectResponse);
+}
+
+// BatchService: operations on the Batch aggregate.
+service BatchService {
+  // List Batches.
+  rpc ListBatches(ListBatchesRequest) returns (ListBatchesResponse);
+  // Get Batch.
+  rpc GetBatch(GetBatchRequest) returns (GetBatchResponse);
+  // Create Batch.
+  rpc CreateBatch(CreateBatchRequest) returns (CreateBatchResponse);
+  // Update Batch.
+  rpc UpdateBatch(UpdateBatchRequest) returns (UpdateBatchResponse);
+  // Soft-delete Batch.
+  rpc DeleteBatch(DeleteBatchRequest) returns (DeleteBatchResponse);
+}
+
+// GradeLevelService: operations on the GradeLevel aggregate.
+service GradeLevelService {
+  // List GradeLevels.
+  rpc ListGradeLevels(ListGradeLevelsRequest) returns (ListGradeLevelsResponse);
+  // Get GradeLevel.
+  rpc GetGradeLevel(GetGradeLevelRequest) returns (GetGradeLevelResponse);
+  // Create GradeLevel.
+  rpc CreateGradeLevel(CreateGradeLevelRequest) returns (CreateGradeLevelResponse);
+  // Update GradeLevel.
+  rpc UpdateGradeLevel(UpdateGradeLevelRequest) returns (UpdateGradeLevelResponse);
+  // Soft-delete GradeLevel.
+  rpc DeleteGradeLevel(DeleteGradeLevelRequest) returns (DeleteGradeLevelResponse);
+}
+
+// SectionService: operations on the Section aggregate.
+service SectionService {
+  // List Sections.
+  rpc ListSections(ListSectionsRequest) returns (ListSectionsResponse);
+  // Get Section.
+  rpc GetSection(GetSectionRequest) returns (GetSectionResponse);
+  // Create Section.
+  rpc CreateSection(CreateSectionRequest) returns (CreateSectionResponse);
+  // Update Section.
+  rpc UpdateSection(UpdateSectionRequest) returns (UpdateSectionResponse);
+  // Soft-delete Section.
+  rpc DeleteSection(DeleteSectionRequest) returns (DeleteSectionResponse);
+}
+
+// ClassSectionService: operations on the ClassSection aggregate.
+service ClassSectionService {
+  // List ClassSections.
+  rpc ListClassSections(ListClassSectionsRequest) returns (ListClassSectionsResponse);
+  // Get ClassSection.
+  rpc GetClassSection(GetClassSectionRequest) returns (GetClassSectionResponse);
+  // Create ClassSection.
+  rpc CreateClassSection(CreateClassSectionRequest) returns (CreateClassSectionResponse);
+  // Update ClassSection.
+  rpc UpdateClassSection(UpdateClassSectionRequest) returns (UpdateClassSectionResponse);
+  // Soft-delete ClassSection.
+  rpc DeleteClassSection(DeleteClassSectionRequest) returns (DeleteClassSectionResponse);
+  // List ClassSubjects.
+  rpc ListClassSubjects(ListClassSubjectsRequest) returns (ListClassSubjectsResponse);
+  // Get ClassSubject.
+  rpc GetClassSubject(GetClassSubjectRequest) returns (GetClassSubjectResponse);
+  // Create ClassSubject.
+  rpc CreateClassSubject(CreateClassSubjectRequest) returns (CreateClassSubjectResponse);
+  // Update ClassSubject.
+  rpc UpdateClassSubject(UpdateClassSubjectRequest) returns (UpdateClassSubjectResponse);
+  // Soft-delete ClassSubject.
+  rpc DeleteClassSubject(DeleteClassSubjectRequest) returns (DeleteClassSubjectResponse);
+}
+
+// SubjectService: operations on the Subject aggregate.
+service SubjectService {
+  // List Subjects.
+  rpc ListSubjects(ListSubjectsRequest) returns (ListSubjectsResponse);
+  // Get Subject.
+  rpc GetSubject(GetSubjectRequest) returns (GetSubjectResponse);
+  // Create Subject.
+  rpc CreateSubject(CreateSubjectRequest) returns (CreateSubjectResponse);
+  // Update Subject.
+  rpc UpdateSubject(UpdateSubjectRequest) returns (UpdateSubjectResponse);
+  // Soft-delete Subject.
+  rpc DeleteSubject(DeleteSubjectRequest) returns (DeleteSubjectResponse);
+}
+
+// TeachingAssignmentService: operations on the TeachingAssignment aggregate.
+service TeachingAssignmentService {
+  // List TeachingAssignments.
+  rpc ListTeachingAssignments(ListTeachingAssignmentsRequest) returns (ListTeachingAssignmentsResponse);
+  // Get TeachingAssignment.
+  rpc GetTeachingAssignment(GetTeachingAssignmentRequest) returns (GetTeachingAssignmentResponse);
+  // Create TeachingAssignment.
+  rpc CreateTeachingAssignment(CreateTeachingAssignmentRequest) returns (CreateTeachingAssignmentResponse);
+  // Update TeachingAssignment.
+  rpc UpdateTeachingAssignment(UpdateTeachingAssignmentRequest) returns (UpdateTeachingAssignmentResponse);
+  // Soft-delete TeachingAssignment.
+  rpc DeleteTeachingAssignment(DeleteTeachingAssignmentRequest) returns (DeleteTeachingAssignmentResponse);
+}
+
+// CurriculumUnitService: operations on the CurriculumUnit aggregate.
+service CurriculumUnitService {
+  // List CurriculumUnits.
+  rpc ListCurriculumUnits(ListCurriculumUnitsRequest) returns (ListCurriculumUnitsResponse);
+  // Get CurriculumUnit.
+  rpc GetCurriculumUnit(GetCurriculumUnitRequest) returns (GetCurriculumUnitResponse);
+  // Create CurriculumUnit.
+  rpc CreateCurriculumUnit(CreateCurriculumUnitRequest) returns (CreateCurriculumUnitResponse);
+  // Update CurriculumUnit.
+  rpc UpdateCurriculumUnit(UpdateCurriculumUnitRequest) returns (UpdateCurriculumUnitResponse);
+  // Soft-delete CurriculumUnit.
+  rpc DeleteCurriculumUnit(DeleteCurriculumUnitRequest) returns (DeleteCurriculumUnitResponse);
+}
+
+// LessonPlanService: operations on the LessonPlan aggregate.
+service LessonPlanService {
+  // List LessonPlans.
+  rpc ListLessonPlans(ListLessonPlansRequest) returns (ListLessonPlansResponse);
+  // Get LessonPlan.
+  rpc GetLessonPlan(GetLessonPlanRequest) returns (GetLessonPlanResponse);
+  // Create LessonPlan.
+  rpc CreateLessonPlan(CreateLessonPlanRequest) returns (CreateLessonPlanResponse);
+  // Update LessonPlan.
+  rpc UpdateLessonPlan(UpdateLessonPlanRequest) returns (UpdateLessonPlanResponse);
+  // Soft-delete LessonPlan.
+  rpc DeleteLessonPlan(DeleteLessonPlanRequest) returns (DeleteLessonPlanResponse);
+  // List LessonPlanApprovals.
+  rpc ListLessonPlanApprovals(ListLessonPlanApprovalsRequest) returns (ListLessonPlanApprovalsResponse);
+  // Get LessonPlanApproval.
+  rpc GetLessonPlanApproval(GetLessonPlanApprovalRequest) returns (GetLessonPlanApprovalResponse);
+  // Create LessonPlanApproval.
+  rpc CreateLessonPlanApproval(CreateLessonPlanApprovalRequest) returns (CreateLessonPlanApprovalResponse);
+  // Update LessonPlanApproval.
+  rpc UpdateLessonPlanApproval(UpdateLessonPlanApprovalRequest) returns (UpdateLessonPlanApprovalResponse);
+  // Soft-delete LessonPlanApproval.
+  rpc DeleteLessonPlanApproval(DeleteLessonPlanApprovalRequest) returns (DeleteLessonPlanApprovalResponse);
+  // Submit for approval.
+  rpc SubmitLessonPlan(SubmitLessonPlanRequest) returns (SubmitLessonPlanResponse);
+  // Approve (records an approval).
+  rpc ApproveLessonPlan(ApproveLessonPlanRequest) returns (ApproveLessonPlanResponse);
+  // Reject.
+  rpc RejectLessonPlan(RejectLessonPlanRequest) returns (RejectLessonPlanResponse);
+  // Publish to students / guardians.
+  rpc PublishLessonPlan(PublishLessonPlanRequest) returns (PublishLessonPlanResponse);
+  // Archive.
+  rpc ArchiveLessonPlan(ArchiveLessonPlanRequest) returns (ArchiveLessonPlanResponse);
+}
+
+message ListProgramLevelsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListProgramLevelsResponse {
+  repeated ProgramLevel items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetProgramLevelRequest {
+  // ProgramLevel id (UUID).
+  string id = 1;
+}
+message GetProgramLevelResponse {
+  ProgramLevel program_level = 1;
+}
+
+message CreateProgramLevelRequest {
+  ProgramLevel program_level = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateProgramLevelResponse {
+  ProgramLevel program_level = 1;
+}
+
+message UpdateProgramLevelRequest {
+  // Resource with id and etag set.
+  ProgramLevel program_level = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateProgramLevelResponse {
+  ProgramLevel program_level = 1;
+}
+
+message DeleteProgramLevelRequest {
+  // ProgramLevel id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteProgramLevelResponse {
+}
+
+message ListProgramsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListProgramsResponse {
+  repeated Program items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetProgramRequest {
+  // Program id (UUID).
+  string id = 1;
+}
+message GetProgramResponse {
+  Program program = 1;
+}
+
+message CreateProgramRequest {
+  Program program = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateProgramResponse {
+  Program program = 1;
+}
+
+message UpdateProgramRequest {
+  // Resource with id and etag set.
+  Program program = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateProgramResponse {
+  Program program = 1;
+}
+
+message DeleteProgramRequest {
+  // Program id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteProgramResponse {
+}
+
+message ListCoursesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListCoursesResponse {
+  repeated Course items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetCourseRequest {
+  // Course id (UUID).
+  string id = 1;
+}
+message GetCourseResponse {
+  Course course = 1;
+}
+
+message CreateCourseRequest {
+  Course course = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateCourseResponse {
+  Course course = 1;
+}
+
+message UpdateCourseRequest {
+  // Resource with id and etag set.
+  Course course = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateCourseResponse {
+  Course course = 1;
+}
+
+message DeleteCourseRequest {
+  // Course id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteCourseResponse {
+}
+
+message ListBatchesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListBatchesResponse {
+  repeated Batch items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetBatchRequest {
+  // Batch id (UUID).
+  string id = 1;
+}
+message GetBatchResponse {
+  Batch batch = 1;
+}
+
+message CreateBatchRequest {
+  Batch batch = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateBatchResponse {
+  Batch batch = 1;
+}
+
+message UpdateBatchRequest {
+  // Resource with id and etag set.
+  Batch batch = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateBatchResponse {
+  Batch batch = 1;
+}
+
+message DeleteBatchRequest {
+  // Batch id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteBatchResponse {
+}
+
+message ListGradeLevelsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListGradeLevelsResponse {
+  repeated GradeLevel items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetGradeLevelRequest {
+  // GradeLevel id (UUID).
+  string id = 1;
+}
+message GetGradeLevelResponse {
+  GradeLevel grade_level = 1;
+}
+
+message CreateGradeLevelRequest {
+  GradeLevel grade_level = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateGradeLevelResponse {
+  GradeLevel grade_level = 1;
+}
+
+message UpdateGradeLevelRequest {
+  // Resource with id and etag set.
+  GradeLevel grade_level = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateGradeLevelResponse {
+  GradeLevel grade_level = 1;
+}
+
+message DeleteGradeLevelRequest {
+  // GradeLevel id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteGradeLevelResponse {
+}
+
+message ListSectionsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListSectionsResponse {
+  repeated Section items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetSectionRequest {
+  // Section id (UUID).
+  string id = 1;
+}
+message GetSectionResponse {
+  Section section = 1;
+}
+
+message CreateSectionRequest {
+  Section section = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateSectionResponse {
+  Section section = 1;
+}
+
+message UpdateSectionRequest {
+  // Resource with id and etag set.
+  Section section = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateSectionResponse {
+  Section section = 1;
+}
+
+message DeleteSectionRequest {
+  // Section id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteSectionResponse {
+}
+
+message ListClassSectionsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListClassSectionsResponse {
+  repeated ClassSection items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetClassSectionRequest {
+  // ClassSection id (UUID).
+  string id = 1;
+}
+message GetClassSectionResponse {
+  ClassSection class_section = 1;
+}
+
+message CreateClassSectionRequest {
+  ClassSection class_section = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateClassSectionResponse {
+  ClassSection class_section = 1;
+}
+
+message UpdateClassSectionRequest {
+  // Resource with id and etag set.
+  ClassSection class_section = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateClassSectionResponse {
+  ClassSection class_section = 1;
+}
+
+message DeleteClassSectionRequest {
+  // ClassSection id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteClassSectionResponse {
+}
+
+message ListSubjectsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListSubjectsResponse {
+  repeated Subject items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetSubjectRequest {
+  // Subject id (UUID).
+  string id = 1;
+}
+message GetSubjectResponse {
+  Subject subject = 1;
+}
+
+message CreateSubjectRequest {
+  Subject subject = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateSubjectResponse {
+  Subject subject = 1;
+}
+
+message UpdateSubjectRequest {
+  // Resource with id and etag set.
+  Subject subject = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateSubjectResponse {
+  Subject subject = 1;
+}
+
+message DeleteSubjectRequest {
+  // Subject id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteSubjectResponse {
+}
+
+message ListCourseSubjectsRequest {
+  // Course id (UUID).
+  string course_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListCourseSubjectsResponse {
+  repeated CourseSubject items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetCourseSubjectRequest {
+  // Course id (UUID).
+  string course_id = 1;
+  // CourseSubject id (UUID).
+  string id = 2;
+}
+message GetCourseSubjectResponse {
+  CourseSubject course_subject = 1;
+}
+
+message CreateCourseSubjectRequest {
+  // Course id (UUID).
+  string course_id = 1;
+  CourseSubject course_subject = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateCourseSubjectResponse {
+  CourseSubject course_subject = 1;
+}
+
+message UpdateCourseSubjectRequest {
+  // Course id (UUID).
+  string course_id = 1;
+  // Resource with id and etag set.
+  CourseSubject course_subject = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateCourseSubjectResponse {
+  CourseSubject course_subject = 1;
+}
+
+message DeleteCourseSubjectRequest {
+  // Course id (UUID).
+  string course_id = 1;
+  // CourseSubject id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteCourseSubjectResponse {
+}
+
+message ListClassSubjectsRequest {
+  // ClassSection id (UUID).
+  string class_section_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListClassSubjectsResponse {
+  repeated ClassSubject items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetClassSubjectRequest {
+  // ClassSection id (UUID).
+  string class_section_id = 1;
+  // ClassSubject id (UUID).
+  string id = 2;
+}
+message GetClassSubjectResponse {
+  ClassSubject class_subject = 1;
+}
+
+message CreateClassSubjectRequest {
+  // ClassSection id (UUID).
+  string class_section_id = 1;
+  ClassSubject class_subject = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateClassSubjectResponse {
+  ClassSubject class_subject = 1;
+}
+
+message UpdateClassSubjectRequest {
+  // ClassSection id (UUID).
+  string class_section_id = 1;
+  // Resource with id and etag set.
+  ClassSubject class_subject = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateClassSubjectResponse {
+  ClassSubject class_subject = 1;
+}
+
+message DeleteClassSubjectRequest {
+  // ClassSection id (UUID).
+  string class_section_id = 1;
+  // ClassSubject id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteClassSubjectResponse {
+}
+
+message ListTeachingAssignmentsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListTeachingAssignmentsResponse {
+  repeated TeachingAssignment items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetTeachingAssignmentRequest {
+  // TeachingAssignment id (UUID).
+  string id = 1;
+}
+message GetTeachingAssignmentResponse {
+  TeachingAssignment teaching_assignment = 1;
+}
+
+message CreateTeachingAssignmentRequest {
+  TeachingAssignment teaching_assignment = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateTeachingAssignmentResponse {
+  TeachingAssignment teaching_assignment = 1;
+}
+
+message UpdateTeachingAssignmentRequest {
+  // Resource with id and etag set.
+  TeachingAssignment teaching_assignment = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateTeachingAssignmentResponse {
+  TeachingAssignment teaching_assignment = 1;
+}
+
+message DeleteTeachingAssignmentRequest {
+  // TeachingAssignment id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteTeachingAssignmentResponse {
+}
+
+message ListCurriculumUnitsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListCurriculumUnitsResponse {
+  repeated CurriculumUnit items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetCurriculumUnitRequest {
+  // CurriculumUnit id (UUID).
+  string id = 1;
+}
+message GetCurriculumUnitResponse {
+  CurriculumUnit curriculum_unit = 1;
+}
+
+message CreateCurriculumUnitRequest {
+  CurriculumUnit curriculum_unit = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateCurriculumUnitResponse {
+  CurriculumUnit curriculum_unit = 1;
+}
+
+message UpdateCurriculumUnitRequest {
+  // Resource with id and etag set.
+  CurriculumUnit curriculum_unit = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateCurriculumUnitResponse {
+  CurriculumUnit curriculum_unit = 1;
+}
+
+message DeleteCurriculumUnitRequest {
+  // CurriculumUnit id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteCurriculumUnitResponse {
+}
+
+message ListLessonPlansRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListLessonPlansResponse {
+  repeated LessonPlan items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetLessonPlanRequest {
+  // LessonPlan id (UUID).
+  string id = 1;
+}
+message GetLessonPlanResponse {
+  LessonPlan lesson_plan = 1;
+}
+
+message CreateLessonPlanRequest {
+  LessonPlan lesson_plan = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateLessonPlanResponse {
+  LessonPlan lesson_plan = 1;
+}
+
+message UpdateLessonPlanRequest {
+  // Resource with id and etag set.
+  LessonPlan lesson_plan = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateLessonPlanResponse {
+  LessonPlan lesson_plan = 1;
+}
+
+message DeleteLessonPlanRequest {
+  // LessonPlan id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteLessonPlanResponse {
+}
+
+message ListLessonPlanApprovalsRequest {
+  // LessonPlan id (UUID).
+  string lesson_plan_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListLessonPlanApprovalsResponse {
+  repeated LessonPlanApproval items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetLessonPlanApprovalRequest {
+  // LessonPlan id (UUID).
+  string lesson_plan_id = 1;
+  // LessonPlanApproval id (UUID).
+  string id = 2;
+}
+message GetLessonPlanApprovalResponse {
+  LessonPlanApproval lesson_plan_approval = 1;
+}
+
+message CreateLessonPlanApprovalRequest {
+  // LessonPlan id (UUID).
+  string lesson_plan_id = 1;
+  LessonPlanApproval lesson_plan_approval = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateLessonPlanApprovalResponse {
+  LessonPlanApproval lesson_plan_approval = 1;
+}
+
+message UpdateLessonPlanApprovalRequest {
+  // LessonPlan id (UUID).
+  string lesson_plan_id = 1;
+  // Resource with id and etag set.
+  LessonPlanApproval lesson_plan_approval = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateLessonPlanApprovalResponse {
+  LessonPlanApproval lesson_plan_approval = 1;
+}
+
+message DeleteLessonPlanApprovalRequest {
+  // LessonPlan id (UUID).
+  string lesson_plan_id = 1;
+  // LessonPlanApproval id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteLessonPlanApprovalResponse {
+}
+
+message SubmitLessonPlanRequest {
+  // Path parameter lessonPlanId.
+  string lesson_plan_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message SubmitLessonPlanResponse {
+  LessonPlan lesson_plan = 1;
+}
+
+message ApproveLessonPlanRequest {
+  // Path parameter lessonPlanId.
+  string lesson_plan_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message ApproveLessonPlanResponse {
+  LessonPlan lesson_plan = 1;
+}
+
+message RejectLessonPlanRequest {
+  // Path parameter lessonPlanId.
+  string lesson_plan_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message RejectLessonPlanResponse {
+  LessonPlan lesson_plan = 1;
+}
+
+message PublishLessonPlanRequest {
+  // Path parameter lessonPlanId.
+  string lesson_plan_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message PublishLessonPlanResponse {
+  LessonPlan lesson_plan = 1;
+}
+
+message ArchiveLessonPlanRequest {
+  // Path parameter lessonPlanId.
+  string lesson_plan_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ArchiveLessonPlanResponse {
+  LessonPlan lesson_plan = 1;
+}
+
+// Level of a program (Certificate, Diploma, UG, PG, Doctorate).
+message ProgramLevel {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Level name.
+  string name = 2;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 3;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 4;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 5;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 6;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 7;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 8;
+  // Display order.
+  optional int32 sort_order = 9;
+  // Whether offered for new picks.
+  optional bool is_active = 10;
+}
+
+// Program of study (e.g. B.Sc Computer Science).
+message Program {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Owning department. [UUID]
+  optional string department_id = 3;
+  // Level. [UUID]
+  string program_level_id = 4;
+  // Program code.
+  string code = 5;
+  // Program name.
+  string name = 6;
+  // Minimum credit load per term. [Decimal string]
+  optional string min_unit_load = 7;
+  // Maximum credit load per term. [Decimal string]
+  optional string max_unit_load = 8;
+  // Program image. [UUID]
+  optional string image_file_id = 9;
+  // Whether offered.
+  bool is_active = 10;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 11;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 12;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 14;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 15;
+}
+
+// Course of study inside a program (higher-education / coaching registration unit); may nest under a parent course.
+message Course {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Program. [UUID]
+  optional string program_id = 3;
+  // Department. [UUID]
+  optional string department_id = 4;
+  // Parent course. [UUID]
+  optional string parent_course_id = 5;
+  // Course code.
+  string code = 6;
+  // Course name.
+  string name = 7;
+  // Evaluation scheme.
+  EvaluationType evaluation_type = 8;
+  // Minimum credit load. [Decimal string]
+  optional string min_unit_load = 9;
+  // Maximum credit load. [Decimal string]
+  optional string max_unit_load = 10;
+  // Whether offered.
+  bool is_active = 12;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 13;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 14;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 15;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 16;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 17;
+  // Allowed values of evaluation_type; REST/JSON uses the lowercase value shown in each comment.
+  enum EvaluationType {
+    EVALUATION_TYPE_UNSPECIFIED = 0;
+    // "normal"
+    EVALUATION_TYPE_NORMAL = 1;
+    // "gpa"
+    EVALUATION_TYPE_GPA = 2;
+    // "cwa"
+    EVALUATION_TYPE_CWA = 3;
+    // "cce"
+    EVALUATION_TYPE_CCE = 4;
+  }
+}
+
+// Intake cohort of a course with its own dates (e.g. B.Sc CS 2026-29).
+message Batch {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Course. [UUID]
+  string course_id = 2;
+  // Batch code.
+  string code = 3;
+  // Batch name.
+  string name = 4;
+  // Start date. [ISO-8601 date (YYYY-MM-DD)]
+  string start_date = 5;
+  // End date. [ISO-8601 date (YYYY-MM-DD)]
+  string end_date = 6;
+  // Whether running.
+  bool is_active = 7;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 8;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 9;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 10;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 11;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 12;
+}
+
+// Grade / standard / class level of a school (Nursery, Grade 1 ... Grade 12).
+message GradeLevel {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Grade name.
+  string name = 3;
+  // Grade key.
+  string slug = 4;
+  // Order (lowest grade first).
+  optional int32 sort_order = 5;
+  // Whether offered.
+  bool is_active = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+}
+
+// Section label reused across grades (A, B, C, Rose...).
+message Section {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Section name.
+  string name = 3;
+  // Whether used.
+  bool is_active = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 10;
+  // Display order.
+  optional int32 sort_order = 11;
+}
+
+// A grade + section running in an academic year (the homeroom class, e.g. Grade 5-A 2026-27).
+message ClassSection {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  string academic_year_id = 3;
+  // Grade. [UUID]
+  string grade_level_id = 4;
+  // Section. [UUID]
+  string section_id = 5;
+  // Class (homeroom) teacher. [UUID]
+  optional string class_teacher_staff_id = 6;
+  // Maximum students.
+  optional int32 capacity = 7;
+  // Stream for senior grades (Science, Commerce...).
+  optional string stream = 8;
+  // Whether running.
+  bool is_active = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+}
+
+// Subject catalogue entry.
+message Subject {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Owning department. [UUID]
+  optional string department_id = 3;
+  // Subject code.
+  optional string code = 4;
+  // Subject name.
+  string name = 5;
+  // Theory / practical.
+  DeliveryType delivery_type = 6;
+  // Default category when offered.
+  DefaultCategory default_category = 7;
+  // Weight of the subject in aggregate grades. [Decimal string]
+  optional string grade_weightage = 8;
+  // Whether offered.
+  bool is_active = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+  // Allowed values of delivery_type; REST/JSON uses the lowercase value shown in each comment.
+  enum DeliveryType {
+    DELIVERY_TYPE_UNSPECIFIED = 0;
+    // "theory"
+    DELIVERY_TYPE_THEORY = 1;
+    // "practical"
+    DELIVERY_TYPE_PRACTICAL = 2;
+    // "both"
+    DELIVERY_TYPE_BOTH = 3;
+    // "other"
+    DELIVERY_TYPE_OTHER = 4;
+  }
+  // Allowed values of default_category; REST/JSON uses the lowercase value shown in each comment.
+  enum DefaultCategory {
+    DEFAULT_CATEGORY_UNSPECIFIED = 0;
+    // "compulsory"
+    DEFAULT_CATEGORY_COMPULSORY = 1;
+    // "elective"
+    DEFAULT_CATEGORY_ELECTIVE = 2;
+  }
+}
+
+// Subjects that make up a course.
+message CourseSubject {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Course. [UUID] Set from the parent path on create.
+  string course_id = 2;
+  // Subject. [UUID]
+  string subject_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+  // Semester/term the subject is taught in.
+  optional int32 term_number = 9;
+  // Credit value for higher-ed credit systems. [Decimal string]
+  optional string credits = 10;
+  // Category in the plan (core, elective, lab, project...).
+  optional string subject_category = 11;
+  // Maximum marks when marks-based. [Decimal string]
+  optional string max_marks = 12;
+}
+
+// Subject offered to a class section in its academic year.
+message ClassSubject {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Class section (implies year, grade, section). [UUID] Set from the parent path on create.
+  string class_section_id = 2;
+  // Subject. [UUID]
+  string subject_id = 3;
+  // How the subject is offered.
+  OfferingType offering_type = 4;
+  // Whether active.
+  bool is_active = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+  // Allowed values of offering_type; REST/JSON uses the lowercase value shown in each comment.
+  enum OfferingType {
+    OFFERING_TYPE_UNSPECIFIED = 0;
+    // "core"
+    OFFERING_TYPE_CORE = 1;
+    // "elective"
+    OFFERING_TYPE_ELECTIVE = 2;
+    // "exam_only"
+    OFFERING_TYPE_EXAM_ONLY = 3;
+  }
+}
+
+// Staff member assigned to teach a class subject, with period allocation.
+message TeachingAssignment {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Class subject taught. [UUID]
+  string class_subject_id = 2;
+  // Teacher. [UUID]
+  string staff_id = 3;
+  // Periods allotted per week.
+  optional int32 periods_per_week = 4;
+  // Periods not yet scheduled.
+  optional int32 periods_remaining = 5;
+  // Role on the subject (main, assistant, lab).
+  optional string teacher_role = 6;
+  // Whether current.
+  bool is_active = 7;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 8;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 9;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 10;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 11;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 12;
+}
+
+// Chapter / unit of a class subject's syllabus.
+message CurriculumUnit {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Class subject. [UUID]
+  string class_subject_id = 2;
+  // Unit / chapter name.
+  string name = 3;
+  // Order.
+  optional int32 sequence = 4;
+  // Whether in use.
+  Status status = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "inactive"
+    STATUS_INACTIVE = 2;
+  }
+}
+
+// Teacher's plan for teaching a unit.
+message LessonPlan {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Teaching assignment it belongs to. [UUID]
+  string teaching_assignment_id = 2;
+  // Unit covered (when linked to the syllabus). [UUID]
+  optional string curriculum_unit_id = 3;
+  // Unit number.
+  string unit_no = 4;
+  // Unit name.
+  string unit_name = 5;
+  // Plan title.
+  string title = 6;
+  // Planned teaching time, a Duration (REST: "<seconds>s") despite the field's name: the name stays because renaming it
+  // would break the published contract.
+  google.protobuf.Duration planned_duration_minutes = 7;
+  // Summary.
+  string description = 8;
+  // Learning objectives.
+  optional string objective = 9;
+  // Materials.
+  optional string materials_required = 10;
+  // Introduction.
+  optional string introduction = 11;
+  // Teaching procedure.
+  optional string procedure_text = 12;
+  // Conclusion.
+  optional string conclusion = 13;
+  // Assessment approach.
+  optional string assessment_text = 14;
+  // Adaptations / differentiation.
+  optional string modification = 15;
+  // Notes.
+  optional string notes = 16;
+  // Approval state. Changed only through the workflow operations. Output only.
+  Status status = 17;
+  // Visible to students / guardians. Changed only through the workflow operations. Output only.
+  bool is_published = 18;
+  // When published.
+  google.protobuf.Timestamp published_at = 19;
+  // Planned start. [ISO-8601 date (YYYY-MM-DD)]
+  optional string start_date = 20;
+  // Planned end. [ISO-8601 date (YYYY-MM-DD)]
+  optional string end_date = 21;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 22;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 23;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 24;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 25;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 26;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "pending"
+    STATUS_PENDING = 2;
+    // "approved"
+    STATUS_APPROVED = 3;
+    // "rejected"
+    STATUS_REJECTED = 4;
+    // "archived"
+    STATUS_ARCHIVED = 5;
+    // "cancelled"
+    STATUS_CANCELLED = 6;
+  }
+}
+
+// Review decision on a lesson plan.
+message LessonPlanApproval {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Lesson plan. [UUID] Set from the parent path on create.
+  string lesson_plan_id = 2;
+  // Decision.
+  Decision decision = 3;
+  // Reviewer comments.
+  string comments = 4;
+  // Reviewer. [UUID]
+  optional string decided_by_user_id = 5;
+  // Decision time.
+  google.protobuf.Timestamp decided_at = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+  // Allowed values of decision; REST/JSON uses the lowercase value shown in each comment.
+  enum Decision {
+    DECISION_UNSPECIFIED = 0;
+    // "pending"
+    DECISION_PENDING = 1;
+    // "approved"
+    DECISION_APPROVED = 2;
+    // "rejected"
+    DECISION_REJECTED = 3;
+  }
+}
+

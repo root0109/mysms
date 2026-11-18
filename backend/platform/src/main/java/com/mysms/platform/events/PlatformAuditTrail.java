@@ -22,11 +22,11 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Materialises every module's audit records into platform.audit_log (JAVA-CODING-RULES §4: each change writes an
- * `audit.recorded` event in its own transaction; the platform keeps the trail). Records carry ids, the action, the
- * changed field names, the reason given and the trace — never values. A module audits only its own entities: a record
- * naming another module's entity is rejected (parked by the bus). Audit of global data (no tenant) is stored without a
- * tenant: invisible to every tenant, read by platform staff tooling (database/README "Global tables").
+ * Materialises every module's audit records into platform.audit_log (each change writes an `audit.recorded` event in
+ * its own transaction; the platform keeps the trail). Records carry ids, the action, the changed field names, the
+ * reason given and the trace — never values. A module audits only its own entities: a record naming another module's
+ * entity is rejected (parked by the bus). Audit of global data (no tenant) is stored without a tenant: invisible to
+ * every tenant, read by platform staff tooling.
  */
 @Component
 public class PlatformAuditTrail extends AppTransactionManager implements EventSubscriptions {
@@ -69,6 +69,10 @@ public class PlatformAuditTrail extends AppTransactionManager implements EventSu
             properties.put("reason", data.path("reason").asString());
         }
         properties.put("traceId", data.path("traceId").asString(null));
+        if (data.hasNonNull("impersonatorUserId")) {
+            // the administrator who acted as the causer (iam.StartImpersonation): kept with the record
+            properties.put("impersonatorUserId", UUID.fromString(data.path("impersonatorUserId").asString()).toString());
+        }
         String actor = data.path("actorUserId").asString(null);
         String occurred = data.path("occurredAt").asString(null);
         UUID causer = actor == null ? null : UUID.fromString(actor);

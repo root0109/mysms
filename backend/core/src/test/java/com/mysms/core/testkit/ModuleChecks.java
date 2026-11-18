@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -14,12 +15,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
- * The module boundary checks every module runs as a plain unit test (JAVA-CODING-RULES §2; no ArchUnit, no Modulith):
- * <ul>
- *   <li><b>own-schema SQL</b> (R3): SQL text in the module references no other module's schema;</li>
- *   <li><b>SDK allowlist</b>: the module imports SDK clients only of modules in its row of the allowed-dependency
- *   table in ARCHITECTURE.md.</li>
- * </ul>
+ * The module boundary checks every module runs as a unit test: its SQL names no other module's schema, and it imports
+ * only the gRPC contracts of modules in its row of ARCHITECTURE.md's allowed-dependency table.
  */
 public final class ModuleChecks {
 
@@ -37,9 +34,11 @@ public final class ModuleChecks {
     private static final Pattern UNQUALIFIED = Pattern.compile(
             "(?<!\\bDO\\s)\\b(FROM|JOIN|INTO|UPDATE)\\s+([a-z_][a-z0-9_]*)\\b(?!\\s*[.(])", Pattern.CASE_INSENSITIVE);
     private static final Set<String> NOT_TABLES = Set.of("lateral", "unnest", "only", "generate_series");
+    private static final Pattern CTE_NAME = Pattern.compile(
+            "(?:\\bWITH(?:\\s+RECURSIVE)?\\s+|,\\s*)([a-z_][a-z0-9_]*)\\s+AS\\s*\\(", Pattern.CASE_INSENSITIVE);
     private static final Pattern QUALIFIED = Pattern.compile("\\b([a-z]+)\\.([a-z_][a-z0-9_]*)\\b");
-    private static final Pattern SDK_IMPORT = Pattern.compile("^import\\s+(?:static\\s+)?com\\.mysms\\.sdk\\.([a-z]+)\\.",
-            Pattern.MULTILINE);
+    private static final Pattern GRPC_IMPORT =
+            Pattern.compile("^import\\s+(?:static\\s+)?com\\.mysms\\.([a-z]+)\\.v1\\.", Pattern.MULTILINE);
     private static final Pattern ROW = Pattern.compile("^\\| `([a-z]+)` \\| (.*) \\|$", Pattern.MULTILINE);
     private static final Pattern CELL = Pattern.compile("`([a-z]+)`");
 
@@ -67,8 +66,8 @@ public final class ModuleChecks {
     }
 
     /**
-     * Table references without a schema in SQL statements ("File: FROM item"): every table must be schema-qualified
-     * (JAVA-CODING-RULES §6), so the own-schema check above can see every table a statement touches.
+     * Table references without a schema ("File: FROM item"): every table must be schema-qualified so the own-schema
+     * check sees it. A name the statement declares as a CTE is not a table.
      */
     public static List<String> unqualifiedTableReferences(Path sourceRoot) {
         List<String> violations = new ArrayList<>();
@@ -77,9 +76,15 @@ public final class ModuleChecks {
                 if (!STATEMENT.matcher(sql).find()) {
                     continue;
                 }
+                Set<String> cteNames = new HashSet<>();
+                Matcher cte = CTE_NAME.matcher(sql);
+                while (cte.find()) {
+                    cteNames.add(cte.group(1).toLowerCase(java.util.Locale.ROOT));
+                }
                 Matcher unqualified = UNQUALIFIED.matcher(sql);
                 while (unqualified.find()) {
-                    if (!NOT_TABLES.contains(unqualified.group(2).toLowerCase(java.util.Locale.ROOT))) {
+                    String name = unqualified.group(2).toLowerCase(java.util.Locale.ROOT);
+                    if (!NOT_TABLES.contains(name) && !cteNames.contains(name)) {
                         violations.add(file.getFileName() + ": " + unqualified.group().replaceAll("\\s+", " "));
                     }
                 }
@@ -110,15 +115,20 @@ public final class ModuleChecks {
         return files;
     }
 
-    /** Violations of the SDK allowlist: "File.java imports the sdk of x" for every import outside the module's row. */
-    public static List<String> sdkImportsOutsideAllowlist(String module, Path sourceRoot, Path architectureMd) {
-        Set<String> allowed = allowedDependencies(module, architectureMd);
+    /**
+     * Violations of the gRPC allowlist: "File.java imports the gRPC contract of x" for every import of another module's
+     * {@code com.mysms.<x>.v1} outside the module's row (its own and the shared {@code common} are always allowed).
+     */
+    public static List<String> grpcImportsOutsideAllowlist(String module, Path sourceRoot, Path architectureMd) {
+        Set<String> allowed = new TreeSet<>(allowedDependencies(module, architectureMd));
+        allowed.add(module);
+        allowed.add("common");
         List<String> violations = new ArrayList<>();
         for (Path file : javaFiles(sourceRoot)) {
-            Matcher imports = SDK_IMPORT.matcher(read(file));
+            Matcher imports = GRPC_IMPORT.matcher(read(file));
             while (imports.find()) {
                 if (!allowed.contains(imports.group(1))) {
-                    violations.add(file.getFileName() + " imports the sdk of " + imports.group(1));
+                    violations.add(file.getFileName() + " imports the gRPC contract of " + imports.group(1));
                 }
             }
         }

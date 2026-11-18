@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -27,7 +27,7 @@ public class Bookmark {
   private @Nullable UUID id;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID userId;
+  private @Nullable UUID userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private String title;
@@ -69,8 +69,7 @@ public class Bookmark {
   /**
    * Constructor with only required parameters
    */
-  public Bookmark(UUID userId, String title, String url) {
-    this.userId = userId;
+  public Bookmark(String title, String url) {
     this.title = title;
     this.url = url;
   }
@@ -95,23 +94,23 @@ public class Bookmark {
     this.id = id;
   }
 
-  public Bookmark userId(UUID userId) {
+  public Bookmark userId(@Nullable UUID userId) {
     this.userId = userId;
     return this;
   }
 
   /**
-   * User.
+   * User. Output only: the caller, from the token.
    * @return userId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("userId")
-  public UUID getUserId() {
+  public @Nullable UUID getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(UUID userId) {
+  public void setUserId(@Nullable UUID userId) {
     this.userId = userId;
   }
 

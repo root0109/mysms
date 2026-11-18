@@ -14,7 +14,6 @@ import com.mysms.lms.api.model.ReleaseRuleList;
 import com.mysms.lms.api.model.ReleaseRuleTarget;
 import com.mysms.lms.api.model.ReleaseRuleTargetUpdate;
 import com.mysms.lms.api.model.ReleaseRuleUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.ReleaseRuleService;
 import java.net.URI;
@@ -23,11 +22,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the ReleaseRule operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the ReleaseRule operations; authentication and the permission check already ran in the auth-client
+ * filter. Operations not served yet answer 501.
  */
 @RestController
 public class ReleaseRuleController implements ReleaseRuleApi {
@@ -41,7 +37,7 @@ public class ReleaseRuleController implements ReleaseRuleApi {
     @Override
     public ResponseEntity<ReleaseRuleList> copyReleaseRule(UUID releaseRuleId,
             CopyReleaseRuleRequest copyReleaseRuleRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(releaseRuleService.copyReleaseRule(releaseRuleId, copyReleaseRuleRequest));
     }
 
     @Override
@@ -107,13 +103,15 @@ public class ReleaseRuleController implements ReleaseRuleApi {
     @Override
     public ResponseEntity<ReleaseRule> disableReleaseRule(UUID releaseRuleId,
             DisableReleaseRuleRequest disableReleaseRuleRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        ReleaseRule changed = releaseRuleService.disableReleaseRule(releaseRuleId, disableReleaseRuleRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<ReleaseRule> enableReleaseRule(UUID releaseRuleId,
             EnableReleaseRuleRequest enableReleaseRuleRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        ReleaseRule changed = releaseRuleService.enableReleaseRule(releaseRuleId, enableReleaseRuleRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

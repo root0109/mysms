@@ -385,3 +385,201 @@
   display: block;
   margin: 0;
 }
+
+/* SIS-02: the tabs of a record — one row of buttons; the chosen one is underlined in the primary colour */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sms-space-2);
+  border-block-end: 1px solid var(--sms-color-border);
+}
+.tabs__tab {
+  padding: var(--sms-space-3) var(--sms-space-5);
+  border: 0;
+  border-block-end: 2px solid transparent;
+  background: none;
+  color: var(--sms-color-text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+.tabs__tab--on {
+  border-block-end-color: var(--sms-color-primary);
+  color: var(--sms-color-text);
+  font-weight: 600;
+}
+.tabs__tab:focus-visible {
+  outline: 2px solid var(--sms-color-primary);
+  outline-offset: 2px;
+}
+/* admission (ADMN-01 … ADMN-05) */
+.admission-header {
+  margin: 0 0 var(--sms-space-5);
+}
+.admission-timeline,
+.admission-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sms-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admission-timeline__stage {
+  flex: 1 1 10rem;
+  display: grid;
+  gap: var(--sms-space-1);
+  padding: var(--sms-space-3);
+  border: 1px solid var(--sms-color-border);
+  border-radius: var(--sms-radius-sm);
+}
+.admission-timeline__stage--past {
+  color: var(--sms-color-text-muted);
+}
+.admission-timeline__stage--current {
+  border-color: var(--sms-color-primary);
+  background: var(--sms-color-primary-container);
+}
+.admission-timeline__name {
+  font-weight: 600;
+}
+.admission-timeline--compact .admission-timeline__stage {
+  flex: 0 0 auto;
+  padding: var(--sms-space-1) var(--sms-space-2);
+  font-size: var(--sms-font-caption);
+}
+.admission-cycle-row {
+  display: grid;
+  gap: var(--sms-space-2);
+}
+.admission-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--sms-space-4);
+  margin: 0 0 var(--sms-space-5);
+}
+.admission-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: var(--sms-space-4);
+}
+.admission-board__column {
+  padding: var(--sms-space-3);
+  border-radius: var(--sms-radius-md);
+  background: var(--sms-color-surface-2);
+}
+.admission-board__heading {
+  margin: 0 0 var(--sms-space-3);
+  font-size: var(--sms-font-body-lg);
+}
+.admission-board__cards {
+  display: grid;
+  gap: var(--sms-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admission-board__card {
+  display: grid;
+  gap: var(--sms-space-1);
+  padding: var(--sms-space-3);
+  border: 1px solid var(--sms-color-border);
+  border-radius: var(--sms-radius-sm);
+  overflow-wrap: anywhere;
+}
+.admission-steps {
+  margin: 0 0 var(--sms-space-5);
+}
+.admission-steps__step {
+  padding: var(--sms-space-2) var(--sms-space-3);
+  border-radius: var(--sms-radius-full);
+  color: var(--sms-color-text-muted);
+}
+.admission-steps__step--current {
+  color: var(--sms-color-text);
+  background: var(--sms-color-primary-container);
+  font-weight: 600;
+}
+.persona-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sms-space-2);
+}
+.persona-list .sms-button {
+  inline-size: 100%;
+  justify-content: flex-start;
+}
+.secret-once {
+  font: var(--sms-font-mono);
+  overflow-wrap: anywhere;
+  padding: var(--sms-space-3);
+  border-radius: var(--sms-radius-sm);
+  background: var(--sms-color-surface-2);
+}
+
+/* lms: inline action rows and forum threads */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sms-space-2);
+  align-items: center;
+}
+
+.thread {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sms-space-3);
+}
+
+.thread__post {
+  border-left: 2px solid var(--sms-color-border);
+  padding-left: var(--sms-space-3);
+}
+
+.thread__post--reply {
+  margin-left: var(--sms-space-5);
+}
+
+/* LMS learning screens */
+.lms-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--sms-space-4);
+}
+.lms-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sms-space-3);
+  margin: var(--sms-space-4) 0;
+}
+.lms-player {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(14rem, 1fr);
+  gap: var(--sms-space-5);
+}
+@media (max-width: 48rem) {
+  .lms-player {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.lms-frame {
+  inline-size: 100%;
+  block-size: 70vh;
+  border: 0;
+}
+.lms-blocks {
+  display: grid;
+  gap: var(--sms-space-3);
+}
+.lms-blocks__text {
+  white-space: pre-line;
+}
+.lms-outline__lesson {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sms-space-3);
+}

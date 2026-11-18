@@ -5,10 +5,10 @@ setup (roles with real passwords, secrets, TLS, microservices, backups) is in [`
 
 ```
 MySMS/
-├── api/        the OpenAPI snapshot per module (the SDKs and conformance checks read it; the Java
-│               contracts are owned source inside each backend module, com.mysms.<module>.api)
+├── api/        the API guide: conventions, operation list and status, state machines (the contracts are
+│               owned source inside each backend module: com.mysms.<module>.api and its protos)
 ├── database/   Flyway migrations per schema, data dictionary, ERDs, smoke test
-├── backend/    the multi-module Maven project (21 modules + core, auth-client, messaging, sdk, app,
+├── backend/    the multi-module Maven project (21 modules + core, auth-client, messaging, app,
 │               conformance)
 ├── clients/    pnpm/turbo workspace: web app, platform console, phone and tablet apps, shared packages
 └── ui/         screen and navigation specs
@@ -70,15 +70,16 @@ cd backend
 mvn install            # or `mvn verify`
 ```
 
-One command runs, for every module in order: contract and SDK generation from `api/`, compile, unit tests,
-component tests (real PostgreSQL with row-level security, real RabbitMQ and the Pub/Sub emulator), Checkstyle,
+One command runs, for every module (two at a time, `-T 1C`): proto compilation, compile, unit tests,
+component tests (each module's OpenAPI component test writes `target/openapi/api-docs.yml`) (real PostgreSQL with row-level security, real RabbitMQ and the Pub/Sub emulator), Checkstyle,
 SpotBugs and JaCoCo coverage
 gates. It ends with `BUILD SUCCESS`; any test failure, style or bug-pattern violation fails the build.
 
 Useful variants:
 
 ```bash
-mvn -o install                                  # offline, after the first build
+mvn -o install                                  # offline, after the first build; unchanged modules come from the build cache
+mvn install -Dmaven.build.cache.enabled=false   # the gate build: every module built and tested
 mvn -pl iam -am install                         # one module and what it depends on
 mvn -pl iam test -Dtest=SignInServiceTest       # one test class
 mvn -pl app -am package -DskipTests             # just the runnable jars, when the tests already ran
@@ -89,10 +90,10 @@ Outputs: `app/target/app-0.1.0-SNAPSHOT-exec.jar` (all modules in one process) a
 
 **In an IDE (Eclipse/STS with m2e, IntelliJ):**
 
-1. If generated SDK sources are missing, run `mvn install -DskipTests -Djacoco.skip=true` once on the
-   command line (from `backend/`). This generates them and installs every module's jar in `~/.m2`, so the IDE
+1. If the generated gRPC sources are missing, run `mvn install -DskipTests -Djacoco.skip=true` once on the
+   command line (from `backend/`). This compiles every module's protos and installs every module's jar in `~/.m2`, so the IDE
    can resolve modules such as `messaging` even before they are imported. Run the full `mvn verify` afterwards.
-2. Import `backend/` as *Existing Maven Projects* and select **all** modules (the parent, core, sdk,
+2. Import `backend/` as *Existing Maven Projects* and select **all** modules (the parent, core,
    auth-client, messaging, the 21 modules, app and conformance).
 3. Right-click any project → *Maven → Update Project…* (Alt+F5), select all, tick *Force Update of Snapshots/Releases*.
    m2e takes the Java level (17) from the parent pom; make sure a JDK 17 or newer is installed in
@@ -118,7 +119,7 @@ Rule check: the last module, `conformance`, enforces the mechanical rules of
 ```bash
 cd clients
 pnpm install
-pnpm verify            # prettier check, SDK generation, typecheck, lint, unit tests, production builds — every package
+pnpm verify            # prettier check, TypeScript SDK generation from the backend's api-docs.yml, typecheck, lint, unit tests, production builds — every package
 ```
 
 It ends with `Tasks: N successful, N total`. Only the tests use mocks; the apps always talk to a real backend.
@@ -179,6 +180,9 @@ java -jar backend/app/target/app-0.1.0-SNAPSHOT-exec.jar
 
 Ready when `curl -s localhost:8080/actuator/health/readiness` answers `{"status":"UP"}`. Every module migrates its
 own schema with Flyway on start. Drop the three `BOOTSTRAP` variables after the first sign-in.
+Until the first release each module's schema is one baseline script that is edited in place, so after pulling a
+schema change Flyway refuses the existing database (checksum mismatch): drop and recreate `mysms` (the
+`CREATE DATABASE` and `GRANT` lines of §4.1) and start again with the `BOOTSTRAP` variables.
 
 ### 4.3 Start the web apps
 

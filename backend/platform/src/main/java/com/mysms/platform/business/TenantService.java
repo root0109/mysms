@@ -3,12 +3,15 @@ package com.mysms.platform.business;
 import com.mysms.authclient.DataScope;
 import com.mysms.platform.api.model.Tenant;
 import com.mysms.platform.api.model.TenantUpdate;
+import com.mysms.platform.api.model.Operation;
 import com.mysms.core.context.Actor;
+import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.DuplicateResourceException;
 import com.mysms.core.error.FieldError;
+import com.mysms.core.error.InvalidStateException;
 import com.mysms.core.error.PreconditionFailedException;
 import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.error.ValidationFailedException;
@@ -40,10 +43,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of platform.tenant (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of platform.tenant: audit and domain event in the same transaction as every change; rows outside the
+ * caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class TenantService extends AppTransactionManager {
@@ -58,12 +59,13 @@ public class TenantService extends AppTransactionManager {
 
     private final TenantRepository repository;
     private final TenantMapper mapper;
+    private final OperationService operations;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
 
-    public TenantService(TenantRepository repository, TenantMapper mapper,
+    public TenantService(TenantRepository repository, TenantMapper mapper, OperationService operations,
             @Qualifier(PlatformDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(PlatformDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(PlatformEventsConfig.OUTBOX) OutboxWriter outbox,
@@ -73,6 +75,7 @@ public class TenantService extends AppTransactionManager {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
+        this.operations = operations;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -176,6 +179,52 @@ public class TenantService extends AppTransactionManager {
                 outbox.publish(AGGREGATE + PlatformEvents.DELETED, AGGREGATE, id, eventPayload(entity, expected + 1));
             }
         });
+    }
+
+    /**
+     * Registers the tenant iam's installation bootstrap made, named by its code until platform staff rename it; one that
+     * exists already (live or deleted) is left as it is. A code another tenant holds is a
+     * {@link DuplicateResourceException}.
+     */
+    public void registerBootstrapTenant(UUID id, String code) {
+        runInWriteTransaction(() -> {
+            if (repository.exists(id)) {
+                return;
+            }
+            TenantEntity entity = TenantEntity.builder().code(code).name(code).build();
+            entity.onCreatingData(Actor.current(), clock);
+            entity.setId(id);
+            assertUnique(entity);
+            TenantEntity stored = repository.insert(entity);
+            audit.recordCreate(AGGREGATE, id);
+            outbox.publish(AGGREGATE + PlatformEvents.CREATED, AGGREGATE, id, eventPayload(stored,
+                    stored.getRowVersion()));
+        });
+    }
+
+    /**
+     * platform.ClearDemoData (platform staff): demo data lives in the modules that loaded it, which the platform may
+     * not touch, so the platform announces the request in the tenant — the {@code platform.tenant.clearDemoData} event,
+     * consumed by each module that loads demo data — and answers the finished operation that records the announcement.
+     * A closed tenant is 409.
+     */
+    public Operation clearDemoData(UUID id) {
+        TenantEntity tenant = doInGlobalReadTransaction(() -> loadVisible(DataScope.global(), id));
+        if ("closed".equals(tenant.getStatus())) {
+            throw new InvalidStateException("A closed tenant has no data to clear.");
+        }
+        CallContext staff = CallContextHolder.require();
+        return CallContextHolder.callAs(staff.withIdentity(id, staff.userId().orElse(null)), () ->
+                doInWriteTransaction(() -> {
+                    Operation operation = operations.recordFinished("platform.ClearDemoData", AGGREGATE, id, null,
+                            null);
+                    audit.recordTransition(AGGREGATE, id, "clearDemoData", List.of(), null);
+                    Map<String, Object> payload = new LinkedHashMap<>();
+                    payload.put("id", id.toString());
+                    payload.put("operationId", operation.getOperationId().toString());
+                    outbox.publish(AGGREGATE + ".clearDemoData", AGGREGATE, id, payload);
+                    return operation;
+                }));
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */

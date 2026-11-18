@@ -45,10 +45,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of sis.promotion (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of sis.promotion: audit and domain event in the same transaction as every change; rows outside the
+ * caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class PromotionService extends AppTransactionManager {
@@ -56,7 +54,7 @@ public class PromotionService extends AppTransactionManager {
     public static final String AGGREGATE = PromotionEntity.TABLE;
     static final String PERMISSION_LIST = "sis.promotion.read";
     static final String PERMISSION_GET = "sis.promotion.read";
-    static final String PERMISSION_CREATE = "sis.promotion.create";
+    public static final String PERMISSION_CREATE = "sis.promotion.create";
     static final String PERMISSION_UPDATE = "sis.promotion.update";
     static final String PERMISSION_DELETE = "sis.promotion.delete";
     static final String PERMISSION_APPROVE_PROMOTION = "sis.promotion.approve_promotion";
@@ -184,9 +182,8 @@ public class PromotionService extends AppTransactionManager {
     }
 
     /**
-     * sis.ApprovePromotion: Approve. The row must be visible and writable for the caller, and the step is allowed while
-     * status is proposed; in any other state
-     * the answer is 409 and nothing changes.
+     * sis.ApprovePromotion: Approve. Allowed while status is proposed, for a caller who can see and write the row;
+     * otherwise 409 and nothing changes.
      */
     public Promotion approvePromotion(UUID id, ApprovePromotionRequest request) {
         DataScope scope = DataScope.current(PERMISSION_APPROVE_PROMOTION);
@@ -217,9 +214,8 @@ public class PromotionService extends AppTransactionManager {
     }
 
     /**
-     * sis.RejectPromotion: Reject (student detained). The row must be visible and writable for the caller, and the step
-     * is allowed while status is proposed; in any other state
-     * the answer is 409 and nothing changes.
+     * sis.RejectPromotion: Reject (student detained). Allowed while status is proposed, for a caller who can see and
+     * write the row; otherwise 409 and nothing changes.
      */
     public Promotion rejectPromotion(UUID id, RejectPromotionRequest request) {
         DataScope scope = DataScope.current(PERMISSION_REJECT_PROMOTION);

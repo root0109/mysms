@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of lms.content_item (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of lms.content_item. */
 @Getter
 @Setter
 @SuperBuilder

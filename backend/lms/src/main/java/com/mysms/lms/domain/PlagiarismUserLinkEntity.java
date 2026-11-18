@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of lms.plagiarism_user_link (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of lms.plagiarism_user_link. */
 @Getter
 @Setter
 @SuperBuilder

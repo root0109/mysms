@@ -44,13 +44,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of org.institution_type (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of org.institution_type: audit and domain event in the same transaction as every change; rows
+ * outside the caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a InstitutionType
- * are served here too — InstitutionTypeAttribute.
+ * <p>Also serves the records that exist only as part of the InstitutionType aggregate: InstitutionTypeAttribute.
  */
 @Service
 public class InstitutionTypeService extends AppTransactionManager {

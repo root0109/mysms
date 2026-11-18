@@ -7,15 +7,9 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
- * The message catalogue of the API's error sentences (modelled on the owner's {@code common} module): a sentence is
- * looked up by its code in the language of the call — the request's {@code Accept-Language}, which Spring binds to
- * the thread; a request that names no language is given the server's default locale by the servlet container, so a
- * deployment that adds a bundle for the server's own language answers such requests in it — from the bundles {@code
- * messages/mysms*.properties}. The base bundle is English; another language is
- * added by putting {@code messages/mysms_<language>.properties} on the classpath, with no change to code.
- *
- * <p>A code the catalogue does not know keeps the sentence the code that raised the error gave, so the catalogue
- * can grow one code at a time.
+ * The catalogue of error sentences by code, in the call's language ({@code Accept-Language}, else the server's
+ * default locale). English is the base; a language is added as {@code messages/mysms_<language>.properties}. An
+ * unknown code keeps the sentence it was raised with.
  */
 public final class MessageUtil {
 

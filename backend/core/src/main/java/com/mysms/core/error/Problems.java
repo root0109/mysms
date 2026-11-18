@@ -8,10 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-/**
- * Builds RFC 9457 problem bodies exactly as the contract's `Problem` schema: type, title, status, detail, code,
- * traceId and errors[] (api/README "Errors"). The one place error bodies are shaped, for MVC and for filters alike.
- */
+/** Builds RFC 9457 problem bodies as the contract's `Problem` schema; the one place error bodies are shaped. */
 public final class Problems {
 
     public static final MediaType PROBLEM_JSON = MediaType.APPLICATION_PROBLEM_JSON;
@@ -40,6 +37,10 @@ public final class Problems {
     public static ResponseEntity<Map<String, Object>> response(HttpStatus status, String code, String detail,
                                                                List<FieldError> errors) {
         return ResponseEntity.status(status).contentType(PROBLEM_JSON).body(body(status, code, detail, errors));
+    }
+
+    public static ResponseEntity<Map<String, Object>> response(Problem problem) {
+        return response(problem.status(), problem.code(), problem.detail(), problem.errors());
     }
 
     public static ResponseEntity<Map<String, Object>> response(ApiException exception) {

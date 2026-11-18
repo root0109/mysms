@@ -428,14 +428,14 @@ describe('list-manager screens of the inventory', () => {
   });
 
   it('tells a role without the list permission instead of showing a broken list', async () => {
-    await signedIn('/app/hr/staff', office);
-    expect(await screen.findByRole('heading', { name: 'Staff directory' })).toBeInTheDocument();
+    await signedIn('/app/library/library-cards', office);
+    expect(await screen.findByRole('heading', { name: 'Cards' })).toBeInTheDocument();
     expect(screen.getByText('Your role may not list these records.')).toBeInTheDocument();
   });
 });
 
 describe('ACC-08 Security & sessions', () => {
-  // every role manages its own factors and sessions (self-service permissions, iam V1_030_005)
+  // every role manages its own factors and sessions (self-service permissions of the iam permission catalogue)
   const user = { ...schoolAdmin, permissions: [...SELF_SERVICE] };
   const userId = schoolAdmin.user?.id ?? '';
   const handlers = (): Record<string, Handler> => {

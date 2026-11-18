@@ -6,11 +6,9 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * The rows a caller may touch beyond the operation's permission (api/README "Authorization": data-level rules on top of
- * the permission check). Institution-owned rows are visible only inside the caller's institutions — narrowed to the one
- * selected with {@code X-Institution-Id} — and tenant-level rows (no institution) are read by every holder of the
- * permission but changed only by a tenant-wide grant, so a school-level role can never alter what applies to the
- * whole tenant.
+ * The rows a caller may touch beyond the operation's permission. Institution rows are visible only inside the caller's
+ * institutions (narrowed to {@code X-Institution-Id}); tenant-level rows are read by every holder of the permission
+ * but changed only through a tenant-wide grant, so a school-level role never alters what applies to the whole tenant.
  *
  * @param all          every institution of the tenant (a tenant-wide grant and no institution selected)
  * @param institutions the institutions the caller may read when {@code all} is false
@@ -23,10 +21,8 @@ public record DataScope(boolean all, Set<UUID> institutions, boolean tenantWide)
     }
 
     /**
-     * The scope of a global table (no tenant, no institution: tenants, SaaS plans, notification types…). Its rows are
-     * not narrowed: who may call the operation at all — platform staff for every write — was decided at the edge from
-     * the operation's scheme and permission (JAVA-CODING-RULES §16.2), and the service applies its own data rules (the
-     * guest projection of public reads).
+     * The scope of a global table: rows are not narrowed, because who may call at all (platform staff for every write)
+     * was decided at the edge.
      */
     public static DataScope global() {
         return new DataScope(true, Set.of(), true);

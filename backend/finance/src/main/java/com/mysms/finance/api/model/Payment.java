@@ -1,4 +1,4 @@
-// Owned API contract of finance (JAVA-CODING-RULES §7); first materialized from api/openapi/finance.yaml on 2026-11-10.
+// Owned API contract of finance.
 package com.mysms.finance.api.model;
 
 import java.net.URI;
@@ -30,7 +30,7 @@ import java.util.*;
 public class Payment {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid PaymentAllocation> allocations = new ArrayList<>();
+  private @Nullable List<@Valid PaymentAllocation> allocations = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -112,13 +112,15 @@ public class Payment {
   private @Nullable UUID institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID payerUserId;
+  private @Nullable UUID payerUserId;
 
   /**
    * What the payment is for.
    */
   public enum PurposeEnum {
     INVOICE("invoice"),
+    
+    FEES("fees"),
     
     LMS_COURSE("lms_course"),
     
@@ -201,7 +203,7 @@ public class Payment {
   private @Nullable String couponCode;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private String billingName;
+  private @Nullable String billingName;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID billingAddressId;
@@ -291,12 +293,10 @@ public class Payment {
   /**
    * Constructor with only required parameters
    */
-  public Payment(UUID payerUserId, PurposeEnum purpose, String amount, UUID currencyId, String billingName) {
-    this.payerUserId = payerUserId;
+  public Payment(PurposeEnum purpose, String amount, UUID currencyId) {
     this.purpose = purpose;
     this.amount = amount;
     this.currencyId = currencyId;
-    this.billingName = billingName;
   }
 
   public Payment allocations(List<@Valid PaymentAllocation> allocations) {
@@ -547,7 +547,7 @@ public class Payment {
     this.institutionId = institutionId;
   }
 
-  public Payment payerUserId(UUID payerUserId) {
+  public Payment payerUserId(@Nullable UUID payerUserId) {
     this.payerUserId = payerUserId;
     return this;
   }
@@ -556,14 +556,14 @@ public class Payment {
    * Payer.
    * @return payerUserId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("payerUserId")
-  public UUID getPayerUserId() {
+  public @Nullable UUID getPayerUserId() {
     return payerUserId;
   }
 
   @JsonProperty("payerUserId")
-  public void setPayerUserId(UUID payerUserId) {
+  public void setPayerUserId(@Nullable UUID payerUserId) {
     this.payerUserId = payerUserId;
   }
 
@@ -867,7 +867,7 @@ public class Payment {
     this.couponCode = couponCode;
   }
 
-  public Payment billingName(String billingName) {
+  public Payment billingName(@Nullable String billingName) {
     this.billingName = billingName;
     return this;
   }
@@ -876,14 +876,14 @@ public class Payment {
    * Billing name.
    * @return billingName
    */
-  @NotNull @Size(max = 200) 
+  @Size(max = 200) 
   @JsonProperty("billingName")
-  public String getBillingName() {
+  public @Nullable String getBillingName() {
     return billingName;
   }
 
   @JsonProperty("billingName")
-  public void setBillingName(String billingName) {
+  public void setBillingName(@Nullable String billingName) {
     this.billingName = billingName;
   }
 

@@ -38,10 +38,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of org.holiday (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of org.holiday: audit and domain event in the same transaction as every change; rows outside the
+ * caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class HolidayService extends AppTransactionManager {
@@ -49,7 +47,7 @@ public class HolidayService extends AppTransactionManager {
     public static final String AGGREGATE = HolidayEntity.TABLE;
     static final String PERMISSION_LIST = "org.holiday.read";
     static final String PERMISSION_GET = "org.holiday.read";
-    static final String PERMISSION_CREATE = "org.holiday.create";
+    public static final String PERMISSION_CREATE = "org.holiday.create";
     static final String PERMISSION_UPDATE = "org.holiday.update";
     static final String PERMISSION_DELETE = "org.holiday.delete";
     /** The contract's HolidayUpdate fields, in apply order. */

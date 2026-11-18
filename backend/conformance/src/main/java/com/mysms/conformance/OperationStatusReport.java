@@ -47,7 +47,7 @@ public final class OperationStatusReport {
         Map<String, int[]> totals = new TreeMap<>();
         for (ContractOperations.Operation operation : ContractOperations.read(tree)) {
             boolean isServed = isServed(served, operation);
-            String name = operation.operationId().substring(operation.operationId().indexOf('.') + 1);
+            String name = operation.name();
             String why = isServed ? "" : STANDARD.matcher(name).find()
                     ? "standard operation not built yet (public, platform-staff or extra-parameter variant)"
                     : "workflow / custom operation";

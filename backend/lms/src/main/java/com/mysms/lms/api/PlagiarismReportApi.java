@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api;
 
 import com.mysms.core.paging.PagingInfo;
@@ -139,7 +139,7 @@ public interface PlagiarismReportApi {
          @PathVariable("provider") String provider,
         @NotNull  @RequestHeader(value = "X-Signature", required = true) String xSignature,
         @NotNull  @RequestHeader(value = "X-Timestamp", required = true) String xTimestamp,
-         @Valid @RequestBody Object body
+        @RequestBody byte[] body
     );
 
 

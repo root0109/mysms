@@ -55,6 +55,7 @@ class GlobalExceptionHandlerTest {
                 case "denied" -> new PermissionDeniedException("not yours");
                 case "locked" -> new ConflictException("SETTING_LOCKED", "locked");
                 case "unbuilt" -> new NotImplementedException();
+                case "stub" -> io.grpc.Status.NOT_FOUND.withDescription("student 42 of tenant 7").asRuntimeException();
                 default -> new IllegalStateException("boom with secrets");
             };
         }
@@ -113,6 +114,13 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.code").value("NOT_IMPLEMENTED"));
         mvc.perform(get("/unserved/false")).andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+    }
+
+    @Test
+    void anotherServicesAnswerThatEscapedAStubCallIs503WithoutItsMessage() throws Exception {
+        mvc.perform(get("/typed/stub")).andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.code").value("UNAVAILABLE"))
+                .andExpect(jsonPath("$.detail").value(com.mysms.core.grpc.GrpcStatuses.UNANSWERED));
     }
 
     @Test

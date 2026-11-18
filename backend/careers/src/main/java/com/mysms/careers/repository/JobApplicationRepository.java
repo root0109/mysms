@@ -22,11 +22,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to careers.job_application (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to careers.job_application: live rows only, keyset paging, and the row_version guard on every
+ * update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class JobApplicationRepository {
@@ -94,6 +91,16 @@ public class JobApplicationRepository {
                             WHERE tenant_id = :tenantId
                               AND job_opening_id = :jobOpeningId AND applicant_user_id = :applicantUserId AND id <> :id
                                   AND ((deleted_at IS NULL)))
+            """;
+    /** careers.UpdateApplicationStatus: the guard on the status was checked on the row as read. */
+    private static final String SET_STATUS = """
+            UPDATE careers.job_application
+               SET status = :status,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
     private static final String EXISTS_JOB_OPENING_ID = """
             SELECT EXISTS (SELECT 1 FROM careers.job_opening WHERE tenant_id = :tenantId
@@ -165,14 +172,24 @@ public class JobApplicationRepository {
                 .query(Boolean.class).single());
     }
 
-    /** Whether the referenced careers.job_opening row exists (live). */
+    /** careers.UpdateApplicationStatus; 0 rows means the row changed (or vanished) since it was read. */
+    public int setStatus(UUID id, int expected, String status, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(SET_STATUS).param("id", id).param("expected", expected).param("status", status)
+                .param("now", now).param("actor", actor).update();
+    }
+
     public boolean existsJobOpeningId(UUID id) {
         return Boolean.TRUE.equals(jdbc.sql(EXISTS_JOB_OPENING_ID).param("id", id).query(Boolean.class).single());
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.job_opening_id = :parentId", Map.of("parentId", parentId));
+    }
+
+    /** The applications of one applicant. */
+    public static SqlFragment ofApplicant(UUID applicantUserId) {
+        return new SqlFragment("r.applicant_user_id = :applicantUserId", Map.of("applicantUserId", applicantUserId));
     }
 
     private static List<Object> sortValues(SortSpec sort, JobApplicationEntity e) {

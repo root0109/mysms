@@ -24,11 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to payroll.payslip (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to payroll.payslip: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class PayslipRepository {
@@ -140,6 +137,16 @@ public class PayslipRepository {
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
             """;
 
+    /**
+     * Owner-only reads: the payslips of the institutions where the reader is a payroll officer, and the payslips of
+     * the reader's own staff records (payroll.staff_member, kept from hr's events).
+     */
+    private static final String READABLE_BY = """
+             (:officerAll OR r.institution_id = ANY(:officerIds) OR r.staff_id IN (SELECT m.staff_id
+                 FROM payroll.staff_member m WHERE m.tenant_id = :tenantId AND NOT m.is_deleted
+                  AND m.user_id = :reader))
+            """;
+
     private final JdbcClient jdbc;
 
     public PayslipRepository(@Qualifier(PayrollDatabaseConfig.DATABASE) ModuleDatabase database) {
@@ -238,7 +245,13 @@ public class PayslipRepository {
                 .param("actor", actor).update();
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
+    /** The payslips the reader may read: see {@code READABLE_BY}; {@code officer} is where the reader is an officer. */
+    public static SqlFragment readableBy(DataScope officer, UUID reader) {
+        return new SqlFragment(READABLE_BY, Map.of("officerAll", officer.all(), "officerIds", officer.institutionArray(),
+                "reader", reader));
+    }
+
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

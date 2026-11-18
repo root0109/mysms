@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of org.institution (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of org.institution. */
 @Getter
 @Setter
 @SuperBuilder

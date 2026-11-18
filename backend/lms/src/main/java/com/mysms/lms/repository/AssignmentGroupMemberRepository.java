@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.assignment_group_member (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.assignment_group_member: live rows only, keyset paging, and the row_version guard on every
+ * update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class AssignmentGroupMemberRepository {
@@ -246,9 +243,73 @@ public class AssignmentGroupMemberRepository {
                 .param("actor", actor).update();
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    private static final String INSERT_WITH_STATUS = """
+            INSERT INTO lms.assignment_group_member
+            (id, tenant_id, assignment_group_id, user_id, content_item_id, status, created_at, created_by,
+             updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :assignmentGroupId, :userId, :contentItemId, :status, :createdAt, :createdBy,
+                    :updatedAt, :updatedBy, :rowVersion)
+            RETURNING id, tenant_id, assignment_group_id, user_id, content_item_id, status, created_at, created_by,
+                      updated_at, updated_by, deleted_at, row_version
+            """;
+    private static final String OF_GROUP = SELECT_LIVE + " AND r.assignment_group_id = :groupId ORDER BY r.created_at";
+    private static final String FIND_IN_GROUP = SELECT_LIVE
+            + " AND r.assignment_group_id = :groupId AND r.user_id = :userId";
+    private static final String ACTIVE_FOR_ITEM = SELECT_LIVE
+            + " AND r.content_item_id = :itemId AND r.user_id = :userId AND r.status = 'active'";
+    private static final String SET_STATUS = """
+            UPDATE lms.assignment_group_member
+               SET status = :status,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+
+    /** Inserts the row with an explicit membership status (requested on a join request). */
+    public AssignmentGroupMemberEntity insertWithStatus(AssignmentGroupMemberEntity e) {
+        return jdbc.sql(INSERT_WITH_STATUS)
+                .param("id", e.getId())
+                .param("tenantId", e.getTenantId())
+                .param("assignmentGroupId", e.getAssignmentGroupId())
+                .param("userId", e.getUserId())
+                .param("contentItemId", e.getContentItemId())
+                .param("status", e.getStatus())
+                .param("createdAt", e.getCreatedAt())
+                .param("createdBy", e.getCreatedBy())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("rowVersion", e.getRowVersion())
+                .query(AssignmentGroupMemberRepository::map).single();
+    }
+
+    /** The group's live membership rows, oldest first. */
+    public List<AssignmentGroupMemberEntity> ofGroup(UUID groupId) {
+        return jdbc.sql(OF_GROUP).param("groupId", groupId).query(AssignmentGroupMemberRepository::map).list();
+    }
+
+    /** The user's live membership row in the group, whatever its status. */
+    public Optional<AssignmentGroupMemberEntity> findInGroup(UUID groupId, UUID userId) {
+        return jdbc.sql(FIND_IN_GROUP).param("groupId", groupId).param("userId", userId)
+                .query(AssignmentGroupMemberRepository::map).optional();
+    }
+
+    /** The user's active membership for the item, in any of its groups. */
+    public Optional<AssignmentGroupMemberEntity> activeForItem(UUID itemId, UUID userId) {
+        return jdbc.sql(ACTIVE_FOR_ITEM).param("itemId", itemId).param("userId", userId)
+                .query(AssignmentGroupMemberRepository::map).optional();
+    }
+
+    /** Sets the membership status; 0 rows means the row changed since it was read. */
+    public int setStatus(UUID id, String status, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(SET_STATUS).param("id", id).param("status", status).param("expected", expected)
+                .param("now", now).param("actor", actor).update();
     }
 
     private static List<Object> sortValues(SortSpec sort, AssignmentGroupMemberEntity e) {

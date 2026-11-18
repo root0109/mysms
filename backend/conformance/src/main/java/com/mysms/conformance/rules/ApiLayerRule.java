@@ -12,25 +12,30 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The web edge of the domain modules (JAVA-CODING-RULES §7, §9, §11, §16):
+ * The web edge of the domain modules:
  * <ul>
- * <li>C3 — every controller implements a contract interface and declares no mapping of its own; controllers import
- * no repository, outbox, audit writer or event publisher.</li>
+ * <li>C3 — every controller implements a contract interface and declares no mapping of its own; controllers import no
+ * repository, outbox, audit writer or event publisher.</li>
  * <li>D2 — no hand-written *DTO classes, no Optional fields in model/, no {@code @JsonView} or ResponseBodyAdvice; a
- * delete operation answers 204; no contract operation replaces with PUT (updates are PATCH + updateMask, §7.3) except
- * the one idempotent set the rules allow.</li>
+ * delete answers 204; no contract operation replaces with PUT (updates are PATCH + updateMask) except the one
+ * idempotent set allowed.</li>
  * <li>E2 — no {@code @ControllerAdvice}, own exception type or BusinessException in a domain module; no exception
  * message passed into a typed exception or the problem body.</li>
  * <li>X1 — no servlet filter in a domain module (the auth and idempotency filters live in auth-client and core).</li>
  * </ul>
- * The OIDC key set controller serves an infrastructure path, not an API operation, and is exempt from C3.
+ * The OIDC key set and the service-token endpoint serve infrastructure paths, not API operations, and are exempt from
+ * C3.
  */
 public final class ApiLayerRule implements ConformanceRule {
 
-    /** Controllers of infrastructure paths that are not API operations (§16 step 1): the OIDC key set. */
-    private static final Set<String> INFRASTRUCTURE_CONTROLLERS =
-            Set.of("iam/src/main/java/com/mysms/iam/controller/JwksController.java");
-    /** The only PUT of the contracts (§7.3): setting one's own value of one setting key is an idempotent set. */
+    /**
+     * Controllers of infrastructure paths that are not API operations: the OIDC key set and the service-principal token
+     * endpoint.
+     */
+    private static final Set<String> INFRASTRUCTURE_CONTROLLERS = Set.of(
+            "iam/src/main/java/com/mysms/iam/controller/JwksController.java",
+            "iam/src/main/java/com/mysms/iam/controller/ServiceTokenController.java");
+    /** The only PUT of the contracts: setting one's own value of one setting key is an idempotent set. */
     private static final Set<String> PUT_ALLOWED = Set.of("iam.SetMySetting");
 
     private static final Pattern MAPPING = Pattern.compile("@(?:[\\w.]+\\.)?(Request|Get|Post|Put|Patch|Delete)Mapping\\b");
@@ -66,14 +71,14 @@ public final class ApiLayerRule implements ConformanceRule {
         }
         for (ContractOperations.Operation operation : ContractOperations.read(tree)) {
             if ("PUT".equals(operation.method()) && !PUT_ALLOWED.contains(operation.operationId())) {
-                found.add(new Violation("D2", "api/openapi/" + operation.module() + ".yaml",
+                found.add(new Violation("D2", tree.relative(ContractOperations.table(tree, operation.module())),
                         "PUT " + operation.operationId() + " (updates are PATCH + updateMask, §7.3)"));
             }
         }
         return found;
     }
 
-    /** The module's own contract package: the API interfaces and DTOs (owned source, JAVA-CODING-RULES §7). */
+    /** The module's own contract package: the API interfaces and DTOs. */
     private static boolean isContract(SourceTree tree, Path file) {
         return tree.relative(file).matches(".*/src/main/java/com/mysms/\\w+/api/.*");
     }

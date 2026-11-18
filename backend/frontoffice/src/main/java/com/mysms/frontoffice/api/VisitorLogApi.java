@@ -1,4 +1,4 @@
-// Owned API contract of frontoffice (JAVA-CODING-RULES §7); first materialized from api/openapi/frontoffice.yaml on 2026-11-10.
+// Owned API contract of frontoffice.
 package com.mysms.frontoffice.api;
 
 import com.mysms.core.paging.PagingInfo;

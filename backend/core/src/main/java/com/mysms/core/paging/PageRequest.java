@@ -11,19 +11,9 @@ import java.util.UUID;
 import java.util.function.Function;
 
 /**
- * A validated list request (api/README "Pagination"): the one-based {@code page} (default 1), the page {@code size}
- * (1-500, default 50), the sort and, when the caller follows a {@code next} link, its cursor.
- *
- * <p>Two ways reach a page, and the repository SQL is the same for both — it appends {@link #keysetPredicate()} to
- * its WHERE, orders by {@link #orderByClause()}, ends with {@link #limitClause()} and binds {@link #limitParams()}:
- * <ul>
- * <li>With a cursor (every {@code next} link carries one) the page starts right after the cursor's row: a keyset
- * seek on the sort index, as fast on page 10,000 as on page 2, and stable while rows are added in front.</li>
- * <li>Without one (the first page, a {@code previous} link, a jump to page n) the page is read with OFFSET. OFFSET
- * reads and discards every skipped row, so it is capped at {@link #MAX_OFFSET} rows; deeper pages are reached by
- * following {@code next} links.</li>
- * </ul>
- * One row more than the page is fetched to know whether another page exists (no count query is ever run).
+ * A validated list request: one-based {@code page} (default 1), {@code size} (1-500, default 50), sort and cursor.
+ * With a cursor the page is a keyset seek after the cursor's row; without one it is read with OFFSET, capped at
+ * {@link #MAX_OFFSET} rows. One extra row is fetched to know whether another page exists, never a count query.
  */
 public final class PageRequest {
 

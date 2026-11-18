@@ -1,0 +1,1964 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.platform.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "PlatformProto";
+option java_package = "com.mysms.platform.v1";
+
+// TenantService: operations on the Tenant aggregate.
+service TenantService {
+  // List Tenants.
+  rpc ListTenants(ListTenantsRequest) returns (ListTenantsResponse);
+  // Get Tenant.
+  rpc GetTenant(GetTenantRequest) returns (GetTenantResponse);
+  // Create Tenant.
+  rpc CreateTenant(CreateTenantRequest) returns (CreateTenantResponse);
+  // Update Tenant.
+  rpc UpdateTenant(UpdateTenantRequest) returns (UpdateTenantResponse);
+  // Soft-delete Tenant.
+  rpc DeleteTenant(DeleteTenantRequest) returns (DeleteTenantResponse);
+  // Public branding and locale for login pages and the PWA manifest. Public.
+  rpc GetBranding(GetBrandingRequest) returns (GetBrandingResponse);
+  // Remove demo data loaded for a trial tenant.
+  rpc ClearDemoData(ClearDemoDataRequest) returns (ClearDemoDataResponse);
+  // Permission-aware search across students, staff, guardians, courses, media...
+  rpc GlobalSearch(GlobalSearchRequest) returns (GlobalSearchResponse);
+  // Reports the caller may run.
+  rpc ListReportDefinitions(ListReportDefinitionsRequest) returns (ListReportDefinitionsResponse);
+  // Run a report or printable document asynchronously; the operation result holds the output file.
+  rpc RunReport(RunReportRequest) returns (RunReportResponse);
+  // Download the CSV/XLSX template for an importable entity.
+  rpc GetImportTemplate(GetImportTemplateRequest) returns (GetImportTemplateResponse);
+  // Bulk import from a file; the operation result lists row errors (ImportRowError).
+  rpc StartImport(StartImportRequest) returns (StartImportResponse);
+  // Search a stock-photo provider for cover images.
+  rpc SearchStockImages(SearchStockImagesRequest) returns (SearchStockImagesResponse);
+}
+
+// SaasPlanService: operations on the SaasPlan aggregate.
+service SaasPlanService {
+  // List SaasPlans.
+  rpc ListSaasPlans(ListSaasPlansRequest) returns (ListSaasPlansResponse);
+  // Get SaasPlan.
+  rpc GetSaasPlan(GetSaasPlanRequest) returns (GetSaasPlanResponse);
+  // Create SaasPlan.
+  rpc CreateSaasPlan(CreateSaasPlanRequest) returns (CreateSaasPlanResponse);
+  // Update SaasPlan.
+  rpc UpdateSaasPlan(UpdateSaasPlanRequest) returns (UpdateSaasPlanResponse);
+  // Soft-delete SaasPlan.
+  rpc DeleteSaasPlan(DeleteSaasPlanRequest) returns (DeleteSaasPlanResponse);
+}
+
+// TenantSubscriptionService: operations on the TenantSubscription aggregate.
+service TenantSubscriptionService {
+  // List TenantSubscriptions.
+  rpc ListTenantSubscriptions(ListTenantSubscriptionsRequest) returns (ListTenantSubscriptionsResponse);
+  // Get TenantSubscription.
+  rpc GetTenantSubscription(GetTenantSubscriptionRequest) returns (GetTenantSubscriptionResponse);
+  // Start paying for a plan.
+  rpc StartSubscriptionCheckout(StartSubscriptionCheckoutRequest) returns (StartSubscriptionCheckoutResponse);
+  // Cancel at the end of the paid period.
+  rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
+  // Confirm a subscription payment with the gateway's checkout signature.
+  rpc ConfirmSubscriptionCheckout(ConfirmSubscriptionCheckoutRequest) returns (ConfirmSubscriptionCheckoutResponse);
+  // Gateway callback for subscription payments. Authenticated by the gateway signature over the raw body, not by a token.
+  rpc ReceiveSubscriptionWebhook(ReceiveSubscriptionWebhookRequest) returns (ReceiveSubscriptionWebhookResponse);
+}
+
+// FileObjectService: operations on the FileObject aggregate.
+service FileObjectService {
+  // List FileObjects.
+  rpc ListFileObjects(ListFileObjectsRequest) returns (ListFileObjectsResponse);
+  // Get FileObject.
+  rpc GetFileObject(GetFileObjectRequest) returns (GetFileObjectResponse);
+  // Soft-delete FileObject.
+  rpc DeleteFileObject(DeleteFileObjectRequest) returns (DeleteFileObjectResponse);
+  // Create a pending file and a pre-signed upload URL.
+  rpc CreateUploadUrl(CreateUploadUrlRequest) returns (CreateUploadUrlResponse);
+  // Confirm the bytes were uploaded; the file is scanned and becomes available.
+  rpc CompleteUpload(CompleteUploadRequest) returns (CompleteUploadResponse);
+  // Pre-signed download URL. Signed-in users are checked against the owner record; guests can only resolve files owned by published catalogue content (course / cohort images, preview lessons, public profiles). Public.
+  rpc GetDownloadUrl(GetDownloadUrlRequest) returns (GetDownloadUrlResponse);
+  // Server-side copy of a stored file into a new file record (no download / upload round trip).
+  rpc CopyFile(CopyFileRequest) returns (CopyFileResponse);
+}
+
+// EntityAttachmentService: operations on the EntityAttachment aggregate.
+service EntityAttachmentService {
+  // List EntityAttachments.
+  rpc ListEntityAttachments(ListEntityAttachmentsRequest) returns (ListEntityAttachmentsResponse);
+  // Create EntityAttachment.
+  rpc CreateEntityAttachment(CreateEntityAttachmentRequest) returns (CreateEntityAttachmentResponse);
+  // Soft-delete EntityAttachment.
+  rpc DeleteEntityAttachment(DeleteEntityAttachmentRequest) returns (DeleteEntityAttachmentResponse);
+}
+
+// TagService: operations on the Tag aggregate.
+service TagService {
+  // List Tags.
+  rpc ListTags(ListTagsRequest) returns (ListTagsResponse);
+  // Get Tag.
+  rpc GetTag(GetTagRequest) returns (GetTagResponse);
+  // Create Tag.
+  rpc CreateTag(CreateTagRequest) returns (CreateTagResponse);
+  // Update Tag.
+  rpc UpdateTag(UpdateTagRequest) returns (UpdateTagResponse);
+  // Soft-delete Tag.
+  rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse);
+}
+
+// TagAssignmentService: operations on the TagAssignment aggregate.
+service TagAssignmentService {
+  // List TagAssignments.
+  rpc ListTagAssignments(ListTagAssignmentsRequest) returns (ListTagAssignmentsResponse);
+  // Create TagAssignment.
+  rpc CreateTagAssignment(CreateTagAssignmentRequest) returns (CreateTagAssignmentResponse);
+  // Soft-delete TagAssignment.
+  rpc DeleteTagAssignment(DeleteTagAssignmentRequest) returns (DeleteTagAssignmentResponse);
+}
+
+// EntityNoteService: operations on the EntityNote aggregate.
+service EntityNoteService {
+  // List EntityNotes.
+  rpc ListEntityNotes(ListEntityNotesRequest) returns (ListEntityNotesResponse);
+  // Get EntityNote.
+  rpc GetEntityNote(GetEntityNoteRequest) returns (GetEntityNoteResponse);
+  // Create EntityNote.
+  rpc CreateEntityNote(CreateEntityNoteRequest) returns (CreateEntityNoteResponse);
+  // Update EntityNote.
+  rpc UpdateEntityNote(UpdateEntityNoteRequest) returns (UpdateEntityNoteResponse);
+  // Soft-delete EntityNote.
+  rpc DeleteEntityNote(DeleteEntityNoteRequest) returns (DeleteEntityNoteResponse);
+}
+
+// AuditLogService: operations on the AuditLog aggregate.
+service AuditLogService {
+  // List AuditLogs.
+  rpc ListAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse);
+  // Get AuditLog.
+  rpc GetAuditLog(GetAuditLogRequest) returns (GetAuditLogResponse);
+}
+
+// ReservedKeywordService: operations on the ReservedKeyword aggregate.
+service ReservedKeywordService {
+  // List ReservedKeywords.
+  rpc ListReservedKeywords(ListReservedKeywordsRequest) returns (ListReservedKeywordsResponse);
+  // Get ReservedKeyword.
+  rpc GetReservedKeyword(GetReservedKeywordRequest) returns (GetReservedKeywordResponse);
+  // Create ReservedKeyword.
+  rpc CreateReservedKeyword(CreateReservedKeywordRequest) returns (CreateReservedKeywordResponse);
+  // Update ReservedKeyword.
+  rpc UpdateReservedKeyword(UpdateReservedKeywordRequest) returns (UpdateReservedKeywordResponse);
+  // Soft-delete ReservedKeyword.
+  rpc DeleteReservedKeyword(DeleteReservedKeywordRequest) returns (DeleteReservedKeywordResponse);
+}
+
+// SalesEnquiryService: operations on the SalesEnquiry aggregate.
+service SalesEnquiryService {
+  // List SalesEnquiries.
+  rpc ListSalesEnquiries(ListSalesEnquiriesRequest) returns (ListSalesEnquiriesResponse);
+  // Get SalesEnquiry.
+  rpc GetSalesEnquiry(GetSalesEnquiryRequest) returns (GetSalesEnquiryResponse);
+  // Create SalesEnquiry.
+  rpc CreateSalesEnquiry(CreateSalesEnquiryRequest) returns (CreateSalesEnquiryResponse);
+  // Update SalesEnquiry.
+  rpc UpdateSalesEnquiry(UpdateSalesEnquiryRequest) returns (UpdateSalesEnquiryResponse);
+  // Soft-delete SalesEnquiry.
+  rpc DeleteSalesEnquiry(DeleteSalesEnquiryRequest) returns (DeleteSalesEnquiryResponse);
+  // Record follow-up.
+  rpc MarkEnquiryContacted(MarkEnquiryContactedRequest) returns (MarkEnquiryContactedResponse);
+}
+
+// SystemSettingService: operations on the SystemSetting aggregate.
+service SystemSettingService {
+  // List SystemSettings.
+  rpc ListSystemSettings(ListSystemSettingsRequest) returns (ListSystemSettingsResponse);
+  // Get SystemSetting.
+  rpc GetSystemSetting(GetSystemSettingRequest) returns (GetSystemSettingResponse);
+  // Create SystemSetting.
+  rpc CreateSystemSetting(CreateSystemSettingRequest) returns (CreateSystemSettingResponse);
+  // Update SystemSetting.
+  rpc UpdateSystemSetting(UpdateSystemSettingRequest) returns (UpdateSystemSettingResponse);
+  // Soft-delete SystemSetting.
+  rpc DeleteSystemSetting(DeleteSystemSettingRequest) returns (DeleteSystemSettingResponse);
+}
+
+// ThemeService: operations on the Theme aggregate.
+service ThemeService {
+  // List Themes.
+  rpc ListThemes(ListThemesRequest) returns (ListThemesResponse);
+  // Get Theme.
+  rpc GetTheme(GetThemeRequest) returns (GetThemeResponse);
+  // Create Theme.
+  rpc CreateTheme(CreateThemeRequest) returns (CreateThemeResponse);
+  // Update Theme.
+  rpc UpdateTheme(UpdateThemeRequest) returns (UpdateThemeResponse);
+  // Soft-delete Theme.
+  rpc DeleteTheme(DeleteThemeRequest) returns (DeleteThemeResponse);
+}
+
+// UploadPolicyService: operations on the UploadPolicy aggregate.
+service UploadPolicyService {
+  // List UploadPolicies.
+  rpc ListUploadPolicies(ListUploadPoliciesRequest) returns (ListUploadPoliciesResponse);
+  // Get UploadPolicy.
+  rpc GetUploadPolicy(GetUploadPolicyRequest) returns (GetUploadPolicyResponse);
+  // Create UploadPolicy.
+  rpc CreateUploadPolicy(CreateUploadPolicyRequest) returns (CreateUploadPolicyResponse);
+  // Update UploadPolicy.
+  rpc UpdateUploadPolicy(UpdateUploadPolicyRequest) returns (UpdateUploadPolicyResponse);
+  // Soft-delete UploadPolicy.
+  rpc DeleteUploadPolicy(DeleteUploadPolicyRequest) returns (DeleteUploadPolicyResponse);
+}
+
+// DeletionLogService: operations on the DeletionLog aggregate.
+service DeletionLogService {
+  // List DeletionLogs.
+  rpc ListDeletionLogs(ListDeletionLogsRequest) returns (ListDeletionLogsResponse);
+  // Get DeletionLog.
+  rpc GetDeletionLog(GetDeletionLogRequest) returns (GetDeletionLogResponse);
+}
+
+// StorageQuotaService: operations on the StorageQuota aggregate.
+service StorageQuotaService {
+  // Caller's storage quota and usage.
+  rpc GetMyStorageUsage(GetMyStorageUsageRequest) returns (GetMyStorageUsageResponse);
+  // List StorageQuotas.
+  rpc ListStorageQuotas(ListStorageQuotasRequest) returns (ListStorageQuotasResponse);
+  // Get StorageQuota.
+  rpc GetStorageQuota(GetStorageQuotaRequest) returns (GetStorageQuotaResponse);
+  // Create StorageQuota.
+  rpc CreateStorageQuota(CreateStorageQuotaRequest) returns (CreateStorageQuotaResponse);
+  // Update StorageQuota.
+  rpc UpdateStorageQuota(UpdateStorageQuotaRequest) returns (UpdateStorageQuotaResponse);
+  // Soft-delete StorageQuota.
+  rpc DeleteStorageQuota(DeleteStorageQuotaRequest) returns (DeleteStorageQuotaResponse);
+}
+
+// OperationService: long-running operations started in this module.
+service OperationService {
+  // Live status of a long-running operation started in this module.
+  rpc GetOperation(GetOperationRequest) returns (GetOperationResponse);
+  // Job centre: the caller's operations across all modules (index fed by module operation events).
+  rpc ListOperations(ListOperationsRequest) returns (ListOperationsResponse);
+  // Request cancellation of a running operation started in this module.
+  rpc CancelOperation(CancelOperationRequest) returns (CancelOperationResponse);
+}
+
+message ListTenantsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListTenantsResponse {
+  repeated Tenant items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetTenantRequest {
+  // Tenant id (UUID).
+  string id = 1;
+}
+message GetTenantResponse {
+  Tenant tenant = 1;
+}
+
+message CreateTenantRequest {
+  Tenant tenant = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateTenantResponse {
+  Tenant tenant = 1;
+}
+
+message UpdateTenantRequest {
+  // Resource with id and etag set.
+  Tenant tenant = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateTenantResponse {
+  Tenant tenant = 1;
+}
+
+message DeleteTenantRequest {
+  // Tenant id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteTenantResponse {
+}
+
+message ListSaasPlansRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListSaasPlansResponse {
+  repeated SaasPlan items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetSaasPlanRequest {
+  // SaasPlan id (UUID).
+  string id = 1;
+}
+message GetSaasPlanResponse {
+  SaasPlan saas_plan = 1;
+}
+
+message CreateSaasPlanRequest {
+  SaasPlan saas_plan = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateSaasPlanResponse {
+  SaasPlan saas_plan = 1;
+}
+
+message UpdateSaasPlanRequest {
+  // Resource with id and etag set.
+  SaasPlan saas_plan = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateSaasPlanResponse {
+  SaasPlan saas_plan = 1;
+}
+
+message DeleteSaasPlanRequest {
+  // SaasPlan id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteSaasPlanResponse {
+}
+
+message ListTenantSubscriptionsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListTenantSubscriptionsResponse {
+  repeated TenantSubscription items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetTenantSubscriptionRequest {
+  // TenantSubscription id (UUID).
+  string id = 1;
+}
+message GetTenantSubscriptionResponse {
+  TenantSubscription tenant_subscription = 1;
+}
+
+message ListFileObjectsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListFileObjectsResponse {
+  repeated FileObject items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetFileObjectRequest {
+  // FileObject id (UUID).
+  string id = 1;
+}
+message GetFileObjectResponse {
+  FileObject file_object = 1;
+}
+
+message DeleteFileObjectRequest {
+  // FileObject id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteFileObjectResponse {
+}
+
+message ListEntityAttachmentsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListEntityAttachmentsResponse {
+  repeated EntityAttachment items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message CreateEntityAttachmentRequest {
+  EntityAttachment entity_attachment = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateEntityAttachmentResponse {
+  EntityAttachment entity_attachment = 1;
+}
+
+message DeleteEntityAttachmentRequest {
+  // EntityAttachment id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteEntityAttachmentResponse {
+}
+
+message ListTagsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListTagsResponse {
+  repeated Tag items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetTagRequest {
+  // Tag id (UUID).
+  string id = 1;
+}
+message GetTagResponse {
+  Tag tag = 1;
+}
+
+message CreateTagRequest {
+  Tag tag = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateTagResponse {
+  Tag tag = 1;
+}
+
+message UpdateTagRequest {
+  // Resource with id and etag set.
+  Tag tag = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateTagResponse {
+  Tag tag = 1;
+}
+
+message DeleteTagRequest {
+  // Tag id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteTagResponse {
+}
+
+message ListTagAssignmentsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListTagAssignmentsResponse {
+  repeated TagAssignment items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message CreateTagAssignmentRequest {
+  TagAssignment tag_assignment = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateTagAssignmentResponse {
+  TagAssignment tag_assignment = 1;
+}
+
+message DeleteTagAssignmentRequest {
+  // TagAssignment id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteTagAssignmentResponse {
+}
+
+message ListEntityNotesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListEntityNotesResponse {
+  repeated EntityNote items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetEntityNoteRequest {
+  // EntityNote id (UUID).
+  string id = 1;
+}
+message GetEntityNoteResponse {
+  EntityNote entity_note = 1;
+}
+
+message CreateEntityNoteRequest {
+  EntityNote entity_note = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateEntityNoteResponse {
+  EntityNote entity_note = 1;
+}
+
+message UpdateEntityNoteRequest {
+  // Resource with id and etag set.
+  EntityNote entity_note = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateEntityNoteResponse {
+  EntityNote entity_note = 1;
+}
+
+message DeleteEntityNoteRequest {
+  // EntityNote id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteEntityNoteResponse {
+}
+
+message ListAuditLogsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListAuditLogsResponse {
+  repeated AuditLog items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetAuditLogRequest {
+  // AuditLog id (UUID).
+  string id = 1;
+}
+message GetAuditLogResponse {
+  AuditLog audit_log = 1;
+}
+
+message ListReservedKeywordsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListReservedKeywordsResponse {
+  repeated ReservedKeyword items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetReservedKeywordRequest {
+  // ReservedKeyword id (UUID).
+  string id = 1;
+}
+message GetReservedKeywordResponse {
+  ReservedKeyword reserved_keyword = 1;
+}
+
+message CreateReservedKeywordRequest {
+  ReservedKeyword reserved_keyword = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateReservedKeywordResponse {
+  ReservedKeyword reserved_keyword = 1;
+}
+
+message UpdateReservedKeywordRequest {
+  // Resource with id and etag set.
+  ReservedKeyword reserved_keyword = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateReservedKeywordResponse {
+  ReservedKeyword reserved_keyword = 1;
+}
+
+message DeleteReservedKeywordRequest {
+  // ReservedKeyword id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteReservedKeywordResponse {
+}
+
+message ListSalesEnquiriesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListSalesEnquiriesResponse {
+  repeated SalesEnquiry items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetSalesEnquiryRequest {
+  // SalesEnquiry id (UUID).
+  string id = 1;
+}
+message GetSalesEnquiryResponse {
+  SalesEnquiry sales_enquiry = 1;
+}
+
+message CreateSalesEnquiryRequest {
+  SalesEnquiry sales_enquiry = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateSalesEnquiryResponse {
+  SalesEnquiry sales_enquiry = 1;
+}
+
+message UpdateSalesEnquiryRequest {
+  // Resource with id and etag set.
+  SalesEnquiry sales_enquiry = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateSalesEnquiryResponse {
+  SalesEnquiry sales_enquiry = 1;
+}
+
+message DeleteSalesEnquiryRequest {
+  // SalesEnquiry id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteSalesEnquiryResponse {
+}
+
+message ListSystemSettingsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListSystemSettingsResponse {
+  repeated SystemSetting items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetSystemSettingRequest {
+  // SystemSetting id (UUID).
+  string id = 1;
+}
+message GetSystemSettingResponse {
+  SystemSetting system_setting = 1;
+}
+
+message CreateSystemSettingRequest {
+  SystemSetting system_setting = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateSystemSettingResponse {
+  SystemSetting system_setting = 1;
+}
+
+message UpdateSystemSettingRequest {
+  // Resource with id and etag set.
+  SystemSetting system_setting = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateSystemSettingResponse {
+  SystemSetting system_setting = 1;
+}
+
+message DeleteSystemSettingRequest {
+  // SystemSetting id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteSystemSettingResponse {
+}
+
+message ListThemesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListThemesResponse {
+  repeated Theme items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetThemeRequest {
+  // Theme id (UUID).
+  string id = 1;
+}
+message GetThemeResponse {
+  Theme theme = 1;
+}
+
+message CreateThemeRequest {
+  Theme theme = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateThemeResponse {
+  Theme theme = 1;
+}
+
+message UpdateThemeRequest {
+  // Resource with id and etag set.
+  Theme theme = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateThemeResponse {
+  Theme theme = 1;
+}
+
+message DeleteThemeRequest {
+  // Theme id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteThemeResponse {
+}
+
+message ListUploadPoliciesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListUploadPoliciesResponse {
+  repeated UploadPolicy items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetUploadPolicyRequest {
+  // UploadPolicy id (UUID).
+  string id = 1;
+}
+message GetUploadPolicyResponse {
+  UploadPolicy upload_policy = 1;
+}
+
+message CreateUploadPolicyRequest {
+  UploadPolicy upload_policy = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateUploadPolicyResponse {
+  UploadPolicy upload_policy = 1;
+}
+
+message UpdateUploadPolicyRequest {
+  // Resource with id and etag set.
+  UploadPolicy upload_policy = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateUploadPolicyResponse {
+  UploadPolicy upload_policy = 1;
+}
+
+message DeleteUploadPolicyRequest {
+  // UploadPolicy id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteUploadPolicyResponse {
+}
+
+message ListDeletionLogsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListDeletionLogsResponse {
+  repeated DeletionLog items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetDeletionLogRequest {
+  // DeletionLog id (UUID).
+  string id = 1;
+}
+message GetDeletionLogResponse {
+  DeletionLog deletion_log = 1;
+}
+
+message ListStorageQuotasRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListStorageQuotasResponse {
+  repeated StorageQuota items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetStorageQuotaRequest {
+  // StorageQuota id (UUID).
+  string id = 1;
+}
+message GetStorageQuotaResponse {
+  StorageQuota storage_quota = 1;
+}
+
+message CreateStorageQuotaRequest {
+  StorageQuota storage_quota = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateStorageQuotaResponse {
+  StorageQuota storage_quota = 1;
+}
+
+message UpdateStorageQuotaRequest {
+  // Resource with id and etag set.
+  StorageQuota storage_quota = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStorageQuotaResponse {
+  StorageQuota storage_quota = 1;
+}
+
+message DeleteStorageQuotaRequest {
+  // StorageQuota id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteStorageQuotaResponse {
+}
+
+message CreateUploadUrlRequest {
+  // Original name. Required.
+  string file_name = 1;
+  // MIME type. Required.
+  string mime_type = 2;
+  // Size. Required.
+  int64 size_bytes = 3;
+  // SHA-256 for integrity.
+  optional string checksum_sha256 = 4;
+  // Owner type.
+  optional string owner_entity_type = 5;
+  // Owner record.
+  optional string owner_entity_id = 6;
+  // Collection.
+  optional string collection_name = 7;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 8;
+}
+message CreateUploadUrlResponse {
+  mysms.common.v1.UploadTarget result = 1;
+}
+
+message CompleteUploadRequest {
+  // Path parameter fileObjectId.
+  string file_object_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message CompleteUploadResponse {
+  FileObject file_object = 1;
+}
+
+message GetDownloadUrlRequest {
+  // Path parameter fileObjectId.
+  string file_object_id = 1;
+}
+message GetDownloadUrlResponse {
+  mysms.common.v1.DownloadLink result = 1;
+}
+
+message GetBrandingRequest {
+  // Tenant code. Required.
+  string tenant_code = 1;
+  // Institution.
+  optional string institution_id = 2;
+}
+message GetBrandingResponse {
+  mysms.common.v1.Branding result = 1;
+}
+
+message ClearDemoDataRequest {
+  // Path parameter tenantId.
+  string tenant_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message ClearDemoDataResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message GlobalSearchRequest {
+  // Search text. Required.
+  string query = 1;
+  // Restrict to these resource types.
+  repeated string entity_types = 2;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 3 (page_size), 4 (page_token) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 3, 4;
+  reserved "page_size", "page_token";
+}
+message GlobalSearchResponse {
+  repeated mysms.common.v1.SearchHit items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 3;
+  // Fields 2 (next_page_token) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2;
+  reserved "next_page_token";
+}
+
+message GetOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+}
+message GetOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message ListOperationsRequest {
+  // Filter by kind.
+  optional string kind = 1;
+  // The page to read: number, size and the cursor of a next page (api/README "Pagination"). Its sort is not taken:
+  // the rows come in their one fixed order, as over REST, which has no sort parameter here.
+  mysms.common.v1.PageableRequest pageable = 4;
+  // Fields 2 (page_size), 3 (page_token) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3;
+  reserved "page_size", "page_token";
+}
+message ListOperationsResponse {
+  repeated mysms.common.v1.Operation items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 3;
+  // Fields 2 (next_page_token) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2;
+  reserved "next_page_token";
+}
+
+message CancelOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message CancelOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message ListReportDefinitionsRequest {
+  // Filter by module.
+  optional string module = 1;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 4;
+  // Fields 2 (page_size), 3 (page_token) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3;
+  reserved "page_size", "page_token";
+}
+message ListReportDefinitionsResponse {
+  repeated mysms.common.v1.ReportDefinition items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 3;
+  // Fields 2 (next_page_token) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2;
+  reserved "next_page_token";
+}
+
+message RunReportRequest {
+  // Report code (see ListReportDefinitions). Required.
+  string report_code = 1;
+  // Output format. Required.
+  Format format = 2;
+  // Report parameters.
+  google.protobuf.Value parameters = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+  // Allowed values of format; REST/JSON uses the lowercase value shown in each comment.
+  enum Format {
+    FORMAT_UNSPECIFIED = 0;
+    // "csv"
+    FORMAT_CSV = 1;
+    // "xlsx"
+    FORMAT_XLSX = 2;
+    // "pdf"
+    FORMAT_PDF = 3;
+  }
+}
+message RunReportResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message GetImportTemplateRequest {
+  // Path parameter entityType.
+  string entity_type = 1;
+}
+message GetImportTemplateResponse {
+  mysms.common.v1.DownloadLink result = 1;
+}
+
+message StartImportRequest {
+  // What is imported. Required.
+  EntityType entity_type = 1;
+  // Uploaded file. Required.
+  string file_id = 2;
+  // Target institution.
+  optional string institution_id = 3;
+  // Validate only.
+  optional bool dry_run = 4;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 5;
+  // Allowed values of entity_type; REST/JSON uses the lowercase value shown in each comment.
+  enum EntityType {
+    ENTITY_TYPE_UNSPECIFIED = 0;
+    // "students"
+    ENTITY_TYPE_STUDENTS = 1;
+    // "guardians"
+    ENTITY_TYPE_GUARDIANS = 2;
+    // "staff"
+    ENTITY_TYPE_STAFF = 3;
+    // "library_media"
+    ENTITY_TYPE_LIBRARY_MEDIA = 4;
+    // "holidays"
+    ENTITY_TYPE_HOLIDAYS = 5;
+    // "promotions"
+    ENTITY_TYPE_PROMOTIONS = 6;
+    // "lms_course_package"
+    ENTITY_TYPE_LMS_COURSE_PACKAGE = 7;
+  }
+}
+message StartImportResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message SearchStockImagesRequest {
+  // Keyword. Required.
+  string query = 1;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 4;
+  // Fields 2 (page_size), 3 (page_token) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3;
+  reserved "page_size", "page_token";
+}
+message SearchStockImagesResponse {
+  repeated mysms.common.v1.StockImage items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 3;
+  // Fields 2 (next_page_token) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2;
+  reserved "next_page_token";
+}
+
+message StartSubscriptionCheckoutRequest {
+  // Plan. Required.
+  string plan_id = 1;
+  // Institution.
+  optional string institution_id = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+// Checkout started for a subscription purchase. References the finance payment by id only.
+message SubscriptionCheckout {
+  // Payment row created in finance. [UUID]
+  string payment_id = 1;
+  // Hosted payment page.
+  optional string redirect_url = 2;
+  // Gateway order id for client SDKs.
+  optional string gateway_order_id = 3;
+  // Publishable key for client SDKs.
+  optional string gateway_public_key = 4;
+}
+message StartSubscriptionCheckoutResponse {
+  SubscriptionCheckout result = 1;
+}
+
+message CancelSubscriptionRequest {
+  // Path parameter tenantSubscriptionId.
+  string tenant_subscription_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CancelSubscriptionResponse {
+  TenantSubscription tenant_subscription = 1;
+}
+
+message ConfirmSubscriptionCheckoutRequest {
+  // Path parameter tenantSubscriptionId.
+  string tenant_subscription_id = 1;
+  // Gateway order id (razorpay_order_id).
+  string gateway_order_id = 2;
+  // Gateway payment id (razorpay_payment_id).
+  string gateway_payment_id = 3;
+  // Checkout signature (razorpay_signature).
+  string gateway_signature = 4;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 5;
+}
+message ConfirmSubscriptionCheckoutResponse {
+  TenantSubscription tenant_subscription = 1;
+}
+
+message ReceiveSubscriptionWebhookRequest {
+  // Unmodified request body as sent by the gateway. Required.
+  bytes raw_body = 1;
+  // Gateway signature headers.
+  map<string, string> headers = 2;
+}
+message ReceiveSubscriptionWebhookResponse {
+}
+
+message MarkEnquiryContactedRequest {
+  // Path parameter salesEnquiryId.
+  string sales_enquiry_id = 1;
+  // Reason / comment recorded with the transition.
+  optional string reason = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message MarkEnquiryContactedResponse {
+  SalesEnquiry sales_enquiry = 1;
+}
+
+message GetMyStorageUsageRequest {
+}
+message GetMyStorageUsageResponse {
+  StorageQuota result = 1;
+}
+
+message CopyFileRequest {
+  // Path parameter fileObjectId.
+  string file_object_id = 1;
+  // Owner type of the copy.
+  optional string owner_entity_type = 2;
+  // Owner record of the copy.
+  optional string owner_entity_id = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CopyFileResponse {
+  FileObject file_object = 1;
+}
+
+// A customer organisation (school group, trust, single school or training company) that owns all of its data.
+message Tenant {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Short unique tenant code used in URLs and logins.
+  string code = 2;
+  // Display name.
+  string name = 3;
+  // Registered legal name.
+  optional string legal_name = 4;
+  // Tenant lifecycle state.
+  Status status = 5;
+  // Main contact e-mail.
+  optional string primary_email = 6;
+  // Main contact phone.
+  optional string primary_phone = 7;
+  // Country of registration. [UUID]
+  optional string country_id = 8;
+  // Default currency for fees and payments. [UUID]
+  optional string default_currency_id = 9;
+  // IANA time zone, e.g. Asia/Kolkata.
+  string timezone = 10;
+  // Default locale.
+  string locale = 11;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 12;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 13;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 14;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 15;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 16;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "suspended"
+    STATUS_SUSPENDED = 2;
+    // "closed"
+    STATUS_CLOSED = 3;
+  }
+}
+
+// Subscription plan offered to tenants, with usage limits.
+message SaasPlan {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Unique plan code.
+  string code = 2;
+  // Plan name shown to customers.
+  string display_name = 3;
+  // Billing cycle length in months.
+  int32 billing_cycle_months = 4;
+  // Price per billing cycle. [Decimal string]
+  string price = 5;
+  // Currency of the price. [UUID]
+  optional string currency_id = 6;
+  // Display order.
+  int32 sort_order = 7;
+  // Whether the plan can be purchased.
+  bool is_active = 8;
+  // Member (user) limit; NULL = unlimited.
+  optional int32 max_members = 9;
+  // Event limit.
+  optional int32 max_events = 10;
+  // Folder limit.
+  optional int32 max_folders = 11;
+  // File limit.
+  optional int32 max_files = 12;
+  // Video limit.
+  optional int32 max_videos = 13;
+  // Audio limit.
+  optional int32 max_audios = 14;
+  // Bulletin/magazine limit.
+  optional int32 max_bulletins = 15;
+  // Group limit.
+  optional int32 max_groups = 16;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 17;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 18;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 19;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 20;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 21;
+}
+
+// A tenant's (or one institution's) subscription to a SaaS plan.
+message TenantSubscription {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution the subscription covers; NULL = whole tenant. [UUID]
+  optional string institution_id = 2;
+  // Subscribed plan (NULL while a custom plan is being negotiated). [UUID]
+  optional string plan_id = 3;
+  // User who requested the subscription. [UUID]
+  string requested_by_user_id = 4;
+  // Subscription state. Changed only through the workflow operations. Output only.
+  Status status = 5;
+  // Start of the subscription. [ISO-8601 date (YYYY-MM-DD)]
+  optional string start_date = 6;
+  // End of the current paid period. [ISO-8601 date (YYYY-MM-DD)]
+  optional string end_date = 7;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "pending"
+    STATUS_PENDING = 1;
+    // "active"
+    STATUS_ACTIVE = 2;
+    // "cancelled"
+    STATUS_CANCELLED = 3;
+    // "expired"
+    STATUS_EXPIRED = 4;
+  }
+  // Plan limit copied at purchase. Output only.
+  optional int32 max_members = 15;
+  // Price paid for the cycle. [Decimal string] Output only.
+  optional string price = 16;
+  // Currency of the purchase. [UUID] Output only.
+  optional string currency_id = 17;
+  // Billing cycle purchased, in months. Output only.
+  optional int32 billing_cycle_months = 18;
+  // Gateway that took the subscription payment. Output only.
+  optional string gateway_name = 19;
+  // Gateway transaction reference. Output only.
+  optional string gateway_txn_ref = 20;
+  // Amount actually captured. [Decimal string] Output only.
+  optional string amount_paid = 21;
+  // Status reported by the gateway. Output only.
+  optional string gateway_status = 22;
+  // When the payment was captured. Output only.
+  google.protobuf.Timestamp paid_at = 23;
+  // Payer name as reported. Output only.
+  optional string payer_name = 24;
+}
+
+// Every stored file (documents, images, videos, attachments). Other tables reference files through *_file_id.
+message FileObject {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Stored file name.
+  string file_name = 2;
+  // Name of the file as uploaded.
+  optional string original_name = 3;
+  // MIME type.
+  optional string mime_type = 4;
+  // File size in bytes.
+  int64 size_bytes = 5;
+  // SHA-256 of the content.
+  optional string checksum_sha256 = 6;
+  // Polymorphic owner type (table name) when the file belongs to one record.
+  optional string owner_entity_type = 7;
+  // Polymorphic owner record id (pairs with owner_entity_type). [UUID]
+  optional string owner_entity_id = 8;
+  // Logical collection within the owner, e.g. avatar, gallery.
+  optional string collection_name = 9;
+  // Order within the collection.
+  optional int32 sort_order = 10;
+  // Kind of file (from the fixed content-type catalogue), used for icons, viewers and processing.
+  optional FileKind file_kind = 20;
+  // Shared with a group of users (readable beyond the owner).
+  bool is_shared = 21;
+  // State of post-upload processing (package extraction, document-to-e-book conversion, video transcoding).
+  ProcessingStatus processing_status = 22;
+  // Processing attempts so far.
+  int32 processing_attempts = 23;
+  // Last processing error.
+  optional string processing_error = 24;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 15;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 16;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 17;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 18;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 19;
+  // Allowed values of file_kind; REST/JSON uses the lowercase value shown in each comment.
+  enum FileKind {
+    FILE_KIND_UNSPECIFIED = 0;
+    // "document"
+    FILE_KIND_DOCUMENT = 1;
+    // "presentation"
+    FILE_KIND_PRESENTATION = 2;
+    // "spreadsheet"
+    FILE_KIND_SPREADSHEET = 3;
+    // "pdf"
+    FILE_KIND_PDF = 4;
+    // "image"
+    FILE_KIND_IMAGE = 5;
+    // "audio"
+    FILE_KIND_AUDIO = 6;
+    // "video"
+    FILE_KIND_VIDEO = 7;
+    // "archive"
+    FILE_KIND_ARCHIVE = 8;
+    // "package"
+    FILE_KIND_PACKAGE = 9;
+    // "ebook"
+    FILE_KIND_EBOOK = 10;
+    // "other"
+    FILE_KIND_OTHER = 11;
+  }
+  // Allowed values of processing_status; REST/JSON uses the lowercase value shown in each comment.
+  enum ProcessingStatus {
+    PROCESSING_STATUS_UNSPECIFIED = 0;
+    // "none"
+    PROCESSING_STATUS_NONE = 1;
+    // "pending"
+    PROCESSING_STATUS_PENDING = 2;
+    // "in_progress"
+    PROCESSING_STATUS_IN_PROGRESS = 3;
+    // "succeeded"
+    PROCESSING_STATUS_SUCCEEDED = 4;
+    // "failed"
+    PROCESSING_STATUS_FAILED = 5;
+  }
+  // Lifecycle: pending, available, quarantined or deleted. Output only.
+  optional string status = 25;
+  // When malware/content scanning finished. Output only.
+  google.protobuf.Timestamp scanned_at = 26;
+  // User who uploaded the file. [UUID] Output only.
+  optional string uploaded_by_user_id = 27;
+}
+
+// Attaches one or more files to any record (multi-file fields such as homework submissions, mail attachments).
+message EntityAttachment {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Polymorphic owner table name, e.g. assessment.homework_submission.
+  string entity_type = 2;
+  // Polymorphic owner record id. [UUID]
+  string entity_id = 3;
+  // Attached file. [UUID]
+  string file_id = 4;
+  // Display order.
+  int32 sort_order = 5;
+  // Role of the file on the record (task resources, grading key, reviewer feedback, submitted work, media embedded in rich text).
+  Purpose purpose = 11;
+  // Display title of the attachment.
+  optional string title = 12;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+  // Allowed values of purpose; REST/JSON uses the lowercase value shown in each comment.
+  enum Purpose {
+    PURPOSE_UNSPECIFIED = 0;
+    // "attachment"
+    PURPOSE_ATTACHMENT = 1;
+    // "resource"
+    PURPOSE_RESOURCE = 2;
+    // "grading_key"
+    PURPOSE_GRADING_KEY = 3;
+    // "review_feedback"
+    PURPOSE_REVIEW_FEEDBACK = 4;
+    // "submission"
+    PURPOSE_SUBMISSION = 5;
+    // "inline_media"
+    PURPOSE_INLINE_MEDIA = 6;
+  }
+}
+
+// Tenant-defined label used to classify records (posts, library media, courses).
+message Tag {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Tag family, e.g. general, post, library_media, lms_course.
+  string tag_type = 2;
+  // Tag label.
+  string name = 3;
+  // URL-safe tag key.
+  string slug = 4;
+  // Localised name/slug values keyed by locale.
+  google.protobuf.Value translations = 5;
+  // Display order.
+  optional int32 sort_order = 6;
+  // Short code (e.g. subject tag code).
+  optional string code = 12;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+}
+
+// Applies a tag to a record.
+message TagAssignment {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Tag applied. [UUID]
+  string tag_id = 2;
+  // Polymorphic target table name.
+  string entity_type = 3;
+  // Polymorphic target record id. [UUID]
+  string entity_id = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// Free-text note attached to any record (e.g. an event or student).
+message EntityNote {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution scope. [UUID]
+  string institution_id = 2;
+  // Polymorphic target table name.
+  string entity_type = 3;
+  // Polymorphic target record id. [UUID]
+  string entity_id = 4;
+  // Note content.
+  string note_text = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+}
+
+// Immutable audit trail of changes and actions.
+message AuditLog {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Log channel / category.
+  optional string log_name = 2;
+  // Human-readable action description.
+  string description = 3;
+  // Event name, e.g. created, updated, deleted.
+  optional string event = 4;
+  // Polymorphic subject table name.
+  optional string subject_type = 5;
+  // Polymorphic subject record id. [UUID]
+  optional string subject_id = 6;
+  // Polymorphic actor type (normally iam.user_account).
+  optional string causer_type = 7;
+  // Polymorphic actor record id. [UUID]
+  optional string causer_id = 8;
+  // Before/after values and context.
+  google.protobuf.Value properties = 9;
+  // Logical id grouping entries written in one operation. [UUID]
+  optional string batch_id = 10;
+  // Client IP.
+  optional string ip_address = 11;
+  // When the action happened.
+  google.protobuf.Timestamp occurred_at = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+}
+
+// Words that may not be used in new tenant or institution names.
+message ReservedKeyword {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Reserved word.
+  string keyword = 2;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 3;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 4;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 5;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 6;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 7;
+}
+
+// Inbound enquiry / demo request from a prospective customer.
+message SalesEnquiry {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person making the enquiry.
+  string contact_name = 2;
+  // Contact e-mail.
+  string email = 3;
+  // Contact phone.
+  string phone = 4;
+  // School / organisation name.
+  string organisation_name = 5;
+  // Contact's role.
+  string designation = 6;
+  // How the enquiry arrived (web, phone, event).
+  optional string channel = 7;
+  // Enquiry text.
+  optional string message = 8;
+  // Sales follow-up state.
+  Status status = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "new"
+    STATUS_NEW = 1;
+    // "contacted"
+    STATUS_CONTACTED = 2;
+    // "qualified"
+    STATUS_QUALIFIED = 3;
+    // "converted"
+    STATUS_CONVERTED = 4;
+    // "closed"
+    STATUS_CLOSED = 5;
+  }
+}
+
+// Platform-wide configurable setting.
+message SystemSetting {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Unique key.
+  string setting_key = 2;
+  // Display name.
+  string name = 3;
+  // Explanation.
+  optional string description = 4;
+  // Current value (serialised).
+  optional string value = 5;
+  // Editor control used for the value (text, bool, select, json).
+  string input_type = 6;
+  // Whether the setting is in effect.
+  bool is_active = 7;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 8;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 9;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 10;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 11;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 12;
+}
+
+// Visual theme (colours, logo placement) selectable per institution. NULL tenant = platform-provided theme.
+message Theme {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Theme name.
+  string name = 2;
+  // Description.
+  optional string description = 3;
+  // Preview image. [UUID]
+  optional string thumbnail_file_id = 4;
+  // Second preview image (e.g. dark variant). [UUID]
+  optional string thumbnail_alt_file_id = 5;
+  // Design tokens (colours, fonts) applied by the web and mobile apps.
+  google.protobuf.Value tokens = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+  // Logo shown on sign-in pages, the app shell and the PWA manifest (the branding of the tenant's default theme). [UUID]
+  optional string logo_file_id = 12;
+  // The tenant's own theme, the one public branding uses. At most one per tenant; setting it moves the mark.
+  optional bool is_default = 13;
+}
+
+// File-upload limits per role and feature (maximum size, allowed extensions).
+message UploadPolicy {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Role the limit applies to (NULL = everyone). [UUID]
+  optional string role_id = 2;
+  // Feature area (assignments, quiz media, profile picture...).
+  string module_code = 3;
+  // Specific operation within the feature (e.g. create_question_image).
+  optional string operation_code = 4;
+  // Maximum file size in bytes (NULL = platform default).
+  optional int64 max_size_bytes = 5;
+  // Comma-separated allowed extensions (NULL = platform default list).
+  optional string allowed_extensions = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+}
+
+// Tombstone of a hard-deleted row, so offline clients and integrations can remove it in delta sync. Soft-deleted rows are synced through deleted_at instead.
+message DeletionLog {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Table of the deleted row (schema.table).
+  string entity_type = 2;
+  // Polymorphic id of the deleted row. [UUID]
+  string entity_id = 3;
+  // Cohort context, used to route the tombstone to the right devices. [UUID]
+  optional string cohort_id = 4;
+  // When the row was deleted.
+  google.protobuf.Timestamp deleted_at_ts = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+}
+
+// Storage allowance and usage of a user or an institution.
+message StorageQuota {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // User the quota belongs to. [UUID]
+  optional string user_id = 2;
+  // Institution the quota belongs to (institution-wide pool). [UUID]
+  optional string institution_id = 3;
+  // Allowed bytes.
+  int64 quota_bytes = 4;
+  // Bytes in use (maintained by the application).
+  int64 used_bytes = 5;
+  // Quota is enforced.
+  bool is_active = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+}
+

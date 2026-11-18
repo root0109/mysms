@@ -11,14 +11,12 @@ import java.util.regex.Pattern;
 
 /**
  * Finds the tenant tables a SQL statement reads or changes without filtering them by {@code tenant_id = :tenantId} at
- * the statement's own level (JAVA-CODING-RULES §1.6, rule R1). A predicate counts only where it filters the table: in
- * the WHERE of the statement or sub-select that reads the base table, or in the ON of a joined tenant table — not
- * inside a deeper sub-select and not in one branch of an OR. Statements the check cannot place a predicate in
- * (compound statements, comma joins, {@code DELETE … USING}, {@code UPDATE … FROM}, a tenant table read without a
- * WHERE) are refused as {@link Unsupported}, so they are written differently instead of slipping through.
+ * the statement's own level (rule R1). A predicate counts only in the WHERE of the statement or sub-select that reads
+ * the base table, or in the ON of a joined tenant table, never inside a deeper sub-select or one branch of an OR.
+ * Shapes the check cannot place a predicate in (compound statements, comma joins, {@code DELETE … USING},
+ * {@code UPDATE … FROM}, a tenant table read without a WHERE) are refused as {@link Unsupported}.
  *
- * <p>A single forward pass over the tokens with one frame per parenthesis level, which is all the SQL in MySMS's
- * repositories needs; it is not a general SQL parser.
+ * <p>A single forward pass over the tokens with one frame per parenthesis level; not a general SQL parser.
  */
 public final class TenantPredicates {
 
@@ -85,7 +83,6 @@ public final class TenantPredicates {
         }
     }
 
-    /** The scan of one statement. */
     private final class Pass {
         private final List<String> tokens;
         private final Deque<Frame> frames = new ArrayDeque<>();

@@ -1,4 +1,4 @@
-// Owned API contract of platform (JAVA-CODING-RULES §7); first materialized from api/openapi/platform.yaml on 2026-11-10.
+// Owned API contract of platform.
 package com.mysms.platform.api;
 
 import com.mysms.platform.api.model.StockImage;

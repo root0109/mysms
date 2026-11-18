@@ -20,7 +20,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * Plain-JDBC access to iam.operation (JAVA-CODING-RULES §6): constant SQL, the tenant filtered in every statement,
+ * Plain-JDBC access to iam.operation: the tenant filtered in every statement,
  * live rows only, newest first with keyset paging, the row_version guard on cancel.
  */
 @Repository
@@ -50,10 +50,33 @@ public class OperationRepository {
                AND id = :id AND row_version = :expected AND status = 'running' AND deleted_at IS NULL
             """;
 
+    private static final String INSERT_COMPLETED = """
+            INSERT INTO iam.operation
+                (id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent,
+                 started_by_user_id, started_at, finished_at, created_at, created_by, updated_at, updated_by,
+                 row_version)
+            VALUES (:id, :tenantId, :operationName, :resourceType, :resourceId, 'succeeded', 100,
+                    :startedBy, :startedAt, :finishedAt, :createdAt, :createdBy, :updatedAt, :updatedBy, :rowVersion)
+            RETURNING id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent,
+                      error_code, error_message, result_entity_type, result_entity_id, started_by_user_id,
+                      started_at, finished_at, created_at, created_by, updated_at, updated_by, deleted_at, row_version
+            """;
+
     private final JdbcClient jdbc;
 
     public OperationRepository(@Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** Stores the finished record of work done at once but answered through the asynchronous operation contract. */
+    public OperationEntity insertCompleted(OperationEntity e) {
+        return jdbc.sql(INSERT_COMPLETED).param("id", e.getId()).param("tenantId", e.getTenantId())
+                .param("operationName", e.getOperationName()).param("resourceType", e.getResourceType())
+                .param("resourceId", e.getResourceId()).param("startedBy", e.getStartedByUserId())
+                .param("startedAt", e.getStartedAt()).param("finishedAt", e.getFinishedAt())
+                .param("createdAt", e.getCreatedAt()).param("createdBy", e.getCreatedBy())
+                .param("updatedAt", e.getUpdatedAt()).param("updatedBy", e.getUpdatedBy())
+                .param("rowVersion", e.getRowVersion()).query(OperationRepository::map).single();
     }
 
     public Optional<OperationEntity> findById(UUID id) {

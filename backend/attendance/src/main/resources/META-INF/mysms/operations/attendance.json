@@ -5,7 +5,8 @@
   "permission" : "attendance.attendance_sheet.cancel_attendance_sheet",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "attendance.CompleteAttendanceSheet",
   "method" : "POST",
@@ -13,7 +14,8 @@
   "permission" : "attendance.attendance_sheet.complete_attendance_sheet",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "attendance.CreateAbsenceReason",
   "method" : "POST",
@@ -21,7 +23,8 @@
   "permission" : "attendance.absence_reason.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "attendance.CreateAttendanceRegister",
   "method" : "POST",
@@ -29,7 +32,8 @@
   "permission" : "attendance.attendance_register.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "attendance.CreateAttendanceSheet",
   "method" : "POST",
@@ -37,7 +41,8 @@
   "permission" : "attendance.attendance_sheet.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "attendance.CreateAttendanceType",
   "method" : "POST",
@@ -45,7 +50,8 @@
   "permission" : "attendance.attendance_type.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "attendance.CreateStaffAttendance",
   "method" : "POST",
@@ -53,119 +59,136 @@
   "permission" : "attendance.staff_attendance.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "attendance.DeleteAbsenceReason",
   "method" : "DELETE",
   "path" : "/v1/attendance/absence-reasons/{absenceReasonId}",
   "permission" : "attendance.absence_reason.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.DeleteAttendanceRegister",
   "method" : "DELETE",
   "path" : "/v1/attendance/attendance-registers/{attendanceRegisterId}",
   "permission" : "attendance.attendance_register.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.DeleteAttendanceSheet",
   "method" : "DELETE",
   "path" : "/v1/attendance/attendance-sheets/{attendanceSheetId}",
   "permission" : "attendance.attendance_sheet.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.DeleteAttendanceType",
   "method" : "DELETE",
   "path" : "/v1/attendance/attendance-types/{attendanceTypeId}",
   "permission" : "attendance.attendance_type.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.GetAbsenceReason",
   "method" : "GET",
   "path" : "/v1/attendance/absence-reasons/{absenceReasonId}",
   "permission" : "attendance.absence_reason.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.GetAttendanceRecord",
   "method" : "GET",
   "path" : "/v1/attendance/attendance-sheets/{attendanceSheetId}/records/{attendanceRecordId}",
   "permission" : "attendance.attendance_record.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.GetAttendanceRegister",
   "method" : "GET",
   "path" : "/v1/attendance/attendance-registers/{attendanceRegisterId}",
   "permission" : "attendance.attendance_register.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.GetAttendanceSheet",
   "method" : "GET",
   "path" : "/v1/attendance/attendance-sheets/{attendanceSheetId}",
   "permission" : "attendance.attendance_sheet.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.GetAttendanceType",
   "method" : "GET",
   "path" : "/v1/attendance/attendance-types/{attendanceTypeId}",
   "permission" : "attendance.attendance_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.GetStaffAttendance",
   "method" : "GET",
   "path" : "/v1/attendance/staff-attendance-days/{staffAttendanceId}",
   "permission" : "attendance.staff_attendance.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.ListAbsenceReasons",
   "method" : "GET",
   "path" : "/v1/attendance/absence-reasons",
   "permission" : "attendance.absence_reason.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.ListAttendanceRecords",
   "method" : "GET",
   "path" : "/v1/attendance/attendance-sheets/{attendanceSheetId}/records",
   "permission" : "attendance.attendance_record.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.ListAttendanceRegisters",
   "method" : "GET",
   "path" : "/v1/attendance/attendance-registers",
   "permission" : "attendance.attendance_register.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.ListAttendanceSheets",
   "method" : "GET",
   "path" : "/v1/attendance/attendance-sheets",
   "permission" : "attendance.attendance_sheet.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.ListAttendanceTypes",
   "method" : "GET",
   "path" : "/v1/attendance/attendance-types",
   "permission" : "attendance.attendance_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.ListStaffAttendances",
   "method" : "GET",
   "path" : "/v1/attendance/staff-attendance-days",
   "permission" : "attendance.staff_attendance.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.RecordAttendance",
   "method" : "POST",
@@ -173,7 +196,8 @@
   "permission" : "attendance.attendance_sheet.record_attendance",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "attendance.ResetAttendanceSheet",
   "method" : "POST",
@@ -181,7 +205,8 @@
   "permission" : "attendance.attendance_sheet.reset_attendance_sheet",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "attendance.StartAttendanceSheet",
   "method" : "POST",
@@ -189,14 +214,16 @@
   "permission" : "attendance.attendance_sheet.start_attendance_sheet",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "attendance.SummarizeAttendance",
   "method" : "GET",
   "path" : "/v1/attendance/summaries",
   "permission" : "attendance.attendance_record.summarize_attendance",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.TakeAttendanceForSession",
   "method" : "POST",
@@ -204,40 +231,46 @@
   "permission" : "attendance.attendance_sheet.take_attendance_for_session",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "attendance.UpdateAbsenceReason",
   "method" : "PATCH",
   "path" : "/v1/attendance/absence-reasons/{absenceReasonId}",
   "permission" : "attendance.absence_reason.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.UpdateAttendanceRegister",
   "method" : "PATCH",
   "path" : "/v1/attendance/attendance-registers/{attendanceRegisterId}",
   "permission" : "attendance.attendance_register.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.UpdateAttendanceSheet",
   "method" : "PATCH",
   "path" : "/v1/attendance/attendance-sheets/{attendanceSheetId}",
   "permission" : "attendance.attendance_sheet.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.UpdateAttendanceType",
   "method" : "PATCH",
   "path" : "/v1/attendance/attendance-types/{attendanceTypeId}",
   "permission" : "attendance.attendance_type.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "attendance.UpdateStaffAttendance",
   "method" : "PATCH",
   "path" : "/v1/attendance/staff-attendance-days/{staffAttendanceId}",
   "permission" : "attendance.staff_attendance.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 } ]

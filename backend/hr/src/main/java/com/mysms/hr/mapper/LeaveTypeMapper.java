@@ -8,10 +8,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
- * Entity ⇄ contract DTO for hr.leave_type. The way in ignores the id, the tenant, the audit set and every read-only
- * field, so
- * a request can never choose an id, re-tenant a row or set a value only workflows change; the ETag always comes from
- * row_version.
+ * Maps hr.leave_type to and from its contract DTO. The way in ignores id, tenant, audit and read-only fields, so a
+ * request cannot set them; the ETag comes from row_version.
  */
 @Mapper(config = HrMapperConfig.class, imports = {Etags.class, WireValues.class})
 public interface LeaveTypeMapper {

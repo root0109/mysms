@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of comms.post_audience_class (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of comms.post_audience_class. */
 @Getter
 @Setter
 @SuperBuilder

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of finance.fee_plan_installment_component (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of finance.fee_plan_installment_component. */
 @Getter
 @Setter
 @SuperBuilder

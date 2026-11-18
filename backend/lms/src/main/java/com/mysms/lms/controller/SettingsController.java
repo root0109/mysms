@@ -1,5 +1,6 @@
 package com.mysms.lms.controller;
 
+import com.mysms.lms.business.CatalogService;
 import java.util.List;
 import com.mysms.core.paging.PagingUtil;
 import com.mysms.core.paging.PagingInfo;
@@ -13,7 +14,6 @@ import com.mysms.lms.api.model.SettingsPrimaryCountryUpdate;
 import com.mysms.lms.api.model.SettingsSidebarItem;
 import com.mysms.lms.api.model.SettingsSidebarItemUpdate;
 import com.mysms.lms.api.model.SettingsUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -21,18 +21,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Settings operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Settings operations; authentication and the permission check already ran in the auth-client filter.
+ * Operations not served yet answer 501.
  */
 @RestController
 public class SettingsController implements SettingsApi {
 
 
     private final SettingsService settingsService;
+    private final CatalogService catalogService;
 
-    public SettingsController(SettingsService settingsService) {
+    public SettingsController(SettingsService settingsService, CatalogService catalogService) {
+        this.catalogService = catalogService;
         this.settingsService = settingsService;
     }
 
@@ -80,12 +80,13 @@ public class SettingsController implements SettingsApi {
 
     @Override
     public ResponseEntity<PublicLmsSettings> getPublicSettings() {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(catalogService.getPublicSettings());
     }
 
     @Override
     public ResponseEntity<Settings> getSettings() {
-        throw new NotImplementedException();
+        Settings found = settingsService.getSettings();
+        return ResponseEntity.ok().eTag(found.getEtag()).body(found);
     }
 
     @Override
@@ -127,13 +128,15 @@ public class SettingsController implements SettingsApi {
     @Override
     public ResponseEntity<Void> sendContactMessage(SendContactMessageRequest sendContactMessageRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        catalogService.sendContactMessage(sendContactMessageRequest);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<Settings> updateSettings(String ifMatch, SettingsUpdate settingsUpdate,
             String updateMask) {
-        throw new NotImplementedException();
+        Settings updated = settingsService.updateSettings(ifMatch, settingsUpdate, updateMask, false);
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override

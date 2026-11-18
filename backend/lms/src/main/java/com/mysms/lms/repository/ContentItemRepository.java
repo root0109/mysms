@@ -24,11 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.content_item (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.content_item: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class ContentItemRepository {
@@ -120,6 +117,53 @@ public class ContentItemRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** lms.SetContentItemVisibility: shows or hides a cohort item under its version. */
+    private static final String SET_ACTIVE = """
+            UPDATE lms.content_item
+               SET is_active = :active, updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** Makes room at a place in a chapter: the items from there on move one down (the moved item excluded). */
+    private static final String SHIFT_DOWN = """
+            UPDATE lms.content_item
+               SET sort_order = sort_order + 1, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND chapter_id = :chapterId AND deleted_at IS NULL AND sort_order >= :start
+               AND id <> :id
+            """;
+    /** lms.MoveContentItem: the chapter and the place in it, under the item's version. */
+    private static final String MOVE = """
+            UPDATE lms.content_item
+               SET chapter_id = :chapterId, sort_order = :sortOrder, updated_at = :now, updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** lms.RecordItemView: one more view; the cached likes are recounted from the students' ratings. */
+    private static final String COUNT_VIEW = """
+            UPDATE lms.content_item
+               SET view_count = view_count + 1,
+                   like_count = (SELECT count(*) FROM lms.content_item_rating x WHERE x.tenant_id = :tenantId
+                                    AND x.content_item_id = :id AND x.deleted_at IS NULL AND x.is_like)
+             WHERE tenant_id = :tenantId AND id = :id AND deleted_at IS NULL
+            """;
+    /** A student likes an item: one rating row per item and student (uq_content_item_rating_1). */
+    private static final String LIKE = """
+            INSERT INTO lms.content_item_rating
+            (id, tenant_id, content_item_id, cohort_id, user_id, is_like, created_at, created_by, updated_at,
+             updated_by, row_version)
+            VALUES (:ratingId, :tenantId, :id, :cohortId, :userId, true, :now, :userId, :now, :userId, 1)
+            ON CONFLICT (content_item_id, user_id) WHERE deleted_at IS NULL
+            DO UPDATE SET is_like = true, updated_at = :now, updated_by = :userId,
+                          row_version = lms.content_item_rating.row_version + 1
+             WHERE lms.content_item_rating.tenant_id = :tenantId AND NOT COALESCE(lms.content_item_rating.is_like, false)
+            """;
+    /** Whether the user may follow the item as a student: enrolled in its course, or in its cohort. */
+    private static final String LEARNER_OF = """
+            SELECT EXISTS (SELECT 1 FROM lms.enrollment e WHERE e.tenant_id = :tenantId AND e.course_id = :courseId
+                              AND e.user_id = :userId AND e.deleted_at IS NULL)
+                OR EXISTS (SELECT 1 FROM lms.cohort_enrollment c WHERE c.tenant_id = :tenantId
+                              AND c.cohort_id = :cohortId AND c.user_id = :userId AND c.deleted_at IS NULL
+                              AND c.is_active AND c.removed_at IS NULL)
+            """;
     private static final String INSERT = """
             INSERT INTO lms.content_item
             (id, tenant_id, exercise_id, chapter_id, course_id, cohort_id, item_kind, lesson_id, file_id,
@@ -355,6 +399,34 @@ public class ContentItemRepository {
 
     public ContentItemRepository(@Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** Shows (true) or hides the item; 0 rows means it changed since it was read. */
+    public int setActive(UUID id, boolean active, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(SET_ACTIVE).param("id", id).param("active", active).param("expected", expected)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    /** Moves the item to a place in a chapter, making room there; 0 rows means it changed since it was read. */
+    public int move(UUID id, int expected, UUID chapterId, int sortOrder, OffsetDateTime now, UUID actor) {
+        jdbc.sql(SHIFT_DOWN).param("chapterId", chapterId).param("start", sortOrder).param("id", id).update();
+        return jdbc.sql(MOVE).param("id", id).param("expected", expected).param("chapterId", chapterId)
+                .param("sortOrder", sortOrder).param("now", now).param("actor", actor).update();
+    }
+
+    /** Counts a view of the item and, when the student liked it, their like. */
+    public void countView(UUID id, UUID cohortId, UUID userId, boolean liked, UUID ratingId, OffsetDateTime now) {
+        if (liked) {
+            jdbc.sql(LIKE).param("ratingId", ratingId).param("id", id).param("cohortId", cohortId)
+                    .param("userId", userId).param("now", now).update();
+        }
+        jdbc.sql(COUNT_VIEW).param("id", id).update();
+    }
+
+    /** Whether the user follows the item's course or cohort as a student. */
+    public boolean isLearnerOf(ContentItemEntity item, UUID userId) {
+        return Boolean.TRUE.equals(jdbc.sql(LEARNER_OF).param("courseId", item.getCourseId())
+                .param("cohortId", item.getCohortId()).param("userId", userId).query(Boolean.class).single());
     }
 
     public Optional<ContentItemEntity> findById(UUID id) {
@@ -687,9 +759,32 @@ public class ContentItemRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    private static final String NEXT_SORT_ORDER = """
+            SELECT COALESCE(MAX(sort_order) + 1, 0) FROM lms.content_item
+             WHERE tenant_id = :tenantId
+               AND chapter_id = :chapterId AND deleted_at IS NULL
+            """;
+
+    /** The next free place at the end of a chapter. */
+    public int nextSortOrder(UUID chapterId) {
+        return jdbc.sql(NEXT_SORT_ORDER).param("chapterId", chapterId).query(Integer.class).single();
+    }
+
+    private static final String OF_CHAPTERS = SELECT_LIVE
+            + " AND r.chapter_id = ANY(:chapterIds) ORDER BY r.chapter_id, r.sort_order, r.created_at";
+
+    /** The live items of the chapters, in reading order. */
+    public List<ContentItemEntity> ofChapters(List<UUID> chapterIds) {
+        if (chapterIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(OF_CHAPTERS).param("chapterIds", chapterIds.toArray(UUID[]::new))
+                .query(ContentItemRepository::map).list();
     }
 
     private static List<Object> sortValues(SortSpec sort, ContentItemEntity e) {

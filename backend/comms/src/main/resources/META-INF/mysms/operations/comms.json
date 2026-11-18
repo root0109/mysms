@@ -5,7 +5,8 @@
   "permission" : "comms.event.activate_event",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.AddGroupMembers",
   "method" : "POST",
@@ -13,7 +14,8 @@
   "permission" : "comms.audience_group.add_group_members",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.ApprovePost",
   "method" : "POST",
@@ -21,7 +23,8 @@
   "permission" : "comms.post.approve_post",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.ArchiveNotifications",
   "method" : "POST",
@@ -29,7 +32,8 @@
   "permission" : "comms.in_app_notification.archive_notifications",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CancelEventOccurrence",
   "method" : "POST",
@@ -37,7 +41,8 @@
   "permission" : "comms.event_occurrence.cancel_event_occurrence",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CancelOperation",
   "method" : "POST",
@@ -45,7 +50,8 @@
   "permission" : "comms.operation.cancel_operation",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CancelOutboundMessage",
   "method" : "POST",
@@ -53,7 +59,8 @@
   "permission" : "comms.outbound_message.cancel_outbound_message",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CancelPost",
   "method" : "POST",
@@ -61,7 +68,8 @@
   "permission" : "comms.post.cancel_post",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.ClaimTask",
   "method" : "POST",
@@ -69,7 +77,8 @@
   "permission" : "comms.task.claim_task",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CloseFeedbackThread",
   "method" : "POST",
@@ -77,7 +86,8 @@
   "permission" : "comms.feedback_thread.close_feedback_thread",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CloseNoticeReplies",
   "method" : "POST",
@@ -85,7 +95,8 @@
   "permission" : "comms.notice.close_notice_replies",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CompletePersonalEvent",
   "method" : "POST",
@@ -93,7 +104,8 @@
   "permission" : "comms.event_occurrence.complete_personal_event",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CompleteTask",
   "method" : "POST",
@@ -101,7 +113,8 @@
   "permission" : "comms.task.complete_task",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.ComposeMail",
   "method" : "POST",
@@ -109,7 +122,8 @@
   "permission" : "comms.mailbox_message.compose_mail",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateAudienceGroup",
   "method" : "POST",
@@ -117,7 +131,8 @@
   "permission" : "comms.audience_group.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateAudienceGroupMember",
   "method" : "POST",
@@ -125,7 +140,8 @@
   "permission" : "comms.audience_group_member.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateClassPage",
   "method" : "POST",
@@ -133,7 +149,8 @@
   "permission" : "comms.class_page.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateClassPageAttachment",
   "method" : "POST",
@@ -141,7 +158,8 @@
   "permission" : "comms.class_page_attachment.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateClassPageMember",
   "method" : "POST",
@@ -149,7 +167,8 @@
   "permission" : "comms.class_page_member.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateCommentReaction",
   "method" : "POST",
@@ -157,7 +176,8 @@
   "permission" : "comms.comment_reaction.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateContentView",
   "method" : "POST",
@@ -165,7 +185,8 @@
   "permission" : "comms.content_view.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateConversation",
   "method" : "POST",
@@ -173,7 +194,8 @@
   "permission" : "comms.conversation.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateConversationMessage",
   "method" : "POST",
@@ -181,7 +203,8 @@
   "permission" : "comms.conversation_message.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateConversationParticipant",
   "method" : "POST",
@@ -189,7 +212,8 @@
   "permission" : "comms.conversation_participant.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateEvent",
   "method" : "POST",
@@ -197,7 +221,8 @@
   "permission" : "comms.event.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateEventAttendee",
   "method" : "POST",
@@ -205,7 +230,8 @@
   "permission" : "comms.event_attendee.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateEventGalleryItem",
   "method" : "POST",
@@ -213,7 +239,8 @@
   "permission" : "comms.event_gallery_item.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateEventInstitution",
   "method" : "POST",
@@ -221,7 +248,8 @@
   "permission" : "comms.event_institution.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateEventOccurrence",
   "method" : "POST",
@@ -229,7 +257,8 @@
   "permission" : "comms.event_occurrence.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateFeedbackMessage",
   "method" : "POST",
@@ -237,7 +266,8 @@
   "permission" : "comms.feedback_message.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateFeedbackThread",
   "method" : "POST",
@@ -245,7 +275,8 @@
   "permission" : "comms.feedback_thread.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateMagazine",
   "method" : "POST",
@@ -253,7 +284,8 @@
   "permission" : "comms.magazine.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateMessageTemplate",
   "method" : "POST",
@@ -261,7 +293,8 @@
   "permission" : "comms.message_template.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateNotice",
   "method" : "POST",
@@ -269,7 +302,8 @@
   "permission" : "comms.notice.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateNoticeAudience",
   "method" : "POST",
@@ -277,7 +311,8 @@
   "permission" : "comms.notice_audience.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateNoticeBackground",
   "method" : "POST",
@@ -285,7 +320,8 @@
   "permission" : "comms.notice_background.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateNotificationChannel",
   "method" : "POST",
@@ -293,7 +329,8 @@
   "permission" : "comms.notification_channel.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateNotificationChannelProperty",
   "method" : "POST",
@@ -301,7 +338,8 @@
   "permission" : "comms.notification_channel_property.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateNotificationCohortSetting",
   "method" : "POST",
@@ -309,7 +347,8 @@
   "permission" : "comms.notification_cohort_setting.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateNotificationPreference",
   "method" : "POST",
@@ -317,7 +356,8 @@
   "permission" : "comms.notification_preference.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateNotificationPreferenceSet",
   "method" : "POST",
@@ -325,7 +365,8 @@
   "permission" : "comms.notification_preference_set.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateNotificationRule",
   "method" : "POST",
@@ -333,7 +374,8 @@
   "permission" : "comms.notification_rule.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateNotificationType",
   "method" : "POST",
@@ -341,7 +383,8 @@
   "permission" : "comms.notification_type.create",
   "schemes" : [ "platformAdminAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "platform"
 }, {
   "operationId" : "comms.CreateNotificationTypeProperty",
   "method" : "POST",
@@ -349,7 +392,8 @@
   "permission" : "comms.notification_type_property.create",
   "schemes" : [ "platformAdminAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "platform"
 }, {
   "operationId" : "comms.CreatePageCategory",
   "method" : "POST",
@@ -357,7 +401,8 @@
   "permission" : "comms.page_category.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreatePost",
   "method" : "POST",
@@ -365,7 +410,8 @@
   "permission" : "comms.post.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreatePostAudienceClass",
   "method" : "POST",
@@ -373,7 +419,8 @@
   "permission" : "comms.post_audience_class.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreatePostComment",
   "method" : "POST",
@@ -381,7 +428,8 @@
   "permission" : "comms.post_comment.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreatePostReaction",
   "method" : "POST",
@@ -389,7 +437,8 @@
   "permission" : "comms.post_reaction.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateTask",
   "method" : "POST",
@@ -397,7 +446,8 @@
   "permission" : "comms.task.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.CreateTaskAssignee",
   "method" : "POST",
@@ -405,7 +455,8 @@
   "permission" : "comms.task_assignee.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeactivateEvent",
   "method" : "POST",
@@ -413,7 +464,8 @@
   "permission" : "comms.event.deactivate_event",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeactivateNotice",
   "method" : "POST",
@@ -421,280 +473,320 @@
   "permission" : "comms.notice.deactivate_notice",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteAudienceGroup",
   "method" : "DELETE",
   "path" : "/v1/comms/audience-groups/{audienceGroupId}",
   "permission" : "comms.audience_group.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteAudienceGroupMember",
   "method" : "DELETE",
   "path" : "/v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}",
   "permission" : "comms.audience_group_member.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteCalendarExport",
   "method" : "DELETE",
   "path" : "/v1/comms/calendar-exports/{calendarExportId}",
   "permission" : "comms.calendar_export.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteClassPage",
   "method" : "DELETE",
   "path" : "/v1/comms/class-pages/{classPageId}",
   "permission" : "comms.class_page.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteClassPageAttachment",
   "method" : "DELETE",
   "path" : "/v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}",
   "permission" : "comms.class_page_attachment.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteClassPageMember",
   "method" : "DELETE",
   "path" : "/v1/comms/class-pages/{classPageId}/members/{classPageMemberId}",
   "permission" : "comms.class_page_member.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteCommentReaction",
   "method" : "DELETE",
   "path" : "/v1/comms/comment-reactions/{commentReactionId}",
   "permission" : "comms.comment_reaction.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteContentView",
   "method" : "DELETE",
   "path" : "/v1/comms/content-views/{contentViewId}",
   "permission" : "comms.content_view.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteConversation",
   "method" : "DELETE",
   "path" : "/v1/comms/conversations/{conversationId}",
   "permission" : "comms.conversation.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteConversationMessage",
   "method" : "DELETE",
   "path" : "/v1/comms/conversations/{conversationId}/messages/{conversationMessageId}",
   "permission" : "comms.conversation_message.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteConversationParticipant",
   "method" : "DELETE",
   "path" : "/v1/comms/conversations/{conversationId}/participants/{conversationParticipantId}",
   "permission" : "comms.conversation_participant.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteEvent",
   "method" : "DELETE",
   "path" : "/v1/comms/events/{eventId}",
   "permission" : "comms.event.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteEventAttendee",
   "method" : "DELETE",
   "path" : "/v1/comms/events/{eventId}/attendees/{eventAttendeeId}",
   "permission" : "comms.event_attendee.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteEventGalleryItem",
   "method" : "DELETE",
   "path" : "/v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}",
   "permission" : "comms.event_gallery_item.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteEventInstitution",
   "method" : "DELETE",
   "path" : "/v1/comms/events/{eventId}/institutions/{eventInstitutionId}",
   "permission" : "comms.event_institution.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteEventOccurrence",
   "method" : "DELETE",
   "path" : "/v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}",
   "permission" : "comms.event_occurrence.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteFeedbackMessage",
   "method" : "DELETE",
   "path" : "/v1/comms/feedback-threads/{feedbackThreadId}/messages/{feedbackMessageId}",
   "permission" : "comms.feedback_message.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteFeedbackThread",
   "method" : "DELETE",
   "path" : "/v1/comms/feedback-threads/{feedbackThreadId}",
   "permission" : "comms.feedback_thread.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteMagazine",
   "method" : "DELETE",
   "path" : "/v1/comms/magazines/{magazineId}",
   "permission" : "comms.magazine.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteMailboxMessage",
   "method" : "DELETE",
   "path" : "/v1/comms/mailbox-messages/{mailboxMessageId}",
   "permission" : "comms.mailbox_message.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteMessageTemplate",
   "method" : "DELETE",
   "path" : "/v1/comms/message-templates/{messageTemplateId}",
   "permission" : "comms.message_template.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteNotice",
   "method" : "DELETE",
   "path" : "/v1/comms/notices/{noticeId}",
   "permission" : "comms.notice.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteNoticeAudience",
   "method" : "DELETE",
   "path" : "/v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}",
   "permission" : "comms.notice_audience.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteNoticeBackground",
   "method" : "DELETE",
   "path" : "/v1/comms/notice-backgrounds/{noticeBackgroundId}",
   "permission" : "comms.notice_background.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteNotificationChannel",
   "method" : "DELETE",
   "path" : "/v1/comms/notification-channels/{notificationChannelId}",
   "permission" : "comms.notification_channel.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteNotificationChannelProperty",
   "method" : "DELETE",
   "path" : "/v1/comms/notification-channels/{notificationChannelId}/properties/{notificationChannelPropertyId}",
   "permission" : "comms.notification_channel_property.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteNotificationCohortSetting",
   "method" : "DELETE",
   "path" : "/v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId}",
   "permission" : "comms.notification_cohort_setting.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteNotificationPreference",
   "method" : "DELETE",
   "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences/{notificationPreferenceId}",
   "permission" : "comms.notification_preference.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteNotificationPreferenceSet",
   "method" : "DELETE",
   "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}",
   "permission" : "comms.notification_preference_set.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteNotificationRule",
   "method" : "DELETE",
   "path" : "/v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId}",
   "permission" : "comms.notification_rule.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteNotificationType",
   "method" : "DELETE",
   "path" : "/v1/comms/notification-types/{notificationTypeId}",
   "permission" : "comms.notification_type.delete",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "comms.DeleteNotificationTypeProperty",
   "method" : "DELETE",
   "path" : "/v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId}",
   "permission" : "comms.notification_type_property.delete",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "comms.DeletePageCategory",
   "method" : "DELETE",
   "path" : "/v1/comms/page-categories/{pageCategoryId}",
   "permission" : "comms.page_category.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeletePost",
   "method" : "DELETE",
   "path" : "/v1/comms/posts/{postId}",
   "permission" : "comms.post.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeletePostAudienceClass",
   "method" : "DELETE",
   "path" : "/v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}",
   "permission" : "comms.post_audience_class.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeletePostComment",
   "method" : "DELETE",
   "path" : "/v1/comms/posts/{postId}/comments/{postCommentId}",
   "permission" : "comms.post_comment.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeletePostReaction",
   "method" : "DELETE",
   "path" : "/v1/comms/posts/{postId}/reactions/{postReactionId}",
   "permission" : "comms.post_reaction.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteTask",
   "method" : "DELETE",
   "path" : "/v1/comms/tasks/{taskId}",
   "permission" : "comms.task.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.DeleteTaskAssignee",
   "method" : "DELETE",
   "path" : "/v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}",
   "permission" : "comms.task_assignee.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ExportCalendar",
   "method" : "POST",
@@ -702,7 +794,8 @@
   "permission" : "comms.calendar_export.export_calendar",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.FollowClassPage",
   "method" : "POST",
@@ -710,322 +803,368 @@
   "permission" : "comms.class_page.follow_class_page",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetAudienceGroup",
   "method" : "GET",
   "path" : "/v1/comms/audience-groups/{audienceGroupId}",
   "permission" : "comms.audience_group.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetAudienceGroupMember",
   "method" : "GET",
   "path" : "/v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}",
   "permission" : "comms.audience_group_member.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetCalendarExport",
   "method" : "GET",
   "path" : "/v1/comms/calendar-exports/{calendarExportId}",
   "permission" : "comms.calendar_export.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetClassPage",
   "method" : "GET",
   "path" : "/v1/comms/class-pages/{classPageId}",
   "permission" : "comms.class_page.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetClassPageAttachment",
   "method" : "GET",
   "path" : "/v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}",
   "permission" : "comms.class_page_attachment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetClassPageMember",
   "method" : "GET",
   "path" : "/v1/comms/class-pages/{classPageId}/members/{classPageMemberId}",
   "permission" : "comms.class_page_member.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetCommentReaction",
   "method" : "GET",
   "path" : "/v1/comms/comment-reactions/{commentReactionId}",
   "permission" : "comms.comment_reaction.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetContentView",
   "method" : "GET",
   "path" : "/v1/comms/content-views/{contentViewId}",
   "permission" : "comms.content_view.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetConversation",
   "method" : "GET",
   "path" : "/v1/comms/conversations/{conversationId}",
   "permission" : "comms.conversation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetConversationMessage",
   "method" : "GET",
   "path" : "/v1/comms/conversations/{conversationId}/messages/{conversationMessageId}",
   "permission" : "comms.conversation_message.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetConversationParticipant",
   "method" : "GET",
   "path" : "/v1/comms/conversations/{conversationId}/participants/{conversationParticipantId}",
   "permission" : "comms.conversation_participant.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetEvent",
   "method" : "GET",
   "path" : "/v1/comms/events/{eventId}",
   "permission" : "comms.event.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetEventAttendee",
   "method" : "GET",
   "path" : "/v1/comms/events/{eventId}/attendees/{eventAttendeeId}",
   "permission" : "comms.event_attendee.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetEventGalleryItem",
   "method" : "GET",
   "path" : "/v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}",
   "permission" : "comms.event_gallery_item.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetEventInstitution",
   "method" : "GET",
   "path" : "/v1/comms/events/{eventId}/institutions/{eventInstitutionId}",
   "permission" : "comms.event_institution.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetEventOccurrence",
   "method" : "GET",
   "path" : "/v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}",
   "permission" : "comms.event_occurrence.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetFeed",
   "method" : "GET",
   "path" : "/v1/comms/posts:feed",
   "permission" : "comms.post.get_feed",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetFeedbackMessage",
   "method" : "GET",
   "path" : "/v1/comms/feedback-threads/{feedbackThreadId}/messages/{feedbackMessageId}",
   "permission" : "comms.feedback_message.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetFeedbackThread",
   "method" : "GET",
   "path" : "/v1/comms/feedback-threads/{feedbackThreadId}",
   "permission" : "comms.feedback_thread.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetInAppNotification",
   "method" : "GET",
   "path" : "/v1/comms/notifications/{inAppNotificationId}",
   "permission" : "comms.in_app_notification.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetMagazine",
   "method" : "GET",
   "path" : "/v1/comms/magazines/{magazineId}",
   "permission" : "comms.magazine.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetMailboxMessage",
   "method" : "GET",
   "path" : "/v1/comms/mailbox-messages/{mailboxMessageId}",
   "permission" : "comms.mailbox_message.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetMessageTemplate",
   "method" : "GET",
   "path" : "/v1/comms/message-templates/{messageTemplateId}",
   "permission" : "comms.message_template.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetMyCalendar",
   "method" : "GET",
   "path" : "/v1/comms/me/calendar",
   "permission" : "comms.event.get_my_calendar",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetNotice",
   "method" : "GET",
   "path" : "/v1/comms/notices/{noticeId}",
   "permission" : "comms.notice.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetNoticeAudience",
   "method" : "GET",
   "path" : "/v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}",
   "permission" : "comms.notice_audience.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetNoticeBackground",
   "method" : "GET",
   "path" : "/v1/comms/notice-backgrounds/{noticeBackgroundId}",
   "permission" : "comms.notice_background.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetNoticeVersion",
   "method" : "GET",
   "path" : "/v1/comms/notices/{noticeId}/versions/{noticeVersionId}",
   "permission" : "comms.notice_version.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetNotificationChannel",
   "method" : "GET",
   "path" : "/v1/comms/notification-channels/{notificationChannelId}",
   "permission" : "comms.notification_channel.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetNotificationChannelProperty",
   "method" : "GET",
   "path" : "/v1/comms/notification-channels/{notificationChannelId}/properties/{notificationChannelPropertyId}",
   "permission" : "comms.notification_channel_property.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetNotificationCohortSetting",
   "method" : "GET",
   "path" : "/v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId}",
   "permission" : "comms.notification_cohort_setting.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetNotificationPreference",
   "method" : "GET",
   "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences/{notificationPreferenceId}",
   "permission" : "comms.notification_preference.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetNotificationPreferenceSet",
   "method" : "GET",
   "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}",
   "permission" : "comms.notification_preference_set.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetNotificationRule",
   "method" : "GET",
   "path" : "/v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId}",
   "permission" : "comms.notification_rule.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetNotificationType",
   "method" : "GET",
   "path" : "/v1/comms/notification-types/{notificationTypeId}",
   "permission" : "comms.notification_type.read",
   "schemes" : [ "bearerAuth", "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetNotificationTypeProperty",
   "method" : "GET",
   "path" : "/v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId}",
   "permission" : "comms.notification_type_property.read",
   "schemes" : [ "bearerAuth", "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetOperation",
   "method" : "GET",
   "path" : "/v1/comms/operations/{operationId}",
   "permission" : "comms.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetOutboundMessage",
   "method" : "GET",
   "path" : "/v1/comms/outbound-messages/{outboundMessageId}",
   "permission" : "comms.outbound_message.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetPageCategory",
   "method" : "GET",
   "path" : "/v1/comms/page-categories/{pageCategoryId}",
   "permission" : "comms.page_category.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetPost",
   "method" : "GET",
   "path" : "/v1/comms/posts/{postId}",
   "permission" : "comms.post.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetPostAudienceClass",
   "method" : "GET",
   "path" : "/v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}",
   "permission" : "comms.post_audience_class.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetPostComment",
   "method" : "GET",
   "path" : "/v1/comms/posts/{postId}/comments/{postCommentId}",
   "permission" : "comms.post_comment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetPostReaction",
   "method" : "GET",
   "path" : "/v1/comms/posts/{postId}/reactions/{postReactionId}",
   "permission" : "comms.post_reaction.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetTask",
   "method" : "GET",
   "path" : "/v1/comms/tasks/{taskId}",
   "permission" : "comms.task.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.GetTaskAssignee",
   "method" : "GET",
   "path" : "/v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}",
   "permission" : "comms.task_assignee.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.HideMessageForMe",
   "method" : "POST",
@@ -1033,308 +1172,352 @@
   "permission" : "comms.conversation_message.hide_message_for_me",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListAudienceGroupMembers",
   "method" : "GET",
   "path" : "/v1/comms/audience-groups/{audienceGroupId}/members",
   "permission" : "comms.audience_group_member.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListAudienceGroups",
   "method" : "GET",
   "path" : "/v1/comms/audience-groups",
   "permission" : "comms.audience_group.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListCalendarExports",
   "method" : "GET",
   "path" : "/v1/comms/calendar-exports",
   "permission" : "comms.calendar_export.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListClassPageAttachments",
   "method" : "GET",
   "path" : "/v1/comms/class-pages/{classPageId}/attachments",
   "permission" : "comms.class_page_attachment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListClassPageMembers",
   "method" : "GET",
   "path" : "/v1/comms/class-pages/{classPageId}/members",
   "permission" : "comms.class_page_member.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListClassPages",
   "method" : "GET",
   "path" : "/v1/comms/class-pages",
   "permission" : "comms.class_page.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListCommentReactions",
   "method" : "GET",
   "path" : "/v1/comms/comment-reactions",
   "permission" : "comms.comment_reaction.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListContentViews",
   "method" : "GET",
   "path" : "/v1/comms/content-views",
   "permission" : "comms.content_view.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListConversationMessages",
   "method" : "GET",
   "path" : "/v1/comms/conversations/{conversationId}/messages",
   "permission" : "comms.conversation_message.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListConversationParticipants",
   "method" : "GET",
   "path" : "/v1/comms/conversations/{conversationId}/participants",
   "permission" : "comms.conversation_participant.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListConversations",
   "method" : "GET",
   "path" : "/v1/comms/conversations",
   "permission" : "comms.conversation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListEventAttendees",
   "method" : "GET",
   "path" : "/v1/comms/events/{eventId}/attendees",
   "permission" : "comms.event_attendee.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListEventGalleryItems",
   "method" : "GET",
   "path" : "/v1/comms/events/{eventId}/gallery-items",
   "permission" : "comms.event_gallery_item.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListEventInstitutions",
   "method" : "GET",
   "path" : "/v1/comms/events/{eventId}/institutions",
   "permission" : "comms.event_institution.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListEventOccurrences",
   "method" : "GET",
   "path" : "/v1/comms/events/{eventId}/occurrences",
   "permission" : "comms.event_occurrence.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListEvents",
   "method" : "GET",
   "path" : "/v1/comms/events",
   "permission" : "comms.event.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListFeedbackMessages",
   "method" : "GET",
   "path" : "/v1/comms/feedback-threads/{feedbackThreadId}/messages",
   "permission" : "comms.feedback_message.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListFeedbackThreads",
   "method" : "GET",
   "path" : "/v1/comms/feedback-threads",
   "permission" : "comms.feedback_thread.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListInAppNotifications",
   "method" : "GET",
   "path" : "/v1/comms/notifications",
   "permission" : "comms.in_app_notification.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListMagazines",
   "method" : "GET",
   "path" : "/v1/comms/magazines",
   "permission" : "comms.magazine.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListMailboxMessages",
   "method" : "GET",
   "path" : "/v1/comms/mailbox-messages",
   "permission" : "comms.mailbox_message.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListMessageTemplates",
   "method" : "GET",
   "path" : "/v1/comms/message-templates",
   "permission" : "comms.message_template.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListNoticeAudiences",
   "method" : "GET",
   "path" : "/v1/comms/notices/{noticeId}/audiences",
   "permission" : "comms.notice_audience.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListNoticeBackgrounds",
   "method" : "GET",
   "path" : "/v1/comms/notice-backgrounds",
   "permission" : "comms.notice_background.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListNoticeVersions",
   "method" : "GET",
   "path" : "/v1/comms/notices/{noticeId}/versions",
   "permission" : "comms.notice_version.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListNotices",
   "method" : "GET",
   "path" : "/v1/comms/notices",
   "permission" : "comms.notice.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListNotificationChannelProperties",
   "method" : "GET",
   "path" : "/v1/comms/notification-channels/{notificationChannelId}/properties",
   "permission" : "comms.notification_channel_property.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListNotificationChannels",
   "method" : "GET",
   "path" : "/v1/comms/notification-channels",
   "permission" : "comms.notification_channel.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListNotificationCohortSettings",
   "method" : "GET",
   "path" : "/v1/comms/notification-types/{notificationTypeId}/cohort-settings",
   "permission" : "comms.notification_cohort_setting.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListNotificationPreferenceSets",
   "method" : "GET",
   "path" : "/v1/comms/notification-preference-sets",
   "permission" : "comms.notification_preference_set.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListNotificationPreferences",
   "method" : "GET",
   "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences",
   "permission" : "comms.notification_preference.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListNotificationRules",
   "method" : "GET",
   "path" : "/v1/comms/notification-types/{notificationTypeId}/rules",
   "permission" : "comms.notification_rule.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListNotificationTypeProperties",
   "method" : "GET",
   "path" : "/v1/comms/notification-types/{notificationTypeId}/properties",
   "permission" : "comms.notification_type_property.read",
   "schemes" : [ "bearerAuth", "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListNotificationTypes",
   "method" : "GET",
   "path" : "/v1/comms/notification-types",
   "permission" : "comms.notification_type.read",
   "schemes" : [ "bearerAuth", "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListOperations",
   "method" : "GET",
   "path" : "/v1/comms/operations",
   "permission" : "comms.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListOutboundMessages",
   "method" : "GET",
   "path" : "/v1/comms/outbound-messages",
   "permission" : "comms.outbound_message.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListPageCategories",
   "method" : "GET",
   "path" : "/v1/comms/page-categories",
   "permission" : "comms.page_category.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListPostAudienceClasses",
   "method" : "GET",
   "path" : "/v1/comms/posts/{postId}/audience-classes",
   "permission" : "comms.post_audience_class.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListPostComments",
   "method" : "GET",
   "path" : "/v1/comms/posts/{postId}/comments",
   "permission" : "comms.post_comment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListPostReactions",
   "method" : "GET",
   "path" : "/v1/comms/posts/{postId}/reactions",
   "permission" : "comms.post_reaction.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListPosts",
   "method" : "GET",
   "path" : "/v1/comms/posts",
   "permission" : "comms.post.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListTaskAssignees",
   "method" : "GET",
   "path" : "/v1/comms/tasks/{taskId}/assignees",
   "permission" : "comms.task_assignee.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.ListTasks",
   "method" : "GET",
   "path" : "/v1/comms/tasks",
   "permission" : "comms.task.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.MarkAllNotificationsRead",
   "method" : "POST",
@@ -1342,7 +1525,8 @@
   "permission" : "comms.in_app_notification.mark_all_notifications_read",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.MarkConversationRead",
   "method" : "POST",
@@ -1350,7 +1534,8 @@
   "permission" : "comms.conversation.mark_conversation_read",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.MarkFeedbackMessage",
   "method" : "POST",
@@ -1358,7 +1543,8 @@
   "permission" : "comms.feedback_message.mark_feedback_message",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.MarkMailRead",
   "method" : "POST",
@@ -1366,7 +1552,8 @@
   "permission" : "comms.mailbox_message.mark_mail_read",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.MarkNotificationRead",
   "method" : "POST",
@@ -1374,7 +1561,8 @@
   "permission" : "comms.in_app_notification.mark_notification_read",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.PublishNotice",
   "method" : "POST",
@@ -1382,7 +1570,8 @@
   "permission" : "comms.notice.publish_notice",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.ReactivateNotice",
   "method" : "POST",
@@ -1390,7 +1579,8 @@
   "permission" : "comms.notice.reactivate_notice",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.ReopenFeedbackThread",
   "method" : "POST",
@@ -1398,7 +1588,8 @@
   "permission" : "comms.feedback_thread.reopen_feedback_thread",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.ReopenTask",
   "method" : "POST",
@@ -1406,7 +1597,8 @@
   "permission" : "comms.task.reopen_task",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.RetryOutboundMessage",
   "method" : "POST",
@@ -1414,7 +1606,8 @@
   "permission" : "comms.outbound_message.retry_outbound_message",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.SendMessage",
   "method" : "POST",
@@ -1422,7 +1615,8 @@
   "permission" : "comms.outbound_message.send_message",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "required"
+  "idempotency" : "required",
+  "audience" : "public"
 }, {
   "operationId" : "comms.SendTestMessage",
   "method" : "POST",
@@ -1430,7 +1624,8 @@
   "permission" : "comms.notification_channel.send_test_message",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.SnoozeTask",
   "method" : "POST",
@@ -1438,7 +1633,8 @@
   "permission" : "comms.task.snooze_task",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.SubmitPost",
   "method" : "POST",
@@ -1446,7 +1642,8 @@
   "permission" : "comms.post.submit_post",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.UnpublishNotice",
   "method" : "POST",
@@ -1454,264 +1651,302 @@
   "permission" : "comms.notice.unpublish_notice",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateAudienceGroup",
   "method" : "PATCH",
   "path" : "/v1/comms/audience-groups/{audienceGroupId}",
   "permission" : "comms.audience_group.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateAudienceGroupMember",
   "method" : "PATCH",
   "path" : "/v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}",
   "permission" : "comms.audience_group_member.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateClassPage",
   "method" : "PATCH",
   "path" : "/v1/comms/class-pages/{classPageId}",
   "permission" : "comms.class_page.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateClassPageAttachment",
   "method" : "PATCH",
   "path" : "/v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}",
   "permission" : "comms.class_page_attachment.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateClassPageMember",
   "method" : "PATCH",
   "path" : "/v1/comms/class-pages/{classPageId}/members/{classPageMemberId}",
   "permission" : "comms.class_page_member.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateCommentReaction",
   "method" : "PATCH",
   "path" : "/v1/comms/comment-reactions/{commentReactionId}",
   "permission" : "comms.comment_reaction.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateContentView",
   "method" : "PATCH",
   "path" : "/v1/comms/content-views/{contentViewId}",
   "permission" : "comms.content_view.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateConversation",
   "method" : "PATCH",
   "path" : "/v1/comms/conversations/{conversationId}",
   "permission" : "comms.conversation.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateConversationMessage",
   "method" : "PATCH",
   "path" : "/v1/comms/conversations/{conversationId}/messages/{conversationMessageId}",
   "permission" : "comms.conversation_message.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateConversationParticipant",
   "method" : "PATCH",
   "path" : "/v1/comms/conversations/{conversationId}/participants/{conversationParticipantId}",
   "permission" : "comms.conversation_participant.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateEvent",
   "method" : "PATCH",
   "path" : "/v1/comms/events/{eventId}",
   "permission" : "comms.event.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateEventAttendee",
   "method" : "PATCH",
   "path" : "/v1/comms/events/{eventId}/attendees/{eventAttendeeId}",
   "permission" : "comms.event_attendee.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateEventGalleryItem",
   "method" : "PATCH",
   "path" : "/v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}",
   "permission" : "comms.event_gallery_item.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateEventInstitution",
   "method" : "PATCH",
   "path" : "/v1/comms/events/{eventId}/institutions/{eventInstitutionId}",
   "permission" : "comms.event_institution.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateEventOccurrence",
   "method" : "PATCH",
   "path" : "/v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}",
   "permission" : "comms.event_occurrence.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateFeedbackMessage",
   "method" : "PATCH",
   "path" : "/v1/comms/feedback-threads/{feedbackThreadId}/messages/{feedbackMessageId}",
   "permission" : "comms.feedback_message.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateFeedbackThread",
   "method" : "PATCH",
   "path" : "/v1/comms/feedback-threads/{feedbackThreadId}",
   "permission" : "comms.feedback_thread.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateMagazine",
   "method" : "PATCH",
   "path" : "/v1/comms/magazines/{magazineId}",
   "permission" : "comms.magazine.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateMessageTemplate",
   "method" : "PATCH",
   "path" : "/v1/comms/message-templates/{messageTemplateId}",
   "permission" : "comms.message_template.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateNotice",
   "method" : "PATCH",
   "path" : "/v1/comms/notices/{noticeId}",
   "permission" : "comms.notice.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateNoticeAudience",
   "method" : "PATCH",
   "path" : "/v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}",
   "permission" : "comms.notice_audience.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateNoticeBackground",
   "method" : "PATCH",
   "path" : "/v1/comms/notice-backgrounds/{noticeBackgroundId}",
   "permission" : "comms.notice_background.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateNotificationChannel",
   "method" : "PATCH",
   "path" : "/v1/comms/notification-channels/{notificationChannelId}",
   "permission" : "comms.notification_channel.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateNotificationChannelProperty",
   "method" : "PATCH",
   "path" : "/v1/comms/notification-channels/{notificationChannelId}/properties/{notificationChannelPropertyId}",
   "permission" : "comms.notification_channel_property.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateNotificationCohortSetting",
   "method" : "PATCH",
   "path" : "/v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId}",
   "permission" : "comms.notification_cohort_setting.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateNotificationPreference",
   "method" : "PATCH",
   "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences/{notificationPreferenceId}",
   "permission" : "comms.notification_preference.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateNotificationPreferenceSet",
   "method" : "PATCH",
   "path" : "/v1/comms/notification-preference-sets/{notificationPreferenceSetId}",
   "permission" : "comms.notification_preference_set.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateNotificationRule",
   "method" : "PATCH",
   "path" : "/v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId}",
   "permission" : "comms.notification_rule.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateNotificationType",
   "method" : "PATCH",
   "path" : "/v1/comms/notification-types/{notificationTypeId}",
   "permission" : "comms.notification_type.update",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "comms.UpdateNotificationTypeProperty",
   "method" : "PATCH",
   "path" : "/v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId}",
   "permission" : "comms.notification_type_property.update",
   "schemes" : [ "platformAdminAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "platform"
 }, {
   "operationId" : "comms.UpdatePageCategory",
   "method" : "PATCH",
   "path" : "/v1/comms/page-categories/{pageCategoryId}",
   "permission" : "comms.page_category.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdatePost",
   "method" : "PATCH",
   "path" : "/v1/comms/posts/{postId}",
   "permission" : "comms.post.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdatePostAudienceClass",
   "method" : "PATCH",
   "path" : "/v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}",
   "permission" : "comms.post_audience_class.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdatePostComment",
   "method" : "PATCH",
   "path" : "/v1/comms/posts/{postId}/comments/{postCommentId}",
   "permission" : "comms.post_comment.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdatePostReaction",
   "method" : "PATCH",
   "path" : "/v1/comms/posts/{postId}/reactions/{postReactionId}",
   "permission" : "comms.post_reaction.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateTask",
   "method" : "PATCH",
   "path" : "/v1/comms/tasks/{taskId}",
   "permission" : "comms.task.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "comms.UpdateTaskAssignee",
   "method" : "PATCH",
   "path" : "/v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}",
   "permission" : "comms.task_assignee.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 } ]

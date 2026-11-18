@@ -26,6 +26,7 @@ function transport(overrides: Partial<AuthTransport> = {}): AuthTransport {
     logout: vi.fn(async () => undefined),
     me: vi.fn(async () => ME),
     mySettings: vi.fn(async () => SETTINGS),
+    stopImpersonation: vi.fn(async () => undefined),
     ...overrides,
   };
 }
@@ -220,5 +221,58 @@ describe('session', () => {
     expect(s.store.getState().settings).toBeNull();
     await s.reloadSettings();
     expect(auth.mySettings).toHaveBeenCalledTimes(3);
+  });
+
+  it('adopts the tokens and Me of a role switch', async () => {
+    const vault = memoryVault();
+    const s = createSession({ auth: transport(), vault, now: () => 0 });
+    await s.signIn(login);
+    const switched = { ...ME, activeRole: { roleCode: 'teacher', roleId: 'r-t', scopeType: 'tenant' } } as Me;
+    await s.adopt(pair(7), switched);
+    expect(s.store.getState()).toMatchObject({ accessToken: 'a7', me: switched, status: 'signedIn' });
+    await expect(vault.load()).resolves.toBe('r7');
+  });
+
+  it('acts as another user until the impersonation ends, then returns to the own session', async () => {
+    const vault = memoryVault();
+    const target = { user: { id: 'u2', username: 'pupil' }, permissions: [] } as unknown as Me;
+    const auth = transport({ me: vi.fn(async (token: string) => (token === 'imp' ? target : ME)) });
+    const s = createSession({ auth, vault, now: () => 0 });
+    await s.signIn(login);
+    await s.impersonate({ accessToken: 'imp', expiresInSeconds: 900, impersonatedUserId: 'u2' });
+    expect(s.store.getState()).toMatchObject({
+      accessToken: 'imp',
+      me: target,
+      impersonation: { userId: 'u2', expiresAt: 900_000 },
+    });
+    await expect(vault.load()).resolves.toBe('r1');
+    await s.endImpersonation();
+    expect(auth.stopImpersonation).toHaveBeenCalledWith('imp');
+    expect(s.store.getState()).toMatchObject({ accessToken: 'a1', me: ME, impersonation: null });
+    await s.endImpersonation();
+    expect(auth.stopImpersonation).toHaveBeenCalledTimes(1);
+  });
+
+  it('never refreshes an impersonation token: the own session comes back and is refreshed', async () => {
+    const vault = memoryVault();
+    const target = { user: { id: 'u2' }, permissions: [] } as unknown as Me;
+    const auth = transport({ me: vi.fn(async (token: string) => (token === 'imp' ? target : ME)) });
+    const s = createSession({ auth, vault, now: () => 0 });
+    await s.signIn(login);
+    await s.impersonate({ accessToken: 'imp', expiresInSeconds: 900, impersonatedUserId: 'u2' });
+    await expect(s.refresh()).resolves.toBe(true);
+    expect(s.store.getState()).toMatchObject({ impersonation: null, me: ME, accessToken: 'a2' });
+    expect(auth.refresh).toHaveBeenCalledWith('r1');
+  });
+
+  it('signs the administrator out of the impersonation and of their own session', async () => {
+    const auth = transport();
+    const s = createSession({ auth, vault: memoryVault(), now: () => 0 });
+    await s.signIn(login);
+    await s.impersonate({ accessToken: 'imp', expiresInSeconds: 900, impersonatedUserId: 'u2' });
+    await s.signOut();
+    expect(auth.stopImpersonation).toHaveBeenCalledWith('imp');
+    expect(auth.logout).toHaveBeenCalledWith('a1');
+    expect(s.store.getState()).toMatchObject({ status: 'signedOut', impersonation: null, me: null });
   });
 });

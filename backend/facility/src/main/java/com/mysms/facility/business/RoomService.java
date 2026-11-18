@@ -50,13 +50,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of facility.room (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Room
- * are served here too — RoomAsset, RoomFacility.
+ * Business service of facility.room and of the records that exist only as part of a Room (RoomAsset, RoomFacility):
+ * audit and domain event commit in the same transaction as every change. Rows outside the caller's institutions are
+ * invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class RoomService extends AppTransactionManager {
@@ -168,8 +164,8 @@ public class RoomService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Room updateRoom(UUID id, String ifMatch, RoomUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
@@ -236,12 +232,12 @@ public class RoomService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(RoomEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected RoomUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected RoomUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(RoomEntity entity, RoomUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -292,7 +288,7 @@ public class RoomService extends AppTransactionManager {
         }
     }
 
-    // ---- RoomAsset: a record of the Room aggregate ----
+    // ---- RoomAsset ----
 
     public RoomAsset getRoomAsset(UUID roomId, UUID id) {
         return doInReadTransaction(() -> {
@@ -344,8 +340,8 @@ public class RoomService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public RoomAsset updateRoomAsset(UUID roomId, UUID id, String ifMatch, RoomAssetUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -406,12 +402,12 @@ public class RoomService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the facility.room it belongs to). */
+    /** The institution of the facility.room the row belongs to. */
     private Optional<UUID> institutionOfRoomAsset(RoomAssetEntity entity) {
         return roomAssetRepository.institutionOf(entity.getRoomId());
     }
 
-    /** Applies the selected RoomAssetUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected RoomAssetUpdate fields; explicit per field so a mask can clear values. */
     private static void applyRoomAsset(RoomAssetEntity entity, RoomAssetUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -451,7 +447,7 @@ public class RoomService extends AppTransactionManager {
 
     }
 
-    // ---- RoomFacility: a record of the Room aggregate ----
+    // ---- RoomFacility ----
 
     public RoomFacility getRoomFacility(UUID roomId, UUID id) {
         return doInReadTransaction(() -> {
@@ -504,8 +500,8 @@ public class RoomService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public RoomFacility updateRoomFacility(UUID roomId, UUID id, String ifMatch, RoomFacilityUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -568,14 +564,12 @@ public class RoomService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the facility.room it belongs to). */
+    /** The institution of the facility.room the row belongs to. */
     private Optional<UUID> institutionOfRoomFacility(RoomFacilityEntity entity) {
         return roomFacilityRepository.institutionOf(entity.getRoomId());
     }
 
-    /**
-     * Applies the selected RoomFacilityUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected RoomFacilityUpdate fields; explicit per field so a mask can clear values. */
     private static void applyRoomFacility(RoomFacilityEntity entity, RoomFacilityUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

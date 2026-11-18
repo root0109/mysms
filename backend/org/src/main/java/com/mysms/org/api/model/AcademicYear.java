@@ -1,4 +1,4 @@
-// Owned API contract of org (JAVA-CODING-RULES §7); first materialized from api/openapi/org.yaml on 2026-11-10.
+// Owned API contract of org.
 package com.mysms.org.api.model;
 
 import java.net.URI;

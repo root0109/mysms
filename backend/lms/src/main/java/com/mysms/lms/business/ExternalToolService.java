@@ -62,13 +62,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.external_tool (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a ExternalTool
- * are served here too — ExternalToolInstitution, ExternalToolOption, ExternalToolRole, ExternalToolSetting.
+ * Business service of lms.external_tool and of the records that exist only as part of a ExternalTool
+ * (ExternalToolInstitution, ExternalToolOption, ExternalToolRole, ExternalToolSetting): audit and domain event commit
+ * in the same transaction as every change. Rows outside the caller's institutions are invisible; tenant-level rows
+ * change only through a tenant-wide grant.
  */
 @Service
 public class ExternalToolService extends AppTransactionManager implements InitializingBean {
@@ -214,8 +211,8 @@ public class ExternalToolService extends AppTransactionManager implements Initia
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ExternalTool updateExternalTool(UUID id, String ifMatch, ExternalToolUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -297,14 +294,12 @@ public class ExternalToolService extends AppTransactionManager implements Initia
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(ExternalToolEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected ExternalToolUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected ExternalToolUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(ExternalToolEntity entity, ExternalToolUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -392,8 +387,8 @@ public class ExternalToolService extends AppTransactionManager implements Initia
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ExternalToolInstitution updateExternalToolInstitution(UUID externalToolId, UUID id, String ifMatch,
             ExternalToolInstitutionUpdate changes, String updateMask, boolean validateOnly) {
@@ -456,15 +451,12 @@ public class ExternalToolService extends AppTransactionManager implements Initia
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOfExternalToolInstitution(ExternalToolInstitutionEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /**
-     * Applies the selected ExternalToolInstitutionUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected ExternalToolInstitutionUpdate fields; explicit per field so a mask can clear values. */
     private static void applyExternalToolInstitution(ExternalToolInstitutionEntity entity, ExternalToolInstitutionUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -552,8 +544,8 @@ public class ExternalToolService extends AppTransactionManager implements Initia
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ExternalToolOption updateExternalToolOption(UUID externalToolId, UUID id, String ifMatch,
             ExternalToolOptionUpdate changes, String updateMask, boolean validateOnly) {
@@ -616,15 +608,12 @@ public class ExternalToolService extends AppTransactionManager implements Initia
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfExternalToolOption(ExternalToolOptionEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected ExternalToolOptionUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected ExternalToolOptionUpdate fields; explicit per field so a mask can clear values. */
     private static void applyExternalToolOption(ExternalToolOptionEntity entity, ExternalToolOptionUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -718,8 +707,8 @@ public class ExternalToolService extends AppTransactionManager implements Initia
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ExternalToolRole updateExternalToolRole(UUID externalToolId, UUID id, String ifMatch,
             ExternalToolRoleUpdate changes, String updateMask, boolean validateOnly) {
@@ -782,15 +771,12 @@ public class ExternalToolService extends AppTransactionManager implements Initia
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfExternalToolRole(ExternalToolRoleEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected ExternalToolRoleUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected ExternalToolRoleUpdate fields; explicit per field so a mask can clear values. */
     private static void applyExternalToolRole(ExternalToolRoleEntity entity, ExternalToolRoleUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -827,7 +813,7 @@ public class ExternalToolService extends AppTransactionManager implements Initia
 
     // ---- ExternalToolSetting: a record of the ExternalTool aggregate ----
 
-    /** Refuses to start without a master key: this resource stores secret columns (DEPLOYMENT.md "Secrets"). */
+    /** Refuses to start without a master key: this resource stores secret columns. */
     @Override
     public void afterPropertiesSet() {
         cipher.requireConfigured();
@@ -884,8 +870,8 @@ public class ExternalToolService extends AppTransactionManager implements Initia
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ExternalToolSetting updateExternalToolSetting(UUID externalToolId, UUID id, String ifMatch,
             ExternalToolSettingUpdate changes, String updateMask, boolean validateOnly) {
@@ -938,9 +924,7 @@ public class ExternalToolService extends AppTransactionManager implements Initia
         });
     }
 
-    /**
-     * Stores secretValue encrypted for the row's tenant and column (database/README "Secrets"); never the plaintext.
-     */
+    /** Stores secretValue encrypted for the row's tenant and column; never the plaintext. */
     private void sealSecretValueExternalToolSetting(ExternalToolSettingEntity entity, String plaintext) {
         entity.setSecretValueEnc(cipher.encrypt(plaintext, entity.getTenantId(), EXTERNAL_TOOL_SETTING_SECRET_SECRET_VALUE_ENC));
     }
@@ -964,15 +948,12 @@ public class ExternalToolService extends AppTransactionManager implements Initia
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfExternalToolSetting(ExternalToolSettingEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected ExternalToolSettingUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected ExternalToolSettingUpdate fields; explicit per field so a mask can clear values. */
     private void applyExternalToolSetting(ExternalToolSettingEntity entity, ExternalToolSettingUpdate changes,
             List<String> fields) {
         for (String field : fields) {

@@ -50,13 +50,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of sis.student (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of sis.student: audit and domain event in the same transaction as every change; rows outside the
+ * caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Student
- * are served here too — StudentGuardian, StudentSibling.
+ * <p>Also serves the records that exist only as part of the Student aggregate: StudentGuardian, StudentSibling.
  */
 @Service
 public class StudentService extends AppTransactionManager {
@@ -64,7 +61,7 @@ public class StudentService extends AppTransactionManager {
     public static final String AGGREGATE = StudentEntity.TABLE;
     static final String PERMISSION_LIST = "sis.student.read";
     static final String PERMISSION_GET = "sis.student.read";
-    static final String PERMISSION_CREATE = "sis.student.create";
+    public static final String PERMISSION_CREATE = "sis.student.create";
     static final String PERMISSION_UPDATE = "sis.student.update";
     static final String PERMISSION_DELETE = "sis.student.delete";
     /** The contract's StudentUpdate fields, in apply order. */
@@ -267,7 +264,7 @@ public class StudentService extends AppTransactionManager {
     }
 
     /** The event payload of a student record as stored: whose it is, where, and its row version. */
-    private static Map<String, Object> memberPayload(StudentEntity student) {
+    static Map<String, Object> memberPayload(StudentEntity student) {
         return SisEvents.member(student.getId(), student.getUserId(), student.getPersonId(),
                 student.getInstitutionId(), student.getRowVersion());
     }

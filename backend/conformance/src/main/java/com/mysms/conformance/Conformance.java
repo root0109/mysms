@@ -1,6 +1,8 @@
 package com.mysms.conformance;
 
 import com.mysms.conformance.rules.ApiLayerRule;
+import com.mysms.conformance.rules.ConfigurationRule;
+import com.mysms.conformance.rules.GrpcGuidelineRule;
 import com.mysms.conformance.rules.MapperRule;
 import com.mysms.conformance.rules.MavenLayoutRule;
 import com.mysms.conformance.rules.ModuleBoundaryRule;
@@ -13,8 +15,7 @@ import com.mysms.conformance.rules.TestKitRule;
 import java.util.List;
 
 /**
- * The mechanical rules of JAVA-CODING-RULES.md, ARCHITECTURE.md and database/README.md that the compiler, Checkstyle
- * and SpotBugs do not already enforce. The rule ids:
+ * The mechanical coding rules that the compiler, Checkstyle and SpotBugs do not already enforce. The rule ids:
  * <pre>
  * M0   backend/ holds only the Maven project                           MavenLayoutRule
  * R1   tenant predicate on every tenant table a statement touches        SqlRule
@@ -34,13 +35,23 @@ import java.util.List;
  * M1   one MapperConfig, stateless mappers, audit set ignored            MapperRule
  * X1   tokens verified only in auth-client; passwords hashed only in iam ApiLayerRule, SecurityBoundaryRule
  * P1   every tenant permission is seeded in iam's catalogue               PermissionCatalogueRule
+ * G1   protos owned by their module; callee copies byte-identical         GrpcGuidelineRule
+ * G2   field numbers match conformance/src/main/resources/field-numbers.lock.json
+ * G3   operation table = the module's RPCs
+ * G4   other modules' gRPC stubs only in <module>/integration
+ * G5   every gRPC server implementation is a @GrpcService
+ * G6   no REST client between modules
+ * G7   no Transactions helper (AppTransactionManager only)
+ * G8   every module's OpenApiComponentTest writes target/openapi/api-docs.yml
+ * G9   every module's application.properties; the monolith's combines them ConfigurationRule
  * </pre>
  */
 public final class Conformance {
 
     private final List<ConformanceRule> rules = List.of(new MavenLayoutRule(), new SqlRule(), new TechnologyRule(),
             new ModuleBoundaryRule(), new PersistenceRule(), new ApiLayerRule(), new MapperRule(),
-            new SecurityBoundaryRule(), new TestKitRule(), new PermissionCatalogueRule());
+            new SecurityBoundaryRule(), new TestKitRule(), new PermissionCatalogueRule(), new GrpcGuidelineRule(),
+            new ConfigurationRule());
 
     /** Every violation in the tree, rule by rule, in a stable order. */
     public List<Violation> check(SourceTree tree) {

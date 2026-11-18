@@ -43,13 +43,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of comms.notification_preference_set (JAVA-CODING-RULES §4): one plain class, explicit methods,
- * transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the owner-only
- * privacy rules of api/README "Authorization".
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a NotificationPreferenceSet
- * are served here too — NotificationPreference.
+ * Business service of comms.notification_preference_set and its NotificationPreference records: audit and domain event
+ * commit in the same transaction as every change. Sets are owner-only: a tenant permission does not reach another
+ * account's settings.
  */
 @Service
 public class NotificationPreferenceSetService extends AppTransactionManager {
@@ -153,8 +149,8 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public NotificationPreferenceSet updateNotificationPreferenceSet(UUID id, String ifMatch,
             NotificationPreferenceSetUpdate changes, String updateMask, boolean validateOnly) {
@@ -219,15 +215,12 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(NotificationPreferenceSetEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected NotificationPreferenceSetUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected NotificationPreferenceSetUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(NotificationPreferenceSetEntity entity, NotificationPreferenceSetUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -254,7 +247,7 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
 
     }
 
-    // ---- NotificationPreference: a record of the NotificationPreferenceSet aggregate ----
+    // ---- NotificationPreference ----
 
     public NotificationPreference getNotificationPreference(UUID preferenceSetId, UUID id) {
         return doInReadTransaction(() -> {
@@ -309,8 +302,8 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public NotificationPreference updateNotificationPreference(UUID preferenceSetId, UUID id, String ifMatch,
             NotificationPreferenceUpdate changes, String updateMask, boolean validateOnly) {
@@ -375,15 +368,12 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfNotificationPreference(NotificationPreferenceEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected NotificationPreferenceUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected NotificationPreferenceUpdate fields; explicit per field so a mask can clear values. */
     private static void applyNotificationPreference(NotificationPreferenceEntity entity, NotificationPreferenceUpdate changes,
             List<String> fields) {
         for (String field : fields) {

@@ -7,6 +7,7 @@ import com.mysms.assessment.mapper.MarksheetLineMapper;
 import com.mysms.assessment.mapper.ExamResultMapper;
 import com.mysms.assessment.repository.MarksheetLineRepository;
 import com.mysms.assessment.repository.ExamResultRepository;
+import com.mysms.authclient.AuthContext;
 import com.mysms.authclient.DataScope;
 import com.mysms.assessment.api.model.MarksheetLine;
 import com.mysms.assessment.api.model.ResultCard;
@@ -23,11 +24,11 @@ import com.mysms.core.paging.Page;
 import com.mysms.core.paging.PageRequest;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.paging.SortSpec;
-import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,10 +36,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of assessment.marksheet_line (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of assessment.marksheet_line: audit and domain event commit in the same transaction as every change.
+ * Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class MarksheetLineService extends AppTransactionManager {
@@ -52,7 +51,7 @@ public class MarksheetLineService extends AppTransactionManager {
     private final MarksheetLineMapper mapper;
     private final ExamResultRepository examResultRepository;
     private final ExamResultMapper examResultMapper;
-    private final StudentResultAccessLookup studentResultAccess;
+    private final StudentOwnershipLookup ownership;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
@@ -60,7 +59,7 @@ public class MarksheetLineService extends AppTransactionManager {
 
     public MarksheetLineService(MarksheetLineRepository repository, MarksheetLineMapper mapper,
             ExamResultRepository examResultRepository, ExamResultMapper examResultMapper,
-            StudentResultAccessLookup studentResultAccess,
+            StudentOwnershipLookup ownership,
             @Qualifier(AssessmentDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(AssessmentDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(AssessmentEventsConfig.OUTBOX) OutboxWriter outbox,
@@ -72,7 +71,7 @@ public class MarksheetLineService extends AppTransactionManager {
         this.mapper = mapper;
         this.examResultRepository = examResultRepository;
         this.examResultMapper = examResultMapper;
-        this.studentResultAccess = studentResultAccess;
+        this.ownership = ownership;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -99,24 +98,59 @@ public class MarksheetLineService extends AppTransactionManager {
         });
     }
 
-    /** Returns published results only to the student named in the route or one of that student's guardians. */
+    /**
+     * assessment.GetStudentResults: a student's report-card data, one card per validated marksheet line with its
+     * per-paper results.
+     *
+     * <p><b>Staff</b> — callers who read marksheet lines ({@link #PERMISSION_LIST}) — read every validated result of
+     * the student in the institutions of their reach, published or not; when the student's results are all outside
+     * it the student does not exist for them (404). <b>The student and their guardians</b> read published results
+     * only, guardians only those shared with guardians; sis confirms the relation with the caller's token before the
+     * read (404 when the student is not theirs, 503 when sis cannot answer), and their cards leave out the
+     * teacher-internal details of each result (the note, the room, who evaluated, created and changed it).
+     */
     public Page<ResultCard> getStudentResults(UUID studentId, UUID academicYearId, UUID examSessionId,
             Integer pageNumber, Integer pageSize, String cursor) {
-        boolean guardian = studentResultAccess.isStudentOrGuardian(studentId);
+        AuthContext caller = AuthContext.require();
         SortSpec sort = SortSpec.parse(null, MarksheetLineRepository.SORT_FIELDS,
                 MarksheetLineRepository.DEFAULT_ORDER, MarksheetLineRepository.ID_COLUMN);
-        String cursorScope = studentId + "|" + academicYearId + "|" + examSessionId + "|" + guardian;
+        String cursorScope = studentId + "|" + academicYearId + "|" + examSessionId;
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, cursorScope, clock);
-        return doInReadTransaction(() -> repository.listStudentResults(studentId, academicYearId, examSessionId,
-                true, guardian, page, SqlFragment.TRUE).map(row -> {
-                    ResultCard card = new ResultCard();
-                    card.setExamSessionId(row.examSessionId());
-                    card.setMarksheetLine(mapper.toDto(row.line()));
-                    card.setResults(examResultRepository.listForSessionAndStudent(row.examSessionId(), studentId)
-                            .stream().filter(result -> row.line().getId().equals(result.getMarksheetLineId()))
-                            .map(examResultMapper::toDto).toList());
-                    return card;
-                }));
+        if (caller.hasPermission(PERMISSION_LIST)) {
+            DataScope reach = StaffReach.of(caller, PERMISSION_LIST);
+            return doInReadTransaction(() -> {
+                if (repository.studentResultsOutOfReach(studentId, reach)) {
+                    throw new ResourceNotFoundException("sis.student", studentId);
+                }
+                return cards(repository.listStudentResults(studentId, academicYearId, examSessionId, false, false,
+                        page, MarksheetLineRepository.sessionReach(reach)), studentId, false);
+            });
+        }
+        StudentOwnershipLookup.Relation relation = ownership.relationTo(caller, studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("sis.student", studentId));
+        boolean guardian = relation == StudentOwnershipLookup.Relation.GUARDIAN;
+        return doInReadTransaction(() -> cards(repository.listStudentResults(studentId, academicYearId,
+                examSessionId, true, guardian, page, SqlFragment.TRUE), studentId, true));
+    }
+
+    /** The cards of a page of the student's lines, each with its exam session (read once for the page). */
+    private Page<ResultCard> cards(Page<MarksheetLineEntity> lines, UUID studentId, boolean forFamily) {
+        Map<UUID, UUID> sessions = repository.examSessionsOfMarksheets(
+                lines.items().stream().map(MarksheetLineEntity::getMarksheetId).distinct().toList());
+        return lines.map(line -> card(line, sessions.get(line.getMarksheetId()), studentId, forFamily));
+    }
+
+    /** One card: the line and the results linked to it; for the student and their family without staff details. */
+    private ResultCard card(MarksheetLineEntity line, UUID examSessionId, UUID studentId, boolean forFamily) {
+        ResultCard card = new ResultCard(examSessionId);
+        card.setMarksheetLine(mapper.toDto(line));
+        card.setResults(examResultRepository.listForSessionAndStudent(examSessionId, studentId).stream()
+                .filter(result -> line.getId().equals(result.getMarksheetLineId()))
+                .map(examResultMapper::toDto)
+                .map(result -> forFamily ? result.note(null).roomId(null).evaluatedByUserId(null).createdBy(null)
+                        .updatedBy(null) : result)
+                .toList());
+        return card;
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
@@ -129,10 +163,7 @@ public class MarksheetLineService extends AppTransactionManager {
         return entity;
     }
 
-    /**
-     * The institution that owns the row (the institution of the assessment.marksheet → assessment.exam_session it
-     * belongs to).
-     */
+    /** The institution of the assessment.marksheet → assessment.exam_session the row belongs to. */
     private Optional<UUID> institutionOf(MarksheetLineEntity entity) {
         return repository.institutionOf(entity.getMarksheetId());
     }

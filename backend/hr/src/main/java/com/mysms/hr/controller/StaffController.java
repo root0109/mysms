@@ -13,7 +13,6 @@ import com.mysms.hr.api.model.StaffDepartmentUpdate;
 import com.mysms.hr.api.model.StaffSubject;
 import com.mysms.hr.api.model.StaffSubjectUpdate;
 import com.mysms.hr.api.model.StaffUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.hr.business.StaffService;
 import java.net.URI;
@@ -23,9 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the Staff operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/hr.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * cannot drift from the module's contract. Thin: delegate, then shape the HTTP response. Authentication and the
+ * x-permission check already happened in the auth-client filter.
  */
 @RestController
 public class StaffController implements StaffApi {
@@ -39,7 +37,8 @@ public class StaffController implements StaffApi {
     @Override
     public ResponseEntity<Staff> changeStaffStatus(UUID staffId,
             ChangeStaffStatusRequest changeStaffStatusRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Staff changed = staffService.changeStaffStatus(staffId, changeStaffStatusRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -68,7 +67,8 @@ public class StaffController implements StaffApi {
     @Override
     public ResponseEntity<Staff> createStaffPortalAccount(UUID staffId,
             CreateStaffPortalAccountRequest createStaffPortalAccountRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Staff changed = staffService.createStaffPortalAccount(staffId, createStaffPortalAccountRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

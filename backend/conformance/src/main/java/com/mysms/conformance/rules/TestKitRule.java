@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * T (JAVA-CODING-RULES §12): every domain module checks its own boundaries (ModuleBoundaryTest), has a service
- * component test, and its component tests sign real tokens (TestTokens) instead of bypassing authentication.
+ * T: every domain module checks its own boundaries (ModuleBoundaryTest), has a service component test, and its
+ * component tests sign real tokens (TestTokens) instead of bypassing authentication.
  */
 public final class TestKitRule implements ConformanceRule {
 

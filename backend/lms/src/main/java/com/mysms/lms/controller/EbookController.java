@@ -1,5 +1,7 @@
 package com.mysms.lms.controller;
 
+import com.mysms.lms.business.EbookConversionService;
+import com.mysms.lms.business.EbookWorkflowService;
 import java.util.List;
 import com.mysms.core.paging.PagingUtil;
 import com.mysms.core.paging.PagingInfo;
@@ -11,7 +13,6 @@ import com.mysms.lms.api.model.RelatedMaterial;
 import com.mysms.lms.api.model.RelatedMaterialList;
 import com.mysms.lms.api.model.RelatedMaterialRank;
 import com.mysms.lms.api.model.RelatedMaterialUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.EbookService;
 import java.net.URI;
@@ -20,23 +21,27 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Ebook operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Ebook operations; authentication and the permission check already ran in the auth-client filter.
+ * Operations not served yet answer 501.
  */
 @RestController
 public class EbookController implements EbookApi {
 
     private final EbookService ebookService;
+    private final EbookWorkflowService ebookWorkflowService;
+    private final EbookConversionService ebookConversionService;
 
-    public EbookController(EbookService ebookService) {
+    public EbookController(EbookService ebookService, EbookWorkflowService ebookWorkflowService,
+            EbookConversionService ebookConversionService) {
+        this.ebookWorkflowService = ebookWorkflowService;
         this.ebookService = ebookService;
+        this.ebookConversionService = ebookConversionService;
     }
 
     @Override
     public ResponseEntity<Ebook> convertEbook(UUID ebookId, Object body, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Ebook converted = ebookConversionService.convertEbook(ebookId);
+        return ResponseEntity.ok().eTag(converted.getEtag()).body(converted);
     }
 
     @Override
@@ -85,7 +90,8 @@ public class EbookController implements EbookApi {
     @Override
     public ResponseEntity<PagingInfo<RelatedMaterial>> getMyRelatedMaterials(UUID ebookId, UUID courseId, UUID fileId,
             Integer page, Integer size, String cursor) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(PagingUtil.pagingInfo(ebookWorkflowService.getMyRelatedMaterials(ebookId, courseId,
+                fileId, page, size, cursor)));
     }
 
     @Override
@@ -98,7 +104,8 @@ public class EbookController implements EbookApi {
     @Override
     public ResponseEntity<RelatedMaterialRank> getRelatedMaterialRank(UUID ebookId,
             UUID relatedMaterialRankId, String fields) {
-        throw new NotImplementedException();
+        RelatedMaterialRank found = ebookWorkflowService.getRelatedMaterialRank(ebookId, relatedMaterialRankId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
@@ -112,7 +119,10 @@ public class EbookController implements EbookApi {
     @Override
     public ResponseEntity<PagingInfo<RelatedMaterialRank>> listRelatedMaterialRanks(UUID ebookId, Integer page,
             Integer size, String cursor, String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<RelatedMaterialRank> list = PagingUtil.pagingInfo(ebookWorkflowService.listRelatedMaterialRanks(
+                ebookId, page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
@@ -127,13 +137,14 @@ public class EbookController implements EbookApi {
     @Override
     public ResponseEntity<RelatedMaterialList> publishEbookCuration(UUID ebookId,
             PublishEbookCurationRequest publishEbookCurationRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(ebookWorkflowService.publishEbookCuration(ebookId, publishEbookCurationRequest));
     }
 
     @Override
     public ResponseEntity<Void> receiveEbookConversion(String provider, String xSignature,
-            String xTimestamp, Object body) {
-        throw new NotImplementedException();
+            String xTimestamp, byte[] body) {
+        ebookConversionService.receiveEbookConversion(provider, xSignature, xTimestamp, body);
+        return ResponseEntity.noContent().build();
     }
 
     @Override

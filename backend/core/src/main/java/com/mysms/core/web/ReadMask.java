@@ -9,8 +9,8 @@ import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 
 /**
- * Partial responses (`fields`, api/README "Standard methods"): keeps only the listed top-level fields of a response
- * DTO and clears the rest, which the contract's non-null JSON inclusion then omits. Unknown names → 400.
+ * Partial responses (`fields`): keeps only the listed top-level fields of a response DTO and clears the rest, which
+ * non-null JSON inclusion then omits. Unknown names → 400.
  */
 public final class ReadMask {
 

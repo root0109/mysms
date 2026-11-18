@@ -24,11 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to hr.staff (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live rows
- * only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to hr.staff: live rows only, keyset paging, and the row_version guard on every update and delete.
+ * Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class StaffRepository {
@@ -125,6 +122,30 @@ public class StaffRepository {
                    row_version = row_version + 1
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** hr.ChangeStaffStatus; the service decides which moves are allowed. */
+    private static final String TRANSITION_CHANGE_STATUS = """
+            UPDATE hr.staff
+               SET status = :status,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /**
+     * hr.CreateStaffPortalAccount: only a staff member without a login account, who has not left, is given one — and
+     * only as the service last read the row (its version).
+     */
+    private static final String ATTACH_ACCOUNT = """
+            UPDATE hr.staff
+               SET user_id = :userId,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND user_id IS NULL AND status <> 'exited'
+               AND deleted_at IS NULL
             """;
     private static final String UQ_STAFF_1_TAKEN = """
             SELECT EXISTS (SELECT 1 FROM hr.staff
@@ -250,6 +271,31 @@ public class StaffRepository {
                 .update();
     }
 
+    /** hr.ChangeStaffStatus; 0 rows means the row changed (or vanished) since it was read. */
+    public int changeStatus(UUID id, int expected, String status, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_CHANGE_STATUS)
+                .param("id", id)
+                .param("expected", expected)
+                .param("status", status)
+                .param("now", now)
+                .param("actor", actor)
+                .update();
+    }
+
+    /**
+     * Stores the login account of a staff member who has none and has not left, at the version the caller read; 0
+     * rows means the row changed (or vanished, or the staff member left or has an account by now).
+     */
+    public int attachAccount(UUID id, int expected, UUID userId, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(ATTACH_ACCOUNT)
+                .param("id", id)
+                .param("expected", expected)
+                .param("userId", userId)
+                .param("now", now)
+                .param("actor", actor)
+                .update();
+    }
+
     /** uq_staff_1: institution_id, person_id where (deleted_at IS NULL). */
     public boolean takenInstitutionIdPersonId1(StaffEntity e) {
         return Boolean.TRUE.equals(jdbc.sql(UQ_STAFF_1_TAKEN)
@@ -309,7 +355,7 @@ public class StaffRepository {
                 .single());
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

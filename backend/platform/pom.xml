@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   platform: the Platform and Tenancy microservice, owner of database schema "platform" (JAVA-CODING-RULES §2).
-  Depends on core, sdk, auth-client and the messaging runtime; only event consumers compile against the
+  Depends on core, auth-client and the messaging runtime; only event consumers compile against the
   narrow messaging API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
   Its Flyway migrations are database/migrations/platform, applied to its own schema only.
 -->
@@ -24,11 +24,12 @@
     </dependency>
     <dependency>
       <groupId>com.mysms</groupId>
-      <artifactId>sdk</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
       <artifactId>auth-client</artifactId>
+    </dependency>
+    <!-- the file store: Google Cloud Storage with V4 signed URLs (business/GcsFileStore) -->
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
     </dependency>
     <dependency>
       <groupId>org.mapstruct</groupId>
@@ -61,6 +62,12 @@
       <artifactId>testcontainers-postgresql</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- the file store's component tests run against a real GCS emulator (fsouza/fake-gcs-server) -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -75,6 +82,11 @@
       </resource>
     </resources>
     <plugins>
+      <!-- its protos (src/main/resources/proto: its own, and copies of the callees' it calls) into its jar -->
+      <plugin>
+        <groupId>org.xolstice.maven.plugins</groupId>
+        <artifactId>protobuf-maven-plugin</artifactId>
+      </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
@@ -82,13 +94,6 @@
           <mainClass>com.mysms.platform.PlatformApplication</mainClass>
           <classifier>exec</classifier>
         </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

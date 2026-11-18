@@ -1,4 +1,4 @@
-// Owned API contract of platform (JAVA-CODING-RULES §7); first materialized from api/openapi/platform.yaml on 2026-11-10.
+// Owned API contract of platform.
 package com.mysms.platform.api.model;
 
 import java.net.URI;
@@ -35,6 +35,7 @@ public class Tag {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private String slug;
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Object translations = null;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -1,4 +1,4 @@
-// Owned API contract of assessment (JAVA-CODING-RULES §7); first materialized from api/openapi/assessment.yaml on 2026-11-10.
+// Owned API contract of assessment.
 package com.mysms.assessment.api.model;
 
 import java.net.URI;
@@ -31,7 +31,9 @@ public class MarkEntry {
   public enum AttendanceStatusEnum {
     PRESENT("present"),
     
-    ABSENT("absent");
+    ABSENT("absent"),
+    
+    EXEMPTED("exempted");
 
     private final String value;
 
@@ -68,6 +70,9 @@ public class MarkEntry {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String note;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String etag;
 
   public MarkEntry() {
     super();
@@ -161,6 +166,26 @@ public class MarkEntry {
     this.note = note;
   }
 
+  public MarkEntry etag(@Nullable String etag) {
+    this.etag = etag;
+    return this;
+  }
+
+  /**
+   * The attendee row's entity tag as last read; when sent, a row changed since is refused (412).
+   * @return etag
+   */
+  
+  @JsonProperty("etag")
+  public @Nullable String getEtag() {
+    return etag;
+  }
+
+  @JsonProperty("etag")
+  public void setEtag(@Nullable String etag) {
+    this.etag = etag;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -173,12 +198,13 @@ public class MarkEntry {
     return Objects.equals(this.studentId, markEntry.studentId) &&
         Objects.equals(this.attendanceStatus, markEntry.attendanceStatus) &&
         Objects.equals(this.marksObtained, markEntry.marksObtained) &&
-        Objects.equals(this.note, markEntry.note);
+        Objects.equals(this.note, markEntry.note) &&
+        Objects.equals(this.etag, markEntry.etag);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(studentId, attendanceStatus, marksObtained, note);
+    return Objects.hash(studentId, attendanceStatus, marksObtained, note, etag);
   }
 
   @Override
@@ -189,6 +215,7 @@ public class MarkEntry {
     sb.append("    attendanceStatus: ").append(toIndentedString(attendanceStatus)).append("\n");
     sb.append("    marksObtained: ").append(toIndentedString(marksObtained)).append("\n");
     sb.append("    note: ").append(toIndentedString(note)).append("\n");
+    sb.append("    etag: ").append(toIndentedString(etag)).append("\n");
     sb.append("}");
     return sb.toString();
   }

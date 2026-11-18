@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.student_alert (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.student_alert: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class StudentAlertRepository {
@@ -226,9 +223,21 @@ public class StudentAlertRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    private static final String OF_COHORTS = SELECT_LIVE
+            + " AND r.cohort_id = ANY(:cohortIds) ORDER BY r.sent_at DESC LIMIT :top";
+
+    /** The cohorts' latest alerts, newest first. */
+    public List<StudentAlertEntity> ofCohorts(List<UUID> cohortIds, int top) {
+        if (cohortIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(OF_COHORTS).param("cohortIds", cohortIds.toArray(UUID[]::new)).param("top", top)
+                .query(StudentAlertRepository::map).list();
     }
 
     private static List<Object> sortValues(SortSpec sort, StudentAlertEntity e) {

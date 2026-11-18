@@ -5,7 +5,8 @@
   "permission" : "frontoffice.visitor_log.check_out_visitor",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.CreateCallLog",
   "method" : "POST",
@@ -13,7 +14,8 @@
   "permission" : "frontoffice.call_log.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.CreateDirectoryContact",
   "method" : "POST",
@@ -21,7 +23,8 @@
   "permission" : "frontoffice.directory_contact.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.CreatePostalRecord",
   "method" : "POST",
@@ -29,7 +32,8 @@
   "permission" : "frontoffice.postal_record.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.CreateVisitorLog",
   "method" : "POST",
@@ -37,117 +41,134 @@
   "permission" : "frontoffice.visitor_log.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.DeleteCallLog",
   "method" : "DELETE",
   "path" : "/v1/frontoffice/call-logs/{callLogId}",
   "permission" : "frontoffice.call_log.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.DeleteDirectoryContact",
   "method" : "DELETE",
   "path" : "/v1/frontoffice/directory-contacts/{directoryContactId}",
   "permission" : "frontoffice.directory_contact.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.DeletePostalRecord",
   "method" : "DELETE",
   "path" : "/v1/frontoffice/postal-records/{postalRecordId}",
   "permission" : "frontoffice.postal_record.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.DeleteVisitorLog",
   "method" : "DELETE",
   "path" : "/v1/frontoffice/visitor-logs/{visitorLogId}",
   "permission" : "frontoffice.visitor_log.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.GetCallLog",
   "method" : "GET",
   "path" : "/v1/frontoffice/call-logs/{callLogId}",
   "permission" : "frontoffice.call_log.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.GetDirectoryContact",
   "method" : "GET",
   "path" : "/v1/frontoffice/directory-contacts/{directoryContactId}",
   "permission" : "frontoffice.directory_contact.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.GetPostalRecord",
   "method" : "GET",
   "path" : "/v1/frontoffice/postal-records/{postalRecordId}",
   "permission" : "frontoffice.postal_record.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.GetVisitorLog",
   "method" : "GET",
   "path" : "/v1/frontoffice/visitor-logs/{visitorLogId}",
   "permission" : "frontoffice.visitor_log.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.ListCallLogs",
   "method" : "GET",
   "path" : "/v1/frontoffice/call-logs",
   "permission" : "frontoffice.call_log.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.ListDirectoryContacts",
   "method" : "GET",
   "path" : "/v1/frontoffice/directory-contacts",
   "permission" : "frontoffice.directory_contact.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.ListPostalRecords",
   "method" : "GET",
   "path" : "/v1/frontoffice/postal-records",
   "permission" : "frontoffice.postal_record.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.ListVisitorLogs",
   "method" : "GET",
   "path" : "/v1/frontoffice/visitor-logs",
   "permission" : "frontoffice.visitor_log.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.UpdateCallLog",
   "method" : "PATCH",
   "path" : "/v1/frontoffice/call-logs/{callLogId}",
   "permission" : "frontoffice.call_log.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.UpdateDirectoryContact",
   "method" : "PATCH",
   "path" : "/v1/frontoffice/directory-contacts/{directoryContactId}",
   "permission" : "frontoffice.directory_contact.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.UpdatePostalRecord",
   "method" : "PATCH",
   "path" : "/v1/frontoffice/postal-records/{postalRecordId}",
   "permission" : "frontoffice.postal_record.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "frontoffice.UpdateVisitorLog",
   "method" : "PATCH",
   "path" : "/v1/frontoffice/visitor-logs/{visitorLogId}",
   "permission" : "frontoffice.visitor_log.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 } ]

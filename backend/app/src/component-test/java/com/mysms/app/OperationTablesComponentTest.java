@@ -12,10 +12,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Every one of the 2049 contract operations resolves to itself — and only to itself — from a concrete URL. The app
- * module sees every domain module's own operation table (META-INF/mysms/operations/&lt;module&gt;.json), so this is
- * where the whole edge routing surface is provable; the conformance build checks the same tables against the
- * contracts.
+ * Every contract operation resolves to itself, and only to itself, from a concrete URL. The app module sees every
+ * module's operation table, so the whole edge routing surface is provable here.
  */
 class OperationTablesComponentTest {
 
@@ -26,7 +24,7 @@ class OperationTablesComponentTest {
     @Test
     void everyOperationMatchesItsOwnRule() throws Exception {
         OperationTable table = OperationTable.load(MODULES);
-        assertThat(table.size()).isEqualTo(2049);
+        assertThat(table.size()).isEqualTo(2055);
         JsonMapper json = JsonMapper.builder().build();
         int checked = 0;
         for (String module : MODULES) {
@@ -42,6 +40,31 @@ class OperationTablesComponentTest {
                 }
             }
         }
-        assertThat(checked).isEqualTo(2049);
+        assertThat(checked).isEqualTo(2055);
+    }
+
+    /**
+     * Every RPC of every module's gRPC contract finds its own operation ({@code <module>.<RpcMethod>}), so the gRPC
+     * edge enforces exactly what the REST edge does.
+     */
+    @Test
+    void everyGrpcMethodFindsItsOperation() throws Exception {
+        OperationTable table = OperationTable.load(MODULES);
+        int checked = 0;
+        for (String module : MODULES) {
+            String outer = "com.mysms." + module + ".v1." + Character.toUpperCase(module.charAt(0)) + module.substring(1)
+                    + "Proto";
+            com.google.protobuf.Descriptors.FileDescriptor file = (com.google.protobuf.Descriptors.FileDescriptor)
+                    Class.forName(outer).getMethod("getDescriptor").invoke(null);
+            for (com.google.protobuf.Descriptors.ServiceDescriptor service : file.getServices()) {
+                for (com.google.protobuf.Descriptors.MethodDescriptor method : service.getMethods()) {
+                    String full = service.getFullName() + "/" + method.getName();
+                    assertThat(table.forGrpcMethod(full)).as(full).map(OperationRule::operationId)
+                            .contains(module + "." + method.getName());
+                    checked++;
+                }
+            }
+        }
+        assertThat(checked).isEqualTo(2055);
     }
 }

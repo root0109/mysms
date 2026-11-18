@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.release_rule_target (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.release_rule_target: live rows only, keyset paging, and the row_version guard on every
+ * update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class ReleaseRuleTargetRepository {
@@ -61,6 +58,8 @@ public class ReleaseRuleTargetRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** The targets of a rule. */
+    private static final String OF_RULE = SELECT_LIVE + " AND r.release_rule_id = :ruleId ORDER BY r.id";
     private static final String INSERT = """
             INSERT INTO lms.release_rule_target
             (id, tenant_id, release_rule_id, content_item_id, chapter_id, created_at, created_by, updated_at,
@@ -133,6 +132,11 @@ public class ReleaseRuleTargetRepository {
     }
 
     /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
+    /** The live targets of the rule. */
+    public List<ReleaseRuleTargetEntity> ofRule(UUID ruleId) {
+        return jdbc.sql(OF_RULE).param("ruleId", ruleId).query(ReleaseRuleTargetRepository::map).list();
+    }
+
     public ReleaseRuleTargetEntity insert(ReleaseRuleTargetEntity e) {
         return jdbc.sql(INSERT)
                 .param("id", e.getId())
@@ -195,12 +199,12 @@ public class ReleaseRuleTargetRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.release_rule_id = :parentId", Map.of("parentId", parentId));
     }

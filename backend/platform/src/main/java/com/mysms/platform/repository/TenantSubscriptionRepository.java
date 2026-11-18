@@ -16,6 +16,7 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -24,11 +25,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to platform.tenant_subscription (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to platform.tenant_subscription: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. Every statement filters the caller's tenant itself; row-level security
+ * is the backstop.
  */
 @Repository
 public class TenantSubscriptionRepository {
@@ -77,6 +76,16 @@ public class TenantSubscriptionRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** The file limit of the tenant-wide subscription in force today (the one paid furthest ahead). */
+    private static final String FILE_LIMIT = """
+            SELECT r.max_files
+              FROM platform.tenant_subscription r
+             WHERE r.tenant_id = :tenantId
+               AND r.deleted_at IS NULL AND r.institution_id IS NULL AND r.status = 'active'
+               AND (r.end_date IS NULL OR r.end_date >= :today)
+             ORDER BY r.end_date DESC NULLS FIRST
+             LIMIT 1
+            """;
     private static final String INSERT = """
             INSERT INTO platform.tenant_subscription
             (id, tenant_id, institution_id, plan_id, requested_by_user_id, start_date, end_date, created_at,
@@ -104,6 +113,71 @@ public class TenantSubscriptionRepository {
                    row_version = row_version + 1
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String RETURNING = """
+            RETURNING id, tenant_id, max_members, price, currency_id, billing_cycle_months, gateway_name,
+                      gateway_txn_ref, amount_paid, gateway_status, paid_at, payer_name, institution_id, plan_id,
+                      requested_by_user_id, status, start_date, end_date, created_at, created_by, updated_at,
+                      updated_by, deleted_at, row_version
+            """;
+    /** StartSubscriptionCheckout: a pending subscription with the plan's terms copied and the gateway order. */
+    private static final String INSERT_CHECKOUT = """
+            INSERT INTO platform.tenant_subscription
+            (id, tenant_id, institution_id, plan_id, requested_by_user_id, status, max_members, max_events,
+             max_folders, max_files, max_videos, max_audios, max_bulletins, max_groups, price, currency_id,
+             billing_cycle_months, gateway_name, gateway_txn_ref, gateway_status, created_at, created_by, updated_at,
+             updated_by, row_version)
+            VALUES (:id, :tenantId, :institutionId, :planId, :requestedByUserId, 'pending', :maxMembers, :maxEvents,
+                    :maxFolders, :maxFiles, :maxVideos, :maxAudios, :maxBulletins, :maxGroups, :price, :currencyId,
+                    :billingCycleMonths, :gatewayName, :gatewayTxnRef, 'created', :createdAt, :createdBy, :updatedAt,
+                    :updatedBy, 1)
+            """ + RETURNING;
+    /** The proof of payment arrived: a pending subscription becomes active for its paid period. */
+    private static final String TRANSITION_ACTIVATE = """
+            UPDATE platform.tenant_subscription
+               SET status = 'active',
+                   start_date = :startDate,
+                   end_date = :endDate,
+                   amount_paid = price,
+                   paid_at = :now,
+                   gateway_status = :gatewayStatus,
+                   payment_mode = :paymentMode,
+                   payer_email = :payerEmail,
+                   payer_phone = :payerPhone,
+                   gateway_raw_response = :rawResponse,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND status = 'pending' AND deleted_at IS NULL
+            """;
+    /** Money arrived for a subscription that can no longer start (cancelled meanwhile): kept for a refund. */
+    private static final String RECORD_LATE_PAYMENT = """
+            UPDATE platform.tenant_subscription
+               SET gateway_status = 'paid_after_cancel',
+                   gateway_raw_response = :rawResponse,
+                   updated_at = :now,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND status <> 'pending' AND deleted_at IS NULL
+            """;
+    /** CancelSubscription: allowed while pending or active; an active one stays usable until its end date. */
+    private static final String TRANSITION_CANCEL = """
+            UPDATE platform.tenant_subscription
+               SET status = 'cancelled',
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND status IN ('pending', 'active') AND deleted_at IS NULL
+            """;
+    /** The last day already paid for this scope (tenant-wide or one institution): a renewal starts after it. */
+    private static final String PAID_UNTIL = """
+            SELECT max(r.end_date)
+              FROM platform.tenant_subscription r
+             WHERE r.tenant_id = :tenantId
+               AND r.deleted_at IS NULL AND r.status = 'active'
+               AND r.institution_id IS NOT DISTINCT FROM CAST(:institutionId AS uuid)
             """;
     private static final String EXISTS_PLAN_ID = """
             SELECT EXISTS (SELECT 1 FROM platform.saas_plan WHERE id = :id AND deleted_at IS NULL)
@@ -169,12 +243,84 @@ public class TenantSubscriptionRepository {
                 .update();
     }
 
+    /**
+     * The most live files the tenant may keep under its current tenant-wide subscription; empty when no subscription
+     * is in force or the plan sets no file limit.
+     */
+    public Optional<Integer> fileLimit(LocalDate today) {
+        return jdbc.sql(FILE_LIMIT).param("today", today).query((rs, row) -> rs.getObject("max_files", Integer.class))
+                .optional().filter(Objects::nonNull);
+    }
+
+    /** Inserts a pending subscription opened at the gateway (the plan's terms already copied onto the entity). */
+    public TenantSubscriptionEntity insertCheckout(TenantSubscriptionEntity e, SaasPlanTerms terms) {
+        return jdbc.sql(INSERT_CHECKOUT)
+                .param("id", e.getId())
+                .param("tenantId", e.getTenantId())
+                .param("institutionId", e.getInstitutionId())
+                .param("planId", e.getPlanId())
+                .param("requestedByUserId", e.getRequestedByUserId())
+                .param("maxMembers", terms.maxMembers())
+                .param("maxEvents", terms.maxEvents())
+                .param("maxFolders", terms.maxFolders())
+                .param("maxFiles", terms.maxFiles())
+                .param("maxVideos", terms.maxVideos())
+                .param("maxAudios", terms.maxAudios())
+                .param("maxBulletins", terms.maxBulletins())
+                .param("maxGroups", terms.maxGroups())
+                .param("price", e.getPrice())
+                .param("currencyId", e.getCurrencyId())
+                .param("billingCycleMonths", e.getBillingCycleMonths())
+                .param("gatewayName", e.getGatewayName())
+                .param("gatewayTxnRef", e.getGatewayTxnRef())
+                .param("createdAt", e.getCreatedAt())
+                .param("createdBy", e.getCreatedBy())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .query(TenantSubscriptionRepository::map).single();
+    }
+
+    /** Activates a pending subscription for its paid period; 0 rows when it changed or is no longer pending. */
+    public int activate(UUID id, int expected, LocalDate start, LocalDate end, GatewayPaymentRecord payment,
+            OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_ACTIVATE)
+                .param("id", id)
+                .param("expected", expected)
+                .param("startDate", start)
+                .param("endDate", end)
+                .param("gatewayStatus", payment.status())
+                .param("paymentMode", payment.method())
+                .param("payerEmail", payment.email())
+                .param("payerPhone", payment.phone())
+                .param("rawResponse", payment.raw())
+                .param("now", now)
+                .param("actor", actor)
+                .update();
+    }
+
+    /** Keeps the proof of a payment that arrived after the subscription was cancelled, for a refund. */
+    public int recordLatePayment(UUID id, int expected, String rawResponse, OffsetDateTime now) {
+        return jdbc.sql(RECORD_LATE_PAYMENT).param("id", id).param("expected", expected)
+                .param("rawResponse", rawResponse).param("now", now).update();
+    }
+
+    /** CancelSubscription; 0 rows when the row changed or is neither pending nor active. */
+    public int cancel(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_CANCEL).param("id", id).param("expected", expected).param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** The last day already paid for by an active subscription of this scope (null institution: tenant-wide). */
+    public Optional<LocalDate> paidUntil(UUID institutionId) {
+        return jdbc.sql(PAID_UNTIL).param("institutionId", institutionId).query(LocalDate.class).optional();
+    }
+
     /** Whether the referenced platform.saas_plan row exists (live). */
     public boolean existsPlanId(UUID id) {
         return Boolean.TRUE.equals(jdbc.sql(EXISTS_PLAN_ID).param("id", id).query(Boolean.class).single());
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

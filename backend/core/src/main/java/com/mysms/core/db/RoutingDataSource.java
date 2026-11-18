@@ -10,14 +10,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 /**
- * A module's data source that hands out connections of the primary or of the replica, by the role the opening
- * transaction asked for ({@link DatabaseRoleHolder}); the {@code RoutingDataSource} of the owner's {@code common}
- * module, with its targets fixed when the module starts. A module without a replica routes both roles to the
- * primary, so code never needs to know whether a replica exists.
- *
- * <p>The replica is an optimisation, never a dependency: when it cannot give a connection (down, restarting, its pool
- * exhausted past its short timeout) the read is served by the primary instead, so a replica outage costs load on the
- * primary, not availability.
+ * Hands out primary or replica connections by the role the opening transaction asked for
+ * ({@link DatabaseRoleHolder}); without a replica both roles go to the primary. When the replica cannot give a
+ * connection the primary serves the read, so a replica outage costs load, not availability.
  */
 public final class RoutingDataSource extends AbstractRoutingDataSource {
 

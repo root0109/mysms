@@ -5,8 +5,8 @@ import com.mysms.core.error.PreconditionRequiredException;
 import java.util.regex.Pattern;
 
 /**
- * ETag ⇄ row_version (api/README "Concurrency"): the ETag of a row is its `row_version` as a strong tag ("7").
- * Updates and deletes must send it back in If-Match; the repository turns it into `AND row_version = :expected`.
+ * ETag ⇄ row_version: a row's ETag is its `row_version` as a strong tag ("7"), which updates and deletes send back
+ * in If-Match.
  */
 public final class Etags {
 

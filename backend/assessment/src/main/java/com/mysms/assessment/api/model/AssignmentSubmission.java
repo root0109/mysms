@@ -1,4 +1,4 @@
-// Owned API contract of assessment (JAVA-CODING-RULES §7); first materialized from api/openapi/assessment.yaml on 2026-11-10.
+// Owned API contract of assessment.
 package com.mysms.assessment.api.model;
 
 import java.net.URI;
@@ -39,7 +39,7 @@ public class AssignmentSubmission {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private OffsetDateTime submittedAt;
+  private @Nullable OffsetDateTime submittedAt;
 
   /**
    * Submission state. Changed only through the workflow operations.
@@ -126,10 +126,9 @@ public class AssignmentSubmission {
   /**
    * Constructor with only required parameters
    */
-  public AssignmentSubmission(UUID assignmentId, UUID studentId, OffsetDateTime submittedAt) {
+  public AssignmentSubmission(UUID assignmentId, UUID studentId) {
     this.assignmentId = assignmentId;
     this.studentId = studentId;
-    this.submittedAt = submittedAt;
   }
 
   public AssignmentSubmission id(@Nullable UUID id) {
@@ -212,23 +211,23 @@ public class AssignmentSubmission {
     this.content = content;
   }
 
-  public AssignmentSubmission submittedAt(OffsetDateTime submittedAt) {
+  public AssignmentSubmission submittedAt(@Nullable OffsetDateTime submittedAt) {
     this.submittedAt = submittedAt;
     return this;
   }
 
   /**
-   * Submission time.
+   * Submission time; set by the service when the submission is made and by the submit operation.
    * @return submittedAt
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("submittedAt")
-  public OffsetDateTime getSubmittedAt() {
+  public @Nullable OffsetDateTime getSubmittedAt() {
     return submittedAt;
   }
 
   @JsonProperty("submittedAt")
-  public void setSubmittedAt(OffsetDateTime submittedAt) {
+  public void setSubmittedAt(@Nullable OffsetDateTime submittedAt) {
     this.submittedAt = submittedAt;
   }
 
@@ -258,7 +257,7 @@ public class AssignmentSubmission {
   }
 
   /**
-   * Marks awarded.
+   * Marks awarded; set by the grading workflow.
    * @return marksObtained
    */
   @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
@@ -278,7 +277,7 @@ public class AssignmentSubmission {
   }
 
   /**
-   * Grader.
+   * Grader; set by the grading workflow.
    * @return gradedByUserId
    */
   @Valid 
@@ -298,7 +297,7 @@ public class AssignmentSubmission {
   }
 
   /**
-   * Grading date.
+   * Grading date; set by the grading workflow.
    * @return gradedOn
    */
   @Valid 
@@ -318,7 +317,7 @@ public class AssignmentSubmission {
   }
 
   /**
-   * Feedback to the student.
+   * Feedback to the student; set by the grading workflow.
    * @return feedback
    */
   

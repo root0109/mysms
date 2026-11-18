@@ -1,5 +1,6 @@
 package com.mysms.lms.controller;
 
+import com.mysms.lms.business.ExerciseSubmissionService;
 import java.util.List;
 import com.mysms.core.paging.PagingUtil;
 import com.mysms.core.paging.PagingInfo;
@@ -10,7 +11,6 @@ import com.mysms.lms.api.model.ExerciseTestCaseUpdate;
 import com.mysms.lms.api.model.ProgrammingExercise;
 import com.mysms.lms.api.model.ProgrammingExerciseUpdate;
 import com.mysms.lms.api.model.SubmitExerciseRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.ProgrammingExerciseService;
 import java.net.URI;
@@ -19,18 +19,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the ProgrammingExercise operations: implements the generated contract interface, so paths, parameters
- * and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the ProgrammingExercise operations; authentication and the permission check already ran in the
+ * auth-client filter. Operations not served yet answer 501.
  */
 @RestController
 public class ProgrammingExerciseController implements ProgrammingExerciseApi {
 
     private final ProgrammingExerciseService programmingExerciseService;
+    private final ExerciseSubmissionService exerciseSubmissionService;
 
-    public ProgrammingExerciseController(ProgrammingExerciseService programmingExerciseService) {
+    public ProgrammingExerciseController(ProgrammingExerciseService programmingExerciseService,
+            ExerciseSubmissionService exerciseSubmissionService) {
+        this.exerciseSubmissionService = exerciseSubmissionService;
         this.programmingExerciseService = programmingExerciseService;
     }
 
@@ -110,7 +110,9 @@ public class ProgrammingExerciseController implements ProgrammingExerciseApi {
     @Override
     public ResponseEntity<ExerciseSubmission> submitExercise(UUID programmingExerciseId,
             SubmitExerciseRequest submitExerciseRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        ExerciseSubmission stored = exerciseSubmissionService.submitExercise(programmingExerciseId,
+                submitExerciseRequest);
+        return ResponseEntity.ok().eTag(stored.getEtag()).body(stored);
     }
 
     @Override

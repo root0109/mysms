@@ -36,6 +36,7 @@ import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.DuplicateResourceException;
 import com.mysms.core.error.FieldError;
 import com.mysms.core.error.InvalidStateException;
+import com.mysms.core.error.PermissionDeniedException;
 import com.mysms.core.error.PreconditionFailedException;
 import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.error.ValidationFailedException;
@@ -50,6 +51,7 @@ import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
 import com.mysms.core.web.UpdateMask;
+import com.mysms.facility.v1.Room;
 import java.time.Clock;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -60,6 +62,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -69,13 +72,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of assessment.exam (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Exam
- * are served here too — ExamInvigilator.
+ * Business service of assessment.exam and of the records that exist only as part of a Exam (ExamInvigilator): audit and
+ * domain event commit in the same transaction as every change. Rows outside the caller's institutions are invisible;
+ * tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class ExamService extends AppTransactionManager {
@@ -90,6 +89,9 @@ public class ExamService extends AppTransactionManager {
     static final String PERMISSION_COMPLETE_EXAM = "assessment.exam.complete_exam";
     static final String PERMISSION_CANCEL_EXAM = "assessment.exam.cancel_exam";
     static final String PERMISSION_RESET_EXAM = "assessment.exam.reset_exam";
+    static final String PERMISSION_POPULATE_EXAM_RESULTS = "assessment.exam.populate_exam_results";
+    static final String PERMISSION_ALLOCATE_EXAM_ROOMS = "assessment.exam.allocate_exam_rooms";
+    static final String PERMISSION_RECORD_EXAM_MARKS = "assessment.exam.record_exam_marks";
     /** The contract's ExamUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("examSessionId", "subjectId", "classSectionId", "code", "name", "startAt", "endAt", "totalMarks",
@@ -152,21 +154,32 @@ public class ExamService extends AppTransactionManager {
         this.coursePlanLookup = coursePlanLookup;
     }
 
-    /** Register the SIS roster once; repeated calls add only students not already registered. */
+    /**
+     * assessment.PopulateExamResults: registers the sis roster once; repeated calls add only students not already
+     * registered and snapshot missing credits. The exam is checked in a read transaction, sis and academics are asked
+     * with the caller's token outside any transaction, and the write re-checks that the exam and its session are
+     * unchanged (412 otherwise) with the exam row locked, so two populations of one exam run one after the other.
+     */
     public ExamResultList populateExamResults(UUID id) {
-        DataScope scope = DataScope.current("assessment.exam.populate_exam_results");
-        return doInWriteTransaction(() -> {
+        DataScope scope = DataScope.current(PERMISSION_POPULATE_EXAM_RESULTS);
+        Snapshot before = doInPrimaryReadTransaction(() -> {
             ExamEntity exam = visibleExam(scope, id);
             scope.requireWritable(institutionOf(exam));
-            if (!"scheduled".equals(exam.getStatus())) {
-                throw new InvalidStateException("Exam attendees can only be populated after scheduling.");
-            }
-            ExamSessionEntity session = sessionRepository.findById(exam.getExamSessionId())
-                    .orElseThrow(() -> new ResourceNotFoundException("assessment.exam_session", exam.getExamSessionId()));
-            List<UUID> students = rosterLookup.students(exam, session);
-            BigDecimal credits = coursePlanLookup.credits(exam, session);
-            if (students.isEmpty()) {
-                throw new InvalidStateException("The SIS roster has no students for this exam.");
+            requireScheduled(exam, "Exam attendees can only be populated after scheduling.");
+            return new Snapshot(exam, sessionOf(exam));
+        });
+        List<UUID> students = rosterLookup.students(before.exam(), before.session());
+        BigDecimal credits = coursePlanLookup.credits(before.exam(), before.session());
+        if (students.isEmpty()) {
+            throw new InvalidStateException("The SIS roster has no students for this exam.");
+        }
+        return doInWriteTransaction(() -> {
+            ExamEntity exam = lockedExam(scope, id);
+            requireScheduled(exam, "Exam attendees can only be populated after scheduling.");
+            ExamSessionEntity session = sessionOf(exam);
+            if (exam.getRowVersion() != before.exam().getRowVersion()
+                    || session.getRowVersion() != before.session().getRowVersion()) {
+                throw new PreconditionFailedException("The exam changed while its roster was read; try again.");
             }
             Map<UUID, ExamResultEntity> existing = new HashMap<>();
             for (ExamResultEntity result : resultRepository.listForExam(id)) {
@@ -174,19 +187,9 @@ public class ExamService extends AppTransactionManager {
             }
             UUID tenantId = CallContextHolder.require().tenantId().orElseThrow();
             for (UUID studentId : students) {
-                if (existing.containsKey(studentId)) {
-                    ExamResultEntity row = existing.get(studentId);
-                    if (credits != null && row.getCredits() == null) {
-                        if (resultRepository.setCredits(row.getId(), row.getRowVersion(), credits, now(),
-                                Actor.current().orElse(null)) == 0) {
-                            throw new PreconditionFailedException(
-                                    "An exam attendee changed while credits were being populated.");
-                        }
-                        audit.recordTransition(ExamResultService.AGGREGATE, row.getId(), "snapshotCredits",
-                                List.of("credits"), null);
-                        outbox.publish(ExamResultService.AGGREGATE + ".creditsSnapshotted",
-                                ExamResultService.AGGREGATE, row.getId(), AssessmentEvents.payload(row.getId()));
-                    }
+                ExamResultEntity row = existing.get(studentId);
+                if (row != null) {
+                    snapshotCredits(row, credits);
                     continue;
                 }
                 ExamResultEntity result = ExamResultEntity.builder().tenantId(tenantId).examId(id)
@@ -203,44 +206,63 @@ public class ExamService extends AppTransactionManager {
         });
     }
 
-    /** Allocate the ordered exam roster across active rooms without exceeding their published capacities. */
+    /** A registered attendee without credits gets the course plan's (a population after the plan was set). */
+    private void snapshotCredits(ExamResultEntity row, BigDecimal credits) {
+        if (credits == null || row.getCredits() != null) {
+            return;
+        }
+        if (resultRepository.setCredits(row.getId(), row.getRowVersion(), credits, now(),
+                Actor.current().orElse(null)) == 0) {
+            throw new PreconditionFailedException("An exam attendee changed while credits were being populated.");
+        }
+        audit.recordTransition(ExamResultService.AGGREGATE, row.getId(), "snapshotCredits", List.of("credits"), null);
+        outbox.publish(ExamResultService.AGGREGATE + ".creditsSnapshotted", ExamResultService.AGGREGATE, row.getId(),
+                AssessmentEvents.payload(row.getId()));
+    }
+
+    /**
+     * assessment.AllocateExamRooms: spreads the ordered attendees (absent and exempted ones aside) across the given
+     * rooms without exceeding their capacities. Each room is read from facility with the caller's token outside any
+     * transaction and must belong to the exam's institution, be in use and have a capacity (422); the write locks the
+     * exam, re-checks it is unchanged (412) and allocates the attendees as they are then.
+     */
     public ExamResultList allocateExamRooms(UUID id, AllocateExamRoomsRequest request) {
-        DataScope scope = DataScope.current("assessment.exam.allocate_exam_rooms");
-        return doInWriteTransaction(() -> {
+        DataScope scope = DataScope.current(PERMISSION_ALLOCATE_EXAM_ROOMS);
+        List<UUID> roomIds = requireRoomIds(request);
+        Placed before = doInPrimaryReadTransaction(() -> {
             ExamEntity exam = visibleExam(scope, id);
             Optional<UUID> institution = institutionOf(exam);
             scope.requireWritable(institution);
-            if (!"scheduled".equals(exam.getStatus())) {
-                throw new InvalidStateException("Rooms can only be allocated to a scheduled exam.");
-            }
-            if (request == null || request.getRoomIds() == null || request.getRoomIds().isEmpty()) {
-                throw new ValidationFailedException(List.of(new FieldError("roomIds", "must not be empty", "NotEmpty")));
-            }
-            List<ExamResultEntity> attendees = resultRepository.listForExam(id).stream()
-                    .filter(row -> !Set.of("absent", "exempted").contains(row.getAttendanceStatus())).toList();
-            if (attendees.isEmpty()) {
+            requireScheduled(exam, "Rooms can only be allocated to a scheduled exam.");
+            if (seated(resultRepository.listForExam(id)).isEmpty()) {
                 throw new InvalidStateException("Populate the attendee list before allocating rooms.");
             }
-            Set<UUID> uniqueRoomIds = new HashSet<>();
-            List<UUID> roomIds = request.getRoomIds();
-            List<Integer> capacities = new ArrayList<>();
-            for (int i = 0; i < roomIds.size(); i++) {
-                UUID roomId = roomIds.get(i);
-                if (roomId == null || !uniqueRoomIds.add(roomId)) {
-                    throw new ValidationFailedException(List.of(new FieldError("roomIds[" + i + "]",
-                            "room ids must be unique and non-null", "DUPLICATE")));
-                }
-                com.mysms.sdk.facility.model.Room room = roomLookup.requireRoom(roomId);
-                if (institution.isEmpty() || !institution.get().equals(room.getInstitutionId())) {
-                    throw new ValidationFailedException(List.of(new FieldError("roomIds[" + i + "]",
-                            "room belongs to another institution", "OUT_OF_SCOPE")));
-                }
-                if (room.getCapacity() == null || room.getCapacity() <= 0) {
-                    throw new ValidationFailedException(List.of(new FieldError("roomIds[" + i + "]",
-                            "room must have positive capacity", "MIN")));
-                }
-                capacities.add(room.getCapacity());
+            return new Placed(exam, institution);
+        });
+        Optional<UUID> institution = before.institution();
+        List<Integer> capacities = new ArrayList<>();
+        List<FieldError> errors = new ArrayList<>();
+        for (int i = 0; i < roomIds.size(); i++) {
+            Room room = roomLookup.requireRoom(roomIds.get(i));
+            String field = "roomIds[" + i + "]";
+            if (institution.isEmpty() || !institution.get().toString().equals(room.getInstitutionId())) {
+                errors.add(new FieldError(field, "room belongs to another institution", "OUT_OF_SCOPE"));
+            } else if (!room.getIsActive()) {
+                errors.add(new FieldError(field, "room is not in use", "INACTIVE"));
+            } else if (room.getCapacity() <= 0) {
+                errors.add(new FieldError(field, "room must have positive capacity", "MIN"));
             }
+            capacities.add(room.getCapacity());
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
+        }
+        return doInWriteTransaction(() -> {
+            ExamEntity exam = lockedExam(scope, id);
+            if (exam.getRowVersion() != before.exam().getRowVersion()) {
+                throw new PreconditionFailedException("The exam changed while its rooms were read; try again.");
+            }
+            List<ExamResultEntity> attendees = seated(resultRepository.listForExam(id));
             long totalCapacity = capacities.stream().mapToLong(Integer::longValue).sum();
             if (totalCapacity < attendees.size()) {
                 throw new ValidationFailedException(List.of(new FieldError("roomIds",
@@ -248,7 +270,6 @@ public class ExamService extends AppTransactionManager {
             }
             OffsetDateTime now = now();
             UUID actor = Actor.current().orElse(null);
-            List<ExamResultEntity> changed = new ArrayList<>();
             int roomIndex = 0;
             int assigned = 0;
             for (ExamResultEntity attendee : attendees) {
@@ -268,9 +289,30 @@ public class ExamService extends AppTransactionManager {
                 }
                 assigned++;
             }
-            changed.addAll(resultRepository.listForExam(id));
-            return resultList(changed);
+            return resultList(resultRepository.listForExam(id));
         });
+    }
+
+    /** The requested rooms: at least one, each given once (422). */
+    private static List<UUID> requireRoomIds(AllocateExamRoomsRequest request) {
+        if (request == null || request.getRoomIds() == null || request.getRoomIds().isEmpty()) {
+            throw new ValidationFailedException(List.of(new FieldError("roomIds", "must not be empty", "NotEmpty")));
+        }
+        Set<UUID> unique = new HashSet<>();
+        List<UUID> roomIds = request.getRoomIds();
+        for (int i = 0; i < roomIds.size(); i++) {
+            if (roomIds.get(i) == null || !unique.add(roomIds.get(i))) {
+                throw new ValidationFailedException(List.of(new FieldError("roomIds[" + i + "]",
+                        "room ids must be unique and non-null", "DUPLICATE")));
+            }
+        }
+        return roomIds;
+    }
+
+    /** The attendees who sit the paper: everyone registered except the absent and the exempted. */
+    private static List<ExamResultEntity> seated(List<ExamResultEntity> attendees) {
+        return attendees.stream().filter(row -> !Set.of("absent", "exempted").contains(row.getAttendanceStatus()))
+                .toList();
     }
 
     /** Mark a scheduled exam held once at least one attendee row exists. */
@@ -289,14 +331,22 @@ public class ExamService extends AppTransactionManager {
                 request == null ? null : request.getEtag(), Set.of("held"), "markResultsUpdated",
                 List.of("status", "resultsEntered"), () -> {
                     if (!resultRepository.allMarksEntered(id)) {
-                        throw new InvalidStateException("Every attendee must have attendance and marks before results are updated.");
+                        throw new InvalidStateException(
+                                "Every attendee must have attendance and marks before results are updated.");
                     }
                 }, repository::markExamResultsUpdated);
     }
 
-    /** Record marks through the immutable audit log; batch validation precedes every write. */
+    /**
+     * assessment.RecordExamMarks: the attendance and marks of many attendees at once, all or nothing. Every entry is
+     * validated before any write (422 with every failing entry); an entry that carries the attendee's etag is refused
+     * when the attendee changed since it was read (412), so two people entering marks never overwrite each other
+     * unseen. Present attendees need marks (pass or fail against the pass marks), absent and exempted ones have none
+     * (an exempted attendee has no result). A result already added to a marksheet cannot change (409); a change to
+     * an exam whose results were updated reopens marks entry (result_updated → held).
+     */
     public ExamResultList recordExamMarks(UUID id, RecordExamMarksRequest request) {
-        DataScope scope = DataScope.current("assessment.exam.record_exam_marks");
+        DataScope scope = DataScope.current(PERMISSION_RECORD_EXAM_MARKS);
         return doInWriteTransaction(() -> {
             ExamEntity exam = visibleExam(scope, id);
             scope.requireWritable(institutionOf(exam));
@@ -310,61 +360,17 @@ public class ExamService extends AppTransactionManager {
             for (ExamResultEntity row : resultRepository.listForExam(id)) {
                 byStudent.put(row.getStudentId(), row);
             }
-            List<ValidatedMark> marks = new ArrayList<>();
-            Set<UUID> seen = new HashSet<>();
-            List<FieldError> errors = new ArrayList<>();
-            int index = 0;
-            for (MarkEntry entry : request.getEntries()) {
-                String prefix = "entries[" + index++ + "]";
-                if (entry == null || entry.getStudentId() == null || entry.getAttendanceStatus() == null) {
-                    errors.add(new FieldError(prefix, "studentId and attendanceStatus are required", "NotNull"));
-                    continue;
-                }
-                UUID studentId = entry.getStudentId();
-                if (!seen.add(studentId)) {
-                    errors.add(new FieldError(prefix + ".studentId", "student appears more than once", "DUPLICATE"));
-                    continue;
-                }
-                ExamResultEntity current = byStudent.get(studentId);
-                if (current == null) {
-                    errors.add(new FieldError(prefix + ".studentId", "student is not registered for this exam", "NOT_FOUND"));
-                    continue;
-                }
-                boolean absent = entry.getAttendanceStatus() == MarkEntry.AttendanceStatusEnum.ABSENT;
-                BigDecimal value = absent ? null : WireValues.decimal(entry.getMarksObtained());
-                if (!absent && value == null) {
-                    errors.add(new FieldError(prefix + ".marksObtained", "marks are required for a present student", "NotNull"));
-                    continue;
-                }
-                if (absent && entry.getMarksObtained() != null) {
-                    errors.add(new FieldError(prefix + ".marksObtained", "absent students cannot have marks", "INVALID"));
-                    continue;
-                }
-                if (value != null && (value.signum() < 0 || value.compareTo(exam.getTotalMarks()) > 0
-                        || value.scale() > 2)) {
-                    errors.add(new FieldError(prefix + ".marksObtained", "marks must be from 0 through the exam maximum with at most 2 decimals", "RANGE"));
-                    continue;
-                }
-                String note = entry.getNote() == null || entry.getNote().isBlank() ? null : entry.getNote().trim();
-                if (note != null && note.length() > 300) {
-                    errors.add(new FieldError(prefix + ".note", "must be at most 300 characters", "Size"));
-                    continue;
-                }
-                String status = absent ? "absent" : (value.compareTo(exam.getPassMarks()) >= 0 ? "pass" : "fail");
-                marks.add(new ValidatedMark(current, absent ? "absent" : "present", value, status, note));
-            }
-            if (!errors.isEmpty()) {
-                throw new ValidationFailedException(errors);
-            }
-            UUID actor = Actor.current().orElseThrow(() -> new IllegalStateException("Authenticated actor is missing."));
+            List<ValidatedMark> marks = validateMarks(exam, request.getEntries(), byStudent);
+            UUID actor = Actor.current().orElseThrow(
+                    () -> new PermissionDeniedException("Recording marks needs a signed-in user."));
             OffsetDateTime now = now();
             boolean anyChanged = false;
             for (ValidatedMark mark : marks) {
                 ExamResultEntity current = mark.current();
-                if (java.util.Objects.equals(current.getAttendanceStatus(), mark.attendanceStatus())
-                        && java.util.Objects.equals(current.getResultStatus(), mark.resultStatus())
+                if (Objects.equals(current.getAttendanceStatus(), mark.attendanceStatus())
+                        && Objects.equals(current.getResultStatus(), mark.resultStatus())
                         && equalDecimal(current.getMarks(), mark.marks())
-                        && java.util.Objects.equals(current.getNote(), mark.note())) {
+                        && Objects.equals(current.getNote(), mark.note())) {
                     continue;
                 }
                 requireUnaggregated(current);
@@ -379,16 +385,88 @@ public class ExamService extends AppTransactionManager {
                 outbox.publish(ExamResultService.AGGREGATE + ".marksRecorded", ExamResultService.AGGREGATE,
                         current.getId(), AssessmentEvents.payload(current.getId()));
             }
-            if (anyChanged && "result_updated".equals(exam.getStatus())
-                    && repository.reopenResults(id, exam.getRowVersion(), now, actor) == 0) {
-                throw new PreconditionFailedException("The exam changed while marks were being recorded.");
-            }
             if (anyChanged && "result_updated".equals(exam.getStatus())) {
+                if (repository.reopenResults(id, exam.getRowVersion(), now, actor) == 0) {
+                    throw new PreconditionFailedException("The exam changed while marks were being recorded.");
+                }
                 audit.recordTransition(AGGREGATE, id, "reopenResults", List.of("status", "resultsEntered"), null);
                 outbox.publish(AGGREGATE + ".resultsReopened", AGGREGATE, id, AssessmentEvents.payload(id));
             }
             return resultList(resultRepository.listForExam(id));
         });
+    }
+
+    /** Every entry checked against the registered attendees (422 with every failing entry; 412 for a stale etag). */
+    private static List<ValidatedMark> validateMarks(ExamEntity exam, List<MarkEntry> entries,
+            Map<UUID, ExamResultEntity> byStudent) {
+        List<ValidatedMark> marks = new ArrayList<>();
+        Set<UUID> seen = new HashSet<>();
+        List<FieldError> errors = new ArrayList<>();
+        List<String> stale = new ArrayList<>();
+        int index = 0;
+        for (MarkEntry entry : entries) {
+            String prefix = "entries[" + index++ + "]";
+            if (entry == null || entry.getStudentId() == null || entry.getAttendanceStatus() == null) {
+                errors.add(new FieldError(prefix, "studentId and attendanceStatus are required", "NotNull"));
+                continue;
+            }
+            if (!seen.add(entry.getStudentId())) {
+                errors.add(new FieldError(prefix + ".studentId", "student appears more than once", "DUPLICATE"));
+                continue;
+            }
+            ExamResultEntity current = byStudent.get(entry.getStudentId());
+            if (current == null) {
+                errors.add(new FieldError(prefix + ".studentId", "student is not registered for this exam", "NOT_FOUND"));
+                continue;
+            }
+            OptionalInt version = Etags.bodyVersion(entry.getEtag());
+            if (version.isPresent() && version.getAsInt() != current.getRowVersion()) {
+                stale.add(prefix);
+                continue;
+            }
+            String attendance = entry.getAttendanceStatus().getValue();
+            boolean present = MarkEntry.AttendanceStatusEnum.PRESENT == entry.getAttendanceStatus();
+            BigDecimal value = WireValues.decimal(entry.getMarksObtained());
+            if (present && value == null) {
+                errors.add(new FieldError(prefix + ".marksObtained", "marks are required for a present student", "NotNull"));
+                continue;
+            }
+            if (!present && entry.getMarksObtained() != null) {
+                errors.add(new FieldError(prefix + ".marksObtained", "absent or exempted students cannot have marks",
+                        "INVALID"));
+                continue;
+            }
+            if (value != null && (value.signum() < 0 || value.compareTo(exam.getTotalMarks()) > 0
+                    || value.scale() > 2)) {
+                errors.add(new FieldError(prefix + ".marksObtained",
+                        "marks must be from 0 through the exam maximum with at most 2 decimals", "RANGE"));
+                continue;
+            }
+            String sentNote = entry.getNote();
+            String note = sentNote == null || sentNote.isBlank() ? null : sentNote.trim();
+            if (note != null && note.length() > 300) {
+                errors.add(new FieldError(prefix + ".note", "must be at most 300 characters", "Size"));
+                continue;
+            }
+            marks.add(new ValidatedMark(current, attendance, value, resultStatus(exam, attendance, value), note));
+        }
+        if (!stale.isEmpty()) {
+            throw new PreconditionFailedException("These attendees changed since they were read: "
+                    + String.join(", ", stale) + ". Read the marks again.");
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
+        }
+        return marks;
+    }
+
+    /** Present: pass or fail against the pass marks; absent: absent; exempted: no result. */
+    private static String resultStatus(ExamEntity exam, String attendance, BigDecimal marks) {
+        return switch (attendance) {
+            case "present" -> marks.compareTo(exam.getPassMarks()) >= 0 ? "pass" : "fail";
+            case "absent" -> "absent";
+            default -> null;
+        };
     }
 
     private Exam transitionExam(UUID id, String permission, String etag, Set<String> states, String action,
@@ -424,6 +502,29 @@ public class ExamService extends AppTransactionManager {
         return entity;
     }
 
+    /** The exam, visible (404) and writable (403) for the caller, locked until the transaction ends. */
+    private ExamEntity lockedExam(DataScope scope, UUID id) {
+        ExamEntity entity = repository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+        Optional<UUID> institution = institutionOf(entity);
+        if (!scope.canRead(institution)) {
+            throw new ResourceNotFoundException(AGGREGATE, id);
+        }
+        scope.requireWritable(institution);
+        return entity;
+    }
+
+    private ExamSessionEntity sessionOf(ExamEntity exam) {
+        return sessionRepository.findById(exam.getExamSessionId())
+                .orElseThrow(() -> new ResourceNotFoundException("assessment.exam_session", exam.getExamSessionId()));
+    }
+
+    private static void requireScheduled(ExamEntity exam, String detail) {
+        if (!"scheduled".equals(exam.getStatus())) {
+            throw new InvalidStateException(detail);
+        }
+    }
+
     private ExamResultList resultList(List<ExamResultEntity> entities) {
         ExamResultList response = new ExamResultList();
         response.setItems(entities.stream().map(resultMapper::toDto).toList());
@@ -446,6 +547,12 @@ public class ExamService extends AppTransactionManager {
 
     private record ValidatedMark(ExamResultEntity current, String attendanceStatus, BigDecimal marks,
             String resultStatus, String note) { }
+
+    /** The exam and its session as read before the other modules are asked. */
+    private record Snapshot(ExamEntity exam, ExamSessionEntity session) { }
+
+    /** The exam and its institution as read before facility is asked. */
+    private record Placed(ExamEntity exam, Optional<UUID> institution) { }
 
     @FunctionalInterface
     private interface ExamTransition {
@@ -494,8 +601,8 @@ public class ExamService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Exam updateExam(UUID id, String ifMatch, ExamUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
@@ -554,9 +661,8 @@ public class ExamService extends AppTransactionManager {
     }
 
     /**
-     * assessment.ScheduleExam: Schedule. The row must be visible and writable for the caller, and the step is allowed
-     * while status is draft; in any other state
-     * the answer is 409 and nothing changes.
+     * assessment.ScheduleExam: Schedule. Allowed while status is draft, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public Exam scheduleExam(UUID id, ScheduleExamRequest request) {
         DataScope scope = DataScope.current(PERMISSION_SCHEDULE_EXAM);
@@ -586,9 +692,8 @@ public class ExamService extends AppTransactionManager {
     }
 
     /**
-     * assessment.CompleteExam: Done. The row must be visible and writable for the caller, and the step is allowed while
-     * status is held or result_updated; in any other state
-     * the answer is 409 and nothing changes.
+     * assessment.CompleteExam: Done. Allowed while status is held or result_updated, on a row the caller may see and
+     * write; otherwise 409 and nothing changes.
      */
     public Exam completeExam(UUID id, CompleteExamRequest request) {
         DataScope scope = DataScope.current(PERMISSION_COMPLETE_EXAM);
@@ -618,9 +723,8 @@ public class ExamService extends AppTransactionManager {
     }
 
     /**
-     * assessment.CancelExam: Cancel. The row must be visible and writable for the caller, and the step is allowed while
-     * status is draft or scheduled; in any other state
-     * the answer is 409 and nothing changes.
+     * assessment.CancelExam: Cancel. Allowed while status is draft or scheduled, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public Exam cancelExam(UUID id, CancelExamRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CANCEL_EXAM);
@@ -651,9 +755,8 @@ public class ExamService extends AppTransactionManager {
     }
 
     /**
-     * assessment.ResetExam: Back to draft. The row must be visible and writable for the caller, and the step is allowed
-     * while status is cancelled; in any other state
-     * the answer is 409 and nothing changes.
+     * assessment.ResetExam: Back to draft. Allowed while status is cancelled, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public Exam resetExam(UUID id, ResetExamRequest request) {
         DataScope scope = DataScope.current(PERMISSION_RESET_EXAM);
@@ -691,12 +794,12 @@ public class ExamService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the assessment.exam_session it belongs to). */
+    /** The institution of the assessment.exam_session the row belongs to. */
     private Optional<UUID> institutionOf(ExamEntity entity) {
         return repository.institutionOf(entity.getExamSessionId());
     }
 
-    /** Applies the selected ExamUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected ExamUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(ExamEntity entity, ExamUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -762,7 +865,7 @@ public class ExamService extends AppTransactionManager {
         }
     }
 
-    // ---- ExamInvigilator: a record of the Exam aggregate ----
+    // ---- ExamInvigilator ----
 
     public ExamInvigilator getExamInvigilator(UUID examId, UUID id) {
         return doInReadTransaction(() -> {
@@ -816,8 +919,8 @@ public class ExamService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ExamInvigilator updateExamInvigilator(UUID examId, UUID id, String ifMatch, ExamInvigilatorUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -880,17 +983,12 @@ public class ExamService extends AppTransactionManager {
         return entity;
     }
 
-    /**
-     * The institution that owns the row (the institution of the assessment.exam → assessment.exam_session it belongs
-     * to).
-     */
+    /** The institution of the assessment.exam → assessment.exam_session the row belongs to. */
     private Optional<UUID> institutionOfExamInvigilator(ExamInvigilatorEntity entity) {
         return examInvigilatorRepository.institutionOf(entity.getExamId());
     }
 
-    /**
-     * Applies the selected ExamInvigilatorUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected ExamInvigilatorUpdate fields; explicit per field so a mask can clear values. */
     private static void applyExamInvigilator(ExamInvigilatorEntity entity, ExamInvigilatorUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

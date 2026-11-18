@@ -1,6 +1,8 @@
 package com.mysms.lms.business;
 
 import com.mysms.authclient.DataScope;
+import com.mysms.core.error.PermissionDeniedException;
+import com.mysms.authclient.AuthContext;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.AppTransactionManager;
@@ -22,10 +24,12 @@ import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
 import com.mysms.core.web.UpdateMask;
+import com.mysms.lms.api.model.ConnectEvaluatorCalendarRequest;
 import com.mysms.lms.api.model.Evaluator;
 import com.mysms.lms.api.model.EvaluatorAvailability;
 import com.mysms.lms.api.model.EvaluatorAvailabilityUpdate;
 import com.mysms.lms.api.model.EvaluatorUpdate;
+import com.mysms.lms.api.model.ExternalLink;
 import com.mysms.lms.config.LmsDatabaseConfig;
 import com.mysms.lms.config.LmsEventsConfig;
 import com.mysms.lms.domain.EvaluatorAvailabilityEntity;
@@ -35,23 +39,27 @@ import com.mysms.lms.mapper.EvaluatorAvailabilityMapper;
 import com.mysms.lms.mapper.EvaluatorMapper;
 import com.mysms.lms.repository.EvaluatorAvailabilityRepository;
 import com.mysms.lms.repository.EvaluatorRepository;
+import java.net.URI;
+import java.security.SecureRandom;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.HexFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.evaluator (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Evaluator
- * are served here too — EvaluatorAvailability.
+ * Business service of lms.evaluator and of the records that exist only as part of a Evaluator (EvaluatorAvailability):
+ * audit and domain event commit in the same transaction as every change. Rows outside the caller's institutions are
+ * invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class EvaluatorService extends AppTransactionManager {
@@ -62,6 +70,8 @@ public class EvaluatorService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "lms.evaluator.create";
     static final String PERMISSION_UPDATE = "lms.evaluator.update";
     static final String PERMISSION_DELETE = "lms.evaluator.delete";
+    static final String PERMISSION_CONNECT_CALENDAR = "lms.evaluator.connect_evaluator_calendar";
+    static final String PERMISSION_DISCONNECT_CALENDAR = "lms.evaluator.disconnect_evaluator_calendar";
     /** The contract's EvaluatorUpdate fields, in apply order. */
     static final List<String> WRITABLE = List.of("userId", "unavailableFrom", "unavailableTo");
 
@@ -80,6 +90,9 @@ public class EvaluatorService extends AppTransactionManager {
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
+    private final CalendarProviders calendars;
+    private final Duration stateLifetime;
+    private final SecureRandom random = new SecureRandom();
     private final EvaluatorAvailabilityRepository evaluatorAvailabilityRepository;
     private final EvaluatorAvailabilityMapper evaluatorAvailabilityMapper;
 
@@ -92,8 +105,12 @@ public class EvaluatorService extends AppTransactionManager {
             DtoValidator validator,
             Clock clock,
             EvaluatorAvailabilityRepository evaluatorAvailabilityRepository,
-            EvaluatorAvailabilityMapper evaluatorAvailabilityMapper) {
+            EvaluatorAvailabilityMapper evaluatorAvailabilityMapper,
+            CalendarProviders calendars,
+            @Value("${mysms.lms.calendar.state-lifetime}") Duration stateLifetime) {
         super(database, transactions);
+        this.calendars = calendars;
+        this.stateLifetime = stateLifetime;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
@@ -144,8 +161,8 @@ public class EvaluatorService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Evaluator updateEvaluator(UUID id, String ifMatch, EvaluatorUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -222,12 +239,82 @@ public class EvaluatorService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
+    /**
+     * Starts OAuth to link the evaluator's calendar: remembers the provider and a fresh state nonce on the row and
+     * answers the provider's authorization URL (503 while no provider is configured). Only the evaluator's own user
+     * starts it (403 for anyone else).
+     */
+    public ExternalLink connectEvaluatorCalendar(UUID id, ConnectEvaluatorCalendarRequest request) {
+        validator.validate(request);
+        requireHttpUrl(request.getRedirectUri());
+        CalendarProvider provider = calendars.of(GoogleCalendarProvider.PROVIDER);
+        DataScope scope = DataScope.current(PERMISSION_CONNECT_CALENDAR);
+        byte[] nonce = new byte[16];
+        random.nextBytes(nonce);
+        String state = HexFormat.of().formatHex(nonce);
+        return doInWriteTransaction(() -> {
+            EvaluatorEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            if (!AuthContext.require().userId().equals(entity.getUserId())) {
+                throw new PermissionDeniedException("Only the evaluator links their own calendar.");
+            }
+            OffsetDateTime now = now();
+            if (repository.connectCalendar(id, entity.getRowVersion(), provider.provider(), state, now,
+                    Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The evaluator changed meanwhile; try again.");
+            }
+            audit.recordTransition(AGGREGATE, id, "connect_calendar",
+                    List.of("calendarProvider", "calendarState", "calendarRequestedAt"), null);
+            outbox.publish(AGGREGATE + ".calendar_connect_requested", AGGREGATE, id, LmsEvents.payload(id));
+            ExternalLink link = new ExternalLink(provider.authorizeUrl(request.getRedirectUri(), state).toString());
+            link.setExpiresAt(now.plus(stateLifetime));
+            return link;
+        });
+    }
+
+    /** Unlinks the evaluator's calendar (409 while none is linked or pending). */
+    public Evaluator disconnectEvaluatorCalendar(UUID id) {
+        DataScope scope = DataScope.current(PERMISSION_DISCONNECT_CALENDAR);
+        return doInWriteTransaction(() -> {
+            EvaluatorEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            if (entity.getCalendarProvider() == null) {
+                throw new InvalidStateException("No calendar is linked.");
+            }
+            if (repository.disconnectCalendar(id, entity.getRowVersion(), now(), Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The evaluator changed meanwhile; try again.");
+            }
+            audit.recordTransition(AGGREGATE, id, "disconnect_calendar",
+                    List.of("calendarProvider", "calendarState", "calendarRequestedAt", "calendarConnectedAt"), null);
+            outbox.publish(AGGREGATE + ".calendar_disconnected", AGGREGATE, id, LmsEvents.payload(id));
+            return mapper.toDto(repository.findById(id).orElseThrow());
+        });
+    }
+
+    private static void requireHttpUrl(String redirectUri) {
+        URI parsed;
+        try {
+            parsed = URI.create(redirectUri);
+        } catch (IllegalArgumentException invalid) {
+            parsed = null;
+        }
+        if (parsed == null || !parsed.isAbsolute()
+                || !("https".equals(parsed.getScheme()) || "http".equals(parsed.getScheme()))) {
+            throw new ValidationFailedException(List.of(new FieldError("redirectUri", "must be an absolute http(s) URL",
+                    "INVALID_URL")));
+        }
+    }
+
+    private OffsetDateTime now() {
+        return OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+    }
+
     private Optional<UUID> institutionOf(EvaluatorEntity entity) {
         return Optional.empty();
     }
 
-    /** Applies the selected EvaluatorUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected EvaluatorUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(EvaluatorEntity entity, EvaluatorUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -314,8 +401,8 @@ public class EvaluatorService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public EvaluatorAvailability updateEvaluatorAvailability(UUID evaluatorId, UUID id, String ifMatch,
             EvaluatorAvailabilityUpdate changes, String updateMask, boolean validateOnly) {
@@ -384,15 +471,12 @@ public class EvaluatorService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfEvaluatorAvailability(EvaluatorAvailabilityEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected EvaluatorAvailabilityUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected EvaluatorAvailabilityUpdate fields; explicit per field so a mask can clear values. */
     private static void applyEvaluatorAvailability(EvaluatorAvailabilityEntity entity, EvaluatorAvailabilityUpdate changes,
             List<String> fields) {
         for (String field : fields) {

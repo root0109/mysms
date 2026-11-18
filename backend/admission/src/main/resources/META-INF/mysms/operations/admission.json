@@ -5,7 +5,8 @@
   "permission" : "admission.application.approve_application",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.CancelAdmissionCycle",
   "method" : "POST",
@@ -13,7 +14,8 @@
   "permission" : "admission.admission_cycle.cancel_admission_cycle",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.CancelApplication",
   "method" : "POST",
@@ -21,7 +23,8 @@
   "permission" : "admission.application.cancel_application",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.CancelOperation",
   "method" : "POST",
@@ -29,7 +32,8 @@
   "permission" : "admission.operation.cancel_operation",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.CloseAdmissionCycle",
   "method" : "POST",
@@ -37,7 +41,8 @@
   "permission" : "admission.admission_cycle.close_admission_cycle",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.ConfirmAdmission",
   "method" : "POST",
@@ -45,7 +50,8 @@
   "permission" : "admission.application.confirm_admission",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.ConfirmAdmissionCycle",
   "method" : "POST",
@@ -53,7 +59,8 @@
   "permission" : "admission.admission_cycle.confirm_admission_cycle",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.ConfirmApplication",
   "method" : "POST",
@@ -61,7 +68,8 @@
   "permission" : "admission.application.confirm_application",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.CreateAdmissionCycle",
   "method" : "POST",
@@ -69,7 +77,8 @@
   "permission" : "admission.admission_cycle.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.CreateAdmissionCycleFee",
   "method" : "POST",
@@ -77,7 +86,8 @@
   "permission" : "admission.admission_cycle_fee.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.CreateApplication",
   "method" : "POST",
@@ -85,7 +95,8 @@
   "permission" : "admission.application.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.CreateApplicationEmergencyContact",
   "method" : "POST",
@@ -93,7 +104,8 @@
   "permission" : "admission.application_emergency_contact.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.CreateApplicationGuardian",
   "method" : "POST",
@@ -101,42 +113,48 @@
   "permission" : "admission.application_guardian.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.DeleteAdmissionCycle",
   "method" : "DELETE",
   "path" : "/v1/admission/admission-cycles/{admissionCycleId}",
   "permission" : "admission.admission_cycle.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.DeleteAdmissionCycleFee",
   "method" : "DELETE",
   "path" : "/v1/admission/admission-cycles/{admissionCycleId}/fees/{admissionCycleFeeId}",
   "permission" : "admission.admission_cycle_fee.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.DeleteApplication",
   "method" : "DELETE",
   "path" : "/v1/admission/applications/{applicationId}",
   "permission" : "admission.application.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.DeleteApplicationEmergencyContact",
   "method" : "DELETE",
   "path" : "/v1/admission/applications/{applicationId}/emergency-contacts/{applicationEmergencyContactId}",
   "permission" : "admission.application_emergency_contact.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.DeleteApplicationGuardian",
   "method" : "DELETE",
   "path" : "/v1/admission/applications/{applicationId}/guardians/{applicationGuardianId}",
   "permission" : "admission.application_guardian.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.EnrollApplicant",
   "method" : "POST",
@@ -144,91 +162,104 @@
   "permission" : "admission.application.enroll_applicant",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "required"
+  "idempotency" : "required",
+  "audience" : "public"
 }, {
   "operationId" : "admission.GetAdmissionCycle",
   "method" : "GET",
   "path" : "/v1/admission/admission-cycles/{admissionCycleId}",
   "permission" : "admission.admission_cycle.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.GetAdmissionCycleFee",
   "method" : "GET",
   "path" : "/v1/admission/admission-cycles/{admissionCycleId}/fees/{admissionCycleFeeId}",
   "permission" : "admission.admission_cycle_fee.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.GetApplication",
   "method" : "GET",
   "path" : "/v1/admission/applications/{applicationId}",
   "permission" : "admission.application.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.GetApplicationEmergencyContact",
   "method" : "GET",
   "path" : "/v1/admission/applications/{applicationId}/emergency-contacts/{applicationEmergencyContactId}",
   "permission" : "admission.application_emergency_contact.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.GetApplicationGuardian",
   "method" : "GET",
   "path" : "/v1/admission/applications/{applicationId}/guardians/{applicationGuardianId}",
   "permission" : "admission.application_guardian.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.GetOperation",
   "method" : "GET",
   "path" : "/v1/admission/operations/{operationId}",
   "permission" : "admission.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.ListAdmissionCycleFees",
   "method" : "GET",
   "path" : "/v1/admission/admission-cycles/{admissionCycleId}/fees",
   "permission" : "admission.admission_cycle_fee.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.ListAdmissionCycles",
   "method" : "GET",
   "path" : "/v1/admission/admission-cycles",
   "permission" : "admission.admission_cycle.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.ListApplicationEmergencyContacts",
   "method" : "GET",
   "path" : "/v1/admission/applications/{applicationId}/emergency-contacts",
   "permission" : "admission.application_emergency_contact.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.ListApplicationGuardians",
   "method" : "GET",
   "path" : "/v1/admission/applications/{applicationId}/guardians",
   "permission" : "admission.application_guardian.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.ListApplications",
   "method" : "GET",
   "path" : "/v1/admission/applications",
   "permission" : "admission.application.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.ListOperations",
   "method" : "GET",
   "path" : "/v1/admission/operations",
   "permission" : "admission.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.MarkApplicationPending",
   "method" : "POST",
@@ -236,7 +267,8 @@
   "permission" : "admission.application.mark_application_pending",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.OpenApplications",
   "method" : "POST",
@@ -244,7 +276,8 @@
   "permission" : "admission.admission_cycle.open_applications",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.RejectApplication",
   "method" : "POST",
@@ -252,7 +285,8 @@
   "permission" : "admission.application.reject_application",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.ResetAdmissionCycle",
   "method" : "POST",
@@ -260,7 +294,8 @@
   "permission" : "admission.admission_cycle.reset_admission_cycle",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.ResetApplication",
   "method" : "POST",
@@ -268,7 +303,8 @@
   "permission" : "admission.application.reset_application",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.StartAdmission",
   "method" : "POST",
@@ -276,7 +312,8 @@
   "permission" : "admission.admission_cycle.start_admission",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.SubmitApplication",
   "method" : "POST",
@@ -284,40 +321,46 @@
   "permission" : "admission.application.submit_application",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "admission.UpdateAdmissionCycle",
   "method" : "PATCH",
   "path" : "/v1/admission/admission-cycles/{admissionCycleId}",
   "permission" : "admission.admission_cycle.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.UpdateAdmissionCycleFee",
   "method" : "PATCH",
   "path" : "/v1/admission/admission-cycles/{admissionCycleId}/fees/{admissionCycleFeeId}",
   "permission" : "admission.admission_cycle_fee.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.UpdateApplication",
   "method" : "PATCH",
   "path" : "/v1/admission/applications/{applicationId}",
   "permission" : "admission.application.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.UpdateApplicationEmergencyContact",
   "method" : "PATCH",
   "path" : "/v1/admission/applications/{applicationId}/emergency-contacts/{applicationEmergencyContactId}",
   "permission" : "admission.application_emergency_contact.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "admission.UpdateApplicationGuardian",
   "method" : "PATCH",
   "path" : "/v1/admission/applications/{applicationId}/guardians/{applicationGuardianId}",
   "permission" : "admission.application_guardian.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 } ]

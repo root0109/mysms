@@ -17,8 +17,7 @@ import com.mysms.academics.controller.TeachingAssignmentController;
 import org.junit.jupiter.api.Test;
 
 /**
- * The contract operations academics does not serve yet answer 501 NOT_IMPLEMENTED explicitly — none falls through, and
- * a
+ * The contract operations academics does not serve yet answer 501 NOT_IMPLEMENTED explicitly: none falls through, and a
  * newly served operation changes the count on purpose.
  */
 class AcademicsControllerStubsTest {

@@ -1,4 +1,4 @@
-// Owned API contract of iam (JAVA-CODING-RULES §7); first materialized from api/openapi/iam.yaml on 2026-11-10.
+// Owned API contract of iam.
 package com.mysms.iam.api;
 
 import com.mysms.iam.api.model.AuthToken;
@@ -7,6 +7,7 @@ import com.mysms.iam.api.model.AcceptTermsRequest;
 import com.mysms.iam.api.model.ActivateUserRequest;
 import com.mysms.iam.api.model.ApiTokenCreated;
 import com.mysms.iam.api.model.Availability;
+import com.mysms.iam.api.model.TenantCodeResolution;
 import com.mysms.iam.api.model.ChangePasswordRequest;
 import com.mysms.iam.api.model.ConfirmVerificationRequest;
 import com.mysms.iam.api.model.CreateApiTokenRequest;
@@ -29,6 +30,7 @@ import com.mysms.iam.api.model.ResetPasswordRequest;
 import com.mysms.iam.api.model.SetMySettingRequest;
 import com.mysms.iam.api.model.SetUserCredentialsRequest;
 import com.mysms.iam.api.model.SetUserRolesRequest;
+import com.mysms.iam.api.model.SignUpInstitutionList;
 import com.mysms.iam.api.model.SignUpRequest;
 import com.mysms.iam.api.model.StartImpersonationRequest;
 import com.mysms.iam.api.model.SwitchRoleRequest;
@@ -176,6 +178,43 @@ public interface UserAccountApi {
     )
     ResponseEntity<Availability> checkUsernameAvailable(
         @NotNull  @Valid @RequestParam(value = "username", required = true) String username
+    );
+
+
+    String PATH_RESOLVE_TENANT_CODE = "/v1/iam/tenant-codes/{tenantCode}";
+    /**
+     * GET /v1/iam/tenant-codes/{tenantCode} : The active tenant a school code names
+     * Guests name their school by the code users type at sign-in; the edge of a module serving guests resolves it here.
+     *
+     * @param tenantCode Code users type at sign-in. (required)
+     * @return OK (status code 200)
+     *         or Malformed request. (status code 400)
+     *         or Resource not found (an unknown, suspended or closed school). (status code 404)
+     *         or Rate limit exceeded. (status code 429)
+     *         or Unexpected server error. (status code 500)
+     */
+    @RequestMapping(
+        method = RequestMethod.GET,
+        value = UserAccountApi.PATH_RESOLVE_TENANT_CODE,
+        produces = { "application/json", "application/problem+json" }
+    )
+    ResponseEntity<TenantCodeResolution> resolveTenantCode(
+        @PathVariable("tenantCode") String tenantCode
+    );
+
+
+    String PATH_LIST_SIGN_UP_INSTITUTIONS = "/v1/iam/tenant-codes/{tenantCode}/sign-up-institutions";
+    /**
+     * GET /v1/iam/tenant-codes/{tenantCode}/sign-up-institutions : the schools a guest may sign up at (id and name of
+     * the tenant's active institutions); 403 where sign-up is closed or the code names no active school, like SignUp.
+     */
+    @RequestMapping(
+        method = RequestMethod.GET,
+        value = UserAccountApi.PATH_LIST_SIGN_UP_INSTITUTIONS,
+        produces = { "application/json", "application/problem+json" }
+    )
+    ResponseEntity<SignUpInstitutionList> listSignUpInstitutions(
+        @PathVariable("tenantCode") String tenantCode
     );
 
 

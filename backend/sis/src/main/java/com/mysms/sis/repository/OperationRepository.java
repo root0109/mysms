@@ -20,8 +20,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * Plain-JDBC access to sis.operation (JAVA-CODING-RULES §6): constant SQL, the tenant filtered in every statement,
- * live rows only, newest first with keyset paging, the row_version guard on cancel.
+ * Plain-JDBC access to sis.operation: constant SQL, the tenant filtered in every statement, live rows only, newest
+ * first with keyset paging, the row_version guard on cancel.
  */
 @Repository
 public class OperationRepository {
@@ -50,6 +50,19 @@ public class OperationRepository {
                AND id = :id AND row_version = :expected AND status = 'running' AND deleted_at IS NULL
             """;
 
+
+    /** A job that ran to its end inside the request that started it: recorded finished, with what it produced. */
+    private static final String INSERT_FINISHED = """
+            INSERT INTO sis.operation
+            (id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent, result_entity_type,
+             result_entity_id, started_by_user_id, started_at, finished_at, created_at, created_by, updated_at,
+             updated_by, row_version)
+            VALUES (:id, :tenantId, :operationName, :resourceType, :resourceId, 'succeeded', 100, :resultEntityType,
+                    :resultEntityId, :actor, :now, :now, :now, :actor, :now, :actor, 1)
+            RETURNING id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent, error_code,
+                      error_message, result_entity_type, result_entity_id, started_by_user_id, started_at,
+                      finished_at, created_at, created_by, updated_at, updated_by, deleted_at, row_version
+            """;
     private final JdbcClient jdbc;
 
     public OperationRepository(@Qualifier(SisDatabaseConfig.DATABASE) ModuleDatabase database) {
@@ -72,6 +85,26 @@ public class OperationRepository {
     public int cancel(UUID id, int expected, OffsetDateTime now, UUID actor) {
         return jdbc.sql(CANCEL).param("id", id).param("expected", expected).param("now", now).param("actor", actor)
                 .update();
+    }
+
+    /**
+     * Records a job that ran to its end inside the request that started it, as a succeeded operation of the caller.
+     *
+     * @param resourceType     what the job worked on (a table name), with {@code resourceId} when it is one row
+     * @param resultEntityType what it produced or changed (a table name), with {@code resultEntityId} when one row
+     */
+    public OperationEntity insertFinished(UUID id, String operationName, String resourceType, UUID resourceId,
+            String resultEntityType, UUID resultEntityId, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(INSERT_FINISHED)
+                .param("id", id)
+                .param("operationName", operationName)
+                .param("resourceType", resourceType)
+                .param("resourceId", resourceId)
+                .param("resultEntityType", resultEntityType)
+                .param("resultEntityId", resultEntityId)
+                .param("now", now)
+                .param("actor", actor)
+                .query(OperationRepository::map).single();
     }
 
     /** Only the caller's own operations, unless every operation of the tenant may be seen. */

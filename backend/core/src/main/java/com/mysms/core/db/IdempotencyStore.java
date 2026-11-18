@@ -1,29 +1,23 @@
 package com.mysms.core.db;
 
 import com.mysms.core.id.UuidV7;
-import com.mysms.core.tx.Transactions;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
 
 /**
- * One module's {@code <module>.idempotency_key} (api/README "Idempotency", database/README: module-local
- * infrastructure). A key is claimed in its own short transaction before the request runs, completed with the
- * response afterwards, or released when the request failed on the server so a retry can run it again. Only the
- * owning module writes its table; the tenant is filtered explicitly (R1) and the response is stored encrypted by the
- * caller.
+ * One module's {@code <module>.idempotency_key}: a key is claimed in its own short transaction before the request
+ * runs, then completed with the response or released after a server failure so a retry runs again. The tenant is
+ * filtered explicitly and the response arrives already encrypted.
  */
-public final class IdempotencyStore {
+public final class IdempotencyStore extends AppTransactionManager {
 
     private static final Pattern SCHEMA = Pattern.compile("[a-z]+");
 
     private final ModuleDatabase database;
-    private final PlatformTransactionManager transactions;
     private final Clock clock;
     private final String claim;
     private final String find;
@@ -33,11 +27,11 @@ public final class IdempotencyStore {
     private final String purge;
 
     public IdempotencyStore(ModuleDatabase database, Clock clock) {
+        super(database, database.transactionManager());
         if (!SCHEMA.matcher(database.module()).matches()) {
             throw new IllegalArgumentException("not a module schema: " + database.module());
         }
         this.database = database;
-        this.transactions = database.transactionManager();
         this.clock = clock;
         String table = database.module() + ".idempotency_key";
         // the schema name comes from the module's own configuration, never from a request
@@ -105,9 +99,7 @@ public final class IdempotencyStore {
      */
     public Claim claim(UUID key, UUID user, String operation, String hash, OffsetDateTime now,
                        OffsetDateTime expiresAt, OffsetDateTime staleBefore) {
-        TransactionStatus transaction = transactions.getTransaction(database.writeDefinition());
-        try {
-            database.bindTenant();
+        return doInWriteTransaction(() -> {
             UUID id = UuidV7.next(clock);
             JdbcClient jdbc = database.jdbc();
             jdbc.sql(purge).param("now", now).update();
@@ -138,41 +130,18 @@ public final class IdempotencyStore {
                 return new Claim(Outcome.IN_PROGRESS, row.id(), null, null);
             }
             return new Claim(Outcome.REPLAY, row.id(), row.status(), row.body());
-        } catch (RuntimeException | Error failure) {
-            Transactions.rollback(transactions, transaction, failure);
-            throw failure;
-        } finally {
-            Transactions.commit(transactions, transaction);
-        }
+        });
     }
 
     /** Records the response of a claimed key (the body already encrypted). */
     public void complete(UUID id, int status, String storedBody, OffsetDateTime now) {
-        TransactionStatus transaction = transactions.getTransaction(database.writeDefinition());
-        try {
-            database.bindTenant();
-            database.jdbc().sql(complete).param("id", id).param("status", status).param("body", storedBody)
-                    .param("now", now).update();
-        } catch (RuntimeException | Error failure) {
-            Transactions.rollback(transactions, transaction, failure);
-            throw failure;
-        } finally {
-            Transactions.commit(transactions, transaction);
-        }
+        runInWriteTransaction(() -> database.jdbc().sql(complete).param("id", id).param("status", status)
+                .param("body", storedBody).param("now", now).update());
     }
 
     /** Frees a claimed key whose request failed on the server, so a retry runs it again. */
     public void release(UUID id, OffsetDateTime now) {
-        TransactionStatus transaction = transactions.getTransaction(database.writeDefinition());
-        try {
-            database.bindTenant();
-            database.jdbc().sql(release).param("id", id).param("now", now).update();
-        } catch (RuntimeException | Error failure) {
-            Transactions.rollback(transactions, transaction, failure);
-            throw failure;
-        } finally {
-            Transactions.commit(transactions, transaction);
-        }
+        runInWriteTransaction(() -> database.jdbc().sql(release).param("id", id).param("now", now).update());
     }
 
     private record Row(UUID id, UUID user, String operation, String hash, Integer status, String body,

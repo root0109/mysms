@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.evaluator_availability (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.evaluator_availability: live rows only, keyset paging, and the row_version guard on every
+ * update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class EvaluatorAvailabilityRepository {
@@ -157,9 +154,18 @@ public class EvaluatorAvailabilityRepository {
         return Boolean.TRUE.equals(jdbc.sql(EXISTS_EVALUATOR_ID).param("id", id).query(Boolean.class).single());
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.evaluator_id = :parentId", Map.of("parentId", parentId));
+    }
+
+    private static final String OF_EVALUATOR = SELECT_LIVE + " AND r.evaluator_id = :evaluatorId"
+            + " ORDER BY r.weekday, r.start_time";
+
+    /** The evaluator's live weekly availability, in week order. */
+    public List<EvaluatorAvailabilityEntity> ofEvaluator(UUID evaluatorId) {
+        return jdbc.sql(OF_EVALUATOR).param("evaluatorId", evaluatorId)
+                .query(EvaluatorAvailabilityRepository::map).list();
     }
 
     private static List<Object> sortValues(SortSpec sort, EvaluatorAvailabilityEntity e) {

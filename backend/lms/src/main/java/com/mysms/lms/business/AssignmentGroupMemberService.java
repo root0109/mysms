@@ -46,11 +46,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.assignment_group_member (JAVA-CODING-RULES §4): one plain class, explicit methods,
- * transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of lms.assignment_group_member: audit and domain event commit in the same transaction as every
+ * change. Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide
+ * grant.
  */
 @Service
 public class AssignmentGroupMemberService extends AppTransactionManager {
@@ -132,8 +130,8 @@ public class AssignmentGroupMemberService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public AssignmentGroupMember updateAssignmentGroupMember(UUID id, String ifMatch,
             AssignmentGroupMemberUpdate changes, String updateMask, boolean validateOnly) {
@@ -185,9 +183,8 @@ public class AssignmentGroupMemberService extends AppTransactionManager {
     }
 
     /**
-     * lms.AcceptGroupRequest: Accept a join request. The row must be visible and writable for the caller, and the step
-     * is allowed while status is requested; in any other state
-     * the answer is 409 and nothing changes.
+     * lms.AcceptGroupRequest: Accept a join request. Allowed while status is requested, on a row the caller may see and
+     * write; otherwise 409 and nothing changes.
      */
     public AssignmentGroupMember acceptGroupRequest(UUID id, AcceptGroupRequestRequest request) {
         DataScope scope = DataScope.current(PERMISSION_ACCEPT_GROUP_REQUEST);
@@ -219,9 +216,8 @@ public class AssignmentGroupMemberService extends AppTransactionManager {
     }
 
     /**
-     * lms.RejectGroupRequest: Reject a join request. The row must be visible and writable for the caller, and the step
-     * is allowed while status is requested; in any other state
-     * the answer is 409 and nothing changes.
+     * lms.RejectGroupRequest: Reject a join request. Allowed while status is requested, on a row the caller may see and
+     * write; otherwise 409 and nothing changes.
      */
     public AssignmentGroupMember rejectGroupRequest(UUID id, RejectGroupRequestRequest request) {
         DataScope scope = DataScope.current(PERMISSION_REJECT_GROUP_REQUEST);
@@ -268,10 +264,7 @@ public class AssignmentGroupMemberService extends AppTransactionManager {
         return repository.institutionOf(entity.getAssignmentGroupId());
     }
 
-    /**
-     * Applies the selected AssignmentGroupMemberUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected AssignmentGroupMemberUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(AssignmentGroupMemberEntity entity, AssignmentGroupMemberUpdate changes,
             List<String> fields) {
         for (String field : fields) {

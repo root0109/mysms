@@ -23,11 +23,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to finance.fee_structure (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to finance.fee_structure: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. Every statement filters the caller's tenant itself; row-level security
+ * is the backstop.
  */
 @Repository
 public class FeeStructureRepository {
@@ -125,6 +123,16 @@ public class FeeStructureRepository {
                    row_version = row_version + 1
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** finance.PublishFeeStructure: allowed while status is draft (its dues are generated first). */
+    private static final String TRANSITION_PUBLISH_FEE_STRUCTURE = """
+            UPDATE finance.fee_structure
+               SET status = 'published',
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND status = 'draft' AND deleted_at IS NULL
             """;
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds) OR r.institution_id IS NULL)
@@ -224,7 +232,16 @@ public class FeeStructureRepository {
                 .param("actor", actor).update();
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** finance.PublishFeeStructure; 0 rows means the row changed (or left draft) since it was read. */
+    public int publishFeeStructure(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_PUBLISH_FEE_STRUCTURE)
+                .param("id", id)
+                .param("expected", expected)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import tools.jackson.databind.json.JsonMapper;
 
-/** The module's own outbox (lms.outbox_event) and the audit writer on top of it (JAVA-CODING-RULES §2, §4). */
+/** The module's outbox (lms.outbox_event) and its audit writer. */
 @Configuration(proxyBeanMethods = false)
 public class LmsEventsConfig {
 

@@ -1,5 +1,33 @@
 package com.mysms.lms.business;
 
+import com.mysms.authclient.AuthContext;
+import com.mysms.core.error.ConflictException;
+import com.mysms.lms.api.model.BlankView;
+import com.mysms.lms.api.model.OptionView;
+import com.mysms.lms.api.model.QuizAttempt;
+import com.mysms.lms.api.model.QuizQuestionView;
+import com.mysms.lms.domain.ContentItemEntity;
+import com.mysms.lms.domain.ItemOverrideEntity;
+import com.mysms.lms.domain.QuestionEntity;
+import com.mysms.lms.domain.QuestionMatchPairEntity;
+import com.mysms.lms.domain.QuizSubmissionEntity;
+import com.mysms.lms.repository.ContentItemRepository;
+import com.mysms.lms.repository.ItemOverrideRepository;
+import com.mysms.lms.repository.QuestionBlankRepository;
+import com.mysms.lms.repository.QuestionHotspotRepository;
+import com.mysms.lms.repository.QuestionMatchPairRepository;
+import com.mysms.lms.repository.QuestionOptionRepository;
+import com.mysms.lms.repository.QuestionRepository;
+import com.mysms.lms.repository.QuizSubmissionRepository;
+import com.mysms.lms.repository.QuizAttemptRepository;
+import com.mysms.lms.model.QuizAnswerKey;
+import com.mysms.core.id.UuidV7;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.Random;
 import com.mysms.authclient.DataScope;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
@@ -41,7 +69,9 @@ import com.mysms.lms.repository.QuizQuestionRepository;
 import com.mysms.lms.repository.QuizRepository;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -49,13 +79,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.quiz (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Quiz
- * are served here too — QuizQuestionHistory, QuizQuestion.
+ * Business service of lms.quiz and of the records that exist only as part of a Quiz (QuizQuestionHistory,
+ * QuizQuestion): audit and domain event commit in the same transaction as every change. Rows outside the caller's
+ * institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class QuizService extends AppTransactionManager {
@@ -98,6 +124,15 @@ public class QuizService extends AppTransactionManager {
     private final QuizQuestionHistoryMapper quizQuestionHistoryMapper;
     private final QuizQuestionRepository quizQuestionRepository;
     private final QuizQuestionMapper quizQuestionMapper;
+    private final ContentItemRepository contentItems;
+    private final ItemOverrideRepository itemOverrides;
+    private final QuestionRepository questions;
+    private final QuestionOptionRepository questionOptions;
+    private final QuestionBlankRepository questionBlanks;
+    private final QuestionMatchPairRepository questionMatchPairs;
+    private final QuestionHotspotRepository questionHotspots;
+    private final QuizSubmissionRepository quizSubmissions;
+    private final QuizAttemptRepository attempts;
 
     public QuizService(QuizRepository repository,
             QuizMapper mapper,
@@ -110,7 +145,16 @@ public class QuizService extends AppTransactionManager {
             QuizQuestionHistoryRepository quizQuestionHistoryRepository,
             QuizQuestionHistoryMapper quizQuestionHistoryMapper,
             QuizQuestionRepository quizQuestionRepository,
-            QuizQuestionMapper quizQuestionMapper) {
+            QuizQuestionMapper quizQuestionMapper,
+            ContentItemRepository contentItems,
+            ItemOverrideRepository itemOverrides,
+            QuestionRepository questions,
+            QuestionOptionRepository questionOptions,
+            QuestionBlankRepository questionBlanks,
+            QuestionMatchPairRepository questionMatchPairs,
+            QuestionHotspotRepository questionHotspots,
+            QuizSubmissionRepository quizSubmissions,
+            QuizAttemptRepository attempts) {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
@@ -122,6 +166,176 @@ public class QuizService extends AppTransactionManager {
         this.quizQuestionHistoryMapper = quizQuestionHistoryMapper;
         this.quizQuestionRepository = quizQuestionRepository;
         this.quizQuestionMapper = quizQuestionMapper;
+        this.contentItems = contentItems;
+        this.itemOverrides = itemOverrides;
+        this.questions = questions;
+        this.questionOptions = questionOptions;
+        this.questionBlanks = questionBlanks;
+        this.questionMatchPairs = questionMatchPairs;
+        this.questionHotspots = questionHotspots;
+        this.quizSubmissions = quizSubmissions;
+        this.attempts = attempts;
+    }
+
+    /**
+     * lms.StartQuizAttempt: a student of the placement opens their next attempt — their open attempt is resumed,
+     * otherwise a fresh in-progress submission is created within the attempt window, the schedule and the attempt
+     * limit. The question set (shuffled and limited as the quiz asks, stably per attempt) comes back without answers.
+     */
+    public QuizAttempt startQuizAttempt(UUID contentItemId) {
+        UUID user = AuthContext.require().userId();
+        UUID tenant = CallContextHolder.require().tenantId().orElseThrow();
+        return doInWriteTransaction(() -> {
+            ContentItemEntity item = contentItems.findById(contentItemId)
+                    .filter(e -> "quiz".equals(e.getItemKind()) && contentItems.isLearnerOf(e, user))
+                    .orElseThrow(() -> new ResourceNotFoundException(ContentItemEntity.TABLE, contentItemId));
+            QuizEntity quiz = repository.findById(item.getQuizId())
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, item.getQuizId()));
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            requireOpenWindow(item, quiz, user, now);
+            int used = quizSubmissions.attemptsUsed(quiz.getId(), user, contentItemId);
+            QuizSubmissionEntity attempt = quizSubmissions.openAttempt(quiz.getId(), user, contentItemId)
+                    .orElse(null);
+            boolean fresh = attempt == null;
+            if (fresh) {
+                if (quiz.getMaxAttempts() != null && used >= quiz.getMaxAttempts()) {
+                    throw new ConflictException("NO_ATTEMPTS_LEFT", "Every allowed attempt has been used.");
+                }
+                attempt = QuizSubmissionEntity.builder().quizId(quiz.getId()).userId(user)
+                        .courseId(item.getCourseId()).cohortId(item.getCohortId()).contentItemId(contentItemId)
+                        .status("in_progress").startedAt(now).attemptNumber(used + 1).violationCount(0)
+                        .isReassigned(false)
+                        .passingPercentage(quiz.getPassingPercentage() == null ? null
+                                : BigDecimal.valueOf(quiz.getPassingPercentage()))
+                        .build();
+                attempt.onCreatingData(Actor.current(), clock);
+                attempt.setTenantId(tenant);
+                attempt = quizSubmissions.insert(attempt);
+                quizSubmissions.startAttempt(attempt.getId(), used + 1, now);
+                attempt.setStatus("in_progress");
+                attempt.setStartedAt(now);
+                attempt.setAttemptNumber(used + 1);
+                audit.recordCreate(QuizSubmissionEntity.TABLE, attempt.getId());
+                outbox.publish(QuizSubmissionEntity.TABLE + ".start", QuizSubmissionEntity.TABLE, attempt.getId(),
+                        LmsEvents.payload(attempt.getId()));
+            }
+            List<QuizQuestionView> delivered = questionViews(quiz, attempt.getId());
+            if (fresh) {
+                recordDelivery(attempt.getId(), delivered, now);
+            }
+            QuizAttempt view = new QuizAttempt(mapper.toDto(quiz), delivered, used,
+                    QuizAttemptToken.of(attempt.getId(), attempt.getAttemptNumber(), attempt.getStartedAt()),
+                    attempt.getId());
+            view.setAttemptNumber(attempt.getAttemptNumber());
+            view.setServerTime(now);
+            view.setDeadlineAt(deadline(item, itemOverrides.ownOverride(item.getId(), user), quiz,
+                    attempt.getStartedAt() == null ? now : attempt.getStartedAt()));
+            return view;
+        });
+    }
+
+    /**
+     * Records the questions a fresh attempt was delivered with, in their order and with their marks, as blank answer
+     * rows: saving, submitting and grading (QuizAttemptService) then work on exactly this set.
+     */
+    private void recordDelivery(UUID attemptId, List<QuizQuestionView> delivered, OffsetDateTime now) {
+        Map<UUID, BigDecimal> marks = new LinkedHashMap<>();
+        delivered.forEach(q -> marks.put(q.getQuestionId(), q.getMarks() == null ? BigDecimal.ZERO
+                : new BigDecimal(q.getMarks())));
+        Map<UUID, QuizAnswerKey> keys = attempts.keys(marks);
+        UUID actor = AuthContext.require().userId();
+        for (int order = 0; order < delivered.size(); order++) {
+            attempts.insertAnswer(UuidV7.next(clock), attemptId, keys.get(delivered.get(order).getQuestionId()), null,
+                    order, null, now, actor);
+        }
+    }
+
+    /** 409 when the placement's attempt window or the quiz's schedule is closed for the student now. */
+    private void requireOpenWindow(ContentItemEntity item, QuizEntity quiz, UUID user, OffsetDateTime now) {
+        OffsetDateTime from = item.getAttemptFrom();
+        OffsetDateTime until = item.getDueAt();
+        Optional<ItemOverrideEntity> override = itemOverrides.ownOverride(item.getId(), user);
+        if (override.isPresent()) {
+            from = override.get().getAvailableFrom() == null ? from : override.get().getAvailableFrom();
+            until = override.get().getDueAt() == null ? until : override.get().getDueAt();
+        }
+        if (from != null && now.isBefore(from) || until != null && now.isAfter(until)
+                && !Boolean.TRUE.equals(item.getLateSubmissionAllowed())) {
+            throw new ConflictException("ATTEMPT_WINDOW_CLOSED", "The placement takes no attempts now.");
+        }
+        if (Boolean.TRUE.equals(quiz.getSchedulingEnabled())
+                && (quiz.getScheduleStart() != null && now.isBefore(quiz.getScheduleStart())
+                        || quiz.getScheduleEnd() != null && now.isAfter(quiz.getScheduleEnd()))) {
+            throw new ConflictException("QUIZ_NOT_SCHEDULED", "The quiz is outside its scheduled window.");
+        }
+    }
+
+    /**
+     * When the attempt must be handed in: the duration (and the student's extra time) from its start, capped by the
+     * placement's close — its due time, or the end of its late days when it takes late work (none without them).
+     */
+    static OffsetDateTime deadline(ContentItemEntity item, Optional<ItemOverrideEntity> override, QuizEntity quiz,
+            OffsetDateTime startedAt) {
+        int extra = override.map(ItemOverrideEntity::getExtraTimeMinutes).filter(m -> m > 0).orElse(0);
+        OffsetDateTime byDuration = quiz.getDurationMinutes() == null || quiz.getDurationMinutes() <= 0 ? null
+                : startedAt.plusMinutes(quiz.getDurationMinutes() + extra);
+        OffsetDateTime due = override.map(ItemOverrideEntity::getDueAt).orElse(item.getDueAt());
+        OffsetDateTime closes = due == null || !Boolean.TRUE.equals(item.getLateSubmissionAllowed()) ? due
+                : item.getLateSubmissionDays() == null ? null : due.plusDays(item.getLateSubmissionDays());
+        if (byDuration == null) {
+            return closes;
+        }
+        return closes == null || byDuration.isBefore(closes) ? byDuration : closes;
+    }
+
+    /** The attempt's questions without answers, shuffled and limited as the quiz asks, stable per attempt. */
+    private List<QuizQuestionView> questionViews(QuizEntity quiz, UUID attemptId) {
+        List<QuizQuestionEntity> links = new ArrayList<>(quizQuestionRepository.ofQuiz(quiz.getId()));
+        if (Boolean.TRUE.equals(quiz.getShuffleQuestions())) {
+            Collections.shuffle(links, new Random(attemptId.getMostSignificantBits()));
+        }
+        if (quiz.getLimitQuestionsTo() != null && links.size() > quiz.getLimitQuestionsTo()) {
+            links = links.subList(0, quiz.getLimitQuestionsTo());
+        }
+        List<QuizQuestionView> views = new ArrayList<>();
+        for (QuizQuestionEntity link : links) {
+            QuestionEntity question = questions.findById(link.getQuestionId()).orElse(null);
+            if (question == null) {
+                continue;
+            }
+            BigDecimal marks = Boolean.TRUE.equals(quiz.getEqualQuestionWeighting())
+                    && quiz.getMarksPerQuestion() != null ? quiz.getMarksPerQuestion()
+                    : link.getMarks() != null ? link.getMarks() : question.getMarks();
+            QuizQuestionView view = new QuizQuestionView(link.getId(), question.getId(),
+                    question.getQuestionText(), question.getQuestionType(),
+                    Boolean.TRUE.equals(question.getAllowsMultiple()), WireValues.decimal(marks));
+            view.setMaxSelections(question.getMaxSelections());
+            view.setCaseSensitive(question.getCaseSensitive());
+            switch (question.getQuestionType()) {
+                case "choices", "true_false" -> view.setOptions(questionOptions.ofQuestion(question.getId()).stream()
+                        .map(o -> new OptionView(o.getId(), o.getOptionText())).toList());
+                case "fill_blank" -> view.setBlanks(questionBlanks.ofQuestion(question.getId()).stream()
+                        .map(b -> new BlankView(b.getId(), b.getBlankText())).toList());
+                case "matching" -> {
+                    List<QuestionMatchPairEntity> pairs = questionMatchPairs.ofQuestion(question.getId());
+                    view.setMatchLeft(pairs.stream().map(m -> new OptionView(m.getId(), m.getLeftText())).toList());
+                    List<OptionView> right = new ArrayList<>(pairs.stream()
+                            .map(m -> new OptionView(m.getId(), m.getRightText())).toList());
+                    Collections.shuffle(right, new Random(attemptId.getLeastSignificantBits()));
+                    view.setMatchRight(right);
+                }
+                case "hotspot" -> questionHotspots.ofQuestion(question.getId()).stream().findFirst()
+                        .ifPresent(h -> {
+                            view.setHotspotImageFileId(h.getImageFileId());
+                            view.setHotspotSelection(QuizQuestionView.HotspotSelectionEnum.fromValue(
+                                    h.getHotspotType()));
+                        });
+                default -> { }
+            }
+            views.add(view);
+        }
+        return views;
     }
 
     public Quiz getQuiz(UUID id) {
@@ -165,8 +379,8 @@ public class QuizService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Quiz updateQuiz(UUID id, String ifMatch, QuizUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
@@ -256,12 +470,12 @@ public class QuizService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(QuizEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected QuizUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected QuizUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(QuizEntity entity, QuizUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -415,7 +629,7 @@ public class QuizService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.quiz it belongs to). */
+    /** The institution of the lms.quiz the row belongs to. */
     private Optional<UUID> institutionOfQuizQuestionHistory(QuizQuestionHistoryEntity entity) {
         return quizQuestionHistoryRepository.institutionOf(entity.getQuizId());
     }
@@ -498,8 +712,8 @@ public class QuizService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public QuizQuestion updateQuizQuestion(UUID quizId, UUID id, String ifMatch, QuizQuestionUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -560,14 +774,12 @@ public class QuizService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.quiz it belongs to). */
+    /** The institution of the lms.quiz the row belongs to. */
     private Optional<UUID> institutionOfQuizQuestion(QuizQuestionEntity entity) {
         return quizQuestionRepository.institutionOf(entity.getQuizId());
     }
 
-    /**
-     * Applies the selected QuizQuestionUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected QuizQuestionUpdate fields; explicit per field so a mask can clear values. */
     private static void applyQuizQuestion(QuizQuestionEntity entity, QuizQuestionUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

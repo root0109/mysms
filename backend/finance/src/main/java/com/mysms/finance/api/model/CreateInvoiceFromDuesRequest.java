@@ -1,4 +1,4 @@
-// Owned API contract of finance (JAVA-CODING-RULES §7); first materialized from api/openapi/finance.yaml on 2026-11-10.
+// Owned API contract of finance.
 package com.mysms.finance.api.model;
 
 import java.net.URI;
@@ -29,6 +29,9 @@ public class CreateInvoiceFromDuesRequest {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private List<UUID> dueIds = new ArrayList<>();
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String billToName;
 
   public CreateInvoiceFromDuesRequest() {
     super();
@@ -90,6 +93,26 @@ public class CreateInvoiceFromDuesRequest {
     this.dueIds = dueIds;
   }
 
+  public CreateInvoiceFromDuesRequest billToName(@Nullable String billToName) {
+    this.billToName = billToName;
+    return this;
+  }
+
+  /**
+   * Name printed on the invoice; when omitted, the student's name as sis shows it to the caller.
+   * @return billToName
+   */
+  @Size(min = 1, max = 200) 
+  @JsonProperty("billToName")
+  public @Nullable String getBillToName() {
+    return billToName;
+  }
+
+  @JsonProperty("billToName")
+  public void setBillToName(@Nullable String billToName) {
+    this.billToName = billToName;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -100,12 +123,13 @@ public class CreateInvoiceFromDuesRequest {
     }
     CreateInvoiceFromDuesRequest createInvoiceFromDuesRequest = (CreateInvoiceFromDuesRequest) o;
     return Objects.equals(this.studentId, createInvoiceFromDuesRequest.studentId) &&
-        Objects.equals(this.dueIds, createInvoiceFromDuesRequest.dueIds);
+        Objects.equals(this.dueIds, createInvoiceFromDuesRequest.dueIds) &&
+        Objects.equals(this.billToName, createInvoiceFromDuesRequest.billToName);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(studentId, dueIds);
+    return Objects.hash(studentId, dueIds, billToName);
   }
 
   @Override
@@ -114,6 +138,7 @@ public class CreateInvoiceFromDuesRequest {
     sb.append("class CreateInvoiceFromDuesRequest {\n");
     sb.append("    studentId: ").append(toIndentedString(studentId)).append("\n");
     sb.append("    dueIds: ").append(toIndentedString(dueIds)).append("\n");
+    sb.append("    billToName: ").append(toIndentedString(billToName)).append("\n");
     sb.append("}");
     return sb.toString();
   }

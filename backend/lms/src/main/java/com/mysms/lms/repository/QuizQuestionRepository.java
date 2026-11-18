@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.quiz_question (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.quiz_question: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class QuizQuestionRepository {
@@ -202,14 +199,21 @@ public class QuizQuestionRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.quiz_id = :parentId", Map.of("parentId", parentId));
+    }
+
+    private static final String OF_QUIZ = SELECT_LIVE + " AND r.quiz_id = :quizId ORDER BY r.sort_order";
+
+    /** The quiz's live question links, in order. */
+    public List<QuizQuestionEntity> ofQuiz(UUID quizId) {
+        return jdbc.sql(OF_QUIZ).param("quizId", quizId).query(QuizQuestionRepository::map).list();
     }
 
     private static List<Object> sortValues(SortSpec sort, QuizQuestionEntity e) {

@@ -14,15 +14,10 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Application-level encryption of the `*_enc` columns (database/README "Secrets"): the envelope
- * {@code v1.<keyId>.<iv>.<ciphertext>} with AES-256-GCM.
- *
- * <p>Each tenant gets its own data key, derived with HKDF-SHA256 from a master key and the tenant id, so a value
- * can only be opened for the tenant it was written for. The associated data binds each value to its tenant and
- * column, so a ciphertext copied to another row's column or another tenant fails to open. Master keys come only
- * from the environment ({@code mysms.secrets.keys}, never the database); several may be configured so values
- * written under an older key stay readable while {@code mysms.secrets.active-key} names the key new values use.
- * Plaintext is never logged and never part of an exception message.
+ * AES-256-GCM encryption of the `*_enc` columns as {@code v1.<keyId>.<iv>.<ciphertext>}. Each tenant's key is derived
+ * with HKDF from a master key, and the associated data binds a value to its tenant and column, so a copied ciphertext
+ * fails to open. Master keys come only from the environment; older keys stay readable while
+ * {@code mysms.secrets.active-key} names the one new values use. Plaintext is never logged or put in an exception.
  */
 public final class FieldCipher {
 

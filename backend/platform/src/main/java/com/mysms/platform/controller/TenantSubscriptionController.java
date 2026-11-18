@@ -5,10 +5,10 @@ import com.mysms.core.paging.PagingUtil;
 import com.mysms.core.paging.PagingInfo;
 import com.mysms.platform.api.TenantSubscriptionApi;
 import com.mysms.platform.api.model.CancelSubscriptionRequest;
+import com.mysms.platform.api.model.ConfirmSubscriptionCheckoutRequest;
 import com.mysms.platform.api.model.StartSubscriptionCheckoutRequest;
 import com.mysms.platform.api.model.SubscriptionCheckout;
 import com.mysms.platform.api.model.TenantSubscription;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.platform.business.TenantSubscriptionService;
 import java.util.UUID;
@@ -16,11 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the TenantSubscription operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/platform.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the TenantSubscription operations; authentication and the permission check already happened in the
+ * auth-client filter; operations not served yet answer 501 NOT_IMPLEMENTED.
  */
 @RestController
 public class TenantSubscriptionController implements TenantSubscriptionApi {
@@ -34,7 +31,17 @@ public class TenantSubscriptionController implements TenantSubscriptionApi {
     @Override
     public ResponseEntity<TenantSubscription> cancelSubscription(UUID tenantSubscriptionId,
             CancelSubscriptionRequest cancelSubscriptionRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        TenantSubscription cancelled =
+                tenantSubscriptionService.cancelSubscription(tenantSubscriptionId, cancelSubscriptionRequest);
+        return ResponseEntity.ok().eTag(cancelled.getEtag()).body(cancelled);
+    }
+
+    @Override
+    public ResponseEntity<TenantSubscription> confirmSubscriptionCheckout(UUID tenantSubscriptionId,
+            ConfirmSubscriptionCheckoutRequest confirmSubscriptionCheckoutRequest, UUID idempotencyKey) {
+        TenantSubscription confirmed = tenantSubscriptionService.confirmSubscriptionCheckout(tenantSubscriptionId,
+                confirmSubscriptionCheckoutRequest);
+        return ResponseEntity.ok().eTag(confirmed.getEtag()).body(confirmed);
     }
 
     @Override
@@ -57,6 +64,12 @@ public class TenantSubscriptionController implements TenantSubscriptionApi {
     @Override
     public ResponseEntity<SubscriptionCheckout> startSubscriptionCheckout(UUID idempotencyKey,
             StartSubscriptionCheckoutRequest startSubscriptionCheckoutRequest) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(tenantSubscriptionService.startSubscriptionCheckout(startSubscriptionCheckoutRequest));
+    }
+
+    @Override
+    public ResponseEntity<Void> receiveSubscriptionWebhook(String signature, byte[] body) {
+        tenantSubscriptionService.receiveSubscriptionWebhook(signature, body);
+        return ResponseEntity.noContent().build();
     }
 }

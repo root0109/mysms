@@ -1,5 +1,6 @@
 package com.mysms.lms.controller;
 
+import com.mysms.lms.business.QuestionImportService;
 import com.mysms.core.paging.PagingUtil;
 import com.mysms.core.paging.PagingInfo;
 import com.mysms.lms.api.QuestionApi;
@@ -19,27 +20,27 @@ import com.mysms.lms.api.model.QuestionOptionUpdate;
 import com.mysms.lms.api.model.QuestionPattern;
 import com.mysms.lms.api.model.QuestionPatternUpdate;
 import com.mysms.lms.api.model.QuestionUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.QuestionService;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Question operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Question operations; authentication and the permission check already ran in the auth-client filter.
+ * Operations not served yet answer 501.
  */
 @RestController
 public class QuestionController implements QuestionApi {
 
     private final QuestionService questionService;
+    private final QuestionImportService questionImportService;
 
-    public QuestionController(QuestionService questionService) {
+    public QuestionController(QuestionService questionService, QuestionImportService questionImportService) {
+        this.questionImportService = questionImportService;
         this.questionService = questionService;
     }
 
@@ -231,7 +232,8 @@ public class QuestionController implements QuestionApi {
     @Override
     public ResponseEntity<Operation> importQuestions(ImportQuestionsRequest importQuestionsRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(questionImportService.importQuestions(
+                importQuestionsRequest));
     }
 
     @Override
@@ -305,7 +307,8 @@ public class QuestionController implements QuestionApi {
     @Override
     public ResponseEntity<PagingInfo<Question>> searchQuestionBank(String query, List<String> questionTypes,
             UUID excludeQuizId, Integer page, Integer size, String cursor) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(PagingUtil.pagingInfo(questionService.searchQuestionBank(query, questionTypes,
+                excludeQuizId, page, size, cursor)));
     }
 
     @Override

@@ -10,11 +10,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record NavigationInfo(
-        @Schema(example = "3", description = "The current page number (one-based).")
+        @Schema(example = "3", description = "The current page number (one-based).",
+                requiredMode = Schema.RequiredMode.REQUIRED)
         int page,
-        @Schema(example = "10", description = "The count of items in the current page.")
+        @Schema(example = "10", description = "The count of items in the current page.",
+                requiredMode = Schema.RequiredMode.REQUIRED)
         int size,
-        @Schema(example = "/v1/hr/staff?page=1&size=10", description = "URL of the first page.")
+        @Schema(example = "/v1/hr/staff?page=1&size=10", description = "URL of the first page.",
+                requiredMode = Schema.RequiredMode.REQUIRED)
         String first,
         @Schema(example = "/v1/hr/staff?page=2&size=10", description = "URL of the previous page.")
         String previous,

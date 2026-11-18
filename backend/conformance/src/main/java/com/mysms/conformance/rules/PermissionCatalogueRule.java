@@ -13,10 +13,10 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 /**
- * P1 (database/README "Permissions"): every permission a tenant user can be granted — the x-permission of each
- * operation callable with a tenant user's token — is seeded in iam's permission catalogue by a migration, with the id
- * derived from the code ({@code md5('mysms.permission:' || code)::uuid}) so it is the same in every environment. A
- * new operation therefore comes with a new iam migration that seeds its permission; applied migrations never change.
+ * P1: every permission a tenant user can be granted (the x-permission of each operation callable with a tenant user's
+ * token) is seeded in iam's catalogue by iam's migrations, with an id derived from the code
+ * ({@code md5('mysms.permission:' || code)::uuid}) so it is the same in every environment. Before the first release a
+ * new permission goes in iam's baseline; after it, in a new iam migration.
  */
 public final class PermissionCatalogueRule implements ConformanceRule {
 

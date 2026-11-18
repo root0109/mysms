@@ -8,3 +8,8 @@ export { useDeepLinks } from './useDeepLinks';
 export { secureStoreVault } from './vault';
 export { TimetableScreen } from './TimetableScreen';
 export { LeaveScreen } from './LeaveScreen';
+export { PayslipsScreen } from './PayslipsScreen';
+export { ChildrenScreen, DisciplineScreen, StudentSummaryScreen } from './StudentScreens';
+export { SubjectRegistrationScreen } from './SubjectRegistrationScreen';
+export { LmsScreen, type LmsScreenProps } from './LmsScreen';
+export { LMS_SCREEN_IDS, isLmsScreenId, type LmsRoute, type LmsScreenId } from './lmsRoutes';

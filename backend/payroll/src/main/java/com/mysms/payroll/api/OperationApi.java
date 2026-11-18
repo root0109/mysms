@@ -1,4 +1,4 @@
-// Owned API contract of payroll (JAVA-CODING-RULES §7); first materialized from api/openapi/payroll.yaml on 2026-11-10.
+// Owned API contract of payroll.
 package com.mysms.payroll.api;
 
 import com.mysms.core.paging.PagingInfo;

@@ -15,33 +15,42 @@ import com.mysms.sis.api.model.StudentSibling;
 import com.mysms.sis.api.model.StudentSiblingUpdate;
 import com.mysms.sis.api.model.StudentSummary;
 import com.mysms.sis.api.model.StudentUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
+import com.mysms.sis.business.PortalAccountService;
 import com.mysms.sis.business.StudentService;
+import com.mysms.sis.business.StudentSummaryService;
+import com.mysms.sis.business.StudentWorkflowService;
 import java.net.URI;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Student operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/sis.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Student operations; authentication and the permission check already happened in the auth-client
+ * filter. The steps with further effects, the portal account and the summary are served by their own services.
  */
 @RestController
 public class StudentController implements StudentApi {
 
     private final StudentService studentService;
+    private final StudentWorkflowService workflowService;
+    private final PortalAccountService portalAccountService;
+    private final StudentSummaryService summaryService;
 
-    public StudentController(StudentService studentService) {
+    public StudentController(StudentService studentService, StudentWorkflowService workflowService,
+            PortalAccountService portalAccountService, StudentSummaryService summaryService) {
         this.studentService = studentService;
+        this.workflowService = workflowService;
+        this.portalAccountService = portalAccountService;
+        this.summaryService = summaryService;
     }
 
     @Override
     public ResponseEntity<Student> changeStudentStatus(UUID studentId,
             ChangeStudentStatusRequest changeStudentStatusRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Student changed = workflowService.changeStudentStatus(studentId, changeStudentStatusRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -71,7 +80,9 @@ public class StudentController implements StudentApi {
     @Override
     public ResponseEntity<Student> createStudentPortalAccount(UUID studentId,
             CreateStudentPortalAccountRequest createStudentPortalAccountRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Student linked = portalAccountService.createStudentPortalAccount(studentId,
+                createStudentPortalAccountRequest);
+        return ResponseEntity.ok().eTag(linked.getEtag()).body(linked);
     }
 
     @Override
@@ -128,13 +139,14 @@ public class StudentController implements StudentApi {
 
     @Override
     public ResponseEntity<StudentSummary> getStudentSummary(UUID studentId, UUID academicYearId) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(summaryService.getStudentSummary(studentId, academicYearId));
     }
 
     @Override
     public ResponseEntity<Operation> issueBonafideCertificate(UUID studentId,
             IssueBonafideCertificateRequest issueBonafideCertificateRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body(workflowService.issueBonafideCertificate(studentId, issueBonafideCertificateRequest));
     }
 
     @Override

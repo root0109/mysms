@@ -1,4 +1,4 @@
-// Owned API contract of iam (JAVA-CODING-RULES §7); first materialized from api/openapi/iam.yaml on 2026-11-10.
+// Owned API contract of iam.
 package com.mysms.iam.api;
 
 import com.mysms.core.paging.PagingInfo;

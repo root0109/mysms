@@ -9,6 +9,7 @@ import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.paging.ValueType;
 import com.mysms.lms.config.LmsDatabaseConfig;
 import com.mysms.lms.domain.GradebookEntryEntity;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -23,11 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.gradebook_entry (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.gradebook_entry: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class GradebookEntryRepository {
@@ -239,9 +237,84 @@ public class GradebookEntryRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    private static final String OF_ITEM = SELECT_LIVE + " AND r.content_item_id = :itemId ORDER BY r.created_at";
+    private static final String OF_ITEM_USERS = SELECT_LIVE
+            + " AND r.content_item_id = :itemId AND r.user_id = ANY(:userIds) ORDER BY r.created_at";
+    private static final String OF_ITEM_AND_USER = SELECT_LIVE
+            + " AND r.content_item_id = :itemId AND r.user_id = :userId";
+    private static final String OF_ITEM_AND_GROUP = SELECT_LIVE
+            + " AND r.content_item_id = :itemId AND r.group_id = :groupId";
+    private static final String SET_PEER_POINTS = """
+            UPDATE lms.gradebook_entry
+               SET peer_points = :points,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String PUBLISH = """
+            UPDATE lms.gradebook_entry
+               SET is_published = true,
+                   published_at = :now,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String REASSIGN = """
+            UPDATE lms.gradebook_entry
+               SET status = 'reassigned',
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+
+    /** The item's live entries, oldest first; a non-empty user list narrows them to those students. */
+    public List<GradebookEntryEntity> ofItem(UUID itemId, List<UUID> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return jdbc.sql(OF_ITEM).param("itemId", itemId).query(GradebookEntryRepository::map).list();
+        }
+        return jdbc.sql(OF_ITEM_USERS).param("itemId", itemId).param("userIds", userIds.toArray(UUID[]::new))
+                .query(GradebookEntryRepository::map).list();
+    }
+
+    /** The student's live entry for the item. */
+    public Optional<GradebookEntryEntity> ofItemAndUser(UUID itemId, UUID userId) {
+        return jdbc.sql(OF_ITEM_AND_USER).param("itemId", itemId).param("userId", userId)
+                .query(GradebookEntryRepository::map).optional();
+    }
+
+    /** The group's live entry for the item. */
+    public Optional<GradebookEntryEntity> ofItemAndGroup(UUID itemId, UUID groupId) {
+        return jdbc.sql(OF_ITEM_AND_GROUP).param("itemId", itemId).param("groupId", groupId)
+                .query(GradebookEntryRepository::map).optional();
+    }
+
+    /** Writes the finalised peer points; 0 rows means the row changed since it was read. */
+    public int setPeerPoints(UUID id, BigDecimal points, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(SET_PEER_POINTS).param("id", id).param("points", points).param("expected", expected)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    /** Publishes the entry to its student; 0 rows means the row changed since it was read. */
+    public int publish(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(PUBLISH).param("id", id).param("expected", expected).param("now", now).param("actor", actor)
+                .update();
+    }
+
+    /** Marks the entry reassigned for a fresh attempt; 0 rows means the row changed since it was read. */
+    public int reassign(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(REASSIGN).param("id", id).param("expected", expected).param("now", now).param("actor", actor)
+                .update();
     }
 
     private static List<Object> sortValues(SortSpec sort, GradebookEntryEntity e) {

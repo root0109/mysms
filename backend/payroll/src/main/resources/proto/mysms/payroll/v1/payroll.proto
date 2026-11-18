@@ -1,0 +1,1313 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.payroll.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "PayrollProto";
+option java_package = "com.mysms.payroll.v1";
+
+// PayComponentService: operations on the PayComponent aggregate.
+service PayComponentService {
+  // List PayComponents.
+  rpc ListPayComponents(ListPayComponentsRequest) returns (ListPayComponentsResponse);
+  // Get PayComponent.
+  rpc GetPayComponent(GetPayComponentRequest) returns (GetPayComponentResponse);
+  // Create PayComponent.
+  rpc CreatePayComponent(CreatePayComponentRequest) returns (CreatePayComponentResponse);
+  // Update PayComponent.
+  rpc UpdatePayComponent(UpdatePayComponentRequest) returns (UpdatePayComponentResponse);
+  // Soft-delete PayComponent.
+  rpc DeletePayComponent(DeletePayComponentRequest) returns (DeletePayComponentResponse);
+}
+
+// PayCategoryService: operations on the PayCategory aggregate.
+service PayCategoryService {
+  // List PayCategories.
+  rpc ListPayCategories(ListPayCategoriesRequest) returns (ListPayCategoriesResponse);
+  // Get PayCategory.
+  rpc GetPayCategory(GetPayCategoryRequest) returns (GetPayCategoryResponse);
+  // Create PayCategory.
+  rpc CreatePayCategory(CreatePayCategoryRequest) returns (CreatePayCategoryResponse);
+  // Update PayCategory.
+  rpc UpdatePayCategory(UpdatePayCategoryRequest) returns (UpdatePayCategoryResponse);
+  // Soft-delete PayCategory.
+  rpc DeletePayCategory(DeletePayCategoryRequest) returns (DeletePayCategoryResponse);
+}
+
+// SalaryTemplateService: operations on the SalaryTemplate aggregate.
+service SalaryTemplateService {
+  // List SalaryTemplates.
+  rpc ListSalaryTemplates(ListSalaryTemplatesRequest) returns (ListSalaryTemplatesResponse);
+  // Get SalaryTemplate.
+  rpc GetSalaryTemplate(GetSalaryTemplateRequest) returns (GetSalaryTemplateResponse);
+  // Create SalaryTemplate.
+  rpc CreateSalaryTemplate(CreateSalaryTemplateRequest) returns (CreateSalaryTemplateResponse);
+  // Update SalaryTemplate.
+  rpc UpdateSalaryTemplate(UpdateSalaryTemplateRequest) returns (UpdateSalaryTemplateResponse);
+  // Soft-delete SalaryTemplate.
+  rpc DeleteSalaryTemplate(DeleteSalaryTemplateRequest) returns (DeleteSalaryTemplateResponse);
+  // List SalaryTemplateComponents.
+  rpc ListSalaryTemplateComponents(ListSalaryTemplateComponentsRequest) returns (ListSalaryTemplateComponentsResponse);
+  // Get SalaryTemplateComponent.
+  rpc GetSalaryTemplateComponent(GetSalaryTemplateComponentRequest) returns (GetSalaryTemplateComponentResponse);
+  // Create SalaryTemplateComponent.
+  rpc CreateSalaryTemplateComponent(CreateSalaryTemplateComponentRequest) returns (CreateSalaryTemplateComponentResponse);
+  // Update SalaryTemplateComponent.
+  rpc UpdateSalaryTemplateComponent(UpdateSalaryTemplateComponentRequest) returns (UpdateSalaryTemplateComponentResponse);
+  // Soft-delete SalaryTemplateComponent.
+  rpc DeleteSalaryTemplateComponent(DeleteSalaryTemplateComponentRequest) returns (DeleteSalaryTemplateComponentResponse);
+}
+
+// StaffSalaryService: operations on the StaffSalary aggregate.
+service StaffSalaryService {
+  // List StaffSalaries.
+  rpc ListStaffSalaries(ListStaffSalariesRequest) returns (ListStaffSalariesResponse);
+  // Get StaffSalary.
+  rpc GetStaffSalary(GetStaffSalaryRequest) returns (GetStaffSalaryResponse);
+  // Create StaffSalary.
+  rpc CreateStaffSalary(CreateStaffSalaryRequest) returns (CreateStaffSalaryResponse);
+  // Update StaffSalary.
+  rpc UpdateStaffSalary(UpdateStaffSalaryRequest) returns (UpdateStaffSalaryResponse);
+  // Soft-delete StaffSalary.
+  rpc DeleteStaffSalary(DeleteStaffSalaryRequest) returns (DeleteStaffSalaryResponse);
+  // List StaffSalaryComponents.
+  rpc ListStaffSalaryComponents(ListStaffSalaryComponentsRequest) returns (ListStaffSalaryComponentsResponse);
+  // Get StaffSalaryComponent.
+  rpc GetStaffSalaryComponent(GetStaffSalaryComponentRequest) returns (GetStaffSalaryComponentResponse);
+  // Create StaffSalaryComponent.
+  rpc CreateStaffSalaryComponent(CreateStaffSalaryComponentRequest) returns (CreateStaffSalaryComponentResponse);
+  // Update StaffSalaryComponent.
+  rpc UpdateStaffSalaryComponent(UpdateStaffSalaryComponentRequest) returns (UpdateStaffSalaryComponentResponse);
+  // Soft-delete StaffSalaryComponent.
+  rpc DeleteStaffSalaryComponent(DeleteStaffSalaryComponentRequest) returns (DeleteStaffSalaryComponentResponse);
+}
+
+// PayslipService: operations on the Payslip aggregate.
+service PayslipService {
+  // List Payslips.
+  rpc ListPayslips(ListPayslipsRequest) returns (ListPayslipsResponse);
+  // Get Payslip.
+  rpc GetPayslip(GetPayslipRequest) returns (GetPayslipResponse);
+  // List PayslipLines.
+  rpc ListPayslipLines(ListPayslipLinesRequest) returns (ListPayslipLinesResponse);
+  // Get PayslipLine.
+  rpc GetPayslipLine(GetPayslipLineRequest) returns (GetPayslipLineResponse);
+  // Generate payslips from staff salaries, leave and attendance.
+  rpc GeneratePayslips(GeneratePayslipsRequest) returns (GeneratePayslipsResponse);
+  // Mark paid and create the payroll payment.
+  rpc MarkPayslipPaid(MarkPayslipPaidRequest) returns (MarkPayslipPaidResponse);
+  // Cancel.
+  rpc CancelPayslip(CancelPayslipRequest) returns (CancelPayslipResponse);
+}
+
+// PaymentTypeService: operations on the PaymentType aggregate.
+service PaymentTypeService {
+  // List PaymentTypes.
+  rpc ListPaymentTypes(ListPaymentTypesRequest) returns (ListPaymentTypesResponse);
+  // Get PaymentType.
+  rpc GetPaymentType(GetPaymentTypeRequest) returns (GetPaymentTypeResponse);
+  // Create PaymentType.
+  rpc CreatePaymentType(CreatePaymentTypeRequest) returns (CreatePaymentTypeResponse);
+  // Update PaymentType.
+  rpc UpdatePaymentType(UpdatePaymentTypeRequest) returns (UpdatePaymentTypeResponse);
+  // Soft-delete PaymentType.
+  rpc DeletePaymentType(DeletePaymentTypeRequest) returns (DeletePaymentTypeResponse);
+}
+
+// DisbursementAccountService: operations on the DisbursementAccount aggregate.
+service DisbursementAccountService {
+  // List DisbursementAccounts.
+  rpc ListDisbursementAccounts(ListDisbursementAccountsRequest) returns (ListDisbursementAccountsResponse);
+  // Get DisbursementAccount.
+  rpc GetDisbursementAccount(GetDisbursementAccountRequest) returns (GetDisbursementAccountResponse);
+  // Create DisbursementAccount.
+  rpc CreateDisbursementAccount(CreateDisbursementAccountRequest) returns (CreateDisbursementAccountResponse);
+  // Update DisbursementAccount.
+  rpc UpdateDisbursementAccount(UpdateDisbursementAccountRequest) returns (UpdateDisbursementAccountResponse);
+  // Soft-delete DisbursementAccount.
+  rpc DeleteDisbursementAccount(DeleteDisbursementAccountRequest) returns (DeleteDisbursementAccountResponse);
+}
+
+// PayrollPaymentService: operations on the PayrollPayment aggregate.
+service PayrollPaymentService {
+  // List PayrollPayments.
+  rpc ListPayrollPayments(ListPayrollPaymentsRequest) returns (ListPayrollPaymentsResponse);
+  // Get PayrollPayment.
+  rpc GetPayrollPayment(GetPayrollPaymentRequest) returns (GetPayrollPaymentResponse);
+  // Create PayrollPayment.
+  rpc CreatePayrollPayment(CreatePayrollPaymentRequest) returns (CreatePayrollPaymentResponse);
+}
+
+message ListPayComponentsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListPayComponentsResponse {
+  repeated PayComponent items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetPayComponentRequest {
+  // PayComponent id (UUID).
+  string id = 1;
+}
+message GetPayComponentResponse {
+  PayComponent pay_component = 1;
+}
+
+message CreatePayComponentRequest {
+  PayComponent pay_component = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreatePayComponentResponse {
+  PayComponent pay_component = 1;
+}
+
+message UpdatePayComponentRequest {
+  // Resource with id and etag set.
+  PayComponent pay_component = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdatePayComponentResponse {
+  PayComponent pay_component = 1;
+}
+
+message DeletePayComponentRequest {
+  // PayComponent id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeletePayComponentResponse {
+}
+
+message ListPayCategoriesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListPayCategoriesResponse {
+  repeated PayCategory items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetPayCategoryRequest {
+  // PayCategory id (UUID).
+  string id = 1;
+}
+message GetPayCategoryResponse {
+  PayCategory pay_category = 1;
+}
+
+message CreatePayCategoryRequest {
+  PayCategory pay_category = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreatePayCategoryResponse {
+  PayCategory pay_category = 1;
+}
+
+message UpdatePayCategoryRequest {
+  // Resource with id and etag set.
+  PayCategory pay_category = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdatePayCategoryResponse {
+  PayCategory pay_category = 1;
+}
+
+message DeletePayCategoryRequest {
+  // PayCategory id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeletePayCategoryResponse {
+}
+
+message ListSalaryTemplatesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListSalaryTemplatesResponse {
+  repeated SalaryTemplate items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetSalaryTemplateRequest {
+  // SalaryTemplate id (UUID).
+  string id = 1;
+}
+message GetSalaryTemplateResponse {
+  SalaryTemplate salary_template = 1;
+}
+
+message CreateSalaryTemplateRequest {
+  SalaryTemplate salary_template = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateSalaryTemplateResponse {
+  SalaryTemplate salary_template = 1;
+}
+
+message UpdateSalaryTemplateRequest {
+  // Resource with id and etag set.
+  SalaryTemplate salary_template = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateSalaryTemplateResponse {
+  SalaryTemplate salary_template = 1;
+}
+
+message DeleteSalaryTemplateRequest {
+  // SalaryTemplate id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteSalaryTemplateResponse {
+}
+
+message ListSalaryTemplateComponentsRequest {
+  // SalaryTemplate id (UUID).
+  string salary_template_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListSalaryTemplateComponentsResponse {
+  repeated SalaryTemplateComponent items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetSalaryTemplateComponentRequest {
+  // SalaryTemplate id (UUID).
+  string salary_template_id = 1;
+  // SalaryTemplateComponent id (UUID).
+  string id = 2;
+}
+message GetSalaryTemplateComponentResponse {
+  SalaryTemplateComponent salary_template_component = 1;
+}
+
+message CreateSalaryTemplateComponentRequest {
+  // SalaryTemplate id (UUID).
+  string salary_template_id = 1;
+  SalaryTemplateComponent salary_template_component = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateSalaryTemplateComponentResponse {
+  SalaryTemplateComponent salary_template_component = 1;
+}
+
+message UpdateSalaryTemplateComponentRequest {
+  // SalaryTemplate id (UUID).
+  string salary_template_id = 1;
+  // Resource with id and etag set.
+  SalaryTemplateComponent salary_template_component = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateSalaryTemplateComponentResponse {
+  SalaryTemplateComponent salary_template_component = 1;
+}
+
+message DeleteSalaryTemplateComponentRequest {
+  // SalaryTemplate id (UUID).
+  string salary_template_id = 1;
+  // SalaryTemplateComponent id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteSalaryTemplateComponentResponse {
+}
+
+message ListStaffSalariesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListStaffSalariesResponse {
+  repeated StaffSalary items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetStaffSalaryRequest {
+  // StaffSalary id (UUID).
+  string id = 1;
+}
+message GetStaffSalaryResponse {
+  StaffSalary staff_salary = 1;
+}
+
+message CreateStaffSalaryRequest {
+  StaffSalary staff_salary = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateStaffSalaryResponse {
+  StaffSalary staff_salary = 1;
+}
+
+message UpdateStaffSalaryRequest {
+  // Resource with id and etag set.
+  StaffSalary staff_salary = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStaffSalaryResponse {
+  StaffSalary staff_salary = 1;
+}
+
+message DeleteStaffSalaryRequest {
+  // StaffSalary id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteStaffSalaryResponse {
+}
+
+message ListStaffSalaryComponentsRequest {
+  // StaffSalary id (UUID).
+  string staff_salary_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListStaffSalaryComponentsResponse {
+  repeated StaffSalaryComponent items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetStaffSalaryComponentRequest {
+  // StaffSalary id (UUID).
+  string staff_salary_id = 1;
+  // StaffSalaryComponent id (UUID).
+  string id = 2;
+}
+message GetStaffSalaryComponentResponse {
+  StaffSalaryComponent staff_salary_component = 1;
+}
+
+message CreateStaffSalaryComponentRequest {
+  // StaffSalary id (UUID).
+  string staff_salary_id = 1;
+  StaffSalaryComponent staff_salary_component = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateStaffSalaryComponentResponse {
+  StaffSalaryComponent staff_salary_component = 1;
+}
+
+message UpdateStaffSalaryComponentRequest {
+  // StaffSalary id (UUID).
+  string staff_salary_id = 1;
+  // Resource with id and etag set.
+  StaffSalaryComponent staff_salary_component = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateStaffSalaryComponentResponse {
+  StaffSalaryComponent staff_salary_component = 1;
+}
+
+message DeleteStaffSalaryComponentRequest {
+  // StaffSalary id (UUID).
+  string staff_salary_id = 1;
+  // StaffSalaryComponent id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteStaffSalaryComponentResponse {
+}
+
+message ListPayslipsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListPayslipsResponse {
+  repeated Payslip items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetPayslipRequest {
+  // Payslip id (UUID).
+  string id = 1;
+}
+message GetPayslipResponse {
+  Payslip payslip = 1;
+}
+
+message ListPayslipLinesRequest {
+  // Payslip id (UUID).
+  string payslip_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListPayslipLinesResponse {
+  repeated PayslipLine items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetPayslipLineRequest {
+  // Payslip id (UUID).
+  string payslip_id = 1;
+  // PayslipLine id (UUID).
+  string id = 2;
+}
+message GetPayslipLineResponse {
+  PayslipLine payslip_line = 1;
+}
+
+message ListPaymentTypesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListPaymentTypesResponse {
+  repeated PaymentType items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetPaymentTypeRequest {
+  // PaymentType id (UUID).
+  string id = 1;
+}
+message GetPaymentTypeResponse {
+  PaymentType payment_type = 1;
+}
+
+message CreatePaymentTypeRequest {
+  PaymentType payment_type = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreatePaymentTypeResponse {
+  PaymentType payment_type = 1;
+}
+
+message UpdatePaymentTypeRequest {
+  // Resource with id and etag set.
+  PaymentType payment_type = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdatePaymentTypeResponse {
+  PaymentType payment_type = 1;
+}
+
+message DeletePaymentTypeRequest {
+  // PaymentType id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeletePaymentTypeResponse {
+}
+
+message ListDisbursementAccountsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListDisbursementAccountsResponse {
+  repeated DisbursementAccount items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetDisbursementAccountRequest {
+  // DisbursementAccount id (UUID).
+  string id = 1;
+}
+message GetDisbursementAccountResponse {
+  DisbursementAccount disbursement_account = 1;
+}
+
+message CreateDisbursementAccountRequest {
+  DisbursementAccount disbursement_account = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateDisbursementAccountResponse {
+  DisbursementAccount disbursement_account = 1;
+}
+
+message UpdateDisbursementAccountRequest {
+  // Resource with id and etag set.
+  DisbursementAccount disbursement_account = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateDisbursementAccountResponse {
+  DisbursementAccount disbursement_account = 1;
+}
+
+message DeleteDisbursementAccountRequest {
+  // DisbursementAccount id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteDisbursementAccountResponse {
+}
+
+message ListPayrollPaymentsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListPayrollPaymentsResponse {
+  repeated PayrollPayment items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetPayrollPaymentRequest {
+  // PayrollPayment id (UUID).
+  string id = 1;
+}
+message GetPayrollPaymentResponse {
+  PayrollPayment payroll_payment = 1;
+}
+
+message CreatePayrollPaymentRequest {
+  PayrollPayment payroll_payment = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreatePayrollPaymentResponse {
+  PayrollPayment payroll_payment = 1;
+}
+
+message GeneratePayslipsRequest {
+  // Institution. Required.
+  string institution_id = 1;
+  // Start. Required.
+  string period_start = 2;
+  // End. Required.
+  string period_end = 3;
+  // Subset (default all with a salary).
+  repeated string staff_ids = 4;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 5;
+}
+message GeneratePayslipsResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message MarkPayslipPaidRequest {
+  // Path parameter payslipId.
+  string payslip_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Account. Required.
+  string disbursement_account_id = 3;
+  // Method. Required.
+  PaymentMethod payment_method = 4;
+  // Reference.
+  optional string reference_number = 5;
+  // Date. Required.
+  string transaction_date = 6;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 7;
+  // Allowed values of payment_method; REST/JSON uses the lowercase value shown in each comment.
+  enum PaymentMethod {
+    PAYMENT_METHOD_UNSPECIFIED = 0;
+    // "cash"
+    PAYMENT_METHOD_CASH = 1;
+    // "cheque"
+    PAYMENT_METHOD_CHEQUE = 2;
+    // "bank_transfer"
+    PAYMENT_METHOD_BANK_TRANSFER = 3;
+    // "other"
+    PAYMENT_METHOD_OTHER = 4;
+  }
+}
+message MarkPayslipPaidResponse {
+  Payslip payslip = 1;
+}
+
+message CancelPayslipRequest {
+  // Path parameter payslipId.
+  string payslip_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CancelPayslipResponse {
+  Payslip payslip = 1;
+}
+
+// Earning or deduction component (Basic, HRA, PF...).
+message PayComponent {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Component key used in formulas.
+  string code = 2;
+  // Component name.
+  string name = 3;
+  // Earning, deduction or employer-defined.
+  ComponentType component_type = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+  // Allowed values of component_type; REST/JSON uses the lowercase value shown in each comment.
+  enum ComponentType {
+    COMPONENT_TYPE_UNSPECIFIED = 0;
+    // "earning"
+    COMPONENT_TYPE_EARNING = 1;
+    // "deduction"
+    COMPONENT_TYPE_DEDUCTION = 2;
+    // "defined"
+    COMPONENT_TYPE_DEFINED = 3;
+  }
+}
+
+// Calculation basis of a template component (fixed amount, % of basic, % of gross...).
+message PayCategory {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Category name.
+  string name = 2;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 3;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 4;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 5;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 6;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 7;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 8;
+  // Display order.
+  optional int32 sort_order = 9;
+  // Whether offered for new picks.
+  optional bool is_active = 10;
+}
+
+// Reusable salary structure.
+message SalaryTemplate {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Template name.
+  string name = 3;
+  // Whether usable.
+  bool is_active = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// Component included in a salary template and how it is calculated.
+message SalaryTemplateComponent {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Template. [UUID] Set from the parent path on create.
+  string salary_template_id = 2;
+  // Component. [UUID]
+  string pay_component_id = 3;
+  // Calculation basis. [UUID]
+  string pay_category_id = 4;
+  // Amount or rate for the calculation basis. [Decimal string]
+  optional string value = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+}
+
+// Salary structure assigned to a staff member from an effective date.
+message StaffSalary {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Staff member. [UUID]
+  string staff_id = 2;
+  // Template used. [UUID]
+  string salary_template_id = 3;
+  // Gross monthly salary. [Decimal string]
+  string gross_salary = 4;
+  // Effective from. [ISO-8601 date (YYYY-MM-DD)]
+  string effective_date = 5;
+  // Comments.
+  optional string remarks = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+}
+
+// Resolved amount of each template component for a staff salary.
+message StaffSalaryComponent {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Staff salary. [UUID] Set from the parent path on create.
+  string staff_salary_id = 2;
+  // Template component. [UUID]
+  string salary_template_component_id = 3;
+  // Amount. [Decimal string]
+  string amount = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// Payroll run result for one staff member and pay period.
+message Payslip {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Payslip number.
+  string payslip_number = 3;
+  // Staff member. [UUID]
+  string staff_id = 4;
+  // Salary structure applied. [UUID]
+  string staff_salary_id = 5;
+  // Pay period start. [ISO-8601 date (YYYY-MM-DD)]
+  string period_start = 6;
+  // Pay period end. [ISO-8601 date (YYYY-MM-DD)]
+  string period_end = 7;
+  // Percentage of salary payable. [Decimal string]
+  string pay_percentage = 8;
+  // Leave days in the period. [Decimal string]
+  string leave_days = 9;
+  // Late arrivals in the period.
+  optional int32 late_count = 10;
+  // Deduction for unpaid leave. [Decimal string]
+  string leave_deduction = 11;
+  // Payment state. Changed only through the workflow operations. Output only.
+  Status status = 12;
+  // Comments.
+  optional string remarks = 13;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 14;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 15;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 16;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 17;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 18;
+  // Gross for the period. [Decimal string] Output only.
+  optional string gross_amount = 19;
+  // Total deductions. [Decimal string] Output only.
+  optional string deduction_total = 20;
+  // Net payable. [Decimal string] Output only.
+  optional string net_amount = 21;
+  // Rendered PDF of the payslip. [UUID] Output only.
+  optional string document_file_id = 22;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "unpaid"
+    STATUS_UNPAID = 1;
+    // "paid"
+    STATUS_PAID = 2;
+    // "cancelled"
+    STATUS_CANCELLED = 3;
+  }
+}
+
+// Amount of one salary component on a payslip.
+message PayslipLine {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Payslip. [UUID] Set from the parent path on create.
+  string payslip_id = 2;
+  // Component. [UUID]
+  string staff_salary_component_id = 3;
+  // Amount. [Decimal string]
+  string amount = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+  // Pay component code snapshot at generation time. Output only.
+  optional string component_code = 10;
+  // Pay component name snapshot. Output only.
+  optional string component_name = 11;
+  // earning / deduction snapshot. Output only.
+  optional string component_type = 12;
+}
+
+// Type of payroll transaction (salary, advance, bonus, reimbursement...).
+message PaymentType {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Type name.
+  string name = 2;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 3;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 4;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 5;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 6;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 7;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 8;
+  // Display order.
+  optional int32 sort_order = 9;
+  // Whether offered for new picks.
+  optional bool is_active = 10;
+}
+
+// Institution bank account salaries are paid from.
+message DisbursementAccount {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // User responsible for the account. [UUID]
+  string managed_by_user_id = 3;
+  // Account label.
+  string name = 4;
+  // Short key.
+  string account_key = 5;
+  // Plain value, input only: stored encrypted and never returned. Bank account number, encrypted.
+  optional string account_number = 6;
+  // Masked form for display, e.g. "••••1234". Output only.
+  optional string account_number_masked = 7;
+  // Bank routing code (IFSC / ABA / sort code).
+  string bank_routing_code = 8;
+  // Branch.
+  optional string branch_name = 9;
+  // Additional bank parameter (e.g. SWIFT).
+  optional string extra_reference = 10;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 11;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 12;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 14;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 15;
+}
+
+// Money paid to a staff member (salary disbursement or other payroll transaction).
+message PayrollPayment {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Transaction number.
+  string transaction_number = 3;
+  // Transaction type. [UUID]
+  optional string payment_type_id = 4;
+  // Account paid from. [UUID]
+  optional string disbursement_account_id = 5;
+  // Payee. [UUID]
+  string staff_id = 6;
+  // Payslip settled. [UUID]
+  optional string payslip_id = 7;
+  // Payment date. [ISO-8601 date (YYYY-MM-DD)]
+  string transaction_date = 8;
+  // Amount paid. [Decimal string]
+  string amount = 9;
+  // Method.
+  PaymentMethod payment_method = 10;
+  // Details.
+  optional string transaction_details = 11;
+  // Cheque / UTR number.
+  optional string reference_number = 12;
+  // Proof document. [UUID]
+  optional string attachment_file_id = 13;
+  // Remarks.
+  optional string remarks = 14;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 15;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 16;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 17;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 18;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 19;
+  // Allowed values of payment_method; REST/JSON uses the lowercase value shown in each comment.
+  enum PaymentMethod {
+    PAYMENT_METHOD_UNSPECIFIED = 0;
+    // "cash"
+    PAYMENT_METHOD_CASH = 1;
+    // "cheque"
+    PAYMENT_METHOD_CHEQUE = 2;
+    // "bank_transfer"
+    PAYMENT_METHOD_BANK_TRANSFER = 3;
+    // "other"
+    PAYMENT_METHOD_OTHER = 4;
+  }
+}
+
+// Bank account salary is paid into. The account number is write-only and displayed masked.
+message StaffBankAccount {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Staff member. [UUID]
+  string staff_id = 2;
+  // Name on the account.
+  string account_holder_name = 3;
+  // Masked display form (last 4). Output only.
+  optional string account_number_masked = 4;
+  // Bank routing code.
+  optional string ifsc_code = 5;
+  // Bank.
+  optional string bank_name = 6;
+  // Branch.
+  optional string branch_name = 7;
+  // Account currently used for disbursement.
+  optional bool is_primary = 8;
+  // Whether usable.
+  optional bool is_active = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+  // Account number; stored encrypted, never returned. Input only.
+  optional string account_number = 15;
+}
+
+message ListStaffBankAccountsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListStaffBankAccountsResponse {
+  repeated StaffBankAccount items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetStaffBankAccountRequest {
+  // StaffBankAccount id (UUID).
+  string id = 1;
+}
+message GetStaffBankAccountResponse {
+  StaffBankAccount staff_bank_account = 1;
+}
+
+message CreateStaffBankAccountRequest {
+  StaffBankAccount staff_bank_account = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateStaffBankAccountResponse {
+  StaffBankAccount staff_bank_account = 1;
+}
+
+message UpdateStaffBankAccountRequest {
+  // Resource with id and etag set.
+  StaffBankAccount staff_bank_account = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStaffBankAccountResponse {
+  StaffBankAccount staff_bank_account = 1;
+}
+
+message DeleteStaffBankAccountRequest {
+  // StaffBankAccount id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteStaffBankAccountResponse {
+}
+
+// StaffBankAccountService: operations on the StaffBankAccount aggregate.
+service StaffBankAccountService {
+  // List StaffBankAccounts.
+  rpc ListStaffBankAccounts(ListStaffBankAccountsRequest) returns (ListStaffBankAccountsResponse);
+  // Get StaffBankAccount.
+  rpc GetStaffBankAccount(GetStaffBankAccountRequest) returns (GetStaffBankAccountResponse);
+  // Create StaffBankAccount.
+  rpc CreateStaffBankAccount(CreateStaffBankAccountRequest) returns (CreateStaffBankAccountResponse);
+  // Update StaffBankAccount.
+  rpc UpdateStaffBankAccount(UpdateStaffBankAccountRequest) returns (UpdateStaffBankAccountResponse);
+  // Soft-delete StaffBankAccount.
+  rpc DeleteStaffBankAccount(DeleteStaffBankAccountRequest) returns (DeleteStaffBankAccountResponse);
+}
+
+// OperationService: long-running operations started in this module.
+service OperationService {
+  // Live status of a long-running operation started in this module.
+  rpc GetOperation(GetOperationRequest) returns (GetOperationResponse);
+  // Long-running operations of this module started by the caller.
+  rpc ListOperations(ListOperationsRequest) returns (ListOperationsResponse);
+  // Request cancellation of a running operation started in this module.
+  rpc CancelOperation(CancelOperationRequest) returns (CancelOperationResponse);
+}
+
+message GetOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+}
+
+message GetOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message ListOperationsRequest {
+  // Filter by kind.
+  optional string kind = 1;
+  // The page to read: number, size and the cursor of a next page (api/README "Pagination"). Its sort is not taken:
+  // the rows come in their one fixed order, as over REST, which has no sort parameter here.
+  mysms.common.v1.PageableRequest pageable = 4;
+  // Fields 2 (page_size), 3 (page_token) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3;
+  reserved "page_size", "page_token";
+}
+
+message ListOperationsResponse {
+  repeated mysms.common.v1.Operation items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 3;
+  // Fields 2 (next_page_token) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2;
+  reserved "next_page_token";
+}
+
+message CancelOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+
+message CancelOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}

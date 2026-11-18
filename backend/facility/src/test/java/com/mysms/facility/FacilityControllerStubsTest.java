@@ -9,8 +9,8 @@ import com.mysms.facility.controller.RoomController;
 import org.junit.jupiter.api.Test;
 
 /**
- * The contract operations facility does not serve yet answer 501 NOT_IMPLEMENTED explicitly — none falls through, and a
- * newly served operation changes the count on purpose.
+ * The operations facility does not serve yet answer 501 explicitly; a newly served operation changes the count on
+ * purpose.
  */
 class FacilityControllerStubsTest {
 

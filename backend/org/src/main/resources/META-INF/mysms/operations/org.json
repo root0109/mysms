@@ -5,7 +5,8 @@
   "permission" : "org.academic_year.activate_academic_year",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "org.CloseAcademicYear",
   "method" : "POST",
@@ -13,7 +14,8 @@
   "permission" : "org.academic_year.close_academic_year",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "org.CreateAcademicTerm",
   "method" : "POST",
@@ -21,7 +23,8 @@
   "permission" : "org.academic_term.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "org.CreateAcademicYear",
   "method" : "POST",
@@ -29,7 +32,8 @@
   "permission" : "org.academic_year.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "org.CreateAttributeDefinition",
   "method" : "POST",
@@ -37,7 +41,8 @@
   "permission" : "org.attribute_definition.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "org.CreateDepartment",
   "method" : "POST",
@@ -45,7 +50,8 @@
   "permission" : "org.department.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "org.CreateHoliday",
   "method" : "POST",
@@ -53,7 +59,8 @@
   "permission" : "org.holiday.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "org.CreateInstitution",
   "method" : "POST",
@@ -61,7 +68,8 @@
   "permission" : "org.institution.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "org.CreateInstitutionAttribute",
   "method" : "POST",
@@ -69,7 +77,8 @@
   "permission" : "org.institution_attribute.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "org.CreateInstitutionType",
   "method" : "POST",
@@ -77,7 +86,8 @@
   "permission" : "org.institution_type.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "org.CreateInstitutionTypeAttribute",
   "method" : "POST",
@@ -85,77 +95,88 @@
   "permission" : "org.institution_type_attribute.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "org.DeleteAcademicTerm",
   "method" : "DELETE",
   "path" : "/v1/org/academic-years/{academicYearId}/terms/{academicTermId}",
   "permission" : "org.academic_term.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.DeleteAcademicYear",
   "method" : "DELETE",
   "path" : "/v1/org/academic-years/{academicYearId}",
   "permission" : "org.academic_year.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.DeleteAttributeDefinition",
   "method" : "DELETE",
   "path" : "/v1/org/attribute-definitions/{attributeDefinitionId}",
   "permission" : "org.attribute_definition.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.DeleteDepartment",
   "method" : "DELETE",
   "path" : "/v1/org/departments/{departmentId}",
   "permission" : "org.department.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.DeleteHoliday",
   "method" : "DELETE",
   "path" : "/v1/org/holidays/{holidayId}",
   "permission" : "org.holiday.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.DeleteInstitution",
   "method" : "DELETE",
   "path" : "/v1/org/institutions/{institutionId}",
   "permission" : "org.institution.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.DeleteInstitutionAttribute",
   "method" : "DELETE",
   "path" : "/v1/org/institutions/{institutionId}/attributes/{institutionAttributeId}",
   "permission" : "org.institution_attribute.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.DeleteInstitutionType",
   "method" : "DELETE",
   "path" : "/v1/org/institution-types/{institutionTypeId}",
   "permission" : "org.institution_type.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.DeleteInstitutionTypeAttribute",
   "method" : "DELETE",
   "path" : "/v1/org/institution-types/{institutionTypeId}/attributes/{institutionTypeAttributeId}",
   "permission" : "org.institution_type_attribute.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.FindInstitutions",
   "method" : "GET",
   "path" : "/v1/org/institutions:find",
   "permission" : "org.institution.find_institutions",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : true
+  "anonymous" : true,
+  "audience" : "public"
 }, {
   "operationId" : "org.GenerateTerms",
   "method" : "POST",
@@ -163,194 +184,230 @@
   "permission" : "org.academic_year.generate_terms",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "org.GetAcademicTerm",
   "method" : "GET",
   "path" : "/v1/org/academic-years/{academicYearId}/terms/{academicTermId}",
   "permission" : "org.academic_term.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.GetAcademicYear",
   "method" : "GET",
   "path" : "/v1/org/academic-years/{academicYearId}",
   "permission" : "org.academic_year.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.GetAttributeDefinition",
   "method" : "GET",
   "path" : "/v1/org/attribute-definitions/{attributeDefinitionId}",
   "permission" : "org.attribute_definition.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.GetDepartment",
   "method" : "GET",
   "path" : "/v1/org/departments/{departmentId}",
   "permission" : "org.department.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.GetHoliday",
   "method" : "GET",
   "path" : "/v1/org/holidays/{holidayId}",
   "permission" : "org.holiday.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.GetInstitution",
   "method" : "GET",
   "path" : "/v1/org/institutions/{institutionId}",
   "permission" : "org.institution.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.GetInstitutionAttribute",
   "method" : "GET",
   "path" : "/v1/org/institutions/{institutionId}/attributes/{institutionAttributeId}",
   "permission" : "org.institution_attribute.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.GetInstitutionType",
   "method" : "GET",
   "path" : "/v1/org/institution-types/{institutionTypeId}",
   "permission" : "org.institution_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.GetInstitutionTypeAttribute",
   "method" : "GET",
   "path" : "/v1/org/institution-types/{institutionTypeId}/attributes/{institutionTypeAttributeId}",
   "permission" : "org.institution_type_attribute.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.ListAcademicTerms",
   "method" : "GET",
   "path" : "/v1/org/academic-years/{academicYearId}/terms",
   "permission" : "org.academic_term.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.ListAcademicYears",
   "method" : "GET",
   "path" : "/v1/org/academic-years",
   "permission" : "org.academic_year.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.ListAttributeDefinitions",
   "method" : "GET",
   "path" : "/v1/org/attribute-definitions",
   "permission" : "org.attribute_definition.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.ListDepartments",
   "method" : "GET",
   "path" : "/v1/org/departments",
   "permission" : "org.department.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.ListHolidays",
   "method" : "GET",
   "path" : "/v1/org/holidays",
   "permission" : "org.holiday.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.ListInstitutionAttributes",
   "method" : "GET",
   "path" : "/v1/org/institutions/{institutionId}/attributes",
   "permission" : "org.institution_attribute.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.ListInstitutionTypeAttributes",
   "method" : "GET",
   "path" : "/v1/org/institution-types/{institutionTypeId}/attributes",
   "permission" : "org.institution_type_attribute.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.ListInstitutionTypes",
   "method" : "GET",
   "path" : "/v1/org/institution-types",
   "permission" : "org.institution_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "org.ListActiveInstitutions",
+  "method" : "GET",
+  "path" : "/v1/org/institutions:active",
+  "permission" : "org.institution.list_active",
+  "schemes" : [ ],
+  "anonymous" : false,
+  "audience" : "internal"
 }, {
   "operationId" : "org.ListInstitutions",
   "method" : "GET",
   "path" : "/v1/org/institutions",
   "permission" : "org.institution.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.UpdateAcademicTerm",
   "method" : "PATCH",
   "path" : "/v1/org/academic-years/{academicYearId}/terms/{academicTermId}",
   "permission" : "org.academic_term.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.UpdateAcademicYear",
   "method" : "PATCH",
   "path" : "/v1/org/academic-years/{academicYearId}",
   "permission" : "org.academic_year.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.UpdateAttributeDefinition",
   "method" : "PATCH",
   "path" : "/v1/org/attribute-definitions/{attributeDefinitionId}",
   "permission" : "org.attribute_definition.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.UpdateDepartment",
   "method" : "PATCH",
   "path" : "/v1/org/departments/{departmentId}",
   "permission" : "org.department.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.UpdateHoliday",
   "method" : "PATCH",
   "path" : "/v1/org/holidays/{holidayId}",
   "permission" : "org.holiday.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.UpdateInstitution",
   "method" : "PATCH",
   "path" : "/v1/org/institutions/{institutionId}",
   "permission" : "org.institution.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.UpdateInstitutionAttribute",
   "method" : "PATCH",
   "path" : "/v1/org/institutions/{institutionId}/attributes/{institutionAttributeId}",
   "permission" : "org.institution_attribute.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.UpdateInstitutionType",
   "method" : "PATCH",
   "path" : "/v1/org/institution-types/{institutionTypeId}",
   "permission" : "org.institution_type.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "org.UpdateInstitutionTypeAttribute",
   "method" : "PATCH",
   "path" : "/v1/org/institution-types/{institutionTypeId}/attributes/{institutionTypeAttributeId}",
   "permission" : "org.institution_type_attribute.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 } ]

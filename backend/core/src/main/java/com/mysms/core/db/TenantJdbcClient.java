@@ -7,10 +7,9 @@ import java.util.UUID;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 /**
- * The module's {@link JdbcClient}: every statement whose SQL names {@code :tenantId} gets the tenant of the current
- * call bound to it (JAVA-CODING-RULES §1.6, §6 R1). Each read and write of a tenant table states
- * {@code tenant_id = :tenantId} in its own SQL, so the tenant is filtered explicitly and row-level security is only
- * the backstop. Without a bound tenant the parameter stays unbound and the statement fails, never runs unfiltered.
+ * Binds the current call's tenant to every statement that names {@code :tenantId}, so tenant tables are filtered
+ * explicitly and row-level security is only the backstop. Without a bound tenant the statement fails, never runs
+ * unfiltered.
  */
 public final class TenantJdbcClient implements JdbcClient {
 

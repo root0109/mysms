@@ -4,8 +4,8 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 
 /**
- * Base of every expected, client-visible failure. Carries the HTTP status, the stable problem+json `code` and a
- * `detail` that must contain ids only — never names or other personal data (JAVA-CODING-RULES §1.5, §11).
+ * Base of every expected, client-visible failure: HTTP status, stable problem+json `code`, and a `detail` with ids
+ * only, never names or other personal data.
  */
 public abstract class ApiException extends RuntimeException {
 

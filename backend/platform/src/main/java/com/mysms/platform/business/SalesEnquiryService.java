@@ -3,11 +3,13 @@ package com.mysms.platform.business;
 import com.mysms.authclient.DataScope;
 import com.mysms.platform.api.model.SalesEnquiry;
 import com.mysms.platform.api.model.SalesEnquiryUpdate;
+import com.mysms.platform.api.model.MarkEnquiryContactedRequest;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.FieldError;
+import com.mysms.core.error.InvalidStateException;
 import com.mysms.core.error.PreconditionFailedException;
 import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.error.ValidationFailedException;
@@ -28,6 +30,9 @@ import com.mysms.platform.events.PlatformEvents;
 import com.mysms.platform.mapper.SalesEnquiryMapper;
 import com.mysms.platform.repository.SalesEnquiryRepository;
 import java.time.Clock;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,10 +44,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of platform.sales_enquiry (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of platform.sales_enquiry: audit and domain event in the same transaction as every change; rows
+ * outside the caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class SalesEnquiryService extends AppTransactionManager {
@@ -173,6 +176,32 @@ public class SalesEnquiryService extends AppTransactionManager {
                 }
                 audit.recordDelete(AGGREGATE, id);
                 outbox.publish(AGGREGATE + PlatformEvents.DELETED, AGGREGATE, id, eventPayload(entity, expected + 1));
+            }
+        });
+    }
+
+    /**
+     * platform.MarkEnquiryContacted (platform staff): a new enquiry is marked contacted (409 from any other status);
+     * the reason, when given, is kept in the audit record.
+     */
+    public SalesEnquiry markEnquiryContacted(UUID id, MarkEnquiryContactedRequest request) {
+        OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                .truncatedTo(ChronoUnit.MICROS);
+        return doInGlobalWriteTransaction(() -> {
+            try (CallContextHolder.Scope global = CallContextHolder.withoutTenant()) {
+                SalesEnquiryEntity entity = loadVisible(DataScope.global(), id);
+                if (!"new".equals(entity.getStatus())) {
+                    throw new InvalidStateException("Only a new enquiry can be marked contacted.");
+                }
+                if (repository.markContacted(id, entity.getRowVersion(), now, Actor.current().orElse(null)) == 0) {
+                    throw new PreconditionFailedException("The row changed since it was read.");
+                }
+                String reason = request.getReason();
+                audit.recordTransition(AGGREGATE, id, "markContacted", List.of("status"),
+                        reason == null || reason.isBlank() ? null : reason.trim());
+                outbox.publish(AGGREGATE + ".markContacted", AGGREGATE, id, eventPayload(entity,
+                        entity.getRowVersion() + 1));
+                return mapper.toDto(repository.findById(id).orElseThrow());
             }
         });
     }

@@ -13,7 +13,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /**
- * Sign-in sessions. Every user reaches their own sessions (ACC-08: list them, end one); another user's sessions —
+ * Sign-in sessions. Every user reaches their own sessions (list them, end one); another user's sessions —
  * their devices and network addresses are personal data — only with the operation's permission held tenant-wide
  * (an administrator). Ending a session through the API signs that device out at once (its refresh family is revoked).
  */

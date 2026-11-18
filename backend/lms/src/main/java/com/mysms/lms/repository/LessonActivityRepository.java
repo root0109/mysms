@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.lesson_activity (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.lesson_activity: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class LessonActivityRepository {
@@ -66,6 +63,9 @@ public class LessonActivityRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** A lesson's activities in their order; students see those that are not teacher-only. */
+    private static final String OF_LESSON = SELECT_LIVE
+            + " AND r.lesson_id = :lessonId AND (:teacherOnlyToo OR NOT r.teacher_only) ORDER BY r.sort_order, r.id";
     private static final String INSERT = """
             INSERT INTO lms.lesson_activity
             (id, tenant_id, lesson_id, quiz_id, assignment_id, exercise_id, teacher_only, sort_order, created_at,
@@ -143,6 +143,12 @@ public class LessonActivityRepository {
         return page.toPage(rows, e -> sortValues(page.sort(), e), LessonActivityEntity::getId);
     }
 
+    /** The lesson's activities in order, teacher-only ones included only when asked. */
+    public List<LessonActivityEntity> ofLesson(UUID lessonId, boolean teacherOnlyToo) {
+        return jdbc.sql(OF_LESSON).param("lessonId", lessonId).param("teacherOnlyToo", teacherOnlyToo)
+                .query(LessonActivityRepository::map).list();
+    }
+
     /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
     public LessonActivityEntity insert(LessonActivityEntity e) {
         return jdbc.sql(INSERT)
@@ -217,12 +223,12 @@ public class LessonActivityRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.lesson_id = :parentId", Map.of("parentId", parentId));
     }

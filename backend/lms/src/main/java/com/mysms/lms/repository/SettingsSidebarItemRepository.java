@@ -22,11 +22,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.settings_sidebar_item (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.settings_sidebar_item: live rows only, keyset paging, and the row_version guard on every
+ * update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class SettingsSidebarItemRepository {
@@ -72,6 +69,9 @@ public class SettingsSidebarItemRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** The visible navigation items of the settings, in order (the public catalogue's navigation). */
+    private static final String VISIBLE = SELECT_LIVE
+            + " AND r.settings_id = :settingsId AND NOT r.is_hidden ORDER BY r.sort_order, r.id";
     private static final String INSERT = """
             INSERT INTO lms.settings_sidebar_item
             (id, tenant_id, settings_id, sort_order, item_type, item_key, title, icon, web_page_route, route, url,
@@ -120,6 +120,11 @@ public class SettingsSidebarItemRepository {
 
     public SettingsSidebarItemRepository(@Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** The settings' visible navigation items in order. */
+    public List<SettingsSidebarItemEntity> visible(UUID settingsId) {
+        return jdbc.sql(VISIBLE).param("settingsId", settingsId).query(SettingsSidebarItemRepository::map).list();
     }
 
     public Optional<SettingsSidebarItemEntity> findById(UUID id) {
@@ -195,7 +200,7 @@ public class SettingsSidebarItemRepository {
         return Boolean.TRUE.equals(jdbc.sql(EXISTS_SETTINGS_ID).param("id", id).query(Boolean.class).single());
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.settings_id = :parentId", Map.of("parentId", parentId));
     }

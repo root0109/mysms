@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of comms.notification_type (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of comms.notification_type. */
 @Getter
 @Setter
 @SuperBuilder

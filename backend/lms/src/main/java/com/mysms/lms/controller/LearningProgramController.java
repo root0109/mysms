@@ -10,7 +10,6 @@ import com.mysms.lms.api.model.LearningProgramCourseUpdate;
 import com.mysms.lms.api.model.LearningProgramMember;
 import com.mysms.lms.api.model.LearningProgramMemberUpdate;
 import com.mysms.lms.api.model.LearningProgramUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.LearningProgramService;
 import java.net.URI;
@@ -19,11 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the LearningProgram operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the LearningProgram operations; authentication and the permission check already ran in the auth-client
+ * filter. Operations not served yet answer 501.
  */
 @RestController
 public class LearningProgramController implements LearningProgramApi {
@@ -42,7 +38,8 @@ public class LearningProgramController implements LearningProgramApi {
         if (dryRun) {
             return ResponseEntity.ok(created);
         }
-        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).eTag(created.getEtag()).body(created);
+        return ResponseEntity.created(URI.create("/v1/lms/learning-programs/" + created.getId())).eTag(created.getEtag())
+                .body(created);
     }
 
     @Override
@@ -98,12 +95,14 @@ public class LearningProgramController implements LearningProgramApi {
     @Override
     public ResponseEntity<LearningProgramMember> enrollInLearningProgram(UUID learningProgramId,
             Object body, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LearningProgramMember created = learningProgramService.enrollInLearningProgram(learningProgramId);
+        return ResponseEntity.ok().eTag(created.getEtag()).body(created);
     }
 
     @Override
     public ResponseEntity<LearningProgram> getLearningProgram(UUID learningProgramId, String fields) {
-        throw new NotImplementedException();
+        LearningProgram found = learningProgramService.getLearningProgram(learningProgramId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
@@ -145,7 +144,10 @@ public class LearningProgramController implements LearningProgramApi {
     @Override
     public ResponseEntity<PagingInfo<LearningProgram>> listLearningPrograms(Integer page, Integer size, String cursor,
             String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<LearningProgram> list =
+                PagingUtil.pagingInfo(learningProgramService.listLearningPrograms(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override

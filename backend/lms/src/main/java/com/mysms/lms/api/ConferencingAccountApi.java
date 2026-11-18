@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api;
 
 import com.mysms.core.paging.PagingInfo;
@@ -148,6 +148,8 @@ public interface ConferencingAccountApi {
      * Provider callback (meeting ended, participant joined/left). Authenticated by the provider signature over the raw body, not by a token; the tenant is resolved from the stored meeting id. Processed idempotently by provider event id.
      *
      * @param provider  (required)
+     * @param xSignature HMAC-SHA256 of the timestamp and raw body with the account's secret. (required)
+     * @param xTimestamp Unix-seconds timestamp the signature covers. (required)
      * @param body Raw provider payload, passed through unchanged for signature verification. (required)
      * @return Done (status code 204)
      *         or Malformed request. (status code 400)
@@ -167,7 +169,9 @@ public interface ConferencingAccountApi {
     )
     ResponseEntity<Void> receiveConferencingWebhook(
          @PathVariable("provider") String provider,
-         @Valid @RequestBody Object body
+        @NotNull  @RequestHeader(value = "X-Signature", required = true) String xSignature,
+        @NotNull  @RequestHeader(value = "X-Timestamp", required = true) String xTimestamp,
+        @RequestBody byte[] body
     );
 
 

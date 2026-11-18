@@ -43,14 +43,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of assessment.homework (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Homework
- * are served here too — HomeworkApproval, which is read-only here: approvals are written by the homework workflow
- * ({@link HomeworkWorkflowService}) alone, so the contract has no create, update or delete for them.
+ * Business service of assessment.homework and of the records that exist only as part of a Homework (HomeworkApproval,
+ * which is read-only here: approvals are written by the homework workflow ({@link HomeworkWorkflowService}) alone, so
+ * the contract has no create, update or delete for them): audit and domain event commit in the same transaction as
+ * every change. Rows outside the caller's institutions are invisible; tenant-level rows change only through a
+ * tenant-wide grant.
  */
 @Service
 public class HomeworkService extends AppTransactionManager {
@@ -143,8 +140,8 @@ public class HomeworkService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Homework updateHomework(UUID id, String ifMatch, HomeworkUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -236,12 +233,12 @@ public class HomeworkService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(HomeworkEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected HomeworkUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected HomeworkUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(HomeworkEntity entity, HomeworkUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -280,7 +277,7 @@ public class HomeworkService extends AppTransactionManager {
 
     }
 
-    // ---- HomeworkApproval: a record of the Homework aggregate ----
+    // ---- HomeworkApproval ----
 
     public HomeworkApproval getHomeworkApproval(UUID homeworkId, UUID id) {
         return doInReadTransaction(() -> {
@@ -315,7 +312,7 @@ public class HomeworkService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the assessment.homework it belongs to). */
+    /** The institution of the assessment.homework the row belongs to. */
     private Optional<UUID> institutionOfHomeworkApproval(HomeworkApprovalEntity entity) {
         return homeworkApprovalRepository.institutionOf(entity.getHomeworkId());
     }

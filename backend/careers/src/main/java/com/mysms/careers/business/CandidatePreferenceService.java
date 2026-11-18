@@ -49,14 +49,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of careers.candidate_preference (JAVA-CODING-RULES §4): one plain class, explicit methods,
- * transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a CandidatePreference
- * are served here too — CandidatePreferredFunction, CandidatePreferredIndustry.
+ * Business service of careers.candidate_preference and of the records that exist only as part of a CandidatePreference
+ * (CandidatePreferredFunction, CandidatePreferredIndustry): audit and domain event commit in the same transaction as
+ * every change. Rows outside the caller's institutions are invisible; tenant-level rows change only through a
+ * tenant-wide grant.
  */
 @Service
 public class CandidatePreferenceService extends AppTransactionManager {
@@ -170,8 +166,8 @@ public class CandidatePreferenceService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CandidatePreference updateCandidatePreference(UUID id, String ifMatch, CandidatePreferenceUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -242,15 +238,12 @@ public class CandidatePreferenceService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(CandidatePreferenceEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected CandidatePreferenceUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected CandidatePreferenceUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(CandidatePreferenceEntity entity, CandidatePreferenceUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -347,8 +340,8 @@ public class CandidatePreferenceService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CandidatePreferredFunction updateCandidatePreferredFunction(UUID candidatePreferenceId, UUID id,
             String ifMatch, CandidatePreferredFunctionUpdate changes, String updateMask, boolean validateOnly) {
@@ -413,15 +406,12 @@ public class CandidatePreferenceService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfCandidatePreferredFunction(CandidatePreferredFunctionEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected CandidatePreferredFunctionUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected CandidatePreferredFunctionUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCandidatePreferredFunction(CandidatePreferredFunctionEntity entity,
             CandidatePreferredFunctionUpdate changes,
             List<String> fields) {
@@ -516,8 +506,8 @@ public class CandidatePreferenceService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CandidatePreferredIndustry updateCandidatePreferredIndustry(UUID candidatePreferenceId, UUID id,
             String ifMatch, CandidatePreferredIndustryUpdate changes, String updateMask, boolean validateOnly) {
@@ -582,15 +572,12 @@ public class CandidatePreferenceService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfCandidatePreferredIndustry(CandidatePreferredIndustryEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected CandidatePreferredIndustryUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected CandidatePreferredIndustryUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCandidatePreferredIndustry(CandidatePreferredIndustryEntity entity,
             CandidatePreferredIndustryUpdate changes,
             List<String> fields) {

@@ -1,5 +1,4 @@
 import {
-  isApiError,
   useCan,
   useCreateGradingBand,
   useCreateGradingScheme,
@@ -28,6 +27,8 @@ import {
   type Column,
 } from '@mysms/ui-web';
 import { useEffect, useState } from 'react';
+import { assessmentErrorText as message } from './assessmentText';
+import { OfflineBanner } from './assessmentUi';
 
 type SchemeForm = {
   institutionId: string;
@@ -65,33 +66,6 @@ const EMPTY_BAND: BandForm = {
   description: '',
   isPass: true,
 };
-
-function message(error: unknown, t: ReturnType<typeof useI18n>['t']): string {
-  if (isApiError(error)) {
-    if (error.status === 412) return t('common.conflict.body');
-    if (error.status === 403) return t('adm.records.forbidden');
-    if (error.status === 409) return error.detail ?? t('common.error.generic');
-    if (error.status === 422)
-      return error.errors.map((item) => item.message).join(' ') || t('common.validation.pattern');
-  }
-  return t('common.error.generic');
-}
-
-function Offline() {
-  const { t } = useI18n();
-  const [online, setOnline] = useState(() => typeof navigator === 'undefined' || navigator.onLine);
-  useEffect(() => {
-    const on = () => setOnline(true);
-    const off = () => setOnline(false);
-    window.addEventListener('online', on);
-    window.addEventListener('offline', off);
-    return () => {
-      window.removeEventListener('online', on);
-      window.removeEventListener('offline', off);
-    };
-  }, []);
-  return online ? null : <Banner intent="warning">{t('common.state.offline')}</Banner>;
-}
 
 function GradingBandManager({ scheme }: { scheme: GradingScheme }) {
   const { t } = useI18n();
@@ -495,7 +469,7 @@ export function GradingSchemesScreen() {
   const busy = create.isPending || update.isPending || remove.isPending;
   return (
     <div className="page">
-      <Offline />
+      <OfflineBanner />
       <header className="page__header">
         <h1 className="page__title">{t('screen.ASM13.title')}</h1>
         <p className="page__subtitle">{t('asm.web.gradeScheme')}</p>

@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.learning_objective (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.learning_objective: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class LearningObjectiveRepository {
@@ -221,9 +218,16 @@ public class LearningObjectiveRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    private static final String OF_COURSE = SELECT_LIVE + " AND r.course_id = :courseId ORDER BY r.sort_order";
+
+    /** The course's live objectives, in order. */
+    public List<LearningObjectiveEntity> ofCourse(UUID courseId) {
+        return jdbc.sql(OF_COURSE).param("courseId", courseId).query(LearningObjectiveRepository::map).list();
     }
 
     private static List<Object> sortValues(SortSpec sort, LearningObjectiveEntity e) {

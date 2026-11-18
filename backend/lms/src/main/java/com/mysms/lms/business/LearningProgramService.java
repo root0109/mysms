@@ -1,5 +1,7 @@
 package com.mysms.lms.business;
 
+import java.math.BigDecimal;
+import com.mysms.authclient.AuthContext;
 import com.mysms.authclient.DataScope;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
@@ -50,18 +52,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.learning_program (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a LearningProgram
- * are served here too — LearningProgramCourse, LearningProgramMember.
+ * Business service of lms.learning_program and of the records that exist only as part of a LearningProgram
+ * (LearningProgramCourse, LearningProgramMember): audit and domain event commit in the same transaction as every
+ * change. Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide
+ * grant.
  */
 @Service
 public class LearningProgramService extends AppTransactionManager {
 
     public static final String AGGREGATE = LearningProgramEntity.TABLE;
+    static final String PERMISSION_READ = "lms.learning_program.read";
+    static final String PERMISSION_ENROLL = "lms.learning_program.enroll_in_learning_program";
     static final String PERMISSION_CREATE = "lms.learning_program.create";
     static final String PERMISSION_UPDATE = "lms.learning_program.update";
     static final String PERMISSION_DELETE = "lms.learning_program.delete";
@@ -97,6 +98,7 @@ public class LearningProgramService extends AppTransactionManager {
     private final LearningProgramCourseMapper learningProgramCourseMapper;
     private final LearningProgramMemberRepository learningProgramMemberRepository;
     private final LearningProgramMemberMapper learningProgramMemberMapper;
+    private final PublicReads publicReads;
 
     public LearningProgramService(LearningProgramRepository repository,
             LearningProgramMapper mapper,
@@ -109,8 +111,9 @@ public class LearningProgramService extends AppTransactionManager {
             LearningProgramCourseRepository learningProgramCourseRepository,
             LearningProgramCourseMapper learningProgramCourseMapper,
             LearningProgramMemberRepository learningProgramMemberRepository,
-            LearningProgramMemberMapper learningProgramMemberMapper) {
+            LearningProgramMemberMapper learningProgramMemberMapper, PublicReads publicReads) {
         super(database, transactions);
+        this.publicReads = publicReads;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
@@ -145,8 +148,8 @@ public class LearningProgramService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public LearningProgram updateLearningProgram(UUID id, String ifMatch, LearningProgramUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -211,6 +214,64 @@ public class LearningProgramService extends AppTransactionManager {
         });
     }
 
+    /** A learning program: every program to a member holding lms.learning_program.read, published ones to the public. */
+    public LearningProgram getLearningProgram(UUID id) {
+        boolean member = publicReads.asMember(PERMISSION_READ);
+        return doInReadTransaction(() -> repository.findById(id)
+                .filter(e -> member || Boolean.TRUE.equals(e.getIsPublished()))
+                .map(e -> member ? mapper.toDto(e) : guestProjection(mapper.toDto(e)))
+                .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+    }
+
+    /** The tenant's learning programs, page by page; published ones only to the public. */
+    public Page<LearningProgram> listLearningPrograms(Integer pageNumber, Integer pageSize, String cursor,
+            String filter, List<String> sortBy) {
+        boolean member = publicReads.asMember(PERMISSION_READ);
+        SortSpec sort = SortSpec.parse(sortBy, LearningProgramRepository.SORT_FIELDS,
+                LearningProgramRepository.DEFAULT_ORDER, LearningProgramRepository.ID_COLUMN);
+        SqlFragment where = FilterParser.parse(filter, LearningProgramRepository.FILTER_FIELDS);
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+        if (member) {
+            return doInReadTransaction(() -> repository.list(page, where).map(mapper::toDto));
+        }
+        return doInReadTransaction(() -> repository.list(page, where.and(LearningProgramRepository.PUBLISHED))
+                .map(e -> guestProjection(mapper.toDto(e))));
+    }
+
+    /** The public's view of a program: who created and changed it is internal. */
+    private static LearningProgram guestProjection(LearningProgram program) {
+        program.setCreatedBy(null);
+        program.setUpdatedBy(null);
+        return program;
+    }
+
+    /**
+     * lms.EnrollInLearningProgram: the caller joins a published program; a repeat is 409 DUPLICATE, decided by the
+     * unique index when two race. Joining does not enrol in the program's courses.
+     */
+    public LearningProgramMember enrollInLearningProgram(UUID id) {
+        UUID user = AuthContext.require().userId();
+        LearningProgramMemberEntity entity = new LearningProgramMemberEntity();
+        entity.setLearningProgramId(id);
+        entity.setUserId(user);
+        entity.setProgressPercent(BigDecimal.ZERO);
+        entity.onCreatingData(Actor.current(), clock);
+        entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
+        return doInWriteTransaction(() -> {
+            LearningProgramEntity program = repository.findById(id)
+                    .filter(e -> Boolean.TRUE.equals(e.getIsPublished()))
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            if (learningProgramMemberRepository.takenLearningProgramIdUserId1(entity)) {
+                throw new DuplicateResourceException("The caller is already a member of this learning program.");
+            }
+            LearningProgramMemberEntity stored = learningProgramMemberRepository.insert(entity);
+            repository.countMember(program.getId());
+            audit.recordCreate(LEARNING_PROGRAM_MEMBER_AGGREGATE, stored.getId());
+            outbox.publish(AGGREGATE + ".enroll", AGGREGATE, id, LmsEvents.payload(id));
+            return learningProgramMemberMapper.toDto(stored);
+        });
+    }
+
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
     private LearningProgramEntity loadVisible(DataScope scope, UUID id) {
         LearningProgramEntity entity = repository.findById(id)
@@ -221,14 +282,12 @@ public class LearningProgramService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(LearningProgramEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected LearningProgramUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected LearningProgramUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(LearningProgramEntity entity, LearningProgramUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -324,8 +383,8 @@ public class LearningProgramService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public LearningProgramCourse updateLearningProgramCourse(UUID learningProgramId, UUID id, String ifMatch,
             LearningProgramCourseUpdate changes, String updateMask, boolean validateOnly) {
@@ -389,15 +448,12 @@ public class LearningProgramService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOfLearningProgramCourse(LearningProgramCourseEntity entity) {
         return learningProgramCourseRepository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected LearningProgramCourseUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected LearningProgramCourseUpdate fields; explicit per field so a mask can clear values. */
     private static void applyLearningProgramCourse(LearningProgramCourseEntity entity, LearningProgramCourseUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -492,8 +548,8 @@ public class LearningProgramService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public LearningProgramMember updateLearningProgramMember(UUID learningProgramId, UUID id, String ifMatch,
             LearningProgramMemberUpdate changes, String updateMask, boolean validateOnly) {
@@ -557,15 +613,12 @@ public class LearningProgramService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfLearningProgramMember(LearningProgramMemberEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected LearningProgramMemberUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected LearningProgramMemberUpdate fields; explicit per field so a mask can clear values. */
     private static void applyLearningProgramMember(LearningProgramMemberEntity entity, LearningProgramMemberUpdate changes,
             List<String> fields) {
         for (String field : fields) {

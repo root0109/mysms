@@ -1,4 +1,4 @@
-// Owned API contract of admission (JAVA-CODING-RULES §7); first materialized from api/openapi/admission.yaml on 2026-11-10.
+// Owned API contract of admission.
 package com.mysms.admission.api;
 
 import com.mysms.core.paging.PagingInfo;

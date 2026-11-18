@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -25,18 +25,12 @@ public class ApproveEnrollmentRequestRequest {
   private @Nullable String etag;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID cohortId;
+  private @Nullable UUID cohortId;
 
   public ApproveEnrollmentRequestRequest() {
     super();
   }
 
-  /**
-   * Constructor with only required parameters
-   */
-  public ApproveEnrollmentRequestRequest(UUID cohortId) {
-    this.cohortId = cohortId;
-  }
 
   public ApproveEnrollmentRequestRequest etag(@Nullable String etag) {
     this.etag = etag;
@@ -58,7 +52,7 @@ public class ApproveEnrollmentRequestRequest {
     this.etag = etag;
   }
 
-  public ApproveEnrollmentRequestRequest cohortId(UUID cohortId) {
+  public ApproveEnrollmentRequestRequest cohortId(@Nullable UUID cohortId) {
     this.cohortId = cohortId;
     return this;
   }
@@ -67,14 +61,14 @@ public class ApproveEnrollmentRequestRequest {
    * Cohort to enrol in.
    * @return cohortId
    */
-  @NotNull @Valid 
+  @Valid
   @JsonProperty("cohortId")
-  public UUID getCohortId() {
+  public @Nullable UUID getCohortId() {
     return cohortId;
   }
 
   @JsonProperty("cohortId")
-  public void setCohortId(UUID cohortId) {
+  public void setCohortId(@Nullable UUID cohortId) {
     this.cohortId = cohortId;
   }
 

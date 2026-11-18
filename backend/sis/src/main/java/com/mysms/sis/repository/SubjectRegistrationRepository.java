@@ -23,11 +23,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to sis.subject_registration (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to sis.subject_registration: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. Every statement filters the caller's tenant itself; row-level security
+ * is the backstop.
  */
 @Repository
 public class SubjectRegistrationRepository {
@@ -72,6 +70,7 @@ public class SubjectRegistrationRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String LOCK_BY_ID = FIND_BY_ID + " FOR UPDATE";
     private static final String INSERT = """
             INSERT INTO sis.subject_registration
             (id, tenant_id, academic_year_id, academic_term_id, program_enrollment_id, student_id, course_id,
@@ -157,6 +156,26 @@ public class SubjectRegistrationRepository {
     private static final String TRANSITION_RESET_SUBJECT_REGISTRATION = """
             UPDATE sis.subject_registration
                SET status = 'draft',
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** sis.LoadCourseSubjects: the lines of a draft changed, so the registration takes a new version (its ETag). */
+    private static final String LINES_CHANGED = """
+            UPDATE sis.subject_registration
+               SET updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND status = 'draft' AND deleted_at IS NULL
+            """;
+
+    /** sis.ApproveSubjectRegistration: allowed while status is submitted. */
+    private static final String TRANSITION_APPROVE_SUBJECT_REGISTRATION = """
+            UPDATE sis.subject_registration
+               SET status = 'approved',
                    updated_at = :now,
                    updated_by = :actor,
                    row_version = row_version + 1
@@ -306,7 +325,30 @@ public class SubjectRegistrationRepository {
                 .param("actor", actor).update();
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** The live row, locked until the transaction ends, so no step changes it meanwhile. */
+    public Optional<SubjectRegistrationEntity> lockById(UUID id) {
+        return jdbc.sql(LOCK_BY_ID).param("id", id).query(SubjectRegistrationRepository::map).optional();
+    }
+
+    /** Gives a draft whose lines changed a new version; 0 rows means it changed, or is no draft, since it was read. */
+    public int linesChanged(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(LINES_CHANGED)
+                .param("id", id)
+                .param("expected", expected)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** sis.ApproveSubjectRegistration; 0 rows means the row changed (or vanished) since it was read. */
+    public int approveSubjectRegistration(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_APPROVE_SUBJECT_REGISTRATION)
+                .param("id", id)
+                .param("expected", expected)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

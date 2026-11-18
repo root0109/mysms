@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.testkit.ModuleChecks;
-import com.mysms.core.testkit.OpenApiDocuments;
 import com.mysms.core.testkit.TestDatabase;
 import com.mysms.platform.config.PlatformDatabaseConfig;
 import java.io.InputStream;
@@ -25,16 +24,15 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The platform microservice runs alone on its own database (JAVA-CODING-RULES §2, §12):
- * it migrates schema "platform" with its own Flyway history, reports its database in health,
- * and its edge refuses undeclared routes and missing tokens.
+ * The platform microservice runs alone on its own database: it migrates schema "platform" with its own Flyway history,
+ * reports its database in health, and its edge refuses undeclared routes and missing tokens.
  */
 @SpringBootTest(classes = PlatformApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = "management.endpoint.health.show-components=always")
 class PlatformServiceComponentTest {
 
     /** CREATE TABLE statements in database/migrations/platform (partitions included). */
-    private static final int TABLES = 47;
+    private static final int TABLES = 50;
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
     private static final TestTokens TOKENS = new TestTokens();
     private static final HttpClient HTTP = HttpClient.newHttpClient();
@@ -113,14 +111,5 @@ class PlatformServiceComponentTest {
             }
         }
         throw new IllegalStateException("platform has no operation that requires a token");
-    }
-
-    /** The OpenAPI document is written from the contract interfaces by springdoc and kept as a build artifact. */
-    @Test
-    void writesItsOpenApiDocumentFromTheCode() throws Exception {
-        HttpResponse<String> doc = send("GET", "/v3/api-docs.yaml", null);
-        assertThat(doc.statusCode()).isEqualTo(200);
-        String document = OpenApiDocuments.write("platform", doc.body());
-        assertThat(document).contains("operationId: platform.CancelOperation").contains("x-permission:");
     }
 }

@@ -4,11 +4,13 @@ import com.mysms.authclient.AuthContext;
 import com.mysms.iam.api.model.CompleteMfaRequest;
 import com.mysms.iam.api.model.LoginRequest;
 import com.mysms.iam.api.model.LoginResult;
+import com.mysms.iam.api.model.TenantCodeResolution;
 import com.mysms.iam.api.model.TokenPair;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.error.UnauthenticatedException;
 import com.mysms.core.id.UuidV7;
 import com.mysms.core.outbox.OutboxWriter;
@@ -19,21 +21,16 @@ import com.mysms.iam.events.IamEvents;
 import com.mysms.iam.mapper.MeAccountMapper;
 import com.mysms.iam.repository.AccountRepository;
 import com.mysms.iam.repository.AuthTokenRepository;
-import com.mysms.iam.repository.GrantRepository;
-import com.mysms.iam.repository.RoleGrantRow;
 import com.mysms.iam.repository.SignInAccount;
 import com.mysms.iam.repository.SignInSessionRepository;
 import com.mysms.iam.repository.TenantDirectoryRepository;
 import java.time.Clock;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -42,7 +39,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * Sign-in, token refresh and sign-out (iam.Login, iam.RefreshToken, iam.Logout) — the issuer's half of the token
- * contract (JAVA-CODING-RULES §16 security floor):
+ * contract:
  * <ul>
  *   <li>argon2id passwords: every refusal in a known tenant pays one verification and one write transaction, whether
  *       or not the account exists;</li>
@@ -64,6 +61,7 @@ public class SignInService extends AppTransactionManager {
     static final int LOCK_THRESHOLD = 5;
     static final int MAX_LOCK_MINUTES = 60;
     private static final int MAX_TENANT_CODE = 60;
+    private static final String TENANT_DIRECTORY = "iam.tenant_directory";
     private static final int MAX_IDENTIFIER = 320;
     private static final int MAX_PASSWORD = 1024;
     private static final int MAX_CODE = 32;
@@ -74,7 +72,7 @@ public class SignInService extends AppTransactionManager {
 
     private final TenantDirectoryRepository tenants;
     private final AccountRepository users;
-    private final GrantRepository grants;
+    private final ClaimsFactory claimsFactory;
     private final AuthTokenRepository refreshTokens;
     private final SignInSessionRepository sessions;
     private final MeAccountMapper userMapper;
@@ -83,20 +81,21 @@ public class SignInService extends AppTransactionManager {
     private final OutboxWriter outbox;
     private final DtoValidator validator;
     private final MfaService mfa;
+    private final AccountSignOutHandler signOut;
     private final Clock clock;
 
     public SignInService(@Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(IamDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
-                         TenantDirectoryRepository tenants, AccountRepository users, GrantRepository grants,
+                         TenantDirectoryRepository tenants, AccountRepository users, ClaimsFactory claimsFactory,
                          AuthTokenRepository refreshTokens, SignInSessionRepository sessions,
                          MeAccountMapper userMapper, PasswordHasher passwords, TokenIssuer issuer,
                          @Qualifier(IamEventsConfig.OUTBOX) OutboxWriter outbox, DtoValidator validator,
-                         MfaService mfa, Clock clock) {
+                         MfaService mfa, AccountSignOutHandler signOut, Clock clock) {
 
         super(database, transactions);
         this.tenants = tenants;
         this.users = users;
-        this.grants = grants;
+        this.claimsFactory = claimsFactory;
         this.refreshTokens = refreshTokens;
         this.sessions = sessions;
         this.userMapper = userMapper;
@@ -105,7 +104,22 @@ public class SignInService extends AppTransactionManager {
         this.outbox = outbox;
         this.validator = validator;
         this.mfa = mfa;
+        this.signOut = signOut;
         this.clock = clock;
+    }
+
+    /**
+     * The active tenant a school code names, for the edges of modules that serve guests. Unknown, over-long, suspended
+     * and closed all answer the same 404; read on the primary so a tenant just suspended is not served.
+     */
+    public TenantCodeResolution resolveTenantCode(String code) {
+        String trimmed = code == null ? "" : code.trim();
+        if (trimmed.isEmpty() || trimmed.length() > MAX_TENANT_CODE) {
+            throw new ResourceNotFoundException(TENANT_DIRECTORY, "code");
+        }
+        UUID tenant = doInGlobalPrimaryReadTransaction(() -> tenants.findActiveTenant(trimmed))
+                .orElseThrow(() -> new ResourceNotFoundException(TENANT_DIRECTORY, "code"));
+        return new TenantCodeResolution(tenant, trimmed);
     }
 
     /** iam.Login: password sign-in into one tenant. */
@@ -273,15 +287,16 @@ public class SignInService extends AppTransactionManager {
         return Optional.of(claims(account.get(), tenant, token.family()));
     }
 
-    /** iam.Logout: ends the token's session, or every session of the user; access tokens expire on their own. */
+    /**
+     * iam.Logout: ends the token's session, or everything that keeps the user signed in — every session, device and
+     * personal API token ({@link AccountSignOutHandler}); access tokens expire on their own.
+     */
     public void logout(boolean allDevices) {
         AuthContext caller = AuthContext.require();
         runInWriteTransaction(() -> {
             OffsetDateTime now = now();
             if (allDevices) {
-                refreshTokens.revokeAll(caller.userId(), now);
-                sessions.deactivateDevices(caller.userId(), now);
-                sessions.endAll(caller.userId(), now);
+                signOut.everywhere(caller.userId(), now);
             } else {
                 caller.sessionId().ifPresent(session -> {
                     refreshTokens.revokeFamily(session, now);
@@ -294,20 +309,12 @@ public class SignInService extends AppTransactionManager {
         });
     }
 
-    /** Claims from the database as of now: active grants, effective permissions (compacted), linked person. */
+    /**
+     * Claims from the database as of now: active grants (only the session's role once it switched role), effective
+     * permissions (compacted), linked person.
+     */
     private AccessClaims claims(SignInAccount account, UUID tenant, UUID session) {
-        LocalDate today = LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC);
-        List<RoleGrantRow> grantRows = grants.activeGrants(account.id(), today);
-        Set<String> permissions = PermissionCompactor.compact(grants.effectivePermissions(account.id(), today),
-                grants.catalogue());
-        Set<UUID> institutions = grantRows.stream()
-                .filter(g -> "institution".equals(g.scopeType()))
-                .map(g -> g.scopeId().orElseThrow())
-                .collect(Collectors.toUnmodifiableSet());
-        return new AccessClaims(account.id(), tenant, account.personId(), session, permissions, institutions,
-                grantRows.stream().map(RoleGrantRow::claim).distinct().toList(),
-                grantRows.stream().anyMatch(g -> RoleGrantRow.TENANT.equals(g.scopeType())),
-                PermissionCompactor.compact(grants.tenantWidePermissions(account.id(), today), grants.catalogue()));
+        return claimsFactory.forSession(account.id(), account.personId(), tenant, session);
     }
 
     private TokenPair tokenPair(AccessClaims claims, String refresh) {

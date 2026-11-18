@@ -7,6 +7,7 @@ import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.InvalidStateException;
 import com.mysms.core.error.PreconditionFailedException;
 import com.mysms.core.error.ResourceNotFoundException;
+import com.mysms.core.id.UuidV7;
 import com.mysms.core.outbox.AuditWriter;
 import com.mysms.core.outbox.OutboxWriter;
 import com.mysms.core.paging.Page;
@@ -98,6 +99,29 @@ public class OperationService extends AppTransactionManager {
             audit.recordTransition(AGGREGATE, id, "cancel", List.of("status", "doneTime"), null);
             outbox.publish(AGGREGATE + ".cancelled", AGGREGATE, id, SisEvents.payload(id));
             return mapper.toDto(repository.findById(id).orElseThrow());
+        });
+    }
+
+    /**
+     * Records a job that ran to its end inside the caller's write transaction (sis.IssueBonafideCertificate,
+     * sis.ApplyPromotions answer 202 with it): a succeeded operation of the caller, audited and announced with the
+     * work it reports, so the job centre lists it and GetOperation answers it like any other.
+     *
+     * @param operationName    the contract operation that ran (sis.ApplyPromotions)
+     * @param resourceType     what the job worked on (a table name), with {@code resourceId} when it is one row
+     * @param resultEntityType what it produced or changed (a table name), with {@code resultEntityId} when one row
+     */
+    public Operation recordFinished(String operationName, String resourceType, UUID resourceId,
+            String resultEntityType, UUID resultEntityId) {
+        OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                .truncatedTo(ChronoUnit.MICROS);
+        UUID actor = AuthContext.require().userId();
+        return doInWriteTransaction(() -> {
+            OperationEntity stored = repository.insertFinished(UuidV7.next(clock), operationName, resourceType,
+                    resourceId, resultEntityType, resultEntityId, now, actor);
+            audit.recordCreate(AGGREGATE, stored.getId());
+            outbox.publish(AGGREGATE + ".succeeded", AGGREGATE, stored.getId(), SisEvents.payload(stored.getId()));
+            return mapper.toDto(stored);
         });
     }
 

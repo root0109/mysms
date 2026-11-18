@@ -1,15 +1,9 @@
 package com.mysms.core.error;
 
 /**
- * Gives a field error its sentence from the message catalogue by the error's code (modelled on the owner's
- * {@code common} module): {@code NotNull} becomes the catalogue's {@code constraint.NotNull} in the caller's
- * language. Every field error of a response passes through here in {@link GlobalExceptionHandler}, whether bean
- * validation or a service raised it, so a translated code is translated everywhere at once.
- *
- * <p>Only codes whose sentence needs nothing but the code are in the catalogue; an error with any other code keeps
- * the sentence it was raised with. So does an error that carries a known code but a sentence of its own (a service
- * saying more than "must not be null"): the catalogue replaces the standard sentence of a code, never a specific one.
- * Field errors Spring raises for request parameters (400) do not come this way; they keep the validator's sentence.
+ * Gives a field error the catalogue sentence of its code in the caller's language ({@code NotNull} →
+ * {@code constraint.NotNull}). Only a code's standard sentence is replaced; an error with an unknown code or a
+ * sentence of its own keeps it.
  */
 public final class ConstraintMapper {
 

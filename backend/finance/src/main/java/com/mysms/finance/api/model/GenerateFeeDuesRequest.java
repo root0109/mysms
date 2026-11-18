@@ -1,4 +1,4 @@
-// Owned API contract of finance (JAVA-CODING-RULES §7); first materialized from api/openapi/finance.yaml on 2026-11-10.
+// Owned API contract of finance.
 package com.mysms.finance.api.model;
 
 import java.net.URI;
@@ -30,13 +30,16 @@ public class GenerateFeeDuesRequest {
   private UUID feePlanId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<UUID> studentIds = new ArrayList<>();
+  private UUID academicYearId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable List<UUID> studentIds = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID classSectionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<UUID> programEnrollmentIds = new ArrayList<>();
+  private @Nullable List<UUID> programEnrollmentIds = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -52,8 +55,9 @@ public class GenerateFeeDuesRequest {
   /**
    * Constructor with only required parameters
    */
-  public GenerateFeeDuesRequest(UUID feePlanId, LocalDate startDate) {
+  public GenerateFeeDuesRequest(UUID feePlanId, UUID academicYearId, LocalDate startDate) {
     this.feePlanId = feePlanId;
+    this.academicYearId = academicYearId;
     this.startDate = startDate;
   }
 
@@ -75,6 +79,26 @@ public class GenerateFeeDuesRequest {
   @JsonProperty("feePlanId")
   public void setFeePlanId(UUID feePlanId) {
     this.feePlanId = feePlanId;
+  }
+
+  public GenerateFeeDuesRequest academicYearId(UUID academicYearId) {
+    this.academicYearId = academicYearId;
+    return this;
+  }
+
+  /**
+   * Academic year the dues belong to (part of the duplicate-due guard).
+   * @return academicYearId
+   */
+  @NotNull @Valid 
+  @JsonProperty("academicYearId")
+  public UUID getAcademicYearId() {
+    return academicYearId;
+  }
+
+  @JsonProperty("academicYearId")
+  public void setAcademicYearId(UUID academicYearId) {
+    this.academicYearId = academicYearId;
   }
 
   public GenerateFeeDuesRequest studentIds(List<UUID> studentIds) {
@@ -203,6 +227,7 @@ public class GenerateFeeDuesRequest {
     }
     GenerateFeeDuesRequest generateFeeDuesRequest = (GenerateFeeDuesRequest) o;
     return Objects.equals(this.feePlanId, generateFeeDuesRequest.feePlanId) &&
+        Objects.equals(this.academicYearId, generateFeeDuesRequest.academicYearId) &&
         Objects.equals(this.studentIds, generateFeeDuesRequest.studentIds) &&
         Objects.equals(this.classSectionId, generateFeeDuesRequest.classSectionId) &&
         Objects.equals(this.programEnrollmentIds, generateFeeDuesRequest.programEnrollmentIds) &&
@@ -212,7 +237,7 @@ public class GenerateFeeDuesRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(feePlanId, studentIds, classSectionId, programEnrollmentIds, startDate, totalAmount);
+    return Objects.hash(feePlanId, academicYearId, studentIds, classSectionId, programEnrollmentIds, startDate, totalAmount);
   }
 
   @Override
@@ -220,6 +245,7 @@ public class GenerateFeeDuesRequest {
     StringBuilder sb = new StringBuilder();
     sb.append("class GenerateFeeDuesRequest {\n");
     sb.append("    feePlanId: ").append(toIndentedString(feePlanId)).append("\n");
+    sb.append("    academicYearId: ").append(toIndentedString(academicYearId)).append("\n");
     sb.append("    studentIds: ").append(toIndentedString(studentIds)).append("\n");
     sb.append("    classSectionId: ").append(toIndentedString(classSectionId)).append("\n");
     sb.append("    programEnrollmentIds: ").append(toIndentedString(programEnrollmentIds)).append("\n");

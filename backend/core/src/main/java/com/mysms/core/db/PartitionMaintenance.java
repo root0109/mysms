@@ -20,11 +20,9 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
 /**
- * Keeps a module's range-partitioned tables (database/README.md "Partitioned high-volume tables") ready: a monthly
- * partition for the current month and the months ahead, an alert when a DEFAULT partition holds rows (rows outside
- * every month, which also stop new months from being attached), and, only when a retention is configured, detaching
- * and dropping months that ended before it. Plain DDL through JDBC, connected as the schema owner, because only the
- * owner of a table may attach partitions to it; the application role never runs DDL.
+ * Keeps a module's range-partitioned tables ready: monthly partitions ahead, an alert when a DEFAULT partition holds
+ * rows (which also blocks attaching new months), and, only with a retention, dropping months before it. Runs as the
+ * schema owner, because only a table's owner may attach partitions; the application role never runs DDL.
  */
 public final class PartitionMaintenance {
 
@@ -80,7 +78,7 @@ public final class PartitionMaintenance {
     /**
      * One run over the module's schema.
      *
-     * @param owner           connections as the schema owner (ModuleDatabase#ownerDataSource)
+     * @param owner           connections as the schema owner
      * @param today           the current date (UTC)
      * @param monthsAhead     months after the current one that must already have a partition
      * @param retentionMonths months kept before the current one; 0 keeps every month (nothing is ever dropped)

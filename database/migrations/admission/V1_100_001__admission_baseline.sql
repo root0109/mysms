@@ -171,7 +171,6 @@ CREATE TABLE admission.application (
     CONSTRAINT ck_application_transport_mode CHECK (transport_mode IN ('auto', 'car', 'city_bus', 'cycle', 'rickshaw', 'school_bus', 'taxi', 'walking')),
     CONSTRAINT ck_application_payment_status CHECK (payment_status IN ('unpaid', 'partial', 'paid', 'waived')),
     CONSTRAINT ck_application_status CHECK (status IN ('draft', 'submitted', 'pending', 'confirmed', 'approved', 'rejected', 'admitted', 'cancelled', 'done')),
-    CONSTRAINT uq_application_1 UNIQUE (institution_id, application_number),
     CONSTRAINT uq_application_id_tenant UNIQUE (id, tenant_id)
 );
 COMMENT ON TABLE admission.application IS 'Admission application with applicant details.';
@@ -349,6 +348,7 @@ CREATE TABLE admission.outbox_event (
     payload text NOT NULL,
     occurred_at timestamptz NOT NULL DEFAULT now(),
     published_at timestamptz,
+    publish_error text,
     CONSTRAINT pk_admission_outbox_event PRIMARY KEY (id)
 );
 COMMENT ON TABLE admission.outbox_event IS 'Transactional outbox of the admission module: events written in the same transaction as the change, published to the bus by a relay, then pruned. Ordered by the identity column.';
@@ -360,7 +360,8 @@ COMMENT ON COLUMN admission.outbox_event.aggregate_id IS 'Entity id the event is
 COMMENT ON COLUMN admission.outbox_event.payload IS 'Serialised event (opaque message envelope).';
 COMMENT ON COLUMN admission.outbox_event.occurred_at IS 'When the change committed.';
 COMMENT ON COLUMN admission.outbox_event.published_at IS 'When the relay published it (NULL = pending).';
-CREATE INDEX ix_admission_outbox_event_pending ON admission.outbox_event (id) WHERE published_at IS NULL;
+COMMENT ON COLUMN admission.outbox_event.publish_error IS 'Why the relay could not turn the row into an event (set aside, not published); NULL otherwise.';
+CREATE INDEX ix_admission_outbox_event_pending ON admission.outbox_event (id) WHERE published_at IS NULL AND publish_error IS NULL;
 CREATE TABLE admission.inbox_event (
     event_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
@@ -368,19 +369,21 @@ CREATE TABLE admission.inbox_event (
     received_at timestamptz NOT NULL DEFAULT now(),
     processed_at timestamptz,
     processing_error text,
-    CONSTRAINT pk_admission_inbox_event PRIMARY KEY (event_id)
+    CONSTRAINT pk_admission_inbox_event PRIMARY KEY (tenant_id, event_id)
 );
 COMMENT ON TABLE admission.inbox_event IS 'Inbox of the admission module: ids of consumed events, kept so redeliveries are processed exactly once.';
-COMMENT ON COLUMN admission.inbox_event.event_id IS 'Global id of the consumed event.';
+COMMENT ON COLUMN admission.inbox_event.event_id IS 'Global id of the consumed event; recorded per tenant.';
 COMMENT ON COLUMN admission.inbox_event.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
 COMMENT ON COLUMN admission.inbox_event.event_type IS 'Event name.';
 COMMENT ON COLUMN admission.inbox_event.received_at IS 'First delivery time.';
 COMMENT ON COLUMN admission.inbox_event.processed_at IS 'When handling committed (NULL = in flight).';
 COMMENT ON COLUMN admission.inbox_event.processing_error IS 'Last handling error, if any.';
+CREATE INDEX ix_admission_inbox_event_processed ON admission.inbox_event (processed_at) WHERE processed_at IS NOT NULL;
 
 -- === P1-15: business uniqueness ignores soft-deleted rows ===
 
 CREATE UNIQUE INDEX uq_admission_cycle_fee_1 ON admission.admission_cycle_fee (admission_cycle_id, course_id) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX uq_application_1 ON admission.application (institution_id, application_number) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX uq_application_emergency_contact_1 ON admission.application_emergency_contact (application_id, priority) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX uq_application_guardian_1 ON admission.application_guardian (application_id, relationship) WHERE deleted_at IS NULL;
 

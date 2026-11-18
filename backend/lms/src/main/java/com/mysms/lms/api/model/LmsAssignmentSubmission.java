@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -31,7 +31,7 @@ public class LmsAssignmentSubmission {
   private UUID assignmentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID userId;
+  private @Nullable UUID userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID lessonId;
@@ -184,9 +184,8 @@ public class LmsAssignmentSubmission {
   /**
    * Constructor with only required parameters
    */
-  public LmsAssignmentSubmission(UUID assignmentId, UUID userId) {
+  public LmsAssignmentSubmission(UUID assignmentId) {
     this.assignmentId = assignmentId;
-    this.userId = userId;
   }
 
   public LmsAssignmentSubmission id(@Nullable UUID id) {
@@ -229,23 +228,23 @@ public class LmsAssignmentSubmission {
     this.assignmentId = assignmentId;
   }
 
-  public LmsAssignmentSubmission userId(UUID userId) {
+  public LmsAssignmentSubmission userId(@Nullable UUID userId) {
     this.userId = userId;
     return this;
   }
 
   /**
-   * Student.
+   * Student. Output only: the submitting student, from the token.
    * @return userId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("userId")
-  public UUID getUserId() {
+  public @Nullable UUID getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(UUID userId) {
+  public void setUserId(@Nullable UUID userId) {
     this.userId = userId;
   }
 
@@ -375,7 +374,7 @@ public class LmsAssignmentSubmission {
   }
 
   /**
-   * Evaluation result.
+   * Evaluation result. Output only: set by GradeLearningSubmission.
    * @return status
    */
   
@@ -395,7 +394,7 @@ public class LmsAssignmentSubmission {
   }
 
   /**
-   * Evaluator.
+   * Evaluator. Output only: set by GradeLearningSubmission.
    * @return evaluatorUserId
    */
   @Valid 
@@ -415,7 +414,7 @@ public class LmsAssignmentSubmission {
   }
 
   /**
-   * Feedback.
+   * Feedback. Output only: set by GradeLearningSubmission.
    * @return evaluatorComments
    */
   
@@ -495,7 +494,7 @@ public class LmsAssignmentSubmission {
   }
 
   /**
-   * Submission time.
+   * Submission time. Output only: set by FinalizeSubmission.
    * @return submittedAt
    */
   @Valid 
@@ -515,7 +514,7 @@ public class LmsAssignmentSubmission {
   }
 
   /**
-   * Final submission (false = draft that can still change).
+   * Final submission (false = draft that can still change). Output only: set by FinalizeSubmission.
    * @return isFinal
    */
   
@@ -535,7 +534,7 @@ public class LmsAssignmentSubmission {
   }
 
   /**
-   * When marked final.
+   * When marked final. Output only: set by FinalizeSubmission.
    * @return finalizedAt
    */
   @Valid 

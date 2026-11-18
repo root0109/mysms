@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of facility.room_facility (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of facility.room_facility. */
 @Getter
 @Setter
 @SuperBuilder

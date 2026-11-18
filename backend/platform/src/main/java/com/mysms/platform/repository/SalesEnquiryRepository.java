@@ -22,11 +22,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to platform.sales_enquiry (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. The table is global (no
- * tenant column, no row-level security): it is written only by
- * platform staff, through the operations whose scheme the edge enforces.
+ * Plain-JDBC access to platform.sales_enquiry: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. The table is global (no tenant column, no row-level security): it is
+ * written only by platform staff, through the operations whose scheme the edge enforces.
  */
 @Repository
 public class SalesEnquiryRepository {
@@ -81,6 +79,15 @@ public class SalesEnquiryRepository {
                    updated_by = :updatedBy,
                    row_version = row_version + 1
              WHERE id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** platform.MarkEnquiryContacted: allowed while the enquiry is new. */
+    private static final String TRANSITION_MARK_CONTACTED = """
+            UPDATE platform.sales_enquiry
+               SET status = 'contacted',
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE id = :id AND row_version = :expected AND status = 'new' AND deleted_at IS NULL
             """;
     private static final String UPDATE = """
             UPDATE platform.sales_enquiry
@@ -152,6 +159,12 @@ public class SalesEnquiryRepository {
                 .param("updatedBy", e.getUpdatedBy())
                 .param("expected", expectedVersion)
                 .update();
+    }
+
+    /** platform.MarkEnquiryContacted; 0 rows when the enquiry changed or is no longer new. */
+    public int markContacted(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_MARK_CONTACTED).param("id", id).param("expected", expected).param("now", now)
+                .param("actor", actor).update();
     }
 
     public int softDelete(SalesEnquiryEntity e, int expectedVersion) {

@@ -8,11 +8,8 @@ MySMS is a set of **21 independently deployable services**, one per PostgreSQL s
 
 ```text
 mysms/              (parent pom: Java 17, Spring Boot 4.1, dependency + plugin management, quality gates)
-├── core/           (plain library: base classes, tenancy, errors, paging, ids, transaction helpers,
+├── core/           (plain library: base classes, tenancy, errors, paging, ids, AppTransactionManager,
 │                    cross-cutting auto-configuration — no schema, no Flyway, no datasource of its own)
-├── sdk/            (GENERATED: the Java clients modules call each other with, and the gRPC stubs of every
-│                    module compiled from api/proto; each module's own contract interfaces and DTOs live
-│                    inside the module itself, in com.mysms.<module>.api)
 ├── auth-client/    (the only auth surface modules touch: AuthContext, token verification, permission filters)
 ├── messaging/      (event API, runtime, and RabbitMQ [default], Google Cloud Pub/Sub, and in-process adapters)
 ├── master/         (schema `master`: Master Data)
@@ -41,20 +38,20 @@ mysms/              (parent pom: Java 17, Spring Boot 4.1, dependency + plugin m
 
 Each domain module has its own `@SpringBootApplication`, its own configuration namespace (`mysms.<module>.*`), its own DataSource (core's `RoutingDataSource`: read transactions on the module's replica pool when one is configured, write transactions on the primary) and transaction manager, and its own Flyway folder; the build produces both a library jar (used by `app`) and an executable service jar.
 
-**Isolation is structural.** A domain module depends on `core`, `sdk`, `auth-client` and the `messaging` runtime — never another domain module — so one module cannot compile against another's classes. A module that declares event handlers also gets `messaging` at compile scope for the narrow `com.mysms.messaging.events` API; modules that only publish through core's outbox keep the dependency runtime-only. Maven exposes adapter dependencies transitively, so the dependency boundary is enforced by the POM policy and conformance check: domain code may use the event API, but not RabbitMQ, Google Pub/Sub or adapter/runtime packages. RabbitMQ is the default; Google Cloud Pub/Sub and in-process are selected with `mysms.events.bus`. Package layout inside a module is defined in `JAVA-CODING-RULES.md` §3.
+**Isolation is structural.** A domain module depends on `core`, `auth-client` and the `messaging` runtime — never another domain module — so one module cannot compile against another's classes. A module that declares event handlers also gets `messaging` at compile scope for the narrow `com.mysms.messaging.events` API; modules that only publish through core's outbox keep the dependency runtime-only. Maven exposes adapter dependencies transitively, so the dependency boundary is enforced by the POM policy and conformance check: domain code may use the event API, but not RabbitMQ, Google Pub/Sub or adapter/runtime packages. RabbitMQ is the default; Google Cloud Pub/Sub and in-process are selected with `mysms.events.bus`. Package layout inside a module is defined in `JAVA-CODING-RULES.md` §3.
 
 **Cross-module rules** (these hold identically in one process or across many):
 
-- **No cross-schema SQL** — no joins, reads or writes outside the module's own schema. Another module's data is read through its SDK client (ids plus compact card projections), or from a local read model kept fresh by that module's events.
+- **No cross-schema SQL** — no joins, reads or writes outside the module's own schema. Another module's data is read through its gRPC service (ids plus compact card messages; JAVA-CODING-RULES §10), or from a local read model kept fresh by that module's events.
 - **No cross-module foreign keys.** References into another module are *logical references* (indexed uuid columns) stored as given (no write-time call to the owner, decision of 2026-11-07), protected by archive-not-delete, event-driven cleanup and RLS (a reconciliation job against the owners waits for service-to-service identity) — see `database/logical-references.md`.
 - **No distributed transactions.** A change that other modules care about writes its own rows plus an `outbox_event` row in one local transaction; the module's relay publishes it to the bus — MySMS's own `EventBus` interface, RabbitMQ by default, swappable by configuration — and consumers handle it exactly once through their `inbox_event`. Audit records travel the same way into `platform.audit_log`.
 - **Module-local infrastructure.** Idempotency keys, long-running operations and document numbering live in each module's own schema; nothing is borrowed from the platform schema at runtime.
-- **Calls are remote by contract.** In `app`, SDK clients call the co-located module over loopback HTTP/gRPC — the same path as in production — so assembled and distributed deployments behave the same.
-- **Trace context** (W3C `traceparent`) is propagated by `core` on every inbound request, SDK call and published event, so a request can be followed across services.
+- **Calls are remote by contract.** Modules call each other only over gRPC (`@GrpcClient` stubs, JAVA-CODING-RULES §10); in `app` the same clients call the co-located module through the in-process gRPC server — the same code path as in production — so assembled and distributed deployments behave the same.
+- **Trace context** (W3C `traceparent`) is propagated by `core` on every inbound request, gRPC call and published event, so a request can be followed across services.
 
 ## 2. Allowed module dependencies
 
-A module may call (through `sdk`) only the modules whose data it references. The table is derived from the 468 forward logical references in `database/logical-references.md`; the number is how many reference columns point at that module. Tenant references are not dependencies (the tenant comes from the token). Every module also uses `core`, `contracts`, `sdk` and `auth-client`.
+A module may call (over gRPC, from its `integration` package, with copies of the callees' protos) only the modules whose data it references. The table is derived from the 468 forward logical references in `database/logical-references.md`; the number is how many reference columns point at that module. Tenant references are not dependencies (the tenant comes from the token). Every module also uses `core`, `contracts`, `sdk` and `auth-client`.
 
 | Module | May depend on |
 |---|---|
@@ -80,7 +77,7 @@ A module may call (through `sdk`) only the modules whose data it references. The
 | `frontoffice` | `hr` (1), `iam` (2), `org` (7), `platform` (1), `sis` (1) |
 | `careers` | `iam` (2), `master` (1), `people` (1), `platform` (2) |
 
-**The graph is a DAG.** The 26 references that point against an arrow are event-only: the owner does not know about them, the referencing module cleans them up from the owner's events, and it never calls the owner for them (listed at the end of `database/logical-references.md`). Each module declares the SDK clients it uses in its configuration; a plain JUnit check in `core`'s test kit fails the build if a module imports an SDK client package outside this table.
+**The graph is a DAG.** The 27 references that point against an arrow are event-only: the owner does not know about them, the referencing module cleans them up from the owner's events, and it never calls the owner for them (listed at the end of `database/logical-references.md`). Each module calls only the modules in its row, through one `<Callee>GrpcClient` per callee; a plain JUnit check in `core`'s test kit (`ModuleChecks`) fails the build if a module imports the gRPC contract (`com.mysms.<x>.v1`) of a module outside its row, and conformance G1 fails it if a module carries the proto of one.
 
 ## 3. Data access: Spring JDBC only, no ORM
 

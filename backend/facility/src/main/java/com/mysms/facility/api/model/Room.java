@@ -1,4 +1,4 @@
-// Owned API contract of facility (JAVA-CODING-RULES §7); first materialized from api/openapi/facility.yaml on 2026-11-10.
+// Owned API contract of facility.
 package com.mysms.facility.api.model;
 
 import java.net.URI;

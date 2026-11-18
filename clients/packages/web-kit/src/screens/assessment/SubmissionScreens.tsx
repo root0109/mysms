@@ -1,5 +1,4 @@
 import {
-  isApiError,
   RESOURCES,
   useAssignmentSubmissionStep,
   useAssignmentSubmissions,
@@ -8,7 +7,7 @@ import {
   useCreateRecord,
   useHomeworkSubmissions,
   useI18n,
-  useMyStudent,
+  useMyStudentIds,
   useRecord,
   useReplyToHomeworkFeedback,
   useUpdateRecord,
@@ -18,43 +17,11 @@ import {
 } from '@mysms/core';
 import { enumLabel } from '@mysms/i18n';
 import { Banner, Button, Card, DataTable, Skeleton, StatusChip, TextArea, TextInput } from '@mysms/ui-web';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router';
+import { assessmentErrorText as errorText, useOnline } from './assessmentText';
+import { OfflineBanner } from './assessmentUi';
 import { ManagedResourcePanel } from './ManagedResourcePanel';
-
-function useOnline() {
-  const [online, setOnline] = useState(() => typeof navigator === 'undefined' || navigator.onLine);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const on = () => setOnline(true);
-    const off = () => setOnline(false);
-    window.addEventListener('online', on);
-    window.addEventListener('offline', off);
-    return () => {
-      window.removeEventListener('online', on);
-      window.removeEventListener('offline', off);
-    };
-  }, []);
-  return online;
-}
-
-function OfflineBanner() {
-  const online = useOnline();
-  const { t } = useI18n();
-  return online ? null : <Banner intent="warning">{t('common.state.offline')}</Banner>;
-}
-
-function errorText(error: unknown, t: ReturnType<typeof useI18n>['t']): string {
-  if (isApiError(error)) {
-    if (error.status === 412) return t('common.conflict.body');
-    if (error.status === 403) return t('adm.records.forbidden');
-    if (error.status === 404) return t('common.state.notAvailable');
-    if (error.status === 409) return error.detail ?? t('common.error.generic');
-    if (error.status === 422)
-      return error.errors.map((item) => item.message).join(' ') || t('common.validation.pattern');
-  }
-  return t('common.error.generic');
-}
 
 export function HomeworkSubmissionPanel({
   homeworkId,
@@ -68,7 +35,7 @@ export function HomeworkSubmissionPanel({
   const mayCreate = useCan('assessment.homework_submission.create');
   const mayRead = useCan('assessment.homework_submission.read');
   const mayReply = useCan('assessment.homework_submission.reply_to_homework_feedback');
-  const student = useMyStudent();
+  const studentId = useMyStudentIds()[0];
   const submissions = useHomeworkSubmissions(mayRead ? homeworkId : null);
   const create = useCreateHomeworkSubmission();
   const reply = useReplyToHomeworkFeedback();
@@ -82,30 +49,21 @@ export function HomeworkSubmissionPanel({
       </Card>
     );
   }
-  if (student.isPending || (mayRead && submissions.isPending))
-    return <Skeleton label={t('common.state.loading')} lines={5} />;
-  if (student.isError || (mayRead && submissions.isError)) {
-    const error = student.error ?? submissions.error;
+  if (mayRead && submissions.isPending) return <Skeleton label={t('common.state.loading')} lines={5} />;
+  if (mayRead && submissions.isError) {
     return (
       <Banner
         intent="danger"
         action={
-          <Button
-            variant="secondary"
-            onClick={() => {
-              void student.refetch();
-              if (mayRead) void submissions.refetch();
-            }}
-          >
+          <Button variant="secondary" onClick={() => void submissions.refetch()}>
             {t('common.action.retry')}
           </Button>
         }
       >
-        {errorText(error, t)}
+        {errorText(submissions.error, t)}
       </Banner>
     );
   }
-  const studentId = student.data?.id;
   const own = studentId ? submissions.data?.items.find((item) => item.studentId === studentId) : undefined;
   const createSubmission = async () => {
     if (!studentId || !online || create.isPending) return;
@@ -119,14 +77,14 @@ export function HomeworkSubmissionPanel({
     }
   };
   const sendReply = async () => {
-    if (!own?.id || !text.trim() || !online || reply.isPending) return;
+    if (!own?.id || !own.etag || !text.trim() || !online || reply.isPending) return;
     setFailure(null);
     setNotice(null);
     try {
       await reply.mutateAsync({
         homeworkId,
         submissionId: own.id,
-        etag: own.etag ?? null,
+        etag: own.etag,
         studentReply: text,
       });
       setText('');
@@ -152,7 +110,7 @@ export function HomeworkSubmissionPanel({
         <p className="hint">{t('asm.web.homeworkRecordOnly')}</p>
         <p className="hint">{t('asm.native.attachmentsUnavailable')}</p>
       </Card>
-      {student.data ? null : <Banner intent="warning">{t('asm.web.noStudent')}</Banner>}
+      {studentId ? null : <Banner intent="warning">{t('asm.web.noStudent')}</Banner>}
       {own ? (
         <Card title={t('asm.native.submitted')}>
           <StatusChip label={enumLabel(t, 'assessment.status', own.status)} />
@@ -181,7 +139,7 @@ export function HomeworkSubmissionPanel({
               />
               <Button
                 loading={reply.isPending}
-                disabled={!text.trim() || !online}
+                disabled={!text.trim() || !online || !own.etag}
                 onClick={() => void sendReply()}
               >
                 {t('asm.native.reply')}
@@ -210,82 +168,87 @@ export function HomeworkSubmissionPanel({
   );
 }
 
-function StudentAssignmentSubmission({ assignmentId }: { assignmentId: string }) {
+/** The states in which a student may change their own submission and hand it in (again). */
+const EDITABLE = ['draft', 'change_requested'];
+/** The states from which a returned submission can be taken back to a draft. */
+const RESETTABLE = ['rejected', 'change_requested'];
+
+function StudentAssignmentSubmission({
+  assignmentId,
+  studentId,
+}: {
+  assignmentId: string;
+  studentId: string;
+}) {
   const { t } = useI18n();
   const online = useOnline();
-  const student = useMyStudent();
-  const mayRead = useCan('assessment.assignment_submission.read');
+  const mayCreate = useCan('assessment.assignment_submission.create');
+  const mayUpdate = useCan('assessment.assignment_submission.update');
+  const maySubmit = useCan('assessment.assignment_submission.submit_assignment_submission');
   const mayReset = useCan('assessment.assignment_submission.reset_assignment_submission');
   const submissionDef = RESOURCES.find((item) => item.key === 'assessment.AssignmentSubmission');
   const create = useCreateRecord(submissionDef!);
   const update = useUpdateRecord(submissionDef!);
   const step = useAssignmentSubmissionStep();
-  const submissions = useAssignmentSubmissions(mayRead ? assignmentId : null);
+  // only the student's own submission is asked for (the service shows a student nothing else)
+  const submissions = useAssignmentSubmissions(assignmentId, studentId);
   const [text, setText] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
   const [failure, setFailure] = useState<unknown>(null);
-  if (student.isPending || (mayRead && submissions.isPending))
-    return <Skeleton label={t('common.state.loading')} lines={5} />;
-  if (student.isError || (mayRead && submissions.isError)) {
-    const error = student.error ?? submissions.error;
+  if (submissions.isPending) return <Skeleton label={t('common.state.loading')} lines={5} />;
+  if (submissions.isError) {
     return (
       <Banner
         intent="danger"
         action={
-          <Button
-            variant="secondary"
-            onClick={() => {
-              void student.refetch();
-              if (mayRead) void submissions.refetch();
-            }}
-          >
+          <Button variant="secondary" onClick={() => void submissions.refetch()}>
             {t('common.action.retry')}
           </Button>
         }
       >
-        {errorText(error, t)}
+        {errorText(submissions.error, t)}
       </Banner>
     );
   }
-  const studentId = student.data?.id;
-  const own = studentId ? submissions.data?.items.find((item) => item.studentId === studentId) : undefined;
-  const canEdit = !own || own.status === 'draft' || own.status === 'change_requested';
+  const own = submissions.data?.items.find((item) => item.studentId === studentId);
+  const canEdit = own ? EDITABLE.includes(own.status ?? '') && mayUpdate && Boolean(own.etag) : mayCreate;
   const busy = create.isPending || update.isPending || step.isPending;
   const submit = async () => {
-    if (!studentId || !text.trim() || !online || busy || !mayRead) return;
+    if (!canEdit || !maySubmit || !text.trim() || !online || busy) return;
     setNotice(null);
     setFailure(null);
     try {
       let submission: RecordRow;
-      if (own?.id) {
-        if (!own.etag) throw new Error('The submission is missing its entity tag.');
+      if (own?.id && own.etag) {
         submission = await update.mutateAsync({
           id: own.id,
           etag: own.etag,
           values: { content: text.trim() },
         });
       } else {
-        submission = await create.mutateAsync({
-          values: { assignmentId, studentId, submittedAt: new Date().toISOString(), content: text.trim() },
-        });
+        // the service records when the work was handed in
+        submission = await create.mutateAsync({ values: { assignmentId, studentId, content: text.trim() } });
       }
-      if (!submission.id) throw new Error('The submission id was not returned.');
+      if (typeof submission.etag !== 'string' || !submission.etag) {
+        throw new Error('The submission came back without its entity tag.');
+      }
       await step.mutateAsync({
         submissionId: submission.id,
         assignmentId,
         step: 'submit',
-        etag: typeof submission.etag === 'string' ? submission.etag : (own?.etag ?? null),
+        etag: submission.etag,
       });
+      setText('');
       setNotice(t('asm.web.submissionSaved'));
     } catch (error) {
       setFailure(error);
     }
   };
   const reset = async () => {
-    if (!own?.id || !online || busy) return;
+    if (!own?.id || !own.etag || !online || busy) return;
     setFailure(null);
     try {
-      await step.mutateAsync({ submissionId: own.id, assignmentId, step: 'reset', etag: own.etag ?? null });
+      await step.mutateAsync({ submissionId: own.id, assignmentId, step: 'reset', etag: own.etag });
       setNotice(t('asm.web.submissionSaved'));
     } catch (error) {
       setFailure(error);
@@ -293,12 +256,16 @@ function StudentAssignmentSubmission({ assignmentId }: { assignmentId: string })
   };
   return (
     <>
-      {student.data ? null : <Banner intent="warning">{t('asm.web.noStudent')}</Banner>}
       <OfflineBanner />
       {own ? (
         <StatusChip label={enumLabel(t, 'assessment.assignment_submission_status', own.status)} />
       ) : null}
-      {canEdit ? (
+      {own?.feedback ? (
+        <p>
+          <strong>{t('asm.native.feedback')}:</strong> {own.feedback}
+        </p>
+      ) : null}
+      {canEdit && maySubmit ? (
         <>
           <TextArea
             label={t('asm.web.submitText')}
@@ -306,17 +273,18 @@ function StudentAssignmentSubmission({ assignmentId }: { assignmentId: string })
             maxLength={8000}
             onChange={(event) => setText(event.target.value)}
           />
-          <Button
-            loading={busy}
-            disabled={!studentId || !text.trim() || !online || !mayRead}
-            onClick={() => void submit()}
-          >
+          <Button loading={busy} disabled={!text.trim() || !online} onClick={() => void submit()}>
             {own ? t('asm.web.updateSubmission') : t('asm.web.submitAssignment')}
           </Button>
         </>
       ) : null}
-      {own?.status === 'cancelled' && mayReset ? (
-        <Button variant="secondary" loading={busy} disabled={!online} onClick={() => void reset()}>
+      {own && RESETTABLE.includes(own.status ?? '') && mayReset ? (
+        <Button
+          variant="secondary"
+          loading={busy}
+          disabled={!online || !own.etag}
+          onClick={() => void reset()}
+        >
           {t('asm.native.reset')}
         </Button>
       ) : null}
@@ -343,12 +311,15 @@ function SubmissionReview({
   const [feedback, setFeedback] = useState(submission.feedback ?? '');
   const [reason, setReason] = useState('');
   const status = String(submission.status);
+  const ready = Boolean(submission.id && submission.etag);
   const run = (action: 'accept' | 'reject' | 'requestChanges' | 'grade') =>
+    submission.id &&
+    submission.etag &&
     step.mutate({
-      submissionId: submission.id ?? '',
+      submissionId: submission.id,
       assignmentId,
       step: action,
-      etag: submission.etag ?? null,
+      etag: submission.etag,
       ...(action === 'grade' ? { marks, feedback } : {}),
       ...(action === 'reject' || action === 'requestChanges' ? { reason } : {}),
     });
@@ -361,7 +332,7 @@ function SubmissionReview({
         </p>
       </div>
       {status === 'submitted' && mayAccept ? (
-        <Button variant="secondary" loading={step.isPending} onClick={() => run('accept')}>
+        <Button variant="secondary" loading={step.isPending} disabled={!ready} onClick={() => run('accept')}>
           {t('asm.native.approve')}
         </Button>
       ) : null}
@@ -376,7 +347,7 @@ function SubmissionReview({
             <Button
               variant="danger"
               loading={step.isPending}
-              disabled={!reason.trim()}
+              disabled={!ready || !reason.trim()}
               onClick={() => run('reject')}
             >
               {t('asm.native.reject')}
@@ -386,7 +357,7 @@ function SubmissionReview({
             <Button
               variant="secondary"
               loading={step.isPending}
-              disabled={!reason.trim()}
+              disabled={!ready || !reason.trim()}
               onClick={() => run('requestChanges')}
             >
               {t('asm.native.requestChanges')}
@@ -407,7 +378,7 @@ function SubmissionReview({
             value={feedback}
             onChange={(event) => setFeedback(event.target.value)}
           />
-          <Button loading={step.isPending} disabled={!marks.trim()} onClick={() => run('grade')}>
+          <Button loading={step.isPending} disabled={!ready || !marks.trim()} onClick={() => run('grade')}>
             {t('asm.web.gradeSubmission')}
           </Button>
         </>
@@ -422,21 +393,25 @@ function SubmissionReview({
 }
 
 export function AssignmentDetailScreen() {
-  const { t } = useI18n();
+  const { t, format } = useI18n();
   const { assignmentId: param = '' } = useParams();
   const assignmentId = param;
   const mayRead = useCan('assessment.assignment.read');
-  const maySubmit = useCan('assessment.assignment_submission.create');
+  const maySubmit = useCan('assessment.assignment_submission.submit_assignment_submission');
   const mayReadSubmissions = useCan('assessment.assignment_submission.read');
   const mayGrade = useCan('assessment.assignment_submission.grade_assignment_submission');
   const mayAccept = useCan('assessment.assignment_submission.accept_assignment_submission');
   const mayReject = useCan('assessment.assignment_submission.reject_assignment_submission');
   const mayRequestChanges = useCan('assessment.assignment_submission.request_submission_changes');
-  const mayReviewSubmissions = mayReadSubmissions || mayGrade || mayAccept || mayReject || mayRequestChanges;
+  // a teacher reviews; the read grant alone does not make one (a student's role carries it too)
+  const reviewer = mayGrade || mayAccept || mayReject || mayRequestChanges;
+  // the student view belongs to whoever is a student (a student record of their own) and reviews nothing
+  const ownStudentId = useMyStudentIds()[0];
+  const studentView = ownStudentId !== undefined && !reviewer;
   const def = RESOURCES.find((item) => item.key === 'assessment.Assignment');
   const assignment = useRecord(mayRead ? def : undefined, mayRead ? assignmentId || null : null);
-  const submissions = useAssignmentSubmissions(mayReviewSubmissions ? assignmentId : null);
-  if (!mayRead && !maySubmit && !mayReviewSubmissions) {
+  const submissions = useAssignmentSubmissions(reviewer && mayReadSubmissions ? assignmentId : null);
+  if (!mayRead && !studentView && !reviewer) {
     return (
       <Card title={t('screen.ASM06.title')}>
         <p className="hint">{t('asm.web.noAccess')}</p>
@@ -464,7 +439,6 @@ export function AssignmentDetailScreen() {
         <p>{t('asm.web.noAssignment')}</p>
       </Card>
     );
-  const studentView = maySubmit && !mayReviewSubmissions;
   if (studentView) {
     return (
       <div className="page">
@@ -479,9 +453,15 @@ export function AssignmentDetailScreen() {
         <Card title={String(row?.title ?? row?.name ?? t('screen.ASM07.title'))}>
           <p>{String(row?.description ?? t('common.state.notAvailable'))}</p>
           <p>
-            {t('asm.native.due')}: {String(row?.dueAt ?? t('common.state.notAvailable'))}
+            {typeof row?.dueAt === 'string' && row.dueAt
+              ? t('asm.native.due', { date: format.dateTime(row.dueAt) })
+              : t('common.state.notAvailable')}
           </p>
-          <StudentAssignmentSubmission assignmentId={assignmentId} />
+          {maySubmit || mayReadSubmissions ? (
+            <StudentAssignmentSubmission assignmentId={assignmentId} studentId={ownStudentId} />
+          ) : (
+            <p className="hint">{t('asm.web.noAccess')}</p>
+          )}
         </Card>
       </div>
     );
@@ -497,7 +477,7 @@ export function AssignmentDetailScreen() {
         </p>
         <Link to="/app/assessment/assignments">{t('screen.ASM05.title')}</Link>
       </header>
-      {!mayReviewSubmissions ? (
+      {!reviewer || !mayReadSubmissions ? (
         <Card title={t('asm.native.submissions')}>
           <p className="hint">{t('asm.web.noAccess')}</p>
         </Card>

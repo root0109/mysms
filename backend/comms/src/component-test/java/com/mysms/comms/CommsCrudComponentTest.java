@@ -20,8 +20,8 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 /**
- * Every standard operation comms serves, end to end over HTTP against real PostgreSQL as the non-owner application
- * role (row-level security on): the checks of {@link CrudContract} for each resource of crud-spec.json.
+ * Runs the {@link CrudContract} checks for each resource of crud-spec.json over HTTP, against real PostgreSQL as the
+ * non-owner role (row-level security on).
  */
 @SpringBootTest(classes = CommsApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CommsCrudComponentTest {

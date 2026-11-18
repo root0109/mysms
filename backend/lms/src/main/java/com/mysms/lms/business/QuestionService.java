@@ -59,6 +59,7 @@ import com.mysms.lms.repository.QuestionHotspotRepository;
 import com.mysms.lms.repository.QuestionMatchPairRepository;
 import com.mysms.lms.repository.QuestionOptionRepository;
 import com.mysms.lms.repository.QuestionPatternRepository;
+import com.mysms.lms.repository.QuestionBankSearch;
 import com.mysms.lms.repository.QuestionRepository;
 import java.time.Clock;
 import java.util.ArrayList;
@@ -70,20 +71,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.question (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Question
- * are served here too — QuestionAcceptedAnswer, QuestionBlank, QuestionHotspot, QuestionMatchPair, QuestionOption,
- * QuestionPattern.
+ * Business service of lms.question and of the records that exist only as part of a Question (QuestionAcceptedAnswer,
+ * QuestionBlank, QuestionHotspot, QuestionMatchPair, QuestionOption, QuestionPattern): audit and domain event commit in
+ * the same transaction as every change. Rows outside the caller's institutions are invisible; tenant-level rows change
+ * only through a tenant-wide grant.
  */
 @Service
 public class QuestionService extends AppTransactionManager {
 
     public static final String AGGREGATE = QuestionEntity.TABLE;
     static final String PERMISSION_LIST = "lms.question.read";
+    static final int MAX_SEARCH_TEXT = 200;
+    static final List<String> QUESTION_TYPES = List.of("choices", "user_input", "open_ended", "true_false",
+            "matching", "fill_blank", "numeric", "hotspot", "pattern");
     static final String PERMISSION_GET = "lms.question.read";
     static final String PERMISSION_CREATE = "lms.question.create";
     static final String PERMISSION_UPDATE = "lms.question.update";
@@ -228,6 +228,33 @@ public class QuestionService extends AppTransactionManager {
         });
     }
 
+    /**
+     * Finds questions to add to a quiz: live and unretired, matching the text (title, text or code) and the types,
+     * leaving out the questions already in {@code excludeQuizId}; newest first. Text of at most 200 characters, known
+     * types only (422).
+     */
+    public Page<Question> searchQuestionBank(String query, List<String> questionTypes, UUID excludeQuizId,
+            Integer pageNumber, Integer pageSize, String cursor) {
+        List<FieldError> errors = new ArrayList<>();
+        if (query != null && query.length() > MAX_SEARCH_TEXT) {
+            errors.add(new FieldError("query", "must be at most " + MAX_SEARCH_TEXT + " characters", "Size"));
+        }
+        List<String> types = questionTypes == null ? List.of() : questionTypes;
+        if (!QUESTION_TYPES.containsAll(types)) {
+            errors.add(new FieldError("questionTypes", "must be among " + String.join(", ", QUESTION_TYPES),
+                    "AllowedValues"));
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
+        }
+        SortSpec sort = SortSpec.parse(List.of("createTime,desc"), QuestionRepository.SORT_FIELDS,
+                QuestionRepository.DEFAULT_ORDER, QuestionRepository.ID_COLUMN);
+        SqlFragment where = QuestionBankSearch.of(query, types, excludeQuizId);
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort,
+                query + "|" + types + "|" + excludeQuizId, clock);
+        return doInReadTransaction(() -> repository.list(page, where).map(mapper::toDto));
+    }
+
     /** Creates the row; with validateOnly every check runs and nothing is written. */
     public Question createQuestion(Question request, boolean validateOnly) {
         validator.validate(request);
@@ -250,8 +277,8 @@ public class QuestionService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Question updateQuestion(UUID id, String ifMatch, QuestionUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -359,12 +386,12 @@ public class QuestionService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(QuestionEntity entity) {
         return Optional.empty();
     }
 
-    /** Applies the selected QuestionUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected QuestionUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(QuestionEntity entity, QuestionUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -488,8 +515,8 @@ public class QuestionService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public QuestionAcceptedAnswer updateQuestionAcceptedAnswer(UUID questionId, UUID id, String ifMatch,
             QuestionAcceptedAnswerUpdate changes, String updateMask, boolean validateOnly) {
@@ -552,15 +579,12 @@ public class QuestionService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfQuestionAcceptedAnswer(QuestionAcceptedAnswerEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected QuestionAcceptedAnswerUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected QuestionAcceptedAnswerUpdate fields; explicit per field so a mask can clear values. */
     private static void applyQuestionAcceptedAnswer(QuestionAcceptedAnswerEntity entity, QuestionAcceptedAnswerUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -649,8 +673,8 @@ public class QuestionService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public QuestionBlank updateQuestionBlank(UUID questionId, UUID id, String ifMatch, QuestionBlankUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -716,14 +740,12 @@ public class QuestionService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfQuestionBlank(QuestionBlankEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected QuestionBlankUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected QuestionBlankUpdate fields; explicit per field so a mask can clear values. */
     private static void applyQuestionBlank(QuestionBlankEntity entity, QuestionBlankUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -808,8 +830,8 @@ public class QuestionService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public QuestionHotspot updateQuestionHotspot(UUID questionId, UUID id, String ifMatch,
             QuestionHotspotUpdate changes, String updateMask, boolean validateOnly) {
@@ -875,14 +897,12 @@ public class QuestionService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfQuestionHotspot(QuestionHotspotEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected QuestionHotspotUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected QuestionHotspotUpdate fields; explicit per field so a mask can clear values. */
     private static void applyQuestionHotspot(QuestionHotspotEntity entity, QuestionHotspotUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -965,8 +985,8 @@ public class QuestionService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public QuestionMatchPair updateQuestionMatchPair(UUID questionId, UUID id, String ifMatch,
             QuestionMatchPairUpdate changes, String updateMask, boolean validateOnly) {
@@ -1029,15 +1049,12 @@ public class QuestionService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfQuestionMatchPair(QuestionMatchPairEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected QuestionMatchPairUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected QuestionMatchPairUpdate fields; explicit per field so a mask can clear values. */
     private static void applyQuestionMatchPair(QuestionMatchPairEntity entity, QuestionMatchPairUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -1127,8 +1144,8 @@ public class QuestionService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public QuestionOption updateQuestionOption(UUID questionId, UUID id, String ifMatch, QuestionOptionUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -1189,14 +1206,12 @@ public class QuestionService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfQuestionOption(QuestionOptionEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected QuestionOptionUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected QuestionOptionUpdate fields; explicit per field so a mask can clear values. */
     private static void applyQuestionOption(QuestionOptionEntity entity, QuestionOptionUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -1290,8 +1305,8 @@ public class QuestionService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public QuestionPattern updateQuestionPattern(UUID questionId, UUID id, String ifMatch,
             QuestionPatternUpdate changes, String updateMask, boolean validateOnly) {
@@ -1352,14 +1367,12 @@ public class QuestionService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfQuestionPattern(QuestionPatternEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected QuestionPatternUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected QuestionPatternUpdate fields; explicit per field so a mask can clear values. */
     private static void applyQuestionPattern(QuestionPatternEntity entity, QuestionPatternUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

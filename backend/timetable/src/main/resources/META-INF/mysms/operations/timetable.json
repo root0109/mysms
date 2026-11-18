@@ -5,7 +5,8 @@
   "permission" : "timetable.session.batch_confirm_sessions",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "timetable.CancelOperation",
   "method" : "POST",
@@ -13,7 +14,8 @@
   "permission" : "timetable.operation.cancel_operation",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "timetable.CancelSession",
   "method" : "POST",
@@ -21,7 +23,8 @@
   "permission" : "timetable.session.cancel_session",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "timetable.CompleteSession",
   "method" : "POST",
@@ -29,7 +32,8 @@
   "permission" : "timetable.session.complete_session",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "timetable.ConfirmSession",
   "method" : "POST",
@@ -37,7 +41,8 @@
   "permission" : "timetable.session.confirm_session",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "timetable.CreatePeriod",
   "method" : "POST",
@@ -45,7 +50,8 @@
   "permission" : "timetable.period.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "timetable.CreateSession",
   "method" : "POST",
@@ -53,7 +59,8 @@
   "permission" : "timetable.session.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "timetable.CreateSessionStudent",
   "method" : "POST",
@@ -61,28 +68,32 @@
   "permission" : "timetable.session_student.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "timetable.DeletePeriod",
   "method" : "DELETE",
   "path" : "/v1/timetable/periods/{periodId}",
   "permission" : "timetable.period.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.DeleteSession",
   "method" : "DELETE",
   "path" : "/v1/timetable/sessions/{sessionId}",
   "permission" : "timetable.session.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.DeleteSessionStudent",
   "method" : "DELETE",
   "path" : "/v1/timetable/sessions/{sessionId}/students/{sessionStudentId}",
   "permission" : "timetable.session_student.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.GenerateSessions",
   "method" : "POST",
@@ -90,70 +101,80 @@
   "permission" : "timetable.session.generate_sessions",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "timetable.GetOperation",
   "method" : "GET",
   "path" : "/v1/timetable/operations/{operationId}",
   "permission" : "timetable.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.GetPeriod",
   "method" : "GET",
   "path" : "/v1/timetable/periods/{periodId}",
   "permission" : "timetable.period.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.GetSession",
   "method" : "GET",
   "path" : "/v1/timetable/sessions/{sessionId}",
   "permission" : "timetable.session.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.GetSessionStudent",
   "method" : "GET",
   "path" : "/v1/timetable/sessions/{sessionId}/students/{sessionStudentId}",
   "permission" : "timetable.session_student.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.GetTimetable",
   "method" : "GET",
   "path" : "/v1/timetable/sessions:timetable",
   "permission" : "timetable.session.get_timetable",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.ListOperations",
   "method" : "GET",
   "path" : "/v1/timetable/operations",
   "permission" : "timetable.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.ListPeriods",
   "method" : "GET",
   "path" : "/v1/timetable/periods",
   "permission" : "timetable.period.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.ListSessionStudents",
   "method" : "GET",
   "path" : "/v1/timetable/sessions/{sessionId}/students",
   "permission" : "timetable.session_student.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.ListSessions",
   "method" : "GET",
   "path" : "/v1/timetable/sessions",
   "permission" : "timetable.session.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.ResetSession",
   "method" : "POST",
@@ -161,26 +182,30 @@
   "permission" : "timetable.session.reset_session",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "timetable.UpdatePeriod",
   "method" : "PATCH",
   "path" : "/v1/timetable/periods/{periodId}",
   "permission" : "timetable.period.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.UpdateSession",
   "method" : "PATCH",
   "path" : "/v1/timetable/sessions/{sessionId}",
   "permission" : "timetable.session.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "timetable.UpdateSessionStudent",
   "method" : "PATCH",
   "path" : "/v1/timetable/sessions/{sessionId}/students/{sessionStudentId}",
   "permission" : "timetable.session_student.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 } ]

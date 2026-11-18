@@ -6,9 +6,6 @@ import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
 import java.time.Clock;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.support.StaticListableBeanFactory;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.web.client.RestClient;
 import tools.jackson.databind.json.JsonMapper;
 
 class CoreAutoConfigurationTest {
@@ -20,13 +17,8 @@ class CoreAutoConfigurationTest {
         assertThat(config.traceFilter()).isNotNull();
         assertThat(config.globalExceptionHandler(config.messageUtil())).isNotNull();
         assertThat(config.problemResponseWriter(JsonMapper.builder().build())).isNotNull();
-        assertThat(config.tracePropagationInterceptor()).isNotNull();
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             assertThat(config.dtoValidator(factory.getValidator())).isNotNull();
         }
-        StaticListableBeanFactory beans = new StaticListableBeanFactory();
-        beans.addBean("trace", config.tracePropagationInterceptor());
-        assertThat(config.sdkClientFactory(RestClient.builder(), beans.getBeanProvider(ClientHttpRequestInterceptor.class)))
-                .isNotNull();
     }
 }

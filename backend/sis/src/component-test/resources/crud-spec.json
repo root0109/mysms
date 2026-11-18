@@ -51,7 +51,55 @@
    "update": {
     "details": "Updated details"
    },
-   "duplicateConflicts": false
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "sis.MarkIncidentActionTaken",
+     "path": "/v1/sis/discipline-incidents/{id}:markActionTaken",
+     "permission": "sis.discipline_incident.mark_incident_action_taken",
+     "guard": {
+      "actionTaken": [
+       false
+      ]
+     },
+     "prepare": [
+      "UPDATE sis.discipline_incident SET action_taken = false WHERE id = '{id}'"
+     ],
+     "body": {
+      "response": "Parents met the class teacher."
+     },
+     "sets": {
+      "actionTaken": true,
+      "response": "Parents met the class teacher."
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "sis.MarkIncidentSeen",
+     "path": "/v1/sis/discipline-incidents/{id}:markSeen",
+     "permission": "sis.discipline_incident.mark_incident_seen",
+     "guard": {
+      "notifyGuardians": [
+       true
+      ],
+      "seenByGuardian": [
+       false
+      ]
+     },
+     "prepare": [
+      "UPDATE sis.discipline_incident SET notify_guardians = true, seen_by_guardian = false WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "seenByGuardian": true
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
   },
   {
    "name": "Guardian",

@@ -16,33 +16,37 @@ import com.mysms.lms.api.model.QuizSubmission;
 import com.mysms.lms.api.model.QuizUpdate;
 import com.mysms.lms.api.model.SetQuizQuestionsRequest;
 import com.mysms.lms.api.model.SubmitQuizRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
+import com.mysms.lms.business.QuizAttemptService;
 import com.mysms.lms.business.QuizService;
+import com.mysms.lms.business.QuizWorkflowService;
 import java.net.URI;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Quiz operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Quiz operations; authentication and the permission check already ran in the auth-client filter.
+ * Operations not served yet answer 501.
  */
 @RestController
 public class QuizController implements QuizApi {
 
     private final QuizService quizService;
+    private final QuizWorkflowService quizWorkflowService;
+    private final QuizAttemptService quizAttemptService;
 
-    public QuizController(QuizService quizService) {
+    public QuizController(QuizService quizService, QuizWorkflowService quizWorkflowService,
+            QuizAttemptService quizAttemptService) {
         this.quizService = quizService;
+        this.quizWorkflowService = quizWorkflowService;
+        this.quizAttemptService = quizAttemptService;
     }
 
     @Override
     public ResponseEntity<AnswerCheck> checkQuizAnswer(UUID quizId,
             CheckQuizAnswerRequest checkQuizAnswerRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(quizWorkflowService.checkQuizAnswer(quizId, checkQuizAnswerRequest));
     }
 
     @Override
@@ -128,19 +132,20 @@ public class QuizController implements QuizApi {
     @Override
     public ResponseEntity<QuizQuestionList> setQuizQuestions(UUID quizId,
             SetQuizQuestionsRequest setQuizQuestionsRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(quizWorkflowService.setQuizQuestions(quizId, setQuizQuestionsRequest));
     }
 
     @Override
     public ResponseEntity<QuizAttempt> startQuizAttempt(UUID contentItemId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(quizService.startQuizAttempt(contentItemId));
     }
 
     @Override
     public ResponseEntity<QuizSubmission> submitQuiz(UUID quizSubmissionId,
             SubmitQuizRequest submitQuizRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        QuizSubmission submitted = quizAttemptService.submitQuiz(quizSubmissionId, submitQuizRequest);
+        return ResponseEntity.ok().eTag(submitted.getEtag()).body(submitted);
     }
 
     @Override

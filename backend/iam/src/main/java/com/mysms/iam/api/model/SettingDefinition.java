@@ -1,4 +1,4 @@
-// Owned API contract of iam (JAVA-CODING-RULES §7); first materialized from api/openapi/iam.yaml on 2026-11-10.
+// Owned API contract of iam.
 package com.mysms.iam.api.model;
 
 import java.net.URI;
@@ -28,7 +28,7 @@ import java.util.*;
 public class SettingDefinition {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<String> allowedValues = new ArrayList<>();
+  private @Nullable List<String> allowedValues = new ArrayList<>();
 
   /**
    * Gets or Sets allowedScopes
@@ -72,7 +72,7 @@ public class SettingDefinition {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<AllowedScopesEnum> allowedScopes = new ArrayList<>();
+  private @Nullable List<AllowedScopesEnum> allowedScopes = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID id;

@@ -24,11 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to sis.student (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live rows
- * only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to sis.student: live rows only, keyset paging over an allowlisted order and the row_version guard
+ * on every update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class StudentRepository {
@@ -172,6 +169,41 @@ public class StudentRepository {
     private static final String REFERENCED_BY_SUBJECT_REGISTRATION_STUDENT_ID = """
             SELECT EXISTS (SELECT 1 FROM sis.subject_registration WHERE tenant_id = :tenantId
                 AND student_id = :id AND deleted_at IS NULL)
+            """;
+
+    /** sis.ChangeStudentStatus: the status with its exit details, under the version the service read. */
+    private static final String TRANSITION_CHANGE_STATUS = """
+            UPDATE sis.student
+               SET status = :status,
+                   exit_date = :exitDate,
+                   exit_reason = :exitReason,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+
+    /** sis.CreateStudentPortalAccount: links the login account, only while the student has none. */
+    private static final String LINK_ACCOUNT = """
+            UPDATE sis.student
+               SET user_id = :userId,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND user_id IS NULL AND deleted_at IS NULL
+            """;
+
+    /** sis.IssueBonafideCertificate: records the number of the certificate just issued. */
+    private static final String RECORD_BONAFIDE_CERTIFICATE = """
+            UPDATE sis.student
+               SET bonafide_certificate_number = :number,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
@@ -339,7 +371,40 @@ public class StudentRepository {
                 .query(Boolean.class).single());
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** sis.ChangeStudentStatus; 0 rows means the row changed (or vanished) since it was read. */
+    public int changeStatus(UUID id, int expected, String status, LocalDate exitDate, String exitReason,
+            OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_CHANGE_STATUS)
+                .param("id", id)
+                .param("expected", expected)
+                .param("status", status)
+                .param("exitDate", exitDate)
+                .param("exitReason", exitReason)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Links the login account; 0 rows means the row changed, or got an account, since it was read. */
+    public int linkAccount(UUID id, int expected, UUID userId, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(LINK_ACCOUNT)
+                .param("id", id)
+                .param("expected", expected)
+                .param("userId", userId)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Records the certificate number; 0 rows means the row changed (or vanished) since it was read. */
+    public int recordBonafideCertificate(UUID id, int expected, String number, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(RECORD_BONAFIDE_CERTIFICATE)
+                .param("id", id)
+                .param("expected", expected)
+                .param("number", number)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

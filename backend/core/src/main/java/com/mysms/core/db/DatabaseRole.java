@@ -1,9 +1,6 @@
 package com.mysms.core.db;
 
-/**
- * Which copy of a module's database a connection comes from (the connection identity of the owner's {@code common}
- * module, reduced to what a module has: one primary it writes to and, optionally, one replica it reads from).
- */
+/** Which copy of a module's database a connection comes from: the primary, or the optional read replica. */
 public enum DatabaseRole {
 
     /** The database every write and every read inside a write goes to. */

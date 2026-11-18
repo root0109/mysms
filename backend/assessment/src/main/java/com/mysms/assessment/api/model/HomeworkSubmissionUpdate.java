@@ -1,4 +1,4 @@
-// Owned API contract of assessment (JAVA-CODING-RULES §7); first materialized from api/openapi/assessment.yaml on 2026-11-10.
+// Owned API contract of assessment.
 package com.mysms.assessment.api.model;
 
 import java.net.URI;
@@ -26,8 +26,6 @@ public class HomeworkSubmissionUpdate {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID homeworkId;
 
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID studentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -51,26 +49,6 @@ public class HomeworkSubmissionUpdate {
   @JsonProperty("homeworkId")
   public void setHomeworkId(@Nullable UUID homeworkId) {
     this.homeworkId = homeworkId;
-  }
-
-  public HomeworkSubmissionUpdate studentId(@Nullable UUID studentId) {
-    this.studentId = studentId;
-    return this;
-  }
-
-  /**
-   * Student.
-   * @return studentId
-   */
-  @Valid 
-  @JsonProperty("studentId")
-  public @Nullable UUID getStudentId() {
-    return studentId;
-  }
-
-  @JsonProperty("studentId")
-  public void setStudentId(@Nullable UUID studentId) {
-    this.studentId = studentId;
   }
 
   public HomeworkSubmissionUpdate submittedOn(@Nullable LocalDate submittedOn) {
@@ -103,13 +81,12 @@ public class HomeworkSubmissionUpdate {
     }
     HomeworkSubmissionUpdate homeworkSubmissionUpdate = (HomeworkSubmissionUpdate) o;
     return Objects.equals(this.homeworkId, homeworkSubmissionUpdate.homeworkId) &&
-        Objects.equals(this.studentId, homeworkSubmissionUpdate.studentId) &&
         Objects.equals(this.submittedOn, homeworkSubmissionUpdate.submittedOn);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(homeworkId, studentId, submittedOn);
+    return Objects.hash(homeworkId, submittedOn);
   }
 
   @Override
@@ -117,7 +94,6 @@ public class HomeworkSubmissionUpdate {
     StringBuilder sb = new StringBuilder();
     sb.append("class HomeworkSubmissionUpdate {\n");
     sb.append("    homeworkId: ").append(toIndentedString(homeworkId)).append("\n");
-    sb.append("    studentId: ").append(toIndentedString(studentId)).append("\n");
     sb.append("    submittedOn: ").append(toIndentedString(submittedOn)).append("\n");
     sb.append("}");
     return sb.toString();

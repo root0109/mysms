@@ -14,11 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the GradeLevel operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/academics.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the GradeLevel operations; authentication and the permission check already happened in the auth-client
+ * filter; operations not served yet answer 501 NOT_IMPLEMENTED.
  */
 @RestController
 public class GradeLevelController implements GradeLevelApi {

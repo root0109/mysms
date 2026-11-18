@@ -5,7 +5,8 @@
   "permission" : "sis.promotion.apply_promotions",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.ApprovePromotion",
   "method" : "POST",
@@ -13,7 +14,8 @@
   "permission" : "sis.promotion.approve_promotion",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.ApproveStudentLeaveRequest",
   "method" : "POST",
@@ -21,7 +23,8 @@
   "permission" : "sis.student_leave_request.approve",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.ApproveSubjectRegistration",
   "method" : "POST",
@@ -29,7 +32,8 @@
   "permission" : "sis.subject_registration.approve_subject_registration",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CancelOperation",
   "method" : "POST",
@@ -37,7 +41,8 @@
   "permission" : "sis.operation.cancel_operation",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.ChangeStudentStatus",
   "method" : "POST",
@@ -45,7 +50,8 @@
   "permission" : "sis.student.change_student_status",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateActivityType",
   "method" : "POST",
@@ -53,7 +59,8 @@
   "permission" : "sis.activity_type.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateDisciplineIncident",
   "method" : "POST",
@@ -61,7 +68,8 @@
   "permission" : "sis.discipline_incident.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateGuardian",
   "method" : "POST",
@@ -69,7 +77,8 @@
   "permission" : "sis.guardian.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreatePortalAccount",
   "method" : "POST",
@@ -77,7 +86,8 @@
   "permission" : "sis.guardian.create_portal_account",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateProgramEnrollment",
   "method" : "POST",
@@ -85,7 +95,8 @@
   "permission" : "sis.program_enrollment.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateProgramEnrollmentSubject",
   "method" : "POST",
@@ -93,7 +104,8 @@
   "permission" : "sis.program_enrollment_subject.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreatePromotion",
   "method" : "POST",
@@ -101,7 +113,8 @@
   "permission" : "sis.promotion.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateRelationshipType",
   "method" : "POST",
@@ -109,7 +122,8 @@
   "permission" : "sis.relationship_type.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateStudent",
   "method" : "POST",
@@ -117,7 +131,8 @@
   "permission" : "sis.student.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateStudentActivity",
   "method" : "POST",
@@ -125,7 +140,8 @@
   "permission" : "sis.student_activity.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateStudentCategory",
   "method" : "POST",
@@ -133,7 +149,8 @@
   "permission" : "sis.student_category.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateStudentEnrollment",
   "method" : "POST",
@@ -141,7 +158,8 @@
   "permission" : "sis.student_enrollment.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateStudentGuardian",
   "method" : "POST",
@@ -149,7 +167,8 @@
   "permission" : "sis.student_guardian.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateStudentHealthRecord",
   "method" : "POST",
@@ -157,7 +176,8 @@
   "permission" : "sis.student_health_record.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateStudentLeaveRequest",
   "method" : "POST",
@@ -165,7 +185,8 @@
   "permission" : "sis.student_leave_request.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateStudentPortalAccount",
   "method" : "POST",
@@ -173,7 +194,8 @@
   "permission" : "sis.student.create_student_portal_account",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateStudentSibling",
   "method" : "POST",
@@ -181,7 +203,8 @@
   "permission" : "sis.student_sibling.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateSubjectRegistration",
   "method" : "POST",
@@ -189,7 +212,8 @@
   "permission" : "sis.subject_registration.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.CreateSubjectRegistrationLine",
   "method" : "POST",
@@ -197,259 +221,296 @@
   "permission" : "sis.subject_registration_line.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteActivityType",
   "method" : "DELETE",
   "path" : "/v1/sis/activity-types/{activityTypeId}",
   "permission" : "sis.activity_type.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteDisciplineIncident",
   "method" : "DELETE",
   "path" : "/v1/sis/discipline-incidents/{disciplineIncidentId}",
   "permission" : "sis.discipline_incident.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteGuardian",
   "method" : "DELETE",
   "path" : "/v1/sis/guardians/{guardianId}",
   "permission" : "sis.guardian.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteProgramEnrollment",
   "method" : "DELETE",
   "path" : "/v1/sis/program-enrollments/{programEnrollmentId}",
   "permission" : "sis.program_enrollment.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteProgramEnrollmentSubject",
   "method" : "DELETE",
   "path" : "/v1/sis/program-enrollments/{programEnrollmentId}/subjects/{programEnrollmentSubjectId}",
   "permission" : "sis.program_enrollment_subject.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeletePromotion",
   "method" : "DELETE",
   "path" : "/v1/sis/promotions/{promotionId}",
   "permission" : "sis.promotion.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteRelationshipType",
   "method" : "DELETE",
   "path" : "/v1/sis/relationship-types/{relationshipTypeId}",
   "permission" : "sis.relationship_type.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteStudent",
   "method" : "DELETE",
   "path" : "/v1/sis/students/{studentId}",
   "permission" : "sis.student.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteStudentActivity",
   "method" : "DELETE",
   "path" : "/v1/sis/student-activities/{studentActivityId}",
   "permission" : "sis.student_activity.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteStudentCategory",
   "method" : "DELETE",
   "path" : "/v1/sis/student-categories/{studentCategoryId}",
   "permission" : "sis.student_category.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteStudentEnrollment",
   "method" : "DELETE",
   "path" : "/v1/sis/student-enrollments/{studentEnrollmentId}",
   "permission" : "sis.student_enrollment.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteStudentGuardian",
   "method" : "DELETE",
   "path" : "/v1/sis/students/{studentId}/guardians/{studentGuardianId}",
   "permission" : "sis.student_guardian.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteStudentHealthRecord",
   "method" : "DELETE",
   "path" : "/v1/sis/student-health-records/{studentHealthRecordId}",
   "permission" : "sis.student_health_record.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteStudentLeaveRequest",
   "method" : "DELETE",
   "path" : "/v1/sis/student-leave-requests/{studentLeaveRequestId}",
   "permission" : "sis.student_leave_request.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteStudentSibling",
   "method" : "DELETE",
   "path" : "/v1/sis/students/{studentId}/siblings/{studentSiblingId}",
   "permission" : "sis.student_sibling.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteSubjectRegistration",
   "method" : "DELETE",
   "path" : "/v1/sis/subject-registrations/{subjectRegistrationId}",
   "permission" : "sis.subject_registration.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.DeleteSubjectRegistrationLine",
   "method" : "DELETE",
   "path" : "/v1/sis/subject-registrations/{subjectRegistrationId}/lines/{subjectRegistrationLineId}",
   "permission" : "sis.subject_registration_line.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetActivityType",
   "method" : "GET",
   "path" : "/v1/sis/activity-types/{activityTypeId}",
   "permission" : "sis.activity_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetDisciplineIncident",
   "method" : "GET",
   "path" : "/v1/sis/discipline-incidents/{disciplineIncidentId}",
   "permission" : "sis.discipline_incident.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetGuardian",
   "method" : "GET",
   "path" : "/v1/sis/guardians/{guardianId}",
   "permission" : "sis.guardian.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetOperation",
   "method" : "GET",
   "path" : "/v1/sis/operations/{operationId}",
   "permission" : "sis.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetProgramEnrollment",
   "method" : "GET",
   "path" : "/v1/sis/program-enrollments/{programEnrollmentId}",
   "permission" : "sis.program_enrollment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetProgramEnrollmentSubject",
   "method" : "GET",
   "path" : "/v1/sis/program-enrollments/{programEnrollmentId}/subjects/{programEnrollmentSubjectId}",
   "permission" : "sis.program_enrollment_subject.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetPromotion",
   "method" : "GET",
   "path" : "/v1/sis/promotions/{promotionId}",
   "permission" : "sis.promotion.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetRelationshipType",
   "method" : "GET",
   "path" : "/v1/sis/relationship-types/{relationshipTypeId}",
   "permission" : "sis.relationship_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetStudent",
   "method" : "GET",
   "path" : "/v1/sis/students/{studentId}",
   "permission" : "sis.student.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetStudentActivity",
   "method" : "GET",
   "path" : "/v1/sis/student-activities/{studentActivityId}",
   "permission" : "sis.student_activity.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetStudentCategory",
   "method" : "GET",
   "path" : "/v1/sis/student-categories/{studentCategoryId}",
   "permission" : "sis.student_category.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetStudentEnrollment",
   "method" : "GET",
   "path" : "/v1/sis/student-enrollments/{studentEnrollmentId}",
   "permission" : "sis.student_enrollment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetStudentGuardian",
   "method" : "GET",
   "path" : "/v1/sis/students/{studentId}/guardians/{studentGuardianId}",
   "permission" : "sis.student_guardian.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetStudentHealthRecord",
   "method" : "GET",
   "path" : "/v1/sis/student-health-records/{studentHealthRecordId}",
   "permission" : "sis.student_health_record.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetStudentLeaveRequest",
   "method" : "GET",
   "path" : "/v1/sis/student-leave-requests/{studentLeaveRequestId}",
   "permission" : "sis.student_leave_request.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetStudentSibling",
   "method" : "GET",
   "path" : "/v1/sis/students/{studentId}/siblings/{studentSiblingId}",
   "permission" : "sis.student_sibling.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetStudentSummary",
   "method" : "GET",
   "path" : "/v1/sis/students/{studentId}:summary",
   "permission" : "sis.student.get_student_summary",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetSubjectRegistration",
   "method" : "GET",
   "path" : "/v1/sis/subject-registrations/{subjectRegistrationId}",
   "permission" : "sis.subject_registration.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.GetSubjectRegistrationLine",
   "method" : "GET",
   "path" : "/v1/sis/subject-registrations/{subjectRegistrationId}/lines/{subjectRegistrationLineId}",
   "permission" : "sis.subject_registration_line.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.IssueBonafideCertificate",
   "method" : "POST",
@@ -457,147 +518,168 @@
   "permission" : "sis.student.issue_bonafide_certificate",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListActivityTypes",
   "method" : "GET",
   "path" : "/v1/sis/activity-types",
   "permission" : "sis.activity_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListClassRoster",
   "method" : "GET",
   "path" : "/v1/sis/class-sections/{classSectionId}:roster",
   "permission" : "sis.student_enrollment.list_class_roster",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListDisciplineIncidents",
   "method" : "GET",
   "path" : "/v1/sis/discipline-incidents",
   "permission" : "sis.discipline_incident.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListGuardians",
   "method" : "GET",
   "path" : "/v1/sis/guardians",
   "permission" : "sis.guardian.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListMyChildren",
   "method" : "GET",
   "path" : "/v1/sis/me/children",
   "permission" : "sis.guardian.list_my_children",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListOperations",
   "method" : "GET",
   "path" : "/v1/sis/operations",
   "permission" : "sis.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListProgramEnrollmentSubjects",
   "method" : "GET",
   "path" : "/v1/sis/program-enrollments/{programEnrollmentId}/subjects",
   "permission" : "sis.program_enrollment_subject.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListProgramEnrollments",
   "method" : "GET",
   "path" : "/v1/sis/program-enrollments",
   "permission" : "sis.program_enrollment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListPromotions",
   "method" : "GET",
   "path" : "/v1/sis/promotions",
   "permission" : "sis.promotion.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListRelationshipTypes",
   "method" : "GET",
   "path" : "/v1/sis/relationship-types",
   "permission" : "sis.relationship_type.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListStudentActivities",
   "method" : "GET",
   "path" : "/v1/sis/student-activities",
   "permission" : "sis.student_activity.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListStudentCategories",
   "method" : "GET",
   "path" : "/v1/sis/student-categories",
   "permission" : "sis.student_category.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListStudentEnrollments",
   "method" : "GET",
   "path" : "/v1/sis/student-enrollments",
   "permission" : "sis.student_enrollment.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListStudentGuardians",
   "method" : "GET",
   "path" : "/v1/sis/students/{studentId}/guardians",
   "permission" : "sis.student_guardian.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListStudentHealthRecords",
   "method" : "GET",
   "path" : "/v1/sis/student-health-records",
   "permission" : "sis.student_health_record.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListStudentLeaveRequests",
   "method" : "GET",
   "path" : "/v1/sis/student-leave-requests",
   "permission" : "sis.student_leave_request.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListStudentSiblings",
   "method" : "GET",
   "path" : "/v1/sis/students/{studentId}/siblings",
   "permission" : "sis.student_sibling.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListStudents",
   "method" : "GET",
   "path" : "/v1/sis/students",
   "permission" : "sis.student.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListSubjectRegistrationLines",
   "method" : "GET",
   "path" : "/v1/sis/subject-registrations/{subjectRegistrationId}/lines",
   "permission" : "sis.subject_registration_line.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.ListSubjectRegistrations",
   "method" : "GET",
   "path" : "/v1/sis/subject-registrations",
   "permission" : "sis.subject_registration.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.LoadCourseSubjects",
   "method" : "POST",
@@ -605,7 +687,8 @@
   "permission" : "sis.subject_registration.load_course_subjects",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.MarkIncidentActionTaken",
   "method" : "POST",
@@ -613,7 +696,8 @@
   "permission" : "sis.discipline_incident.mark_incident_action_taken",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.MarkIncidentSeen",
   "method" : "POST",
@@ -621,7 +705,8 @@
   "permission" : "sis.discipline_incident.mark_incident_seen",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.ProposePromotions",
   "method" : "POST",
@@ -629,7 +714,8 @@
   "permission" : "sis.promotion.propose_promotions",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.RejectPromotion",
   "method" : "POST",
@@ -637,7 +723,8 @@
   "permission" : "sis.promotion.reject_promotion",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.RejectStudentLeaveRequest",
   "method" : "POST",
@@ -645,7 +732,8 @@
   "permission" : "sis.student_leave_request.reject",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.RejectSubjectRegistration",
   "method" : "POST",
@@ -653,7 +741,8 @@
   "permission" : "sis.subject_registration.reject_subject_registration",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.ResetSubjectRegistration",
   "method" : "POST",
@@ -661,7 +750,8 @@
   "permission" : "sis.subject_registration.reset_subject_registration",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.SubmitSubjectRegistration",
   "method" : "POST",
@@ -669,124 +759,142 @@
   "permission" : "sis.subject_registration.submit_subject_registration",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateActivityType",
   "method" : "PATCH",
   "path" : "/v1/sis/activity-types/{activityTypeId}",
   "permission" : "sis.activity_type.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateDisciplineIncident",
   "method" : "PATCH",
   "path" : "/v1/sis/discipline-incidents/{disciplineIncidentId}",
   "permission" : "sis.discipline_incident.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateGuardian",
   "method" : "PATCH",
   "path" : "/v1/sis/guardians/{guardianId}",
   "permission" : "sis.guardian.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateProgramEnrollment",
   "method" : "PATCH",
   "path" : "/v1/sis/program-enrollments/{programEnrollmentId}",
   "permission" : "sis.program_enrollment.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateProgramEnrollmentSubject",
   "method" : "PATCH",
   "path" : "/v1/sis/program-enrollments/{programEnrollmentId}/subjects/{programEnrollmentSubjectId}",
   "permission" : "sis.program_enrollment_subject.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdatePromotion",
   "method" : "PATCH",
   "path" : "/v1/sis/promotions/{promotionId}",
   "permission" : "sis.promotion.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateRelationshipType",
   "method" : "PATCH",
   "path" : "/v1/sis/relationship-types/{relationshipTypeId}",
   "permission" : "sis.relationship_type.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateStudent",
   "method" : "PATCH",
   "path" : "/v1/sis/students/{studentId}",
   "permission" : "sis.student.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateStudentActivity",
   "method" : "PATCH",
   "path" : "/v1/sis/student-activities/{studentActivityId}",
   "permission" : "sis.student_activity.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateStudentCategory",
   "method" : "PATCH",
   "path" : "/v1/sis/student-categories/{studentCategoryId}",
   "permission" : "sis.student_category.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateStudentEnrollment",
   "method" : "PATCH",
   "path" : "/v1/sis/student-enrollments/{studentEnrollmentId}",
   "permission" : "sis.student_enrollment.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateStudentGuardian",
   "method" : "PATCH",
   "path" : "/v1/sis/students/{studentId}/guardians/{studentGuardianId}",
   "permission" : "sis.student_guardian.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateStudentHealthRecord",
   "method" : "PATCH",
   "path" : "/v1/sis/student-health-records/{studentHealthRecordId}",
   "permission" : "sis.student_health_record.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateStudentLeaveRequest",
   "method" : "PATCH",
   "path" : "/v1/sis/student-leave-requests/{studentLeaveRequestId}",
   "permission" : "sis.student_leave_request.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateStudentSibling",
   "method" : "PATCH",
   "path" : "/v1/sis/students/{studentId}/siblings/{studentSiblingId}",
   "permission" : "sis.student_sibling.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateSubjectRegistration",
   "method" : "PATCH",
   "path" : "/v1/sis/subject-registrations/{subjectRegistrationId}",
   "permission" : "sis.subject_registration.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "sis.UpdateSubjectRegistrationLine",
   "method" : "PATCH",
   "path" : "/v1/sis/subject-registrations/{subjectRegistrationId}/lines/{subjectRegistrationLineId}",
   "permission" : "sis.subject_registration_line.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 } ]

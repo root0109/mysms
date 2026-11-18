@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.assignment_submission (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.assignment_submission: live rows only, keyset paging, and the row_version guard on every
+ * update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class LmsAssignmentSubmissionRepository {
@@ -152,6 +149,26 @@ public class LmsAssignmentSubmissionRepository {
              ANY(:scopeIds) OR p0.institution_id IS NULL)))
             """;
 
+    private static final String TAUGHT = """
+             EXISTS (SELECT 1 FROM lms.content_item ci
+                       LEFT JOIN lms.chapter ch ON ch.id = ci.chapter_id AND ch.tenant_id = :tenantId
+                      WHERE ci.tenant_id = :tenantId AND ci.deleted_at IS NULL
+                        AND (ci.id = r.content_item_id
+                             OR (r.content_item_id IS NULL AND ci.assignment_id = r.assignment_id
+                                 AND EXISTS (SELECT 1 FROM lms.cohort_enrollment ce WHERE ce.tenant_id = :tenantId
+                                                AND ce.cohort_id = COALESCE(ci.cohort_id, ch.cohort_id)
+                                                AND ce.user_id = r.user_id AND ce.deleted_at IS NULL)))
+                        AND COALESCE(ci.cohort_id, ch.cohort_id) IN (""" + TeachingReach.TAUGHT_COHORT_IDS + "))";
+    private static final String OWN = """
+             r.user_id = :reachUser
+             OR (r.group_id IS NOT NULL AND EXISTS (SELECT 1 FROM lms.assignment_group_member gm
+                     WHERE gm.tenant_id = :tenantId AND gm.assignment_group_id = r.group_id
+                       AND gm.user_id = :reachUser AND gm.status = 'active' AND gm.deleted_at IS NULL))
+            """;
+    private static final String IS_TAUGHT = """
+            SELECT EXISTS (SELECT 1 FROM lms.assignment_submission r WHERE r.tenant_id = :tenantId AND r.id = :id
+                              AND r.deleted_at IS NULL AND\s""" + TAUGHT + ")";
+
     private final JdbcClient jdbc;
 
     public LmsAssignmentSubmissionRepository(@Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database) {
@@ -272,9 +289,28 @@ public class LmsAssignmentSubmissionRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    /** The caller's own submissions (theirs or their group's) and those of the cohorts they teach. */
+    public static SqlFragment ownOrTaught(TeachingReach reach) {
+        return new SqlFragment(OWN + " OR " + TAUGHT, reach.params());
+    }
+
+    /** Whether the submission belongs to a cohort the caller teaches. */
+    public boolean taught(UUID id, TeachingReach reach) {
+        return Boolean.TRUE.equals(jdbc.sql(IS_TAUGHT).params(reach.params()).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    private static final String OF_ITEM = SELECT_LIVE
+            + " AND r.content_item_id = :itemId AND r.is_final ORDER BY r.created_at";
+
+    /** The item's final live submissions, oldest first. */
+    public List<LmsAssignmentSubmissionEntity> ofItem(UUID itemId) {
+        return jdbc.sql(OF_ITEM).param("itemId", itemId).query(LmsAssignmentSubmissionRepository::map).list();
     }
 
     private static List<Object> sortValues(SortSpec sort, LmsAssignmentSubmissionEntity e) {

@@ -19,6 +19,7 @@ export const CONSOLE_SCREENS: readonly ConsoleScreenDef[] = [
     resource: 'platform.Tenant',
     group: 'setup',
     columns: ['code', 'name', 'status', 'primaryEmail'],
+    tool: 'clearDemoData',
   },
   {
     id: 'PLT-02',

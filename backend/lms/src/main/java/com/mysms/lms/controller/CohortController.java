@@ -59,57 +59,80 @@ import com.mysms.lms.api.model.SetStudentAccessRequest;
 import com.mysms.lms.api.model.TimetableEntryList;
 import com.mysms.lms.api.model.UnpublishCohortRequest;
 import com.mysms.lms.api.model.UnreadCounts;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
+import com.mysms.lms.business.CertificateService;
+import com.mysms.lms.business.CohortEnrollmentService;
+import com.mysms.lms.business.CohortGradebookService;
+import com.mysms.lms.business.CohortReleaseService;
 import com.mysms.lms.business.CohortService;
+import com.mysms.lms.business.TimetableEntryService;
 import java.net.URI;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Cohort operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Cohort operations; authentication and the permission check already ran in the auth-client filter.
+ * Operations not served yet answer 501.
  */
 @RestController
 public class CohortController implements CohortApi {
 
     private final CohortService cohortService;
+    private final CohortEnrollmentService cohortEnrollmentService;
+    private final TimetableEntryService timetableEntryService;
+    private final CohortGradebookService gradebookService;
+    private final CohortReleaseService releaseService;
+    private final CertificateService certificateService;
 
-    public CohortController(CohortService cohortService) {
+    public CohortController(CohortService cohortService, CohortEnrollmentService cohortEnrollmentService,
+            TimetableEntryService timetableEntryService, CohortGradebookService gradebookService,
+            CohortReleaseService releaseService, CertificateService certificateService) {
+        this.certificateService = certificateService;
+        this.releaseService = releaseService;
         this.cohortService = cohortService;
+        this.cohortEnrollmentService = cohortEnrollmentService;
+        this.timetableEntryService = timetableEntryService;
+        this.gradebookService = gradebookService;
     }
 
     @Override
     public ResponseEntity<Cohort> activateCohort(UUID cohortId,
             ActivateCohortRequest activateCohortRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Cohort changed = cohortService.activateCohort(cohortId,
+                activateCohortRequest == null ? null : activateCohortRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<TimetableEntryList> applyTimetableTemplate(UUID cohortId,
             ApplyTimetableTemplateRequest applyTimetableTemplateRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(timetableEntryService.applyTimetableTemplate(cohortId,
+                applyTimetableTemplateRequest.getTimetableTemplateId()));
     }
 
     @Override
     public ResponseEntity<Cohort> archiveCohort(UUID cohortId, ArchiveCohortRequest archiveCohortRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Cohort changed = cohortService.archiveCohort(cohortId,
+                archiveCohortRequest == null ? null : archiveCohortRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<BatchEnrollPreviewList> batchEnrollInCohort(UUID cohortId, UUID idempotencyKey,
             BatchEnrollInCohortRequest batchEnrollInCohortRequest) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(cohortEnrollmentService.batchEnrollInCohort(cohortId,
+                batchEnrollInCohortRequest.getUserIds(), batchEnrollInCohortRequest.getPaymentIds(),
+                Boolean.TRUE.equals(batchEnrollInCohortRequest.getValidateOnly())));
     }
 
     @Override
     public ResponseEntity<ChapterList> copyCourseOutlineToCohort(UUID cohortId,
             CopyCourseOutlineToCohortRequest copyCourseOutlineToCohortRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(cohortService.copyCourseOutlineToCohort(cohortId,
+                copyCourseOutlineToCohortRequest.getCourseId(), copyCourseOutlineToCohortRequest.getChapterIds(),
+                copyCourseOutlineToCohortRequest.getShiftDatesFrom()));
     }
 
     @Override
@@ -119,13 +142,20 @@ public class CohortController implements CohortApi {
         if (dryRun) {
             return ResponseEntity.ok(created);
         }
-        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).eTag(created.getEtag()).body(created);
+        return ResponseEntity.created(URI.create("/v1/lms/cohorts/" + created.getId()))
+                .eTag(created.getEtag()).body(created);
     }
 
     @Override
     public ResponseEntity<CohortActivity> createCohortActivity(UUID cohortId,
             CohortActivity cohortActivity, UUID idempotencyKey, Boolean validateOnly) {
-        throw new NotImplementedException();
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        CohortActivity created = cohortService.createCohortActivity(cohortId, cohortActivity, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(URI.create("/v1/lms/cohorts/" + cohortId + "/activities/" + created.getId()))
+                .eTag(created.getEtag()).body(created);
     }
 
     @Override
@@ -242,7 +272,10 @@ public class CohortController implements CohortApi {
     @Override
     public ResponseEntity<Cohort> deactivateCohort(UUID cohortId,
             DeactivateCohortRequest deactivateCohortRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Cohort changed = cohortService.deactivateCohort(cohortId,
+                deactivateCohortRequest == null ? null : deactivateCohortRequest.getEtag(),
+                deactivateCohortRequest == null ? null : deactivateCohortRequest.getReason());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -254,7 +287,8 @@ public class CohortController implements CohortApi {
     @Override
     public ResponseEntity<Void> deleteCohortActivity(UUID cohortId, UUID cohortActivityId,
             String ifMatch) {
-        throw new NotImplementedException();
+        cohortService.deleteCohortActivity(cohortId, cohortActivityId, ifMatch);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
@@ -317,36 +351,44 @@ public class CohortController implements CohortApi {
     @Override
     public ResponseEntity<CohortEnrollment> enrollInCohort(UUID cohortId,
             EnrollInCohortRequest enrollInCohortRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        CohortEnrollment enrolled = cohortEnrollmentService.enrollInCohort(cohortId,
+                enrollInCohortRequest == null ? null : enrollInCohortRequest.getPaymentId());
+        return ResponseEntity.ok().eTag(enrolled.getEtag()).body(enrolled);
     }
 
     @Override
     public ResponseEntity<ReleaseGrantList> evaluateReleaseRules(UUID cohortId,
             EvaluateReleaseRulesRequest evaluateReleaseRulesRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(releaseService.evaluateReleaseRules(cohortId,
+                evaluateReleaseRulesRequest == null ? null : evaluateReleaseRulesRequest.getUserId()));
     }
 
     @Override
     public ResponseEntity<Operation> exportGrades(UUID cohortId, ExportGradesRequest exportGradesRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.accepted().body(gradebookService.exportGrades(cohortId, exportGradesRequest));
     }
 
     @Override
     public ResponseEntity<Operation> generateCohortCertificates(UUID cohortId,
             GenerateCohortCertificatesRequest generateCohortCertificatesRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.accepted().body(certificateService.generateCohortCertificates(cohortId,
+                generateCohortCertificatesRequest.getUserIds(), generateCohortCertificatesRequest.getTemplateCode(),
+                generateCohortCertificatesRequest.getIssueDate(),
+                Boolean.TRUE.equals(generateCohortCertificatesRequest.getPublish())));
     }
 
     @Override
     public ResponseEntity<Cohort> getCohort(UUID cohortId, String fields) {
-        throw new NotImplementedException();
+        Cohort found = cohortService.getCohort(cohortId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
     public ResponseEntity<CohortActivity> getCohortActivity(UUID cohortId, UUID cohortActivityId,
             String fields) {
-        throw new NotImplementedException();
+        CohortActivity found = cohortService.getCohortActivity(cohortId, cohortActivityId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
@@ -379,19 +421,22 @@ public class CohortController implements CohortApi {
     @Override
     public ResponseEntity<PagingInfo<CohortPerformance>> getCohortPerformance(UUID cohortId, Integer page, Integer size,
             String cursor) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(PagingUtil.pagingInfo(gradebookService.getCohortPerformance(cohortId, page, size,
+                cursor)));
     }
 
     @Override
     public ResponseEntity<PagingInfo<CohortStudentProgress>> getCohortProgress(UUID cohortId, UUID userId, Integer page,
             Integer size, String cursor) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(PagingUtil.pagingInfo(gradebookService.getCohortProgress(cohortId, userId, page, size,
+                cursor)));
     }
 
     @Override
     public ResponseEntity<PagingInfo<RosterEntry>> getCohortRoster(UUID cohortId, String roleCode,
             Boolean includeInactive, Integer page, Integer size, String cursor) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(PagingUtil.pagingInfo(cohortEnrollmentService.getCohortRoster(cohortId, roleCode,
+                includeInactive, page, size, cursor)));
     }
 
     @Override
@@ -410,7 +455,7 @@ public class CohortController implements CohortApi {
 
     @Override
     public ResponseEntity<DownloadLink> getCohortSyllabus(UUID cohortId, String format) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(cohortService.getCohortSyllabus(cohortId, format));
     }
 
     @Override
@@ -423,7 +468,8 @@ public class CohortController implements CohortApi {
     @Override
     public ResponseEntity<PagingInfo<TimetableEntry>> getCohortTimetable(UUID cohortId, Integer page, Integer size,
             String cursor) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(PagingUtil.pagingInfo(timetableEntryService.getCohortTimetable(cohortId, page, size,
+                cursor)));
     }
 
     @Override
@@ -435,7 +481,11 @@ public class CohortController implements CohortApi {
     @Override
     public ResponseEntity<Gradebook> getGradebook(UUID cohortId, UUID userId, UUID gradingCategoryId,
             Integer page, Integer size, String cursor) {
-        throw new NotImplementedException();
+        CohortGradebookService.GradebookPage read = gradebookService.getGradebook(cohortId, userId, gradingCategoryId,
+                page, size, cursor);
+        Gradebook gradebook = read.gradebook();
+        gradebook.setPaging(PagingUtil.pagingInfo(read.rows()).paging());
+        return ResponseEntity.ok(gradebook);
     }
 
     @Override
@@ -448,25 +498,32 @@ public class CohortController implements CohortApi {
 
     @Override
     public ResponseEntity<UnreadCounts> getUnreadCounts() {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(cohortService.getUnreadCounts());
     }
 
     @Override
     public ResponseEntity<Operation> importCohortMembers(UUID cohortId,
             ImportCohortMembersRequest importCohortMembersRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.accepted().body(cohortEnrollmentService.importCohortMembers(cohortId,
+                importCohortMembersRequest));
     }
 
     @Override
     public ResponseEntity<PagingInfo<CohortActivity>> listCohortActivities(UUID cohortId, Integer page, Integer size,
             String cursor, String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<CohortActivity> list =
+                PagingUtil.pagingInfo(cohortService.listCohortActivities(cohortId, page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
     public ResponseEntity<PagingInfo<CohortCourse>> listCohortCourses(UUID cohortId, Integer page, Integer size,
             String cursor, String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<CohortCourse> list =
+                PagingUtil.pagingInfo(cohortService.listCohortCourses(cohortId, page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
@@ -527,7 +584,9 @@ public class CohortController implements CohortApi {
     @Override
     public ResponseEntity<PagingInfo<Cohort>> listCohorts(Integer page, Integer size, String cursor, String filter,
             List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<Cohort> list = PagingUtil.pagingInfo(cohortService.listCohorts(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
@@ -552,37 +611,46 @@ public class CohortController implements CohortApi {
     @Override
     public ResponseEntity<Cohort> publishCohort(UUID cohortId, PublishCohortRequest publishCohortRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Cohort changed = cohortService.publishCohort(cohortId,
+                publishCohortRequest == null ? null : publishCohortRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<CohortEnrollmentList> publishFinalGrades(UUID cohortId,
             PublishFinalGradesRequest publishFinalGradesRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(gradebookService.publishFinalGrades(cohortId,
+                publishFinalGradesRequest == null ? null : publishFinalGradesRequest.getUserIds()));
     }
 
     @Override
     public ResponseEntity<SendResult> sendCohortAnnouncement(UUID cohortId,
             SendCohortAnnouncementRequest sendCohortAnnouncementRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(cohortEnrollmentService.sendCohortAnnouncement(cohortId,
+                sendCohortAnnouncementRequest));
     }
 
     @Override
     public ResponseEntity<RosterEntryList> setCohortMembers(UUID cohortId,
             SetCohortMembersRequest setCohortMembersRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(cohortEnrollmentService.setCohortMembers(cohortId, setCohortMembersRequest.getMembers(),
+                setCohortMembersRequest.getRemoveUserIds()));
     }
 
     @Override
     public ResponseEntity<Cohort> setStudentAccess(UUID cohortId,
             SetStudentAccessRequest setStudentAccessRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Cohort changed = cohortService.setStudentAccess(cohortId, setStudentAccessRequest.getStudentAccessFrom(),
+                setStudentAccessRequest.getStudentAccessUntil());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<Cohort> unpublishCohort(UUID cohortId,
             UnpublishCohortRequest unpublishCohortRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Cohort changed = cohortService.unpublishCohort(cohortId,
+                unpublishCohortRequest == null ? null : unpublishCohortRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -596,7 +664,9 @@ public class CohortController implements CohortApi {
     @Override
     public ResponseEntity<CohortActivity> updateCohortActivity(UUID cohortId, UUID cohortActivityId,
             String ifMatch, CohortActivityUpdate cohortActivityUpdate, String updateMask, Boolean validateOnly) {
-        throw new NotImplementedException();
+        CohortActivity updated = cohortService.updateCohortActivity(cohortId, cohortActivityId, ifMatch,
+                cohortActivityUpdate, updateMask, Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override

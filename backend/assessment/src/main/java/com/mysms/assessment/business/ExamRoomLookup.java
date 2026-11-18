@@ -1,58 +1,27 @@
 package com.mysms.assessment.business;
 
-import com.mysms.core.error.PermissionDeniedException;
+import com.mysms.assessment.integration.FacilityGrpcClient;
 import com.mysms.core.error.ResourceNotFoundException;
-import com.mysms.core.error.UnavailableException;
-import com.mysms.sdk.facility.api.RoomApi;
-import com.mysms.sdk.facility.model.Room;
-import java.util.Optional;
+import com.mysms.facility.v1.GetRoomRequest;
+import com.mysms.facility.v1.Room;
 import java.util.UUID;
-import java.util.function.Supplier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
+import org.springframework.stereotype.Component;
 
-/** Reads room ownership and capacity from facility. */
+/** Reads room ownership, capacity and whether the room is in use from facility, with the caller's identity. */
+@Component
 public class ExamRoomLookup {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ExamRoomLookup.class);
-    private final RoomApi rooms;
+    private static final String SERVICE = "facility";
+    private final FacilityGrpcClient facility;
 
-    public ExamRoomLookup(RoomApi rooms) {
-        this.rooms = rooms;
+    public ExamRoomLookup(FacilityGrpcClient facility) {
+        this.facility = facility;
     }
 
-    public static ExamRoomLookup unconfigured() {
-        return new ExamRoomLookup(null);
-    }
-
+    /** The room as facility shows it to the caller; 404 when facility does not know it (or does not show it). */
     public Room requireRoom(UUID id) {
-        if (rooms == null) {
-            throw new UnavailableException("The facility service is not configured for room allocation.");
-        }
-        return call(() -> rooms.getRoom(id, "id,institutionId,capacity,isActive,roomType"))
+        return Downstream.required(SERVICE, "facility.room.read", "Allocating exam rooms",
+                        () -> facility.getRoom(GetRoomRequest.newBuilder().setId(id.toString()).build()).getRoom())
                 .orElseThrow(() -> new ResourceNotFoundException("facility.room", id));
-    }
-
-    private static <T> Optional<T> call(Supplier<ResponseEntity<T>> request) {
-        try {
-            return Optional.ofNullable(request.get().getBody());
-        } catch (RestClientResponseException e) {
-            HttpStatusCode status = e.getStatusCode();
-            if (status.value() == 403) {
-                throw new PermissionDeniedException("Allocating exam rooms also needs facility.room.read.");
-            }
-            if (status.value() == 404) {
-                return Optional.empty();
-            }
-            LOG.warn("facility answered {} to exam room lookup", status.value());
-            throw new UnavailableException("The facility service could not provide a room.");
-        } catch (RestClientException e) {
-            LOG.warn("facility exam room lookup failed", e);
-            throw new UnavailableException("The facility service could not provide a room.");
-        }
     }
 }

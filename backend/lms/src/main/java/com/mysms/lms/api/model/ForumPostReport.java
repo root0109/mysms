@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -36,7 +36,7 @@ public class ForumPostReport {
   private @Nullable String description;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID reportedBy;
+  private @Nullable UUID reportedBy;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -66,9 +66,8 @@ public class ForumPostReport {
   /**
    * Constructor with only required parameters
    */
-  public ForumPostReport(UUID forumPostId, UUID reportedBy) {
+  public ForumPostReport(UUID forumPostId) {
     this.forumPostId = forumPostId;
-    this.reportedBy = reportedBy;
   }
 
   public ForumPostReport id(@Nullable UUID id) {
@@ -151,23 +150,23 @@ public class ForumPostReport {
     this.description = description;
   }
 
-  public ForumPostReport reportedBy(UUID reportedBy) {
+  public ForumPostReport reportedBy(@Nullable UUID reportedBy) {
     this.reportedBy = reportedBy;
     return this;
   }
 
   /**
-   * Reporter.
+   * Reporter. Output only: the caller, from the token.
    * @return reportedBy
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("reportedBy")
-  public UUID getReportedBy() {
+  public @Nullable UUID getReportedBy() {
     return reportedBy;
   }
 
   @JsonProperty("reportedBy")
-  public void setReportedBy(UUID reportedBy) {
+  public void setReportedBy(@Nullable UUID reportedBy) {
     this.reportedBy = reportedBy;
   }
 
@@ -177,7 +176,7 @@ public class ForumPostReport {
   }
 
   /**
-   * When.
+   * When. Output only: set by the service.
    * @return reportedAt
    */
   @Valid 

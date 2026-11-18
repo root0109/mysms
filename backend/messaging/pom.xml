@@ -14,6 +14,11 @@
   </parent>
   <artifactId>messaging</artifactId>
   <name>MySMS messaging</name>
+
+  <properties>
+    <!-- no layer packages here: SpotBugs analyses the module's own root package -->
+    <mysms.spotbugs.onlyAnalyze>com.mysms.messaging.-</mysms.spotbugs.onlyAnalyze>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>com.mysms</groupId>

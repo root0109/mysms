@@ -4,9 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * The Transport microservice: owns schema "transport" and serves the transport contract.
- * Core configures it from this class: the package it scans names the module (ModuleDefaultsEnvironmentPostProcessor);
- * in the monolith the same module runs inside `app`.
+ * The Transport microservice: owns schema "transport". In the monolith the same module runs inside {@code app}, whose
+ * configuration merges every module's {@code application.properties}.
  */
 @SpringBootApplication
 public class TransportApplication {

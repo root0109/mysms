@@ -1,9 +1,8 @@
 package com.mysms.finance.controller;
 
-import java.util.List;
-import com.mysms.core.paging.PagingUtil;
 import com.mysms.core.paging.PagingInfo;
-import com.mysms.finance.business.InvoiceService;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.web.ReadMask;
 import com.mysms.finance.api.InvoiceApi;
 import com.mysms.finance.api.model.CancelInvoiceRequest;
 import com.mysms.finance.api.model.CreateInvoiceFromDuesRequest;
@@ -14,21 +13,19 @@ import com.mysms.finance.api.model.InvoiceUpdate;
 import com.mysms.finance.api.model.PostInvoiceRequest;
 import com.mysms.finance.api.model.SendFeeRemindersRequest;
 import com.mysms.finance.api.model.SendResult;
-import com.mysms.core.error.NotImplementedException;
-import com.mysms.core.web.ReadMask;
+import com.mysms.finance.business.InvoiceService;
+import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Invoice operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/finance.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Invoice operations. Authentication, the x-permission check and the Idempotency-Key already happened
+ * in core's and auth-client's filters.
  */
 @RestController
 public class InvoiceController implements InvoiceApi {
-
 
     private final InvoiceService invoiceService;
 
@@ -37,31 +34,39 @@ public class InvoiceController implements InvoiceApi {
     }
 
     @Override
-    public ResponseEntity<Invoice> cancelInvoice(UUID invoiceId,
-            CancelInvoiceRequest cancelInvoiceRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+    public ResponseEntity<Invoice> cancelInvoice(UUID invoiceId, CancelInvoiceRequest cancelInvoiceRequest,
+            UUID idempotencyKey) {
+        Invoice changed = invoiceService.cancelInvoice(invoiceId, cancelInvoiceRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
-    public ResponseEntity<Invoice> createInvoice(Invoice invoice, UUID idempotencyKey,
-            Boolean validateOnly) {
-        throw new NotImplementedException();
+    public ResponseEntity<Invoice> createInvoice(Invoice invoice, UUID idempotencyKey, Boolean validateOnly) {
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        Invoice created = invoiceService.createInvoice(invoice, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(URI.create("/v1/finance/invoices/" + created.getId()))
+                .eTag(created.getEtag()).body(created);
     }
 
     @Override
     public ResponseEntity<Invoice> createInvoiceFromDues(UUID idempotencyKey,
             CreateInvoiceFromDuesRequest createInvoiceFromDuesRequest) {
-        throw new NotImplementedException();
+        Invoice created = invoiceService.createInvoiceFromDues(createInvoiceFromDuesRequest);
+        return ResponseEntity.ok().eTag(created.getEtag()).body(created);
     }
 
     @Override
     public ResponseEntity<FeeStatement> getFeeStatement(UUID studentId, UUID academicYearId) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(invoiceService.getFeeStatement(studentId, academicYearId));
     }
 
     @Override
     public ResponseEntity<Invoice> getInvoice(UUID invoiceId, String fields) {
-        throw new NotImplementedException();
+        Invoice found = invoiceService.getInvoice(invoiceId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
@@ -82,24 +87,30 @@ public class InvoiceController implements InvoiceApi {
     @Override
     public ResponseEntity<PagingInfo<Invoice>> listInvoices(Integer page, Integer size, String cursor, String filter,
             List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<Invoice> list =
+                PagingUtil.pagingInfo(invoiceService.listInvoices(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
     public ResponseEntity<Invoice> postInvoice(UUID invoiceId, PostInvoiceRequest postInvoiceRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Invoice changed = invoiceService.postInvoice(invoiceId, postInvoiceRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<SendResult> sendFeeReminders(SendFeeRemindersRequest sendFeeRemindersRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(invoiceService.sendFeeReminders(sendFeeRemindersRequest));
     }
 
     @Override
-    public ResponseEntity<Invoice> updateInvoice(UUID invoiceId, String ifMatch,
-            InvoiceUpdate invoiceUpdate, String updateMask, Boolean validateOnly) {
-        throw new NotImplementedException();
+    public ResponseEntity<Invoice> updateInvoice(UUID invoiceId, String ifMatch, InvoiceUpdate invoiceUpdate,
+            String updateMask, Boolean validateOnly) {
+        Invoice updated = invoiceService.updateInvoice(invoiceId, ifMatch, invoiceUpdate, updateMask,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 }

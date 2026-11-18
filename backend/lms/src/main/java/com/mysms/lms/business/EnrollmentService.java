@@ -1,5 +1,24 @@
 package com.mysms.lms.business;
 
+import java.util.Set;
+import java.util.Objects;
+import java.util.HashSet;
+import com.mysms.core.context.CallContextHolder;
+import java.time.ZoneOffset;
+import java.time.LocalDate;
+import java.math.BigDecimal;
+import com.mysms.lms.repository.LmsCourseRepository;
+import com.mysms.lms.repository.LiveClassRepository;
+import com.mysms.lms.repository.LearningActivityRepository;
+import com.mysms.lms.repository.CohortEnrollmentRepository;
+import com.mysms.lms.mapper.LiveClassMapper;
+import com.mysms.lms.mapper.CohortEnrollmentMapper;
+import com.mysms.lms.domain.LmsCourseEntity;
+import com.mysms.lms.api.model.StudentDashboard;
+import com.mysms.lms.api.model.LmsStatistics;
+import com.mysms.lms.api.model.DailyCount;
+import com.mysms.core.error.ConflictException;
+import com.mysms.authclient.AuthContext;
 import com.mysms.authclient.DataScope;
 import com.mysms.lms.api.model.Enrollment;
 import com.mysms.lms.api.model.EnrollmentUpdate;
@@ -38,10 +57,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.enrollment (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of lms.enrollment: audit and domain event commit in the same transaction as every change. Rows
+ * outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class EnrollmentService extends AppTransactionManager {
@@ -51,6 +68,10 @@ public class EnrollmentService extends AppTransactionManager {
     static final String PERMISSION_GET = "lms.enrollment.read";
     static final String PERMISSION_UPDATE = "lms.enrollment.update";
     static final String PERMISSION_DELETE = "lms.enrollment.delete";
+    /** How much a dashboard lists of each kind, and how far back its activity reaches. */
+    static final int DASHBOARD_ROWS = 50;
+    static final int DASHBOARD_LIVE_CLASSES = 10;
+    static final int HEATMAP_DAYS = 365;
     /** The contract's EnrollmentUpdate fields, in apply order. */
     static final List<String> WRITABLE = List.of("memberRole");
 
@@ -61,20 +82,40 @@ public class EnrollmentService extends AppTransactionManager {
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
+    private final LmsCourseRepository courses;
+    private final CohortEnrollmentRepository cohortEnrollments;
+    private final CohortEnrollmentMapper cohortEnrollmentMapper;
+    private final LiveClassRepository liveClasses;
+    private final LiveClassMapper liveClassMapper;
+    private final LearningActivityRepository activity;
+    private final PublicReads publicReads;
 
     public EnrollmentService(EnrollmentRepository repository, EnrollmentMapper mapper,
             @Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(LmsDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(LmsEventsConfig.OUTBOX) OutboxWriter outbox, @Qualifier(LmsEventsConfig.AUDIT) AuditWriter audit,
-            DtoValidator validator, Clock clock) {
+            DtoValidator validator, Clock clock,
+            LmsCourseRepository courses,
+            CohortEnrollmentRepository cohortEnrollments,
+            CohortEnrollmentMapper cohortEnrollmentMapper,
+            LiveClassRepository liveClasses,
+            LiveClassMapper liveClassMapper,
+            LearningActivityRepository activity, PublicReads publicReads) {
 
         super(database, transactions);
+        this.publicReads = publicReads;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
         this.clock = clock;
+        this.courses = courses;
+        this.cohortEnrollments = cohortEnrollments;
+        this.cohortEnrollmentMapper = cohortEnrollmentMapper;
+        this.liveClasses = liveClasses;
+        this.liveClassMapper = liveClassMapper;
+        this.activity = activity;
     }
 
     public Enrollment getEnrollment(UUID id) {
@@ -97,8 +138,8 @@ public class EnrollmentService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Enrollment updateEnrollment(UUID id, String ifMatch, EnrollmentUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -159,12 +200,12 @@ public class EnrollmentService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOf(EnrollmentEntity entity) {
         return repository.institutionOf(entity.getCourseId());
     }
 
-    /** Applies the selected EnrollmentUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected EnrollmentUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(EnrollmentEntity entity, EnrollmentUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -209,5 +250,107 @@ public class EnrollmentService extends AppTransactionManager {
         if (repository.takenCourseIdUserId1(entity)) {
             throw new DuplicateResourceException("A enrollment with the same course id and user id already exists.");
         }
+    }
+
+    // ---- the learner's own: enrolling, the dashboard; the catalogue's statistics ----
+
+    /**
+     * lms.EnrollInCourse: self-enrolment in a published, active, self-learning course. A paid course is 409
+     * PAYMENT_REQUIRED because payment cannot be checked yet; a repeat is 409 DUPLICATE, decided by the unique index
+     * when two race.
+     */
+    public Enrollment enrollInCourse(UUID courseId) {
+        UUID user = AuthContext.require().userId();
+        EnrollmentEntity entity = new EnrollmentEntity();
+        entity.setCourseId(courseId);
+        entity.setUserId(user);
+        entity.setMemberType("student");
+        entity.setMemberRole("member");
+        entity.setProgressPercent(BigDecimal.ZERO);
+        entity.setPurchasedCertificate(false);
+        entity.onCreatingData(Actor.current(), clock);
+        entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
+        return doInWriteTransaction(() -> {
+            LmsCourseEntity course = courses.findById(courseId)
+                    .filter(c -> Boolean.TRUE.equals(c.getIsPublished()) && "published".equals(c.getLifecycleStatus()))
+                    .orElseThrow(() -> new ResourceNotFoundException(LmsCourseEntity.TABLE, courseId));
+            if (Boolean.TRUE.equals(course.getDisableSelfLearning())) {
+                throw new ConflictException("SELF_LEARNING_DISABLED", "The course is taught in cohorts only.");
+            }
+            if (Boolean.TRUE.equals(course.getIsPaid())) {
+                throw new ConflictException("PAYMENT_REQUIRED", "The course is paid; enrolment follows its payment.");
+            }
+            if (repository.takenCourseIdUserId1(entity)) {
+                throw new DuplicateResourceException("The caller is already enrolled in this course.");
+            }
+            EnrollmentEntity stored = repository.insert(entity);
+            courses.countEnrollment(courseId);
+            audit.recordCreate(AGGREGATE, stored.getId());
+            outbox.publish(AGGREGATE + LmsEvents.CREATED, AGGREGATE, stored.getId(), LmsEvents.payload(stored.getId()));
+            return mapper.toDto(stored);
+        });
+    }
+
+    /**
+     * lms.GetStudentDashboard: the caller's own course and cohort enrolments, where to continue (the lesson they were
+     * last at in their most recently active course), their cohorts' coming live classes, and their activity — the
+     * days of the last year they learned on, the current streak (ending today or yesterday) and the longest one.
+     */
+    public StudentDashboard getStudentDashboard() {
+        UUID user = AuthContext.require().userId();
+        LocalDate today = LocalDate.now(clock.withZone(ZoneOffset.UTC));
+        return doInReadTransaction(() -> {
+            List<EnrollmentEntity> own = repository.listOwn(user, DASHBOARD_ROWS);
+            List<LearningActivityRepository.Day> days = activity.activeDays(user, today.minusDays(HEATMAP_DAYS - 1));
+            StudentDashboard dashboard = new StudentDashboard(currentStreak(days, today), longestStreak(days));
+            dashboard.setEnrollments(own.stream().map(mapper::toDto).toList());
+            dashboard.setContinueLessonId(own.stream().map(EnrollmentEntity::getCurrentLessonId)
+                    .filter(Objects::nonNull).findFirst().orElse(null));
+            dashboard.setCohortEnrollments(cohortEnrollments.ownActive(user, DASHBOARD_ROWS).stream()
+                    .map(cohortEnrollmentMapper::toDto).toList());
+            dashboard.setUpcomingLiveClasses(liveClasses.upcomingForStudent(user, today, DASHBOARD_LIVE_CLASSES)
+                    .stream().map(liveClassMapper::toDto).toList());
+            dashboard.setActivityHeatmap(days.stream().map(d -> new DailyCount(d.date(), d.count())).toList());
+            return dashboard;
+        });
+    }
+
+    /** Consecutive active days ending today — or yesterday, when today has no activity yet. */
+    static int currentStreak(List<LearningActivityRepository.Day> days, LocalDate today) {
+        Set<LocalDate> active = new HashSet<>();
+        days.forEach(d -> active.add(d.date()));
+        LocalDate at = active.contains(today) ? today : today.minusDays(1);
+        int streak = 0;
+        while (active.contains(at)) {
+            streak++;
+            at = at.minusDays(1);
+        }
+        return streak;
+    }
+
+    /** The longest run of consecutive active days (the days come in date order). */
+    static int longestStreak(List<LearningActivityRepository.Day> days) {
+        int longest = 0;
+        int run = 0;
+        LocalDate previous = null;
+        for (LearningActivityRepository.Day day : days) {
+            run = previous != null && previous.plusDays(1).equals(day.date()) ? run + 1 : 1;
+            longest = Math.max(longest, run);
+            previous = day.date();
+        }
+        return longest;
+    }
+
+    /**
+     * lms.GetLmsStatistics: the public figures of the tenant's catalogue — published courses, students, enrolments,
+     * certificates issued and the share of enrolments completed. Public: a guest names the school (404 otherwise).
+     */
+    public LmsStatistics getLmsStatistics() {
+        publicReads.requireTenant();
+        return doInReadTransaction(() -> {
+            LearningActivityRepository.Statistics figures = activity.statistics();
+            return new LmsStatistics(figures.publishedCourses(), figures.students(), figures.enrollments(),
+                    figures.certificatesIssued(), WireValues.decimal(figures.completionPercent()));
+        });
     }
 }

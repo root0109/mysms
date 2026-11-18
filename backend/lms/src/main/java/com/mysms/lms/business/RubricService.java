@@ -55,13 +55,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.rubric (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Rubric
- * are served here too — RubricCell, RubricCriterion, RubricLevel.
+ * Business service of lms.rubric and of the records that exist only as part of a Rubric (RubricCell, RubricCriterion,
+ * RubricLevel): audit and domain event commit in the same transaction as every change. Rows outside the caller's
+ * institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class RubricService extends AppTransactionManager {
@@ -186,8 +182,8 @@ public class RubricService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Rubric updateRubric(UUID id, String ifMatch, RubricUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
@@ -266,12 +262,12 @@ public class RubricService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(RubricEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected RubricUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected RubricUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(RubricEntity entity, RubricUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -356,8 +352,8 @@ public class RubricService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public RubricCell updateRubricCell(UUID rubricId, UUID id, String ifMatch, RubricCellUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -422,12 +418,12 @@ public class RubricService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.rubric it belongs to). */
+    /** The institution of the lms.rubric the row belongs to. */
     private Optional<UUID> institutionOfRubricCell(RubricCellEntity entity) {
         return rubricCellRepository.institutionOf(entity.getRubricId());
     }
 
-    /** Applies the selected RubricCellUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected RubricCellUpdate fields; explicit per field so a mask can clear values. */
     private static void applyRubricCell(RubricCellEntity entity, RubricCellUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -531,8 +527,8 @@ public class RubricService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public RubricCriterion updateRubricCriterion(UUID rubricId, UUID id, String ifMatch, RubricCriterionUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -597,14 +593,12 @@ public class RubricService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.rubric it belongs to). */
+    /** The institution of the lms.rubric the row belongs to. */
     private Optional<UUID> institutionOfRubricCriterion(RubricCriterionEntity entity) {
         return rubricCriterionRepository.institutionOf(entity.getRubricId());
     }
 
-    /**
-     * Applies the selected RubricCriterionUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected RubricCriterionUpdate fields; explicit per field so a mask can clear values. */
     private static void applyRubricCriterion(RubricCriterionEntity entity, RubricCriterionUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -697,8 +691,8 @@ public class RubricService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public RubricLevel updateRubricLevel(UUID rubricId, UUID id, String ifMatch, RubricLevelUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -763,12 +757,12 @@ public class RubricService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.rubric it belongs to). */
+    /** The institution of the lms.rubric the row belongs to. */
     private Optional<UUID> institutionOfRubricLevel(RubricLevelEntity entity) {
         return rubricLevelRepository.institutionOf(entity.getRubricId());
     }
 
-    /** Applies the selected RubricLevelUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected RubricLevelUpdate fields; explicit per field so a mask can clear values. */
     private static void applyRubricLevel(RubricLevelEntity entity, RubricLevelUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

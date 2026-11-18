@@ -64,13 +64,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of library.media (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Media
- * are served here too — MediaAuthor, MediaCourse, MediaPublisher, MediaSubject, MediaUnit.
+ * Business service of library.media and of the records that exist only as part of a Media (MediaAuthor, MediaCourse,
+ * MediaPublisher, MediaSubject, MediaUnit): audit and domain event commit in the same transaction as every change. Rows
+ * outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class MediaService extends AppTransactionManager {
@@ -78,7 +74,7 @@ public class MediaService extends AppTransactionManager {
     public static final String AGGREGATE = MediaEntity.TABLE;
     static final String PERMISSION_LIST = "library.media.read";
     static final String PERMISSION_GET = "library.media.read";
-    static final String PERMISSION_CREATE = "library.media.create";
+    public static final String PERMISSION_CREATE = "library.media.create";
     static final String PERMISSION_UPDATE = "library.media.update";
     static final String PERMISSION_DELETE = "library.media.delete";
     /** The contract's MediaUpdate fields, in apply order. */
@@ -228,8 +224,8 @@ public class MediaService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Media updateMedia(UUID id, String ifMatch, MediaUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
@@ -316,12 +312,12 @@ public class MediaService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(MediaEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected MediaUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected MediaUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(MediaEntity entity, MediaUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -368,7 +364,7 @@ public class MediaService extends AppTransactionManager {
 
     }
 
-    // ---- MediaAuthor: a record of the Media aggregate ----
+    // ---- MediaAuthor ----
 
     public MediaAuthor getMediaAuthor(UUID mediaId, UUID id) {
         return doInReadTransaction(() -> {
@@ -420,8 +416,8 @@ public class MediaService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public MediaAuthor updateMediaAuthor(UUID mediaId, UUID id, String ifMatch, MediaAuthorUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -482,12 +478,12 @@ public class MediaService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the library.media it belongs to). */
+    /** The institution of the library.media the row belongs to. */
     private Optional<UUID> institutionOfMediaAuthor(MediaAuthorEntity entity) {
         return mediaAuthorRepository.institutionOf(entity.getMediaId());
     }
 
-    /** Applies the selected MediaAuthorUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected MediaAuthorUpdate fields; explicit per field so a mask can clear values. */
     private static void applyMediaAuthor(MediaAuthorEntity entity, MediaAuthorUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -527,7 +523,7 @@ public class MediaService extends AppTransactionManager {
         }
     }
 
-    // ---- MediaCourse: a record of the Media aggregate ----
+    // ---- MediaCourse ----
 
     public MediaCourse getMediaCourse(UUID mediaId, UUID id) {
         return doInReadTransaction(() -> {
@@ -579,8 +575,8 @@ public class MediaService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public MediaCourse updateMediaCourse(UUID mediaId, UUID id, String ifMatch, MediaCourseUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -641,12 +637,12 @@ public class MediaService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the library.media it belongs to). */
+    /** The institution of the library.media the row belongs to. */
     private Optional<UUID> institutionOfMediaCourse(MediaCourseEntity entity) {
         return mediaCourseRepository.institutionOf(entity.getMediaId());
     }
 
-    /** Applies the selected MediaCourseUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected MediaCourseUpdate fields; explicit per field so a mask can clear values. */
     private static void applyMediaCourse(MediaCourseEntity entity, MediaCourseUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -679,7 +675,7 @@ public class MediaService extends AppTransactionManager {
         }
     }
 
-    // ---- MediaPublisher: a record of the Media aggregate ----
+    // ---- MediaPublisher ----
 
     public MediaPublisher getMediaPublisher(UUID mediaId, UUID id) {
         return doInReadTransaction(() -> {
@@ -733,8 +729,8 @@ public class MediaService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public MediaPublisher updateMediaPublisher(UUID mediaId, UUID id, String ifMatch, MediaPublisherUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -797,14 +793,12 @@ public class MediaService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the library.media it belongs to). */
+    /** The institution of the library.media the row belongs to. */
     private Optional<UUID> institutionOfMediaPublisher(MediaPublisherEntity entity) {
         return mediaPublisherRepository.institutionOf(entity.getMediaId());
     }
 
-    /**
-     * Applies the selected MediaPublisherUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected MediaPublisherUpdate fields; explicit per field so a mask can clear values. */
     private static void applyMediaPublisher(MediaPublisherEntity entity, MediaPublisherUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -841,7 +835,7 @@ public class MediaService extends AppTransactionManager {
         }
     }
 
-    // ---- MediaSubject: a record of the Media aggregate ----
+    // ---- MediaSubject ----
 
     public MediaSubject getMediaSubject(UUID mediaId, UUID id) {
         return doInReadTransaction(() -> {
@@ -895,8 +889,8 @@ public class MediaService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public MediaSubject updateMediaSubject(UUID mediaId, UUID id, String ifMatch, MediaSubjectUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -959,14 +953,12 @@ public class MediaService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the library.media it belongs to). */
+    /** The institution of the library.media the row belongs to. */
     private Optional<UUID> institutionOfMediaSubject(MediaSubjectEntity entity) {
         return mediaSubjectRepository.institutionOf(entity.getMediaId());
     }
 
-    /**
-     * Applies the selected MediaSubjectUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected MediaSubjectUpdate fields; explicit per field so a mask can clear values. */
     private static void applyMediaSubject(MediaSubjectEntity entity, MediaSubjectUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -1000,7 +992,7 @@ public class MediaService extends AppTransactionManager {
         }
     }
 
-    // ---- MediaUnit: a record of the Media aggregate ----
+    // ---- MediaUnit ----
 
     public MediaUnit getMediaUnit(UUID mediaId, UUID id) {
         return doInReadTransaction(() -> {
@@ -1052,8 +1044,8 @@ public class MediaService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public MediaUnit updateMediaUnit(UUID mediaId, UUID id, String ifMatch, MediaUnitUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -1114,12 +1106,12 @@ public class MediaService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the library.media it belongs to). */
+    /** The institution of the library.media the row belongs to. */
     private Optional<UUID> institutionOfMediaUnit(MediaUnitEntity entity) {
         return mediaUnitRepository.institutionOf(entity.getMediaId());
     }
 
-    /** Applies the selected MediaUnitUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected MediaUnitUpdate fields; explicit per field so a mask can clear values. */
     private static void applyMediaUnit(MediaUnitEntity entity, MediaUnitUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

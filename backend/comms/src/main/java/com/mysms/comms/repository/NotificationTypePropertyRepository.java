@@ -22,11 +22,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to comms.notification_type_property (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. The table is global (no
- * tenant column, no row-level security): it is written only by
- * platform staff, through the operations whose scheme the edge enforces.
+ * Plain-JDBC access to comms.notification_type_property: schema-qualified constant SQL, named parameters, live rows
+ * only, keyset paging over an allowlisted order and the row_version guard on every update and delete. The table is
+ * global (no tenant column, no row-level security): it is written only by platform staff, through the operations whose
+ * scheme the edge enforces.
  */
 @Repository
 public class NotificationTypePropertyRepository {
@@ -149,7 +148,7 @@ public class NotificationTypePropertyRepository {
         return Boolean.TRUE.equals(jdbc.sql(EXISTS_NOTIFICATION_TYPE_ID).param("id", id).query(Boolean.class).single());
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.notification_type_id = :parentId", Map.of("parentId", parentId));
     }

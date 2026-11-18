@@ -36,13 +36,18 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import com.mysms.authclient.AuthContext;
+import com.mysms.core.error.ConflictException;
+import com.mysms.core.error.InvalidStateException;
+import com.mysms.core.error.PermissionDeniedException;
+import com.mysms.lms.api.model.Certificate;
+import com.mysms.lms.repository.CertificationRepository;
+import java.time.LocalDate;
 
 /**
- * Business service of lms.certificate_evaluation (JAVA-CODING-RULES §4): one plain class, explicit methods,
- * transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of lms.certificate_evaluation: audit and domain event commit in the same transaction as every
+ * change. Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide
+ * grant.
  */
 @Service
 public class CertificateEvaluationService extends AppTransactionManager {
@@ -66,14 +71,18 @@ public class CertificateEvaluationService extends AppTransactionManager {
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
+    private final CertificateService certificates;
+    private final CertificationRepository certification;
 
     public CertificateEvaluationService(CertificateEvaluationRepository repository, CertificateEvaluationMapper mapper,
             @Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(LmsDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(LmsEventsConfig.OUTBOX) OutboxWriter outbox, @Qualifier(LmsEventsConfig.AUDIT) AuditWriter audit,
-            DtoValidator validator, Clock clock) {
+            DtoValidator validator, Clock clock, CertificateService certificates, CertificationRepository certification) {
 
         super(database, transactions);
+        this.certificates = certificates;
+        this.certification = certification;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
@@ -131,8 +140,8 @@ public class CertificateEvaluationService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CertificateEvaluation updateCertificateEvaluation(UUID id, String ifMatch,
             CertificateEvaluationUpdate changes, String updateMask, boolean validateOnly) {
@@ -199,15 +208,12 @@ public class CertificateEvaluationService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.course it belongs to). */
+    /** The institution of the lms.course the row belongs to. */
     private Optional<UUID> institutionOf(CertificateEvaluationEntity entity) {
         return repository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected CertificateEvaluationUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected CertificateEvaluationUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(CertificateEvaluationEntity entity, CertificateEvaluationUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -265,5 +271,46 @@ public class CertificateEvaluationService extends AppTransactionManager {
 
     private void assertUnique(CertificateEvaluationEntity entity) {
 
+    }
+
+    // ---- issuing the certificate a passed evaluation earns ----
+
+    static final String PERMISSION_ISSUE = "lms.certificate_evaluation.issue_certificate_from_evaluation";
+
+    /**
+     * lms.IssueCertificateFromEvaluation: the evaluator (or a holder of lms.certificate_evaluation.update in the course's
+     * institution) issues the course certificate a passed evaluation earns. The evaluation must have passed (409), the
+     * student must not already hold the certificate (409 CERTIFICATE_EXISTS), and an expiry may not precede the issue
+     * date (422).
+     */
+    public Certificate issueCertificateFromEvaluation(UUID id, String templateCode, LocalDate issueDate,
+            LocalDate expiryDate, boolean publish) {
+        AuthContext caller = AuthContext.require();
+        DataScope scope = DataScope.current(PERMISSION_ISSUE);
+        return doInWriteTransaction(() -> {
+            CertificateEvaluationEntity evaluation = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(evaluation));
+            boolean staff = caller.hasPermission(PERMISSION_UPDATE)
+                    && DataScope.of(caller, PERMISSION_UPDATE).canRead(institutionOf(evaluation))
+                    && (institutionOf(evaluation).isPresent() || caller.hasTenantWidePermission(PERMISSION_UPDATE));
+            if (!caller.userId().equals(evaluation.getEvaluatorUserId()) && !staff) {
+                throw new PermissionDeniedException("Only the evaluator may issue this certificate.");
+            }
+            if (!"pass".equals(evaluation.getStatus())) {
+                throw new InvalidStateException("Only a passed evaluation earns a certificate.");
+            }
+            if (certification.holdsForCourse(evaluation.getCourseId(), evaluation.getCohortId(),
+                    evaluation.getUserId())) {
+                throw new ConflictException("CERTIFICATE_EXISTS", "The student already holds this certificate.");
+            }
+            UUID evaluator = evaluation.getEvaluatorUserId() == null ? null
+                    : certification.evaluatorOf(evaluation.getEvaluatorUserId()).orElse(null);
+            Certificate issued = certificates.issue(new CertificateService.Issue(evaluation.getUserId(),
+                    evaluation.getCourseId(), evaluation.getCohortId(), evaluator, templateCode, issueDate, expiryDate,
+                    publish));
+            audit.recordTransition(AGGREGATE, id, "issue_certificate", List.of(), null);
+            outbox.publish(AGGREGATE + ".issue_certificate", AGGREGATE, id, LmsEvents.payload(id));
+            return issued;
+        });
     }
 }

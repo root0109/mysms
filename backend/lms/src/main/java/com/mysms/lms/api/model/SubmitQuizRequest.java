@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -32,7 +32,7 @@ public class SubmitQuizRequest {
   private List<@Valid QuizAnswerInput> answers = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid ViolationEvent> violations = new ArrayList<>();
+  private @Nullable List<@Valid ViolationEvent> violations = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String submissionReason;

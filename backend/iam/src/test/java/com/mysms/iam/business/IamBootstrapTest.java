@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 class IamBootstrapTest {
 
     private static IamBootstrap bootstrap(String code, String password) {
-        return new IamBootstrap(new IamProperties(null, null, new IamProperties.Bootstrap(code, "admin", password)),
-                null, null, null, null, null, null, null, Clock.systemUTC());
+        return new IamBootstrap(new IamProperties(null, new IamProperties.Bootstrap(code, "admin", password)),
+                null, null, null, null, null, null, null, null, Clock.systemUTC());
     }
 
     @Test
@@ -19,6 +19,9 @@ class IamBootstrapTest {
         assertThatThrownBy(() -> bootstrap("Not A Code!", "long enough secret").bootstrap())
                 .isInstanceOf(IllegalStateException.class).hasMessageContaining("tenant-code");
         assertThatThrownBy(() -> bootstrap("x", "long enough secret").bootstrap())
+                .isInstanceOf(IllegalStateException.class).hasMessageContaining("tenant-code");
+        // longer than platform.tenant.code, where the platform registers the tenant
+        assertThatThrownBy(() -> bootstrap("a".repeat(51), "long enough secret").bootstrap())
                 .isInstanceOf(IllegalStateException.class).hasMessageContaining("tenant-code");
     }
 

@@ -1,20 +1,23 @@
 package com.mysms.assessment.business;
 
+import com.mysms.assessment.api.model.HomeworkSubmission;
+import com.mysms.assessment.api.model.HomeworkSubmissionUpdate;
 import com.mysms.assessment.config.AssessmentDatabaseConfig;
 import com.mysms.assessment.config.AssessmentEventsConfig;
 import com.mysms.assessment.domain.HomeworkSubmissionEntity;
 import com.mysms.assessment.events.AssessmentEvents;
 import com.mysms.assessment.mapper.HomeworkSubmissionMapper;
 import com.mysms.assessment.repository.HomeworkSubmissionRepository;
+import com.mysms.authclient.AuthContext;
 import com.mysms.authclient.DataScope;
-import com.mysms.assessment.api.model.HomeworkSubmission;
-import com.mysms.assessment.api.model.HomeworkSubmissionUpdate;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.DuplicateResourceException;
 import com.mysms.core.error.FieldError;
+import com.mysms.core.error.InvalidStateException;
+import com.mysms.core.error.PermissionDeniedException;
 import com.mysms.core.error.PreconditionFailedException;
 import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.error.ValidationFailedException;
@@ -38,11 +41,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of assessment.homework_submission (JAVA-CODING-RULES §4): one plain class, explicit methods,
- * transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of assessment.homework_submission: audit and domain event commit in the same transaction as every
+ * change. <p>Staff (holding {@link #PERMISSION_CHECK} in the homework's institution) work on every submission there;
+ * anyone else reaches only their own students' submissions, as sis confirms with the caller's token ({@link
+ * StudentOwnershipLookup}): another student's is 404, creating one in another student's name 403, and they change their
+ * own only until it is checked (409). sis is asked outside any transaction and the write re-checks its row. The check
+ * and the reply are written only by {@link HomeworkWorkflowService}.
  */
 @Service
 public class HomeworkSubmissionService extends AppTransactionManager {
@@ -53,30 +57,39 @@ public class HomeworkSubmissionService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "assessment.homework_submission.create";
     static final String PERMISSION_UPDATE = "assessment.homework_submission.update";
     static final String PERMISSION_DELETE = "assessment.homework_submission.delete";
+    /** The permission only staff hold: where the caller holds it, every submission of the institution is theirs. */
+    static final String PERMISSION_CHECK = "assessment.homework_submission.check_homework_submission";
+    /** The state in which a student may still change their own submission. */
+    static final String OWNER_EDITABLE = "unchecked";
     /**
-     * The contract's HomeworkSubmissionUpdate fields, in apply order. The check and the reply (who, when, the comments,
-     * the student's answer) are not among them: only the workflow operations write those.
+     * The contract's HomeworkSubmissionUpdate fields, in apply order. The student is not among them (a submission
+     * stays the work of the student it was made for), nor the check and the reply: only the workflow writes those.
      */
-    static final List<String> WRITABLE = List.of("homeworkId", "studentId", "submittedOn");
+    static final List<String> WRITABLE = List.of("homeworkId", "submittedOn");
 
+    /** A row as read before sis is asked: the submission and the institution it belongs to. */
+    private record Visible(HomeworkSubmissionEntity row, Optional<UUID> institution) {
+    }
 
     private final HomeworkSubmissionRepository repository;
     private final HomeworkSubmissionMapper mapper;
+    private final StudentOwnershipLookup ownership;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
 
     public HomeworkSubmissionService(HomeworkSubmissionRepository repository, HomeworkSubmissionMapper mapper,
+            StudentOwnershipLookup ownership,
             @Qualifier(AssessmentDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(AssessmentDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(AssessmentEventsConfig.OUTBOX) OutboxWriter outbox,
-                    @Qualifier(AssessmentEventsConfig.AUDIT) AuditWriter audit,
+            @Qualifier(AssessmentEventsConfig.AUDIT) AuditWriter audit,
             DtoValidator validator, Clock clock) {
-
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
+        this.ownership = ownership;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -84,35 +97,52 @@ public class HomeworkSubmissionService extends AppTransactionManager {
     }
 
     public HomeworkSubmission getHomeworkSubmission(UUID id) {
-        return doInReadTransaction(() -> {
-            return mapper.toDto(loadVisible(DataScope.current(PERMISSION_GET), id));
-        });
+        DataScope scope = DataScope.current(PERMISSION_GET);
+        Visible visible = doInReadTransaction(() -> loadVisible(scope, id));
+        requireOwnOrStaff(visible);
+        return mapper.toDto(visible.row());
     }
 
+    /** Staff read every submission in their reach; anyone else the submissions of their own students only. */
     public Page<HomeworkSubmission> listHomeworkSubmissions(Integer pageNumber, Integer pageSize, String cursor,
             String filter, List<String> sortBy) {
-        SortSpec sort =
-                SortSpec.parse(sortBy, HomeworkSubmissionRepository.SORT_FIELDS,
-                        HomeworkSubmissionRepository.DEFAULT_ORDER,
-                HomeworkSubmissionRepository.ID_COLUMN);
+        AuthContext caller = AuthContext.require();
+        SortSpec sort = SortSpec.parse(sortBy, HomeworkSubmissionRepository.SORT_FIELDS,
+                HomeworkSubmissionRepository.DEFAULT_ORDER, HomeworkSubmissionRepository.ID_COLUMN);
+        DataScope scope = DataScope.current(PERMISSION_LIST);
+        DataScope reach = StaffReach.of(caller, PERMISSION_CHECK);
         SqlFragment where = FilterParser.parse(filter, HomeworkSubmissionRepository.FILTER_FIELDS)
-                .and(HomeworkSubmissionRepository.scope(DataScope.current(PERMISSION_LIST)));
+                .and(HomeworkSubmissionRepository.scope(scope));
+        if (!StaffReach.covers(reach, scope)) {
+            where = where.and(HomeworkSubmissionRepository.reachableOrOwn(reach, ownership.ownStudents(caller)));
+        }
+        SqlFragment filtered = where;
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
-        return doInReadTransaction(() -> {
-            Page<HomeworkSubmissionEntity> rows = repository.list(page, where);
-            return rows.map(mapper::toDto);
-        });
+        return doInReadTransaction(() -> repository.list(page, filtered).map(mapper::toDto));
     }
 
-    /** Creates the row; with validateOnly every check runs and nothing is written. */
+    /**
+     * Creates the row; with validateOnly every check runs and nothing is written. Outside the caller's staff reach
+     * the student must be the caller's own (403).
+     */
     public HomeworkSubmission createHomeworkSubmission(HomeworkSubmission request, boolean validateOnly) {
         validator.validate(request);
         HomeworkSubmissionEntity entity = mapper.toEntity(request);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
+        AuthContext caller = AuthContext.require();
         DataScope scope = DataScope.current(PERMISSION_CREATE);
+        Optional<UUID> institution = doInReadTransaction(() -> institutionOf(entity));
+        if (institution.isPresent()) {
+            scope.requireWritable(institution);
+            if (!StaffReach.of(caller, PERMISSION_CHECK).canRead(institution) && entity.getStudentId() != null
+                    && ownership.relationTo(caller, entity.getStudentId()).isEmpty()) {
+                throw new PermissionDeniedException("A submission can only be made for the caller's own student.");
+            }
+        }
         return doInWriteTransaction(() -> {
-            assertValid(entity, true);
+            assertValid(entity);
+            requireSameInstitution(institution, institutionOf(entity));
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
             if (validateOnly) {
@@ -127,23 +157,28 @@ public class HomeworkSubmissionService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public HomeworkSubmission updateHomeworkSubmission(UUID id, String ifMatch, HomeworkSubmissionUpdate changes,
             String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
         List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
+        DataScope scope = DataScope.current(PERMISSION_UPDATE);
+        Visible before = doInReadTransaction(() -> loadVisible(scope, id));
+        boolean owner = requireOwnOrStaff(before);
         return doInWriteTransaction(() -> {
-            DataScope scope = DataScope.current(PERMISSION_UPDATE);
-            HomeworkSubmissionEntity entity = loadVisible(scope, id);
-            scope.requireWritable(institutionOf(entity));
+            Visible visible = loadVisible(scope, id);
+            requireSameInstitution(before.institution(), visible.institution());
+            HomeworkSubmissionEntity entity = visible.row();
+            scope.requireWritable(visible.institution());
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
+            requireOwnerEditable(owner, entity);
             apply(entity, changes, fields);
             validator.validate(mapper.toDto(entity));
-            assertValid(entity, false);
+            assertValid(entity);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
             entity.onUpdatingData(Actor.current(), clock);
@@ -160,16 +195,21 @@ public class HomeworkSubmissionService extends AppTransactionManager {
         });
     }
 
-    /** Soft delete under If-Match; refused while live rows of this module still reference the row. */
+    /** Soft delete under If-Match; a student deletes their own submission only until it is checked. */
     public void deleteHomeworkSubmission(UUID id, String ifMatch) {
         int expected = Etags.expectedVersion(ifMatch);
+        DataScope scope = DataScope.current(PERMISSION_DELETE);
+        Visible before = doInReadTransaction(() -> loadVisible(scope, id));
+        boolean owner = requireOwnOrStaff(before);
         runInWriteTransaction(() -> {
-            DataScope scope = DataScope.current(PERMISSION_DELETE);
-            HomeworkSubmissionEntity entity = loadVisible(scope, id);
-            scope.requireWritable(institutionOf(entity));
+            Visible visible = loadVisible(scope, id);
+            requireSameInstitution(before.institution(), visible.institution());
+            HomeworkSubmissionEntity entity = visible.row();
+            scope.requireWritable(visible.institution());
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
+            requireOwnerEditable(owner, entity);
             entity.onDeletingData(Actor.current(), clock);
             if (repository.softDelete(entity, expected) == 0) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -179,30 +219,55 @@ public class HomeworkSubmissionService extends AppTransactionManager {
         });
     }
 
-    /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
-    private HomeworkSubmissionEntity loadVisible(DataScope scope, UUID id) {
-        HomeworkSubmissionEntity entity = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
-        if (!scope.canRead(institutionOf(entity))) {
-            throw new ResourceNotFoundException(AGGREGATE, id);
+    /**
+     * Staff (the institution in their reach) pass; anyone else must own the submission's student, or the submission
+     * does not exist for them (404). Answers whether the caller acts as the student's owner rather than as staff.
+     */
+    private boolean requireOwnOrStaff(Visible visible) {
+        AuthContext caller = AuthContext.require();
+        if (StaffReach.of(caller, PERMISSION_CHECK).canRead(visible.institution())) {
+            return false;
         }
-        return entity;
+        if (ownership.relationTo(caller, visible.row().getStudentId()).isEmpty()) {
+            throw new ResourceNotFoundException(AGGREGATE, visible.row().getId());
+        }
+        return true;
     }
 
-    /** The institution that owns the row (the institution of the assessment.homework it belongs to). */
+    private static void requireOwnerEditable(boolean owner, HomeworkSubmissionEntity entity) {
+        if (owner && !OWNER_EDITABLE.equals(entity.getStatus())) {
+            throw new InvalidStateException("A submission can be changed by its student only until it is checked.");
+        }
+    }
+
+    /** The row moved to another institution between the check with sis and the write: the check no longer holds. */
+    private static void requireSameInstitution(Optional<UUID> checked, Optional<UUID> current) {
+        if (!checked.equals(current)) {
+            throw new PreconditionFailedException("The homework changed meanwhile; try again.");
+        }
+    }
+
+    /** The live row, if the caller's scope shows it (404 otherwise), with the institution it belongs to. */
+    private Visible loadVisible(DataScope scope, UUID id) {
+        HomeworkSubmissionEntity entity = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+        Optional<UUID> institution = institutionOf(entity);
+        if (!scope.canRead(institution)) {
+            throw new ResourceNotFoundException(AGGREGATE, id);
+        }
+        return new Visible(entity, institution);
+    }
+
+    /** The institution of the assessment.homework the row belongs to. */
     private Optional<UUID> institutionOf(HomeworkSubmissionEntity entity) {
         return repository.institutionOf(entity.getHomeworkId());
     }
 
-    /**
-     * Applies the selected HomeworkSubmissionUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected HomeworkSubmissionUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(HomeworkSubmissionEntity entity, HomeworkSubmissionUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
                 case "homeworkId" -> entity.setHomeworkId(changes.getHomeworkId());
-                case "studentId" -> entity.setStudentId(changes.getStudentId());
                 case "submittedOn" -> entity.setSubmittedOn(changes.getSubmittedOn());
                 default -> throw new IllegalStateException("unhandled writable field " + field);
             }
@@ -210,7 +275,7 @@ public class HomeworkSubmissionService extends AppTransactionManager {
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
-    private void assertValid(HomeworkSubmissionEntity entity, boolean creating) {
+    private void assertValid(HomeworkSubmissionEntity entity) {
         List<FieldError> errors = new ArrayList<>();
         if (entity.getHomeworkId() == null) {
             errors.add(new FieldError("homeworkId", "must not be null", "NotNull"));

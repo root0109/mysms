@@ -26,9 +26,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the AttendanceSheet operations: implements the module's contract interface (JAVA-CODING-RULES §9).
- * Thin: delegate, then shape the HTTP response. Authentication and the x-permission check already happened in the
- * auth-client filter.
+ * REST edge of the AttendanceSheet operations: implements the module's contract interface. Thin: delegate, then shape
+ * the HTTP response. Authentication and the x-permission check already happened in the auth-client filter.
  */
 @RestController
 public class AttendanceSheetController implements AttendanceSheetApi {

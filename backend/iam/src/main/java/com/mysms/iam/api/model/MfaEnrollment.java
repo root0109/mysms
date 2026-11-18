@@ -1,4 +1,4 @@
-// Owned API contract of iam (JAVA-CODING-RULES §7); first materialized from api/openapi/iam.yaml on 2026-11-10.
+// Owned API contract of iam.
 package com.mysms.iam.api.model;
 
 import java.net.URI;
@@ -37,7 +37,7 @@ public class MfaEnrollment {
   private @Nullable String otpauthUrl;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<String> recoveryCodes = new ArrayList<>();
+  private @Nullable List<String> recoveryCodes = new ArrayList<>();
 
   public MfaEnrollment() {
     super();

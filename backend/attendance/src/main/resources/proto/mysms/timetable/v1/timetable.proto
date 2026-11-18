@@ -1,0 +1,540 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.timetable.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "TimetableProto";
+option java_package = "com.mysms.timetable.v1";
+
+// PeriodService: operations on the Period aggregate.
+service PeriodService {
+  // List Periods.
+  rpc ListPeriods(ListPeriodsRequest) returns (ListPeriodsResponse);
+  // Get Period.
+  rpc GetPeriod(GetPeriodRequest) returns (GetPeriodResponse);
+  // Create Period.
+  rpc CreatePeriod(CreatePeriodRequest) returns (CreatePeriodResponse);
+  // Update Period.
+  rpc UpdatePeriod(UpdatePeriodRequest) returns (UpdatePeriodResponse);
+  // Soft-delete Period.
+  rpc DeletePeriod(DeletePeriodRequest) returns (DeletePeriodResponse);
+}
+
+// SessionService: operations on the Session aggregate.
+service SessionService {
+  // List Sessions.
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+  // Get Session.
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse);
+  // Create Session.
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  // Update Session.
+  rpc UpdateSession(UpdateSessionRequest) returns (UpdateSessionResponse);
+  // Soft-delete Session.
+  rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse);
+  // List SessionStudents.
+  rpc ListSessionStudents(ListSessionStudentsRequest) returns (ListSessionStudentsResponse);
+  // Get SessionStudent.
+  rpc GetSessionStudent(GetSessionStudentRequest) returns (GetSessionStudentResponse);
+  // Create SessionStudent.
+  rpc CreateSessionStudent(CreateSessionStudentRequest) returns (CreateSessionStudentResponse);
+  // Update SessionStudent.
+  rpc UpdateSessionStudent(UpdateSessionStudentRequest) returns (UpdateSessionStudentResponse);
+  // Soft-delete SessionStudent.
+  rpc DeleteSessionStudent(DeleteSessionStudentRequest) returns (DeleteSessionStudentResponse);
+  // Confirm.
+  rpc ConfirmSession(ConfirmSessionRequest) returns (ConfirmSessionResponse);
+  // Mark done.
+  rpc CompleteSession(CompleteSessionRequest) returns (CompleteSessionResponse);
+  // Cancel.
+  rpc CancelSession(CancelSessionRequest) returns (CancelSessionResponse);
+  // Back to draft.
+  rpc ResetSession(ResetSessionRequest) returns (ResetSessionResponse);
+  // Confirm many draft sessions at once.
+  rpc BatchConfirmSessions(BatchConfirmSessionsRequest) returns (BatchConfirmSessionsResponse);
+  // Generate sessions from a weekly pattern; clashes (teacher, room, class) are reported.
+  rpc GenerateSessions(GenerateSessionsRequest) returns (GenerateSessionsResponse);
+  // Timetable view for a class, teacher, student or room.
+  rpc GetTimetable(GetTimetableRequest) returns (GetTimetableResponse);
+}
+
+// OperationService: long-running operations started in this module.
+service OperationService {
+  // Live status of a long-running operation started in this module.
+  rpc GetOperation(GetOperationRequest) returns (GetOperationResponse);
+  // Long-running operations of this module started by the caller.
+  rpc ListOperations(ListOperationsRequest) returns (ListOperationsResponse);
+  // Request cancellation of a running operation started in this module.
+  rpc CancelOperation(CancelOperationRequest) returns (CancelOperationResponse);
+}
+
+message ListPeriodsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListPeriodsResponse {
+  repeated Period items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetPeriodRequest {
+  // Period id (UUID).
+  string id = 1;
+}
+message GetPeriodResponse {
+  Period period = 1;
+}
+
+message CreatePeriodRequest {
+  Period period = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreatePeriodResponse {
+  Period period = 1;
+}
+
+message UpdatePeriodRequest {
+  // Resource with id and etag set.
+  Period period = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdatePeriodResponse {
+  Period period = 1;
+}
+
+message DeletePeriodRequest {
+  // Period id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeletePeriodResponse {
+}
+
+message ListSessionsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListSessionsResponse {
+  repeated Session items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetSessionRequest {
+  // Session id (UUID).
+  string id = 1;
+}
+message GetSessionResponse {
+  Session session = 1;
+}
+
+message CreateSessionRequest {
+  Session session = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateSessionResponse {
+  Session session = 1;
+}
+
+message UpdateSessionRequest {
+  // Resource with id and etag set.
+  Session session = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateSessionResponse {
+  Session session = 1;
+}
+
+message DeleteSessionRequest {
+  // Session id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteSessionResponse {
+}
+
+message ListSessionStudentsRequest {
+  // Session id (UUID).
+  string session_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListSessionStudentsResponse {
+  repeated SessionStudent items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetSessionStudentRequest {
+  // Session id (UUID).
+  string session_id = 1;
+  // SessionStudent id (UUID).
+  string id = 2;
+}
+message GetSessionStudentResponse {
+  SessionStudent session_student = 1;
+}
+
+message CreateSessionStudentRequest {
+  // Session id (UUID).
+  string session_id = 1;
+  SessionStudent session_student = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateSessionStudentResponse {
+  SessionStudent session_student = 1;
+}
+
+message UpdateSessionStudentRequest {
+  // Session id (UUID).
+  string session_id = 1;
+  // Resource with id and etag set.
+  SessionStudent session_student = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateSessionStudentResponse {
+  SessionStudent session_student = 1;
+}
+
+message DeleteSessionStudentRequest {
+  // Session id (UUID).
+  string session_id = 1;
+  // SessionStudent id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteSessionStudentResponse {
+}
+
+message ConfirmSessionRequest {
+  // Path parameter sessionId.
+  string session_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ConfirmSessionResponse {
+  Session session = 1;
+}
+
+message CompleteSessionRequest {
+  // Path parameter sessionId.
+  string session_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CompleteSessionResponse {
+  Session session = 1;
+}
+
+message CancelSessionRequest {
+  // Path parameter sessionId.
+  string session_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CancelSessionResponse {
+  Session session = 1;
+}
+
+message ResetSessionRequest {
+  // Path parameter sessionId.
+  string session_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ResetSessionResponse {
+  Session session = 1;
+}
+
+message BatchConfirmSessionsRequest {
+  // Sessions to confirm. Required.
+  repeated string session_ids = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message BatchConfirmSessionsResponse {
+  repeated Session items = 1;
+  // Fields 2 (next_page_token) removed: the operation returns every item it wrote in one
+  // response; it is not a page of a list.
+  reserved 2;
+  reserved "next_page_token";
+}
+
+message GenerateSessionsRequest {
+  // Institution. Required.
+  string institution_id = 1;
+  // Class (K-12).
+  optional string class_section_id = 2;
+  // Course.
+  optional string course_id = 3;
+  // Batch.
+  optional string batch_id = 4;
+  // From. Required.
+  string start_date = 5;
+  // To. Required.
+  string end_date = 6;
+  // Weekly pattern. Required.
+  repeated mysms.common.v1.WeeklySlot slots = 7;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 8;
+}
+message GenerateSessionsResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message GetTimetableRequest {
+  // From. Required.
+  string from_date = 1;
+  // To. Required.
+  string to_date = 2;
+  // Class.
+  optional string class_section_id = 3;
+  // Batch.
+  optional string batch_id = 4;
+  // Teacher.
+  optional string staff_id = 5;
+  // Student.
+  optional string student_id = 6;
+  // Room.
+  optional string room_id = 7;
+  // The page to read: number, size and the cursor of a next page (api/README "Pagination"). Its sort is not taken:
+  // the rows come in their one fixed order, as over REST, which has no sort parameter here.
+  mysms.common.v1.PageableRequest pageable = 10;
+  // Fields 8 (page_size), 9 (page_token) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 8, 9;
+  reserved "page_size", "page_token";
+}
+message GetTimetableResponse {
+  repeated TimetableView items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 3;
+  // Fields 2 (next_page_token) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2;
+  reserved "next_page_token";
+}
+
+// Named teaching period with a start time and duration.
+message Period {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Period name.
+  string name = 3;
+  // Start time. [Time of day (HH:MM[:SS])]
+  string start_time = 4;
+  // Duration in minutes. [Decimal string]
+  optional string duration_minutes = 5;
+  // Order in the day.
+  optional int32 sequence = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+}
+
+// Scheduled teaching session (one class meeting).
+message Session {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Period. [UUID]
+  optional string period_id = 3;
+  // Start.
+  google.protobuf.Timestamp start_at = 4;
+  // End.
+  google.protobuf.Timestamp end_at = 5;
+  // ISO weekday (1 = Monday).
+  optional int32 weekday = 6;
+  // Class section (K-12). [UUID]
+  optional string class_section_id = 7;
+  // Course (higher education). [UUID]
+  optional string course_id = 8;
+  // Batch (higher education). [UUID]
+  optional string batch_id = 9;
+  // Subject taught. [UUID]
+  string subject_id = 10;
+  // Teacher. [UUID]
+  string staff_id = 11;
+  // Room. [UUID]
+  optional string room_id = 12;
+  // Display title.
+  optional string title = 13;
+  // Session type (lecture, lab, tutorial...).
+  optional string session_type = 14;
+  // Calendar colour index.
+  optional int32 color = 15;
+  // Session state. Changed only through the workflow operations. Output only.
+  Status status = 16;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 17;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 18;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 19;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 20;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 21;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "confirmed"
+    STATUS_CONFIRMED = 2;
+    // "done"
+    STATUS_DONE = 3;
+    // "cancelled"
+    STATUS_CANCELLED = 4;
+  }
+}
+
+// Students expected in a session (for split groups / electives).
+message SessionStudent {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Session. [UUID] Set from the parent path on create.
+  string session_id = 2;
+  // Student. [UUID]
+  string student_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+message TimetableView {
+  // Session. Required.
+  Session session = 1;
+  // Subject name.
+  optional string subject_name = 2;
+  // Teacher name.
+  optional string staff_name = 3;
+  // Room name.
+  optional string room_name = 4;
+}
+
+message GetOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+}
+
+message GetOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message ListOperationsRequest {
+  // Filter by kind.
+  optional string kind = 1;
+  // The page to read: number, size and the cursor of a next page (api/README "Pagination"). Its sort is not taken:
+  // the rows come in their one fixed order, as over REST, which has no sort parameter here.
+  mysms.common.v1.PageableRequest pageable = 4;
+  // Fields 2 (page_size), 3 (page_token) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3;
+  reserved "page_size", "page_token";
+}
+
+message ListOperationsResponse {
+  repeated mysms.common.v1.Operation items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 3;
+  // Fields 2 (next_page_token) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2;
+  reserved "next_page_token";
+}
+
+message CancelOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+
+message CancelOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}

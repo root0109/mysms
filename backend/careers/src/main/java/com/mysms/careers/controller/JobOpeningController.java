@@ -14,7 +14,6 @@ import com.mysms.careers.api.model.JobOpeningUpdate;
 import com.mysms.careers.api.model.ReopenJobOpeningRequest;
 import com.mysms.careers.api.model.ReportJobOpeningRequest;
 import com.mysms.careers.api.model.UpdateApplicationStatusRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -22,11 +21,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the JobOpening operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/careers.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the JobOpening operations; authentication and the permission check already ran in the auth-client
+ * filter. Operations not served yet answer 501.
  */
 @RestController
 public class JobOpeningController implements JobOpeningApi {
@@ -65,7 +61,8 @@ public class JobOpeningController implements JobOpeningApi {
         if (dryRun) {
             return ResponseEntity.ok(created);
         }
-        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).eTag(created.getEtag()).body(created);
+        return ResponseEntity.created(URI.create("/v1/careers/job-openings/" + created.getId()))
+                .eTag(created.getEtag()).body(created);
     }
 
     @Override
@@ -84,7 +81,8 @@ public class JobOpeningController implements JobOpeningApi {
     @Override
     public ResponseEntity<Void> emailApplicant(UUID applicationId,
             EmailApplicantRequest emailApplicantRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        jobOpeningService.emailApplicant(applicationId, emailApplicantRequest);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
@@ -96,7 +94,8 @@ public class JobOpeningController implements JobOpeningApi {
 
     @Override
     public ResponseEntity<JobOpening> getJobOpening(UUID jobOpeningId, String fields) {
-        throw new NotImplementedException();
+        JobOpening found = jobOpeningService.getJobOpening(jobOpeningId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
@@ -112,7 +111,10 @@ public class JobOpeningController implements JobOpeningApi {
     @Override
     public ResponseEntity<PagingInfo<JobOpening>> listJobOpenings(Integer page, Integer size, String cursor,
             String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<JobOpening> list =
+                PagingUtil.pagingInfo(jobOpeningService.listJobOpenings(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
@@ -125,13 +127,16 @@ public class JobOpeningController implements JobOpeningApi {
     @Override
     public ResponseEntity<Void> reportJobOpening(UUID jobOpeningId,
             ReportJobOpeningRequest reportJobOpeningRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        jobOpeningService.reportJobOpening(jobOpeningId, reportJobOpeningRequest);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<JobApplication> updateApplicationStatus(UUID jobOpeningId,
             UUID jobApplicationId, UpdateApplicationStatusRequest updateApplicationStatusRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        JobApplication changed = jobOpeningService.updateApplicationStatus(jobOpeningId, jobApplicationId,
+                updateApplicationStatusRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

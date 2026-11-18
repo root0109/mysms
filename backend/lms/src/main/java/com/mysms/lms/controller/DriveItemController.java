@@ -10,7 +10,6 @@ import com.mysms.lms.api.model.DriveItemShareList;
 import com.mysms.lms.api.model.DriveItemShareUpdate;
 import com.mysms.lms.api.model.DriveItemUpdate;
 import com.mysms.lms.api.model.ShareDriveItemRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.DriveItemService;
 import java.net.URI;
@@ -19,10 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the DriveItem operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the DriveItem operations; authentication and the permission check already ran in the auth-client filter.
+ * Operations not served yet answer 501.
  */
 @RestController
 public class DriveItemController implements DriveItemApi {
@@ -97,7 +94,7 @@ public class DriveItemController implements DriveItemApi {
     @Override
     public ResponseEntity<DriveItemShareList> shareDriveItem(UUID driveItemId,
             ShareDriveItemRequest shareDriveItemRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(driveItemService.shareDriveItem(driveItemId, shareDriveItemRequest));
     }
 
     @Override

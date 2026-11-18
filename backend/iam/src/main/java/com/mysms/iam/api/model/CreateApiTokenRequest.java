@@ -1,4 +1,4 @@
-// Owned API contract of iam (JAVA-CODING-RULES §7); first materialized from api/openapi/iam.yaml on 2026-11-10.
+// Owned API contract of iam.
 package com.mysms.iam.api.model;
 
 import java.net.URI;
@@ -29,7 +29,7 @@ public class CreateApiTokenRequest {
   private String name;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<String> abilities = new ArrayList<>();
+  private @Nullable List<String> abilities = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

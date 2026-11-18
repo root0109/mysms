@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of lms.settings_sidebar_item (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of lms.settings_sidebar_item. */
 @Getter
 @Setter
 @SuperBuilder

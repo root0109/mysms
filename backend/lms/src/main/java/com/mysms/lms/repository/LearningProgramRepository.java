@@ -22,11 +22,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.learning_program (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.learning_program: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class LearningProgramRepository {
@@ -74,6 +71,14 @@ public class LearningProgramRepository {
             RETURNING id, tenant_id, title, is_published, enforce_course_order, course_count, member_count, created_at,
                       created_by, updated_at, updated_by, deleted_at, row_version
             """;
+    /** The programs the public sees. */
+    public static final SqlFragment PUBLISHED = new SqlFragment("r.is_published", Map.of());
+    /** A member joined: the cached count follows (lms.EnrollInLearningProgram). */
+    private static final String COUNT_MEMBER = """
+            UPDATE lms.learning_program
+               SET member_count = member_count + 1, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND deleted_at IS NULL
+            """;
     private static final String SOFT_DELETE = """
             UPDATE lms.learning_program
                SET deleted_at = :deletedAt,
@@ -118,6 +123,11 @@ public class LearningProgramRepository {
 
     public LearningProgramRepository(@Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** Counts one more member on the program (lms.EnrollInLearningProgram). */
+    public void countMember(UUID id) {
+        jdbc.sql(COUNT_MEMBER).param("id", id).update();
     }
 
     public Optional<LearningProgramEntity> findById(UUID id) {

@@ -43,10 +43,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of sis.student_leave_request (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of sis.student_leave_request: audit and domain event in the same transaction as every change; rows
+ * outside the caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class StudentLeaveRequestService extends AppTransactionManager {
@@ -183,9 +181,8 @@ public class StudentLeaveRequestService extends AppTransactionManager {
 
     /**
      * sis.ApproveStudentLeaveRequest: Approves the request and records who decided and why. Approved leave is linked
-     * from attendance records. The row must be visible and writable for the caller, and the step is allowed while
-     * status is pending; in any other state
-     * the answer is 409 and nothing changes.
+     * from attendance records. Allowed while status is pending, for a caller who can see and write the row; otherwise
+     * 409 and nothing changes.
      */
     public StudentLeaveRequest approveStudentLeaveRequest(UUID id, String ifMatch,
             StudentLeaveDecisionRequest request) {
@@ -220,9 +217,8 @@ public class StudentLeaveRequestService extends AppTransactionManager {
 
     /**
      * sis.RejectStudentLeaveRequest: Rejects the request and records who decided and why. Approved leave is linked from
-     * attendance records. The row must be visible and writable for the caller, and the step is allowed while status is
-     * pending; in any other state
-     * the answer is 409 and nothing changes.
+     * attendance records. Allowed while status is pending, for a caller who can see and write the row; otherwise 409
+     * and nothing changes.
      */
     public StudentLeaveRequest rejectStudentLeaveRequest(UUID id, String ifMatch, StudentLeaveDecisionRequest request) {
         DataScope scope = DataScope.current(PERMISSION_REJECT_STUDENT_LEAVE_REQUEST);

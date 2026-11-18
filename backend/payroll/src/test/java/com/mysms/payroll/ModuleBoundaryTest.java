@@ -6,7 +6,7 @@ import com.mysms.core.testkit.ModuleChecks;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
-/** The module boundary rules as plain unit tests (JAVA-CODING-RULES §2, review checks A1/R3). */
+/** The module boundary rules as plain unit tests. */
 class ModuleBoundaryTest {
 
     private static final Path SOURCES = Path.of("src/main/java");
@@ -22,8 +22,8 @@ class ModuleBoundaryTest {
     }
 
     @Test
-    void sdkClientsStayWithinTheAllowedDependencies() {
+    void grpcClientsStayWithinTheAllowedDependencies() {
         Path architecture = Path.of("..", "..", "ARCHITECTURE.md");
-        assertThat(ModuleChecks.sdkImportsOutsideAllowlist("payroll", SOURCES, architecture)).isEmpty();
+        assertThat(ModuleChecks.grpcImportsOutsideAllowlist("payroll", SOURCES, architecture)).isEmpty();
     }
 }

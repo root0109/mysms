@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -26,10 +26,10 @@ import java.util.*;
 public class SetCohortMembersRequest {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid MemberAssignment> members = new ArrayList<>();
+  private @Nullable List<@Valid MemberAssignment> members = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<UUID> removeUserIds = new ArrayList<>();
+  private @Nullable List<UUID> removeUserIds = new ArrayList<>();
 
   public SetCohortMembersRequest() {
     super();
@@ -59,9 +59,8 @@ public class SetCohortMembersRequest {
    * Members to add or update.
    * @return members
    */
-  @NotNull 
   @JsonProperty("members")
-  public List<@Valid MemberAssignment> getMembers() {
+  public @Nullable List<@Valid MemberAssignment> getMembers() {
     return members;
   }
 

@@ -110,7 +110,7 @@ public final class SqlRule implements ConformanceRule {
         Matcher delete = DELETE_FROM.matcher(flat);
         while (delete.find()) {
             String target = delete.group(1);
-            // module-local infrastructure is pruned by design (database/README "Events", api/README "Idempotency");
+            // module-local infrastructure tables are pruned by design;
             // IdempotencyStore names its table through {table} = <module>.idempotency_key
             boolean infrastructure = INFRASTRUCTURE.matcher(target).find()
                     || "{table}".equals(target) && "IdempotencyStore.java".equals(SourceTree.fileName(file));

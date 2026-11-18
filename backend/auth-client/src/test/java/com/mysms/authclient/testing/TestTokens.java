@@ -63,6 +63,14 @@ public final class TestTokens {
         return sign(claims(user, "mysms-platform-admin", List.of("pwd", "mfa"), permissions).build());
     }
 
+    /** A module's service token (iam's client-credentials grant: sub service:&lt;module&gt;, audience mysms-internal). */
+    public String service(String module, String... permissions) {
+        Instant now = Instant.now();
+        return sign(new JWTClaimsSet.Builder().issuer(ISSUER).subject("service:" + module).audience("mysms-internal")
+                .issueTime(Date.from(now)).expirationTime(Date.from(now.plus(Duration.ofMinutes(5))))
+                .jwtID(UUID.randomUUID().toString()).claim("perms", List.of(permissions)).build());
+    }
+
     /** A token with any claims, for negative tests. */
     public String custom(Map<String, Object> claims, Instant expiresAt) {
         JWTClaimsSet.Builder builder = new JWTClaimsSet.Builder().issuer(ISSUER).expirationTime(Date.from(expiresAt))

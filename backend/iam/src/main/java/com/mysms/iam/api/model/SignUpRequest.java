@@ -1,4 +1,4 @@
-// Owned API contract of iam (JAVA-CODING-RULES §7); first materialized from api/openapi/iam.yaml on 2026-11-10.
+// Owned API contract of iam.
 package com.mysms.iam.api.model;
 
 import java.net.URI;
@@ -24,6 +24,9 @@ public class SignUpRequest {
   private String tenantCode;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
+  private UUID institutionId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private String email;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -42,8 +45,9 @@ public class SignUpRequest {
   /**
    * Constructor with only required parameters
    */
-  public SignUpRequest(String tenantCode, String email, String fullName, Boolean acceptTerms) {
+  public SignUpRequest(String tenantCode, UUID institutionId, String email, String fullName, Boolean acceptTerms) {
     this.tenantCode = tenantCode;
+    this.institutionId = institutionId;
     this.email = email;
     this.fullName = fullName;
     this.acceptTerms = acceptTerms;
@@ -67,6 +71,26 @@ public class SignUpRequest {
   @JsonProperty("tenantCode")
   public void setTenantCode(String tenantCode) {
     this.tenantCode = tenantCode;
+  }
+
+  public SignUpRequest institutionId(UUID institutionId) {
+    this.institutionId = institutionId;
+    return this;
+  }
+
+  /**
+   * The school the student signs up at: an active institution of the tenant. The account's role is granted there.
+   * @return institutionId
+   */
+  @NotNull 
+  @JsonProperty("institutionId")
+  public UUID getInstitutionId() {
+    return institutionId;
+  }
+
+  @JsonProperty("institutionId")
+  public void setInstitutionId(UUID institutionId) {
+    this.institutionId = institutionId;
   }
 
   public SignUpRequest email(String email) {
@@ -159,6 +183,7 @@ public class SignUpRequest {
     }
     SignUpRequest signUpRequest = (SignUpRequest) o;
     return Objects.equals(this.tenantCode, signUpRequest.tenantCode) &&
+        Objects.equals(this.institutionId, signUpRequest.institutionId) &&
         Objects.equals(this.email, signUpRequest.email) &&
         Objects.equals(this.fullName, signUpRequest.fullName) &&
         Objects.equals(this.acceptTerms, signUpRequest.acceptTerms) &&
@@ -167,7 +192,7 @@ public class SignUpRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(tenantCode, email, fullName, acceptTerms, personaCategory);
+    return Objects.hash(tenantCode, institutionId, email, fullName, acceptTerms, personaCategory);
   }
 
   @Override
@@ -175,6 +200,7 @@ public class SignUpRequest {
     StringBuilder sb = new StringBuilder();
     sb.append("class SignUpRequest {\n");
     sb.append("    tenantCode: ").append(toIndentedString(tenantCode)).append("\n");
+    sb.append("    institutionId: ").append(toIndentedString(institutionId)).append("\n");
     sb.append("    email: ").append(toIndentedString(email)).append("\n");
     sb.append("    fullName: ").append(toIndentedString(fullName)).append("\n");
     sb.append("    acceptTerms: ").append(toIndentedString(acceptTerms)).append("\n");

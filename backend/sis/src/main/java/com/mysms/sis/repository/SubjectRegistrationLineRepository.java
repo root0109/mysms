@@ -23,11 +23,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to sis.subject_registration_line (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to sis.subject_registration_line: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. Every statement filters the caller's tenant itself; row-level security
+ * is the backstop.
  */
 @Repository
 public class SubjectRegistrationLineRepository {
@@ -62,6 +60,8 @@ public class SubjectRegistrationLineRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String OF_REGISTRATION = SELECT_LIVE
+            + " AND r.subject_registration_id = :registrationId ORDER BY r.created_at, r.id";
     private static final String INSERT = """
             INSERT INTO sis.subject_registration_line
             (id, tenant_id, course_subject_id, subject_registration_id, subject_id, selection_type, created_at,
@@ -132,6 +132,12 @@ public class SubjectRegistrationLineRepository {
         return page.toPage(rows, e -> sortValues(page.sort(), e), SubjectRegistrationLineEntity::getId);
     }
 
+    /** The registration's lines, in the order they were added. */
+    public List<SubjectRegistrationLineEntity> ofRegistration(UUID registrationId) {
+        return jdbc.sql(OF_REGISTRATION).param("registrationId", registrationId)
+                .query(SubjectRegistrationLineRepository::map).list();
+    }
+
     /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
     public SubjectRegistrationLineEntity insert(SubjectRegistrationLineEntity e) {
         return jdbc.sql(INSERT)
@@ -196,7 +202,7 @@ public class SubjectRegistrationLineRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

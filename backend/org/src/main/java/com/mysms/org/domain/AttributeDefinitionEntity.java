@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of org.attribute_definition (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of org.attribute_definition. */
 @Getter
 @Setter
 @SuperBuilder

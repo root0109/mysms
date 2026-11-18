@@ -11,8 +11,8 @@ Binding rules for every line of Java written for MySMS. They adapt a reviewed en
 ## 1. Hard constraints (never violated, by anyone)
 
 1. **No ORM, ever.** No JPA, no Hibernate, no Spring Data JDBC repositories, no entity proxies, no `ddl-auto`. Persistence is plain Spring JDBC (`JdbcClient` / `NamedParameterJdbcTemplate`) with hand-written, reviewable SQL. (Project rule; reinforced by the source ADR that rejected JPA for batch-oriented write paths.)
-2. **Flyway owns the schema.** No DDL from application code, no schema generation, no manual DDL in shared environments. The one exception is core's partition maintenance (database/README "Partitioned high-volume tables"): it only attaches next months' partitions to the tables Flyway created and, when a retention is configured, drops months older than it — with a lock timeout, as the schema owner, never touching any other object. A migration applied in any non-ephemeral environment is immutable — never edited, renamed, reordered or deleted; corrections are new migrations.
-3. **Never** drop or truncate tables or schemas (except the configured retention drop of a past month's partition, rule 2); never delete migration files; never force-push protected branches.
+2. **Flyway owns the schema.** No DDL from application code, no schema generation, no manual DDL in shared environments. The one exception is core's partition maintenance (database/README "Partitioned high-volume tables"): it only attaches next months' partitions to the tables Flyway created and, when a retention is configured, drops months older than it — with a lock timeout, as the schema owner, never touching any other object. Until the first release each module has exactly one migration, its baseline, and a schema change edits it in place (owner decision of 2026-11-10; §14). From the first release on, a migration applied in any non-ephemeral environment is immutable — never edited, renamed, reordered or deleted; corrections are new migrations.
+3. **Never** drop or truncate tables or schemas (except the configured retention drop of a past month's partition, rule 2); never delete a released migration file; never force-push protected branches.
 4. **Never commit secrets, credentials or personal data** to version control — including test fixtures, example payloads and OpenAPI examples. Student/guardian data is sensitive by default: synthetic names only, everywhere.
 5. **No personal data in logs, error messages, metrics or traces.** `*_enc` values are write-only and never logged; display uses the masked form (`••••1234`, from a `*_masked` column or computed in memory from the decrypted value). Error `detail` strings carry ids, not names.
 6. **Every SQL statement is tenant-scoped.** Every transaction binds `app.tenant_id` (`ModuleDatabase.bindTenant()`, transaction-local); every hand-written read adds `tenant_id = :tenantId` (RLS is the backstop, not the mechanism) and, unless deleted rows are wanted, `deleted_at IS NULL`.
@@ -21,6 +21,31 @@ Binding rules for every line of Java written for MySMS. They adapt a reviewed en
 9. **This file is edited by humans** (or by an agent only when the change itself is the requested task). An agent never weakens a rule here to make its own diff pass, and never adds lint/static-analysis suppressions for findings it introduced without developer approval.
 
 ---
+
+## 1a. Javadoc and comments: short and to the point
+
+Owner decision of 2026-11-12. A javadoc says what the class or method is for and anything a caller cannot see from the
+signature (a rule it enforces, a refusal it answers, a non-obvious choice) — in one to three sentences. A comment
+explains *why*, never *what* the next line does.
+
+- No file or document references that do not help the reader act (`(JAVA-CODING-RULES §4)`, `(DEPLOYMENT.md §3)`,
+  `(the reference service's …)`, `(owner decision of …)`, review or ticket ids). Cite a rule only where the code
+  looks wrong without it.
+- No restating the code, the parameter names, the class's collaborators or its history ("was …", "since …").
+- No `@param` / `@return` that repeat the name or type; keep them only when they add a constraint (`blank = none`).
+- Generated code is not documented by hand.
+
+```java
+// ✗
+/**
+ * sis's client of the academics service (the reference service's gRPC client shape, JAVA-CODING-RULES §10.4): the
+ * starter injects the blocking stubs of the client academics-service (grpc.client.academics-service.*); every call
+ * carries the caller's own identity (auth-client's GrpcCallerInterceptor), and a failed call is an
+ * IntegrationGrpcClientException the academics lookup maps onward.
+ */
+// ✓
+/** Calls the academics service; a failed call throws {@link IntegrationGrpcClientException}. */
+```
 
 ## 2. Maven multi-module layout
 
@@ -31,11 +56,8 @@ mysms/                # repository root (directory name only — not an artifact
 ├── pom.xml           # reactor + parent: dependencyManagement, plugin management, quality gates
 ├── core/             # plain library jar plugged into every module: BaseEntity, error model, paging,
 │                     #   tenant context, ids (UUIDv7), validation, SQL fragment + batch helpers, the
-│                     #   transaction definitions and helpers, cross-cutting auto-configurations. NO db schema, NO Flyway,
+│                     #   transaction base class (AppTransactionManager), the gRPC edge and client failure, cross-cutting auto-configurations. NO db schema, NO Flyway,
 │                     #   NO datasource of its own, NO domain code.
-├── sdk/              # GENERATED jar: the Java clients modules use to call each other (HTTP), and the gRPC stubs +
-│                     #   protobuf messages of every module (com.mysms.<module>.v1), compiled from /api/proto in one
-│                     #   protoc run (protobuf-maven-plugin + os-maven-plugin, the reference service's mechanism).
 ├── auth-client/      # hand-written auth facade + servlet/gRPC filters (see §16). Owned by the iam team;
 │                     #   plugged into every module; the ONLY auth code a module ever touches.
 ├── messaging/        # event API, outbox/inbox runtime and adapters: RabbitMQ (default), Google Cloud Pub/Sub,
@@ -67,22 +89,71 @@ mysms/                # repository root (directory name only — not an artifact
 
 Rules:
 
-- **One module = one schema = one deployable.** Every domain module carries its own `@SpringBootApplication` main (component-scanning its own package + core/auth-client auto-configs) and nothing else that describes it: no descriptor class, no registration file and no configuration file (§2). The spring-boot plugin repackages with `classifier=exec`, so each flat module produces **both** a plain jar (consumed by `app`) and an executable microservice jar: `mvn -pl finance -am package` builds the finance microservice; `mvn -pl app -am package` builds the monolith.
-- **Domain modules never depend on each other.** Every module uses `core`, `sdk`, `auth-client`, and the `messaging` runtime. Only modules that declare event consumers get `messaging` at compile scope; conformance permits them to import only `com.mysms.messaging.events` API types and rejects RabbitMQ, Google Pub/Sub, and adapter/runtime imports. Publishers use the core outbox writer and need no event API imports. Cross-module imports are therefore impossible at compile time from the dependency graph alone — no Modulith, no ArchUnit, no enforcement library.
-- **Cross-module calls go through `sdk` only** (ids + Card DTOs), over HTTP/gRPC even when deployed together in `app` (loopback) — one code path whether assembled or split. Against-DAG needs use events (outbox), never a direct call. The allowed-dependency table in `ARCHITECTURE.md` governs which clients a module may configure.
+- **One module = one schema = one deployable.** Every domain module carries its own `@SpringBootApplication` main (component-scanning its own package + core/auth-client auto-configs) and its own `application.properties` (§2.1) — nothing else describes it: no descriptor class, no registration file. The spring-boot plugin repackages with `classifier=exec`, so each flat module produces **both** a plain jar (consumed by `app`) and an executable microservice jar: `mvn -pl finance -am package` builds the finance microservice; `mvn -pl app -am package` builds the monolith.
+- **Domain modules never depend on each other.** Every module uses `core`, `auth-client`, and the `messaging` runtime. Only modules that declare event consumers get `messaging` at compile scope; conformance permits them to import only `com.mysms.messaging.events` API types and rejects RabbitMQ, Google Pub/Sub, and adapter/runtime imports. Publishers use the core outbox writer and need no event API imports. Cross-module imports are therefore impossible at compile time from the dependency graph alone — no Modulith, no ArchUnit, no enforcement library.
+- **Cross-module calls are gRPC only** (§10): the caller's `<module>/integration/<Callee>GrpcClient` with `@GrpcClient` stubs compiled from its verbatim copy of the callee's proto (ids + card messages), in-process in `app` and over the network when split — one code path whether assembled or split. No module depends on another and there is no shared client module. Against-DAG needs use events (outbox), never a direct call. The allowed-dependency table in `ARCHITECTURE.md` governs which modules a module may call.
 - **One DataSource per module.** `core` provides the datasource factory; each module binds `mysms.<module>.datasource.*` and owns its pool and its transaction manager. All 21 default to the same PostgreSQL instance; moving a schema to its own instance is a configuration change, zero code. No connection is ever shared across modules, so a cross-schema join cannot exist.
 - **Own-schema-only SQL.** Every statement in a module references only that module's schema. Enforced by a ~20-line plain JUnit check from `core` (regex over the module's SQL constants — no library) plus review check R3.
 - **Flyway per module, per datasource.** Each module migrates only its own schema from `src/main/resources/db/migration/<module>/` with its own `flyway_schema_history` (`default-schema` = the module's schema). There are no cross-module migrations and no cross-module foreign keys, so a module's folder applies unchanged whether its schema shares an instance with others or has a dedicated one.
-- **Logical references, not foreign keys, across modules.** A column pointing into another module's data is validated **before the write** by resolving the id through the owner's SDK client (tenant-scoped; not found / other tenant → 422). Referenced entities are archived, never hard-deleted; the owner publishes `*.deleted` / `*.archived` events and every dependent handles them as `database/logical-references.md` prescribes; each module runs a scheduled reconciliation job that batch-verifies its reference ids against the owners and reports orphans (never auto-fixes). Against-DAG references (listed there) are maintained from events only — the module never calls the owner for them.
+- **Logical references, not foreign keys, across modules.** A column pointing into another module's data is validated **before the write** by resolving the id through the owner's gRPC service (tenant-scoped; not found / other tenant → 422). Referenced entities are archived, never hard-deleted; the owner publishes `*.deleted` / `*.archived` events and every dependent handles them as `database/logical-references.md` prescribes; each module runs a scheduled reconciliation job that batch-verifies its reference ids against the owners and reports orphans (never auto-fixes). Against-DAG references (listed there) are maintained from events only — the module never calls the owner for them.
 - **Module-local infrastructure only.** Idempotency keys, long-running operations, document numbers, outbox and inbox all live in the module's own schema (`idempotency_key`, `operation`, `number_sequence`, `outbox_event`, `inbox_event`). Audit records are written as events into the module's own outbox in the business transaction; the platform module materialises them into `platform.audit_log`. A module never writes, reads or locks another schema's rows.
-- **SDK allowlist.** `core`'s test kit (`ModuleChecks`) has a plain JUnit check, run by every module's `ModuleBoundaryTest`, that fails the build when the module imports an SDK client package (`com.mysms.sdk.<other>`) of a module outside its row of the allowed-dependency table in `ARCHITECTURE.md` — the table is read from the file itself, so the document and the build cannot disagree.
-- **Trace context everywhere.** `core` propagates W3C `traceparent` on every inbound request, outbound SDK call and published/consumed event, and puts trace id, tenant id and request id in the logging MDC.
+- **gRPC allowlist.** `core`'s test kit (`ModuleChecks`) has a plain JUnit check, run by every module's `ModuleBoundaryTest`, that fails the build when the module imports the gRPC contract (`com.mysms.<other>.v1`) of a module outside its row of the allowed-dependency table in `ARCHITECTURE.md` — the table is read from the file itself, so the document and the build cannot disagree.
+- **Trace context everywhere.** `core` propagates W3C `traceparent` on every inbound request, outbound gRPC call and published/consumed event, and puts trace id, tenant id and request id in the logging MDC.
 - **No shared domain code.** `core` holds base classes and cross-cutting infrastructure only — never a domain entity or domain DTO. An entity belongs to exactly one module; cross-module data travels as ids + Card DTOs kept fresh by outbox events.
-- **Per-module config namespace** (`mysms.finance.*`), so a module's properties move with it unchanged when it is split out. No module ships a configuration file. A module is not declared anywhere (owner decision of 2026-11-10): core's `ModuleDefaultsEnvironmentPostProcessor` reads the modules of a process from the application class — a module is a package `com.mysms.<name>`, a module's own `@SpringBootApplication` scans its own package (its microservice), the monolith's lists every module's — and builds the configuration for them as placeholders over the environment variables of DEPLOYMENT.md §3, added as the lowest-precedence property source. A module's settings beyond its datasource are read where they are used, in its own `config` class, as `@Value("${mysms.<module>.<key>:${MYSMS_<VARIABLE>:<default>}}")` constructor or bean-method parameters (iam's `IamSecurityConfig`, attendance's `AttendanceClientsConfig`): the property wins, then the environment variable, then the default. No module jar contains an `application.yml`, so assembling them can never shadow one module's settings with another's.
+- **Per-module config namespace** (`mysms.finance.*`), so a module's properties move with it unchanged when it is split out. How a module is configured: §2.1.
 - **Versioning:** the project version ends in `-SNAPSHOT` during development. A released (suffix-free) version is never built on again: the first commit after a release bumps to the next `-SNAPSHOT`. CI tags artifacts; the POM carries no build qualifier.
 - Java toolchain, dependency versions and plugin versions are pinned in the parent only; child POMs never override a managed version silently.
 - Lombok and MapStruct run as annotation processors; APT is enabled in CI and IDE setup docs. `lombok` then `mapstruct-processor` ordering in `annotationProcessorPaths` (MapStruct must see Lombok-generated getters).
 - CI builds every module's exec jar and runs every module's own Testcontainers suite (own schema, own Flyway) on every commit, so "can this run alone on its own database?" is proven continuously.
+
+### 2.1 Configuration: one `application.properties` per module, combined in the monolith
+
+Owner decision of 2026-11-12. Every domain module ships `src/main/resources/application.properties` — the whole
+configuration of that module's microservice, like the reference service's — and the monolith combines them.
+
+- **What a module's file holds:** its name (`spring.application.name=<module>`, `mysms.auth.modules[0]=<module>`),
+  server and management settings, authentication (`mysms.auth.*`), the gRPC server, one gRPC client per service its
+  `integration` package calls (§10.4), the event bus, its database (`mysms.<module>.datasource.*`) and its own
+  settings (`mysms.<module>.*`). Every value is a default over an environment variable of DEPLOYMENT.md §3, written
+  `key=${MYSMS_<VARIABLE>:<default>}` (the module's own variable first, then the shared one:
+  `${MYSMS_SIS_DB_URL:${MYSMS_DB_URL:jdbc:…}}`). A setting with no safe default has none (`mysms.auth.issuer=${MYSMS_AUTH_ISSUER}`):
+  the service refuses to start without it. Secrets are never written in the file, only their variable.
+- **Code reads the key, never a default of its own:** `@Value("${mysms.iam.smtp.port}")`, or a
+  `@ConfigurationProperties` class. The file is the one place a module's setting and its default are written. (A
+  library — core, auth-client, messaging — keeps code defaults for its own settings, since it ships no file.)
+- **Microservice:** the module's exec jar has one `application.properties` on its classpath; Spring Boot loads it.
+  An operator's `application.properties` beside the jar (or in `config/`), environment variables, system
+  properties and the command line override any value, in Spring Boot's usual order.
+- **Monolith:** `app` has its own `application.properties`, first on its classpath, holding only what differs when
+  every module runs in one process — `spring.application.name=mysms`, every module in `mysms.auth.modules[i]`, the
+  in-process gRPC server and an in-process client per module, the shared broker user. Core's
+  `ModulePropertiesEnvironmentPostProcessor` adds every module's file after it (a file counts as a module's only when
+  its `spring.application.name` names a module whose operation table lies beside it), so app's file and anything
+  the operator sets win over every module file.
+- **No conflicts left to chance:** a key that two module files set to different values must be set in app's file,
+  so the order of the module files never decides a value. The libraries ship no `application.properties`.
+  Conformance G9 checks all of this, and that every `@GrpcClient` key has its client configured.
+- **Tests** set what differs with `@DynamicPropertySource` (core's `TestDatabase.register`: the test database,
+  no gRPC port, absent services, the in-process event bus); they never ship a second `application.properties`.
+
+```properties
+# sis/src/main/resources/application.properties (shortened)
+spring.application.name=sis
+mysms.auth.modules[0]=sis
+mysms.auth.issuer=${MYSMS_AUTH_ISSUER}
+grpc.server.port=${MYSMS_GRPC_SERVER_PORT:9112}
+grpc.client.academics-service.address=${MYSMS_ACADEMICS_GRPC_ADDRESS:dns:///academics-service.${MYSMS_NAMESPACE:mysms}.svc.cluster.local:${MYSMS_ACADEMICS_SERVICE_PORT_RPC:9112}}
+grpc.client.academics-service.negotiationType=PLAINTEXT
+mysms.sis.datasource.url=${MYSMS_SIS_DB_URL:${MYSMS_DB_URL:jdbc:postgresql://localhost:5432/mysms}}
+
+# app/src/main/resources/application.properties (shortened)
+spring.application.name=mysms
+mysms.auth.modules[0]=academics
+…
+mysms.auth.modules[20]=transport
+grpc.server.in-process-name=mysms
+grpc.client.academics-service.address=${MYSMS_ACADEMICS_GRPC_ADDRESS:in-process:mysms}
+```
 
 **Toolchain (pinned in the parent POM; upgraded deliberately, never by a child):**
 
@@ -90,9 +161,10 @@ Rules:
 |---|---|---|
 | Java | 17 (LTS) | `maven.compiler.release`; no language feature or API newer than 17 (`--release 17` enforces it) |
 | Spring Boot | 4.1.2 | parent POM; manages Spring Framework 7.0, Spring Security 7.1, Jackson 3, Flyway 12, PostgreSQL JDBC 42.7, HikariCP 7, gRPC 1.84, protobuf 4.36, Testcontainers 2.0, JUnit 6, Lombok 1.18 |
-| OpenAPI Generator | 7.26.0 | `sdk` (Maven plugin) and the TypeScript SDK (CLI), from the api/openapi snapshot |
-| protobuf-maven-plugin (xolstice) + os-maven-plugin | 0.6.1 / 1.7.1 | `sdk`: protoc + protoc-gen-grpc-java (Boot-managed versions) compile api/proto into the gRPC stubs, one run for all modules |
-| springdoc-openapi | 3.2.0 | every service: `/v3/api-docs.yaml` written from the contract interfaces (core `OpenApiConfiguration`); the component tests keep it as `target/openapi/<module>.yaml` |
+| OpenAPI Generator | 7.26.0 | the clients' TypeScript SDK (CLI, in `clients/`), from each module's `target/openapi/api-docs.yml` |
+| protobuf-maven-plugin (xolstice) + os-maven-plugin | 0.6.1 / 1.7.1 | every module: protoc + protoc-gen-grpc-java compile the module's own protos and its copies of its callees' (§10.2) |
+| grpc-spring-boot-starter (net.devh) | 3.1.0.RELEASE | the gRPC server, `@GrpcService`, `@GrpcClient`, global interceptors (§10) |
+| springdoc-openapi | 3.2.0 | every service: `/v3/api-docs.yaml` written from the contract interfaces (core `OpenApiConfiguration`); each module's OpenAPI component test writes it to `target/openapi/api-docs.yml` (§10.5) |
 | MapStruct | 1.6.3 | with lombok-mapstruct-binding 0.2.0 |
 | Checkstyle / SpotBugs / JaCoCo | 12.3.1 (newest that runs on Java 17) / 4.10.4 / 0.8.15 | quality gates on `mvn verify` (§13) |
 | PostgreSQL | 16 | Testcontainers image `postgres:16-alpine` |
@@ -118,7 +190,7 @@ com.mysms.<module>
 ├── events/        Outbox event types this module publishes, inbox consumers for events it handles (incl. logical-reference cleanup), reconciliation job
 ├── config/        Spring configuration local to the module
 ├── constants/     Message keys, sort constants, resource names
-└── Other modules can never import this module — they are not on its Maven graph; they call its SDK client
+└── Other modules can never import this module — they are not on its Maven graph; they call its gRPC services (§10)
 ```
 
 A class whose role doesn't fit a package above is a design smell — raise it rather than inventing a new top-level package per feature.
@@ -253,7 +325,7 @@ public class SubjectEntity extends BaseEntity {
 OrganizationNode node = new OrganizationNode(entity.getId(), depthOf(entity.getId(), parents));
 ```
 
-**5.4 Read-only projections are records in `repository/`** — report rows, join results, sign-in shapes — never entities, never in `domain/`, never DTOs. Card DTOs are contract schemas (`api/model`, and `com.mysms.sdk.<module>.model` on the caller's side).
+**5.4 Read-only projections are records in `repository/`** — report rows, join results, sign-in shapes — never entities, never in `domain/`, never DTOs. Card DTOs are contract schemas (`api/model`; on the caller's side the card messages of the callee's proto, `com.mysms.<callee>.v1`).
 
 ```java
 // ✓ repository/RoleGrantRow.java (iam)
@@ -298,7 +370,7 @@ entity.onCreatingData(Actor.current(), clock);            // UUIDv7 id, both sta
 // … then repository.insert(entity) inside the service's transaction (§4)
 ```
 
-- Entities never cross the API boundary: not in controller signatures, not serialized, not returned from controller or SDK surfaces. The compiler should make leaking an entity awkward; the reviewer makes it a blocker.
+- Entities never cross the API boundary: not in controller signatures, not serialized, not returned from controller or gRPC surfaces. The compiler should make leaking an entity awkward; the reviewer makes it a blocker.
 
 ---
 
@@ -354,9 +426,9 @@ public class SubjectRepository {
 
 ## 7. The contract layer — the module's own `api` package, strictly separate from entities
 
-**7.1 The contract is owned source inside the module (owner decisions of 2026-11-09/10, CLAUDE.md).** Each module's API interfaces and transport DTOs live in `com.mysms.<module>.api` and `com.mysms.<module>.api.model` — one interface per resource carrying the Spring mappings, one mutable bean per schema carrying `@JsonInclude(NON_NULL)` and the Jakarta constraints. There is no separate contracts module and no OpenAPI→Java generation: the packages were materialized once from the retired generator on 2026-11-10 and are edited directly, in the generator's shape (the style gates skip them for that reason). The OpenAPI documents are written FROM this code: springdoc serves `/v3/api-docs.yaml` in every service (core's `OpenApiConfiguration` restores the contract operationIds, `x-permission`, security schemes and idempotency from the module's edge operation table), and each module's service component test writes it to `target/openapi/<module>.yaml` on every `mvn verify`.
+**7.1 The contract is owned source inside the module (owner decisions of 2026-11-09/10, CLAUDE.md).** Each module's API interfaces and transport DTOs live in `com.mysms.<module>.api` and `com.mysms.<module>.api.model` — one interface per resource carrying the Spring mappings, one mutable bean per schema carrying `@JsonInclude(NON_NULL)` and the Jakarta constraints. There is no separate contracts module and no OpenAPI→Java generation: the packages were materialized once from the retired generator on 2026-11-10 and are edited directly, in the generator's shape (the style gates skip them for that reason). The OpenAPI documents are written FROM this code: springdoc serves `/v3/api-docs.yaml` in every service (core's `OpenApiConfiguration` restores the contract operationIds, `x-permission`, security schemes and idempotency from the module's edge operation table), and each module's `<Module>OpenApiComponentTest` writes it to `target/openapi/api-docs.yml` on every `mvn verify` (§10.5).
 
-Three owned artifacts describe the same operations, and the build fails when they drift: the `api` package (the code), `src/main/resources/META-INF/mysms/operations/<module>.json` (the edge table the auth filter enforces, checked against the contract snapshot by conformance), and `api/openapi/<module>.yaml` (the snapshot the TypeScript/Java SDKs and the conformance checks still read; it retires when the SDKs cut over to the springdoc output — HANDOFF). A contract change edits the interface/DTO, the operation table and the snapshot in one reviewed change.
+Three owned artifacts describe the same operations, and the build fails when they drift: the `api` package (the code), `src/main/resources/META-INF/mysms/operations/<module>.json` (the edge table REST and gRPC are authorised by; the OpenAPI component test checks every documented operation against it, and conformance G3 checks it names exactly the module's RPCs), and the module's proto (§10.2). A contract change edits the interface/DTO, the operation table and the proto (with its field-number lock, and the callers' copies) in one reviewed change. There is no hand-kept OpenAPI snapshot: the document is the build output `target/openapi/api-docs.yml`.
 
 ```java
 // ✗ an ad-hoc transport class next to the contract package
@@ -368,6 +440,7 @@ import com.mysms.academics.api.model.SubjectUpdate;  // its writable fields only
 import com.mysms.core.paging.PagingInfo;              // every list: data + paging (NavigationInfo)
 ```
 
+- **Required or optional is stated by the field:** a property the contract requires is a plain field; an optional one is `@Nullable` (collections included, even when initialised empty). Core's `OpenApiConfiguration` writes the document's `required` lists from that, and never writes a `null` type (MySMS never sends null), so the generated clients get the contract's types.
 - Contract DTOs are mutable beans with `@JsonInclude(NON_NULL)` (the contract omits absent values) and Jakarta constraints (`@NotNull`, `@Size`, `@Min`/`@Max`, `@Pattern`). Because the contract interfaces mark bodies `@Valid`, shape errors are rejected before a controller runs (422 `VALIDATION_FAILED`, parameter errors 400).
 - **Validation is still explicit in the write path:** the business service calls `DtoValidator.validate(dto)` on create, and again on the merged model after a partial update (§4 patch rule); business invariants (codes, cross-row rules, logical references) are named private methods that collect every failing field into one 422.
 - **Output-only fields** (`id`, `createTime`, `updateTime`, `createdBy`, `updatedBy`, `etag`) appear in the resource DTO but are never read from a request: mappers ignore them on the way in (§8).
@@ -527,13 +600,323 @@ public class SubjectController implements SubjectApi {    // com.mysms.academics
 
 ---
 
-## 10. gRPC services
+## 10. gRPC — servers, inter-service calls and the generated documents
 
-- The stubs and protobuf messages (`com.mysms.<module>.v1`) are compiled from `/api/proto` into `sdk` (one protoc run, §1.7), so every module already has its own on the classpath.
-- One resolver per service implementing the generated stub, delegating to the **same** hand-written business services as REST — business rules exist once. The resolver converts proto ↔ DTO with the proto mappers at its edge.
-- Validation path: proto → DTO (proto mapper) → the same Jakarta validator. No duplicate hand-written checks.
-- One global gRPC exception interceptor maps the same typed exceptions to `io.grpc.Status` (NOT_FOUND, FAILED_PRECONDITION for 412, ALREADY_EXISTS for 409, INVALID_ARGUMENT for 400/422) so REST and gRPC fail identically.
-- Field numbers are law: `proto/field-numbers.lock.json` is regenerated and committed with any proto change; renumbering an existing field is release-gated.
+**Owner decision of 2026-11-12: modules call each other over gRPC exactly the way the owner's reference service
+(`plt-organization-service`) does, and every module's OpenAPI document is produced by its OpenAPI component test.
+There is no `sdk` module, no generated Java HTTP client and no `Transactions` helper.** This section is the whole
+mechanism; do not deviate from it. The conformance build enforces it (G1–G9, §13).
+
+### 10.1 The mechanism at a glance
+
+| Concern | How | Where |
+|---|---|---|
+| gRPC runtime | `net.devh:grpc-spring-boot-starter` 3.1.0.RELEASE, Netty (not netty-shaded) | parent POM, `core` |
+| Protos | each module owns `src/main/resources/proto/mysms/<module>/v1/*.proto`; a caller keeps a **byte-identical copy** of each callee proto it uses; the shared messages (`mysms/common/v1`) are core's alone | G1 |
+| Proto compile | `os-maven-plugin` + xolstice `protobuf-maven-plugin` in **every** module: messages + grpc-java stubs into the module jar, descriptor set to `target/docs/protos/grpc.protobin` | parent POM |
+| Server | one gRPC server per process (`grpc.server.port`, default 9112), health service on, reflection off unless opened | core |
+| Server implementation | `@GrpcService` resolver per proto service, delegating to the same business service as REST | `<module>/grpc`, G5 |
+| Errors out | `@GrpcGlobalServerInterceptor` `GlobalGrpcExceptionHandler` at `ORDER_GLOBAL_EXCEPTION_HANDLING`: status + trailers `error-message-bin` (`Any` of `ErrorMessage`) and `error-details` | core |
+| Client | `@GrpcClient("<callee>-service")` setter injection of blocking stubs into a `<Callee>GrpcClient` `@Service` | `<module>/integration`, G4 |
+| Client config | `grpc.client.<callee>-service.address` + `negotiationType=PLAINTEXT` | core defaults, overridable |
+| Errors in | `IntegrationGrpcClientException.call(service, stubCall)` unpacks the callee's trailers (code, HTTP status, fields) | core |
+| Caller identity | `GrpcCallerInterceptor` (`@GrpcGlobalClientInterceptor`) forwards the caller's own token, tenant, institution, `traceparent` and a deadline | auth-client |
+| OpenAPI | `<Module>OpenApiComponentTest` fetches `/v3/api-docs.yaml` from the running service and writes `target/openapi/api-docs.yml` | every module, G8 |
+| No REST between modules | no `RestClient`, `RestTemplate`, `WebClient` or HTTP interface client between modules | G6 |
+
+### 10.2 Protos and the build
+
+A module's protos are source of that module; the module that serves a service is the only one that edits it. A caller
+copies the callee's file verbatim into its own proto tree (same path, same bytes) and recompiles; the conformance
+build fails when a copy differs from the owner's file, or when the callee is not in the caller's row of
+ARCHITECTURE.md §2.
+
+```
+sis/src/main/resources/proto/mysms/
+├── sis/v1/sis.proto              # owned: sis's services and messages
+├── people/v1/people.proto        # verbatim copy (sis calls people)
+├── academics/v1/academics.proto  # verbatim copy
+├── org/v1/org.proto              # verbatim copy
+└── iam/v1/iam.proto              # verbatim copy
+core/src/main/resources/proto/mysms/common/v1/   # shared messages (paging, ErrorMessage …): core's only
+```
+
+```proto
+syntax = "proto3";
+package mysms.sis.v1;
+
+import "google/protobuf/field_mask.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "SisProto";
+option java_package = "com.mysms.sis.v1";   // com.mysms.<module>.v1, always
+
+service StudentCategoryService {
+  rpc GetStudentCategory(GetStudentCategoryRequest) returns (GetStudentCategoryResponse);
+}
+```
+
+The parent POM compiles them in every module (the reference's plugin pair; nothing is downloaded at build time
+beyond the Maven artifacts):
+
+```xml
+<plugin>
+  <groupId>org.xolstice.maven.plugins</groupId>
+  <artifactId>protobuf-maven-plugin</artifactId>
+  <configuration>
+    <protocArtifact>com.google.protobuf:protoc:${protobuf-java.version}:exe:${os.detected.classifier}</protocArtifact>
+    <pluginId>grpc-java</pluginId>
+    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc-java.version}:exe:${os.detected.classifier}</pluginArtifact>
+    <protoSourceRoot>${basedir}/src/main/resources/proto</protoSourceRoot>
+  </configuration>
+  <executions>
+    <execution>
+      <id>protobuf-compile</id>
+      <goals><goal>compile</goal><goal>compile-custom</goal></goals>
+      <configuration>
+        <writeDescriptorSet>true</writeDescriptorSet>
+        <includeDependenciesInDescriptorSet>true</includeDependenciesInDescriptorSet>
+        <includeSourceInfoInDescriptorSet>true</includeSourceInfoInDescriptorSet>
+        <descriptorSetFileName>grpc.protobin</descriptorSetFileName>
+        <descriptorSetOutputDirectory>${project.build.directory}/docs/protos</descriptorSetOutputDirectory>
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
+```
+
+- **Field numbers are law.** `backend/conformance/src/main/resources/field-numbers.lock.json` records the number of
+  every field of every owned message (G2). A new field takes a new number and is added to the lock in the same
+  change; an existing number is never reused or changed.
+- **The operation table is the module's RPCs** (G3): every operation in `META-INF/mysms/operations/<module>.json`
+  names its RPC, and every RPC is in the table, so REST and gRPC are authorised by the same row.
+- Generated classes (`com.mysms.<x>.v1`) are never edited and are excluded from Checkstyle, SpotBugs and coverage
+  (§13).
+
+### 10.3 Serving: `@GrpcService` resolvers
+
+One resolver per proto service in `<module>/grpc`, annotated `@GrpcService`, extending the generated `…ImplBase` and
+delegating every RPC to the **same** business service REST's controller uses — business rules exist once. The
+resolver is thin: proto → DTO through core's `ProtoBridge` (validated with the same Jakarta validator as REST's
+`@Valid`), the service call, DTO → proto.
+
+```java
+@GrpcService
+public class ActivityTypeResolver extends ActivityTypeServiceGrpc.ActivityTypeServiceImplBase {
+
+    private final ActivityTypeService service;
+    private final ProtoBridge bridge;
+
+    public ActivityTypeResolver(ActivityTypeService service, ProtoBridge bridge) {
+        this.service = service;
+        this.bridge = bridge;
+    }
+
+    @Override
+    public void getActivityType(GetActivityTypeRequest request, StreamObserver<GetActivityTypeResponse> out) {
+        ActivityType found = service.getActivityType(bridge.id(request.getId(), "id"));
+        ProtoBridge.send(out, bridge.reply(GetActivityTypeResponse.newBuilder(), "activity_type", found).build());
+    }
+}
+```
+
+Nothing else goes in a resolver: no `try/catch` (errors are the edge's), no permission check, no transaction, no
+repository. Authentication, the operation's permission, idempotency (`request_id`) and error mapping run at the gRPC
+edge as global server interceptors, in this order (`GrpcEdge`):
+
+| Order | Interceptor | Does |
+|---|---|---|
+| `TRACE_ORDER` | `GrpcTraceInterceptor` | continues `traceparent`, binds the trace in the MDC |
+| `ERROR_ORDER` = `InterceptorOrder.ORDER_GLOBAL_EXCEPTION_HANDLING` | `GlobalGrpcExceptionHandler` | typed exception → status + trailers |
+| `AUTH_ORDER` | auth-client's edge | token, tenant, institution, the operation's permission (`EdgeAuthorizer`, shared with REST) |
+| `IDEMPOTENCY_ORDER` | `GrpcIdempotencyInterceptor` | replays a repeated `request_id` from the module's ledger |
+
+The exception handler maps the same typed exceptions REST maps (§11) — `NOT_FOUND`, `PERMISSION_DENIED`,
+`ALREADY_EXISTS`/`FAILED_PRECONDITION` for 409, `ABORTED` for 412, `INVALID_ARGUMENT` for 400/422,
+`UNAVAILABLE` for 503 — and writes the refusal to the trailers the reference service uses:
+
+```java
+@GrpcGlobalServerInterceptor
+@Order(GrpcEdge.ERROR_ORDER)   // InterceptorOrder.ORDER_GLOBAL_EXCEPTION_HANDLING
+public final class GlobalGrpcExceptionHandler implements ServerInterceptor { … }
+
+// trailers of every refusal
+Metadata.Key<byte[]> ERROR_MESSAGE = Metadata.Key.of("error-message-bin", Metadata.BINARY_BYTE_MARSHALLER);
+//   Any.pack(ErrorMessage{code, status, message, errors[field, message, code]})
+Metadata.Key<String> ERROR_DETAILS = Metadata.Key.of("error-details", Metadata.ASCII_STRING_MARSHALLER);
+```
+
+Each module's `<Module>GrpcParityComponentTest` (core's `GrpcParity` kit) proves the RPCs answer what REST answers —
+the same rows, the same refusals — over a real server.
+
+### 10.4 Calling another module: `@GrpcClient`
+
+A module calls another only if the callee is in its row of ARCHITECTURE.md §2 (core's `ModuleChecks` reads the table;
+the build fails on any other `com.mysms.<x>.v1` import). The call lives in one class per callee,
+`<module>/integration/<Callee>GrpcClient`, the only place another module's stubs may appear (G4). The starter injects
+the blocking stubs through `@GrpcClient` setters, as in the reference service:
+
+```java
+package com.mysms.sis.integration;
+
+@Service
+public class AcademicsGrpcClient {
+
+    /** The starter's client of the academics service: grpc.client.academics-service.* */
+    public static final String ACADEMICS_SERVICE_KEY = "academics-service";
+    private static final String SERVICE = "academics";
+
+    private SectionServiceGrpc.SectionServiceBlockingStub sections;
+
+    @GrpcClient(ACADEMICS_SERVICE_KEY)
+    public void initSectionStub(SectionServiceGrpc.SectionServiceBlockingStub stub) {
+        this.sections = stub;
+    }
+
+    public GetSectionResponse getSection(GetSectionRequest request) {
+        return IntegrationGrpcClientException.call(SERVICE, () -> sections.getSection(request));
+    }
+}
+```
+
+**Configuration** — the reference's keys, in the module's own `application.properties` (§2.1). The monolith's file
+turns every client to the in-process server; an operator's file, environment variables or command line override any
+of them:
+
+```properties
+# server (one per process)
+grpc.server.port=${MYSMS_GRPC_SERVER_PORT:9112}
+grpc.server.health-service-enabled=true
+grpc.server.reflection-service-enabled=${MYSMS_GRPC_REFLECTION:false}
+grpc.server.shutdown-grace-period=20s
+grpc.server.max-inbound-message-size=10MB
+
+# one client per service the module calls; split deployment (Kubernetes DNS)
+grpc.client.academics-service.address=${MYSMS_ACADEMICS_GRPC_ADDRESS:dns:///academics-service.${MYSMS_NAMESPACE:mysms}.svc.cluster.local:${MYSMS_ACADEMICS_SERVICE_PORT_RPC:9112}}
+grpc.client.academics-service.negotiationType=PLAINTEXT
+
+# app's file (the monolith): the same clients call its in-process server
+grpc.server.in-process-name=mysms
+grpc.client.academics-service.address=${MYSMS_ACADEMICS_GRPC_ADDRESS:in-process:mysms}
+
+# every call waits at most this long when the stub sets no deadline
+mysms.grpc.client.deadline=${MYSMS_GRPC_CLIENT_DEADLINE:10s}
+```
+
+Tests that need no network port set `grpc.server.port=-1` (the reference's test setting); parity tests that record
+the peer address run on a real port.
+
+**Identity.** Every call carries the caller's own identity: auth-client's `GrpcCallerInterceptor`
+(`@GrpcGlobalClientInterceptor`) adds `authorization: Bearer <caller's token>`, `x-tenant-id`, `x-institution-id`,
+`traceparent` and the deadline. Work with no user behind it (an event consumer, a scheduled job) calls with a service
+token: `stub.withCallCredentials(serviceTokens.callCredentials("<module>"))` (auth-client's `ServiceTokenProvider`:
+iam's client-credentials grant, `sub=service:<module>`, audience `mysms-internal`, in the tenant of the current call
+context) — and the interceptor keeps those credentials.
+
+**Never inside a transaction.** Read transaction → remote call → write transaction that re-checks status, scope and
+version. The interceptor refuses a call made while a transaction is active (`IllegalStateException`), so the first
+test of the path finds it. sis's `PortalAccountService`, shortened:
+
+```java
+Student linkStudentAccount(DataScope scope, UUID id) {
+    PortalAccountStore.Request opening = doInPrimaryReadTransaction(() -> {          // 1. read and check
+        StudentEntity student = eligibleStudent(scope, id);
+        if (student.getUserId() != null) {
+            throw new InvalidStateException("The student already has a portal account.");
+        }
+        return new PortalAccountStore.Request(student.getPersonId(), …);
+    });
+    UUID account = accounts.open(opening);                                           // 2. iam over gRPC, no transaction
+    return doInWriteTransaction(() -> {                                              // 3. check again, then write
+        StudentEntity student = eligibleStudent(scope, id);   // may have left or moved out of scope meanwhile
+        if (students.linkAccount(id, student.getRowVersion(), account, now(), Actor.current().orElse(null)) == 0) {
+            throw new PreconditionFailedException("The student changed meanwhile; try again.");
+        }
+        …
+    });
+}
+```
+
+**Failures.** `IntegrationGrpcClientException.call` turns every `StatusRuntimeException` into an
+`IntegrationGrpcClientException` carrying the callee's service, gRPC code, problem code, HTTP status and refused fields
+(from `error-message-bin`; without one, the status code mapped by api/README's table). The caller maps it to its own
+typed exception — never forwards the callee's sentence or fields (sis's `Downstream`, shortened):
+
+```java
+static <T> Optional<T> required(String service, String permission, String purpose, Supplier<T> request) {
+    try {
+        return Optional.of(request.get());
+    } catch (IntegrationGrpcClientException e) {
+        if (e.httpStatus() == 404) { return Optional.empty(); }                  // not there for this caller
+        if (e.httpStatus() == 403) { throw new PermissionDeniedException(purpose + " also needs " + permission + "."); }
+        throw new UnavailableException("The " + service + " service could not answer.");   // 503
+    }
+}
+```
+
+An exception nobody maps answers 503 `UNAVAILABLE` with no detail of the callee.
+
+**Unit tests** of a client or its caller stub the generated blocking stub with Mockito (`doThrow` a
+`StatusRuntimeException` carrying the trailers for refusals); component tests run the real callee in-process.
+
+### 10.5 The OpenAPI document of every module
+
+Every module has `src/component-test/java/com/mysms/<module>/<Module>OpenApiComponentTest.java`, the reference
+service's mechanism: boot the module on a random port, fetch `/v3/api-docs.yaml` with
+`Accept: application/vnd.oai.openapi`, check it, and write it to **`backend/<module>/target/openapi/api-docs.yml`**.
+That file is the module's published contract — the input of the separate client-generation project (web, mobile)
+and of the clients' TypeScript SDK. It is never hand-written, never copied into the repository, and never produced by a
+script or a plugin outside the test (G8).
+
+```java
+@SpringBootTest(classes = SisApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class SisOpenApiComponentTest {
+
+    private static final String OPEN_API_OUTPUT_LOCATION = "target/openapi/api-docs.yml";
+    private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
+    private static final TestTokens TOKENS = new TestTokens();
+
+    @LocalServerPort
+    private int port;
+
+    @DynamicPropertySource
+    static void properties(DynamicPropertyRegistry registry) {
+        DATABASE.register(registry, "sis");
+        registry.add("mysms.auth.api-docs", () -> true);
+        registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
+        registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
+    }
+
+    @Test
+    void writesItsOpenApiDocumentFromTheCode() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/v3/api-docs.yaml"))
+                .header("Accept", "application/vnd.oai.openapi")
+                .header("Authorization", "Bearer " + TOKENS.tenantUser(UUID.randomUUID(), UUID.randomUUID()))
+                .GET().build();
+        HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        assertThat(response.statusCode()).isEqualTo(200);
+        String document = OpenApiDocuments.checked("sis", response.body());
+
+        Path output = Path.of(OPEN_API_OUTPUT_LOCATION);
+        Files.createDirectories(output.getParent());
+        Files.writeString(output, document, StandardCharsets.UTF_8);
+        assertThat(output).isNotEmptyFile();
+    }
+}
+```
+
+### 10.6 What is banned
+
+- A generated or hand-written HTTP client between modules, an `sdk`-style module of shared clients, or a module
+  dependency on another domain module (G6, A1).
+- Another module's stub outside `<module>/integration` (G4); a proto copy that differs from the owner's file, or an edit
+  to another module's proto (G1).
+- A gRPC server class that is not a `@GrpcService`, or a resolver with business rules, transactions or `try/catch`
+  (G5, §4).
+- A `Transactions` (or similar) helper: transactions are `AppTransactionManager`'s alone (G7, §4).
+- An OpenAPI document from anywhere but the module's OpenAPI component test (G8); a list of gRPC services in core that
+  differs from the domain modules (G9).
 
 ---
 
@@ -607,9 +990,9 @@ Adopted unchanged from the source ADR, including source roots and naming:
 | E2E | `src/e2e-test/java` | `*E2ETest` | no (Surefire exclude) | `-P e2e` |
 
 - **Unit**: no Spring context, no I/O. Mappers (round-trip + ignore-list), validators, SQL fragment builders, pure logic. Deterministic fixtures; no live dependencies; Mockito for collaborators.
-- **Component**: `@SpringBootTest` against **real PostgreSQL with the real Flyway migrations** — never H2, never a hand-built schema. `core`'s test kit `TestDatabase` gives each test class a fresh database with two fresh non-superuser, non-BYPASSRLS roles — the owner Flyway migrates as and the application role that only receives DML grants — so row-level security is enforced and cannot be switched off, exactly as in production on a Testcontainers PostgreSQL 16, or on an existing server named by `MYSMS_TEST_JDBC_URL` / `_USER` / `_PASSWORD` (CI without Docker). `auth-client`'s test kit `TestTokens` signs access tokens with a throwaway key. Every module ships `ModuleBoundaryTest` (unit: own-schema SQL, SDK allowlist) and `<Module>ServiceComponentTest` (the microservice boots alone on its own database, migrates only its schema, reports its database in health, and its edge refuses undeclared routes and missing tokens). Each repository has at least one component test proving tenant-scoping, soft-delete filtering and the `row_version` guard (0-row update → 412 path). Test properties files carry no production secrets.
+- **Component**: `@SpringBootTest` against **real PostgreSQL with the real Flyway migrations** — never H2, never a hand-built schema. `core`'s test kit `TestDatabase` gives each test class a fresh database with two fresh non-superuser, non-BYPASSRLS roles — the owner Flyway migrates as and the application role that only receives DML grants — so row-level security is enforced and cannot be switched off, exactly as in production on a Testcontainers PostgreSQL 16, or on an existing server named by `MYSMS_TEST_JDBC_URL` / `_USER` / `_PASSWORD` (CI without Docker). `auth-client`'s test kit `TestTokens` signs access tokens with a throwaway key. Every module ships `ModuleBoundaryTest` (unit: own-schema SQL, gRPC allowlist) and `<Module>ServiceComponentTest` (the microservice boots alone on its own database, migrates only its schema, reports its database in health, and its edge refuses undeclared routes and missing tokens). Each repository has at least one component test proving tenant-scoping, soft-delete filtering and the `row_version` guard (0-row update → 412 path). Test properties files carry no production secrets.
 - **Contract tests per resource**: each module's `<Module>CrudComponentTest` runs `CrudContract` (auth-client test kit) over every resource in its `crud-spec.json` (owned test data: one entry per resource, with sample bodies valid against the migrated schema) — create (201, ETag, Location, echoed values), validateOnly writes nothing, a duplicate is 409, get and the read mask, list, filter and paging, 404 for an unknown id, 403 without the permission, another tenant never sees the row, the institution scope (404 outside it, 403 for writes; tenant-level rows read by all and changed only tenant-wide), update under If-Match (428 without, 412 when stale, 400 for an unknown mask field), every generated state transition (403 without its permission, 404 outside the scope or 403 for a tenant-level row without a tenant-wide grant, 428/412 for a missing or stale If-Match where declared, 412 for a stale body etag, 200 from the guarded state with the listed values set and the version moved on by one, then 409 with nothing changed when the new state no longer allows the step) and soft delete. The sample payloads and their parent rows are generated from the schema and are first proven against a migrated database by the generator, so a failure is a real defect. `<Module>ControllerStubsTest` pins how many contract operations still answer 501.
-- **Contract**: locks the REST surface for published resources against `/api/openapi` by driving the real service over HTTP (the component tests do this for every implemented operation); a contract-breaking controller change fails before integration.
+- **Contract**: locks the REST surface for published resources against the module's operation table and contract interfaces by driving the real service over HTTP, and the gRPC surface by the parity tests (§10.3) (the component tests do this for every implemented operation); a contract-breaking controller change fails before integration.
 - **Mocks only in unit tests.** Mockito, fakes and stubs are allowed in unit tests and nowhere else: component, contract and E2E tests run real code against real PostgreSQL, real Flyway migrations and real signed tokens (`TestTokens`). An outbound adapter to an external provider (mail, SMS, payment gateway, storage) is exercised in component tests against a real local implementation of that protocol (a Testcontainers container such as a local SMTP or S3-compatible server), never a mock bean.
 - **E2E**: black-box against a deployed stack; always excluded by default; no sleep-based flakiness without a stated reason.
 - A change to the canonical write path, a mapper ignore-list or a migration requires tests in the matching layer in the same PR. Minimum line coverage is enforced by JaCoCo in the parent POM (bar set there, not debated per PR).
@@ -621,8 +1004,9 @@ Adopted unchanged from the source ADR, including source roots and naming:
 - `mvn verify` = compile + unit/component tests + **Checkstyle** + **SpotBugs** + JaCoCo check. All four bound in the parent POM; CI runs exactly `mvn verify`. A PR that needs `-DskipTests` or `-Dcheckstyle.skip` does not merge.
 - Suppressions (`checkstyle-suppressions.xml`, `spotbugs-ignore.xml`) each carry a one-line reason; whole-package or wildcard suppressions require explicit review; agents never add suppressions for their own findings without approval (§1.9).
 - Fix order: tests green first, then static analysis — don't iterate style on broken code.
-- Generated code (MapStruct impls, protobuf, OpenAPI interfaces) is excluded from style/coverage; it is never hand-edited.
-- The `conformance` module (`backend/conformance`, run by `mvn verify`) checks the rules a compiler, Checkstyle or SpotBugs cannot: R1 tenant predicate, R2 SQL as repository constants, R5 plain repository classes, B1 no `@Transactional`/`TransactionTemplate`/ORM/ArchUnit/Modulith, A1 module dependencies, §3 package roles, §5/N1 entities (base class, Lombok, no Jackson/mapping annotations, no `Map` columns, projections outside `domain/`, hooks only in services), §6 no hard DELETE on audited tables, C3 controllers implement contract interfaces, M1 mapper configuration and way-in ignores, D2 DTO shapes, E2 error format, X1/X2 no token handling in modules, test rules (mocks only in unit tests; every module has its boundary and service component tests) and §14 migration schema and no cross-schema foreign key. The build fails on any violation.
+- Generated code (MapStruct impls, protobuf and gRPC stubs) is excluded from style/coverage; it is never hand-edited. SpotBugs analyses only a module's own packages (the parent POM's `mysms.spotbugs.onlyAnalyze`: the root package and every §3 layer package), so the thousands of generated proto classes a module compiles are not analysed; conformance §3 fails the build when that list misses a layer or a domain module narrows it.
+- The build runs in parallel (`.mvn/maven.config`: `-T 1C`) with the Maven build cache (`.mvn/extensions.xml`), which skips a module whose sources and inputs are unchanged. A gate build — before a merge or a release — runs with `-Dmaven.build.cache.enabled=false`. Test JVMs are capped (`mysms.test.jvm`: 1 GB heap, C1 JIT) so two of them run beside the Maven JVM (2 GB, `.mvn/jvm.config`) and the PostgreSQL containers.
+- The `conformance` module (`backend/conformance`, run by `mvn verify`) checks the rules a compiler, Checkstyle or SpotBugs cannot: R1 tenant predicate, R2 SQL as repository constants, R5 plain repository classes, B1 no `@Transactional`/`TransactionTemplate`/ORM/ArchUnit/Modulith, A1 module dependencies, §3 package roles, §5/N1 entities (base class, Lombok, no Jackson/mapping annotations, no `Map` columns, projections outside `domain/`, hooks only in services), §6 no hard DELETE on audited tables, C3 controllers implement contract interfaces, M1 mapper configuration and way-in ignores, D2 DTO shapes, E2 error format, X1/X2 no token handling in modules, test rules (mocks only in unit tests; every module has its boundary and service component tests) §14 migration schema and no cross-schema foreign key, and G1–G9 the gRPC guideline (§10.6: owned protos and verbatim copies, field-number lock, operation table = RPCs, stubs only in `integration`, `@GrpcService` servers, no REST client between modules, no `Transactions` helper, every module's OpenAPI component test, each module's application.properties combined by the monolith's — §2.1). The build fails on any violation.
 
 ---
 
@@ -630,8 +1014,10 @@ Adopted unchanged from the source ADR, including source roots and naming:
 
 The platform-wide migration principles of the source, applied to MySMS's existing Flyway layout (`database/migrations/<module>/V<release>_<module-order>_<seq>__description.sql`):
 
-- One logical change per migration file; descriptive name; the owning module's folder. A migration touches only its own module's schema; a foreign key never crosses schemas — a reference into another module is an indexed uuid column registered in `database/logical-references.md` (regenerate with the schema docs).
-- Applied migrations are immutable (§1.2). Post-go-live changes are backward-compatible with the previous running binary: add nullable/defaulted columns, add tables/indexes (`CONCURRENTLY` outside transactions where needed); renames and drops are expand-contract across two releases; `NOT NULL` lands as `NOT VALID` + `VALIDATE` after backfill.
+- **Until the first release, one baseline per module.** Each module has exactly one script, `V1_<module-order>_001__<module>_baseline.sql`, which by itself builds the module's final schema and catalogue data. A change edits it in place the way a DBA would write it from scratch: a new column goes into the `CREATE TABLE` (business columns before the audit/version columns), a changed constraint or index replaces the old one, a comment replaces the old comment, a new table sits next to its related tables with its comments, indexes and RLS, and catalogue rows are inserted in their final form. No incremental `V1_…_002` script, no backfill.
+- A migration, the baseline included, touches only its own module's schema; a foreign key never crosses schemas — a reference into another module is an indexed uuid column registered in `database/logical-references.md` (regenerate with the schema docs).
+- After the first release: one logical change per migration file; descriptive name; the owning module's folder.
+- Released migrations are immutable (§1.2). Post-go-live changes are backward-compatible with the previous running binary: add nullable/defaulted columns, add tables/indexes (`CONCURRENTLY` outside transactions where needed); renames and drops are expand-contract across two releases; `NOT NULL` lands as `NOT VALID` + `VALIDATE` after backfill.
 - Every new table carries the full MySMS audit set, tenant column + RLS policy, comments on every column, and partial-unique business keys per `database/README.md`. Naming follows the schema's existing conventions (`pk_/fk_/uq_/ix_/ck_` prefixes) — consistency with this schema outranks any other naming scheme.
 - Reference data ships as repeatable seed templates used by tenant provisioning, never as hard-coded inserts in versioned migrations.
 - CI rehearses every release: clean apply + previous-release upgrade apply + `verification/smoke.sql`.
@@ -647,14 +1033,14 @@ Adapted from the source's design-compliance aspect list; a reviewer (human or ag
 | C1 | Controllers thin: no repository/SQL/business rules; contract interface implemented, not re-declared |
 | C2 | Full-DTO validation invoked on create/update; patch re-validates the merged model |
 | C3 | Controllers implement the module's api-package contract interface: mappings only on those interfaces, none on controllers, no base controller, no side effects (events, audit, calls, cache) |
-| A1 | Module depends only on core/sdk/auth-client (messaging per §2); cross-module data fetched via `sdk` clients; SQL touches only the module's own schema |
+| A1 | Module depends only on core/auth-client (messaging per §2); cross-module data fetched through its `integration` gRPC clients (§10); SQL touches only the module's own schema |
 | B1 | One plain service per aggregate, explicit methods; no generic CRUD base service, no `@Transactional` — each service extends `AppTransactionManager` and runs its work through `doInReadTransaction` / `doInWriteTransaction` on its module's `PlatformTransactionManager` bean |
 | B2 | Audit + outbox rows written explicitly in the same transaction as the aggregate write |
 | B3 | `row_version` guard present on update/patch/delete; 0 rows → 412 |
 | R1 | Reads filter `tenant_id` and `deleted_at IS NULL`; partitioned queries carry the range filter |
 | R2 | SQL as constants/resources, named params, `ANY(:ids)` child loads, sort allowlist |
-| R3 | SQL references only the module's own schema — no cross-schema join, read, write or lock; another module's data comes through `sdk` |
-| R4 | New cross-module reference columns are validated through the owner's SDK before the write, indexed, registered in `logical-references.md`, and handled in the owner's delete/archive event consumer |
+| R3 | SQL references only the module's own schema — no cross-schema join, read, write or lock; another module's data comes through its gRPC service |
+| R4 | New cross-module reference columns are validated through the owner's gRPC service before the write, indexed, registered in `logical-references.md`, and handled in the owner's delete/archive event consumer |
 | M1 | Every mapper uses the module's one `@MapperConfig` (`unmappedTargetPolicy=ERROR`); the way in ignores id, tenant and the whole audit set; no null-value strategies, no `@MappingTarget` patching, no logic or state in mappers (§8) |
 | D1 | No entity beyond the business layer; DTOs match the contract; Update DTO contains only writable fields |
 | D2 | Transport DTOs only in the api/model contract package (no ad-hoc `*DTO` classes); PATCH + `updateMask` (no `Optional` fields, no PUT replace); contract shapes only (`<Resource>List`, 204 delete, no envelopes); read mask via `ReadMask` (no `@JsonView`/`ResponseBodyAdvice`) (§7) |
@@ -668,7 +1054,7 @@ Adapted from the source's design-compliance aspect list; a reviewer (human or ag
 | S1 | No secrets/PII in code, config, fixtures; `*_enc` handled write-only |
 | T1–T5 | Tests in the right layer, Testcontainers+Flyway for components, contracts updated with surface changes, E2E still excluded by default (N/A when no test paths in diff) |
 
-Pre-PR self-check = the same list plus: `mvn verify` green locally, no new suppressions without comments, migration files immutable.
+Pre-PR self-check = the same list plus: `mvn verify` green locally, no new suppressions without comments, released migration files immutable (before the first release: the module's baseline edited in place, no new script).
 
 ---
 
@@ -680,7 +1066,7 @@ Pre-PR self-check = the same list plus: `mvn verify` green locally, no new suppr
 
 - `AuthContext` — the request's identity: user id, tenant id, institution ids, permission codes, token id, impersonation flag. Read-only; the only thing business code sees.
 - `TokenVerifier` — validates the bearer token (local JWKS verification, no network call per request; key cache + rotation handling). Interface ours; the Spring Security/Nimbus machinery is an implementation detail inside auth-client.
-- `PermissionChecker` — answers "may this principal perform `<x-permission code>`?" from token claims (plus the iam SDK for the rare dynamic check).
+- `PermissionChecker` — answers "may this principal perform `<x-permission code>`?" from token claims (plus iam's gRPC service for the rare dynamic check).
 - Filters/interceptors — **all checks happen at the edge, never scattered in business code** (the servlet `AuthFilter` is built; the gRPC interceptor follows with the first gRPC service): one servlet filter chain (REST) and one gRPC interceptor (both auto-configured) that verify the token, resolve the tenant, enforce the route's `x-permission` code from the contract, populate `AuthContext`, and emit the access-log/audit hooks. A controller or service never parses a token, never reads a header, never checks a permission inline; it reads `AuthContext`.
 
 **The issuer today.** iam signs in MySMS's own apps through the contract's first-party operations — `iam.Login`, `iam.RefreshToken`, `iam.Logout` — not through an OAuth password grant for third parties. Passwords are argon2id (19 MiB, 2 iterations, 1 lane); every refusal in a known tenant costs one verification and one write transaction whether or not the account exists; every failure gets the same 401 `INVALID_CREDENTIALS`; from the 5th consecutive failure password sign-in is locked for 1, 2, 4… up to 60 minutes (the lockout never ends existing sessions: refresh needs only an active account in an active tenant). Access tokens are RS256 JWTs (15 min) with `sub`, `tid`, `perms`, `ins` (`*` for a tenant-wide grant: every institution), `roles`, `pid` (linked person), `sid` (session), `jti`, `amr`, audience `mysms`; the key comes only from the environment and its public half is served at `/oauth2/jwks`, together with the retiring key during a rotation (`MYSMS_IAM_PREVIOUS_PUBLIC_KEY`). Refresh tokens are opaque (`<tenant>.<256 random bits>`), stored as SHA-256, rotated on every use, and a reused one revokes its whole session (a token revoked by sign-out is refused without that alarm). Sign-out also deactivates the session's push device (or all devices). A complete permission set is compacted in `perms` (`*`, `<module>.*`, `<module>.<resource>.*`) and `AuthContext.hasPermission` expands it, so broad roles fit in a header. The authorization-code + PKCE endpoints for partners and external IdP brokering (Spring Authorization Server) are the next step and change nothing for modules.
@@ -737,7 +1123,7 @@ String token = TOKENS.tenantUser(TENANT, user, "academics.subject.create");     
 
 ## Appendix A — what was deliberately NOT adopted
 
-- **Nested Maven modules and per-module `-contract`/`-client`/`-service`/`-boot` artifacts** — per project decision the layout is flat: one module per schema owning its own contract package, one generated `sdk`, exec-classifier jars instead of `-boot` launchers.
+- **Nested Maven modules and per-module `-contract`/`-client`/`-service`/`-boot` artifacts** — per project decision the layout is flat: one module per schema owning its own contract package and protos, no shared client module, exec-classifier jars instead of `-boot` launchers.
 - **Per-operation springdoc annotation blocks and ad-hoc `*DTO` classes** (`@Operation`/`@ApiResponse` walls on every method; `*DTO` classes with `Optional` fields for patches; custom paging and success envelopes; `@JsonView` / response-body advice for slim responses) — MySMS's contract interfaces carry the Spring mappings and validation, core's `OpenApiConfiguration` restores ids, permissions and security document-wide, patches use `updateMask`, and responses are the contract's shapes and the read mask (§7).
 - **Spring Data repository interfaces and framework lifecycle callbacks** (`CrudRepository`, derived queries, `@Query`, `*Impl` fragments, `BeforeSaveCallback` stamping audit columns) — repositories are plain classes and the service calls the hooks (§5.8, §6).
 - **A generic `BaseController` / `BaseEntityMapper` and one catch-all `BusinessException`** — controllers implement the contract interfaces, each module has one mapper configuration, and failures are typed (§8, §9, §11.3).
@@ -760,7 +1146,7 @@ String token = TOKENS.tenantUser(TENANT, user, "academics.subject.create");     
 |---|---|---|---|
 | §1 | rules/permissions.md, rules/phi-pii.md | hard-constraint floor, agent editing policy | branch names/memory rules generalized; PHI→student data |
 | §2 | ADR bi-0014, project-conventions.md | SNAPSHOT lifecycle, APT, pinned parent | module set = MySMS DAG |
-| §3 | project-conventions.md, layer-reference.md | package tree by layer role | `example/` vertical dropped; `api/` holds the module's own contract (owned source, §7.1); cross-module access still only via the `sdk` module |
+| §3 | project-conventions.md, layer-reference.md | package tree by layer role | `example/` vertical dropped; `api/` holds the module's own contract (owned source, §7.1); cross-module access only through the module's `integration` gRPC clients (§10) |
 | §4 | canonical-template-reference.md §1–§4, §12–§13, §23–§24, §30; layer-reference.md | the write-path *obligations*: one-tx writes, lifecycle hooks, audit+outbox in-tx, 412 on stale version | generic base service, listener pipeline and `MapperContext` rejected — plain per-aggregate services; `@Transactional` and `TransactionTemplate` replaced by programmatic `PlatformTransactionManager`; re-based from Spring Data JDBC onto JdbcClient |
 | §5 | data-model.md, canonical §9, §22 | BaseEntity + hooks, no plain POJOs, records for projections | TaggedEntity default narrowed: MySMS tags via platform.tag_assignment where the schema says so |
 | §6 | ADR bi-java-0001, canonical §10, §16, §24, §26, §32 | explicit SQL, batch template, sort allowlists, no N+1 | no repository derivation at all; tenant predicate + RLS added |

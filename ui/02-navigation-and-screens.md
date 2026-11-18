@@ -132,7 +132,7 @@ Columns: **ID** · Screen · Web route under `/app` (also the deep link) · Clie
 |---|---|---|---|---|---|---|
 | ACC-01 | Sign in | `/auth/login` | all | all | `iam.Login` | Branding via public `platform.GetBranding`; MFA step via `iam.CompleteMfa` when `mfaRequired` |
 | ACC-02 | Forgot / reset password | `/auth/reset` | all | all | `iam.RequestPasswordReset`, `iam.ResetPassword` | Always-204 messaging |
-| ACC-03 | Sign up (LMS self-serve) | `/auth/signup` | W B | external student | `iam.SignUp`, `iam.CheckUsernameAvailable` | Only when tenant allows |
+| ACC-03 | Sign up (LMS self-serve) | `/auth/signup` | W B | external student | `iam.SignUp`, `iam.ListSignUpInstitutions`, `iam.CheckUsernameAvailable` | Only when tenant allows; the student picks the school |
 | ACC-04 | Accept terms | `/auth/terms` | all | all | `iam.AcceptTerms` | Blocking interstitial |
 | ACC-05 | Verify email / mobile | `/auth/verify` | all | all | `iam.RequestVerification`, `iam.ConfirmVerification` | |
 | ACC-06 | Persona switcher | (sheet) | all | multi-role | `iam.GetMe`, `iam.SwitchRole` | Re-issues tokens; shell re-renders |

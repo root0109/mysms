@@ -1,4 +1,4 @@
-// Owned API contract of finance (JAVA-CODING-RULES §7); first materialized from api/openapi/finance.yaml on 2026-11-10.
+// Owned API contract of finance.
 package com.mysms.finance.api;
 
 import com.mysms.core.paging.PagingInfo;

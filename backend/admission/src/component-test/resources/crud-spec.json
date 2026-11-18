@@ -46,6 +46,46 @@
      "ifMatch": false
     },
     {
+     "operation": "admission.OpenApplications",
+     "path": "/v1/admission/admission-cycles/{id}:openApplications",
+     "permission": "admission.admission_cycle.open_applications",
+     "guard": {
+      "status": [
+       "confirmed"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.admission_cycle SET status = 'confirmed' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "open"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "admission.StartAdmission",
+     "path": "/v1/admission/admission-cycles/{id}:startAdmission",
+     "permission": "admission.admission_cycle.start_admission",
+     "guard": {
+      "status": [
+       "open"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.admission_cycle SET status = 'open' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "admission"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
      "operation": "admission.CloseAdmissionCycle",
      "path": "/v1/admission/admission-cycles/{id}:close",
      "permission": "admission.admission_cycle.close_admission_cycle",
@@ -165,9 +205,194 @@
     {
      "field": "nationalId",
      "masked": "nationalIdMasked",
-     "mask": "\u2022\u2022\u2022\u20221234",
+     "mask": "••••1234",
      "rotated": "Rotated-secret-5678",
      "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM admission.application WHERE id = '{id}' AND (national_id_enc IS NULL OR national_id_enc NOT LIKE 'v1.%' OR strpos(national_id_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
+    }
+   ],
+   "transitions": [
+    {
+     "operation": "admission.SubmitApplication",
+     "path": "/v1/admission/applications/{id}:submit",
+     "permission": "admission.application.submit_application",
+     "guard": {
+      "status": [
+       "draft"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.application SET status = 'draft' WHERE id = '{id}'",
+      "INSERT INTO admission.application_guardian (id, tenant_id, application_id, relationship, name) VALUES (gen_random_uuid(), :tenant, '{id}', 'mother', 'Contract guardian')"
+     ],
+     "body": {},
+     "sets": {
+      "status": "submitted"
+     },
+     "stamps": [
+      "applicationDate"
+     ],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "admission.ConfirmApplication",
+     "path": "/v1/admission/applications/{id}:confirm",
+     "permission": "admission.application.confirm_application",
+     "guard": {
+      "status": [
+       "submitted",
+       "pending"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.application SET status = 'submitted' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "confirmed"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "admission.MarkApplicationPending",
+     "path": "/v1/admission/applications/{id}:markPending",
+     "permission": "admission.application.mark_application_pending",
+     "guard": {
+      "status": [
+       "submitted",
+       "confirmed"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.application SET status = 'submitted' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "pending"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "admission.ApproveApplication",
+     "path": "/v1/admission/applications/{id}:approve",
+     "permission": "admission.application.approve_application",
+     "guard": {
+      "status": [
+       "confirmed"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.application SET status = 'confirmed' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "approved"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "admission.RejectApplication",
+     "path": "/v1/admission/applications/{id}:reject",
+     "permission": "admission.application.reject_application",
+     "guard": {
+      "status": [
+       "submitted",
+       "pending",
+       "confirmed",
+       "approved"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.application SET status = 'submitted' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "rejected"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "admission.ResetApplication",
+     "path": "/v1/admission/applications/{id}:resetToDraft",
+     "permission": "admission.application.reset_application",
+     "guard": {
+      "status": [
+       "rejected",
+       "cancelled"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.application SET status = 'rejected' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "draft"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "admission.CancelApplication",
+     "path": "/v1/admission/applications/{id}:cancel",
+     "permission": "admission.application.cancel_application",
+     "guard": {
+      "status": [
+       "draft",
+       "submitted",
+       "pending",
+       "confirmed",
+       "approved",
+       "admitted"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.application SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "cancelled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "admission.ConfirmAdmission",
+     "path": "/v1/admission/applications/{id}:confirmAdmission",
+     "permission": "admission.application.confirm_admission",
+     "guard": {
+      "status": [
+       "approved"
+      ]
+     },
+     "prepare": [
+      "UPDATE admission.application SET status = 'approved' WHERE id = '{id}'",
+      "UPDATE admission.application_guardian SET deleted_at = now() WHERE application_id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "admitted"
+     },
+     "stamps": [
+      "admissionDate"
+     ],
+     "etag": true,
+     "ifMatch": false
     }
    ]
   },
@@ -228,7 +453,7 @@
     {
      "field": "nationalId",
      "masked": "nationalIdMasked",
-     "mask": "\u2022\u2022\u2022\u20221234",
+     "mask": "••••1234",
      "rotated": "Rotated-secret-5678",
      "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM admission.application_guardian WHERE id = '{id}' AND (national_id_enc IS NULL OR national_id_enc NOT LIKE 'v1.%' OR strpos(national_id_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
     }

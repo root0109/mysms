@@ -47,19 +47,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * The homework lifecycle (ui/03 flow F5, api/state-machines.md "Homework"): a teacher publishes homework — at once
- * when they may also approve homework for its institution, otherwise it waits for a reviewer, who approves it
- * (published) or rejects it (back to draft, with the reason kept on the approval record) — and, once students have
- * handed in, the teacher checks each submission and the student may answer the teacher's comments.
- *
- * <p>Who needs a review is decided by the permissions a role holds, not by a setting: a school that wants no review
- * gives its teachers the approving permission. "For its institution" is as exact as the token is: it carries one set
- * of institutions for all of a caller's grants (STATUS, known limit 1), so someone who approves in one school and
- * teaches in another passes as an approver in both. The student who may reply is the account that created the
- * submission; a submission entered for a student by someone else has no one who can reply until the student and
- * guardian operations exist. Every step locks the row it changes, checks the caller's institution
- * scope the way the standard operations do (a row outside it does not exist: 404), honours the optional body etag
- * (412) and writes its audit record and event in the transaction of the change (JAVA-CODING-RULES §4).
+ * The homework lifecycle: a teacher publishes homework, at once when they may also approve homework for its
+ * institution, otherwise it waits for a reviewer who approves it or rejects it back to draft (the reason kept on the
+ * approval record); the teacher then checks each submission and the student may reply. <p>Who needs review is decided
+ * by the permissions a role holds, not a setting. The token carries one set of institutions for all of a caller's
+ * grants, so someone who approves in one school and teaches in another passes as an approver in both. Only the account
+ * that created a submission may reply. Every step locks its row, checks the institution scope (404), honours the
+ * optional etag (412) and writes its audit record and event in the same transaction.
  */
 @Service
 public class HomeworkWorkflowService extends AppTransactionManager {

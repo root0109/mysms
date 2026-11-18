@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -14,7 +14,6 @@ import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
-
 import java.util.*;
 
 /**
@@ -22,9 +21,6 @@ import java.util.*;
  */
 
 public class ContentViewSessionUpdate {
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID contentItemId;
@@ -48,26 +44,6 @@ public class ContentViewSessionUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String sessionRef;
-
-  public ContentViewSessionUpdate userId(@Nullable UUID userId) {
-    this.userId = userId;
-    return this;
-  }
-
-  /**
-   * Student.
-   * @return userId
-   */
-  @Valid 
-  @JsonProperty("userId")
-  public @Nullable UUID getUserId() {
-    return userId;
-  }
-
-  @JsonProperty("userId")
-  public void setUserId(@Nullable UUID userId) {
-    this.userId = userId;
-  }
 
   public ContentViewSessionUpdate contentItemId(@Nullable UUID contentItemId) {
     this.contentItemId = contentItemId;
@@ -218,8 +194,7 @@ public class ContentViewSessionUpdate {
       return false;
     }
     ContentViewSessionUpdate contentViewSessionUpdate = (ContentViewSessionUpdate) o;
-    return Objects.equals(this.userId, contentViewSessionUpdate.userId) &&
-        Objects.equals(this.contentItemId, contentViewSessionUpdate.contentItemId) &&
+    return Objects.equals(this.contentItemId, contentViewSessionUpdate.contentItemId) &&
         Objects.equals(this.fileId, contentViewSessionUpdate.fileId) &&
         Objects.equals(this.cohortId, contentViewSessionUpdate.cohortId) &&
         Objects.equals(this.startedAt, contentViewSessionUpdate.startedAt) &&
@@ -230,14 +205,13 @@ public class ContentViewSessionUpdate {
 
   @Override
   public int hashCode() {
-    return Objects.hash(userId, contentItemId, fileId, cohortId, startedAt, endedAt, location, sessionRef);
+    return Objects.hash(contentItemId, fileId, cohortId, startedAt, endedAt, location, sessionRef);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ContentViewSessionUpdate {\n");
-    sb.append("    userId: ").append(toIndentedString(userId)).append("\n");
     sb.append("    contentItemId: ").append(toIndentedString(contentItemId)).append("\n");
     sb.append("    fileId: ").append(toIndentedString(fileId)).append("\n");
     sb.append("    cohortId: ").append(toIndentedString(cohortId)).append("\n");

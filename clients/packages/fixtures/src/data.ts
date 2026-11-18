@@ -4,7 +4,7 @@ import type { iam, master, people, platform } from '@mysms/sdk';
 export const TENANT_CODE = 'demo';
 
 /** Permissions every role holds (the caller's own account, settings and person record). */
-/** Self-service permissions every role holds (iam permission catalogue V1_030_004 and V1_030_005). */
+/** Self-service permissions every role holds (the permission catalogue of the iam baseline migration). */
 export const SELF_SERVICE = [
   'iam.user_account.get_me',
   'iam.user_account.logout',
@@ -17,6 +17,10 @@ export const SELF_SERVICE = [
   'iam.mfa_credential.regenerate_recovery_codes',
   'iam.user_session.read',
   'iam.user_session.delete',
+  'iam.user_account.request_verification',
+  'iam.user_account.stop_impersonation',
+  'iam.auth_token.read',
+  'iam.auth_token.delete',
   'iam.setting.read_mine',
   'iam.setting.update_mine',
   'iam.setting_definition.read',
@@ -31,6 +35,7 @@ export const platformAdmin: iam.Me = {
     email: 'asha@platform.example',
     locale: 'en-IN',
     timezone: 'Asia/Kolkata',
+    termsAcceptedAt: '2026-06-01T08:00:00Z',
   },
   permissions: [
     'master.country.read',
@@ -79,6 +84,8 @@ export const schoolAdmin: iam.Me = {
     email: 'ravi@school.example',
     locale: 'en-IN',
     timezone: 'Asia/Kolkata',
+    // accepted the terms already: the terms gate (ACC-04) lets the screens under test through
+    termsAcceptedAt: '2026-06-01T08:00:00Z',
   },
   permissions: [
     'master.country.read',
@@ -194,7 +201,7 @@ const ALL_SCOPES: iam.SettingDefinition['allowedScopes'] = [
   'user',
 ];
 
-/** The product's setting catalogue, as iam migration V1_030_003 seeds it (ui/04 §9). */
+/** The product's setting catalogue, as the iam baseline migration seeds it (ui/04 §9). */
 export const settingDefinitions: iam.SettingDefinition[] = [
   {
     id: '01960000-0000-7000-8000-0000000000d1',

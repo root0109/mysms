@@ -47,14 +47,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of comms.notification_channel (JAVA-CODING-RULES §4): one plain class, explicit methods,
- * transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a NotificationChannel
- * are served here too — NotificationChannelProperty.
+ * Business service of comms.notification_channel and of the records that exist only as part of a NotificationChannel
+ * (NotificationChannelProperty): audit and domain event commit in the same transaction as every change. Rows outside
+ * the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class NotificationChannelService extends AppTransactionManager implements InitializingBean {
@@ -159,8 +154,8 @@ public class NotificationChannelService extends AppTransactionManager implements
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public NotificationChannel updateNotificationChannel(UUID id, String ifMatch, NotificationChannelUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -226,15 +221,12 @@ public class NotificationChannelService extends AppTransactionManager implements
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(NotificationChannelEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected NotificationChannelUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected NotificationChannelUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(NotificationChannelEntity entity, NotificationChannelUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -269,9 +261,9 @@ public class NotificationChannelService extends AppTransactionManager implements
 
     }
 
-    // ---- NotificationChannelProperty: a record of the NotificationChannel aggregate ----
+    // ---- NotificationChannelProperty ----
 
-    /** Refuses to start without a master key: this resource stores secret columns (DEPLOYMENT.md "Secrets"). */
+    /** Refuses to start without a master key: this resource stores secret columns. */
     @Override
     public void afterPropertiesSet() {
         cipher.requireConfigured();
@@ -329,8 +321,8 @@ public class NotificationChannelService extends AppTransactionManager implements
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public NotificationChannelProperty updateNotificationChannelProperty(UUID notificationChannelId, UUID id,
             String ifMatch, NotificationChannelPropertyUpdate changes, String updateMask, boolean validateOnly) {
@@ -383,9 +375,7 @@ public class NotificationChannelService extends AppTransactionManager implements
         });
     }
 
-    /**
-     * Stores secretValue encrypted for the row's tenant and column (database/README "Secrets"); never the plaintext.
-     */
+    /** Stores secretValue encrypted for the row's tenant and column; never the plaintext. */
     private void sealSecretValueNotificationChannelProperty(NotificationChannelPropertyEntity entity, String plaintext) {
         entity.setSecretValueEnc(cipher.encrypt(plaintext, entity.getTenantId(),
                 NOTIFICATION_CHANNEL_PROPERTY_SECRET_SECRET_VALUE_ENC));
@@ -412,15 +402,12 @@ public class NotificationChannelService extends AppTransactionManager implements
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOfNotificationChannelProperty(NotificationChannelPropertyEntity entity) {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected NotificationChannelPropertyUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected NotificationChannelPropertyUpdate fields; explicit per field so a mask can clear values. */
     private void applyNotificationChannelProperty(NotificationChannelPropertyEntity entity,
             NotificationChannelPropertyUpdate changes,
             List<String> fields) {

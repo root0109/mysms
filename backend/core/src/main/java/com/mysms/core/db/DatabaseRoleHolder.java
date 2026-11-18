@@ -4,10 +4,8 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * The database role the current thread asks for while it opens a connection (the {@code ConnectionIdHolder} of the
- * owner's {@code common} module). A role is set only around the call that opens a transaction — the connection is
- * bound to the transaction from then on — and is always restored, so nothing leaks to the next task a pooled or
- * virtual thread runs. Without a role, connections come from the primary.
+ * The database role the current thread asks for while it opens a connection. It is set only around opening a
+ * transaction and always restored, so nothing leaks to the next task on a pooled thread; without one, the primary.
  */
 public final class DatabaseRoleHolder {
 

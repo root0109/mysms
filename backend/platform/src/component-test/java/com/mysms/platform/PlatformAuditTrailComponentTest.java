@@ -12,14 +12,18 @@ import com.mysms.core.testkit.TestTransactions;
 import com.mysms.messaging.events.EventEnvelope;
 import com.mysms.messaging.events.InboxProcessor;
 import com.mysms.messaging.events.RejectedEventException;
+import com.mysms.messaging.inprocess.InProcessEventBus;
 import com.mysms.platform.config.PlatformDatabaseConfig;
 import com.mysms.platform.events.PlatformAuditTrail;
 import com.mysms.platform.events.PlatformReferenceCleanup;
+import com.mysms.platform.events.PlatformTenantSync;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +35,9 @@ import org.springframework.test.context.DynamicPropertySource;
 
 /**
  * Real PostgreSQL: the platform turns the modules' `audit.recorded` events into platform.audit_log rows of the
- * event's tenant, once, and its own changes reach the trail through its outbox, relay and inbox.
+ * event's tenant, once, and its own changes reach the trail through its outbox, relay and inbox. It registers the
+ * tenant iam's installation bootstrap made, and an audit record of a tenant it does not know is dead-lettered after the
+ * bus's delivery limit instead of coming back forever.
  */
 @SpringBootTest(classes = PlatformApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class PlatformAuditTrailComponentTest {
@@ -51,6 +57,9 @@ class PlatformAuditTrailComponentTest {
 
     @Autowired
     private PlatformReferenceCleanup cleanup;
+
+    @Autowired
+    private PlatformTenantSync registration;
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
@@ -125,5 +134,77 @@ class PlatformAuditTrailComponentTest {
         assertThat(cleanup.module()).as("the platform's reference cleanup is a second subscription, merged")
                 .isEqualTo(trail.module());
         assertThat(cleanup.handlers()).doesNotContainKey("audit.recorded");
+    }
+
+    private static EventEnvelope audit(UUID tenant, UUID subject) {
+        return new EventEnvelope(UUID.randomUUID(), "iam", "audit.recorded", Optional.of(tenant), "iam.role", subject,
+                Instant.now(), "{\"action\":\"create\",\"entityType\":\"iam.role\"}", Optional.of(TRACE));
+    }
+
+    private static EventEnvelope bootstrapped(UUID tenant, UUID named, String code) {
+        return new EventEnvelope(UUID.randomUUID(), "iam", "iam.tenant_directory.bootstrapped", Optional.of(tenant),
+                "iam.tenant_directory", named, Instant.now(), "{\"id\":\"" + named + "\",\"code\":\"" + code + "\"}",
+                Optional.of(TRACE));
+    }
+
+    @Test
+    void theBootstrapTenantIsRegisteredOnceSoItsAuditRecordsLand() {
+        UUID tenant = UUID.randomUUID();
+        UUID role = UUID.randomUUID();
+        InboxProcessor inbox = new InboxProcessor(database, Clock.systemUTC());
+        assertThat(registration.handlers()).containsOnlyKeys("iam.tenant_directory.bootstrapped");
+
+        assertThat(inbox.deliver(bootstrapped(tenant, tenant, "boot-camp"), registration::register))
+                .isEqualTo(InboxProcessor.Outcome.PROCESSED);
+        // a restart announces it again: nothing changes
+        inbox.deliver(bootstrapped(tenant, tenant, "boot-camp"), registration::register);
+        JdbcClient bypass = DATABASE.adminJdbc();
+        Map<String, Object> row = bypass.sql("SELECT code, name, status, row_version FROM platform.tenant WHERE id = :id")
+                .param("id", tenant).query().singleRow();
+        assertThat(row).containsEntry("code", "boot-camp").containsEntry("name", "boot-camp")
+                .containsEntry("status", "active").containsEntry("row_version", 1);
+        assertThat(bypass.sql("SELECT event_type FROM platform.outbox_event WHERE tenant_id = :tenant "
+                + "AND aggregate_id = :tenant ORDER BY id").param("tenant", tenant).query(String.class).list())
+                .as("audited, and announced so iam's directory follows the platform row")
+                .containsExactly("audit.recorded", "platform.tenant.created");
+
+        assertThat(inbox.deliver(audit(tenant, role), trail::record)).isEqualTo(InboxProcessor.Outcome.PROCESSED);
+        assertThat(as(tenant, () -> database.jdbc().sql("SELECT count(*) FROM platform.audit_log "
+                + "WHERE tenant_id = :tenantId AND subject_id = :id").param("id", role).query(Integer.class).single()))
+                .isOne();
+
+        // events that can never succeed are rejected, not retried
+        UUID other = UUID.randomUUID();
+        assertThatThrownBy(() -> inbox.deliver(bootstrapped(other, other, "boot-camp"), registration::register))
+                .as("a code another tenant holds").isInstanceOf(RejectedEventException.class);
+        assertThatThrownBy(() -> inbox.deliver(bootstrapped(other, tenant, "boot-camp"), registration::register))
+                .as("another tenant's id").isInstanceOf(RejectedEventException.class);
+        assertThatThrownBy(() -> inbox.deliver(bootstrapped(other, other, "Not A Code"), registration::register))
+                .isInstanceOf(RejectedEventException.class);
+        assertThat(bypass.sql("SELECT count(*) FROM platform.tenant WHERE id = :id").param("id", other)
+                .query(Integer.class).single()).isZero();
+    }
+
+    @Test
+    void anAuditRecordOfAnUnknownTenantIsDeadLetteredAfterTheDeliveryLimit() {
+        UUID unknown = UUID.randomUUID();
+        EventEnvelope event = audit(unknown, UUID.randomUUID());
+        InboxProcessor inbox = new InboxProcessor(database, Clock.systemUTC());
+        AtomicInteger tries = new AtomicInteger();
+        try (InProcessEventBus bus = new InProcessEventBus(3)) {
+            bus.subscribe("platform", Set.of("audit.recorded"), e -> {
+                tries.incrementAndGet();
+                inbox.deliver(e, trail::record);
+            });
+            assertThatThrownBy(() -> bus.publish(event)).as("fk_audit_log_tenant_id: delivered again")
+                    .hasMessageContaining("fk_audit_log_tenant_id");
+            assertThatThrownBy(() -> bus.publish(event)).hasMessageContaining("fk_audit_log_tenant_id");
+            bus.publish(event); // the third failure reaches the limit: parked, the relay goes on
+            bus.publish(event);
+        }
+        assertThat(tries).as("never delivered past the limit").hasValue(3);
+        assertThat(DATABASE.adminJdbc().sql("SELECT processing_error FROM platform.inbox_event WHERE event_id = :id")
+                .param("id", event.id()).query(String.class).single())
+                .as("the inbox keeps why").contains("fk_audit_log_tenant_id");
     }
 }

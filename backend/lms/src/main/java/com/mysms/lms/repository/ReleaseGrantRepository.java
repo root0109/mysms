@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.release_grant (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.release_grant: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class ReleaseGrantRepository {
@@ -63,6 +60,22 @@ public class ReleaseGrantRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** A student's release record of an item. */
+    private static final String FIND_OWN = SELECT_LIVE + " AND r.content_item_id = :itemId AND r.user_id = :userId";
+    /**
+     * Grants (or takes back) manual access to an item for a student: one live row per item and student
+     * (uq_release_grant_1 decides between concurrent first calls); the release computed by the rules is kept.
+     */
+    private static final String GRANT = """
+            INSERT INTO lms.release_grant
+            (id, tenant_id, content_item_id, chapter_id, user_id, is_released, access_granted, created_at, created_by,
+             updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :itemId, :chapterId, :userId, false, :granted, :now, :actor, :now, :actor, 1)
+            ON CONFLICT (content_item_id, user_id) WHERE deleted_at IS NULL
+            DO UPDATE SET access_granted = EXCLUDED.access_granted, updated_at = :now, updated_by = :actor,
+                          row_version = lms.release_grant.row_version + 1
+             WHERE lms.release_grant.tenant_id = :tenantId
+            """;
     private static final String INSERT = """
             INSERT INTO lms.release_grant
             (id, tenant_id, content_item_id, chapter_id, user_id, is_released, access_granted, created_at,
@@ -135,6 +148,20 @@ public class ReleaseGrantRepository {
     }
 
     /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
+    /** The student's release record of the item. */
+    public Optional<ReleaseGrantEntity> findOwn(UUID itemId, UUID userId) {
+        return jdbc.sql(FIND_OWN).param("itemId", itemId).param("userId", userId)
+                .query(ReleaseGrantRepository::map).optional();
+    }
+
+    /** Grants or takes back manual access (see {@link #GRANT}). */
+    public void grant(UUID id, UUID tenantId, UUID itemId, UUID chapterId, UUID userId, boolean granted,
+            OffsetDateTime now, UUID actor) {
+        jdbc.sql(GRANT).param("id", id).param("tenantId", tenantId).param("itemId", itemId)
+                .param("chapterId", chapterId).param("userId", userId).param("granted", granted).param("now", now)
+                .param("actor", actor).update();
+    }
+
     public ReleaseGrantEntity insert(ReleaseGrantEntity e) {
         return jdbc.sql(INSERT)
                 .param("id", e.getId())
@@ -202,12 +229,12 @@ public class ReleaseGrantRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.content_item_id = :parentId", Map.of("parentId", parentId));
     }

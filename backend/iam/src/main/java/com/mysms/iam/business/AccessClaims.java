@@ -6,8 +6,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * What an access token says about the caller (api/README "Claims"). Built by the sign-in flow from the database;
- * the issuer only signs it.
+ * What an access token says about the caller. Built by the sign-in flow from the database; the issuer only signs it.
  *
  * @param userId       `sub`
  * @param tenantId     `tid`

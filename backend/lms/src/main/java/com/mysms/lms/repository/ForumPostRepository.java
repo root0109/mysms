@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.forum_post (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.forum_post: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class ForumPostRepository {
@@ -169,6 +166,14 @@ public class ForumPostRepository {
             SELECT p1.institution_id FROM lms.forum_topic p0 JOIN lms.discussion_prompt p1 ON p1.tenant_id = :tenantId
                 AND p1.id =
             p0.discussion_prompt_id WHERE p0.tenant_id = :tenantId AND p0.id = :ref
+            """;
+    private static final String COHORT_OF_TOPIC = """
+            SELECT COALESCE(f.cohort_id, ci.cohort_id, ch.cohort_id) FROM lms.forum_topic t
+              LEFT JOIN lms.forum_section s ON s.id = t.forum_section_id AND s.tenant_id = :tenantId
+              LEFT JOIN lms.forum f ON f.id = s.forum_id AND f.tenant_id = :tenantId
+              LEFT JOIN lms.content_item ci ON ci.id = t.content_item_id AND ci.tenant_id = :tenantId
+              LEFT JOIN lms.chapter ch ON ch.id = ci.chapter_id AND ch.tenant_id = :tenantId
+             WHERE t.tenant_id = :tenantId AND t.id = :id AND t.deleted_at IS NULL
             """;
     private static final String SCOPE = """
              (:scopeAll OR r.forum_topic_id IN (SELECT p0.id FROM lms.forum_topic p0 WHERE p0.tenant_id = :tenantId
@@ -319,12 +324,19 @@ public class ForumPostRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** The cohort a topic is discussed in: its forum's, else its content item's (empty: none). */
+    public Optional<UUID> cohortOfTopic(UUID topicId) {
+        return jdbc.sql(COHORT_OF_TOPIC).param("id", topicId)
+                .query((rs, row) -> Optional.ofNullable(rs.getObject(1, UUID.class))).optional()
+                .flatMap(found -> found);
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.forum_topic_id = :parentId", Map.of("parentId", parentId));
     }

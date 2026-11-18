@@ -15,6 +15,11 @@ import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.error.ValidationFailedException;
 import com.mysms.core.outbox.AuditWriter;
 import com.mysms.core.outbox.OutboxWriter;
+import com.mysms.core.filter.FilterParser;
+import com.mysms.core.paging.Page;
+import com.mysms.core.paging.PageRequest;
+import com.mysms.core.paging.SortSpec;
+import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
 import com.mysms.core.web.UpdateMask;
@@ -34,15 +39,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.category (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of lms.category: audit and domain event commit in the same transaction as every change. Rows outside
+ * the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class CategoryService extends AppTransactionManager {
 
     public static final String AGGREGATE = CategoryEntity.TABLE;
+    static final String PERMISSION_READ = "lms.category.read";
     static final String PERMISSION_CREATE = "lms.category.create";
     static final String PERMISSION_UPDATE = "lms.category.update";
     static final String PERMISSION_DELETE = "lms.category.delete";
@@ -56,14 +60,16 @@ public class CategoryService extends AppTransactionManager {
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
+    private final PublicReads publicReads;
 
     public CategoryService(CategoryRepository repository, CategoryMapper mapper,
             @Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(LmsDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(LmsEventsConfig.OUTBOX) OutboxWriter outbox, @Qualifier(LmsEventsConfig.AUDIT) AuditWriter audit,
-            DtoValidator validator, Clock clock) {
+            DtoValidator validator, Clock clock, PublicReads publicReads) {
 
         super(database, transactions);
+        this.publicReads = publicReads;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
@@ -94,8 +100,8 @@ public class CategoryService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Category updateCategory(UUID id, String ifMatch, CategoryUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -125,6 +131,37 @@ public class CategoryService extends AppTransactionManager {
             outbox.publish(AGGREGATE + LmsEvents.UPDATED, AGGREGATE, id, LmsEvents.payload(id));
             return mapper.toDto(entity);
         });
+    }
+
+    /** A category: every category to a member holding lms.category.read, active ones only to the public. */
+    public Category getCategory(UUID id) {
+        boolean member = publicReads.asMember(PERMISSION_READ);
+        return doInReadTransaction(() -> repository.findById(id)
+                .filter(e -> member || Boolean.TRUE.equals(e.getIsActive()))
+                .map(e -> member ? mapper.toDto(e) : guestProjection(mapper.toDto(e)))
+                .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+    }
+
+    /** The tenant's categories, page by page; active ones only to the public. */
+    public Page<Category> listCategories(Integer pageNumber, Integer pageSize, String cursor, String filter,
+            List<String> sortBy) {
+        boolean member = publicReads.asMember(PERMISSION_READ);
+        SortSpec sort = SortSpec.parse(sortBy, CategoryRepository.SORT_FIELDS, CategoryRepository.DEFAULT_ORDER,
+                CategoryRepository.ID_COLUMN);
+        SqlFragment where = FilterParser.parse(filter, CategoryRepository.FILTER_FIELDS);
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+        if (member) {
+            return doInReadTransaction(() -> repository.list(page, where).map(mapper::toDto));
+        }
+        return doInReadTransaction(() -> repository.list(page, where.and(CategoryRepository.ACTIVE))
+                .map(e -> guestProjection(mapper.toDto(e))));
+    }
+
+    /** The public's view of a category: who created and changed it is internal. */
+    static Category guestProjection(Category category) {
+        category.setCreatedBy(null);
+        category.setUpdatedBy(null);
+        return category;
     }
 
     /** Soft delete under If-Match; refused while live rows of this module still reference the row. */
@@ -163,12 +200,12 @@ public class CategoryService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (none: the rows are tenant-level). */
+    /** No institution: the rows are tenant-level. */
     private Optional<UUID> institutionOf(CategoryEntity entity) {
         return Optional.empty();
     }
 
-    /** Applies the selected CategoryUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected CategoryUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(CategoryEntity entity, CategoryUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

@@ -18,10 +18,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
- * academics keeps its logical references consistent when their owners are deleted (database/logical-references.md, "Events
- * drive cleanup"; references are not checked against the owner when written). For each owner's `.deleted` event it
- * clears the referencing column or soft-deletes the referencing row, audits each changed row and announces it on its
- * own outbox, inside the event's tenant (messaging's InboxProcessor: exactly once per event).
+ * academics keeps its logical references consistent when their owners are deleted (references are not checked against
+ * the owner when written). For each owner's `.deleted` event it clears the referencing column or soft-deletes the
+ * referencing row, audits each changed row and announces it on its own outbox, inside the event's tenant (exactly once
+ * per event).
  */
 @Component
 public class AcademicsReferenceCleanup implements EventSubscriptions {

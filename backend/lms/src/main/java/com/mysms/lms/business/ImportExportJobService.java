@@ -42,10 +42,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of lms.import_export_job (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of lms.import_export_job: audit and domain event commit in the same transaction as every change.
+ * Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class ImportExportJobService extends AppTransactionManager {
@@ -121,9 +119,8 @@ public class ImportExportJobService extends AppTransactionManager {
     }
 
     /**
-     * lms.CancelImportExportJob: Cancel a pending job. The row must be visible and writable for the caller, and the
-     * step is allowed while status is pending; in any other state
-     * the answer is 409 and nothing changes.
+     * lms.CancelImportExportJob: Cancel a pending job. Allowed while status is pending, on a row the caller may see and
+     * write; otherwise 409 and nothing changes.
      */
     public ImportExportJob cancelImportExportJob(UUID id, CancelImportExportJobRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CANCEL_IMPORT_EXPORT_JOB);
@@ -164,7 +161,7 @@ public class ImportExportJobService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(ImportExportJobEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }

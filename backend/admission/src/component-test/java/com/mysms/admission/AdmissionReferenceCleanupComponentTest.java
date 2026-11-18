@@ -32,9 +32,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * admission's reference cleanup against real PostgreSQL as the non-owner application role: for every logical reference
- * of reference-cleanup.json, a row referencing an owner is cleaned up when the owner's deletion event arrives — in
- * that tenant only, once, audited and announced on the outbox.
+ * For every logical reference of reference-cleanup.json, a referencing row is cleaned up when the owner's deletion
+ * event arrives: in that tenant only, once, audited and announced on the outbox.
  */
 @SpringBootTest(classes = AdmissionApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AdmissionReferenceCleanupComponentTest {

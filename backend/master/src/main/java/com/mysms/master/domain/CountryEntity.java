@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of master.country (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of master.country. */
 @Getter
 @Setter
 @SuperBuilder

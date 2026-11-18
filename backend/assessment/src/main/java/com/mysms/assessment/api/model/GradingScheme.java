@@ -1,4 +1,4 @@
-// Owned API contract of assessment (JAVA-CODING-RULES §7); first materialized from api/openapi/assessment.yaml on 2026-11-10.
+// Owned API contract of assessment.
 package com.mysms.assessment.api.model;
 
 import java.net.URI;
@@ -116,6 +116,7 @@ public class GradingScheme {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable GradingMethodEnum gradingMethod;
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Object criteria = null;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)

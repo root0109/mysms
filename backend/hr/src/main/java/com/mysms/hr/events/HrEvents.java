@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Domain events hr publishes through its outbox: {@code <schema>.<table>.created|updated|deleted} with the row id.
- * Dependent modules keep their copies and logical references fresh from these (database/logical-references.md).
+ * Domain events hr publishes through its outbox: {@code <schema>.<table>.created|updated|deleted} with the row id;
+ * dependent modules keep their copies and references fresh from these.
  */
 public final class HrEvents {
 
@@ -22,9 +22,8 @@ public final class HrEvents {
     }
 
     /**
-     * The payload of a staff record (hr.staff)'s events: besides its id, whose record it is — login account (may be absent)
-     * and person — its institution and the row version the event reflects. iam keeps each account's and person's
-     * records from these (iam.member_record) to answer iam.GetMe; the version lets it ignore a late event.
+     * The payload of an hr.staff event: the record's login account (may be absent), person, institution and row
+     * version. iam keeps its member records from these for iam.GetMe; the version lets it ignore a late event.
      */
     public static Map<String, Object> member(UUID id, UUID userId, UUID personId, UUID institutionId, int rowVersion) {
         Map<String, Object> payload = new LinkedHashMap<>();

@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of frontoffice.visitor_log (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of frontoffice.visitor_log. */
 @Getter
 @Setter
 @SuperBuilder

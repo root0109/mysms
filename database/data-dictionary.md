@@ -1,6 +1,6 @@
 # MySMS data dictionary
 
-Every table, column and relationship in the MySMS database — 460 tables across 21 module schemas. Generated from the Flyway migrations in `migrations/` (same folder), so the two always agree.
+Every table, column and relationship in the MySMS database — 466 tables across 21 module schemas. Generated from the Flyway migrations in `migrations/` (same folder), so the two always agree.
 
 Column legend: **PK** primary key · **FK** foreign key inside the module (`→ target`, on-delete rule; *tenant-composite* = the FK also carries `tenant_id`, so the link can never cross tenants) · **logical** reference into another module — no foreign key; validated through the owner's API and listed in `logical-references.md` · **UQ** unique · **NN** not null. Partial unique indexes (business keys that ignore soft-deleted rows) and checks are listed under each table. Standard columns (`id`, `tenant_id`, audit set, `row_version`) are described once under *Conventions* in the README and listed in every table.
 
@@ -165,7 +165,7 @@ Master Data: Global, tenant-independent master tables (geography, currency) shar
 
 Platform & Tenancy: SaaS tenancy, subscription plans, shared files, tags, notes, audit trail and global settings.
 
-22 tables: [`audit_log`](#platformaudit_log), [`deletion_log`](#platformdeletion_log), [`entity_attachment`](#platformentity_attachment), [`entity_note`](#platformentity_note), [`file_object`](#platformfile_object), [`idempotency_key`](#platformidempotency_key), [`inbox_event`](#platforminbox_event), [`operation`](#platformoperation), [`outbox_event`](#platformoutbox_event), [`reserved_keyword`](#platformreserved_keyword), [`saas_plan`](#platformsaas_plan), [`sales_enquiry`](#platformsales_enquiry), [`storage_quota`](#platformstorage_quota), [`system_setting`](#platformsystem_setting), [`tag`](#platformtag), [`tag_assignment`](#platformtag_assignment), [`tenant`](#platformtenant), [`tenant_domain`](#platformtenant_domain), [`tenant_subscription`](#platformtenant_subscription), [`theme`](#platformtheme), [`theme_token`](#platformtheme_token), [`upload_policy`](#platformupload_policy)
+25 tables: [`audit_log`](#platformaudit_log), [`deletion_log`](#platformdeletion_log), [`entity_attachment`](#platformentity_attachment), [`entity_note`](#platformentity_note), [`file_object`](#platformfile_object), [`idempotency_key`](#platformidempotency_key), [`import_batch`](#platformimport_batch), [`import_job`](#platformimport_job), [`import_row_error`](#platformimport_row_error), [`inbox_event`](#platforminbox_event), [`operation`](#platformoperation), [`outbox_event`](#platformoutbox_event), [`reserved_keyword`](#platformreserved_keyword), [`saas_plan`](#platformsaas_plan), [`sales_enquiry`](#platformsales_enquiry), [`storage_quota`](#platformstorage_quota), [`system_setting`](#platformsystem_setting), [`tag`](#platformtag), [`tag_assignment`](#platformtag_assignment), [`tenant`](#platformtenant), [`tenant_domain`](#platformtenant_domain), [`tenant_subscription`](#platformtenant_subscription), [`theme`](#platformtheme), [`theme_token`](#platformtheme_token), [`upload_policy`](#platformupload_policy)
 
 <a id="platformaudit_log"></a>
 ### platform.audit_log
@@ -266,29 +266,30 @@ Platform & Tenancy: SaaS tenancy, subscription plans, shared files, tags, notes,
 | 2 | `tenant_id` | uuid | Y |  | FK → `platform.tenant` · RESTRICT |  |
 | 3 | `storage_disk` | varchar(?) | Y |  |  |  |
 | 4 | `storage_key` | text | Y |  |  |  |
-| 5 | `file_name` | varchar(?) | Y |  |  |  |
-| 6 | `original_name` | varchar(?) |  |  |  |  |
-| 7 | `mime_type` | varchar(?) |  |  |  |  |
-| 8 | `size_bytes` | int8 | Y |  |  |  |
-| 9 | `checksum_sha256` | bpchar(?) |  |  |  |  |
-| 10 | `owner_entity_type` | varchar(?) |  |  |  |  |
-| 11 | `owner_entity_id` | uuid |  |  |  |  |
-| 12 | `collection_name` | varchar(?) |  |  |  |  |
-| 13 | `sort_order` | int4 |  |  |  |  |
-| 14 | `file_kind` | varchar(?) |  |  |  |  |
-| 15 | `is_shared` | bool | Y | FALSE |  |  |
-| 16 | `processing_status` | varchar(?) | Y | 'none' |  |  |
-| 17 | `processing_attempts` | int4 | Y | 0 |  |  |
-| 18 | `processing_error` | text |  |  |  |  |
-| 19 | `created_at` | timestamptz | Y | now() |  |  |
-| 20 | `created_by` | uuid |  |  |  |  |
-| 21 | `updated_at` | timestamptz | Y | now() |  |  |
-| 22 | `updated_by` | uuid |  |  |  |  |
-| 23 | `deleted_at` | timestamptz |  |  |  |  |
-| 24 | `row_version` | int4 | Y | 0 |  |  |
-| 25 | `status` | varchar(?) | Y | 'pending' |  |  |
-| 26 | `scanned_at` | timestamptz |  |  |  |  |
-| 27 | `uploaded_by_user_id` | uuid |  |  | logical → `iam.user_account` (cross-module, no FK) |  |
+| 5 | `storage_generation` | int8 |  |  |  |  |
+| 6 | `file_name` | varchar(?) | Y |  |  |  |
+| 7 | `original_name` | varchar(?) |  |  |  |  |
+| 8 | `mime_type` | varchar(?) |  |  |  |  |
+| 9 | `size_bytes` | int8 | Y |  |  |  |
+| 10 | `checksum_sha256` | bpchar(?) |  |  |  |  |
+| 11 | `owner_entity_type` | varchar(?) |  |  |  |  |
+| 12 | `owner_entity_id` | uuid |  |  |  |  |
+| 13 | `collection_name` | varchar(?) |  |  |  |  |
+| 14 | `sort_order` | int4 |  |  |  |  |
+| 15 | `file_kind` | varchar(?) |  |  |  |  |
+| 16 | `is_shared` | bool | Y | FALSE |  |  |
+| 17 | `processing_status` | varchar(?) | Y | 'none' |  |  |
+| 18 | `processing_attempts` | int4 | Y | 0 |  |  |
+| 19 | `processing_error` | text |  |  |  |  |
+| 20 | `created_at` | timestamptz | Y | now() |  |  |
+| 21 | `created_by` | uuid |  |  |  |  |
+| 22 | `updated_at` | timestamptz | Y | now() |  |  |
+| 23 | `updated_by` | uuid |  |  |  |  |
+| 24 | `deleted_at` | timestamptz |  |  |  |  |
+| 25 | `row_version` | int4 | Y | 0 |  |  |
+| 26 | `status` | varchar(?) | Y | 'pending' |  |  |
+| 27 | `scanned_at` | timestamptz |  |  |  |  |
+| 28 | `uploaded_by_user_id` | uuid |  |  | logical → `iam.user_account` (cross-module, no FK) |  |
 
 **Uniqueness**
 
@@ -305,6 +306,7 @@ Platform & Tenancy: SaaS tenancy, subscription plans, shared files, tags, notes,
 **Relationships**
 
 - ← `platform.entity_attachment.file_id` — referenced by (1:N)
+- ← `platform.theme.logo_file_id` — referenced by (1:N)
 - ← `platform.theme.thumbnail_alt_file_id` — referenced by (1:N)
 - ← `platform.theme.thumbnail_file_id` — referenced by (1:N)
 
@@ -388,6 +390,90 @@ Platform & Tenancy: SaaS tenancy, subscription plans, shared files, tags, notes,
 **Uniqueness**
 
 - UNIQUE (`tenant_id`, `idempotency_key`)
+
+<a id="platformimport_batch"></a>
+### platform.import_batch
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `id` | uuid | Y | gen_random_uuid() | PK | Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). |
+| 2 | `tenant_id` | uuid | Y |  |  | Owning tenant (customer organisation). Row-level security key. |
+| 3 | `import_job_id` | uuid | Y |  | FK → `platform.import_job` · RESTRICT · tenant-composite | The import. |
+| 4 | `batch_number` | int4 | Y |  |  | 1-based position of the batch in the import. |
+| 5 | `module_code` | varchar(40) | Y |  |  | The module that answered (the owner of the entity type). |
+| 6 | `created_count` | int4 | Y |  |  | Rows of the batch the module created. |
+| 7 | `error_count` | int4 | Y |  |  | Row errors of the batch the module reported. |
+| 8 | `created_at` | timestamptz | Y | now() |  | Row creation time (when the answer arrived). |
+| 9 | `created_by` | uuid |  |  |  |  |
+| 10 | `updated_at` | timestamptz | Y | now() |  |  |
+| 11 | `updated_by` | uuid |  |  |  |  |
+| 12 | `deleted_at` | timestamptz |  |  |  |  |
+| 13 | `row_version` | int4 | Y | 0 |  |  |
+
+**Uniqueness**
+
+- UNIQUE (`import_job_id`, `batch_number`) — a repeated answer to a batch is ignored
+
+**Checks**
+
+- `ck_import_batch_counts`: batch_number >= 1 AND created_count >= 0 AND error_count >= 0
+
+<a id="platformimport_job"></a>
+### platform.import_job
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `id` | uuid | Y | gen_random_uuid() | PK | Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). |
+| 2 | `tenant_id` | uuid | Y |  |  | Owning tenant (customer organisation). Row-level security key. |
+| 3 | `operation_id` | uuid | Y |  | FK → `platform.operation` · RESTRICT · tenant-composite | The platform operation the import answers (one import per operation). |
+| 4 | `entity_type` | varchar(40) | Y |  |  | What is imported. |
+| 5 | `institution_id` | uuid |  |  | → `org.institution` (logical) | Target institution; NULL for tenant-level records (guardians, tenant holidays). |
+| 6 | `file_id` | uuid | Y |  | FK → `platform.file_object` · RESTRICT · tenant-composite | The uploaded CSV file. |
+| 7 | `dry_run` | bool | Y | false |  | Validated only: nothing was sent to the owning module. |
+| 8 | `row_count` | int4 | Y | 0 |  | Data rows in the file. |
+| 9 | `batch_count` | int4 | Y | 0 |  | Batches of valid rows sent to the owning module. |
+| 10 | `applied_batch_count` | int4 | Y | 0 |  | Batches the owning module has answered; the import is finished when it reaches batch_count. |
+| 11 | `created_count` | int4 | Y | 0 |  | Rows the owning module created. |
+| 12 | `error_count` | int4 | Y | 0 |  | Row errors recorded (platform.import_row_error). |
+| 13 | `created_at` | timestamptz | Y | now() |  |  |
+| 14 | `created_by` | uuid |  |  |  |  |
+| 15 | `updated_at` | timestamptz | Y | now() |  |  |
+| 16 | `updated_by` | uuid |  |  |  |  |
+| 17 | `deleted_at` | timestamptz |  |  |  |  |
+| 18 | `row_version` | int4 | Y | 0 |  |  |
+
+**Uniqueness**
+
+- UNIQUE (`id`, `tenant_id`)
+- UNIQUE (`operation_id`)
+
+**Checks**
+
+- `ck_import_job_entity_type`: entity_type IN ('students', 'guardians', 'staff', 'library_media', 'holidays', 'promotions')
+- `ck_import_job_counts`: row_count >= 0 AND batch_count >= 0 AND applied_batch_count BETWEEN 0 AND batch_count AND created_count BETWEEN 0 AND row_count AND error_count >= 0
+
+<a id="platformimport_row_error"></a>
+### platform.import_row_error
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `id` | uuid | Y | gen_random_uuid() | PK | Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). |
+| 2 | `tenant_id` | uuid | Y |  |  | Owning tenant (customer organisation). Row-level security key. |
+| 3 | `import_job_id` | uuid | Y |  | FK → `platform.import_job` · RESTRICT · tenant-composite | The import. |
+| 4 | `batch_number` | int4 |  |  |  | The batch whose module refused the row; NULL when the platform's template check did. |
+| 5 | `row_number` | int4 | Y |  |  | Record number of the row in the file (the header row is 1, as a spreadsheet numbers rows). |
+| 6 | `field` | varchar(80) |  |  |  | The column at fault; NULL for the row as a whole. |
+| 7 | `message` | varchar(500) | Y |  |  | Why the row was refused (names fields, never cell values). |
+| 8 | `created_at` | timestamptz | Y | now() |  |  |
+| 9 | `created_by` | uuid |  |  |  |  |
+| 10 | `updated_at` | timestamptz | Y | now() |  |  |
+| 11 | `updated_by` | uuid |  |  |  |  |
+| 12 | `deleted_at` | timestamptz |  |  |  |  |
+| 13 | `row_version` | int4 | Y | 0 |  |  |
+
+**Checks**
+
+- `ck_import_row_error_row`: row_number >= 1 AND (batch_number IS NULL OR batch_number >= 1)
 
 <a id="platforminbox_event"></a>
 ### platform.inbox_event
@@ -719,16 +805,19 @@ Platform & Tenancy: SaaS tenancy, subscription plans, shared files, tags, notes,
 | 4 | `description` | text |  |  |  |  |
 | 5 | `thumbnail_file_id` | uuid |  |  | FK → `platform.file_object` · SET NULL · tenant-composite |  |
 | 6 | `thumbnail_alt_file_id` | uuid |  |  | FK → `platform.file_object` · SET NULL · tenant-composite |  |
-| 7 | `created_at` | timestamptz | Y | now() |  |  |
-| 8 | `created_by` | uuid |  |  |  |  |
-| 9 | `updated_at` | timestamptz | Y | now() |  |  |
-| 10 | `updated_by` | uuid |  |  |  |  |
-| 11 | `deleted_at` | timestamptz |  |  |  |  |
-| 12 | `row_version` | int4 | Y | 0 |  |  |
+| 7 | `logo_file_id` | uuid |  |  | FK → `platform.file_object` · SET NULL · tenant-composite | Logo of the tenant's branding |
+| 8 | `is_default` | bool | Y | false |  | The tenant's own theme (public branding) |
+| 9 | `created_at` | timestamptz | Y | now() |  |  |
+| 10 | `created_by` | uuid |  |  |  |  |
+| 11 | `updated_at` | timestamptz | Y | now() |  |  |
+| 12 | `updated_by` | uuid |  |  |  |  |
+| 13 | `deleted_at` | timestamptz |  |  |  |  |
+| 14 | `row_version` | int4 | Y | 0 |  |  |
 
 **Uniqueness**
 
 - UNIQUE (`id`, `tenant_id`)
+- UNIQUE (`tenant_id`) WHERE is_default AND deleted_at IS NULL — one default theme per tenant
 
 **Relationships**
 
@@ -1478,12 +1567,15 @@ Staff and student records of login accounts and persons, kept from `hr.staff` an
 | 8 | `started_at` | timestamptz | Y | now() |  |  |
 | 9 | `last_seen_at` | timestamptz |  |  |  |  |
 | 10 | `ended_at` | timestamptz |  |  |  |  |
-| 11 | `created_at` | timestamptz | Y | now() |  |  |
-| 12 | `created_by` | uuid |  |  |  |  |
-| 13 | `updated_at` | timestamptz | Y | now() |  |  |
-| 14 | `updated_by` | uuid |  |  |  |  |
-| 15 | `deleted_at` | timestamptz |  |  |  |  |
-| 16 | `row_version` | int4 | Y | 0 |  |  |
+| 11 | `impersonator_user_id` | uuid |  |  |  | Administrator acting as the user in this session (iam.StartImpersonation); NULL for the user's own sign-in. |
+| 12 | `active_role_id` | uuid |  |  |  | Role the session works in after iam.SwitchRole; NULL = every role the user holds. |
+| 13 | `active_scope_id` | uuid |  |  |  | Scope unit of the active role's grant; NULL = every grant of the active role. |
+| 14 | `created_at` | timestamptz | Y | now() |  |  |
+| 15 | `created_by` | uuid |  |  |  |  |
+| 16 | `updated_at` | timestamptz | Y | now() |  |  |
+| 17 | `updated_by` | uuid |  |  |  |  |
+| 18 | `deleted_at` | timestamptz |  |  |  |  |
+| 19 | `row_version` | int4 | Y | 0 |  |  |
 
 ## `org` — Organisation & Calendar
 
@@ -4250,7 +4342,7 @@ Workforce / HR: Staff records, designations, departments, subject competencies, 
 
 Payroll: Pay components, salary templates, staff salary structures, payslips and salary disbursements.
 
-17 tables: [`disbursement_account`](#payrolldisbursement_account), [`idempotency_key`](#payrollidempotency_key), [`inbox_event`](#payrollinbox_event), [`number_sequence`](#payrollnumber_sequence), [`operation`](#payrolloperation), [`outbox_event`](#payrolloutbox_event), [`pay_category`](#payrollpay_category), [`pay_component`](#payrollpay_component), [`payment_type`](#payrollpayment_type), [`payroll_payment`](#payrollpayroll_payment), [`payslip`](#payrollpayslip), [`payslip_line`](#payrollpayslip_line), [`salary_template`](#payrollsalary_template), [`salary_template_component`](#payrollsalary_template_component), [`staff_bank_account`](#payrollstaff_bank_account), [`staff_salary`](#payrollstaff_salary), [`staff_salary_component`](#payrollstaff_salary_component)
+18 tables: [`disbursement_account`](#payrolldisbursement_account), [`idempotency_key`](#payrollidempotency_key), [`inbox_event`](#payrollinbox_event), [`number_sequence`](#payrollnumber_sequence), [`operation`](#payrolloperation), [`outbox_event`](#payrolloutbox_event), [`pay_category`](#payrollpay_category), [`pay_component`](#payrollpay_component), [`payment_type`](#payrollpayment_type), [`payroll_payment`](#payrollpayroll_payment), [`payslip`](#payrollpayslip), [`payslip_line`](#payrollpayslip_line), [`salary_template`](#payrollsalary_template), [`salary_template_component`](#payrollsalary_template_component), [`staff_bank_account`](#payrollstaff_bank_account), [`staff_member`](#payrollstaff_member), [`staff_salary`](#payrollstaff_salary), [`staff_salary_component`](#payrollstaff_salary_component)
 
 <a id="payrolldisbursement_account"></a>
 ### payroll.disbursement_account
@@ -4371,6 +4463,7 @@ Payroll: Pay components, salary templates, staff salary structures, payslips and
 | 18 | `updated_by` | uuid |  |  |  |  |
 | 19 | `deleted_at` | timestamptz |  |  |  |  |
 | 20 | `row_version` | int4 | Y | 0 |  |  |
+| 21 | `result` | text |  |  |  | Outcome of a finished operation as a JSON object (counts, skipped items); NULL while it runs and when it has none. |
 
 **Checks**
 
@@ -4666,6 +4759,28 @@ Payroll: Pay components, salary templates, staff salary structures, payslips and
 
 - unique index `uq_staff_bank_account_primary` (`staff_id`) WHERE is_primary AND deleted_at IS NULL
 
+<a id="payrollstaff_member"></a>
+### payroll.staff_member
+
+Login account of each staff record, kept from `hr.staff` created/updated/deleted events (payroll never reads hr's schema), so a staff member who is not a payroll officer reads only the payslips of their own staff records.
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `tenant_id` | uuid | Y |  | PK | Owning tenant. Row-level security key. |
+| 2 | `staff_id` | uuid | Y |  | PK | `hr.staff.id` (kept from its events) |
+| 3 | `user_id` | uuid |  |  |  | Login account of the staff record |
+| 4 | `is_deleted` | bool | Y | false |  | Deleted in hr; kept so a late event cannot restore it |
+| 5 | `source_version` | int4 | Y |  |  | Source row version this entry reflects; older or equal events are ignored |
+| 6 | `synced_at` | timestamptz | Y |  |  | When an event last changed the row |
+
+**Checks**
+
+- `ck_staff_member_source_version`: source_version >= 1
+
+**Indexes**
+
+- index `ix_staff_member_user` (`tenant_id`, `user_id`) WHERE NOT is_deleted AND user_id IS NOT NULL
+
 <a id="payrollstaff_salary"></a>
 ### payroll.staff_salary
 
@@ -4877,8 +4992,8 @@ Admissions: Admission cycles, fees, applications with applicant, guardian and em
 
 **Uniqueness**
 
-- UNIQUE (`institution_id`, `application_number`)
 - UNIQUE (`id`, `tenant_id`)
+- unique index `uq_application_1` (`institution_id`, `application_number`) WHERE deleted_at IS NULL
 
 **Checks**
 
@@ -8052,16 +8167,18 @@ Learning Management: Online courses (chapters, lessons, SCORM), enrolments and p
 | 7 | `file_id` | uuid |  |  | logical → `platform.file_object` (cross-module, no FK) |  |
 | 8 | `source_file_id` | uuid |  |  | logical → `platform.file_object` (cross-module, no FK) |  |
 | 9 | `conversion_job_ref` | varchar(?) |  |  |  |  |
-| 10 | `show_related_materials` | bool | Y | FALSE |  |  |
-| 11 | `related_material_seed` | text |  |  |  |  |
-| 12 | `category_id` | uuid |  |  | FK → `lms.resource_category` · SET NULL · tenant-composite |  |
-| 13 | `is_in_repository` | bool | Y | FALSE |  |  |
-| 14 | `created_at` | timestamptz | Y | now() |  |  |
-| 15 | `created_by` | uuid |  |  |  |  |
-| 16 | `updated_at` | timestamptz | Y | now() |  |  |
-| 17 | `updated_by` | uuid |  |  |  |  |
-| 18 | `deleted_at` | timestamptz |  |  |  |  |
-| 19 | `row_version` | int4 | Y | 0 |  |  |
+| 10 | `conversion_output_url` | varchar(?) |  |  |  | Converted file's URL a finished job named, until it is stored. |
+| 11 | `conversion_error` | varchar(?) |  |  |  | Why the last conversion job failed. |
+| 12 | `show_related_materials` | bool | Y | FALSE |  |  |
+| 13 | `related_material_seed` | text |  |  |  |  |
+| 14 | `category_id` | uuid |  |  | FK → `lms.resource_category` · SET NULL · tenant-composite |  |
+| 15 | `is_in_repository` | bool | Y | FALSE |  |  |
+| 16 | `created_at` | timestamptz | Y | now() |  |  |
+| 17 | `created_by` | uuid |  |  |  |  |
+| 18 | `updated_at` | timestamptz | Y | now() |  |  |
+| 19 | `updated_by` | uuid |  |  |  |  |
+| 20 | `deleted_at` | timestamptz |  |  |  |  |
+| 21 | `row_version` | int4 | Y | 0 |  |  |
 
 **Uniqueness**
 
@@ -8150,12 +8267,16 @@ Learning Management: Online courses (chapters, lessons, SCORM), enrolments and p
 | 3 | `user_id` | uuid | Y |  | logical → `iam.user_account` (cross-module, no FK) |  |
 | 4 | `unavailable_from` | date |  |  |  |  |
 | 5 | `unavailable_to` | date |  |  |  |  |
-| 6 | `created_at` | timestamptz | Y | now() |  |  |
-| 7 | `created_by` | uuid |  |  |  |  |
-| 8 | `updated_at` | timestamptz | Y | now() |  |  |
-| 9 | `updated_by` | uuid |  |  |  |  |
-| 10 | `deleted_at` | timestamptz |  |  |  |  |
-| 11 | `row_version` | int4 | Y | 0 |  |  |
+| 6 | `calendar_provider` | varchar(30) |  |  |  | Calendar provider the evaluator linked (google); NULL = none |
+| 7 | `calendar_state` | varchar(64) |  |  |  | OAuth state nonce of the newest link attempt |
+| 8 | `calendar_requested_at` | timestamptz |  |  |  | When the newest link attempt started |
+| 9 | `calendar_connected_at` | timestamptz |  |  |  | When the calendar was linked; NULL = not (yet) linked |
+| 10 | `created_at` | timestamptz | Y | now() |  |  |
+| 11 | `created_by` | uuid |  |  |  |  |
+| 12 | `updated_at` | timestamptz | Y | now() |  |  |
+| 13 | `updated_by` | uuid |  |  |  |  |
+| 14 | `deleted_at` | timestamptz |  |  |  |  |
+| 15 | `row_version` | int4 | Y | 0 |  |  |
 
 **Uniqueness**
 
@@ -9082,6 +9203,33 @@ Learning Management: Online courses (chapters, lessons, SCORM), enrolments and p
 
 - `ck_lesson_activity_1`: num_nonnulls(quiz_id, assignment_id, exercise_id) = 1
 
+<a id="lmslesson_note"></a>
+### lms.lesson_note
+
+A student's own highlight or note on a lesson; private to its writer (lms.ListLessonNotes and the other note
+operations answer the writer's rows only).
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `id` | uuid | Y | gen_random_uuid() | PK |  |
+| 2 | `tenant_id` | uuid | Y |  |  |  |
+| 3 | `lesson_id` | uuid | Y |  | FK → `lms.lesson` · CASCADE · tenant-composite |  |
+| 4 | `user_id` | uuid | Y |  | logical → `iam.user_account` (cross-module, no FK) | Writer |
+| 5 | `color` | varchar(20) | Y | 'yellow' |  | red, blue, green, yellow, purple |
+| 6 | `highlighted_text` | text |  |  |  |  |
+| 7 | `note` | text |  |  |  |  |
+| 8 | `created_at` | timestamptz | Y | now() |  |  |
+| 9 | `created_by` | uuid |  |  |  |  |
+| 10 | `updated_at` | timestamptz | Y | now() |  |  |
+| 11 | `updated_by` | uuid |  |  |  |  |
+| 12 | `deleted_at` | timestamptz |  |  |  |  |
+| 13 | `row_version` | int4 | Y | 0 |  |  |
+
+**Checks**
+
+- `ck_lesson_note_color`: color IN ('red', 'blue', 'green', 'yellow', 'purple')
+- `ck_lesson_note_1`: highlighted_text IS NOT NULL OR note IS NOT NULL
+
 <a id="lmslesson_progress"></a>
 ### lms.lesson_progress
 
@@ -9279,6 +9427,7 @@ Learning Management: Online courses (chapters, lessons, SCORM), enrolments and p
 | 18 | `updated_by` | uuid |  |  |  |  |
 | 19 | `deleted_at` | timestamptz |  |  |  |  |
 | 20 | `row_version` | int4 | Y | 0 |  |  |
+| 21 | `result` | text |  |  |  | Outcome of a finished operation as a JSON object (counts, skipped items); NULL while it runs and when it has none. |
 
 **Checks**
 
@@ -9451,6 +9600,8 @@ Learning Management: Online courses (chapters, lessons, SCORM), enrolments and p
 | 23 | `updated_by` | uuid |  |  |  |  |
 | 24 | `deleted_at` | timestamptz |  |  |  |  |
 | 25 | `row_version` | int4 | Y | 0 |  |  |
+| 26 | `entity_type` | varchar(?) |  |  |  | Kind of record the checked attachment belongs to; decides who may open the report |
+| 27 | `entity_id` | uuid |  |  | logical → the lms record named by `entity_type` (no FK) |  |
 
 **Checks**
 
@@ -9958,6 +10109,8 @@ Learning Management: Online courses (chapters, lessons, SCORM), enrolments and p
 | 28 | `deleted_at` | timestamptz |  |  |  |  |
 | 29 | `row_version` | int4 | Y | 0 |  |  |
 | 30 | `attempt_number` | int4 | Y | 1 |  |  |
+| 31 | `resumed_at` | timestamptz |  |  |  | When the running attempt last started or resumed (its timer runs from here; NULL: from started_at). |
+| 32 | `last_client_sequence` | int8 |  |  |  | Highest client sequence of the autosaves kept; a save with a lower or equal sequence is ignored as stale. |
 
 **Uniqueness**
 
@@ -11234,12 +11387,13 @@ Fees & Payments: Fee heads, fee plans with installments, student dues, invoices,
 | 12 | `started_by_user_id` | uuid |  |  |  |  |
 | 13 | `started_at` | timestamptz | Y | now() |  |  |
 | 14 | `finished_at` | timestamptz |  |  |  |  |
-| 15 | `created_at` | timestamptz | Y | now() |  |  |
-| 16 | `created_by` | uuid |  |  |  |  |
-| 17 | `updated_at` | timestamptz | Y | now() |  |  |
-| 18 | `updated_by` | uuid |  |  |  |  |
-| 19 | `deleted_at` | timestamptz |  |  |  |  |
-| 20 | `row_version` | int4 | Y | 0 |  |  |
+| 15 | `result` | text |  |  |  | Outcome of a finished operation as a JSON object (counts, skipped items). |
+| 16 | `created_at` | timestamptz | Y | now() |  |  |
+| 17 | `created_by` | uuid |  |  |  |  |
+| 18 | `updated_at` | timestamptz | Y | now() |  |  |
+| 19 | `updated_by` | uuid |  |  |  |  |
+| 20 | `deleted_at` | timestamptz |  |  |  |  |
+| 21 | `row_version` | int4 | Y | 0 |  |  |
 
 **Checks**
 
@@ -11307,6 +11461,8 @@ Fees & Payments: Fee heads, fee plans with installments, student dues, invoices,
 | 40 | `bank_name` | varchar(?) |  |  |  |  |
 | 41 | `gateway_account_id` | uuid |  |  | FK → `finance.payment_gateway_account` · RESTRICT · tenant-composite |  |
 | 42 | `received_by_user_id` | uuid |  |  | logical → `iam.user_account` (cross-module, no FK) |  |
+| 43 | `gateway_currency` | varchar(?) |  |  |  | ISO code of the order opened at the gateway. |
+| 44 | `gateway_amount_minor` | int8 |  |  |  | Order amount at the gateway, in minor units. |
 
 **Uniqueness**
 
@@ -11317,7 +11473,7 @@ Fees & Payments: Fee heads, fee plans with installments, student dues, invoices,
 
 **Checks**
 
-- `ck_payment_purpose`: purpose IN ('invoice', 'lms_course', 'lms_cohort', 'lms_certificate', 'admission')
+- `ck_payment_purpose`: purpose IN ('invoice', 'fees', 'lms_course', 'lms_cohort', 'lms_certificate', 'admission')
 - `ck_payment_amount_rule`: amount >= 0
 - `ck_payment_status`: status IN ('initiated', 'received', 'failed', 'refunded')
 - `ck_payment_2`: purpose NOT IN ('lms_course', 'lms_certificate') OR lms_course_id IS NOT NULL
@@ -11435,16 +11591,18 @@ Fees & Payments: Fee heads, fee plans with installments, student dues, invoices,
 | 8 | `refund_method` | varchar(?) | Y | 'gateway' |  |  |
 | 9 | `refunded_by_user_id` | uuid |  |  | logical → `iam.user_account` (cross-module, no FK) |  |
 | 10 | `refunded_at` | timestamptz |  |  |  |  |
-| 11 | `created_at` | timestamptz | Y | now() |  |  |
-| 12 | `created_by` | uuid |  |  |  |  |
-| 13 | `updated_at` | timestamptz | Y | now() |  |  |
-| 14 | `updated_by` | uuid |  |  |  |  |
-| 15 | `deleted_at` | timestamptz |  |  |  |  |
-| 16 | `row_version` | int4 | Y | 0 |  |  |
+| 11 | `request_key` | uuid |  |  |  | Idempotency-Key of the request that opened the refund. |
+| 12 | `created_at` | timestamptz | Y | now() |  |  |
+| 13 | `created_by` | uuid |  |  |  |  |
+| 14 | `updated_at` | timestamptz | Y | now() |  |  |
+| 15 | `updated_by` | uuid |  |  |  |  |
+| 16 | `deleted_at` | timestamptz |  |  |  |  |
+| 17 | `row_version` | int4 | Y | 0 |  |  |
 
 **Uniqueness**
 
 - unique index `uq_refund_gateway` (`tenant_id`, `gateway_refund_id`) WHERE gateway_refund_id IS NOT NULL
+- unique index `uq_refund_request` (`tenant_id`, `payment_id`, `request_key`) WHERE request_key IS NOT NULL
 
 **Checks**
 

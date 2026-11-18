@@ -93,6 +93,12 @@ COMMENT ON COLUMN timetable.session.updated_at IS 'Last update time.';
 COMMENT ON COLUMN timetable.session.updated_by IS 'User account that last updated the row (audit reference to iam.user_account; not FK-constrained).';
 COMMENT ON COLUMN timetable.session.deleted_at IS 'Soft-delete marker; NULL = live row.';
 COMMENT ON COLUMN timetable.session.row_version IS 'Optimistic-locking version.';
+-- timetable.GetTimetable reads the sessions of one teacher, class, batch or room over a range of days, in start order:
+-- each index leads with the subject of the view and ends with the start, so a week is one short index range.
+CREATE INDEX ix_session_staff_start ON timetable.session (tenant_id, staff_id, start_at) WHERE deleted_at IS NULL AND staff_id IS NOT NULL;
+CREATE INDEX ix_session_class_section_start ON timetable.session (tenant_id, class_section_id, start_at) WHERE deleted_at IS NULL AND class_section_id IS NOT NULL;
+CREATE INDEX ix_session_batch_start ON timetable.session (tenant_id, batch_id, start_at) WHERE deleted_at IS NULL AND batch_id IS NOT NULL;
+CREATE INDEX ix_session_room_start ON timetable.session (tenant_id, room_id, start_at) WHERE deleted_at IS NULL AND room_id IS NOT NULL;
 
 CREATE TABLE timetable.session_student (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -140,6 +146,7 @@ CREATE TABLE timetable.outbox_event (
     payload text NOT NULL,
     occurred_at timestamptz NOT NULL DEFAULT now(),
     published_at timestamptz,
+    publish_error text,
     CONSTRAINT pk_timetable_outbox_event PRIMARY KEY (id)
 );
 COMMENT ON TABLE timetable.outbox_event IS 'Transactional outbox of the timetable module: events written in the same transaction as the change, published to the bus by a relay, then pruned. Ordered by the identity column.';
@@ -151,7 +158,8 @@ COMMENT ON COLUMN timetable.outbox_event.aggregate_id IS 'Entity id the event is
 COMMENT ON COLUMN timetable.outbox_event.payload IS 'Serialised event (opaque message envelope).';
 COMMENT ON COLUMN timetable.outbox_event.occurred_at IS 'When the change committed.';
 COMMENT ON COLUMN timetable.outbox_event.published_at IS 'When the relay published it (NULL = pending).';
-CREATE INDEX ix_timetable_outbox_event_pending ON timetable.outbox_event (id) WHERE published_at IS NULL;
+COMMENT ON COLUMN timetable.outbox_event.publish_error IS 'Why the relay could not turn the row into an event (set aside, not published); NULL otherwise.';
+CREATE INDEX ix_timetable_outbox_event_pending ON timetable.outbox_event (id) WHERE published_at IS NULL AND publish_error IS NULL;
 CREATE TABLE timetable.inbox_event (
     event_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
@@ -159,15 +167,16 @@ CREATE TABLE timetable.inbox_event (
     received_at timestamptz NOT NULL DEFAULT now(),
     processed_at timestamptz,
     processing_error text,
-    CONSTRAINT pk_timetable_inbox_event PRIMARY KEY (event_id)
+    CONSTRAINT pk_timetable_inbox_event PRIMARY KEY (tenant_id, event_id)
 );
 COMMENT ON TABLE timetable.inbox_event IS 'Inbox of the timetable module: ids of consumed events, kept so redeliveries are processed exactly once.';
-COMMENT ON COLUMN timetable.inbox_event.event_id IS 'Global id of the consumed event.';
+COMMENT ON COLUMN timetable.inbox_event.event_id IS 'Global id of the consumed event; recorded per tenant.';
 COMMENT ON COLUMN timetable.inbox_event.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
 COMMENT ON COLUMN timetable.inbox_event.event_type IS 'Event name.';
 COMMENT ON COLUMN timetable.inbox_event.received_at IS 'First delivery time.';
 COMMENT ON COLUMN timetable.inbox_event.processed_at IS 'When handling committed (NULL = in flight).';
 COMMENT ON COLUMN timetable.inbox_event.processing_error IS 'Last handling error, if any.';
+CREATE INDEX ix_timetable_inbox_event_processed ON timetable.inbox_event (processed_at) WHERE processed_at IS NOT NULL;
 
 -- === P1-15: business uniqueness ignores soft-deleted rows ===
 

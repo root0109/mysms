@@ -1,6 +1,7 @@
 package com.mysms.lms.business;
 
 import com.mysms.authclient.DataScope;
+import com.mysms.authclient.AuthContext;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.AppTransactionManager;
@@ -23,6 +24,7 @@ import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
 import com.mysms.core.web.UpdateMask;
 import com.mysms.lms.api.model.Cohort;
+import com.mysms.lms.api.model.DownloadLink;
 import com.mysms.lms.api.model.CohortCourse;
 import com.mysms.lms.api.model.CohortCourseUpdate;
 import com.mysms.lms.api.model.CohortFeedback;
@@ -42,6 +44,7 @@ import com.mysms.lms.api.model.Forum;
 import com.mysms.lms.api.model.ForumUpdate;
 import com.mysms.lms.api.model.PlagiarismCohortLink;
 import com.mysms.lms.api.model.PlagiarismCohortLinkUpdate;
+import com.mysms.lms.api.model.UnreadCounts;
 import com.mysms.lms.config.LmsDatabaseConfig;
 import com.mysms.lms.config.LmsEventsConfig;
 import com.mysms.lms.domain.CohortCourseEntity;
@@ -75,24 +78,46 @@ import com.mysms.lms.repository.CohortSessionRepository;
 import com.mysms.lms.repository.CohortTeacherRepository;
 import com.mysms.lms.repository.ForumRepository;
 import com.mysms.lms.repository.PlagiarismCohortLinkRepository;
+import com.mysms.lms.repository.LearningActivityRepository;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import com.mysms.lms.api.model.CohortActivity;
+import com.mysms.lms.api.model.CohortActivityUpdate;
+import com.mysms.lms.domain.ContentItemEntity;
+import com.mysms.lms.mapper.CohortActivityMapper;
+import com.mysms.lms.repository.ContentItemRepository;
+import com.mysms.lms.repository.CohortActivityRepository;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.Objects;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+import com.mysms.core.error.ConflictException;
+import com.mysms.core.id.UuidV7;
+import com.mysms.lms.api.model.ChapterList;
+import com.mysms.lms.mapper.ChapterMapper;
+import com.mysms.lms.repository.ChapterRepository;
+import com.mysms.lms.repository.CohortOutlineRepository;
+import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 /**
- * Business service of lms.cohort (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Cohort
- * are served here too — CohortCourse, CohortFeedback, CohortGroup, CohortHoliday, CohortScheduleSlot, CohortSession,
- * CohortTeacher, Forum, PlagiarismCohortLink.
+ * Business service of lms.cohort and of the records that exist only as part of a Cohort (CohortCourse, CohortFeedback,
+ * CohortGroup, CohortHoliday, CohortScheduleSlot, CohortSession, CohortTeacher, Forum, PlagiarismCohortLink): audit and
+ * domain event commit in the same transaction as every change. Rows outside the caller's institutions are invisible;
+ * tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class CohortService extends AppTransactionManager {
@@ -128,7 +153,7 @@ public class CohortService extends AppTransactionManager {
     static final String COHORT_FEEDBACK_PERMISSION_UPDATE = "lms.cohort_feedback.update";
     static final String COHORT_FEEDBACK_PERMISSION_DELETE = "lms.cohort_feedback.delete";
     /** The contract's CohortFeedbackUpdate fields, in apply order. */
-    static final List<String> COHORT_FEEDBACK_WRITABLE = List.of("userId", "feedback", "contentRating", "teacherRating",
+    static final List<String> COHORT_FEEDBACK_WRITABLE = List.of("feedback", "contentRating", "teacherRating",
             "valueRating");
 
     public static final String COHORT_GROUP_AGGREGATE = CohortGroupEntity.TABLE;
@@ -225,6 +250,16 @@ public class CohortService extends AppTransactionManager {
     private final ForumMapper forumMapper;
     private final PlagiarismCohortLinkRepository plagiarismCohortLinkRepository;
     private final PlagiarismCohortLinkMapper plagiarismCohortLinkMapper;
+    private final CohortAccess access;
+    private final ContentItemRepository contentItemRepository;
+    private final CohortActivityRepository cohortActivityRepository;
+    private final CohortActivityMapper cohortActivityMapper;
+    private final CohortOutlineRepository outlineRepository;
+    private final PlatformFiles files;
+    private final ChapterRepository chapterRepository;
+    private final ChapterMapper chapterMapper;
+    private final LearningActivityRepository activity;
+    private final PublicReads publicReads;
 
     public CohortService(CohortRepository repository,
             CohortMapper mapper,
@@ -251,8 +286,22 @@ public class CohortService extends AppTransactionManager {
             ForumRepository forumRepository,
             ForumMapper forumMapper,
             PlagiarismCohortLinkRepository plagiarismCohortLinkRepository,
-            PlagiarismCohortLinkMapper plagiarismCohortLinkMapper) {
+            PlagiarismCohortLinkMapper plagiarismCohortLinkMapper,
+            CohortAccess access,
+            ContentItemRepository contentItemRepository,
+            CohortActivityRepository cohortActivityRepository,
+            CohortActivityMapper cohortActivityMapper,
+            CohortOutlineRepository outlineRepository,
+            PlatformFiles files,
+            ChapterRepository chapterRepository,
+            ChapterMapper chapterMapper,
+            LearningActivityRepository activity, PublicReads publicReads) {
         super(database, transactions);
+        this.publicReads = publicReads;
+        this.outlineRepository = outlineRepository;
+        this.files = files;
+        this.chapterRepository = chapterRepository;
+        this.chapterMapper = chapterMapper;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
@@ -277,6 +326,11 @@ public class CohortService extends AppTransactionManager {
         this.forumMapper = forumMapper;
         this.plagiarismCohortLinkRepository = plagiarismCohortLinkRepository;
         this.plagiarismCohortLinkMapper = plagiarismCohortLinkMapper;
+        this.access = access;
+        this.contentItemRepository = contentItemRepository;
+        this.cohortActivityRepository = cohortActivityRepository;
+        this.cohortActivityMapper = cohortActivityMapper;
+        this.activity = activity;
     }
 
     /** Creates the row; with validateOnly every check runs and nothing is written. */
@@ -307,8 +361,8 @@ public class CohortService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Cohort updateCohort(UUID id, String ifMatch, CohortUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
@@ -501,12 +555,12 @@ public class CohortService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(CohortEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected CohortUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected CohortUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(CohortEntity entity, CohortUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -681,8 +735,8 @@ public class CohortService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CohortCourse updateCohortCourse(UUID cohortId, UUID id, String ifMatch, CohortCourseUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -743,14 +797,12 @@ public class CohortService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.cohort it belongs to). */
+    /** The institution of the lms.cohort the row belongs to. */
     private Optional<UUID> institutionOfCohortCourse(CohortCourseEntity entity) {
         return cohortCourseRepository.institutionOf(entity.getCohortId());
     }
 
-    /**
-     * Applies the selected CohortCourseUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected CohortCourseUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCohortCourse(CohortCourseEntity entity, CohortCourseUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -819,6 +871,7 @@ public class CohortService extends AppTransactionManager {
     public CohortFeedback createCohortFeedback(UUID cohortId, CohortFeedback request, boolean validateOnly) {
         validator.validate(request);
         CohortFeedbackEntity entity = cohortFeedbackMapper.toEntity(request);
+        entity.setUserId(OwnRows.caller());
         entity.setCohortId(cohortId);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
@@ -845,8 +898,8 @@ public class CohortService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CohortFeedback updateCohortFeedback(UUID cohortId, UUID id, String ifMatch, CohortFeedbackUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -855,6 +908,7 @@ public class CohortService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(COHORT_FEEDBACK_PERMISSION_UPDATE);
             CohortFeedbackEntity entity = loadVisibleCohortFeedback(scope, cohortId, id);
+            OwnRows.require(entity.getUserId(), COHORT_FEEDBACK_AGGREGATE, id);
             scope.requireWritable(institutionOfCohortFeedback(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -884,6 +938,7 @@ public class CohortService extends AppTransactionManager {
         runInWriteTransaction(() -> {
             DataScope scope = DataScope.current(COHORT_FEEDBACK_PERMISSION_DELETE);
             CohortFeedbackEntity entity = loadVisibleCohortFeedback(scope, cohortId, id);
+            OwnRows.require(entity.getUserId(), COHORT_FEEDBACK_AGGREGATE, id);
             scope.requireWritable(institutionOfCohortFeedback(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -907,18 +962,15 @@ public class CohortService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.cohort it belongs to). */
+    /** The institution of the lms.cohort the row belongs to. */
     private Optional<UUID> institutionOfCohortFeedback(CohortFeedbackEntity entity) {
         return cohortFeedbackRepository.institutionOf(entity.getCohortId());
     }
 
-    /**
-     * Applies the selected CohortFeedbackUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected CohortFeedbackUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCohortFeedback(CohortFeedbackEntity entity, CohortFeedbackUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
-                case "userId" -> entity.setUserId(changes.getUserId());
                 case "feedback" -> entity.setFeedback(changes.getFeedback());
                 case "contentRating" -> entity.setContentRating(WireValues.decimal(changes.getContentRating()));
                 case "teacherRating" -> entity.setTeacherRating(WireValues.decimal(changes.getTeacherRating()));
@@ -1010,8 +1062,8 @@ public class CohortService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CohortGroup updateCohortGroup(UUID cohortId, UUID id, String ifMatch, CohortGroupUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -1076,12 +1128,12 @@ public class CohortService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.cohort it belongs to). */
+    /** The institution of the lms.cohort the row belongs to. */
     private Optional<UUID> institutionOfCohortGroup(CohortGroupEntity entity) {
         return cohortGroupRepository.institutionOf(entity.getCohortId());
     }
 
-    /** Applies the selected CohortGroupUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected CohortGroupUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCohortGroup(CohortGroupEntity entity, CohortGroupUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -1173,8 +1225,8 @@ public class CohortService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CohortHoliday updateCohortHoliday(UUID cohortId, UUID id, String ifMatch, CohortHolidayUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -1235,14 +1287,12 @@ public class CohortService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.cohort it belongs to). */
+    /** The institution of the lms.cohort the row belongs to. */
     private Optional<UUID> institutionOfCohortHoliday(CohortHolidayEntity entity) {
         return cohortHolidayRepository.institutionOf(entity.getCohortId());
     }
 
-    /**
-     * Applies the selected CohortHolidayUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected CohortHolidayUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCohortHoliday(CohortHolidayEntity entity, CohortHolidayUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -1348,8 +1398,8 @@ public class CohortService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CohortScheduleSlot updateCohortScheduleSlot(UUID cohortId, UUID id, String ifMatch,
             CohortScheduleSlotUpdate changes, String updateMask, boolean validateOnly) {
@@ -1418,15 +1468,12 @@ public class CohortService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.cohort it belongs to). */
+    /** The institution of the lms.cohort the row belongs to. */
     private Optional<UUID> institutionOfCohortScheduleSlot(CohortScheduleSlotEntity entity) {
         return cohortScheduleSlotRepository.institutionOf(entity.getCohortId());
     }
 
-    /**
-     * Applies the selected CohortScheduleSlotUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected CohortScheduleSlotUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCohortScheduleSlot(CohortScheduleSlotEntity entity, CohortScheduleSlotUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -1532,8 +1579,8 @@ public class CohortService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CohortSession updateCohortSession(UUID cohortId, UUID id, String ifMatch, CohortSessionUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -1594,14 +1641,12 @@ public class CohortService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.cohort it belongs to). */
+    /** The institution of the lms.cohort the row belongs to. */
     private Optional<UUID> institutionOfCohortSession(CohortSessionEntity entity) {
         return cohortSessionRepository.institutionOf(entity.getCohortId());
     }
 
-    /**
-     * Applies the selected CohortSessionUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected CohortSessionUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCohortSession(CohortSessionEntity entity, CohortSessionUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -1696,8 +1741,8 @@ public class CohortService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public CohortTeacher updateCohortTeacher(UUID cohortId, UUID id, String ifMatch, CohortTeacherUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -1762,14 +1807,12 @@ public class CohortService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.cohort it belongs to). */
+    /** The institution of the lms.cohort the row belongs to. */
     private Optional<UUID> institutionOfCohortTeacher(CohortTeacherEntity entity) {
         return cohortTeacherRepository.institutionOf(entity.getCohortId());
     }
 
-    /**
-     * Applies the selected CohortTeacherUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected CohortTeacherUpdate fields; explicit per field so a mask can clear values. */
     private static void applyCohortTeacher(CohortTeacherEntity entity, CohortTeacherUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -1865,8 +1908,8 @@ public class CohortService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Forum updateForum(UUID cohortId, UUID id, String ifMatch, ForumUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -1930,12 +1973,12 @@ public class CohortService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.cohort it belongs to). */
+    /** The institution of the lms.cohort the row belongs to. */
     private Optional<UUID> institutionOfForum(ForumEntity entity) {
         return forumRepository.institutionOf(entity.getCohortId());
     }
 
-    /** Applies the selected ForumUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected ForumUpdate fields; explicit per field so a mask can clear values. */
     private static void applyForum(ForumEntity entity, ForumUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -2027,8 +2070,8 @@ public class CohortService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public PlagiarismCohortLink updatePlagiarismCohortLink(UUID cohortId, UUID id, String ifMatch,
             PlagiarismCohortLinkUpdate changes, String updateMask, boolean validateOnly) {
@@ -2091,15 +2134,12 @@ public class CohortService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.cohort it belongs to). */
+    /** The institution of the lms.cohort the row belongs to. */
     private Optional<UUID> institutionOfPlagiarismCohortLink(PlagiarismCohortLinkEntity entity) {
         return plagiarismCohortLinkRepository.institutionOf(entity.getCohortId());
     }
 
-    /**
-     * Applies the selected PlagiarismCohortLinkUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected PlagiarismCohortLinkUpdate fields; explicit per field so a mask can clear values. */
     private static void applyPlagiarismCohortLink(PlagiarismCohortLinkEntity entity, PlagiarismCohortLinkUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -2164,5 +2204,534 @@ public class CohortService extends AppTransactionManager {
             throw new DuplicateResourceException(
                     "A plagiarism cohort link with the same cohort id and plagiarism account id already exists.");
         }
+    }
+
+    // ---- Cohort: reads for members, the workflow steps and the student access window ----
+
+    static final String PERMISSION_READ = "lms.cohort.read";
+    static final String PERMISSION_PUBLISH = "lms.cohort.publish_cohort";
+    static final String PERMISSION_UNPUBLISH = "lms.cohort.unpublish_cohort";
+    static final String PERMISSION_ACTIVATE = "lms.cohort.activate_cohort";
+    static final String PERMISSION_DEACTIVATE = "lms.cohort.deactivate_cohort";
+    static final String PERMISSION_ARCHIVE = "lms.cohort.archive_cohort";
+    static final String PERMISSION_SET_STUDENT_ACCESS = "lms.cohort.set_student_access";
+    static final String COHORT_COURSE_PERMISSION_LIST = "lms.cohort_course.read";
+    /** Fields the guest projections leave out, so the public cannot filter on them either. */
+    static final Set<String> COHORT_GUEST_HIDDEN = Set.of("createdBy", "updatedBy", "externalRef", "customScript",
+            "conferencingAccountId", "confirmationTemplateId", "publishNotificationSent");
+    static final Set<String> COHORT_COURSE_GUEST_HIDDEN = Set.of("evaluatorId", "createdBy", "updatedBy");
+    private static final String STATE_REFUSED = "The cohort cannot be changed this way in its current state.";
+    private static final String ROW_CHANGED = "The cohort changed since it was read; read it again.";
+
+    /**
+     * lms.GetCohort: for a member holding lms.cohort.read the cohort as they may see it (a hidden draft is 404); for
+     * the public an open cohort ({@link #openToGuests}) in the guest projection.
+     */
+    public Cohort getCohort(UUID id) {
+        if (publicReads.asMember(PERMISSION_READ)) {
+            return doInReadTransaction(() -> mapper.toDto(access.visible(id, PERMISSION_READ)));
+        }
+        return doInReadTransaction(() -> guestProjection(mapper.toDto(openCohort(id))));
+    }
+
+    /** A cohort the public may see: published, open for self-enrolment and not ended (404 otherwise). */
+    private CohortEntity openCohort(UUID id) {
+        LocalDate today = LocalDate.now(clock);
+        return repository.findById(id).filter(c -> Boolean.TRUE.equals(c.getIsPublished())
+                && Boolean.TRUE.equals(c.getAllowSelfEnrollment()) && !c.getEndDate().isBefore(today))
+                .orElseThrow(() -> new ResourceNotFoundException(CohortAccess.COHORT, id));
+    }
+
+    /** The public's view of a cohort: its page, not its internal references. */
+    static Cohort guestProjection(Cohort cohort) {
+        cohort.setCreatedBy(null);
+        cohort.setUpdatedBy(null);
+        cohort.setExternalRef(null);
+        cohort.setCustomScript(null);
+        cohort.setConferencingAccountId(null);
+        cohort.setConfirmationTemplateId(null);
+        cohort.setPublishNotificationSent(null);
+        return cohort;
+    }
+
+    /**
+     * lms.ListCohorts, member path: the cohorts of the caller's read scope that are theirs to see — every cohort where
+     * they manage cohorts, elsewhere published cohorts and the ones they teach or study in.
+     */
+    public Page<Cohort> listCohorts(Integer pageNumber, Integer pageSize, String cursor, String filter,
+            List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, CohortRepository.SORT_FIELDS, CohortRepository.DEFAULT_ORDER,
+                CohortRepository.ID_COLUMN);
+        if (!publicReads.asMember(PERMISSION_READ)) {
+            SqlFragment open = FilterParser.parse(filter, PublicReads.guestFields(CohortRepository.FILTER_FIELDS,
+                    COHORT_GUEST_HIDDEN)).and(CohortRepository.openToGuests(LocalDate.now(clock)));
+            PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+            return doInReadTransaction(() -> repository.list(page, open).map(mapper::toDto)
+                    .map(CohortService::guestProjection));
+        }
+        AuthContext caller = CohortAccess.member();
+        DataScope manage = caller.hasPermission(PERMISSION_UPDATE) ? DataScope.of(caller, PERMISSION_UPDATE)
+                : new DataScope(false, Set.of(), false);
+        SqlFragment where = FilterParser.parse(filter, CohortRepository.FILTER_FIELDS)
+                .and(CohortRepository.scope(DataScope.of(caller, PERMISSION_READ)))
+                .and(CohortRepository.visibleToMember(manage, caller.userId()));
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+        return doInReadTransaction(() -> repository.list(page, where).map(mapper::toDto));
+    }
+
+    /**
+     * lms.ListCohortCourses: the courses of a cohort the member may see; for the public the published courses of an
+     * open cohort, without who arranged them.
+     */
+    public Page<CohortCourse> listCohortCourses(UUID cohortId, Integer pageNumber, Integer pageSize, String cursor,
+            String filter, List<String> sortBy) {
+        boolean member = publicReads.asMember(COHORT_COURSE_PERMISSION_LIST);
+        SortSpec sort = SortSpec.parse(sortBy, CohortCourseRepository.SORT_FIELDS, CohortCourseRepository.DEFAULT_ORDER,
+                CohortCourseRepository.ID_COLUMN);
+        SqlFragment where = FilterParser.parse(filter, CohortCourseRepository.FILTER_FIELDS)
+                .and(CohortCourseRepository.ofParent(cohortId));
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + cohortId, clock);
+        if (!member) {
+            SqlFragment open = FilterParser.parse(filter, PublicReads.guestFields(
+                    CohortCourseRepository.FILTER_FIELDS, COHORT_COURSE_GUEST_HIDDEN))
+                    .and(CohortCourseRepository.ofParent(cohortId)).and(CohortCourseRepository.PUBLISHED_COURSE);
+            return doInReadTransaction(() -> {
+                openCohort(cohortId);
+                return cohortCourseRepository.list(page, open).map(cohortCourseMapper::toDto).map(course -> {
+                    course.setEvaluatorId(null);
+                    course.setCreatedBy(null);
+                    course.setUpdatedBy(null);
+                    return course;
+                });
+            });
+        }
+        return doInReadTransaction(() -> {
+            access.visible(cohortId, COHORT_COURSE_PERMISSION_LIST);
+            return cohortCourseRepository.list(page, where).map(cohortCourseMapper::toDto);
+        });
+    }
+
+    /** lms.PublishCohort: into the catalogue; allowed while unpublished and neither suspended, completed nor archived. */
+    public Cohort publishCohort(UUID id, String etag) {
+        return step(id, etag, PERMISSION_PUBLISH, "publish", List.of("isPublished"), null,
+                row -> !Boolean.TRUE.equals(row.getIsPublished())
+                        && List.of("draft", "active").contains(row.getLifecycleStatus()),
+                (row, now, actor) -> repository.publish(id, row.getRowVersion(), now, actor));
+    }
+
+    /** lms.UnpublishCohort: out of the catalogue; allowed while published. */
+    public Cohort unpublishCohort(UUID id, String etag) {
+        return step(id, etag, PERMISSION_UNPUBLISH, "unpublish", List.of("isPublished"), null,
+                row -> Boolean.TRUE.equals(row.getIsPublished()),
+                (row, now, actor) -> repository.unpublish(id, row.getRowVersion(), now, actor));
+    }
+
+    /** lms.ActivateCohort: opens the cohort to its members; allowed from draft or suspended. */
+    public Cohort activateCohort(UUID id, String etag) {
+        return step(id, etag, PERMISSION_ACTIVATE, "activate", List.of("lifecycleStatus"), null,
+                row -> List.of("draft", "suspended").contains(row.getLifecycleStatus()),
+                (row, now, actor) -> repository.setLifecycle(id, row.getRowVersion(), "active", now, actor));
+    }
+
+    /** lms.DeactivateCohort: suspends an active cohort; the reason is kept with the audit record. */
+    public Cohort deactivateCohort(UUID id, String etag, String reason) {
+        return step(id, etag, PERMISSION_DEACTIVATE, "deactivate", List.of("lifecycleStatus"), reason,
+                row -> "active".equals(row.getLifecycleStatus()),
+                (row, now, actor) -> repository.setLifecycle(id, row.getRowVersion(), "suspended", now, actor));
+    }
+
+    /** lms.ArchiveCohort: a finished cohort becomes read-only and leaves the catalogue; allowed unless draft. */
+    public Cohort archiveCohort(UUID id, String etag) {
+        return step(id, etag, PERMISSION_ARCHIVE, "archive", List.of("lifecycleStatus", "isPublished"), null,
+                row -> List.of("active", "suspended", "completed").contains(row.getLifecycleStatus()),
+                (row, now, actor) -> repository.archive(id, row.getRowVersion(), now, actor));
+    }
+
+    /**
+     * lms.SetStudentAccess: the window in which students reach the cohort (either end may be left open). The window
+     * must not end before it starts (422), and an archived cohort is read-only (409).
+     */
+    public Cohort setStudentAccess(UUID id, OffsetDateTime from, OffsetDateTime until) {
+        if (from != null && until != null && until.isBefore(from)) {
+            throw new ValidationFailedException(List.of(new FieldError("studentAccessUntil",
+                    "must not be before studentAccessFrom", "INVALID_RANGE")));
+        }
+        return step(id, null, PERMISSION_SET_STUDENT_ACCESS, "set_student_access",
+                List.of("studentAccessFrom", "studentAccessUntil"), null,
+                row -> !"archived".equals(row.getLifecycleStatus()),
+                (row, now, actor) -> repository.setStudentAccess(id, row.getRowVersion(), from, until, now, actor));
+    }
+
+    /** One guarded UPDATE of a step: what changes, under the row_version the guard was checked on. */
+    @FunctionalInterface
+    private interface StepWrite {
+        int apply(CohortEntity row, OffsetDateTime now, UUID actor);
+    }
+
+    /**
+     * A cohort step: the row under the step's permission scope (404), writable (403), the
+     * body etag when sent (412), the guard on the row as read (409), one guarded UPDATE (0 rows → 412), the audit
+     * record and the {@code lms.cohort.<step>} event in the same transaction.
+     */
+    private Cohort step(UUID id, String etag, String permission, String step, List<String> changed, String reason,
+            Predicate<CohortEntity> guard, StepWrite write) {
+        DataScope scope = DataScope.current(permission);
+        OptionalInt expected = Etags.bodyVersion(etag);
+        return doInWriteTransaction(() -> {
+            CohortEntity row = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(row));
+            if (expected.isPresent() && expected.getAsInt() != row.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!guard.test(row)) {
+                throw new InvalidStateException(STATE_REFUSED);
+            }
+            if (write.apply(row, now(), Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException(ROW_CHANGED);
+            }
+            audit.recordTransition(AGGREGATE, id, step, changed, reason);
+            outbox.publish(AGGREGATE + "." + step, AGGREGATE, id, LmsEvents.payload(id));
+            return mapper.toDto(repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    private OffsetDateTime now() {
+        return OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+    }
+
+    // ---- CohortActivity: a record of the Cohort aggregate (stored as the cohort's own lms.content_item) ----
+
+    public static final String COHORT_ACTIVITY_AGGREGATE = "lms.cohort_activity";
+    static final String COHORT_ACTIVITY_PERMISSION_LIST = "lms.cohort_activity.read";
+    static final String COHORT_ACTIVITY_PERMISSION_GET = "lms.cohort_activity.read";
+    static final String COHORT_ACTIVITY_PERMISSION_CREATE = "lms.cohort_activity.create";
+    static final String COHORT_ACTIVITY_PERMISSION_UPDATE = "lms.cohort_activity.update";
+    static final String COHORT_ACTIVITY_PERMISSION_DELETE = "lms.cohort_activity.delete";
+    /** The contract's CohortActivityUpdate fields, in apply order. */
+    static final List<String> COHORT_ACTIVITY_WRITABLE = List.of("quizId", "assignmentId", "exerciseId");
+
+    public CohortActivity getCohortActivity(UUID cohortId, UUID id) {
+        return doInReadTransaction(() -> cohortActivityMapper.toDto(
+                loadVisibleCohortActivity(DataScope.current(COHORT_ACTIVITY_PERMISSION_GET), cohortId, id)));
+    }
+
+    public Page<CohortActivity> listCohortActivities(UUID cohortId, Integer pageNumber, Integer pageSize,
+            String cursor, String filter, List<String> sortBy) {
+        SortSpec sort = SortSpec.parse(sortBy, CohortActivityRepository.SORT_FIELDS,
+                CohortActivityRepository.DEFAULT_ORDER, CohortActivityRepository.ID_COLUMN);
+        DataScope scope = DataScope.current(COHORT_ACTIVITY_PERMISSION_LIST);
+        SqlFragment where = FilterParser.parse(filter, CohortActivityRepository.FILTER_FIELDS)
+                .and(CohortActivityRepository.ofCohort(cohortId))
+                .and(CohortActivityRepository.scope(scope));
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + cohortId, clock);
+        return doInReadTransaction(() -> contentItemRepository.list(page, where).map(cohortActivityMapper::toDto));
+    }
+
+    /**
+     * Places one quiz, assignment or exercise in the cohort: exactly one reference (422), an existing one (422), not
+     * already placed (409); with validateOnly every check runs and nothing is written.
+     */
+    public CohortActivity createCohortActivity(UUID cohortId, CohortActivity request, boolean validateOnly) {
+        validator.validate(request);
+        ContentItemEntity entity = ContentItemEntity.builder().cohortId(cohortId).quizId(request.getQuizId())
+                .assignmentId(request.getAssignmentId()).exerciseId(request.getExerciseId()).build();
+        entity.onCreatingData(Actor.current(), clock);
+        entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
+        DataScope scope = DataScope.current(COHORT_ACTIVITY_PERMISSION_CREATE);
+        return doInWriteTransaction(() -> {
+            CohortEntity cohort = repository.findById(cohortId)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, cohortId));
+            if (!scope.canRead(institutionOf(cohort))) {
+                throw new ResourceNotFoundException(AGGREGATE, cohortId);
+            }
+            assertValidCohortActivity(entity);
+            scope.requireWritable(institutionOf(cohort));
+            assertUniqueCohortActivity(entity);
+            if (validateOnly) {
+                return cohortActivityMapper.toDto(entity);
+            }
+            ContentItemEntity stored = contentItemRepository.insert(entity);
+            audit.recordCreate(COHORT_ACTIVITY_AGGREGATE, stored.getId());
+            outbox.publish(COHORT_ACTIVITY_AGGREGATE + LmsEvents.CREATED, COHORT_ACTIVITY_AGGREGATE, stored.getId(),
+                    LmsEvents.payload(stored.getId()));
+            return cohortActivityMapper.toDto(stored);
+        });
+    }
+
+    /** Partial update under If-Match: the activity may point at another quiz, assignment or exercise. */
+    public CohortActivity updateCohortActivity(UUID cohortId, UUID id, String ifMatch, CohortActivityUpdate changes,
+            String updateMask, boolean validateOnly) {
+        int expected = Etags.expectedVersion(ifMatch);
+        List<String> fields = UpdateMask.fields(updateMask, changes, COHORT_ACTIVITY_WRITABLE);
+        return doInWriteTransaction(() -> {
+            DataScope scope = DataScope.current(COHORT_ACTIVITY_PERMISSION_UPDATE);
+            ContentItemEntity entity = loadVisibleCohortActivity(scope, cohortId, id);
+            scope.requireWritable(repository.findById(cohortId).flatMap(this::institutionOf));
+            if (entity.getRowVersion() != expected) {
+                throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            applyCohortActivity(entity, changes, fields);
+            validator.validate(cohortActivityMapper.toDto(entity));
+            assertValidCohortActivity(entity);
+            assertUniqueCohortActivity(entity);
+            entity.onUpdatingData(Actor.current(), clock);
+            if (validateOnly) {
+                return cohortActivityMapper.toDto(entity);
+            }
+            if (contentItemRepository.update(entity, expected) == 0) {
+                throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            entity.setRowVersion(expected + 1);
+            audit.recordUpdate(COHORT_ACTIVITY_AGGREGATE, id, fields);
+            outbox.publish(COHORT_ACTIVITY_AGGREGATE + LmsEvents.UPDATED, COHORT_ACTIVITY_AGGREGATE, id,
+                    LmsEvents.payload(id));
+            return cohortActivityMapper.toDto(entity);
+        });
+    }
+
+    /** Soft delete under If-Match; refused while grades, submissions or release rules still reference the item. */
+    public void deleteCohortActivity(UUID cohortId, UUID id, String ifMatch) {
+        int expected = Etags.expectedVersion(ifMatch);
+        runInWriteTransaction(() -> {
+            DataScope scope = DataScope.current(COHORT_ACTIVITY_PERMISSION_DELETE);
+            ContentItemEntity entity = loadVisibleCohortActivity(scope, cohortId, id);
+            scope.requireWritable(repository.findById(cohortId).flatMap(this::institutionOf));
+            if (entity.getRowVersion() != expected) {
+                throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            if (contentItemRepository.referencedByGradebookEntryContentItemId(id)
+                    || contentItemRepository.referencedByQuizSubmissionContentItemId(id)
+                    || contentItemRepository.referencedByAssignmentSubmissionContentItemId(id)
+                    || contentItemRepository.referencedByAssignmentGroupContentItemId(id)
+                    || contentItemRepository.referencedByForumTopicContentItemId(id)
+                    || contentItemRepository.referencedByReleaseRuleSourceContentItemId(id)
+                    || contentItemRepository.referencedByReleaseRuleTargetContentItemId(id)
+                    || contentItemRepository.referencedByReleaseGrantContentItemId(id)
+                    || contentItemRepository.referencedByStudentAlertContentItemId(id)
+                    || contentItemRepository.referencedByItemOverrideContentItemId(id)
+                    || contentItemRepository.referencedByRubricAssessmentContentItemId(id)
+                    || contentItemRepository.referencedByReassignmentLogContentItemId(id)) {
+                throw new InvalidStateException(
+                        "The cohort activity already has grades, submissions or release rules; remove those first.");
+            }
+            entity.onDeletingData(Actor.current(), clock);
+            if (contentItemRepository.softDelete(entity, expected) == 0) {
+                throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            audit.recordDelete(COHORT_ACTIVITY_AGGREGATE, id);
+            outbox.publish(COHORT_ACTIVITY_AGGREGATE + LmsEvents.DELETED, COHORT_ACTIVITY_AGGREGATE, id,
+                    LmsEvents.payload(id));
+        });
+    }
+
+    /** The live activity of this cohort, if the caller may see the cohort: anything else is 404. */
+    private ContentItemEntity loadVisibleCohortActivity(DataScope scope, UUID cohortId, UUID id) {
+        ContentItemEntity entity = contentItemRepository.findById(id)
+                .filter(row -> cohortId.equals(row.getCohortId()) && row.getChapterId() == null
+                        && CohortActivityRepository.KINDS.contains(row.getItemKind()))
+                .orElseThrow(() -> new ResourceNotFoundException(COHORT_ACTIVITY_AGGREGATE, id));
+        Optional<CohortEntity> cohort = repository.findById(cohortId);
+        if (cohort.isEmpty() || !scope.canRead(institutionOf(cohort.get()))) {
+            throw new ResourceNotFoundException(COHORT_ACTIVITY_AGGREGATE, id);
+        }
+        return entity;
+    }
+
+    /** Applies the selected CohortActivityUpdate fields; explicit per field so a mask can clear values. */
+    private static void applyCohortActivity(ContentItemEntity entity, CohortActivityUpdate changes,
+            List<String> fields) {
+        for (String field : fields) {
+            switch (field) {
+                case "quizId" -> entity.setQuizId(changes.getQuizId());
+                case "assignmentId" -> entity.setAssignmentId(changes.getAssignmentId());
+                case "exerciseId" -> entity.setExerciseId(changes.getExerciseId());
+                default -> throw new IllegalStateException("unhandled writable field " + field);
+            }
+        }
+    }
+
+    /**
+     * Exactly one of quiz, assignment and exercise, and it must exist (422 with every failing field); the item kind
+     * of the stored row follows from the reference.
+     */
+    private void assertValidCohortActivity(ContentItemEntity entity) {
+        List<FieldError> errors = new ArrayList<>();
+        long references = Stream.of(entity.getQuizId(), entity.getAssignmentId(),
+                entity.getExerciseId()).filter(Objects::nonNull).count();
+        if (references != 1) {
+            errors.add(new FieldError("quizId", "exactly one of quizId, assignmentId and exerciseId is required",
+                    "EXACTLY_ONE"));
+        }
+        if (entity.getQuizId() != null && !contentItemRepository.existsQuizId(entity.getQuizId())) {
+            errors.add(new FieldError("quizId", "quiz does not exist", "NOT_FOUND"));
+        }
+        if (entity.getAssignmentId() != null && !contentItemRepository.existsAssignmentId(entity.getAssignmentId())) {
+            errors.add(new FieldError("assignmentId", "assignment does not exist", "NOT_FOUND"));
+        }
+        if (entity.getExerciseId() != null && !contentItemRepository.existsExerciseId(entity.getExerciseId())) {
+            errors.add(new FieldError("exerciseId", "exercise does not exist", "NOT_FOUND"));
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
+        }
+        entity.setItemKind(entity.getQuizId() != null ? "quiz" : entity.getAssignmentId() != null ? "assignment"
+                : "exercise");
+    }
+
+    private void assertUniqueCohortActivity(ContentItemEntity entity) {
+        if (cohortActivityRepository.taken(entity.getId(), entity.getCohortId(), entity.getQuizId(),
+                entity.getAssignmentId(), entity.getExerciseId())) {
+            throw new DuplicateResourceException("The quiz, assignment or exercise is already an activity of the cohort.");
+        }
+    }
+
+    // ---- Cohort: the syllabus as a file ----
+
+    static final String PERMISSION_SYLLABUS = "lms.cohort.get_cohort_syllabus";
+
+    /**
+     * lms.GetCohortSyllabus: the cohort's outline with its dates as a PDF file of the caller, downloaded through a
+     * URL signed now (503 while platform cannot). Any cohort member may read it; pdf is the one format made.
+     */
+    public DownloadLink getCohortSyllabus(UUID cohortId, String format) {
+        if (format != null && !"pdf".equals(format)) {
+            throw new ValidationFailedException(List.of(new FieldError("format", "this syllabus is made as pdf",
+                    "AllowedValues")));
+        }
+        record Syllabus(String title, List<CohortOutlineRepository.SyllabusRow> rows) {
+        }
+        Syllabus syllabus = doInReadTransaction(() -> {
+            CohortEntity cohort = access.visible(cohortId, PERMISSION_SYLLABUS);
+            return new Syllabus(cohort.getTitle(), outlineRepository.syllabus(cohortId));
+        });
+        List<String> lines = new ArrayList<>();
+        lines.add(syllabus.title() == null ? "Cohort syllabus" : syllabus.title());
+        lines.add("");
+        String chapter = null;
+        for (CohortOutlineRepository.SyllabusRow row : syllabus.rows()) {
+            if (!java.util.Objects.equals(chapter, row.chapter())) {
+                chapter = row.chapter();
+                lines.add(chapter == null ? "" : chapter);
+            }
+            StringBuilder line = new StringBuilder("  - ");
+            line.append(row.title() == null ? row.itemKind() : row.title());
+            if (row.visibleFrom() != null) {
+                line.append(", from ").append(row.visibleFrom().toLocalDate());
+            }
+            if (row.dueAt() != null) {
+                line.append(", due ").append(row.dueAt().toLocalDate());
+            }
+            if (row.isGraded() && row.points() != null) {
+                line.append(", ").append(row.points().toPlainString()).append(" points");
+            }
+            lines.add(line.toString());
+        }
+        UUID fileId = files.write("cohort-syllabus-" + cohortId + ".pdf", "application/pdf",
+                Pdf.render("Syllabus", lines));
+        return files.link(fileId, "cohortId");
+    }
+
+    // ---- Cohort: copying a course's outline into the cohort ----
+
+    static final String PERMISSION_COPY_OUTLINE = "lms.cohort.copy_course_outline_to_cohort";
+    private static final int OUTLINE_PAGE = 500;
+
+    /**
+     * lms.CopyCourseOutlineToCohort: copies the course's template (all chapters or the chosen ones, with their content
+     * items and learning objectives, the course's grading categories and the release rules of the copied items) into
+     * the cohort. Day offsets become dates from {@code shiftDatesFrom} (default: the cohort's start date) in the
+     * cohort's time zone. A chapter the cohort already has a copy of is not copied again, so the step can be repeated
+     * to pick up chapters added later. The course must be one the cohort teaches (422); an archived cohort is 409.
+     * Answers the chapters copied.
+     */
+    public ChapterList copyCourseOutlineToCohort(UUID cohortId, UUID courseId, List<UUID> chapterIds,
+            LocalDate shiftDatesFrom) {
+        DataScope scope = DataScope.current(PERMISSION_COPY_OUTLINE);
+        return doInWriteTransaction(() -> {
+            CohortEntity cohort = repository.findForUpdate(cohortId)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, cohortId));
+            if (!scope.canRead(institutionOf(cohort))) {
+                throw new ResourceNotFoundException(AGGREGATE, cohortId);
+            }
+            scope.requireWritable(institutionOf(cohort));
+            if ("archived".equals(cohort.getLifecycleStatus())) {
+                throw new InvalidStateException("An archived cohort is read-only.");
+            }
+            if (courseId == null) {
+                throw new ValidationFailedException(List.of(new FieldError("courseId", "must not be null",
+                        "NotNull")));
+            }
+            if (!outlineRepository.isCourseOfCohort(cohortId, courseId)) {
+                throw new ValidationFailedException(List.of(new FieldError("courseId",
+                        "is not a course of the cohort", "NOT_FOUND")));
+            }
+            CohortOutlineRepository.Copy copy = new CohortOutlineRepository.Copy(cohortId,
+                    shiftDatesFrom == null ? cohort.getStartDate() : shiftDatesFrom, zoneOf(cohort), now(),
+                    Actor.current().orElse(null));
+            CohortOutlineRepository.Pairs chapters = pairs(outlineRepository.templateChapters(courseId, cohortId,
+                    chapterIds));
+            if (chapters.isEmpty()) {
+                return new ChapterList(List.of());
+            }
+            outlineRepository.copyChapters(copy, chapters);
+            outlineRepository.copyGradingCategories(copy,
+                    pairs(outlineRepository.templateGradingCategories(courseId, cohortId)));
+            CohortOutlineRepository.Pairs items = pairs(outlineRepository.templateItems(chapters.olds()));
+            outlineRepository.copyItems(copy, items, chapters);
+            outlineRepository.copyObjectives(copy, pairs(outlineRepository.templateObjectives(chapters.olds())),
+                    chapters);
+            CohortOutlineRepository.Pairs rules = pairs(outlineRepository.templateRules(courseId, items.olds()));
+            outlineRepository.copyRules(copy, rules, items);
+            outlineRepository.copyConditions(copy, pairs(outlineRepository.templateConditions(rules.olds())), rules);
+            outlineRepository.copyTargets(copy,
+                    pairs(outlineRepository.templateTargets(rules.olds(), items.olds(), chapters.olds())), rules, items,
+                    chapters);
+            audit.recordTransition(AGGREGATE, cohortId, "copy_course_outline", List.of("chapters", "contentItems"),
+                    null);
+            outbox.publish(AGGREGATE + ".copy_course_outline", AGGREGATE, cohortId, Map.of("id", cohortId.toString(),
+                    "courseId", courseId.toString(), "chapters", chapters.news().length, "items",
+                    items.news().length));
+            SortSpec sort = SortSpec.parse(List.of("sortOrder"), ChapterRepository.SORT_FIELDS,
+                    ChapterRepository.DEFAULT_ORDER, ChapterRepository.ID_COLUMN);
+            SqlFragment copied = new SqlFragment("r.id = ANY(:copiedChapters)", Map.of("copiedChapters",
+                    chapters.news()));
+            return new ChapterList(chapterRepository.list(PageRequest.of(1, OUTLINE_PAGE, null, sort, "outline",
+                    clock), copied).items().stream().map(chapterMapper::toDto).toList());
+        });
+    }
+
+    /** Old ids with a fresh UUIDv7 each, in order. */
+    private CohortOutlineRepository.Pairs pairs(List<UUID> olds) {
+        UUID[] news = new UUID[olds.size()];
+        for (int i = 0; i < news.length; i++) {
+            news[i] = UuidV7.next(clock);
+        }
+        return new CohortOutlineRepository.Pairs(olds.toArray(UUID[]::new), news);
+    }
+
+    /** The cohort's time zone, which day offsets are dated in (409 when it is not a known zone). */
+    private static String zoneOf(CohortEntity cohort) {
+        try {
+            return ZoneId.of(cohort.getTimezone()).getId();
+        } catch (DateTimeException unknown) {
+            throw new ConflictException("INVALID_TIMEZONE", "The cohort's time zone is not a known zone.");
+        }
+    }
+    /**
+     * lms.GetUnreadCounts: the caller's unread forum posts across their cohorts, in all and per cohort.
+     * Notifications and mail are 0 until comms serves its notification and mailbox reads.
+     */
+    public UnreadCounts getUnreadCounts() {
+        UUID user = AuthContext.require().userId();
+        return doInReadTransaction(() -> {
+            List<LearningActivityRepository.CohortUnread> unread =
+                    activity.unreadPosts(user, activity.memberCohorts(user));
+            UnreadCounts counts = new UnreadCounts(
+                    unread.stream().mapToInt(LearningActivityRepository.CohortUnread::posts).sum(), 0, 0);
+            Map<String, Integer> perCohort = new LinkedHashMap<>();
+            unread.forEach(u -> perCohort.put(u.cohortId().toString(), u.posts()));
+            counts.setPerCohort(perCohort);
+            return counts;
+        });
     }
 }

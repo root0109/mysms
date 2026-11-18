@@ -3,9 +3,6 @@ package com.mysms.core.testkit;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,10 +11,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Test kit: keeps the OpenAPI document a module's service component test fetched from its own running service
- * ({@code /v3/api-docs.yaml}, written by springdoc from the module's contract interfaces — core's
- * OpenApiConfiguration). The document lands in {@code target/openapi/<module>.yaml} as a build artifact of every
- * {@code mvn verify}, the way CLAUDE.md requires: generated from the Spring code, never hand-written.
+ * Checks the OpenAPI document a module's {@code <Module>OpenApiComponentTest} fetched from its running service before
+ * the test writes it to {@code target/openapi/api-docs.yml}.
  */
 public final class OpenApiDocuments {
 
@@ -25,13 +20,10 @@ public final class OpenApiDocuments {
     }
 
     /**
-     * Writes the fetched document to {@code target/openapi/<module>.yaml} and returns it for assertions — after
-     * checking it against the module's own operation table: every documented operation must carry a contract
-     * operationId and its {@code x-permission}, so a controller method that silently missed the table cannot ship
-     * mis-documented. (Operations whose resource has no controller yet answer 501 at the edge and have nothing for
-     * springdoc to document; the operation-status report accounts for those.)
+     * The fetched document, checked against the module's operation table: every documented operation must carry a
+     * contract operationId and its {@code x-permission}, so a method that missed the table cannot ship mis-documented.
      */
-    public static String write(String module, String document) {
+    public static String checked(String module, String document) {
         if (document == null || document.isBlank()) {
             throw new IllegalStateException("empty OpenAPI document for " + module);
         }
@@ -60,13 +52,6 @@ public final class OpenApiDocuments {
             throw new IllegalStateException("the OpenAPI document of " + module + " carries " + permissions
                     + " x-permission entries for " + documented.size() + " documented contract operations");
         }
-        try {
-            Path target = Path.of("target", "openapi", module + ".yaml");
-            Files.createDirectories(target.getParent());
-            Files.writeString(target, document, StandardCharsets.UTF_8);
-            return document;
-        } catch (IOException e) {
-            throw new UncheckedIOException("could not write the OpenAPI document of " + module, e);
-        }
+        return document;
     }
 }

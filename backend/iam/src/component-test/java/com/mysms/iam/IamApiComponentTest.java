@@ -74,8 +74,6 @@ class IamApiComponentTest {
         registry.add("mysms.iam.bootstrap.tenant-code", () -> TENANT_CODE);
         registry.add("mysms.iam.bootstrap.admin-username", () -> "admin");
         registry.add("mysms.iam.bootstrap.admin-password", () -> ADMIN_PASSWORD);
-        // nothing listens here: GetMe must still answer, without the person record
-        registry.add("mysms.iam.people-base-url", () -> "http://127.0.0.1:9");
     }
 
     private record Reply(int status, JsonNode body, HttpResponse<String> raw) {
@@ -128,7 +126,7 @@ class IamApiComponentTest {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
-    // ------------------------------------------------------------------ fixtures through the application role (RLS on)
+    // ---- fixtures through the application role (RLS on)
 
     private UUID tenant() {
         return as(null, () -> TestTransactions.of(database).readWithoutTenant(() -> database.jdbc()
@@ -199,7 +197,7 @@ class IamApiComponentTest {
     private static UUID teacher;
     private static UUID departmentHead;
 
-    // ------------------------------------------------------------------ tests
+    // ---- tests
 
     @Test
     @Order(1)
@@ -219,6 +217,13 @@ class IamApiComponentTest {
         assertThat(me.body().path("permissions").size()).isGreaterThan(1600);
         assertThat(me.body().path("user").path("userType").asString()).isEqualTo("admin");
         assertThat(me.body().path("user").has("passwordHash")).isFalse();
+        // the platform learns the tenant before the bootstrap's audit records reach it
+        assertThat(outboxTypes()).first().isEqualTo("iam.tenant_directory.bootstrapped");
+        String announced = as(tenant(), () -> TestTransactions.of(database).read(() -> database.jdbc().sql(
+                "SELECT payload FROM iam.outbox_event WHERE event_type = 'iam.tenant_directory.bootstrapped'")
+                .query(String.class).single()));
+        assertThat(JSON.readTree(announced).path("code").asString()).isEqualTo(TENANT_CODE);
+        assertThat(JSON.readTree(announced).path("id").asString()).isEqualTo(tenant().toString());
     }
 
     @Test
@@ -410,8 +415,8 @@ class IamApiComponentTest {
         String token = accessToken("admin", ADMIN_PASSWORD);
         Reply all = call("GET", "/v1/iam/setting-definitions", token, null);
         assertThat(all.status()).isEqualTo(200);
-        assertThat(all.body().path("data")).hasSize(10);
-        assertThat(all.body().path("paging").path("size").asInt()).isEqualTo(10);
+        assertThat(all.body().path("data")).hasSize(12);
+        assertThat(all.body().path("paging").path("size").asInt()).isEqualTo(12);
         assertThat(all.body().path("data").get(0).path("category").asString()).isEqualTo("appearance");
         Reply appearance = call("GET", "/v1/iam/setting-definitions?filter=" + q("category = \"appearance\""), token, null);
         assertThat(appearance.body().path("data")).hasSize(4);
@@ -446,7 +451,7 @@ class IamApiComponentTest {
         String timeoutId = adminDefinitionId(admin, "security.sessionTimeoutMinutes");
         assertThat(call("GET", "/v1/iam/setting-definitions/" + timeoutId, me, null).status()).isEqualTo(404);
         assertThat(call("GET", "/v1/iam/setting-definitions/" + timeoutId, admin, null).status()).isEqualTo(200);
-        assertThat(call("GET", "/v1/iam/me/settings", admin, null).body().path("items")).hasSize(10);
+        assertThat(call("GET", "/v1/iam/me/settings", admin, null).body().path("items")).hasSize(12);
         assertThat(effective(defaults, "ui.theme").path("value").asString()).isEqualTo("system");
         assertThat(effective(defaults, "ui.theme").path("sourceScope").asString()).isEqualTo("default");
 
@@ -617,11 +622,8 @@ class IamApiComponentTest {
 
     @Test
     @Order(12)
-    void contractOperationsNotServedYetAnswer501() throws Exception {
+    void pathsOutsideTheContractAreNotFound() throws Exception {
         String admin = accessToken("admin", ADMIN_PASSWORD);
-        Reply stub = call("POST", "/v1/iam/me:switchRole", admin, "{\"roleId\":\"" + UUID.randomUUID() + "\"}");
-        assertThat(stub.status()).isEqualTo(501);
-        assertThat(stub.code()).isEqualTo("NOT_IMPLEMENTED");
         assertThat(call("GET", "/v1/iam/no-such-thing", admin, null).status()).isEqualTo(404);
     }
 

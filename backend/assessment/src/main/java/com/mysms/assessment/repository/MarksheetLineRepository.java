@@ -14,6 +14,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,11 +26,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to assessment.marksheet_line (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to assessment.marksheet_line: live rows only, keyset paging, and the row_version guard on every
+ * update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class MarksheetLineRepository {
@@ -84,11 +83,15 @@ public class MarksheetLineRepository {
                       student_id, total_marks, percentage, grade_label, result_status, generated_on, created_at,
                       created_by, updated_at, updated_by, deleted_at, row_version
             """;
+    private static final String EXAM_SESSIONS_OF_MARKSHEETS = """
+            SELECT m.id, m.exam_session_id FROM assessment.marksheet m
+             WHERE m.tenant_id = :tenantId AND m.id = ANY(:ids)
+            """;
     private static final String STUDENT_RESULTS = """
             SELECT r.id, r.tenant_id, r.credits_attempted, r.credits_earned, r.grade_points, r.sgpa, r.cgpa,
                    r.marksheet_id, r.student_id, r.total_marks, r.percentage, r.grade_label, r.result_status,
                    r.generated_on, r.created_at, r.created_by, r.updated_at, r.updated_by, r.deleted_at,
-                   r.row_version, m.exam_session_id, m.visible_to_guardians
+                   r.row_version
               FROM assessment.marksheet_line r
               JOIN assessment.marksheet m ON m.tenant_id = r.tenant_id AND m.tenant_id = :tenantId
                    AND m.id = r.marksheet_id
@@ -101,6 +104,20 @@ public class MarksheetLineRepository {
                AND (CAST(:academicYearId AS uuid) IS NULL OR s.academic_year_id = :academicYearId)
                AND (CAST(:examSessionId AS uuid) IS NULL OR m.exam_session_id = :examSessionId)
             """;
+    /** The student has validated results, and none of them in the given reach (staff outside the student's school). */
+    private static final String STUDENT_RESULTS_OUT_OF_REACH = """
+            SELECT EXISTS (SELECT 1 FROM assessment.marksheet_line r
+                             JOIN assessment.marksheet m ON m.tenant_id = :tenantId AND m.id = r.marksheet_id
+                            WHERE r.tenant_id = :tenantId AND r.deleted_at IS NULL AND m.deleted_at IS NULL
+                              AND m.status = 'validated' AND r.student_id = :studentId)
+               AND NOT EXISTS (SELECT 1 FROM assessment.marksheet_line r
+                             JOIN assessment.marksheet m ON m.tenant_id = :tenantId AND m.id = r.marksheet_id
+                             JOIN assessment.exam_session s ON s.tenant_id = :tenantId AND s.id = m.exam_session_id
+                            WHERE r.tenant_id = :tenantId AND r.deleted_at IS NULL AND m.deleted_at IS NULL
+                              AND m.status = 'validated' AND r.student_id = :studentId
+                              AND (:reachAll OR s.institution_id = ANY(:reachIds)))
+            """;
+    private static final String SESSION_REACH = "(:reachAll OR s.institution_id = ANY(:reachIds))";
     private static final String CUMULATIVE_GPA = """
             SELECT COALESCE(SUM(r.grade_points), 0) AS grade_points,
                    COALESCE(SUM(r.credits_attempted), 0) AS credits_attempted
@@ -212,8 +229,6 @@ public class MarksheetLineRepository {
                 .query(MarksheetLineRepository::map).single();
     }
 
-    public record StudentResultRow(UUID examSessionId, boolean visibleToGuardians, MarksheetLineEntity line) { }
-
     public record GpaTotals(java.math.BigDecimal gradePoints, java.math.BigDecimal creditsAttempted) { }
 
     public GpaTotals cumulativeGpaTotals(UUID studentId, UUID examSessionId, LocalDate generatedOn) {
@@ -222,12 +237,22 @@ public class MarksheetLineRepository {
                         rs.getBigDecimal("grade_points"), rs.getBigDecimal("credits_attempted"))).single();
     }
 
-    public Page<StudentResultRow> listStudentResults(UUID studentId, UUID academicYearId, UUID examSessionId,
+    /** The exam session of each of the given marksheets. */
+    public Map<UUID, UUID> examSessionsOfMarksheets(Collection<UUID> marksheetIds) {
+        Map<UUID, UUID> sessions = new HashMap<>();
+        jdbc.sql(EXAM_SESSIONS_OF_MARKSHEETS).param("ids", marksheetIds.toArray(UUID[]::new))
+                .query((rs, row) -> sessions.put(rs.getObject("id", UUID.class),
+                        rs.getObject("exam_session_id", UUID.class))).list();
+        return sessions;
+    }
+
+    /** The validated marksheet lines of a student (published ones only, or only those shared with guardians). */
+    public Page<MarksheetLineEntity> listStudentResults(UUID studentId, UUID academicYearId, UUID examSessionId,
             boolean requirePublished, boolean guardian, PageRequest page, SqlFragment extraScope) {
         SqlFragment where = extraScope.and(page.keysetPredicate());
         String sql = STUDENT_RESULTS + " AND (" + where.sql() + ") ORDER BY " + page.orderByClause()
                 + page.limitClause();
-        Map<String, Object> params = new java.util.HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put("studentId", studentId);
         params.put("academicYearId", academicYearId);
         params.put("examSessionId", examSessionId);
@@ -235,9 +260,8 @@ public class MarksheetLineRepository {
         params.put("guardians", guardian);
         params.putAll(where.params());
         params.putAll(page.limitParams());
-        List<StudentResultRow> rows = jdbc.sql(sql).params(params).query((rs, row) -> new StudentResultRow(
-                rs.getObject("exam_session_id", UUID.class), rs.getBoolean("visible_to_guardians"), map(rs, row))).list();
-        return page.toPage(rows, result -> sortValues(page.sort(), result.line()), result -> result.line().getId());
+        List<MarksheetLineEntity> rows = jdbc.sql(sql).params(params).query(MarksheetLineRepository::map).list();
+        return page.toPage(rows, line -> sortValues(page.sort(), line), MarksheetLineEntity::getId);
     }
 
     /** Updates under the ETag guard; 0 rows means the row changed (or vanished) since it was read. */
@@ -291,7 +315,19 @@ public class MarksheetLineRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Whether the student has validated results, none of them in the reach (so, to that caller, no results). */
+    public boolean studentResultsOutOfReach(UUID studentId, DataScope reach) {
+        return Boolean.TRUE.equals(jdbc.sql(STUDENT_RESULTS_OUT_OF_REACH).param("studentId", studentId)
+                .param("reachAll", reach.all()).param("reachIds", reach.institutionArray())
+                .query(Boolean.class).single());
+    }
+
+    /** For {@link #listStudentResults}: the results of exam sessions of the reach's institutions only. */
+    public static SqlFragment sessionReach(DataScope reach) {
+        return new SqlFragment(SESSION_REACH, Map.of("reachAll", reach.all(), "reachIds", reach.institutionArray()));
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

@@ -1,4 +1,4 @@
-// Owned API contract of transport (JAVA-CODING-RULES §7); first materialized from api/openapi/transport.yaml on 2026-11-10.
+// Owned API contract of transport.
 package com.mysms.transport.api.model;
 
 import java.net.URI;

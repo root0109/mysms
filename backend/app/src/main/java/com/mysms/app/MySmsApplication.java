@@ -9,11 +9,10 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.FullyQualifiedAnnotationBeanNameGenerator;
 
 /**
- * The monolith: every module's components in one process (JAVA-CODING-RULES §2). The modules' own
- * {@code @SpringBootApplication} classes are excluded — this class is the only application — and each module still
- * opens its own database: core configures every module whose package this class scans. Components are named
- * by their fully qualified class
- * name, so two modules may each have, say, a PersonMapper without colliding.
+ * The monolith: every module's components in one process. The modules' own {@code @SpringBootApplication} classes are
+ * excluded and each module still opens its own database; components are named by fully qualified class name so two
+ * modules may each have, say, a PersonMapper. Configuration is every module's application.properties, overridden by
+ * this module's.
  */
 @SpringBootConfiguration
 @EnableAutoConfiguration

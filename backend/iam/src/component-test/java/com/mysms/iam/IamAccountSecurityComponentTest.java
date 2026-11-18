@@ -85,7 +85,6 @@ class IamAccountSecurityComponentTest {
         registry.add("mysms.iam.bootstrap.tenant-code", () -> TENANT_CODE);
         registry.add("mysms.iam.bootstrap.admin-username", () -> "admin");
         registry.add("mysms.iam.bootstrap.admin-password", () -> ADMIN_PASSWORD);
-        registry.add("mysms.iam.people-base-url", () -> "http://127.0.0.1:9");
     }
 
     private record Reply(int status, JsonNode body, String text) {

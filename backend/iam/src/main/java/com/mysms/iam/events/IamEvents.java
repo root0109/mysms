@@ -23,6 +23,24 @@ public final class IamEvents {
     public static final String PASSWORD_CHANGED = USER_ACCOUNT + ".password_changed";
     public static final String CREDENTIALS_SET = USER_ACCOUNT + ".credentials_set";
     public static final String TERMS_ACCEPTED = USER_ACCOUNT + ".terms_accepted";
+    /** Mailed one-time secrets and what they complete (ids only, never the secret or the address). */
+    public static final String PASSWORD_RESET_REQUESTED = USER_ACCOUNT + ".password_reset_requested";
+    public static final String PASSWORD_RESET = USER_ACCOUNT + ".password_reset";
+    public static final String PASSWORD_RESET_REQUIRED = USER_ACCOUNT + ".password_reset_required";
+    public static final String VERIFICATION_SENT = USER_ACCOUNT + ".verification_sent";
+    public static final String EMAIL_VERIFIED = USER_ACCOUNT + ".email_verified";
+    public static final String SIGNED_UP = USER_ACCOUNT + ".signed_up";
+    public static final String USERS_IMPORTED = USER_ACCOUNT + ".users_imported";
+    /** Tokens other than sign-in issues: impersonation (both identities), role switch, personal API tokens. */
+    public static final String IMPERSONATION_STARTED = USER_ACCOUNT + ".impersonation_started";
+    public static final String IMPERSONATION_ENDED = USER_ACCOUNT + ".impersonation_ended";
+    public static final String ROLE_SWITCHED = USER_ACCOUNT + ".role_switched";
+    public static final String ROLES_SET = USER_ACCOUNT + ".roles_set";
+    public static final String API_TOKEN_CREATED = USER_ACCOUNT + ".api_token_created";
+    public static final String API_TOKEN_REVOKED = USER_ACCOUNT + ".api_token_revoked";
+    public static final String TENANT_DIRECTORY = "iam.tenant_directory";
+    /** The installation bootstrap ensured its tenant (id and code): the platform registers the tenant it lacks. */
+    public static final String TENANT_BOOTSTRAPPED = TENANT_DIRECTORY + ".bootstrapped";
     /** Aggregate id of a failed sign-in that matched no account (the outbox needs one; it names nobody). */
     public static final UUID UNKNOWN_ACCOUNT = new UUID(0L, 0L);
     public static final String CREATED = ".created";
@@ -34,6 +52,13 @@ public final class IamEvents {
 
     public static Map<String, Object> payload(UUID id) {
         return Map.of("id", id.toString());
+    }
+
+    /** An impersonation: the account acted as, the administrator acting and the session it happens in. */
+    public static Map<String, Object> impersonation(UUID user, UUID impersonator, UUID session) {
+        Map<String, Object> payload = session(user, session);
+        payload.put("impersonatorId", impersonator.toString());
+        return payload;
     }
 
     public static Map<String, Object> session(UUID user, UUID session) {

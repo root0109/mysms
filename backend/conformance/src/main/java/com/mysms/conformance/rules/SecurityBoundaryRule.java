@@ -10,9 +10,9 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * X1 (JAVA-CODING-RULES §16): tokens are verified in one place. Outside auth-client nothing imports a token library
- * (io.jsonwebtoken, com.nimbusds, or Spring Security beyond its crypto package) except iam's token issuer, nothing
- * reads the Authorization header, and only iam hashes passwords (Spring Security's crypto package, argon2id).
+ * X1: tokens are verified in one place. Outside auth-client nothing imports a token library (io.jsonwebtoken,
+ * com.nimbusds, or Spring Security beyond its crypto package) except iam's token issuer, nothing reads the
+ * Authorization header, and only iam hashes passwords.
  */
 public final class SecurityBoundaryRule implements ConformanceRule {
 

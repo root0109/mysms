@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of iam.user_department_access (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of iam.user_department_access. */
 @Getter
 @Setter
 @SuperBuilder

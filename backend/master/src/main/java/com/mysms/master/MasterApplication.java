@@ -4,9 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * The Master Data microservice: owns schema "master" and serves the master contract.
- * Core configures it from this class: the package it scans names the module (ModuleDefaultsEnvironmentPostProcessor);
- * in the monolith the same module runs inside `app`.
+ * The Master Data microservice: owns schema "master" and serves the master contract. In the monolith it runs inside
+ * {@code app}, which combines its {@code application.properties} with every other module's.
  */
 @SpringBootApplication
 public class MasterApplication {

@@ -5,7 +5,8 @@
   "permission" : "people.certification.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.CreateConsentRecord",
   "method" : "POST",
@@ -13,7 +14,8 @@
   "permission" : "people.consent_record.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.CreateEducationHistory",
   "method" : "POST",
@@ -21,7 +23,8 @@
   "permission" : "people.education_history.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.CreateEmergencyContact",
   "method" : "POST",
@@ -29,7 +32,8 @@
   "permission" : "people.emergency_contact.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.CreateHonorific",
   "method" : "POST",
@@ -37,7 +41,8 @@
   "permission" : "people.honorific.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.CreatePerson",
   "method" : "POST",
@@ -45,7 +50,8 @@
   "permission" : "people.person.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.CreatePersonAddress",
   "method" : "POST",
@@ -53,7 +59,8 @@
   "permission" : "people.person_address.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.CreatePersonDocument",
   "method" : "POST",
@@ -61,7 +68,8 @@
   "permission" : "people.person_document.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.CreatePersonSkill",
   "method" : "POST",
@@ -69,7 +77,8 @@
   "permission" : "people.person_skill.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.CreatePersonSocialLink",
   "method" : "POST",
@@ -77,7 +86,8 @@
   "permission" : "people.person_social_link.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.CreatePublicProfile",
   "method" : "POST",
@@ -85,7 +95,8 @@
   "permission" : "people.public_profile.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.CreateQualification",
   "method" : "POST",
@@ -93,7 +104,8 @@
   "permission" : "people.qualification.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.CreateSkill",
   "method" : "POST",
@@ -101,7 +113,8 @@
   "permission" : "people.skill.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.CreateWorkExperience",
   "method" : "POST",
@@ -109,308 +122,352 @@
   "permission" : "people.work_experience.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.DeleteCertification",
   "method" : "DELETE",
   "path" : "/v1/people/persons/{personId}/certifications/{certificationId}",
   "permission" : "people.certification.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.DeleteEducationHistory",
   "method" : "DELETE",
   "path" : "/v1/people/persons/{personId}/education/{educationHistoryId}",
   "permission" : "people.education_history.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.DeleteEmergencyContact",
   "method" : "DELETE",
   "path" : "/v1/people/persons/{personId}/emergency-contacts/{emergencyContactId}",
   "permission" : "people.emergency_contact.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.DeleteHonorific",
   "method" : "DELETE",
   "path" : "/v1/people/honorifics/{honorificId}",
   "permission" : "people.honorific.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.DeletePerson",
   "method" : "DELETE",
   "path" : "/v1/people/persons/{personId}",
   "permission" : "people.person.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.DeletePersonAddress",
   "method" : "DELETE",
   "path" : "/v1/people/persons/{personId}/addresses/{personAddressId}",
   "permission" : "people.person_address.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.DeletePersonDocument",
   "method" : "DELETE",
   "path" : "/v1/people/persons/{personId}/documents/{personDocumentId}",
   "permission" : "people.person_document.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.DeletePersonSkill",
   "method" : "DELETE",
   "path" : "/v1/people/persons/{personId}/skills/{personSkillId}",
   "permission" : "people.person_skill.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.DeletePersonSocialLink",
   "method" : "DELETE",
   "path" : "/v1/people/persons/{personId}/social-links/{personSocialLinkId}",
   "permission" : "people.person_social_link.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.DeletePublicProfile",
   "method" : "DELETE",
   "path" : "/v1/people/persons/{personId}/public-profile/{publicProfileId}",
   "permission" : "people.public_profile.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.DeleteQualification",
   "method" : "DELETE",
   "path" : "/v1/people/qualifications/{qualificationId}",
   "permission" : "people.qualification.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.DeleteSkill",
   "method" : "DELETE",
   "path" : "/v1/people/skills/{skillId}",
   "permission" : "people.skill.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.DeleteWorkExperience",
   "method" : "DELETE",
   "path" : "/v1/people/persons/{personId}/work-experience/{workExperienceId}",
   "permission" : "people.work_experience.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetCertification",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/certifications/{certificationId}",
   "permission" : "people.certification.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetConsentRecord",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/consents/{consentRecordId}",
   "permission" : "people.consent_record.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetConsentStatus",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}:consentStatus",
   "permission" : "people.person.get_consent_status",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetEducationHistory",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/education/{educationHistoryId}",
   "permission" : "people.education_history.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetEmergencyContact",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/emergency-contacts/{emergencyContactId}",
   "permission" : "people.emergency_contact.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetHonorific",
   "method" : "GET",
   "path" : "/v1/people/honorifics/{honorificId}",
   "permission" : "people.honorific.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetMyPerson",
   "method" : "GET",
   "path" : "/v1/people/me",
   "permission" : "people.person.read_mine",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetPerson",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}",
   "permission" : "people.person.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetPersonAddress",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/addresses/{personAddressId}",
   "permission" : "people.person_address.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetPersonDocument",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/documents/{personDocumentId}",
   "permission" : "people.person_document.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetPersonSkill",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/skills/{personSkillId}",
   "permission" : "people.person_skill.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetPersonSocialLink",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/social-links/{personSocialLinkId}",
   "permission" : "people.person_social_link.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetPublicProfile",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/public-profile/{publicProfileId}",
   "permission" : "people.public_profile.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetQualification",
   "method" : "GET",
   "path" : "/v1/people/qualifications/{qualificationId}",
   "permission" : "people.qualification.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetSkill",
   "method" : "GET",
   "path" : "/v1/people/skills/{skillId}",
   "permission" : "people.skill.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.GetWorkExperience",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/work-experience/{workExperienceId}",
   "permission" : "people.work_experience.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListBirthdays",
   "method" : "GET",
   "path" : "/v1/people/persons:birthdays",
   "permission" : "people.person.list_birthdays",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListCertifications",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/certifications",
   "permission" : "people.certification.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListConsentRecords",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/consents",
   "permission" : "people.consent_record.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListEducationHistory",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/education",
   "permission" : "people.education_history.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListEmergencyContacts",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/emergency-contacts",
   "permission" : "people.emergency_contact.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListHonorifics",
   "method" : "GET",
   "path" : "/v1/people/honorifics",
   "permission" : "people.honorific.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListPersonAddresses",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/addresses",
   "permission" : "people.person_address.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListPersonDocuments",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/documents",
   "permission" : "people.person_document.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListPersonSkills",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/skills",
   "permission" : "people.person_skill.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListPersonSocialLinks",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/social-links",
   "permission" : "people.person_social_link.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListPersons",
   "method" : "GET",
   "path" : "/v1/people/persons",
   "permission" : "people.person.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListQualifications",
   "method" : "GET",
   "path" : "/v1/people/qualifications",
   "permission" : "people.qualification.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListSkills",
   "method" : "GET",
   "path" : "/v1/people/skills",
   "permission" : "people.skill.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.ListWorkExperiences",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/work-experience",
   "permission" : "people.work_experience.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.SendGreetings",
   "method" : "POST",
@@ -418,105 +475,120 @@
   "permission" : "people.person.send_greetings",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdateCertification",
   "method" : "PATCH",
   "path" : "/v1/people/persons/{personId}/certifications/{certificationId}",
   "permission" : "people.certification.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdateEducationHistory",
   "method" : "PATCH",
   "path" : "/v1/people/persons/{personId}/education/{educationHistoryId}",
   "permission" : "people.education_history.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdateEmergencyContact",
   "method" : "PATCH",
   "path" : "/v1/people/persons/{personId}/emergency-contacts/{emergencyContactId}",
   "permission" : "people.emergency_contact.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdateHonorific",
   "method" : "PATCH",
   "path" : "/v1/people/honorifics/{honorificId}",
   "permission" : "people.honorific.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdateMyPerson",
   "method" : "PATCH",
   "path" : "/v1/people/me",
   "permission" : "people.person.update_mine",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdatePerson",
   "method" : "PATCH",
   "path" : "/v1/people/persons/{personId}",
   "permission" : "people.person.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdatePersonAddress",
   "method" : "PATCH",
   "path" : "/v1/people/persons/{personId}/addresses/{personAddressId}",
   "permission" : "people.person_address.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdatePersonDocument",
   "method" : "PATCH",
   "path" : "/v1/people/persons/{personId}/documents/{personDocumentId}",
   "permission" : "people.person_document.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdatePersonSkill",
   "method" : "PATCH",
   "path" : "/v1/people/persons/{personId}/skills/{personSkillId}",
   "permission" : "people.person_skill.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdatePersonSocialLink",
   "method" : "PATCH",
   "path" : "/v1/people/persons/{personId}/social-links/{personSocialLinkId}",
   "permission" : "people.person_social_link.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdatePublicProfile",
   "method" : "PATCH",
   "path" : "/v1/people/persons/{personId}/public-profile/{publicProfileId}",
   "permission" : "people.public_profile.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdateQualification",
   "method" : "PATCH",
   "path" : "/v1/people/qualifications/{qualificationId}",
   "permission" : "people.qualification.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdateSkill",
   "method" : "PATCH",
   "path" : "/v1/people/skills/{skillId}",
   "permission" : "people.skill.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.UpdateWorkExperience",
   "method" : "PATCH",
   "path" : "/v1/people/persons/{personId}/work-experience/{workExperienceId}",
   "permission" : "people.work_experience.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "people.WithdrawConsent",
   "method" : "POST",
@@ -524,5 +596,6 @@
   "permission" : "people.consent_record.withdraw_consent",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 } ]

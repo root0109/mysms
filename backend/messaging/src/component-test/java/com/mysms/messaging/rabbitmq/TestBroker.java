@@ -5,9 +5,8 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 /**
- * A real RabbitMQ for the tests (JAVA-CODING-RULES §12: real infrastructure, never a stub): a Testcontainers
- * RabbitMQ 4.1 by default, or the broker at {@code MYSMS_TEST_AMQP_URI} (CI without Docker). Each test uses its own
- * exchange and consumer names, so a shared broker needs no cleanup.
+ * A real RabbitMQ for the tests: Testcontainers RabbitMQ 4.1, or the broker at {@code MYSMS_TEST_AMQP_URI} (CI without
+ * Docker). Each test uses its own exchange and consumer names, so a shared broker needs no cleanup.
  */
 final class TestBroker {
 

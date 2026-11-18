@@ -22,11 +22,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to platform.upload_policy (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to platform.upload_policy: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. Every statement filters the caller's tenant itself; row-level security
+ * is the backstop.
  */
 @Repository
 public class UploadPolicyRepository {
@@ -63,6 +61,15 @@ public class UploadPolicyRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /**
+     * The policy for everyone (no role) of a feature: the one naming the operation wins over the feature-wide one.
+     */
+    private static final String FOR_FEATURE = SELECT_LIVE + """
+             AND r.role_id IS NULL AND r.module_code = :moduleCode
+             AND (r.operation_code IS NULL OR r.operation_code = :operationCode)
+            ORDER BY r.operation_code NULLS LAST
+            LIMIT 1
+            """;
     private static final String INSERT = """
             INSERT INTO platform.upload_policy
             (id, tenant_id, role_id, module_code, operation_code, max_size_bytes, allowed_extensions, created_at,
@@ -111,6 +118,12 @@ public class UploadPolicyRepository {
         List<UploadPolicyEntity> rows = jdbc.sql(sql).params(where.params()).params(page.limitParams())
                 .query(UploadPolicyRepository::map).list();
         return page.toPage(rows, e -> sortValues(page.sort(), e), UploadPolicyEntity::getId);
+    }
+
+    /** The limits that apply to everyone uploading for a feature (and operation), when the tenant set any. */
+    public Optional<UploadPolicyEntity> forFeature(String moduleCode, String operationCode) {
+        return jdbc.sql(FOR_FEATURE).param("moduleCode", moduleCode).param("operationCode", operationCode)
+                .query(UploadPolicyRepository::map).optional();
     }
 
     /** Inserts the row and returns it as stored (database defaults of read-only columns included). */

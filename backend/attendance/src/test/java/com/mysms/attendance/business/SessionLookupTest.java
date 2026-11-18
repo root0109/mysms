@@ -3,8 +3,6 @@ package com.mysms.attendance.business;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -13,39 +11,40 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.protobuf.Timestamp;
+import com.mysms.attendance.integration.OrgGrpcClient;
+import com.mysms.attendance.integration.SisGrpcClient;
+import com.mysms.attendance.integration.TimetableGrpcClient;
+import com.mysms.common.v1.Pagination;
 import com.mysms.core.error.InvalidStateException;
 import com.mysms.core.error.PermissionDeniedException;
 import com.mysms.core.error.UnavailableException;
 import com.mysms.core.error.ValidationFailedException;
-import com.mysms.sdk.org.api.InstitutionApi;
-import com.mysms.sdk.org.model.Institution;
-import com.mysms.sdk.sis.api.StudentApi;
-import com.mysms.sdk.sis.api.StudentEnrollmentApi;
-import com.mysms.sdk.sis.model.Student;
-import com.mysms.sdk.sis.model.StudentEnrollment;
-import com.mysms.sdk.sis.model.PagingInfoStudentEnrollment;
-import com.mysms.sdk.sis.model.PagingInfoStudent;
-import com.mysms.sdk.timetable.api.SessionApi;
-import com.mysms.sdk.timetable.model.Session;
-import com.mysms.sdk.timetable.model.SessionStudent;
-import com.mysms.sdk.timetable.model.PagingInfoSessionStudent;
-import java.nio.charset.StandardCharsets;
+import com.mysms.core.testkit.GrpcRefusals;
+import com.mysms.org.v1.GetInstitutionResponse;
+import com.mysms.org.v1.Institution;
+import com.mysms.sis.v1.ListClassRosterRequest;
+import com.mysms.sis.v1.ListClassRosterResponse;
+import com.mysms.sis.v1.ListStudentsRequest;
+import com.mysms.sis.v1.ListStudentsResponse;
+import com.mysms.sis.v1.Student;
+import com.mysms.sis.v1.StudentEnrollment;
+import com.mysms.timetable.v1.GetSessionResponse;
+import com.mysms.timetable.v1.ListSessionStudentsResponse;
+import com.mysms.timetable.v1.Session;
+import com.mysms.timetable.v1.SessionStudent;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.ResourceAccessException;
 
 /**
- * The session lookup against stand-ins of the three SDK clients (a unit test: the real services answer it in the
- * app module's component test): which students are expected, on which date, and how the other modules' refusals
- * become this operation's errors.
+ * The session lookup against stand-ins of the three gRPC clients: which students are expected, on which date, and how
+ * the other modules' refusals become this operation's errors.
  */
 class SessionLookupTest {
 
@@ -55,53 +54,53 @@ class SessionLookupTest {
     private static final UUID SUBJECT = UUID.randomUUID();
     private static final UUID STAFF = UUID.randomUUID();
 
-    private final SessionApi sessions = mock(SessionApi.class);
-    private final StudentEnrollmentApi enrollments = mock(StudentEnrollmentApi.class);
-    private final StudentApi students = mock(StudentApi.class);
-    private final InstitutionApi institutions = mock(InstitutionApi.class);
-    private final SessionLookup lookup = new SessionLookup(sessions, enrollments, students, institutions);
+    private final TimetableGrpcClient timetable = mock(TimetableGrpcClient.class);
+    private final SisGrpcClient sis = mock(SisGrpcClient.class);
+    private final OrgGrpcClient org = mock(OrgGrpcClient.class);
+    private final SessionLookup lookup = new SessionLookup(timetable, sis, org);
 
-    private Session session(String startAt) {
-        Session session = new Session(INSTITUTION, OffsetDateTime.parse(startAt),
-                OffsetDateTime.parse(startAt).plusMinutes(45), SUBJECT, STAFF);
-        session.setClassSectionId(CLASS_SECTION);
-        session.setStatus(Session.StatusEnum.CONFIRMED);
-        return session;
+    private static Session.Builder session(String startAt) {
+        Instant start = Instant.parse(startAt);
+        return Session.newBuilder().setId(SESSION.toString()).setInstitutionId(INSTITUTION.toString())
+                .setStartAt(Timestamp.newBuilder().setSeconds(start.getEpochSecond()))
+                .setClassSectionId(CLASS_SECTION.toString()).setSubjectId(SUBJECT.toString())
+                .setStaffId(STAFF.toString()).setStatus(Session.Status.STATUS_CONFIRMED);
     }
 
-    private void given(Session session, String timezone) {
+    private void given(Session.Builder session, String timezone) {
         // doReturn: a stand-in already told to fail must not fail while it is being told otherwise
-        doReturn(ResponseEntity.ok(session)).when(sessions).getSession(SESSION, null);
-        Institution institution = new Institution();
-        institution.setTimezone(timezone);
-        doReturn(ResponseEntity.ok(institution)).when(institutions).getInstitution(INSTITUTION, null);
+        doReturn(GetSessionResponse.newBuilder().setSession(session).build()).when(timetable).getSession(any());
+        Institution.Builder institution = Institution.newBuilder().setId(INSTITUTION.toString());
+        if (timezone != null) {
+            institution.setTimezone(timezone);
+        }
+        doReturn(GetInstitutionResponse.newBuilder().setInstitution(institution).build()).when(org)
+                .getInstitution(any());
     }
 
     private void givenSessionStudents(UUID... students) {
-        PagingInfoSessionStudent list = new PagingInfoSessionStudent(List.of(students).stream().map(student -> {
-            SessionStudent row = new SessionStudent();
-            row.setStudentId(student);
-            return row;
-        }).toList(), new com.mysms.sdk.timetable.model.NavigationInfo(1, students.length, "/first"));
-        when(sessions.listSessionStudents(eq(SESSION), eq(1), eq(SessionLookup.PAGE_SIZE), isNull(), isNull(),
-                isNull(), isNull())).thenReturn(ResponseEntity.ok(list));
-    }
-
-    /** The navigation of roster page n, without a next page unless the test adds one. */
-    private static com.mysms.sdk.sis.model.NavigationInfo rosterPage(int page) {
-        return new com.mysms.sdk.sis.model.NavigationInfo(page, 1, "/v1/sis/class-sections/x/roster?page=1&size=500");
-    }
-
-    private static com.mysms.sdk.sis.model.NavigationInfo studentPage() {
-        return new com.mysms.sdk.sis.model.NavigationInfo(1, 0, "/v1/sis/students?page=1&size=40");
+        ListSessionStudentsResponse.Builder list = ListSessionStudentsResponse.newBuilder()
+                .setPagination(Pagination.newBuilder().setPage(1));
+        for (UUID student : students) {
+            list.addItems(SessionStudent.newBuilder().setStudentId(student.toString()));
+        }
+        when(timetable.listSessionStudents(any())).thenReturn(list.build());
     }
 
     private static StudentEnrollment enrollment(UUID student, LocalDate from, LocalDate to) {
-        StudentEnrollment enrollment = new StudentEnrollment();
-        enrollment.setStudentId(student);
-        enrollment.setEffectiveFrom(from);
-        enrollment.setEffectiveTo(to);
-        return enrollment;
+        StudentEnrollment.Builder enrollment = StudentEnrollment.newBuilder().setStudentId(student.toString());
+        if (from != null) {
+            enrollment.setEffectiveFrom(from.toString());
+        }
+        if (to != null) {
+            enrollment.setEffectiveTo(to.toString());
+        }
+        return enrollment.build();
+    }
+
+    private static ListClassRosterResponse roster(String nextCursor, StudentEnrollment... rows) {
+        return ListClassRosterResponse.newBuilder().addAllItems(List.of(rows))
+                .setPagination(Pagination.newBuilder().setNextCursor(nextCursor)).build();
     }
 
     @Test
@@ -118,7 +117,8 @@ class SessionLookupTest {
         assertThat(plan.classSectionId()).isEqualTo(CLASS_SECTION);
         assertThat(plan.subjectId()).isEqualTo(SUBJECT);
         assertThat(plan.staffId()).isEqualTo(STAFF);
-        verify(enrollments, never()).listClassRoster(any(), any(), any(), any());
+        assertThat(plan.courseId()).as("not set on the session").isNull();
+        verify(sis, never()).listClassRoster(any());
     }
 
     @Test
@@ -129,17 +129,21 @@ class SessionLookupTest {
         UUID open = UUID.randomUUID();
         UUID later = UUID.randomUUID();
         UUID ended = UUID.randomUUID();
-        LocalDate day = LocalDate.parse("2026-03-02");
-        when(enrollments.listClassRoster(CLASS_SECTION, 1, SessionLookup.PAGE_SIZE, null)).thenReturn(ResponseEntity.ok(
-                new PagingInfoStudentEnrollment(List.of(enrollment(placed, day, day), enrollment(open, null, null),
-                        enrollment(later, day.plusDays(1), null), enrollment(ended, null, day.minusDays(1))),
-                        rosterPage(1).next("/v1/sis/class-sections/x/roster?page=2&size=500&cursor=next"))));
         UUID onSecondPage = UUID.randomUUID();
-        when(enrollments.listClassRoster(CLASS_SECTION, 2, SessionLookup.PAGE_SIZE, "next")).thenReturn(
-                ResponseEntity.ok(new PagingInfoStudentEnrollment(List.of(enrollment(onSecondPage, null, null)),
-                        rosterPage(2))));
+        LocalDate day = LocalDate.parse("2026-03-02");
+        when(sis.listClassRoster(any())).thenAnswer(call -> {
+            ListClassRosterRequest request = call.getArgument(0);
+            return request.getPageable().getPage() == 1
+                    ? roster("next", enrollment(placed, day, day), enrollment(open, null, null),
+                            enrollment(later, day.plusDays(1), null), enrollment(ended, null, day.minusDays(1)))
+                    : roster("", enrollment(onSecondPage, null, null));
+        });
 
         assertThat(lookup.plan(SESSION).studentIds()).containsExactly(placed, open, onSecondPage);
+        ArgumentCaptor<ListClassRosterRequest> asked = ArgumentCaptor.forClass(ListClassRosterRequest.class);
+        verify(sis, times(2)).listClassRoster(asked.capture());
+        assertThat(asked.getAllValues().get(1).getPageable().getCursor()).isEqualTo("next");
+        assertThat(asked.getAllValues().get(0).getClassSectionId()).isEqualTo(CLASS_SECTION.toString());
     }
 
     @Test
@@ -161,51 +165,50 @@ class SessionLookupTest {
 
     @Test
     void anUnknownSessionIsAFieldErrorAndACancelledOneAConflict() {
-        when(sessions.getSession(SESSION, null)).thenThrow(HttpClientErrorException.create(HttpStatus.NOT_FOUND,
-                "Not Found", null, null, StandardCharsets.UTF_8));
+        when(timetable.getSession(any())).thenThrow(GrpcRefusals.refused("timetable", HttpStatus.NOT_FOUND,
+                "NOT_FOUND"));
         assertThatThrownBy(() -> lookup.plan(SESSION)).isInstanceOfSatisfying(ValidationFailedException.class,
                 e -> assertThat(e.errors()).singleElement().satisfies(error -> {
                     assertThat(error.field()).isEqualTo("timetableSessionId");
                     assertThat(error.code()).isEqualTo("NOT_FOUND");
                 }));
 
-        Session cancelled = session("2026-03-02T03:30:00Z");
-        cancelled.setStatus(Session.StatusEnum.CANCELLED);
-        given(cancelled, "UTC");
+        given(session("2026-03-02T03:30:00Z").setStatus(Session.Status.STATUS_CANCELLED), "UTC");
         assertThatThrownBy(() -> lookup.plan(SESSION)).isInstanceOf(InvalidStateException.class);
     }
 
     @Test
     void aRefusalInAnotherModuleIsThisOperationsRefusalNamingThePermission() {
-        when(sessions.getSession(SESSION, null)).thenThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN,
-                "Forbidden", null, null, StandardCharsets.UTF_8));
+        when(timetable.getSession(any())).thenThrow(GrpcRefusals.refused("timetable", HttpStatus.FORBIDDEN,
+                "PERMISSION_DENIED"));
         assertThatThrownBy(() -> lookup.plan(SESSION)).isInstanceOf(PermissionDeniedException.class)
                 .hasMessageContaining("timetable.session.read");
 
         given(session("2026-03-02T03:30:00Z"), "UTC");
-        doThrow(HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", null, null,
-                StandardCharsets.UTF_8)).when(institutions).getInstitution(INSTITUTION, null);
+        doThrow(GrpcRefusals.refused("org", HttpStatus.NOT_FOUND, "NOT_FOUND")).when(org).getInstitution(any());
         assertThatThrownBy(() -> lookup.plan(SESSION)).as("an institution the caller cannot see")
                 .isInstanceOf(PermissionDeniedException.class);
     }
 
     @Test
-    void aFailingOrUnconfiguredServiceIsUnavailableWithoutItsDetails() {
-        when(sessions.getSession(SESSION, null)).thenThrow(HttpServerErrorException.create(
-                HttpStatus.INTERNAL_SERVER_ERROR, "boom at 10.0.0.7", null, null, StandardCharsets.UTF_8));
+    void aFailingOrUnreachableServiceIsUnavailableWithoutItsDetails() {
+        when(timetable.getSession(any())).thenThrow(GrpcRefusals.refused("timetable",
+                HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL"));
         assertThatThrownBy(() -> lookup.plan(SESSION)).isInstanceOf(UnavailableException.class)
                 .hasMessage("The timetable service could not answer.");
 
-        doThrow(new ResourceAccessException("connect to 10.0.0.7 failed")).when(sessions).getSession(SESSION, null);
+        doThrow(GrpcRefusals.unreachable("timetable")).when(timetable).getSession(any());
         assertThatThrownBy(() -> lookup.plan(SESSION)).isInstanceOf(UnavailableException.class)
                 .hasMessage("The timetable service could not answer.");
 
-        assertThatThrownBy(() -> SessionLookup.unconfigured().plan(SESSION))
-                .isInstanceOf(UnavailableException.class).hasMessageContaining("not configured");
+        doReturn(GetSessionResponse.newBuilder().setSession(session("2026-03-02T03:30:00Z").clearStartAt()).build())
+                .when(timetable).getSession(any());
+        assertThatThrownBy(() -> lookup.plan(SESSION)).as("a session without its start")
+                .isInstanceOf(UnavailableException.class);
     }
 
     private static Student student(UUID id, UUID institution) {
-        return new Student(UUID.randomUUID(), institution).id(id);
+        return Student.newBuilder().setId(id.toString()).setInstitutionId(institution.toString()).build();
     }
 
     @Test
@@ -215,19 +218,20 @@ class SessionLookupTest {
         UUID elsewhere = UUID.randomUUID();
         UUID nobody = UUID.randomUUID();
         LocalDate day = LocalDate.parse("2026-03-02");
-        when(enrollments.listClassRoster(CLASS_SECTION, 1, SessionLookup.PAGE_SIZE, null)).thenReturn(ResponseEntity.ok(
-                new PagingInfoStudentEnrollment(List.of(enrollment(classmate, null, null),
-                        enrollment(schoolmate, day.plusDays(1), null)), rosterPage(1))));
+        when(sis.listClassRoster(any())).thenReturn(roster("", enrollment(classmate, null, null),
+                enrollment(schoolmate, day.plusDays(1), null)));
         // sis answers only the students the caller can see: one of this institution, one of another
-        when(students.listStudents(eq(1), eq(SessionLookup.ID_CHUNK), isNull(), any(), isNull(), isNull())).thenReturn(
-                ResponseEntity.ok(new PagingInfoStudent(List.of(student(schoolmate, INSTITUTION),
-                        student(elsewhere, UUID.randomUUID())), studentPage())));
+        when(sis.listStudents(any())).thenReturn(ListStudentsResponse.newBuilder()
+                .addItems(student(schoolmate, INSTITUTION)).addItems(student(elsewhere, UUID.randomUUID())).build());
 
         assertThat(lookup.unknownStudents(INSTITUTION, CLASS_SECTION, day,
                 List.of(classmate, schoolmate, elsewhere, nobody))).containsExactly(elsewhere, nobody);
         // the classmate was settled by the roster and is not asked for again
-        verify(students).listStudents(1, SessionLookup.ID_CHUNK, null,
-                "id = \"" + schoolmate + "\" OR id = \"" + elsewhere + "\" OR id = \"" + nobody + "\"", null, null);
+        ArgumentCaptor<ListStudentsRequest> asked = ArgumentCaptor.forClass(ListStudentsRequest.class);
+        verify(sis).listStudents(asked.capture());
+        assertThat(asked.getValue().getFilter())
+                .isEqualTo("id = \"" + schoolmate + "\" OR id = \"" + elsewhere + "\" OR id = \"" + nobody + "\"");
+        assertThat(asked.getValue().getPageable().getSize()).isEqualTo(SessionLookup.ID_CHUNK);
 
         assertThat(lookup.unknownStudents(INSTITUTION, CLASS_SECTION, day, List.of(classmate))).isEmpty();
         assertThat(lookup.unknownStudents(INSTITUTION, null, day, List.of())).isEmpty();
@@ -235,23 +239,17 @@ class SessionLookupTest {
 
     @Test
     void newStudentsAreCheckedFortyAtATimeAndWithoutTheRosterWhenItIsNotReadable() {
-        when(enrollments.listClassRoster(CLASS_SECTION, 1, SessionLookup.PAGE_SIZE, null)).thenThrow(
-                HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null,
-                        StandardCharsets.UTF_8));
-        when(students.listStudents(eq(1), eq(SessionLookup.ID_CHUNK), isNull(), any(), isNull(), isNull()))
-                .thenReturn(ResponseEntity.ok(new PagingInfoStudent(List.of(), studentPage())));
+        when(sis.listClassRoster(any())).thenThrow(GrpcRefusals.refused("sis", HttpStatus.FORBIDDEN,
+                "PERMISSION_DENIED"));
+        when(sis.listStudents(any())).thenReturn(ListStudentsResponse.getDefaultInstance());
         List<UUID> many = Stream.generate(UUID::randomUUID).limit(45).toList();
 
         assertThat(lookup.unknownStudents(INSTITUTION, CLASS_SECTION, LocalDate.parse("2026-03-02"), many))
                 .containsExactlyElementsOf(many);
-        verify(students, times(2)).listStudents(eq(1), eq(SessionLookup.ID_CHUNK), isNull(), any(),
-                isNull(), isNull());
+        verify(sis, times(2)).listStudents(any());
 
-        doThrow(HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null,
-                StandardCharsets.UTF_8)).when(students).listStudents(any(), any(), any(), any(), any(), any());
+        doThrow(GrpcRefusals.refused("sis", HttpStatus.FORBIDDEN, "PERMISSION_DENIED")).when(sis).listStudents(any());
         assertThatThrownBy(() -> lookup.unknownStudents(INSTITUTION, null, LocalDate.parse("2026-03-02"), many))
                 .isInstanceOf(PermissionDeniedException.class).hasMessageContaining("sis.student.read");
-        assertThatThrownBy(() -> SessionLookup.unconfigured().unknownStudents(INSTITUTION, null,
-                LocalDate.parse("2026-03-02"), many)).isInstanceOf(UnavailableException.class);
     }
 }

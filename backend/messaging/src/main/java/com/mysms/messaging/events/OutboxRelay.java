@@ -1,7 +1,7 @@
 package com.mysms.messaging.events;
 
+import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
-import com.mysms.core.tx.Transactions;
 import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Duration;
@@ -18,37 +18,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Drains one module's transactional outbox to the bus (database/README "Events"). Pending rows are taken in id order
- * with {@code FOR UPDATE SKIP LOCKED} (replicas share the work), each is published and confirmed by the bus, and the
- * batch is marked published in the same transaction — a crash before commit only republishes, and consumers drop the
- * repeat through their inbox. A batch stops taking rows after {@link Settings#maxBatchTime()}, well inside its
- * transaction timeout, so a slow broker commits what it confirmed instead of republishing the whole batch forever.
- * A row that cannot become an event — not the module's own type, or unreadable — is set aside with its reason in
- * `publish_error` and the rows after it go on. Published outbox rows and processed inbox rows are pruned after their
- * retention.
+ * Drains one module's transactional outbox to the bus. Rows are taken in id order with {@code FOR UPDATE SKIP LOCKED}
+ * (replicas share the work), each publish is confirmed, and the batch is marked published in the same transaction: a
+ * crash only republishes, and inboxes drop the repeat. A batch stops after {@link Settings#maxBatchTime()} so a slow
+ * broker commits what it confirmed. A row that cannot become an event is set aside with its reason in
+ * {@code publish_error}.
  *
- * <p>The relay reads every tenant's events, so it connects as the relay role (`mysms_relay`, BYPASSRLS) over a pool of
- * its own and runs these statements only — never a business query; that role may read the outbox and inbox, mark and
- * prune them, and nothing else. Without a relay role it uses the application role only when that role itself bypasses
- * row-level security (a superuser in local development); otherwise it does not start and says so, instead of silently
- * publishing nothing.
+ * <p>The relay reads every tenant's events, so it connects as the relay role ({@code mysms_relay}, BYPASSRLS) on its
+ * own pool and runs only these statements. Without a relay role it uses the application role only when that role
+ * bypasses row-level security (local development); otherwise it does not start and says so.
  */
-public final class OutboxRelay {
+public final class OutboxRelay extends AppTransactionManager {
 
     /**
-     * @param batchSize       rows taken per transaction
-     * @param outboxRetention how long published rows are kept (for diagnosis) before they are pruned
-     * @param inboxRetention  how long processed inbox rows are kept; longer than any redelivery (a dead-lettered event
-     *                        replayed after it is handled again)
-     * @param maxBatchTime    publishing stops taking rows of a batch after this; at most half the transaction timeout
+     * @param inboxRetention longer than any redelivery (a dead-lettered event replayed after it is handled again)
+     * @param maxBatchTime at most half the transaction timeout
      */
     public record Settings(int batchSize, Duration outboxRetention, Duration inboxRetention, Duration maxBatchTime) {
 
@@ -65,7 +55,6 @@ public final class OutboxRelay {
         }
     }
 
-    /** What one pass did. */
     public record Pass(int published, int setAside, int pruned, int inboxPruned) {
 
         /** Whether rows were taken: the caller runs another pass. */
@@ -88,7 +77,6 @@ public final class OutboxRelay {
     private final Clock clock;
     private final Settings settings;
     private final JdbcClient jdbc;
-    private final PlatformTransactionManager transactions;
     private final TransactionDefinition writeDefinition;
     private final String pending;
     private final String markPublished;
@@ -96,8 +84,11 @@ public final class OutboxRelay {
     private final String prune;
     private final String pruneInbox;
 
-    private OutboxRelay(String module, DataSource relayDataSource, EventBus bus, JsonMapper json, Clock clock,
+    private OutboxRelay(ModuleDatabase database, DataSource relayDataSource, EventBus bus, JsonMapper json, Clock clock,
                         Settings settings) {
+        // the relay role bypasses RLS: its own connection, no tenant bound, its own timeout
+        super(database, new DataSourceTransactionManager(relayDataSource));
+        String module = database.module();
         if (!SCHEMA.matcher(module).matches()) {
             throw new IllegalArgumentException("invalid module " + module);
         }
@@ -107,8 +98,6 @@ public final class OutboxRelay {
         this.clock = clock;
         this.settings = settings;
         this.jdbc = JdbcClient.create(relayDataSource);
-        // the relay role reads every tenant's outbox (BYPASSRLS), so its transactions bind no tenant
-        this.transactions = new DataSourceTransactionManager(relayDataSource);
         DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
         definition.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
         definition.setTimeout(Math.toIntExact(TRANSACTION_TIMEOUT.toSeconds()));
@@ -140,7 +129,7 @@ public final class OutboxRelay {
                 """.replace("{schema}", module);
     }
 
-    /** The relay of a module database with the default settings, or empty (logged); see the other factory. */
+    /** The relay of a module database with the default settings, or empty (logged). */
     public static Optional<OutboxRelay> of(ModuleDatabase database, EventBus bus, JsonMapper json, Clock clock) {
         return of(database, bus, json, clock, Settings.defaults());
     }
@@ -150,14 +139,14 @@ public final class OutboxRelay {
                                            Settings settings) {
         Optional<DataSource> relay = database.relayDataSource();
         if (relay.isPresent()) {
-            return Optional.of(new OutboxRelay(database.module(), relay.get(), bus, json, clock, settings));
+            return Optional.of(new OutboxRelay(database, relay.get(), bus, json, clock, settings));
         }
         Boolean bypasses = JdbcClient.create(database.dataSource()).sql(BYPASSES).query(Boolean.class).optional()
                 .orElse(false);
         if (Boolean.TRUE.equals(bypasses)) {
             LOG.warn("module {} relays its outbox as the application role (it bypasses row-level security): local "
                     + "development only, configure a relay-username", database.module());
-            return Optional.of(new OutboxRelay(database.module(), database.dataSource(), bus, json, clock, settings));
+            return Optional.of(new OutboxRelay(database, database.dataSource(), bus, json, clock, settings));
         }
         LOG.error("module {} has no relay-username and its application role is bound by row-level security: its "
                 + "events stay in {}.outbox_event until a relay role is configured", database.module(),
@@ -181,8 +170,7 @@ public final class OutboxRelay {
 
     /** Publishes pending events in one transaction until the batch or its time runs out: {published, set aside}. */
     private int[] publishBatch(OffsetDateTime now, long deadline) {
-        TransactionStatus transaction = transactions.getTransaction(writeDefinition);
-        try {
+        return doInGlobalWriteTransaction(writeDefinition, () -> {
             List<Map<String, Object>> rows = jdbc.sql(pending).param("limit", settings.batchSize()).query()
                     .listOfRows();
             int published = 0;
@@ -211,25 +199,12 @@ public final class OutboxRelay {
                 published++;
             }
             return new int[] {published, asides};
-        } catch (RuntimeException | Error failure) {
-            Transactions.rollback(transactions, transaction, failure);
-            throw failure;
-        } finally {
-            Transactions.commit(transactions, transaction);
-        }
+        });
     }
 
     /** Deletes the rows a pruning statement selects as older than {@code before}, in its own transaction. */
     private int prune(String statement, OffsetDateTime before) {
-        TransactionStatus transaction = transactions.getTransaction(writeDefinition);
-        try {
-            return jdbc.sql(statement).param("before", before).update();
-        } catch (RuntimeException | Error failure) {
-            Transactions.rollback(transactions, transaction, failure);
-            throw failure;
-        } finally {
-            Transactions.commit(transactions, transaction);
-        }
+        return doInGlobalWriteTransaction(writeDefinition, () -> jdbc.sql(statement).param("before", before).update());
     }
 
     private void setAside(Map<String, Object> row, String reason) {

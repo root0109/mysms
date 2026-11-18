@@ -55,19 +55,21 @@ class ModuleChecksTest {
     }
 
     @Test
-    void enforcesTheSdkAllowlistFromArchitectureMd(@TempDir Path root) throws Exception {
+    void enforcesTheGrpcAllowlistFromArchitectureMd(@TempDir Path root) throws Exception {
         Path architecture = Files.writeString(root.resolve("ARCHITECTURE.md"), ARCHITECTURE);
         Path src = Files.createDirectories(root.resolve("src/com/mysms/finance/business"));
         Files.writeString(src.resolve("InvoiceService.java"), """
                 package com.mysms.finance.business;
-                import com.mysms.sdk.sis.api.StudentApi;
-                import com.mysms.sdk.lms.api.CourseApi;
+                import com.mysms.finance.v1.Invoice;
+                import com.mysms.common.v1.PageableRequest;
+                import com.mysms.sis.v1.StudentServiceGrpc;
+                import com.mysms.lms.v1.CourseServiceGrpc;
                 class InvoiceService {}
                 """);
         assertThat(ModuleChecks.allowedDependencies("finance", architecture)).containsExactly("academics", "master", "sis");
         assertThat(ModuleChecks.allowedDependencies("master", architecture)).isEmpty();
-        assertThat(ModuleChecks.sdkImportsOutsideAllowlist("finance", root.resolve("src"), architecture))
-                .containsExactly("InvoiceService.java imports the sdk of lms");
+        assertThat(ModuleChecks.grpcImportsOutsideAllowlist("finance", root.resolve("src"), architecture))
+                .containsExactly("InvoiceService.java imports the gRPC contract of lms");
         assertThatThrownBy(() -> ModuleChecks.allowedDependencies("nope", architecture))
                 .isInstanceOf(IllegalArgumentException.class);
     }

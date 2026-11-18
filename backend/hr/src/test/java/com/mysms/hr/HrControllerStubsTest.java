@@ -11,8 +11,7 @@ import com.mysms.hr.controller.StaffController;
 import org.junit.jupiter.api.Test;
 
 /**
- * The contract operations hr does not serve yet answer 501 NOT_IMPLEMENTED explicitly — none falls through, and a
- * newly served operation changes the count on purpose.
+ * The operations hr does not serve yet answer 501 explicitly; a newly served operation changes the count on purpose.
  */
 class HrControllerStubsTest {
 
@@ -22,6 +21,6 @@ class HrControllerStubsTest {
         assertThat(ControllerStubs.count(LeaveApplicationController.class)).as("LeaveApplication").isEqualTo(0);
         assertThat(ControllerStubs.count(LeaveBalanceController.class)).as("LeaveBalance").isEqualTo(0);
         assertThat(ControllerStubs.count(LeaveTypeController.class)).as("LeaveType").isEqualTo(0);
-        assertThat(ControllerStubs.count(StaffController.class)).as("Staff").isEqualTo(2);
+        assertThat(ControllerStubs.count(StaffController.class)).as("Staff").isEqualTo(0);
     }
 }

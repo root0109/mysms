@@ -6,6 +6,7 @@ import com.mysms.assessment.config.AssessmentDatabaseConfig;
 import com.mysms.assessment.config.AssessmentEventsConfig;
 import com.mysms.assessment.domain.GradingSchemeEntity;
 import com.mysms.assessment.events.AssessmentEvents;
+import com.mysms.assessment.mapper.GradingCriteriaJson;
 import com.mysms.assessment.mapper.GradingSchemeMapper;
 import com.mysms.assessment.repository.GradingSchemeRepository;
 import com.mysms.authclient.DataScope;
@@ -35,7 +36,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
-/** Business service of the grading-scheme aggregate, with institution scope and auditable optimistic writes. */
+/**
+ * Business service of the grading-scheme aggregate, with institution scope and auditable optimistic writes. A scheme
+ * results were generated with (a result template that is no longer a draft grades with it) is not changed (409); the
+ * update takes the scheme row FOR UPDATE first, so a generation holding it FOR SHARE finishes before the check.
+ */
 @Service
 public class GradingSchemeService extends AppTransactionManager {
 
@@ -110,10 +115,15 @@ public class GradingSchemeService extends AppTransactionManager {
         List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
+            repository.lockForUpdate(id);
             GradingSchemeEntity entity = loadVisible(scope, id);
             scope.requireWritable(institutionOf(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
+            }
+            if (repository.usedByGeneratedTemplate(id)) {
+                throw new InvalidStateException(
+                        "The grading scheme has generated results; cancel their marksheets before changing it.");
             }
             apply(entity, changes, fields);
             validator.validate(mapper.toDto(entity));
@@ -173,11 +183,15 @@ public class GradingSchemeService extends AppTransactionManager {
                 case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
                 case "academicYearId" -> entity.setAcademicYearId(changes.getAcademicYearId());
                 case "name" -> entity.setName(changes.getName());
-                case "schemeType" -> entity.setSchemeType(changes.getSchemeType() == null ? null
-                        : changes.getSchemeType().getValue());
-                case "gradingMethod" -> entity.setGradingMethod(changes.getGradingMethod() == null ? null
-                        : changes.getGradingMethod().getValue());
-                case "criteria" -> entity.setCriteria(GradingSchemeMapper.writeCriteria(changes.getCriteria()));
+                case "schemeType" -> {
+                    GradingSchemeUpdate.SchemeTypeEnum type = changes.getSchemeType();
+                    entity.setSchemeType(type == null ? null : type.getValue());
+                }
+                case "gradingMethod" -> {
+                    GradingSchemeUpdate.GradingMethodEnum method = changes.getGradingMethod();
+                    entity.setGradingMethod(method == null ? null : method.getValue());
+                }
+                case "criteria" -> entity.setCriteria(GradingCriteriaJson.write(changes.getCriteria()));
                 case "isActive" -> entity.setIsActive(changes.getIsActive());
                 case "isTemplate" -> entity.setIsTemplate(changes.getIsTemplate());
                 default -> throw new IllegalStateException("unhandled writable field " + field);

@@ -8,33 +8,33 @@ import com.mysms.lms.api.model.BatchGradeEntriesRequest;
 import com.mysms.lms.api.model.GradeEntryRequest;
 import com.mysms.lms.api.model.GradeEntryResultList;
 import com.mysms.lms.api.model.GradebookEntry;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.GradebookEntryService;
+import com.mysms.lms.business.GradebookGradingService;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the GradebookEntry operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the GradebookEntry operations; authentication and the permission check already ran in the auth-client
+ * filter. Operations not served yet answer 501.
  */
 @RestController
 public class GradebookEntryController implements GradebookEntryApi {
 
     private final GradebookEntryService gradebookEntryService;
+    private final GradebookGradingService gradebookGradingService;
 
-    public GradebookEntryController(GradebookEntryService gradebookEntryService) {
+    public GradebookEntryController(GradebookEntryService gradebookEntryService,
+            GradebookGradingService gradebookGradingService) {
         this.gradebookEntryService = gradebookEntryService;
+        this.gradebookGradingService = gradebookGradingService;
     }
 
     @Override
     public ResponseEntity<GradeEntryResultList> batchGradeEntries(
             BatchGradeEntriesRequest batchGradeEntriesRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(gradebookGradingService.batchGradeEntries(batchGradeEntriesRequest));
     }
 
     @Override
@@ -46,7 +46,8 @@ public class GradebookEntryController implements GradebookEntryApi {
     @Override
     public ResponseEntity<GradebookEntry> gradeEntry(GradeEntryRequest gradeEntryRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        GradebookEntry graded = gradebookGradingService.gradeEntry(gradeEntryRequest);
+        return ResponseEntity.ok().eTag(graded.getEtag()).body(graded);
     }
 
     @Override

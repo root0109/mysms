@@ -8,14 +8,14 @@ import com.mysms.iam.controller.UserAccountController;
 import org.junit.jupiter.api.Test;
 
 /**
- * The contract operations iam does not serve yet answer 501 NOT_IMPLEMENTED explicitly — none falls through, and a
- * newly served operation changes the count on purpose.
+ * Every contract operation of iam is served: no controller method answers 501, and a stub added back would change the
+ * count on purpose.
  */
 class IamControllerStubsTest {
 
     @Test
     void unservedOperationsAnswerNotImplemented() {
         assertThat(ControllerStubs.count(RoleController.class)).as("Role").isEqualTo(0);
-        assertThat(ControllerStubs.count(UserAccountController.class)).as("UserAccount").isEqualTo(15);
+        assertThat(ControllerStubs.count(UserAccountController.class)).as("UserAccount").isEqualTo(0);
     }
 }

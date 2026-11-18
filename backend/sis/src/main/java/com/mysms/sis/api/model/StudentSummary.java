@@ -1,4 +1,4 @@
-// Owned API contract of sis (JAVA-CODING-RULES §7); first materialized from api/openapi/sis.yaml on 2026-11-10.
+// Owned API contract of sis.
 package com.mysms.sis.api.model;
 
 import java.net.URI;
@@ -39,10 +39,10 @@ public class StudentSummary {
   private @Nullable StudentEnrollment currentEnrollment;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid ProgramEnrollment> programEnrollments = new ArrayList<>();
+  private @Nullable List<@Valid ProgramEnrollment> programEnrollments = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid StudentGuardian> guardians = new ArrayList<>();
+  private @Nullable List<@Valid StudentGuardian> guardians = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable AttendanceSummary attendance;

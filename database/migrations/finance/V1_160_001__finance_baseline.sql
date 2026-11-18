@@ -432,8 +432,10 @@ CREATE TABLE finance.payment (
     bank_name varchar(120),
     gateway_account_id uuid,
     received_by_user_id uuid,
+    gateway_currency varchar(3),
+    gateway_amount_minor bigint,
     CONSTRAINT pk_payment PRIMARY KEY (id),
-    CONSTRAINT ck_payment_purpose CHECK (purpose IN ('invoice', 'lms_course', 'lms_cohort', 'lms_certificate', 'admission')),
+    CONSTRAINT ck_payment_purpose CHECK (purpose IN ('invoice', 'fees', 'lms_course', 'lms_cohort', 'lms_certificate', 'admission')),
     CONSTRAINT ck_payment_amount_rule CHECK (amount>=0),
     CONSTRAINT ck_payment_status CHECK (status IN ('initiated', 'received', 'failed', 'refunded')),
     CONSTRAINT ck_payment_2 CHECK (purpose NOT IN ('lms_course','lms_certificate') OR lms_course_id IS NOT NULL),
@@ -488,6 +490,8 @@ COMMENT ON COLUMN finance.payment.instrument_date IS 'Date on the cheque/DD/tran
 COMMENT ON COLUMN finance.payment.bank_name IS 'Drawee bank for cheque/DD payments.';
 COMMENT ON COLUMN finance.payment.gateway_account_id IS 'Gateway account (merchant credentials) the payment was taken on.';
 COMMENT ON COLUMN finance.payment.received_by_user_id IS 'Staff user who recorded a counter payment.';
+COMMENT ON COLUMN finance.payment.gateway_currency IS 'ISO 4217 code of the order opened at the gateway; a notification of another currency is refused.';
+COMMENT ON COLUMN finance.payment.gateway_amount_minor IS 'Amount of the order opened at the gateway, in minor units (paise); a notification of another amount is refused.';
 
 -- Intra-module foreign keys
 ALTER TABLE finance.fee_plan_installment ADD CONSTRAINT fk_fee_plan_installment_fee_plan_id FOREIGN KEY (fee_plan_id, tenant_id) REFERENCES finance.fee_plan (id, tenant_id) ON DELETE CASCADE;
@@ -601,6 +605,7 @@ CREATE TABLE finance.refund (
     refund_method varchar(30) NOT NULL DEFAULT 'gateway',
     refunded_by_user_id uuid,
     refunded_at timestamptz,
+    request_key uuid,
     created_at timestamptz NOT NULL DEFAULT now(),
     created_by uuid,
     updated_at timestamptz NOT NULL DEFAULT now(),
@@ -623,6 +628,7 @@ COMMENT ON COLUMN finance.refund.gateway_refund_id IS 'Refund id at the gateway 
 COMMENT ON COLUMN finance.refund.refund_method IS 'How the money went back.';
 COMMENT ON COLUMN finance.refund.refunded_by_user_id IS 'Staff user who initiated the refund.';
 COMMENT ON COLUMN finance.refund.refunded_at IS 'When the refund completed.';
+COMMENT ON COLUMN finance.refund.request_key IS 'Idempotency-Key of the request that opened the refund; a retry finds this row instead of refunding twice.';
 COMMENT ON COLUMN finance.refund.created_at IS 'Row creation time.';
 COMMENT ON COLUMN finance.refund.created_by IS 'User account that created the row (audit reference to iam.user_account; not FK-constrained).';
 COMMENT ON COLUMN finance.refund.updated_at IS 'Last modification time (set by the application on every update).';
@@ -897,6 +903,7 @@ CREATE TABLE finance.outbox_event (
     payload text NOT NULL,
     occurred_at timestamptz NOT NULL DEFAULT now(),
     published_at timestamptz,
+    publish_error text,
     CONSTRAINT pk_finance_outbox_event PRIMARY KEY (id)
 );
 COMMENT ON TABLE finance.outbox_event IS 'Transactional outbox of the finance module: events written in the same transaction as the change, published to the bus by a relay, then pruned. Ordered by the identity column.';
@@ -908,7 +915,8 @@ COMMENT ON COLUMN finance.outbox_event.aggregate_id IS 'Entity id the event is a
 COMMENT ON COLUMN finance.outbox_event.payload IS 'Serialised event (opaque message envelope).';
 COMMENT ON COLUMN finance.outbox_event.occurred_at IS 'When the change committed.';
 COMMENT ON COLUMN finance.outbox_event.published_at IS 'When the relay published it (NULL = pending).';
-CREATE INDEX ix_finance_outbox_event_pending ON finance.outbox_event (id) WHERE published_at IS NULL;
+COMMENT ON COLUMN finance.outbox_event.publish_error IS 'Why the relay could not turn the row into an event (set aside, not published); NULL otherwise.';
+CREATE INDEX ix_finance_outbox_event_pending ON finance.outbox_event (id) WHERE published_at IS NULL AND publish_error IS NULL;
 CREATE TABLE finance.inbox_event (
     event_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
@@ -916,15 +924,16 @@ CREATE TABLE finance.inbox_event (
     received_at timestamptz NOT NULL DEFAULT now(),
     processed_at timestamptz,
     processing_error text,
-    CONSTRAINT pk_finance_inbox_event PRIMARY KEY (event_id)
+    CONSTRAINT pk_finance_inbox_event PRIMARY KEY (tenant_id, event_id)
 );
 COMMENT ON TABLE finance.inbox_event IS 'Inbox of the finance module: ids of consumed events, kept so redeliveries are processed exactly once.';
-COMMENT ON COLUMN finance.inbox_event.event_id IS 'Global id of the consumed event.';
+COMMENT ON COLUMN finance.inbox_event.event_id IS 'Global id of the consumed event; recorded per tenant.';
 COMMENT ON COLUMN finance.inbox_event.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
 COMMENT ON COLUMN finance.inbox_event.event_type IS 'Event name.';
 COMMENT ON COLUMN finance.inbox_event.received_at IS 'First delivery time.';
 COMMENT ON COLUMN finance.inbox_event.processed_at IS 'When handling committed (NULL = in flight).';
 COMMENT ON COLUMN finance.inbox_event.processing_error IS 'Last handling error, if any.';
+CREATE INDEX ix_finance_inbox_event_processed ON finance.inbox_event (processed_at) WHERE processed_at IS NOT NULL;
 
 -- === P1-15: business uniqueness ignores soft-deleted rows ===
 
@@ -1006,6 +1015,7 @@ CREATE POLICY tenant_isolation ON finance.student_fee_due USING (tenant_id = cur
 -- === Review fixes: refund dedupe, allocation currency, one default gateway account ===
 
 CREATE UNIQUE INDEX uq_refund_gateway ON finance.refund (tenant_id, gateway_refund_id) WHERE gateway_refund_id IS NOT NULL;
+CREATE UNIQUE INDEX uq_refund_request ON finance.refund (tenant_id, payment_id, request_key) WHERE request_key IS NOT NULL;
 ALTER TABLE finance.payment_allocation ADD CONSTRAINT fk_payment_allocation_currency_payment FOREIGN KEY (payment_id, currency_id) REFERENCES finance.payment (id, currency_id);
 ALTER TABLE finance.payment_allocation ADD CONSTRAINT fk_payment_allocation_currency_invoice FOREIGN KEY (invoice_id, currency_id) REFERENCES finance.invoice (id, currency_id);
 ALTER TABLE finance.payment_allocation ADD CONSTRAINT fk_payment_allocation_currency_due FOREIGN KEY (student_fee_due_id, currency_id) REFERENCES finance.student_fee_due (id, currency_id);
@@ -1069,6 +1079,7 @@ CREATE TABLE finance.operation (
     started_by_user_id uuid,
     started_at timestamptz NOT NULL DEFAULT now(),
     finished_at timestamptz,
+    result text,
     created_at timestamptz NOT NULL DEFAULT now(),
     created_by uuid,
     updated_at timestamptz NOT NULL DEFAULT now(),
@@ -1093,6 +1104,7 @@ COMMENT ON COLUMN finance.operation.result_entity_id IS 'Id of the produced reco
 COMMENT ON COLUMN finance.operation.started_by_user_id IS 'User who started it.';
 COMMENT ON COLUMN finance.operation.started_at IS 'Start time.';
 COMMENT ON COLUMN finance.operation.finished_at IS 'End time.';
+COMMENT ON COLUMN finance.operation.result IS 'Outcome of a finished operation as a JSON object (counts, skipped items); NULL while it runs and when it has none.';
 COMMENT ON COLUMN finance.operation.created_at IS 'Row creation time.';
 COMMENT ON COLUMN finance.operation.created_by IS 'User account that created the row (audit reference to iam.user_account; not FK-constrained).';
 COMMENT ON COLUMN finance.operation.updated_at IS 'Last modification time (set by the application on every update).';

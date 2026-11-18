@@ -1,4 +1,4 @@
-// Owned API contract of timetable (JAVA-CODING-RULES §7); first materialized from api/openapi/timetable.yaml on 2026-11-10.
+// Owned API contract of timetable.
 package com.mysms.timetable.api;
 
 import com.mysms.timetable.api.model.TimetableView;

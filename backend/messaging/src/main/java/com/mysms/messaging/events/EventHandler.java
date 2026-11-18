@@ -1,6 +1,6 @@
 package com.mysms.messaging.events;
 
-/** Handles one delivered event inside the consuming module's tenant transaction ({@link InboxProcessor}). */
+/** Handles one delivered event inside the consuming module's tenant transaction. */
 @FunctionalInterface
 public interface EventHandler {
 

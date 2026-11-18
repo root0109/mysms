@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.release_rule_condition (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.release_rule_condition: live rows only, keyset paging, and the row_version guard on every
+ * update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class ReleaseRuleConditionRepository {
@@ -66,6 +63,9 @@ public class ReleaseRuleConditionRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** The conditions of several rules, in order. */
+    private static final String OF_RULES = SELECT_LIVE
+            + " AND r.release_rule_id = ANY(:ruleIds) ORDER BY r.release_rule_id, r.sort_order, r.id";
     private static final String INSERT = """
             INSERT INTO lms.release_rule_condition
             (id, tenant_id, condition_type, release_rule_id, operator, value, value2, sort_order, created_at,
@@ -134,6 +134,12 @@ public class ReleaseRuleConditionRepository {
     }
 
     /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
+    /** The live conditions of the rules, ordered within each rule. */
+    public List<ReleaseRuleConditionEntity> ofRules(List<UUID> ruleIds) {
+        return jdbc.sql(OF_RULES).param("ruleIds", ruleIds.toArray(UUID[]::new))
+                .query(ReleaseRuleConditionRepository::map).list();
+    }
+
     public ReleaseRuleConditionEntity insert(ReleaseRuleConditionEntity e) {
         return jdbc.sql(INSERT)
                 .param("id", e.getId())
@@ -192,12 +198,12 @@ public class ReleaseRuleConditionRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.release_rule_id = :parentId", Map.of("parentId", parentId));
     }

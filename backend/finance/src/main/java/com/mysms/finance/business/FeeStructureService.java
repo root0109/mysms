@@ -28,8 +28,11 @@ import com.mysms.finance.config.FinanceEventsConfig;
 import com.mysms.finance.domain.FeeStructureEntity;
 import com.mysms.finance.events.FinanceEvents;
 import com.mysms.finance.mapper.FeeStructureMapper;
+import com.mysms.finance.model.DueTarget;
+import com.mysms.finance.api.model.Operation;
 import com.mysms.finance.repository.FeeStructureRepository;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
@@ -43,10 +46,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of finance.fee_structure (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of finance.fee_structure: audit and domain event in the same transaction as every change; rows
+ * outside the caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class FeeStructureService extends AppTransactionManager {
@@ -58,6 +59,9 @@ public class FeeStructureService extends AppTransactionManager {
     static final String PERMISSION_UPDATE = "finance.fee_structure.update";
     static final String PERMISSION_DELETE = "finance.fee_structure.delete";
     static final String PERMISSION_ARCHIVE_FEE_STRUCTURE = "finance.fee_structure.archive";
+    static final String PERMISSION_PUBLISH_FEE_STRUCTURE = "finance.fee_structure.publish";
+    /** The operation kind of the fee run a published structure starts. */
+    public static final String KIND_PUBLISH = "finance.PublishFeeStructure";
     /** The contract's FeeStructureUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("institutionId", "academicYearId", "gradeLevelId", "programId", "feePlanId", "name");
@@ -69,13 +73,15 @@ public class FeeStructureService extends AppTransactionManager {
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
+    private final StudentFeeDueService dues;
+    private final RosterLookup rosters;
 
     public FeeStructureService(FeeStructureRepository repository, FeeStructureMapper mapper,
             @Qualifier(FinanceDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(FinanceDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(FinanceEventsConfig.OUTBOX) OutboxWriter outbox,
                     @Qualifier(FinanceEventsConfig.AUDIT) AuditWriter audit,
-            DtoValidator validator, Clock clock) {
+            DtoValidator validator, Clock clock, StudentFeeDueService dues, RosterLookup rosters) {
 
         super(database, transactions);
         this.repository = repository;
@@ -84,6 +90,8 @@ public class FeeStructureService extends AppTransactionManager {
         this.audit = audit;
         this.validator = validator;
         this.clock = clock;
+        this.dues = dues;
+        this.rosters = rosters;
     }
 
     public FeeStructure getFeeStructure(UUID id) {
@@ -187,9 +195,7 @@ public class FeeStructureService extends AppTransactionManager {
 
     /**
      * finance.ArchiveFeeStructure: Archives a structure so it no longer generates dues; existing dues are unaffected.
-     * The row must be visible and writable for the caller, and the step is allowed while status is published; in any
-     * other state
-     * the answer is 409 and nothing changes.
+     * Allowed while status is published, for a caller who can see and write the row; otherwise 409 and nothing changes.
      */
     public FeeStructure archiveFeeStructure(UUID id, String ifMatch) {
         DataScope scope = DataScope.current(PERMISSION_ARCHIVE_FEE_STRUCTURE);
@@ -216,6 +222,45 @@ public class FeeStructureService extends AppTransactionManager {
             return mapper.toDto(repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
         });
+    }
+
+    /**
+     * finance.PublishFeeStructure: charges the structure's plan to every student it covers — placed in a class of its
+     * grade level (any grade level when it names neither a grade level nor a program) of the plan's institution in its
+     * academic year, or registered on a course of its program there (sis and academics, read with the caller's token)
+     * — scheduled from the year's first day (org), then marks it published; answered as the fee run's operation (202).
+     * The structure must be visible (404) and writable (403), a draft (409), and its plan of its own institution (422).
+     * Nothing is written when a roster cannot be read (503). The dues are written before the step: a run that stops
+     * leaves the structure a draft, and publishing again keeps the dues already generated and adds the rest.
+     */
+    public Operation publishFeeStructure(UUID id) {
+        DataScope scope = DataScope.current(PERMISSION_PUBLISH_FEE_STRUCTURE);
+        FeeStructureEntity entity = doInReadTransaction(() -> loadVisible(scope, id));
+        scope.requireWritable(institutionOf(entity));
+        if (!"draft".equals(entity.getStatus())) {
+            throw new InvalidStateException("Only a draft fee structure is published.");
+        }
+        UUID institution = dues.requirePlanWritable(entity.getFeePlanId(), scope);
+        if (entity.getInstitutionId() != null && !entity.getInstitutionId().equals(institution)) {
+            throw new ValidationFailedException(List.of(new FieldError("feePlanId",
+                    "the fee plan belongs to another institution", "OTHER_INSTITUTION")));
+        }
+        List<DueTarget> targets = rosters.structureRoster(institution, entity.getAcademicYearId(),
+                entity.getGradeLevelId(), entity.getProgramId());
+        LocalDate start = rosters.yearStart(entity.getAcademicYearId());
+        Operation run = dues.generate(new StudentFeeDueService.FeeRun(entity.getFeePlanId(),
+                entity.getAcademicYearId(), id, start, null, targets), KIND_PUBLISH, AGGREGATE, id);
+        runInWriteTransaction(() -> {
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            if (repository.publishFeeStructure(id, entity.getRowVersion(), now, Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The fee structure changed while its dues were generated; "
+                        + "the dues are kept, publish it again.");
+            }
+            audit.recordTransition(AGGREGATE, id, "publish", List.of("status"), null);
+            outbox.publish(AGGREGATE + ".publish", AGGREGATE, id, FinanceEvents.payload(id));
+        });
+        return run;
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */

@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of comms.task_assignee (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of comms.task_assignee. */
 @Getter
 @Setter
 @SuperBuilder

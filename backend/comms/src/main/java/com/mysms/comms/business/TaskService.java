@@ -50,13 +50,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of comms.task (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Task
- * are served here too — TaskAssignee.
+ * Business service of comms.task and of the records that exist only as part of a Task (TaskAssignee): audit and domain
+ * event commit in the same transaction as every change. Rows outside the caller's institutions are invisible;
+ * tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class TaskService extends AppTransactionManager {
@@ -158,8 +154,8 @@ public class TaskService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Task updateTask(UUID id, String ifMatch, TaskUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
@@ -214,9 +210,8 @@ public class TaskService extends AppTransactionManager {
     }
 
     /**
-     * comms.CompleteTask: Complete. The row must be visible and writable for the caller, and the step is allowed while
-     * is_completed is false; in any other state
-     * the answer is 409 and nothing changes.
+     * comms.CompleteTask: Complete. Allowed while is_completed is false, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public Task completeTask(UUID id, CompleteTaskRequest request) {
         DataScope scope = DataScope.current(PERMISSION_COMPLETE_TASK);
@@ -246,9 +241,8 @@ public class TaskService extends AppTransactionManager {
     }
 
     /**
-     * comms.ReopenTask: Reopen. The row must be visible and writable for the caller, and the step is allowed while
-     * is_completed is true; in any other state
-     * the answer is 409 and nothing changes.
+     * comms.ReopenTask: Reopen. Allowed while is_completed is true, on a row the caller may see and write; otherwise
+     * 409 and nothing changes.
      */
     public Task reopenTask(UUID id, ReopenTaskRequest request) {
         DataScope scope = DataScope.current(PERMISSION_REOPEN_TASK);
@@ -278,9 +272,8 @@ public class TaskService extends AppTransactionManager {
     }
 
     /**
-     * comms.SnoozeTask: Snooze reminder. The row must be visible and writable for the caller, and the step is allowed
-     * while is_completed is false; in any other state
-     * the answer is 409 and nothing changes.
+     * comms.SnoozeTask: Snooze reminder. Allowed while is_completed is false, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public Task snoozeTask(UUID id, SnoozeTaskRequest request) {
         DataScope scope = DataScope.current(PERMISSION_SNOOZE_TASK);
@@ -319,12 +312,12 @@ public class TaskService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(TaskEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected TaskUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected TaskUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(TaskEntity entity, TaskUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -387,7 +380,7 @@ public class TaskService extends AppTransactionManager {
 
     }
 
-    // ---- TaskAssignee: a record of the Task aggregate ----
+    // ---- TaskAssignee ----
 
     public TaskAssignee getTaskAssignee(UUID taskId, UUID id) {
         return doInReadTransaction(() -> {
@@ -440,8 +433,8 @@ public class TaskService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public TaskAssignee updateTaskAssignee(UUID taskId, UUID id, String ifMatch, TaskAssigneeUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -502,14 +495,12 @@ public class TaskService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the comms.task it belongs to). */
+    /** The institution of the comms.task the row belongs to. */
     private Optional<UUID> institutionOfTaskAssignee(TaskAssigneeEntity entity) {
         return taskAssigneeRepository.institutionOf(entity.getTaskId());
     }
 
-    /**
-     * Applies the selected TaskAssigneeUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected TaskAssigneeUpdate fields; explicit per field so a mask can clear values. */
     private static void applyTaskAssignee(TaskAssigneeEntity entity, TaskAssigneeUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

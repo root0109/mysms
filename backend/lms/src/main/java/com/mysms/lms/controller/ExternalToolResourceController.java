@@ -1,5 +1,6 @@
 package com.mysms.lms.controller;
 
+import com.mysms.lms.business.ExternalToolWorkflowService;
 import java.util.List;
 import com.mysms.core.paging.PagingUtil;
 import com.mysms.core.paging.PagingInfo;
@@ -10,7 +11,6 @@ import com.mysms.lms.api.model.ExternalToolResource;
 import com.mysms.lms.api.model.ExternalToolResourceUpdate;
 import com.mysms.lms.api.model.LaunchExternalToolRequest;
 import com.mysms.lms.api.model.LtiLaunch;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.ExternalToolResourceService;
 import java.net.URI;
@@ -19,18 +19,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the ExternalToolResource operations: implements the generated contract interface, so paths, parameters
- * and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the ExternalToolResource operations; authentication and the permission check already ran in the
+ * auth-client filter. Operations not served yet answer 501.
  */
 @RestController
 public class ExternalToolResourceController implements ExternalToolResourceApi {
 
     private final ExternalToolResourceService externalToolResourceService;
+    private final ExternalToolWorkflowService externalToolWorkflowService;
 
-    public ExternalToolResourceController(ExternalToolResourceService externalToolResourceService) {
+    public ExternalToolResourceController(ExternalToolResourceService externalToolResourceService,
+            ExternalToolWorkflowService externalToolWorkflowService) {
+        this.externalToolWorkflowService = externalToolWorkflowService;
         this.externalToolResourceService = externalToolResourceService;
     }
 
@@ -92,7 +92,8 @@ public class ExternalToolResourceController implements ExternalToolResourceApi {
     @Override
     public ResponseEntity<LtiLaunch> launchExternalTool(UUID externalToolResourceId,
             UUID externalToolLinkId, LaunchExternalToolRequest launchExternalToolRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(externalToolWorkflowService.launchExternalTool(externalToolResourceId,
+                externalToolLinkId, launchExternalToolRequest));
     }
 
     @Override
@@ -116,8 +117,9 @@ public class ExternalToolResourceController implements ExternalToolResourceApi {
     }
 
     @Override
-    public ResponseEntity<Void> receiveToolOutcome(String authorization, String body) {
-        throw new NotImplementedException();
+    public ResponseEntity<Void> receiveToolOutcome(String authorization, byte[] body) {
+        externalToolWorkflowService.receiveToolOutcome(authorization, body);
+        return ResponseEntity.noContent().build();
     }
 
     @Override

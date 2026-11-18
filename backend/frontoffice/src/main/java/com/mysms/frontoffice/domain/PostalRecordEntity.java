@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of frontoffice.postal_record (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of frontoffice.postal_record. */
 @Getter
 @Setter
 @SuperBuilder

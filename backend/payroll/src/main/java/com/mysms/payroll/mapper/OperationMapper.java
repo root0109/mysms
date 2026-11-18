@@ -5,7 +5,10 @@ import com.mysms.payroll.domain.OperationEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-/** payroll.operation ⇄ the contract's Operation: the module is fixed, a file result is the output file. */
+/**
+ * payroll.operation ⇄ the contract's Operation: the module is fixed, a file result is the output file. The outcome
+ * ({@code result}) is JSON the service reads, so the mapper stays a pure shape conversion.
+ */
 @Mapper(config = PayrollMapperConfig.class)
 public interface OperationMapper {
 

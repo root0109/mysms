@@ -4,7 +4,7 @@ import java.util.List;
 
 /**
  * One family of rules over the repository (Strategy): {@link Conformance} runs every rule over the same
- * {@link SourceTree} and reports what they find together, so adding a rule never touches the others.
+ * {@link SourceTree}, so adding a rule never touches the others.
  */
 public interface ConformanceRule {
 

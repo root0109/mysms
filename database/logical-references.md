@@ -8,7 +8,7 @@
 4. **Reconciliation** — a periodic per-module job batch-verifies reference ids against the owner via the SDK and reports orphans (never auto-fixes). **Not built:** like a live check, it needs service-to-service identity (P1-34).
 5. **Row-level security** stays the cross-tenant backstop on both sides.
 
-**Tenant references:** every tenant-owned table carries `tenant_id` (logically `platform.tenant.id`; 447 tables). Tenant validity comes from the authenticated token and host→tenant resolution; RLS scopes every row. No FK.
+**Tenant references:** every tenant-owned table carries `tenant_id` (logically `platform.tenant.id`; 450 tables). Tenant validity comes from the authenticated token and host→tenant resolution; RLS scopes every row. No FK.
 
 **Not registered here by design:** actor columns (`created_by`, `updated_by`, `operation.started_by_user_id`, `idempotency_key.user_id`, `outbox_event.aggregate_id`) — audit/scope values that must outlive the account or aggregate they name — and the polymorphic `*_type` / `*_id` pairs listed in the database README.
 
@@ -310,7 +310,7 @@ Validated against the live catalog when it was written (every column exists, is 
 | `iam.user_account.person_id` | `people.person` | owner is never hard-deleted (archived by status); no action needed |
 | `iam.user_department_access.department_id` | `org.department` | archive/delete the dependent row |
 
-`iam.member_record` (migration V1_030_009) is not a set of references but a copy kept from events, like
+`iam.member_record` is not a set of references but a copy kept from events, like
 `iam.tenant_directory`: each row mirrors one `hr.staff` or `sis.student` row — its account, person and institution —
 from that row's own created, updated and deleted events (`MemberRecordSync`), so the owner's deletion is applied by
 the copy itself (a tombstone), and `iam.GetMe` reads the caller's records without reading another schema.
@@ -430,6 +430,7 @@ the copy itself (a tombstone), and `iam.GetMe` reads the caller's records withou
 | `lms.import_export_job.requested_by` | `iam.user_account` | owner is never hard-deleted (archived by status); no action needed |
 | `lms.item_override.user_id` | `iam.user_account` | owner is never hard-deleted (archived by status); no action needed |
 | `lms.learning_program_member.user_id` | `iam.user_account` | owner is never hard-deleted (archived by status); no action needed |
+| `lms.lesson_note.user_id` | `iam.user_account` | owner is never hard-deleted (archived by status); no action needed |
 | `lms.lesson_progress.user_id` | `iam.user_account` | owner is never hard-deleted (archived by status); no action needed |
 | `lms.live_class.calendar_event_id` | `comms.event` | null the column |
 | `lms.live_class.host_user_id` | `iam.user_account` | owner is never hard-deleted (archived by status); no action needed |
@@ -496,6 +497,12 @@ the copy itself (a tombstone), and `iam.GetMe` reads the caller's records withou
 | `payroll.salary_template.institution_id` | `org.institution` | owner is never hard-deleted (archived by status); no action needed |
 | `payroll.staff_bank_account.staff_id` | `hr.staff` | archive/delete the dependent row |
 | `payroll.staff_salary.staff_id` | `hr.staff` | owner is never hard-deleted (archived by status); no action needed |
+
+`payroll.staff_member` is not a set of references but a copy kept from events, like `iam.member_record`: each row
+mirrors one `hr.staff` row's account from that row's own created, updated and deleted events (`StaffMemberSync`; the
+deletion arrives through `PayrollReferenceCleanup`, the module's one handler of `hr.staff.deleted`), so the owner's
+deletion is applied by the copy itself (a tombstone), and payslip reads apply the owner-only rule without reading
+hr's schema.
 
 ## people (10 references)
 
@@ -600,6 +607,7 @@ These point against the module dependency graph; the owner is unaware of them. V
 | `platform.deletion_log.cohort_id` → `lms.cohort` | on owner deletion, null the column. |
 | `platform.storage_quota.user_id` → `iam.user_account` | on owner deletion, delete the row. |
 | `platform.storage_quota.institution_id` → `org.institution` | on owner deletion, delete the row. |
+| `platform.import_job.institution_id` → `org.institution` | on owner deletion, archive/retain (the row is evidence; it keeps the id). |
 | `people.consent_record.recorded_by_user_id` → `iam.user_account` | on owner deletion, null the column. |
 | `sis.promotion.based_on_exam_session_id` → `assessment.exam_session` | on owner deletion, null the column. |
 | `hr.staff_subject.subject_id` → `academics.subject` | on owner deletion, archive/retain (the row is evidence; it keeps the id). |
@@ -620,4 +628,4 @@ These point against the module dependency graph; the owner is unaware of them. V
 | `comms.notification_cohort_setting.cohort_id` → `lms.cohort` | on owner deletion, delete the row. |
 | `platform.file_object.uploaded_by_user_id` → `iam.user_account` | on owner deletion, null the column. |
 
-**Totals: 468 forward logical references + 26 against-DAG references; 447 tenant-owned tables.**
+**Totals: 468 forward logical references + 27 against-DAG references; 450 tenant-owned tables.**

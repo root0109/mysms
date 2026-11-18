@@ -53,13 +53,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of sis.subject_registration (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of sis.subject_registration: audit and domain event in the same transaction as every change; rows
+ * outside the caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a SubjectRegistration
- * are served here too — SubjectRegistrationLine.
+ * <p>Also serves the records that exist only as part of the SubjectRegistration aggregate: SubjectRegistrationLine.
  */
 @Service
 public class SubjectRegistrationService extends AppTransactionManager {
@@ -218,9 +215,8 @@ public class SubjectRegistrationService extends AppTransactionManager {
     }
 
     /**
-     * sis.SubmitSubjectRegistration: Submit for approval. The row must be visible and writable for the caller, and the
-     * step is allowed while status is draft; in any other state
-     * the answer is 409 and nothing changes.
+     * sis.SubmitSubjectRegistration: Submit for approval. Allowed while status is draft, for a caller who can see and
+     * write the row; otherwise 409 and nothing changes.
      */
     public SubjectRegistration submitSubjectRegistration(UUID id, SubmitSubjectRegistrationRequest request) {
         DataScope scope = DataScope.current(PERMISSION_SUBMIT_SUBJECT_REGISTRATION);
@@ -253,9 +249,8 @@ public class SubjectRegistrationService extends AppTransactionManager {
     }
 
     /**
-     * sis.RejectSubjectRegistration: Reject. The row must be visible and writable for the caller, and the step is
-     * allowed while status is submitted; in any other state
-     * the answer is 409 and nothing changes.
+     * sis.RejectSubjectRegistration: Reject. Allowed while status is submitted, for a caller who can see and write the
+     * row; otherwise 409 and nothing changes.
      */
     public SubjectRegistration rejectSubjectRegistration(UUID id, RejectSubjectRegistrationRequest request) {
         DataScope scope = DataScope.current(PERMISSION_REJECT_SUBJECT_REGISTRATION);
@@ -289,9 +284,8 @@ public class SubjectRegistrationService extends AppTransactionManager {
     }
 
     /**
-     * sis.ResetSubjectRegistration: Back to draft. The row must be visible and writable for the caller, and the step is
-     * allowed while status is rejected; in any other state
-     * the answer is 409 and nothing changes.
+     * sis.ResetSubjectRegistration: Back to draft. Allowed while status is rejected, for a caller who can see and write
+     * the row; otherwise 409 and nothing changes.
      */
     public SubjectRegistration resetSubjectRegistration(UUID id, ResetSubjectRegistrationRequest request) {
         DataScope scope = DataScope.current(PERMISSION_RESET_SUBJECT_REGISTRATION);

@@ -10,7 +10,6 @@ import com.mysms.lms.api.model.EvaluatorAvailability;
 import com.mysms.lms.api.model.EvaluatorAvailabilityUpdate;
 import com.mysms.lms.api.model.EvaluatorUpdate;
 import com.mysms.lms.api.model.ExternalLink;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.EvaluatorService;
 import java.net.URI;
@@ -19,10 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Evaluator operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Evaluator operations; authentication and the permission check already ran in the auth-client filter.
+ * Operations not served yet answer 501.
  */
 @RestController
 public class EvaluatorController implements EvaluatorApi {
@@ -36,7 +33,8 @@ public class EvaluatorController implements EvaluatorApi {
     @Override
     public ResponseEntity<ExternalLink> connectEvaluatorCalendar(UUID evaluatorId,
             ConnectEvaluatorCalendarRequest connectEvaluatorCalendarRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(evaluatorService.connectEvaluatorCalendar(evaluatorId,
+                connectEvaluatorCalendarRequest));
     }
 
     @Override
@@ -81,7 +79,8 @@ public class EvaluatorController implements EvaluatorApi {
     @Override
     public ResponseEntity<Evaluator> disconnectEvaluatorCalendar(UUID evaluatorId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Evaluator unlinked = evaluatorService.disconnectEvaluatorCalendar(evaluatorId);
+        return ResponseEntity.ok().eTag(unlinked.getEtag()).body(unlinked);
     }
 
     @Override

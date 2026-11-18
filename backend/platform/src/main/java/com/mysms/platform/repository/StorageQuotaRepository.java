@@ -23,11 +23,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to platform.storage_quota (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to platform.storage_quota: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. Every statement filters the caller's tenant itself; row-level security
+ * is the backstop.
  */
 @Repository
 public class StorageQuotaRepository {
@@ -63,6 +61,34 @@ public class StorageQuotaRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** A user's own quota (the schema allows one live row per user in practice; the newest wins). */
+    private static final String FIND_FOR_USER = SELECT_LIVE + " AND r.user_id = :userId ORDER BY r.created_at DESC LIMIT 1";
+    /**
+     * Counts bytes against the user's live quota row, in one statement so two uploads cannot both spend the last
+     * bytes: an enforced quota refuses (0 rows) what would exceed it; an unenforced one only keeps the count.
+     */
+    private static final String SPEND = """
+            UPDATE platform.storage_quota
+               SET used_bytes = used_bytes + :bytes,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND user_id = :userId AND deleted_at IS NULL
+               AND (NOT is_active OR used_bytes + :bytes <= quota_bytes)
+            RETURNING id
+            """;
+    /** Gives bytes back when a counted file is deleted (never below zero). */
+    private static final String RELEASE = """
+            UPDATE platform.storage_quota
+               SET used_bytes = GREATEST(used_bytes - :bytes, 0),
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND user_id = :userId AND deleted_at IS NULL
+            RETURNING id
+            """;
     private static final String INSERT = """
             INSERT INTO platform.storage_quota
             (id, tenant_id, user_id, institution_id, quota_bytes, used_bytes, is_active, created_at, created_by,
@@ -159,13 +185,30 @@ public class StorageQuotaRepository {
                 .update();
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
     private static List<Object> sortValues(SortSpec sort, StorageQuotaEntity e) {
         return sort.orders().stream().map(o -> SORT_VALUES.get(o.field().name()).apply(e)).toList();
+    }
+
+    /** The user's own live quota, when one is set. */
+    public Optional<StorageQuotaEntity> findForUser(UUID userId) {
+        return jdbc.sql(FIND_FOR_USER).param("userId", userId).query(StorageQuotaRepository::map).optional();
+    }
+
+    /** Counts the bytes on the user's quota rows; returns the rows that took them (none: refused or no quota). */
+    public List<UUID> spend(UUID userId, long bytes, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(SPEND).param("userId", userId).param("bytes", bytes).param("now", now).param("actor", actor)
+                .query(UUID.class).list();
+    }
+
+    /** Gives the bytes back on the user's quota rows; returns the rows that changed. */
+    public List<UUID> release(UUID userId, long bytes, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(RELEASE).param("userId", userId).param("bytes", bytes).param("now", now)
+                .param("actor", actor).query(UUID.class).list();
     }
 
     private static StorageQuotaEntity map(ResultSet rs, int row) throws SQLException {

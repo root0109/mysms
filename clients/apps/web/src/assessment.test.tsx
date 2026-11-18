@@ -130,6 +130,7 @@ describe('assessment screens', () => {
     const me = {
       ...schoolAdmin,
       user: { ...schoolAdmin.user, personId: student.personId },
+      studentIds: [student.id],
       permissions: [
         ...SELF_SERVICE,
         'assessment.homework.read',
@@ -141,15 +142,6 @@ describe('assessment screens', () => {
     const { api } = await signedIn('/app/assessment/homeworks/' + homeworkId, me, {
       ...fakeHomework({ status: 'published' }),
       'GET /v1/assessment/homework-submissions': (request) => onePage(request, []),
-      'GET /v1/sis/students': (request) =>
-        onePage(request, [
-          {
-            id: student.id,
-            personId: student.personId,
-            institutionId: attendanceFixture.institutionId,
-            status: 'active',
-          },
-        ]),
       'POST /v1/assessment/homework-submissions': async (request) => {
         const body = (await request.json()) as { homeworkId: string; studentId: string };
         return json(
@@ -168,6 +160,7 @@ describe('assessment screens', () => {
     );
     expect(JSON.parse(create?.body ?? '{}')).toEqual({ homeworkId, studentId: student.id });
     expect(create?.headers.get('Idempotency-Key')).toBeTruthy();
+    expect(api.calls.some((call) => call.path.startsWith('/v1/sis/students'))).toBe(false);
   });
 
   it('shows submissions to a permitted reviewer without assignment-read and gates every review action separately', async () => {
@@ -175,7 +168,11 @@ describe('assessment screens', () => {
     const studentId = '01960000-0000-7000-8000-0000000000b4';
     const me = {
       ...schoolAdmin,
-      permissions: [...SELF_SERVICE, 'assessment.assignment_submission.accept_assignment_submission'],
+      permissions: [
+        ...SELF_SERVICE,
+        'assessment.assignment_submission.read',
+        'assessment.assignment_submission.accept_assignment_submission',
+      ],
     };
     const { api } = await signedIn('/app/assessment/assignments/' + assignmentId, me, {
       'GET /v1/assessment/assignment-submissions': (request) =>
@@ -283,7 +280,7 @@ describe('assessment screens', () => {
     expect(await screen.findByText('Marks saved.')).toBeInTheDocument();
     const saved = api.calls.find((call) => call.path.endsWith(':recordMarks'));
     expect(JSON.parse(saved?.body ?? '{}')).toEqual({
-      entries: [{ studentId, attendanceStatus: 'present', marksObtained: '88' }],
+      entries: [{ studentId, attendanceStatus: 'present', marksObtained: '88', etag: '"1"' }],
     });
     expect(api.calls.filter((call) => call.path.endsWith(':recordMarks'))).toHaveLength(1);
     expect(api.calls.some((call) => call.path.endsWith(':markResultsUpdated'))).toBe(false);
@@ -316,5 +313,63 @@ describe('assessment screens', () => {
     });
     expect(await screen.findByRole('heading', { name: 'Exams (papers)' })).toBeInTheDocument();
     expect(await screen.findAllByRole('button', { name: 'Complete' })).toHaveLength(2);
+  });
+
+  it('lets a student hand in their own assignment: own row only, no submission time, the etag on submit', async () => {
+    const assignmentId = '01960000-0000-7000-8000-0000000000c1';
+    const studentId = '01960000-0000-7000-8000-0000000000c2';
+    const created = '01960000-0000-7000-8000-0000000000c3';
+    const me = {
+      ...schoolAdmin,
+      studentIds: [studentId],
+      permissions: [
+        ...SELF_SERVICE,
+        'assessment.assignment.read',
+        'assessment.assignment_submission.read',
+        'assessment.assignment_submission.create',
+        'assessment.assignment_submission.submit_assignment_submission',
+      ],
+    };
+    const { api } = await signedIn('/app/assessment/assignments/' + assignmentId, me, {
+      'GET /v1/assessment/assignments/{assignmentId}': () =>
+        json(
+          {
+            id: assignmentId,
+            title: 'Essay on rivers',
+            institutionId: 'school-1',
+            status: 'published',
+            dueAt: '2026-03-20T10:00:00Z',
+            etag: '"1"',
+          },
+          { headers: { ETag: '"1"' } },
+        ),
+      'GET /v1/assessment/assignment-submissions': (request) => onePage(request, []),
+      'POST /v1/assessment/assignment-submissions': async (request) =>
+        json(
+          { id: created, ...((await request.json()) as object), status: 'draft', etag: '"1"' },
+          { headers: { ETag: '"1"' } },
+        ),
+      [`POST /v1/assessment/assignment-submissions/${created}:submit`]: () =>
+        json({ id: created, assignmentId, studentId, status: 'submitted', etag: '"2"' }),
+    });
+    expect(await screen.findByRole('heading', { name: 'Assignment submission' })).toBeInTheDocument();
+    expect(screen.queryByText(/2026-03-20T10:00:00Z/)).not.toBeInTheDocument();
+    await userEvent.type(await screen.findByLabelText('Submission text'), 'Rivers shape valleys.');
+    await userEvent.click(screen.getByRole('button', { name: 'Submit assignment' }));
+    expect(await screen.findByText('Your submission is saved.')).toBeInTheDocument();
+    const list = api.calls.find((call) => call.path === '/v1/assessment/assignment-submissions');
+    expect(new URLSearchParams(list?.search).get('filter')).toBe(
+      `assignmentId = "${assignmentId}" AND studentId = "${studentId}"`,
+    );
+    const create = api.calls.find(
+      (call) => call.path === '/v1/assessment/assignment-submissions' && call.method === 'POST',
+    );
+    expect(JSON.parse(create?.body ?? '{}')).toEqual({
+      assignmentId,
+      studentId,
+      content: 'Rivers shape valleys.',
+    });
+    const submit = api.calls.find((call) => call.path.endsWith(':submit'));
+    expect(JSON.parse(submit?.body ?? '{}')).toEqual({ etag: '"1"' });
   });
 });

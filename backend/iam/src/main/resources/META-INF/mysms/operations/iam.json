@@ -5,7 +5,8 @@
   "permission" : "iam.user_account.accept_terms",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.ActivateUser",
   "method" : "POST",
@@ -13,7 +14,8 @@
   "permission" : "iam.user_account.activate_user",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.CancelOperation",
   "method" : "POST",
@@ -21,7 +23,8 @@
   "permission" : "iam.operation.cancel_operation",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.ChangePassword",
   "method" : "POST",
@@ -29,14 +32,16 @@
   "permission" : "iam.user_account.change_password",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.CheckUsernameAvailable",
   "method" : "GET",
   "path" : "/v1/iam/users:checkUsername",
   "permission" : "iam.user_account.check_username_available",
   "schemes" : [ ],
-  "anonymous" : true
+  "anonymous" : true,
+  "audience" : "public"
 }, {
   "operationId" : "iam.CompleteMfa",
   "method" : "POST",
@@ -44,7 +49,8 @@
   "permission" : "iam.user_account.complete_mfa",
   "schemes" : [ ],
   "anonymous" : true,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.ConfirmVerification",
   "method" : "POST",
@@ -52,7 +58,8 @@
   "permission" : "iam.user_account.confirm_verification",
   "schemes" : [ ],
   "anonymous" : true,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.CreateApiToken",
   "method" : "POST",
@@ -60,7 +67,8 @@
   "permission" : "iam.user_account.create_api_token",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.CreateRole",
   "method" : "POST",
@@ -68,7 +76,8 @@
   "permission" : "iam.role.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.CreateRolePermission",
   "method" : "POST",
@@ -76,7 +85,8 @@
   "permission" : "iam.role_permission.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.CreateSettingValue",
   "method" : "POST",
@@ -84,7 +94,8 @@
   "permission" : "iam.setting_value.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.CreateUserAccount",
   "method" : "POST",
@@ -92,7 +103,8 @@
   "permission" : "iam.user_account.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.CreateUserDepartmentAccess",
   "method" : "POST",
@@ -100,7 +112,8 @@
   "permission" : "iam.user_department_access.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.CreateUserDevice",
   "method" : "POST",
@@ -108,7 +121,8 @@
   "permission" : "iam.user_device.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.CreateUserPermission",
   "method" : "POST",
@@ -116,7 +130,8 @@
   "permission" : "iam.user_permission.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.CreateUserPreference",
   "method" : "POST",
@@ -124,7 +139,8 @@
   "permission" : "iam.user_preference.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.CreateUserRole",
   "method" : "POST",
@@ -132,7 +148,8 @@
   "permission" : "iam.user_role.create",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.DeactivateUser",
   "method" : "POST",
@@ -140,84 +157,96 @@
   "permission" : "iam.user_account.deactivate_user",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.DeleteAuthToken",
   "method" : "DELETE",
   "path" : "/v1/iam/users/{userAccountId}/api-tokens/{authTokenId}",
   "permission" : "iam.auth_token.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.DeleteRole",
   "method" : "DELETE",
   "path" : "/v1/iam/roles/{roleId}",
   "permission" : "iam.role.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.DeleteRolePermission",
   "method" : "DELETE",
   "path" : "/v1/iam/roles/{roleId}/permissions/{rolePermissionId}",
   "permission" : "iam.role_permission.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.DeleteSettingValue",
   "method" : "DELETE",
   "path" : "/v1/iam/setting-values/{settingValueId}",
   "permission" : "iam.setting_value.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.DeleteUserAccount",
   "method" : "DELETE",
   "path" : "/v1/iam/users/{userAccountId}",
   "permission" : "iam.user_account.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.DeleteUserDepartmentAccess",
   "method" : "DELETE",
   "path" : "/v1/iam/users/{userAccountId}/departments/{userDepartmentAccessId}",
   "permission" : "iam.user_department_access.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.DeleteUserDevice",
   "method" : "DELETE",
   "path" : "/v1/iam/users/{userAccountId}/devices/{userDeviceId}",
   "permission" : "iam.user_device.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.DeleteUserPermission",
   "method" : "DELETE",
   "path" : "/v1/iam/users/{userAccountId}/permissions/{userPermissionId}",
   "permission" : "iam.user_permission.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.DeleteUserPreference",
   "method" : "DELETE",
   "path" : "/v1/iam/users/{userAccountId}/preferences/{userPreferenceId}",
   "permission" : "iam.user_preference.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.DeleteUserRole",
   "method" : "DELETE",
   "path" : "/v1/iam/users/{userAccountId}/roles/{userRoleId}",
   "permission" : "iam.user_role.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.DeleteUserSession",
   "method" : "DELETE",
   "path" : "/v1/iam/users/{userAccountId}/sessions/{userSessionId}",
   "permission" : "iam.user_session.delete",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.DisableMfa",
   "method" : "POST",
@@ -225,7 +254,8 @@
   "permission" : "iam.mfa_credential.disable",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.EnrollMfa",
   "method" : "POST",
@@ -233,7 +263,8 @@
   "permission" : "iam.mfa_credential.enroll",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.ForcePasswordReset",
   "method" : "POST",
@@ -241,105 +272,120 @@
   "permission" : "iam.user_account.force_password_reset",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetMe",
   "method" : "GET",
   "path" : "/v1/iam/me",
   "permission" : "iam.user_account.get_me",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetOperation",
   "method" : "GET",
   "path" : "/v1/iam/operations/{operationId}",
   "permission" : "iam.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetPermission",
   "method" : "GET",
   "path" : "/v1/iam/permissions/{permissionId}",
   "permission" : "iam.permission.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetRole",
   "method" : "GET",
   "path" : "/v1/iam/roles/{roleId}",
   "permission" : "iam.role.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetRolePermission",
   "method" : "GET",
   "path" : "/v1/iam/roles/{roleId}/permissions/{rolePermissionId}",
   "permission" : "iam.role_permission.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetSettingDefinition",
   "method" : "GET",
   "path" : "/v1/iam/setting-definitions/{settingDefinitionId}",
   "permission" : "iam.setting_definition.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetSettingValue",
   "method" : "GET",
   "path" : "/v1/iam/setting-values/{settingValueId}",
   "permission" : "iam.setting_value.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetUserAccount",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}",
   "permission" : "iam.user_account.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetUserDepartmentAccess",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/departments/{userDepartmentAccessId}",
   "permission" : "iam.user_department_access.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetUserDevice",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/devices/{userDeviceId}",
   "permission" : "iam.user_device.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetUserPermission",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/permissions/{userPermissionId}",
   "permission" : "iam.user_permission.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetUserPreference",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/preferences/{userPreferenceId}",
   "permission" : "iam.user_preference.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetUserRole",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/roles/{userRoleId}",
   "permission" : "iam.user_role.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.GetUserSession",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/sessions/{userSessionId}",
   "permission" : "iam.user_session.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ImportUsers",
   "method" : "POST",
@@ -347,119 +393,136 @@
   "permission" : "iam.user_account.import_users",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListAuthTokens",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/api-tokens",
   "permission" : "iam.auth_token.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListMfaCredentials",
   "method" : "GET",
   "path" : "/v1/iam/mfa",
   "permission" : "iam.mfa_credential.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListMySettings",
   "method" : "GET",
   "path" : "/v1/iam/me/settings",
   "permission" : "iam.setting.read_mine",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListOperations",
   "method" : "GET",
   "path" : "/v1/iam/operations",
   "permission" : "iam.operation.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListPermissions",
   "method" : "GET",
   "path" : "/v1/iam/permissions",
   "permission" : "iam.permission.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListRolePermissions",
   "method" : "GET",
   "path" : "/v1/iam/roles/{roleId}/permissions",
   "permission" : "iam.role_permission.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListRoles",
   "method" : "GET",
   "path" : "/v1/iam/roles",
   "permission" : "iam.role.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListSettingDefinitions",
   "method" : "GET",
   "path" : "/v1/iam/setting-definitions",
   "permission" : "iam.setting_definition.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListSettingValues",
   "method" : "GET",
   "path" : "/v1/iam/setting-values",
   "permission" : "iam.setting_value.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListUserAccounts",
   "method" : "GET",
   "path" : "/v1/iam/users",
   "permission" : "iam.user_account.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListUserDepartmentAccesses",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/departments",
   "permission" : "iam.user_department_access.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListUserDevices",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/devices",
   "permission" : "iam.user_device.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListUserPermissions",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/permissions",
   "permission" : "iam.user_permission.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListUserPreferences",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/preferences",
   "permission" : "iam.user_preference.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListUserRoles",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/roles",
   "permission" : "iam.user_role.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ListUserSessions",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/sessions",
   "permission" : "iam.user_session.read",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.Login",
   "method" : "POST",
@@ -467,7 +530,8 @@
   "permission" : "iam.user_account.login",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : true,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.Logout",
   "method" : "POST",
@@ -475,7 +539,8 @@
   "permission" : "iam.user_account.logout",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.RefreshToken",
   "method" : "POST",
@@ -483,7 +548,8 @@
   "permission" : "iam.user_account.refresh_token",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : true,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.RegenerateRecoveryCodes",
   "method" : "POST",
@@ -491,7 +557,8 @@
   "permission" : "iam.mfa_credential.regenerate_recovery_codes",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.RequestPasswordReset",
   "method" : "POST",
@@ -499,7 +566,8 @@
   "permission" : "iam.user_account.request_password_reset",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : true,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.RequestVerification",
   "method" : "POST",
@@ -507,14 +575,16 @@
   "permission" : "iam.user_account.request_verification",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.ResetMySetting",
   "method" : "DELETE",
   "path" : "/v1/iam/me/settings/{settingKey}",
   "permission" : "iam.setting.update_mine",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.ResetPassword",
   "method" : "POST",
@@ -522,14 +592,32 @@
   "permission" : "iam.user_account.reset_password",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : true,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "iam.ListSignUpInstitutions",
+  "method" : "GET",
+  "path" : "/v1/iam/tenant-codes/{tenantCode}/sign-up-institutions",
+  "permission" : "iam.tenant_directory.list_sign_up_institutions",
+  "schemes" : [ ],
+  "anonymous" : true,
+  "audience" : "public"
+}, {
+  "operationId" : "iam.ResolveTenantCode",
+  "method" : "GET",
+  "path" : "/v1/iam/tenant-codes/{tenantCode}",
+  "permission" : "iam.tenant_directory.resolve_tenant_code",
+  "schemes" : [ ],
+  "anonymous" : true,
+  "audience" : "public"
 }, {
   "operationId" : "iam.SetMySetting",
   "method" : "PUT",
   "path" : "/v1/iam/me/settings/{settingKey}",
   "permission" : "iam.setting.update_mine",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.SetUserCredentials",
   "method" : "POST",
@@ -537,7 +625,8 @@
   "permission" : "iam.user_account.set_user_credentials",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.SetUserRoles",
   "method" : "POST",
@@ -545,7 +634,8 @@
   "permission" : "iam.user_account.set_user_roles",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.SignUp",
   "method" : "POST",
@@ -553,7 +643,8 @@
   "permission" : "iam.user_account.sign_up",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : true,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.StartImpersonation",
   "method" : "POST",
@@ -561,7 +652,8 @@
   "permission" : "iam.user_account.start_impersonation",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.StopImpersonation",
   "method" : "POST",
@@ -569,7 +661,8 @@
   "permission" : "iam.user_account.stop_impersonation",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.SwitchRole",
   "method" : "POST",
@@ -577,7 +670,8 @@
   "permission" : "iam.user_account.switch_role",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.UnlockUser",
   "method" : "POST",
@@ -585,68 +679,78 @@
   "permission" : "iam.user_account.unlock_user",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "idempotency" : "optional"
+  "idempotency" : "optional",
+  "audience" : "public"
 }, {
   "operationId" : "iam.UpdateRole",
   "method" : "PATCH",
   "path" : "/v1/iam/roles/{roleId}",
   "permission" : "iam.role.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.UpdateRolePermission",
   "method" : "PATCH",
   "path" : "/v1/iam/roles/{roleId}/permissions/{rolePermissionId}",
   "permission" : "iam.role_permission.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.UpdateSettingValue",
   "method" : "PATCH",
   "path" : "/v1/iam/setting-values/{settingValueId}",
   "permission" : "iam.setting_value.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.UpdateUserAccount",
   "method" : "PATCH",
   "path" : "/v1/iam/users/{userAccountId}",
   "permission" : "iam.user_account.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.UpdateUserDepartmentAccess",
   "method" : "PATCH",
   "path" : "/v1/iam/users/{userAccountId}/departments/{userDepartmentAccessId}",
   "permission" : "iam.user_department_access.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.UpdateUserDevice",
   "method" : "PATCH",
   "path" : "/v1/iam/users/{userAccountId}/devices/{userDeviceId}",
   "permission" : "iam.user_device.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.UpdateUserPermission",
   "method" : "PATCH",
   "path" : "/v1/iam/users/{userAccountId}/permissions/{userPermissionId}",
   "permission" : "iam.user_permission.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.UpdateUserPreference",
   "method" : "PATCH",
   "path" : "/v1/iam/users/{userAccountId}/preferences/{userPreferenceId}",
   "permission" : "iam.user_preference.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 }, {
   "operationId" : "iam.UpdateUserRole",
   "method" : "PATCH",
   "path" : "/v1/iam/users/{userAccountId}/roles/{userRoleId}",
   "permission" : "iam.user_role.update",
   "schemes" : [ "bearerAuth" ],
-  "anonymous" : false
+  "anonymous" : false,
+  "audience" : "public"
 } ]

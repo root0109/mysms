@@ -87,14 +87,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of people.person (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of people.person: audit and domain event in the same transaction as every change; rows outside the
+ * caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Person
- * are served here too — Certification, EducationHistory, EmergencyContact, PersonAddress, PersonDocument,
- * PersonSkill, PersonSocialLink, PublicProfile, WorkExperience.
+ * <p>Also serves the records that exist only as part of the Person aggregate: Certification, EducationHistory,
+ * EmergencyContact, PersonAddress, PersonDocument, PersonSkill, PersonSocialLink, PublicProfile, WorkExperience.
  */
 @Service
 public class PersonService extends AppTransactionManager implements InitializingBean {
@@ -290,7 +287,7 @@ public class PersonService extends AppTransactionManager implements Initializing
         this.workExperienceMapper = workExperienceMapper;
     }
 
-    /** Refuses to start without a master key: this resource stores secret columns (DEPLOYMENT.md "Secrets"). */
+    /** Refuses to start without a master key: this resource stores secret columns. */
     @Override
     public void afterPropertiesSet() {
         cipher.requireConfigured();
@@ -437,7 +434,7 @@ public class PersonService extends AppTransactionManager implements Initializing
         });
     }
 
-    /** Stores nationalId encrypted for the row's tenant and column (database/README "Secrets"); never the plaintext. */
+    /** Stores nationalId encrypted for the row's tenant and column; never the plaintext. */
     private void sealNationalId(PersonEntity entity, String plaintext) {
         entity.setNationalIdEnc(cipher.encrypt(plaintext, entity.getTenantId(), SECRET_NATIONAL_ID_ENC));
     }

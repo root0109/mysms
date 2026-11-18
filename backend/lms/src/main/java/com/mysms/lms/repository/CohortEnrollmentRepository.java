@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.cohort_enrollment (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.cohort_enrollment: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class CohortEnrollmentRepository {
@@ -80,6 +77,10 @@ public class CohortEnrollmentRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** A student's active cohort enrolments, newest first (the student dashboard). */
+    private static final String OWN_ACTIVE = SELECT_LIVE
+            + " AND r.user_id = :userId AND r.is_active AND r.removed_at IS NULL ORDER BY r.created_at DESC, r.id"
+            + " LIMIT :limit";
     private static final String INSERT = """
             INSERT INTO lms.cohort_enrollment
             (id, tenant_id, cohort_id, user_id, payment_id, acquisition_source_id, confirmation_email_sent,
@@ -140,6 +141,12 @@ public class CohortEnrollmentRepository {
 
     public CohortEnrollmentRepository(@Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** The user's active cohort enrolments, newest first, at most {@code limit}. */
+    public List<CohortEnrollmentEntity> ownActive(UUID userId, int limit) {
+        return jdbc.sql(OWN_ACTIVE).param("userId", userId).param("limit", limit)
+                .query(CohortEnrollmentRepository::map).list();
     }
 
     public Optional<CohortEnrollmentEntity> findById(UUID id) {
@@ -234,9 +241,20 @@ public class CohortEnrollmentRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    private static final String EXISTS_MEMBER = """
+            SELECT EXISTS (SELECT 1 FROM lms.cohort_enrollment WHERE tenant_id = :tenantId
+                AND cohort_id = :cohortId AND user_id = :userId AND deleted_at IS NULL)
+            """;
+
+    /** Whether the user already has a live enrolment row in the cohort. */
+    public boolean exists(UUID cohortId, UUID userId) {
+        return Boolean.TRUE.equals(jdbc.sql(EXISTS_MEMBER).param("cohortId", cohortId).param("userId", userId)
+                .query(Boolean.class).single());
     }
 
     private static List<Object> sortValues(SortSpec sort, CohortEnrollmentEntity e) {

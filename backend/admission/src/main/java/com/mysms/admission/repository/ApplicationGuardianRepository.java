@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to admission.application_guardian (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to admission.application_guardian: live rows only, keyset paging, and the row_version guard on
+ * every update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class ApplicationGuardianRepository {
@@ -73,6 +70,8 @@ public class ApplicationGuardianRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String FIND_OF_APPLICATION = SELECT_LIVE
+            + " AND r.application_id = :applicationId ORDER BY r.created_at, r.id";
     private static final String INSERT = """
             INSERT INTO admission.application_guardian
             (id, tenant_id, application_id, relationship, name, qualification_id, designation, occupation,
@@ -123,14 +122,11 @@ public class ApplicationGuardianRepository {
             SELECT EXISTS (SELECT 1 FROM admission.application WHERE tenant_id = :tenantId
                 AND id = :id AND deleted_at IS NULL)
             """;
-    private static final String INSTITUTION_OF = """
-            SELECT p0.institution_id FROM admission.application p0 WHERE p0.tenant_id = :tenantId AND p0.id = :ref
-            """;
-    private static final String SCOPE = """
-             (:scopeAll OR r.application_id IN (SELECT p0.id FROM admission.application p0 WHERE p0.tenant_id =
-                 :tenantId
-                 AND (p0.institution_id =
-             ANY(:scopeIds))))
+    private static final String REACH = """
+             (:scopeAll OR r.application_id IN (SELECT p0.id FROM admission.application p0
+                 WHERE p0.tenant_id = :tenantId
+                   AND (p0.institution_id = ANY(:scopeIds)
+                        OR (p0.created_by = :applicant AND p0.admission_cycle_id IS NOT NULL))))
             """;
 
     private final JdbcClient jdbc;
@@ -141,6 +137,12 @@ public class ApplicationGuardianRepository {
 
     public Optional<ApplicationGuardianEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(ApplicationGuardianRepository::map).optional();
+    }
+
+    /** The guardians of one application (at most one per relationship), oldest first. */
+    public List<ApplicationGuardianEntity> findOfApplication(UUID applicationId) {
+        return jdbc.sql(FIND_OF_APPLICATION).param("applicationId", applicationId)
+                .query(ApplicationGuardianRepository::map).list();
     }
 
     public Page<ApplicationGuardianEntity> list(PageRequest page, SqlFragment filter) {
@@ -221,22 +223,16 @@ public class ApplicationGuardianRepository {
         return Boolean.TRUE.equals(jdbc.sql(EXISTS_APPLICATION_ID).param("id", id).query(Boolean.class).single());
     }
 
-    /** The institution owning the row reached through application_id (empty: a tenant-level row, or none). */
-    public Optional<UUID> institutionOf(UUID ref) {
-        if (ref == null) {
-            return Optional.empty();
-        }
-        return jdbc.sql(INSTITUTION_OF).param("ref", ref)
-                .query((rs, row) -> Optional.ofNullable(rs.getObject(1, UUID.class)))
-                .optional().flatMap(found -> found);
+    /**
+     * Rows of applications in the caller's institutions, and of the applications the caller started themselves in an
+     * admission cycle.
+     */
+    public static SqlFragment reach(DataScope scope, UUID applicant) {
+        return new SqlFragment(REACH,
+                Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray(), "applicant", applicant));
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
-    public static SqlFragment scope(DataScope scope) {
-        return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
-    }
-
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.application_id = :parentId", Map.of("parentId", parentId));
     }

@@ -14,9 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of master.state_province: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/master.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter.
+ * REST edge of master.state_province; authentication and the permission check already happened in the auth-client
+ * filter.
  */
 @RestController
 public class StateProvinceController implements StateProvinceApi {

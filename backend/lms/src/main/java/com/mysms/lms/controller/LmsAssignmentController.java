@@ -6,7 +6,6 @@ import com.mysms.core.paging.PagingInfo;
 import com.mysms.lms.api.LmsAssignmentApi;
 import com.mysms.lms.api.model.LmsAssignment;
 import com.mysms.lms.api.model.LmsAssignmentUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.LmsAssignmentService;
 import java.net.URI;
@@ -15,11 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the LmsAssignment operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the LmsAssignment operations; authentication and the permission check already ran in the auth-client
+ * filter. Operations not served yet answer 501.
  */
 @RestController
 public class LmsAssignmentController implements LmsAssignmentApi {
@@ -44,7 +40,8 @@ public class LmsAssignmentController implements LmsAssignmentApi {
 
     @Override
     public ResponseEntity<Void> deleteLmsAssignment(UUID assignmentId, String ifMatch) {
-        throw new NotImplementedException();
+        lmsAssignmentService.deleteLmsAssignment(assignmentId, ifMatch);
+        return ResponseEntity.noContent().build();
     }
 
     @Override

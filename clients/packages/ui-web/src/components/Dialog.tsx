@@ -15,6 +15,9 @@ const FOCUSABLE =
 export function Dialog({ open, title, onClose, children, footer }: DialogProps) {
   const titleId = useId();
   const panel = useRef<HTMLDivElement>(null);
+  // The handler lives in a ref so an inline onClose does not re-run the effect and steal focus mid-typing.
+  const close = useRef(onClose);
+  close.current = onClose;
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
@@ -23,7 +26,7 @@ export function Dialog({ open, title, onClose, children, footer }: DialogProps) 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        onClose();
+        close.current();
         return;
       }
       if (e.key !== 'Tab' || !node) return;
@@ -44,7 +47,7 @@ export function Dialog({ open, title, onClose, children, footer }: DialogProps) 
       document.removeEventListener('keydown', onKey);
       previous?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
   if (!open) return null;
   return (
     <div className="sms-dialog__backdrop">

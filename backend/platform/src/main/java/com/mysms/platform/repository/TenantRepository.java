@@ -22,11 +22,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to platform.tenant (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. The table is global (no
- * tenant column, no row-level security): it is written only by
- * platform staff, through the operations whose scheme the edge enforces.
+ * Plain-JDBC access to platform.tenant: live rows only, keyset paging over an allowlisted order and the row_version
+ * guard on every update and delete. The table is global (no tenant column, no row-level security): it is written only
+ * by platform staff, through the operations whose scheme the edge enforces.
  */
 @Repository
 public class TenantRepository {
@@ -71,6 +69,7 @@ public class TenantRepository {
              WHERE r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String FIND_BY_CODE = SELECT_LIVE + " AND r.code = :code";
     private static final String INSERT = """
             INSERT INTO platform.tenant
             (id, code, name, legal_name, status, primary_email, primary_phone, country_id, default_currency_id,
@@ -112,14 +111,28 @@ public class TenantRepository {
                             WHERE code = :code AND id <> :id)
             """;
 
+    private static final String EXISTS = """
+            SELECT EXISTS (SELECT 1 FROM platform.tenant WHERE id = :id)
+            """;
+
     private final JdbcClient jdbc;
 
     public TenantRepository(@Qualifier(PlatformDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
     }
 
+    /** The live tenant with this code (the code users sign in and reach their tenant's pages with). */
+    public Optional<TenantEntity> findByCode(String code) {
+        return jdbc.sql(FIND_BY_CODE).param("code", code).query(TenantRepository::map).optional();
+    }
+
     public Optional<TenantEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(TenantRepository::map).optional();
+    }
+
+    /** Whether a row with this id exists, deleted or not. */
+    public boolean exists(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(EXISTS).param("id", id).query(Boolean.class).single());
     }
 
     public Page<TenantEntity> list(PageRequest page, SqlFragment filter) {

@@ -4,9 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * The Organisation & Calendar microservice: owns schema "org" and serves the org contract.
- * Core configures it from this class: the package it scans names the module (ModuleDefaultsEnvironmentPostProcessor);
- * in the monolith the same module runs inside `app`.
+ * The Organisation & Calendar microservice: owns schema "org" and serves the org contract. In the monolith it runs
+ * inside {@code app}, which combines its {@code application.properties} with every other module's.
  */
 @SpringBootApplication
 public class OrgApplication {

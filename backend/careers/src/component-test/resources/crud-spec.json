@@ -135,11 +135,11 @@
    ],
    "create": {
     "jobOpeningId": "61b1aa84-f117-5f71-a4a9-6807b5299cf8",
-    "applicantUserId": "3e1ca679-d966-58ab-bb8e-b9e5dc26cd5e",
     "resumeFileId": "aa42f44a-fdc9-5517-8900-3460201a7e4a"
    },
    "update": {},
-   "duplicateConflicts": true
+   "duplicateConflicts": true,
+   "ownerOnly": "3e1ca679-d966-58ab-bb8e-b9e5dc26cd5e"
   },
   {
    "name": "JobOpening",
@@ -147,6 +147,8 @@
    "ops": [
     "Create",
     "Delete",
+    "Get",
+    "List",
     "Update"
    ],
    "collection": "/v1/careers/job-openings",

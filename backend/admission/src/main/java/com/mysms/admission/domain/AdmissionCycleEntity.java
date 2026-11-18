@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of admission.admission_cycle (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of admission.admission_cycle. */
 @Getter
 @Setter
 @SuperBuilder

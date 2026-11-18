@@ -3,7 +3,7 @@ package com.mysms.core.paging;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** A piece of SQL with its named bind parameters. Values are always bound, never concatenated (§6). */
+/** A piece of SQL with its named bind parameters. Values are always bound, never concatenated. */
 public record SqlFragment(String sql, Map<String, Object> params) {
 
     public static final SqlFragment TRUE = new SqlFragment("TRUE", Map.of());

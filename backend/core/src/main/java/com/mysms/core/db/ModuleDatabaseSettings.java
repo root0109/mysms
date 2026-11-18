@@ -3,29 +3,23 @@ package com.mysms.core.db;
 import java.time.Duration;
 
 /**
- * `mysms.<module>.datasource.*`: where a module's schema lives. Every module binds its own, so moving a schema to its
- * own PostgreSQL instance is a configuration change (JAVA-CODING-RULES §2).
+ * `mysms.<module>.datasource.*`: where a module's schema lives, so moving a schema to its own PostgreSQL instance is a
+ * configuration change.
  *
- * @param url              JDBC URL
- * @param username         database role of this module
- * @param password         its password (from the environment or a secret store; never committed)
- * @param maximumPoolSize  connection pool size
- * @param transactionTimeout upper bound for one transaction
+ * @param password         from the environment or a secret store; never committed
  * @param migrate          whether this process applies the module's Flyway migrations at startup
- * @param migrateUsername  the schema owner Flyway runs as (database/README: `mysms_migrate`); the application role
+ * @param migrateUsername  the schema owner Flyway runs as (`mysms_migrate`); the application role
  *                         then only receives DML grants and can never alter tables or switch off row-level security.
  *                         Blank = migrate as the application role (local development only; logged as a warning)
- * @param migratePassword  its password
- * @param relayUsername    the role the outbox relay reads every tenant's pending events as (database/README:
- *                         `mysms_platform_admin`, BYPASSRLS). Blank = the application role, which works only when it
- *                         bypasses row-level security itself (local development as a superuser)
- * @param relayPassword    its password
+ * @param relayUsername    the role the outbox relay reads every tenant's pending events as (`mysms_relay`,
+ *                         BYPASSRLS). Blank = the application role, which works only when it bypasses row-level
+ *                         security itself (local development as a superuser)
  * @param slowStatement    how long a statement may take before it is named in the log (default 200 ms; zero or less
  *                         switches the report off)
  * @param replicaUrl       JDBC URL of a streaming replica that read-only transactions use; blank = none, every read
  *                         goes to the primary. Never migrated: it follows the primary
  * @param replicaUsername  role on the replica; blank = the application role
- * @param replicaPassword  its password; blank = the application role's
+ * @param replicaPassword  blank = the application role's
  */
 public record ModuleDatabaseSettings(String url, String username, String password, Integer maximumPoolSize,
                                      Duration transactionTimeout, Boolean migrate, String migrateUsername,

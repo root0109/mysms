@@ -8,9 +8,8 @@ import java.util.Set;
 import org.springframework.beans.BeanWrapperImpl;
 
 /**
- * Which fields a partial update changes (api/README: "updateMask — comma-separated fields to update; if omitted,
- * every field present in the body is updated"). With a mask, a listed field absent from the body is cleared; without
- * one, only the non-null body fields apply. Names are checked against the resource's writable fields (400 otherwise).
+ * Which fields a partial update changes: with a mask, a listed field absent from the body is cleared; without one,
+ * only the non-null body fields apply. Names are checked against the writable fields (400 otherwise).
  */
 public final class UpdateMask {
 

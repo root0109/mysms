@@ -3,7 +3,9 @@ package com.mysms.admission.controller;
 import java.util.List;
 import com.mysms.core.paging.PagingUtil;
 import com.mysms.core.paging.PagingInfo;
+import com.mysms.admission.business.ApplicationEnrollmentService;
 import com.mysms.admission.business.ApplicationService;
+import com.mysms.admission.business.ApplicationWorkflowService;
 import com.mysms.admission.api.ApplicationApi;
 import com.mysms.admission.api.model.Application;
 import com.mysms.admission.api.model.ApplicationEmergencyContact;
@@ -21,7 +23,6 @@ import com.mysms.admission.api.model.MarkApplicationPendingRequest;
 import com.mysms.admission.api.model.RejectApplicationRequest;
 import com.mysms.admission.api.model.ResetApplicationRequest;
 import com.mysms.admission.api.model.SubmitApplicationRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -29,43 +30,52 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Application operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/admission.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the Application operations; authentication and the permission check already ran in the auth-client
+ * filter. Operations not served yet answer 501.
  */
 @RestController
 public class ApplicationController implements ApplicationApi {
 
     private final ApplicationService applicationService;
+    private final ApplicationWorkflowService applicationWorkflowService;
+    private final ApplicationEnrollmentService applicationEnrollmentService;
 
-    public ApplicationController(ApplicationService applicationService) {
+    public ApplicationController(ApplicationService applicationService,
+            ApplicationWorkflowService applicationWorkflowService,
+            ApplicationEnrollmentService applicationEnrollmentService) {
         this.applicationService = applicationService;
+        this.applicationWorkflowService = applicationWorkflowService;
+        this.applicationEnrollmentService = applicationEnrollmentService;
     }
+
+    /** A step's answer: the application as it now stands, with its ETag. */
+    private static ResponseEntity<Application> changed(Application application) {
+        return ResponseEntity.ok().eTag(application.getEtag()).body(application);
+    }
+
 
     @Override
     public ResponseEntity<Application> approveApplication(UUID applicationId,
             ApproveApplicationRequest approveApplicationRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return changed(applicationWorkflowService.approveApplication(applicationId, approveApplicationRequest));
     }
 
     @Override
     public ResponseEntity<Application> cancelApplication(UUID applicationId,
             CancelApplicationRequest cancelApplicationRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return changed(applicationWorkflowService.cancelApplication(applicationId, cancelApplicationRequest));
     }
 
     @Override
     public ResponseEntity<Application> confirmAdmission(UUID applicationId,
             ConfirmAdmissionRequest confirmAdmissionRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return changed(applicationWorkflowService.confirmAdmission(applicationId, confirmAdmissionRequest));
     }
 
     @Override
     public ResponseEntity<Application> confirmApplication(UUID applicationId,
             ConfirmApplicationRequest confirmApplicationRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return changed(applicationWorkflowService.confirmApplication(applicationId, confirmApplicationRequest));
     }
 
     @Override
@@ -134,7 +144,7 @@ public class ApplicationController implements ApplicationApi {
     @Override
     public ResponseEntity<EnrollApplicantResult> enrollApplicant(UUID applicationId, UUID idempotencyKey,
             EnrollApplicantRequest enrollApplicantRequest) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(applicationEnrollmentService.enrollApplicant(applicationId, enrollApplicantRequest));
     }
 
     @Override
@@ -192,25 +202,25 @@ public class ApplicationController implements ApplicationApi {
     @Override
     public ResponseEntity<Application> markApplicationPending(UUID applicationId,
             MarkApplicationPendingRequest markApplicationPendingRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return changed(applicationWorkflowService.markApplicationPending(applicationId, markApplicationPendingRequest));
     }
 
     @Override
     public ResponseEntity<Application> rejectApplication(UUID applicationId,
             RejectApplicationRequest rejectApplicationRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return changed(applicationWorkflowService.rejectApplication(applicationId, rejectApplicationRequest));
     }
 
     @Override
     public ResponseEntity<Application> resetApplication(UUID applicationId,
             ResetApplicationRequest resetApplicationRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return changed(applicationWorkflowService.resetApplication(applicationId, resetApplicationRequest));
     }
 
     @Override
     public ResponseEntity<Application> submitApplication(UUID applicationId,
             SubmitApplicationRequest submitApplicationRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return changed(applicationWorkflowService.submitApplication(applicationId, submitApplicationRequest));
     }
 
     @Override

@@ -12,34 +12,36 @@ import com.mysms.sis.api.model.SubjectRegistrationLine;
 import com.mysms.sis.api.model.SubjectRegistrationLineUpdate;
 import com.mysms.sis.api.model.SubjectRegistrationUpdate;
 import com.mysms.sis.api.model.SubmitSubjectRegistrationRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.sis.business.SubjectRegistrationService;
+import com.mysms.sis.business.SubjectRegistrationWorkflowService;
 import java.net.URI;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the SubjectRegistration operations: implements the generated contract interface, so paths, parameters
- * and payloads
- * cannot drift from api/openapi/sis.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the SubjectRegistration operations; authentication and the permission check already happened in the
+ * auth-client filter; operations not served yet answer 501 NOT_IMPLEMENTED.
  */
 @RestController
 public class SubjectRegistrationController implements SubjectRegistrationApi {
 
     private final SubjectRegistrationService subjectRegistrationService;
+    private final SubjectRegistrationWorkflowService workflowService;
 
-    public SubjectRegistrationController(SubjectRegistrationService subjectRegistrationService) {
+    public SubjectRegistrationController(SubjectRegistrationService subjectRegistrationService,
+            SubjectRegistrationWorkflowService workflowService) {
         this.subjectRegistrationService = subjectRegistrationService;
+        this.workflowService = workflowService;
     }
 
     @Override
     public ResponseEntity<SubjectRegistration> approveSubjectRegistration(UUID subjectRegistrationId,
             ApproveSubjectRegistrationRequest approveSubjectRegistrationRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        SubjectRegistration approved = workflowService.approveSubjectRegistration(subjectRegistrationId,
+                approveSubjectRegistrationRequest);
+        return ResponseEntity.ok().eTag(approved.getEtag()).body(approved);
     }
 
     @Override
@@ -123,7 +125,8 @@ public class SubjectRegistrationController implements SubjectRegistrationApi {
     @Override
     public ResponseEntity<SubjectRegistration> loadCourseSubjects(UUID subjectRegistrationId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        SubjectRegistration filled = workflowService.loadCourseSubjects(subjectRegistrationId);
+        return ResponseEntity.ok().eTag(filled.getEtag()).body(filled);
     }
 
     @Override

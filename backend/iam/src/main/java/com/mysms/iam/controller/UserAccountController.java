@@ -9,6 +9,7 @@ import com.mysms.iam.api.model.AcceptTermsRequest;
 import com.mysms.iam.api.model.ActivateUserRequest;
 import com.mysms.iam.api.model.ApiTokenCreated;
 import com.mysms.iam.api.model.Availability;
+import com.mysms.iam.api.model.TenantCodeResolution;
 import com.mysms.iam.api.model.ChangePasswordRequest;
 import com.mysms.iam.api.model.ConfirmVerificationRequest;
 import com.mysms.iam.api.model.CreateApiTokenRequest;
@@ -30,6 +31,7 @@ import com.mysms.iam.api.model.ResetPasswordRequest;
 import com.mysms.iam.api.model.SetMySettingRequest;
 import com.mysms.iam.api.model.SetUserCredentialsRequest;
 import com.mysms.iam.api.model.SetUserRolesRequest;
+import com.mysms.iam.api.model.SignUpInstitutionList;
 import com.mysms.iam.api.model.SignUpRequest;
 import com.mysms.iam.api.model.StartImpersonationRequest;
 import com.mysms.iam.api.model.SwitchRoleRequest;
@@ -50,10 +52,16 @@ import com.mysms.iam.api.model.UserRole;
 import com.mysms.iam.api.model.UserRoleList;
 import com.mysms.iam.api.model.UserRoleUpdate;
 import com.mysms.iam.api.model.UserSession;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.ReadMask;
+import com.mysms.iam.business.AccountProvisioningService;
+import com.mysms.iam.business.AccountRecoveryService;
 import com.mysms.iam.business.AccountSecurityService;
+import com.mysms.iam.business.ApiTokenService;
+import com.mysms.iam.business.ApiTokens;
+import com.mysms.iam.business.ImpersonationService;
+import com.mysms.iam.business.RoleGrantService;
+import com.mysms.iam.business.RoleSwitchService;
 import com.mysms.iam.business.MeService;
 import com.mysms.iam.business.MySettingsService;
 import com.mysms.iam.business.SignInService;
@@ -66,13 +74,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the UserAccount operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/iam.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED. Standard operations follow the module's resource pattern; login, refreshToken, logout,
- * getMe, listMySettings, setMySetting, resetMySetting, changePassword, setUserCredentials and acceptTerms carry their
- * own rules.
+ * REST edge of the UserAccount operations; authentication and the permission check already ran in the auth-client
+ * filter. Sign-in, refresh, the caller's own account, credentials, mailed secrets, sign-up and import, role grants
+ * and switch, impersonation and API tokens are served by their own services.
  */
 @RestController
 public class UserAccountController implements UserAccountApi {
@@ -84,6 +88,12 @@ public class UserAccountController implements UserAccountApi {
     private final DtoValidator validator;
     private final HttpServletRequest request;
     private final UserAccountService userAccountService;
+    private final AccountRecoveryService recovery;
+    private final AccountProvisioningService provisioning;
+    private final ApiTokenService apiTokens;
+    private final ImpersonationService impersonation;
+    private final RoleGrantService roleGrants;
+    private final RoleSwitchService roleSwitch;
 
     public UserAccountController(SignInService signIn,
             AccountSecurityService accountSecurity,
@@ -91,7 +101,13 @@ public class UserAccountController implements UserAccountApi {
             MySettingsService mySettings,
             DtoValidator validator,
             HttpServletRequest request,
-            UserAccountService userAccountService) {
+            UserAccountService userAccountService,
+            AccountRecoveryService recovery,
+            AccountProvisioningService provisioning,
+            ApiTokenService apiTokens,
+            ImpersonationService impersonation,
+            RoleGrantService roleGrants,
+            RoleSwitchService roleSwitch) {
         this.signIn = signIn;
         this.accountSecurity = accountSecurity;
         this.me = me;
@@ -99,6 +115,12 @@ public class UserAccountController implements UserAccountApi {
         this.validator = validator;
         this.request = request;
         this.userAccountService = userAccountService;
+        this.recovery = recovery;
+        this.provisioning = provisioning;
+        this.apiTokens = apiTokens;
+        this.impersonation = impersonation;
+        this.roleGrants = roleGrants;
+        this.roleSwitch = roleSwitch;
     }
 
     @Override
@@ -124,19 +146,30 @@ public class UserAccountController implements UserAccountApi {
 
     @Override
     public ResponseEntity<Availability> checkUsernameAvailable(String username) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(provisioning.checkUsernameAvailable(username));
+    }
+
+    @Override
+    public ResponseEntity<TenantCodeResolution> resolveTenantCode(String tenantCode) {
+        return ResponseEntity.ok(signIn.resolveTenantCode(tenantCode));
+    }
+
+    @Override
+    public ResponseEntity<SignUpInstitutionList> listSignUpInstitutions(String tenantCode) {
+        return ResponseEntity.ok(provisioning.listSignUpInstitutions(tenantCode));
     }
 
     @Override
     public ResponseEntity<UserAccount> confirmVerification(
             ConfirmVerificationRequest confirmVerificationRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(recovery.confirmVerification(confirmVerificationRequest));
     }
 
     @Override
     public ResponseEntity<ApiTokenCreated> createApiToken(UUID userAccountId,
             CreateApiTokenRequest createApiTokenRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        ApiTokenCreated created = apiTokens.createApiToken(userAccountId, createApiTokenRequest, request.getRemoteAddr());
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(created);
     }
 
     @Override
@@ -221,7 +254,8 @@ public class UserAccountController implements UserAccountApi {
 
     @Override
     public ResponseEntity<Void> deleteAuthToken(UUID userAccountId, UUID authTokenId, String ifMatch) {
-        throw new NotImplementedException();
+        apiTokens.deleteAuthToken(userAccountId, authTokenId, ifMatch);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
@@ -273,7 +307,8 @@ public class UserAccountController implements UserAccountApi {
     @Override
     public ResponseEntity<UserAccount> forcePasswordReset(UUID userAccountId,
             ForcePasswordResetRequest forcePasswordResetRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        UserAccount changed = recovery.forcePasswordReset(userAccountId, forcePasswordResetRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -332,13 +367,16 @@ public class UserAccountController implements UserAccountApi {
     @Override
     public ResponseEntity<Operation> importUsers(ImportUsersRequest importUsersRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.accepted().body(provisioning.importUsers(importUsersRequest));
     }
 
     @Override
     public ResponseEntity<PagingInfo<AuthToken>> listAuthTokens(UUID userAccountId, Integer page, Integer size,
             String cursor, String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<AuthToken> list = PagingUtil.pagingInfo(apiTokens.listAuthTokens(userAccountId, page, size, cursor,
+                filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
@@ -430,20 +468,23 @@ public class UserAccountController implements UserAccountApi {
     @Override
     public ResponseEntity<TokenPair> refreshToken(RefreshTokenRequest refreshTokenRequest, UUID idempotencyKey) {
         validator.validate(refreshTokenRequest);
-        TokenPair tokens = signIn.refresh(refreshTokenRequest.getRefreshToken());
+        String presented = refreshTokenRequest.getRefreshToken();
+        TokenPair tokens = ApiTokens.recognises(presented) ? apiTokens.exchange(presented) : signIn.refresh(presented);
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(tokens);
     }
 
     @Override
     public ResponseEntity<Void> requestPasswordReset(
             RequestPasswordResetRequest requestPasswordResetRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        recovery.requestPasswordReset(requestPasswordResetRequest, request.getRemoteAddr());
+        return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<Void> requestVerification(RequestVerificationRequest requestVerificationRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        recovery.requestVerification(requestVerificationRequest);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
@@ -455,7 +496,8 @@ public class UserAccountController implements UserAccountApi {
     @Override
     public ResponseEntity<Void> resetPassword(ResetPasswordRequest resetPasswordRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        recovery.resetPassword(resetPasswordRequest);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
@@ -473,29 +515,32 @@ public class UserAccountController implements UserAccountApi {
     @Override
     public ResponseEntity<UserRoleList> setUserRoles(UUID userAccountId,
             SetUserRolesRequest setUserRolesRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(roleGrants.setUserRoles(userAccountId, setUserRolesRequest));
     }
 
     @Override
     public ResponseEntity<UserAccount> signUp(SignUpRequest signUpRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(provisioning.signUp(signUpRequest, request.getRemoteAddr()));
     }
 
     @Override
     public ResponseEntity<ImpersonationToken> startImpersonation(UUID userAccountId,
             StartImpersonationRequest startImpersonationRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        ImpersonationToken token = impersonation.startImpersonation(userAccountId, startImpersonationRequest,
+                request.getRemoteAddr(), request.getHeader("User-Agent"));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(token);
     }
 
     @Override
     public ResponseEntity<Void> stopImpersonation(Object body, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        impersonation.stopImpersonation();
+        return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<SwitchRoleResult> switchRole(SwitchRoleRequest switchRoleRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(roleSwitch.switchRole(switchRoleRequest));
     }
 
     @Override

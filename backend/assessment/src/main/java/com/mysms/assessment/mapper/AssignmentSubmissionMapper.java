@@ -8,10 +8,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
- * Entity ⇄ contract DTO for assessment.assignment_submission. The way in ignores the id, the tenant, the audit set and
- * every read-only field, so
- * a request can never choose an id, re-tenant a row or set a value only workflows change; the ETag always comes from
- * row_version.
+ * Maps assessment.assignment_submission to and from its contract DTO. The way in ignores id, tenant, audit and
+ * read-only fields, so a request cannot set them; the ETag comes from row_version.
  */
 @Mapper(config = AssessmentMapperConfig.class, imports = {Etags.class, WireValues.class})
 public interface AssignmentSubmissionMapper {
@@ -34,6 +32,10 @@ public interface AssignmentSubmissionMapper {
     @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "rowVersion", ignore = true)
     @Mapping(target = "status", ignore = true)
-    @Mapping(target = "marksObtained", expression = "java(WireValues.decimal(dto.getMarksObtained()))")
+    @Mapping(target = "submittedAt", ignore = true)
+    @Mapping(target = "marksObtained", ignore = true)
+    @Mapping(target = "gradedByUserId", ignore = true)
+    @Mapping(target = "gradedOn", ignore = true)
+    @Mapping(target = "feedback", ignore = true)
     AssignmentSubmissionEntity toEntity(AssignmentSubmission dto);
 }

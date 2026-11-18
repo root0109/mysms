@@ -8,7 +8,6 @@ import com.mysms.lms.api.model.CancelCertificateRequestRequest;
 import com.mysms.lms.api.model.CertificateEvaluation;
 import com.mysms.lms.api.model.CertificateRequest;
 import com.mysms.lms.api.model.CertificateRequestUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.CertificateRequestService;
 import java.net.URI;
@@ -17,11 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the CertificateRequest operations: implements the generated contract interface, so paths, parameters and
- * payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the CertificateRequest operations; authentication and the permission check already ran in the
+ * auth-client filter. Operations not served yet answer 501.
  */
 @RestController
 public class CertificateRequestController implements CertificateRequestApi {
@@ -35,7 +31,10 @@ public class CertificateRequestController implements CertificateRequestApi {
     @Override
     public ResponseEntity<CertificateRequest> cancelCertificateRequest(UUID certificateRequestId,
             CancelCertificateRequestRequest cancelCertificateRequestRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        CertificateRequest changed = certificateRequestService.cancelCertificateRequest(certificateRequestId,
+                cancelCertificateRequestRequest == null ? null : cancelCertificateRequestRequest.getEtag(),
+                cancelCertificateRequestRequest == null ? null : cancelCertificateRequestRequest.getReason());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -76,7 +75,8 @@ public class CertificateRequestController implements CertificateRequestApi {
     @Override
     public ResponseEntity<CertificateEvaluation> startEvaluation(UUID certificateRequestId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        CertificateEvaluation started = certificateRequestService.startEvaluation(certificateRequestId);
+        return ResponseEntity.ok().eTag(started.getEtag()).body(started);
     }
 
     @Override

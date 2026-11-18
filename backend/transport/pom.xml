@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   transport: the Transport microservice, owner of database schema "transport" (JAVA-CODING-RULES §2).
-  Depends on core, sdk, auth-client and the messaging runtime; only event consumers compile against the
+  Depends on core, auth-client and the messaging runtime; only event consumers compile against the
   narrow messaging API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
   Its Flyway migrations are database/migrations/transport, applied to its own schema only.
 -->
@@ -21,10 +21,6 @@
     <dependency>
       <groupId>com.mysms</groupId>
       <artifactId>core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>sdk</artifactId>
     </dependency>
     <dependency>
       <groupId>com.mysms</groupId>
@@ -76,6 +72,11 @@
       </resource>
     </resources>
     <plugins>
+      <!-- its protos (src/main/resources/proto: its own, and copies of the callees' it calls) into its jar -->
+      <plugin>
+        <groupId>org.xolstice.maven.plugins</groupId>
+        <artifactId>protobuf-maven-plugin</artifactId>
+      </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
@@ -83,13 +84,6 @@
           <mainClass>com.mysms.transport.TransportApplication</mainClass>
           <classifier>exec</classifier>
         </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

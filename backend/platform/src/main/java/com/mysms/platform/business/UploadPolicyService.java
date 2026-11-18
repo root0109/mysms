@@ -38,10 +38,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of platform.upload_policy (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of platform.upload_policy: audit and domain event in the same transaction as every change; rows
+ * outside the caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class UploadPolicyService extends AppTransactionManager {
@@ -182,6 +180,14 @@ public class UploadPolicyService extends AppTransactionManager {
             audit.recordDelete(AGGREGATE, id);
             outbox.publish(AGGREGATE + PlatformEvents.DELETED, AGGREGATE, id, PlatformEvents.payload(id));
         });
+    }
+
+    /**
+     * The upload limits of a feature for everyone (the policy naming the operation wins over the feature-wide one),
+     * when the tenant set any. Policies for one role are not applied yet: the token carries no role ids.
+     */
+    public Optional<UploadPolicyEntity> limitsFor(String moduleCode, String operationCode) {
+        return doInReadTransaction(() -> repository.forFeature(moduleCode, operationCode));
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */

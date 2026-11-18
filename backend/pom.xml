@@ -26,7 +26,6 @@
 
   <modules>
     <module>core</module>
-    <module>sdk</module>
     <module>auth-client</module>
     <module>messaging</module>
     <module>master</module>
@@ -60,15 +59,16 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <!-- the API contracts live inside each module (com.mysms.<module>.api); api/ keeps the OpenAPI snapshot -->
-    <mysms.api.dir>${maven.multiModuleProjectDirectory}/../api</mysms.api.dir>
     <mysms.migrations.dir>${maven.multiModuleProjectDirectory}/../database/migrations</mysms.migrations.dir>
     <mysms.config.dir>${maven.multiModuleProjectDirectory}/config</mysms.config.dir>
 
     <!-- versions not managed by Spring Boot (Spring Boot 4.1.2 manages Spring, Jackson, Flyway, PostgreSQL,
          HikariCP, Testcontainers, JUnit, Lombok and the standard Maven plugins; Spring Boot's parent manages the gRPC and protobuf versions) -->
-    <openapi-generator.version>7.26.0</openapi-generator.version>
-    <!-- gRPC stub generation, the reference service's mechanism: protoc + protoc-gen-grpc-java resolved by OS -->
+    <!-- the gRPC server and the @GrpcClient stubs of every module, the reference service's mechanism (net.devh);
+         the newest release, which runs on Spring Boot 4 -->
+    <grpc-spring-boot-starter.version>3.1.0.RELEASE</grpc-spring-boot-starter.version>
+    <!-- each module compiles its own protos (and its copies of the callees'), the reference service's mechanism:
+         protoc + protoc-gen-grpc-java resolved by OS -->
     <xolstice-protobuf-maven-plugin.version>0.6.1</xolstice-protobuf-maven-plugin.version>
     <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
     <springdoc.version>3.2.0</springdoc.version>
@@ -81,22 +81,77 @@
     <spotbugs.version>4.10.4</spotbugs.version>
     <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
     <google-cloud-pubsub.version>1.157.0</google-cloud-pubsub.version>
+    <!-- platform's file store (signed upload/download URLs); the release train of google-cloud-pubsub above -->
+    <google-cloud-storage.version>2.75.0</google-cloud-storage.version>
     <!-- argon2id password hashing in iam (JAVA-CODING-RULES §16 security floor) -->
     <bouncycastle.version>1.86</bouncycastle.version>
+    <!-- google.rpc.Status / ErrorInfo / BadRequest / PreconditionFailure of gRPC errors (api/README "Errors"); the
+         release the Pub/Sub client brings, so every module resolves one copy -->
+    <proto-google-common-protos.version>2.78.0</proto-google-common-protos.version>
 
     <!-- quality gates (JAVA-CODING-RULES §12, §13) -->
     <mysms.coverage.line.minimum>0.80</mysms.coverage.line.minimum>
     <checkstyle.skip>false</checkstyle.skip>
     <spotbugs.skip>false</spotbugs.skip>
     <jacoco.skip>false</jacoco.skip>
+    <!--
+      SpotBugs analyses a module's own code only. A domain module also compiles its own and its callees' protos
+      (com.mysms.<module>.v1): thousands of generated classes that took lms past SpotBugs' timeout. The list is the
+      module's root package and the layer packages of JAVA-CODING-RULES §3 (ModuleBoundaryRule checks that it names
+      every layer); the shared modules, which have no layer packages, set their own root package.
+    -->
+    <mysms.spotbugs.onlyAnalyze>com.mysms.${project.artifactId}.*,com.mysms.${project.artifactId}.api.-,com.mysms.${project.artifactId}.controller.-,com.mysms.${project.artifactId}.grpc.-,com.mysms.${project.artifactId}.integration.-,com.mysms.${project.artifactId}.business.-,com.mysms.${project.artifactId}.repository.-,com.mysms.${project.artifactId}.domain.-,com.mysms.${project.artifactId}.model.-,com.mysms.${project.artifactId}.mapper.-,com.mysms.${project.artifactId}.validation.-,com.mysms.${project.artifactId}.errors.-,com.mysms.${project.artifactId}.events.-,com.mysms.${project.artifactId}.config.-,com.mysms.${project.artifactId}.constants.-</mysms.spotbugs.onlyAnalyze>
+    <!--
+      Test JVM: JaCoCo's prepare-agent appends its agent to argLine (empty when JaCoCo is skipped). The heap is capped so
+      that two module test JVMs of the parallel build (-T 1C), the Maven JVM and the PostgreSQL containers fit in the
+      build machine's memory; C1-only JIT because short-lived test JVMs gain nothing from C2 and pay for it in CPU.
+    -->
+    <argLine/>
+    <mysms.test.jvm>-Xmx1g -XX:TieredStopAtLevel=1</mysms.test.jvm>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <!-- one gRPC and one protobuf release for every module (the versions Spring Boot pins, through their BOMs), so
+           every jar's generated stubs come from the same protoc and run on the same runtime -->
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-bom</artifactId>
+        <version>${grpc-java.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-bom</artifactId>
+        <version>${protobuf-java.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <!-- the gRPC server (@GrpcService, @GrpcGlobalServerInterceptor) and clients (@GrpcClient,
+           @GrpcGlobalClientInterceptor) on plain Netty, as the reference service runs them -->
+      <dependency>
+        <groupId>net.devh</groupId>
+        <artifactId>grpc-spring-boot-starter</artifactId>
+        <version>${grpc-spring-boot-starter.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk18on</artifactId>
         <version>${bouncycastle.version}</version>
+      </dependency>
+      <!-- a real SMTP server for iam's mail component tests (JAVA-CODING-RULES §12: adapters against the protocol) -->
+      <dependency>
+        <groupId>com.icegreen</groupId>
+        <artifactId>greenmail</artifactId>
+        <version>2.1.12</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.mysms</groupId>
@@ -108,11 +163,6 @@
         <artifactId>core</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
-      </dependency>
-      <dependency>
-        <groupId>com.mysms</groupId>
-        <artifactId>sdk</artifactId>
-        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.springdoc</groupId>
@@ -141,9 +191,19 @@
         <version>${google-cloud-pubsub.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-storage</artifactId>
+        <version>${google-cloud-storage.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.mapstruct</groupId>
         <artifactId>mapstruct</artifactId>
         <version>${mapstruct.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.api.grpc</groupId>
+        <artifactId>proto-google-common-protos</artifactId>
+        <version>${proto-google-common-protos.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -158,6 +218,14 @@
   </dependencies>
 
   <build>
+    <extensions>
+      <!-- resolves protoc and protoc-gen-grpc-java for the building machine's OS (the reference service's setup) -->
+      <extension>
+        <groupId>kr.motd.maven</groupId>
+        <artifactId>os-maven-plugin</artifactId>
+        <version>${os-maven-plugin.version}</version>
+      </extension>
+    </extensions>
     <pluginManagement>
       <plugins>
         <!--
@@ -272,6 +340,7 @@
               <exclude>**/*E2ETest.java</exclude>
             </excludes>
             <trimStackTrace>false</trimStackTrace>
+            <argLine>@{argLine} ${mysms.test.jvm}</argLine>
             <systemPropertyVariables>
               <user.timezone>UTC</user.timezone>
             </systemPropertyVariables>
@@ -282,10 +351,38 @@
           <artifactId>exec-maven-plugin</artifactId>
           <version>${exec-maven-plugin.version}</version>
         </plugin>
+        <!--
+          A module's protos (src/main/resources/proto: its own, and verbatim copies of the callees' it calls) compiled
+          into its jar: messages and the grpc-java stubs, plus the descriptor set (target/docs/protos/grpc.protobin).
+          The protos of core (mysms/common) are on the import path from core's jar. A module enables it with a bare
+          <plugin> entry; every version and setting is here (the reference service's configuration).
+        -->
         <plugin>
-          <groupId>org.openapitools</groupId>
-          <artifactId>openapi-generator-maven-plugin</artifactId>
-          <version>${openapi-generator.version}</version>
+          <groupId>org.xolstice.maven.plugins</groupId>
+          <artifactId>protobuf-maven-plugin</artifactId>
+          <version>${xolstice-protobuf-maven-plugin.version}</version>
+          <configuration>
+            <protocArtifact>com.google.protobuf:protoc:${protobuf-java.version}:exe:${os.detected.classifier}</protocArtifact>
+            <pluginId>grpc-java</pluginId>
+            <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc-java.version}:exe:${os.detected.classifier}</pluginArtifact>
+            <protoSourceRoot>${basedir}/src/main/resources/proto</protoSourceRoot>
+          </configuration>
+          <executions>
+            <execution>
+              <id>protobuf-compile</id>
+              <goals>
+                <goal>compile</goal>
+                <goal>compile-custom</goal>
+              </goals>
+              <configuration>
+                <writeDescriptorSet>true</writeDescriptorSet>
+                <includeDependenciesInDescriptorSet>true</includeDependenciesInDescriptorSet>
+                <includeSourceInfoInDescriptorSet>true</includeSourceInfoInDescriptorSet>
+                <descriptorSetFileName>grpc.protobin</descriptorSetFileName>
+                <descriptorSetOutputDirectory>${project.build.directory}/docs/protos</descriptorSetOutputDirectory>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -329,8 +426,11 @@
           </dependencies>
           <configuration>
             <effort>Max</effort>
+            <onlyAnalyze>${mysms.spotbugs.onlyAnalyze}</onlyAnalyze>
             <threshold>Medium</threshold>
             <excludeFilterFile>${mysms.config.dir}/spotbugs/exclude.xml</excludeFilterFile>
+            <!-- the generated proto classes are still loaded as referenced classes; the 512 MB default runs out of heap in lms -->
+            <maxHeap>1536</maxHeap>
             <failOnError>true</failOnError>
           </configuration>
         </plugin>
@@ -411,6 +511,8 @@
           <excludes>
             <!-- generated code is excluded from coverage (§13) -->
             <exclude>**/*MapperImpl.class</exclude>
+            <!-- protobuf messages and grpc-java stubs, compiled from the module's protos -->
+            <exclude>com/mysms/*/v1/**</exclude>
             <!-- the contract layer: declarative DTOs and interfaces; behaviour is covered through the controllers -->
             <exclude>com/mysms/*/api/**</exclude>
             <!-- main(): starts a server; every module's wiring is covered by its component test instead -->

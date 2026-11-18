@@ -20,8 +20,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * Plain-JDBC access to lms.operation (JAVA-CODING-RULES §6): constant SQL, the tenant filtered in every statement,
- * live rows only, newest first with keyset paging, the row_version guard on cancel.
+ * Plain-JDBC access to lms.operation: the tenant filtered in every statement, live rows only, newest first with keyset
+ * paging, the row_version guard on cancel.
  */
 @Repository
 public class OperationRepository {
@@ -35,8 +35,8 @@ public class OperationRepository {
     private static final String SELECT_LIVE = """
             SELECT r.id, r.tenant_id, r.operation_name, r.resource_type, r.resource_id, r.status, r.progress_percent,
                    r.error_code, r.error_message, r.result_entity_type, r.result_entity_id, r.started_by_user_id,
-                   r.started_at, r.finished_at, r.created_at, r.created_by, r.updated_at, r.updated_by,
-                   r.deleted_at, r.row_version
+                   r.started_at, r.finished_at, r.result, r.created_at, r.created_by, r.updated_at,
+                   r.updated_by, r.deleted_at, r.row_version
               FROM lms.operation r
              WHERE r.tenant_id = :tenantId
                AND r.deleted_at IS NULL
@@ -50,10 +50,66 @@ public class OperationRepository {
                AND id = :id AND row_version = :expected AND status = 'running' AND deleted_at IS NULL
             """;
 
+    private static final String INSERT_COMPLETED = """
+            INSERT INTO lms.operation
+                (id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent,
+                 result_entity_type, result_entity_id, started_by_user_id, started_at, finished_at,
+                 created_at, created_by, updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :operationName, :resourceType, :resourceId, 'succeeded', 100,
+                    :resultType, :resultId, :startedBy, :startedAt, :finishedAt,
+                    :createdAt, :createdBy, :updatedAt, :updatedBy, :rowVersion)
+            RETURNING id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent,
+                      error_code, error_message, result_entity_type, result_entity_id, started_by_user_id,
+                      started_at, finished_at, result, created_at, created_by, updated_at, updated_by, deleted_at,
+                      row_version
+            """;
+
+    private static final String INSERT = """
+            INSERT INTO lms.operation
+            (id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent, started_by_user_id,
+             started_at, created_at, created_by, updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :operationName, :resourceType, :resourceId, 'running', 0, :actor, :now, :now,
+                    :actor, :now, :actor, 1)
+            """;
+    private static final String PROGRESS = """
+            UPDATE lms.operation
+               SET progress_percent = :progressPercent, updated_at = :now, updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND status = 'running' AND deleted_at IS NULL
+            """;
+    private static final String SUCCEED = """
+            UPDATE lms.operation
+               SET status = 'succeeded', progress_percent = 100, result_entity_type = :resultType,
+                   result_entity_id = :resultId, result = :result, finished_at = :now,
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND status = 'running' AND deleted_at IS NULL
+            """;
+    private static final String FAIL = """
+            UPDATE lms.operation
+               SET status = 'failed', error_code = :errorCode, error_message = :errorMessage, finished_at = :now,
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND status = 'running' AND deleted_at IS NULL
+            """;
+
     private final JdbcClient jdbc;
 
     public OperationRepository(@Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** Stores the completed record of a synchronous job accepted through an asynchronous operation contract. */
+    public OperationEntity insertCompleted(OperationEntity entity) {
+        return jdbc.sql(INSERT_COMPLETED).param("id", entity.getId()).param("tenantId", entity.getTenantId())
+                .param("operationName", entity.getOperationName()).param("resourceType", entity.getResourceType())
+                .param("resourceId", entity.getResourceId()).param("resultType", entity.getResultEntityType())
+                .param("resultId", entity.getResultEntityId()).param("startedBy", entity.getStartedByUserId())
+                .param("startedAt", entity.getStartedAt()).param("finishedAt", entity.getFinishedAt())
+                .param("createdAt", entity.getCreatedAt()).param("createdBy", entity.getCreatedBy())
+                .param("updatedAt", entity.getUpdatedAt()).param("updatedBy", entity.getUpdatedBy())
+                .param("rowVersion", entity.getRowVersion()).query(OperationRepository::map).single();
     }
 
     public Optional<OperationEntity> findById(UUID id) {
@@ -72,6 +128,40 @@ public class OperationRepository {
     public int cancel(UUID id, int expected, OffsetDateTime now, UUID actor) {
         return jdbc.sql(CANCEL).param("id", id).param("expected", expected).param("now", now).param("actor", actor)
                 .update();
+    }
+
+    /** Records an operation that starts now, running at 0 %. */
+    public void insert(UUID id, String operationName, String resourceType, UUID resourceId, OffsetDateTime now,
+            UUID actor) {
+        jdbc.sql(INSERT)
+                .param("id", id)
+                .param("operationName", operationName)
+                .param("resourceType", resourceType)
+                .param("resourceId", resourceId)
+                .param("now", now)
+                .param("actor", actor)
+                .update();
+    }
+
+    /** Reports how far a running operation is; 0 when it is no longer running (cancelled meanwhile). */
+    public int progress(UUID id, int progressPercent, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(PROGRESS).param("id", id).param("progressPercent", progressPercent).param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /**
+     * Ends a running operation as succeeded, with the record it produced and/or its outcome (JSON); 0 when it is no
+     * longer running (cancelled).
+     */
+    public int succeed(UUID id, String resultType, UUID resultId, String result, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(SUCCEED).param("id", id).param("resultType", resultType).param("resultId", resultId)
+                .param("result", result).param("now", now).param("actor", actor).update();
+    }
+
+    /** Ends a running operation as failed; 0 when it is no longer running (cancelled). */
+    public int fail(UUID id, String errorCode, String errorMessage, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(FAIL).param("id", id).param("errorCode", errorCode).param("errorMessage", errorMessage)
+                .param("now", now).param("actor", actor).update();
     }
 
     /** Only the caller's own operations, unless every operation of the tenant may be seen. */
@@ -104,6 +194,7 @@ public class OperationRepository {
                 .startedByUserId(rs.getObject("started_by_user_id", UUID.class))
                 .startedAt(rs.getObject("started_at", OffsetDateTime.class))
                 .finishedAt(rs.getObject("finished_at", OffsetDateTime.class))
+                .result(rs.getString("result"))
                 .createdAt(rs.getObject("created_at", OffsetDateTime.class))
                 .createdBy(rs.getObject("created_by", UUID.class))
                 .updatedAt(rs.getObject("updated_at", OffsetDateTime.class))

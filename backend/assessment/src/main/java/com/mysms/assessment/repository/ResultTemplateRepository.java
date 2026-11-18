@@ -24,11 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to assessment.result_template (JAVA-CODING-RULES §6): schema-qualified constant SQL, named
- * parameters, live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to assessment.result_template: live rows only, keyset paging, and the row_version guard on every
+ * update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class ResultTemplateRepository {
@@ -66,6 +63,16 @@ public class ResultTemplateRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** The row locked for the rest of the transaction, so one generation of a template runs at a time. */
+    private static final String FIND_BY_ID_FOR_UPDATE = FIND_BY_ID + " FOR UPDATE";
+    private static final String REOPEN = """
+            UPDATE assessment.result_template SET status = 'draft', updated_at = :now, updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND status = 'result_generated' AND deleted_at IS NULL
+               AND NOT EXISTS (SELECT 1 FROM assessment.marksheet m
+                                WHERE m.tenant_id = :tenantId AND m.result_template_id = :id
+                                  AND m.deleted_at IS NULL AND m.status <> 'cancelled')
+            """;
     private static final String INSERT = """
             INSERT INTO assessment.result_template
             (id, tenant_id, exam_session_id, grading_scheme_id, name, result_date, status, created_at, created_by,
@@ -138,6 +145,16 @@ public class ResultTemplateRepository {
 
     public Optional<ResultTemplateEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(ResultTemplateRepository::map).optional();
+    }
+
+    /** The live row, locked until the transaction ends (concurrent generations of it wait, then see its new state). */
+    public Optional<ResultTemplateEntity> findByIdForUpdate(UUID id) {
+        return jdbc.sql(FIND_BY_ID_FOR_UPDATE).param("id", id).query(ResultTemplateRepository::map).optional();
+    }
+
+    /** A generated template back to draft once none of its marksheets is live any more; 0 when that is not so. */
+    public int reopen(UUID id, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(REOPEN).param("id", id).param("now", now).param("actor", actor).update();
     }
 
     public Page<ResultTemplateEntity> list(PageRequest page, SqlFragment filter) {
@@ -228,7 +245,7 @@ public class ResultTemplateRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

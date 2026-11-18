@@ -11,7 +11,7 @@ MySMS is an education management system covering school administration, higher-e
 - ER diagrams (Mermaid + PNG): [database/erd/README.md](database/erd/README.md)
 - Principal review (open findings): [PRINCIPAL-REVIEW.md](PRINCIPAL-REVIEW.md)
 - Schema principles & remaining proposals: [database/table-consolidation.md](database/table-consolidation.md)
-- API design (REST + gRPC): [api/README.md](api/README.md), operations index [api/operations.md](api/operations.md), contracts in [api/openapi/](api/openapi/) and [api/proto/](api/proto/)
+- API design (REST + gRPC): [api/README.md](api/README.md), operations index [api/operations.md](api/operations.md), contracts written by each module (`backend/<module>/target/openapi/api-docs.yml`) and its protos (`backend/<module>/src/main/resources/proto`)
 - UI specification (web, mobile, tablet): [ui/README.md](ui/README.md) — product map, 186-screen inventory, user flows, design system, front-end architecture
 - Architecture (modules, dependency graph, deep links): [ARCHITECTURE.md](ARCHITECTURE.md)
 - Java coding rules (Maven multi-module layout, plain Spring JDBC, MapStruct, programmatic transactions, testing, review checklist): [JAVA-CODING-RULES.md](JAVA-CODING-RULES.md)

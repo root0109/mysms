@@ -8,9 +8,8 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
- * Conversions between the contract's string-encoded values (decimals, 64-bit integers and times of day travel as
- * strings, api/README "Data types") and the column types, plus the checks that keep a value the database would reject
- * or silently round out of every write (422 with the field, never a 500 or a changed amount).
+ * Conversions between the contract's string-encoded values (decimals, 64-bit integers, times of day) and the column
+ * types, plus checks that refuse a value the database would reject or round (422 with the field, never a 500).
  */
 public final class WireValues {
 

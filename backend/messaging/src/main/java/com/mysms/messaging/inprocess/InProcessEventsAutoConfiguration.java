@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 
-/** The in-process event adapter for a single JVM (usually the monolith's local development and tests). */
+/** The in-process event adapter for a single JVM. */
 @AutoConfiguration
 @ConditionalOnProperty(name = "mysms.events.bus", havingValue = "in-process")
 public class InProcessEventsAutoConfiguration {

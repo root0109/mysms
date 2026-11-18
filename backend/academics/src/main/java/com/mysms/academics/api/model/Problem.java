@@ -1,4 +1,4 @@
-// Owned API contract of academics (JAVA-CODING-RULES §7); first materialized from api/openapi/academics.yaml on 2026-11-10.
+// Owned API contract of academics.
 package com.mysms.academics.api.model;
 
 import java.net.URI;

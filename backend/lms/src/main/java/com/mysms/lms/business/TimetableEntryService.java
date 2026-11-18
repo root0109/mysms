@@ -36,12 +36,20 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import com.mysms.core.error.InvalidStateException;
+import com.mysms.lms.api.model.TimetableEntryList;
+import com.mysms.lms.domain.CohortEntity;
+import com.mysms.lms.domain.TimetableLegendEntity;
+import com.mysms.lms.repository.CohortRepository;
+import com.mysms.lms.repository.CohortTimetableRepository;
+import com.mysms.lms.repository.TimetableLegendRepository;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 
 /**
- * Business service of lms.timetable_entry (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of lms.timetable_entry: audit and domain event commit in the same transaction as every change. Rows
+ * outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class TimetableEntryService extends AppTransactionManager {
@@ -65,14 +73,23 @@ public class TimetableEntryService extends AppTransactionManager {
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
+    private final CohortRepository cohorts;
+    private final CohortTimetableRepository timetables;
+    private final TimetableLegendRepository legends;
+    private final CohortAccess access;
 
     public TimetableEntryService(TimetableEntryRepository repository, TimetableEntryMapper mapper,
             @Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(LmsDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(LmsEventsConfig.OUTBOX) OutboxWriter outbox, @Qualifier(LmsEventsConfig.AUDIT) AuditWriter audit,
-            DtoValidator validator, Clock clock) {
+            DtoValidator validator, Clock clock, CohortRepository cohorts, CohortTimetableRepository timetables,
+            TimetableLegendRepository legends, CohortAccess access) {
 
         super(database, transactions);
+        this.cohorts = cohorts;
+        this.timetables = timetables;
+        this.legends = legends;
+        this.access = access;
         this.repository = repository;
         this.mapper = mapper;
         this.outbox = outbox;
@@ -130,8 +147,8 @@ public class TimetableEntryService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public TimetableEntry updateTimetableEntry(UUID id, String ifMatch, TimetableEntryUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -199,14 +216,12 @@ public class TimetableEntryService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the lms.cohort it belongs to). */
+    /** The institution of the lms.cohort the row belongs to. */
     private Optional<UUID> institutionOf(TimetableEntryEntity entity) {
         return repository.institutionOf(entity.getCohortId());
     }
 
-    /**
-     * Applies the selected TimetableEntryUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected TimetableEntryUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(TimetableEntryEntity entity, TimetableEntryUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -264,5 +279,115 @@ public class TimetableEntryService extends AppTransactionManager {
 
     private void assertUnique(TimetableEntryEntity entity) {
 
+    }
+
+    // ---- a cohort's timetable: reading it, and replacing it from a template ----
+
+    static final String PERMISSION_COHORT_TIMETABLE = "lms.cohort.get_cohort_timetable";
+    static final String PERMISSION_APPLY_TEMPLATE = "lms.cohort.apply_timetable_template";
+    private static final String LEGEND_AGGREGATE = "lms.timetable_legend";
+    private static final int TEMPLATE_PAGE = 500;
+
+    /** lms.GetCohortTimetable: the cohort's timetable entries, for anybody who sees the cohort. */
+    public Page<TimetableEntry> getCohortTimetable(UUID cohortId, Integer pageNumber, Integer pageSize,
+            String cursor) {
+        CohortAccess.member();
+        SortSpec sort = SortSpec.parse(null, TimetableEntryRepository.SORT_FIELDS,
+                TimetableEntryRepository.DEFAULT_ORDER, TimetableEntryRepository.ID_COLUMN);
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, "cohort|" + cohortId, clock);
+        return doInReadTransaction(() -> {
+            access.visible(cohortId, PERMISSION_COHORT_TIMETABLE);
+            return repository.list(page, CohortTimetableRepository.ofCohort(cohortId)).map(mapper::toDto);
+        });
+    }
+
+    /**
+     * lms.ApplyTimetableTemplate: replaces the cohort's timetable with the template's. Each template entry lands on
+     * the cohort's start date plus its day number less one (day 1 is the start date); entries without a day number
+     * keep no date. The template's legend is copied too, and the cohort records the template. The cohort must be in
+     * the caller's scope (404), writable (403) and not archived (409); an unknown template is 422.
+     */
+    public TimetableEntryList applyTimetableTemplate(UUID cohortId, UUID templateId) {
+        DataScope scope = DataScope.current(PERMISSION_APPLY_TEMPLATE);
+        return doInWriteTransaction(() -> {
+            CohortEntity cohort = cohorts.findForUpdate(cohortId)
+                    .orElseThrow(() -> new ResourceNotFoundException(CohortAccess.COHORT, cohortId));
+            if (!scope.canRead(CohortAccess.institutionOf(cohort))) {
+                throw new ResourceNotFoundException(CohortAccess.COHORT, cohortId);
+            }
+            scope.requireWritable(CohortAccess.institutionOf(cohort));
+            if ("archived".equals(cohort.getLifecycleStatus())) {
+                throw new InvalidStateException("An archived cohort is read-only.");
+            }
+            if (templateId == null) {
+                throw new ValidationFailedException(List.of(new FieldError("timetableTemplateId",
+                        "must not be null", "NotNull")));
+            }
+            if (!timetables.templateExists(templateId)) {
+                throw new ValidationFailedException(List.of(new FieldError("timetableTemplateId",
+                        "timetable template does not exist", "NOT_FOUND")));
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            UUID actor = Actor.current().orElse(null);
+            timetables.clear(cohortId, now, actor);
+            List<TimetableEntry> applied = new ArrayList<>();
+            for (TimetableEntryEntity source : templateRows(templateId)) {
+                TimetableEntryEntity copy = TimetableEntryEntity.builder().cohortId(cohortId)
+                        .lessonId(source.getLessonId()).quizId(source.getQuizId())
+                        .assignmentId(source.getAssignmentId()).exerciseId(source.getExerciseId())
+                        .liveClassId(source.getLiveClassId()).dayNumber(source.getDayNumber())
+                        .entryDate(source.getDayNumber() == null ? null
+                                : cohort.getStartDate().plusDays(source.getDayNumber() - 1L))
+                        .startTime(source.getStartTime()).endTime(source.getEndTime())
+                        .durationMinutes(source.getDurationMinutes()).isMilestone(source.getIsMilestone()).build();
+                copy.onCreatingData(Actor.current(), clock);
+                copy.setTenantId(cohort.getTenantId());
+                TimetableEntryEntity stored = repository.insert(copy);
+                audit.recordCreate(AGGREGATE, stored.getId());
+                outbox.publish(AGGREGATE + LmsEvents.CREATED, AGGREGATE, stored.getId(),
+                        LmsEvents.payload(stored.getId()));
+                applied.add(mapper.toDto(stored));
+            }
+            for (TimetableLegendEntity source : templateLegends(templateId)) {
+                TimetableLegendEntity copy = TimetableLegendEntity.builder().cohortId(cohortId)
+                        .itemKind(source.getItemKind()).color(source.getColor()).label(source.getLabel()).build();
+                copy.onCreatingData(Actor.current(), clock);
+                copy.setTenantId(cohort.getTenantId());
+                UUID legend = legends.insert(copy).getId();
+                audit.recordCreate(LEGEND_AGGREGATE, legend);
+            }
+            if (timetables.setTemplate(cohortId, cohort.getRowVersion(), templateId, now, actor) == 0) {
+                throw new PreconditionFailedException("The cohort changed meanwhile; try again.");
+            }
+            audit.recordTransition(CohortAccess.COHORT, cohortId, "apply_timetable_template",
+                    List.of("timetableTemplateId"), null);
+            outbox.publish(CohortAccess.COHORT + ".apply_timetable_template", CohortAccess.COHORT, cohortId,
+                    LmsEvents.payload(cohortId));
+            return new TimetableEntryList(applied);
+        });
+    }
+
+    private List<TimetableEntryEntity> templateRows(UUID templateId) {
+        SortSpec sort = SortSpec.parse(null, TimetableEntryRepository.SORT_FIELDS,
+                TimetableEntryRepository.DEFAULT_ORDER, TimetableEntryRepository.ID_COLUMN);
+        List<TimetableEntryEntity> rows = new ArrayList<>();
+        String cursor = null;
+        int number = 1;
+        do {
+            Page<TimetableEntryEntity> page = repository.list(PageRequest.of(number, TEMPLATE_PAGE, cursor, sort,
+                    "template|" + templateId, clock), CohortTimetableRepository.ofTemplate(templateId));
+            rows.addAll(page.items());
+            cursor = page.hasNext() ? page.nextCursor() : null;
+            number++;
+        } while (cursor != null);
+        return rows;
+    }
+
+    private List<TimetableLegendEntity> templateLegends(UUID templateId) {
+        SortSpec sort = SortSpec.parse(null, TimetableLegendRepository.SORT_FIELDS,
+                TimetableLegendRepository.DEFAULT_ORDER, TimetableLegendRepository.ID_COLUMN);
+        return legends.list(PageRequest.of(1, TEMPLATE_PAGE, null, sort, "template|" + templateId, clock),
+                CohortTimetableRepository.ofTemplate(templateId)).items();
     }
 }

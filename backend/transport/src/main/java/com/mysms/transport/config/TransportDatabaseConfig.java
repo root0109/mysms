@@ -18,7 +18,7 @@ public class TransportDatabaseConfig {
     /** Bean name; every repository of this module injects the database by this qualifier. */
     public static final String DATABASE = "transportDatabase";
 
-    /** Bean name of the module's transaction manager; every service injects it by this qualifier (§4). */
+    /** Bean name of the module's transaction manager; every service injects it by this qualifier. */
     public static final String TRANSACTIONS = "transportTransactions";
 
     @Bean(name = DATABASE, destroyMethod = "close")
@@ -27,8 +27,7 @@ public class TransportDatabaseConfig {
     }
 
     /**
-     * The transaction manager of this module's own connection pool. Services open every transaction on it
-     * themselves; the database binds the call's tenant inside each one (JAVA-CODING-RULES §4).
+     * The transaction manager of the module's own pool; the database binds the call's tenant inside each transaction.
      */
     @Bean(name = TRANSACTIONS)
     public PlatformTransactionManager transportTransactions(@Qualifier(DATABASE) ModuleDatabase database) {

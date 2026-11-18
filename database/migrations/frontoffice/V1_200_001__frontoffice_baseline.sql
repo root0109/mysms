@@ -202,6 +202,7 @@ CREATE TABLE frontoffice.outbox_event (
     payload text NOT NULL,
     occurred_at timestamptz NOT NULL DEFAULT now(),
     published_at timestamptz,
+    publish_error text,
     CONSTRAINT pk_frontoffice_outbox_event PRIMARY KEY (id)
 );
 COMMENT ON TABLE frontoffice.outbox_event IS 'Transactional outbox of the frontoffice module: events written in the same transaction as the change, published to the bus by a relay, then pruned. Ordered by the identity column.';
@@ -213,7 +214,8 @@ COMMENT ON COLUMN frontoffice.outbox_event.aggregate_id IS 'Entity id the event 
 COMMENT ON COLUMN frontoffice.outbox_event.payload IS 'Serialised event (opaque message envelope).';
 COMMENT ON COLUMN frontoffice.outbox_event.occurred_at IS 'When the change committed.';
 COMMENT ON COLUMN frontoffice.outbox_event.published_at IS 'When the relay published it (NULL = pending).';
-CREATE INDEX ix_frontoffice_outbox_event_pending ON frontoffice.outbox_event (id) WHERE published_at IS NULL;
+COMMENT ON COLUMN frontoffice.outbox_event.publish_error IS 'Why the relay could not turn the row into an event (set aside, not published); NULL otherwise.';
+CREATE INDEX ix_frontoffice_outbox_event_pending ON frontoffice.outbox_event (id) WHERE published_at IS NULL AND publish_error IS NULL;
 CREATE TABLE frontoffice.inbox_event (
     event_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
@@ -221,15 +223,16 @@ CREATE TABLE frontoffice.inbox_event (
     received_at timestamptz NOT NULL DEFAULT now(),
     processed_at timestamptz,
     processing_error text,
-    CONSTRAINT pk_frontoffice_inbox_event PRIMARY KEY (event_id)
+    CONSTRAINT pk_frontoffice_inbox_event PRIMARY KEY (tenant_id, event_id)
 );
 COMMENT ON TABLE frontoffice.inbox_event IS 'Inbox of the frontoffice module: ids of consumed events, kept so redeliveries are processed exactly once.';
-COMMENT ON COLUMN frontoffice.inbox_event.event_id IS 'Global id of the consumed event.';
+COMMENT ON COLUMN frontoffice.inbox_event.event_id IS 'Global id of the consumed event; recorded per tenant.';
 COMMENT ON COLUMN frontoffice.inbox_event.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
 COMMENT ON COLUMN frontoffice.inbox_event.event_type IS 'Event name.';
 COMMENT ON COLUMN frontoffice.inbox_event.received_at IS 'First delivery time.';
 COMMENT ON COLUMN frontoffice.inbox_event.processed_at IS 'When handling committed (NULL = in flight).';
 COMMENT ON COLUMN frontoffice.inbox_event.processing_error IS 'Last handling error, if any.';
+CREATE INDEX ix_frontoffice_inbox_event_processed ON frontoffice.inbox_event (processed_at) WHERE processed_at IS NOT NULL;
 
 -- === P0-03: row-level security (tenant isolation). The application role is not the table owner and sets app.tenant_id per transaction; a platform-admin role with BYPASSRLS serves cross-tenant operations ===
 

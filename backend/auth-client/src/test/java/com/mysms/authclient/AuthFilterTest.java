@@ -17,11 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.mock.http.client.MockClientHttpRequest;
-import org.springframework.mock.http.client.MockClientHttpResponse;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import java.net.URI;
 import tools.jackson.databind.json.JsonMapper;
 
 class AuthFilterTest {
@@ -32,9 +27,9 @@ class AuthFilterTest {
 
     private final TestTokens tokens = new TestTokens();
     private final AuthFilter filter = new AuthFilter(OperationTable.load(List.of("master", "org")),
-            JwtTokenVerifier.from(new AuthClientProperties(TestTokens.ISSUER, null, tokens.publicKeyPem(), null,
-                    List.of("master", "org"), null, false)),
-            new ClaimsPermissionChecker(), new ProblemResponseWriter(JsonMapper.builder().build()),
+            new EdgeAuthorizer(JwtTokenVerifier.from(new AuthClientProperties(TestTokens.ISSUER, null,
+                    tokens.publicKeyPem(), null, List.of("master", "org"), null, false)), new ClaimsPermissionChecker()),
+            new ProblemResponseWriter(JsonMapper.builder().build()),
             List.of("/actuator/health", "/actuator/health/**"));
 
     /** What the downstream chain saw. */
@@ -182,7 +177,7 @@ class AuthFilterTest {
     }
 
     @Test
-    void propagatesTheCallerTokenOnSdkCalls() throws Exception {
+    void propagatesTheCallerTokenOnGrpcCalls() throws Exception {
         String token = tokens.tenantUser(TENANT, USER, "org.institution.read");
         AtomicReference<String> forwarded = new AtomicReference<>();
         CallContextHolder.set(CallContext.anonymous("4bf92f3577b34da6a3ce929d0e0e4736"));
@@ -191,15 +186,8 @@ class AuthFilterTest {
         filter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain() {
             @Override
             public void doFilter(ServletRequest req, ServletResponse res) {
-                MockClientHttpRequest outbound = new MockClientHttpRequest(HttpMethod.GET, URI.create("http://sis.local/v1/x"));
-                try {
-                    new BearerPropagationInterceptor().intercept(outbound, new byte[0], (r, b) -> {
-                        forwarded.set(r.getHeaders().getFirst("Authorization"));
-                        return new MockClientHttpResponse(new byte[0], HttpStatus.OK);
-                    });
-                } catch (java.io.IOException e) {
-                    throw new java.io.UncheckedIOException(e);
-                }
+                forwarded.set(GrpcCallerInterceptorTest.sent(new GrpcCallerInterceptor(java.time.Duration.ofSeconds(5)),
+                        io.grpc.CallOptions.DEFAULT).get(GrpcAuthInterceptor.AUTHORIZATION));
             }
         });
         assertThat(forwarded.get()).isEqualTo("Bearer " + token);

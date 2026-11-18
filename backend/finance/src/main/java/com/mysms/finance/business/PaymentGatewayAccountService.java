@@ -42,11 +42,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of finance.payment_gateway_account (JAVA-CODING-RULES §4): one plain class, explicit methods,
- * transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of finance.payment_gateway_account: audit and domain event in the same transaction as every change;
+ * rows outside the caller's institutions are invisible, and tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class PaymentGatewayAccountService extends AppTransactionManager implements InitializingBean {
@@ -92,7 +89,7 @@ public class PaymentGatewayAccountService extends AppTransactionManager implemen
         this.cipher = cipher;
     }
 
-    /** Refuses to start without a master key: this resource stores secret columns (DEPLOYMENT.md "Secrets"). */
+    /** Refuses to start without a master key: this resource stores secret columns. */
     @Override
     public void afterPropertiesSet() {
         cipher.requireConfigured();
@@ -205,14 +202,12 @@ public class PaymentGatewayAccountService extends AppTransactionManager implemen
         });
     }
 
-    /** Stores keySecret encrypted for the row's tenant and column (database/README "Secrets"); never the plaintext. */
+    /** Stores keySecret encrypted for the row's tenant and column; never the plaintext. */
     private void sealKeySecret(PaymentGatewayAccountEntity entity, String plaintext) {
         entity.setKeySecretEnc(cipher.encrypt(plaintext, entity.getTenantId(), SECRET_KEY_SECRET_ENC));
     }
 
-    /**
-     * Stores webhookSecret encrypted for the row's tenant and column (database/README "Secrets"); never the plaintext.
-     */
+    /** Stores webhookSecret encrypted for the row's tenant and column; never the plaintext. */
     private void sealWebhookSecret(PaymentGatewayAccountEntity entity, String plaintext) {
         entity.setWebhookSecretEnc(cipher.encrypt(plaintext, entity.getTenantId(), SECRET_WEBHOOK_SECRET_ENC));
     }

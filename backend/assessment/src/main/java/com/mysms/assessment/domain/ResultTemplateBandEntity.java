@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of assessment.result_template_band (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of assessment.result_template_band. */
 @Getter
 @Setter
 @SuperBuilder

@@ -32,9 +32,9 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The homework lifecycle (flow F5) over HTTP against real PostgreSQL as the application role: publishing with and
- * without review, the reviewer's approval and rejection, checking a submission and the student's reply. Each test
- * works in a tenant of its own.
+ * The homework lifecycle over HTTP against real PostgreSQL as the application role: publishing with and without review,
+ * the reviewer's approval and rejection, checking a submission and the student's reply. Each test works in a tenant of
+ * its own.
  */
 @SpringBootTest(classes = AssessmentApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class HomeworkWorkflowComponentTest {
@@ -122,6 +122,14 @@ class HomeworkWorkflowComponentTest {
         HttpResponse<String> response = HTTP.send(request.build(), HttpResponse.BodyHandlers.ofString());
         return new Reply(response.statusCode(),
                 response.body().isEmpty() ? JSON.nullNode() : JSON.readTree(response.body()), response.body());
+    }
+
+    /** The submission as the student would have made it (sis, which confirms the student's own, is not running). */
+    private void handedInBy(UUID tenant, String submission, UUID studentUser) {
+        CallContext context = CallContext.anonymous(TRACE).withIdentity(tenant, null);
+        CallContextHolder.callAs(context, () -> TestTransactions.of(database).write(() -> database.jdbc()
+                .sql("UPDATE assessment.homework_submission SET created_by = :user WHERE tenant_id = :tenantId "
+                        + "AND id = :id").param("user", studentUser).param("id", UUID.fromString(submission)).update()));
     }
 
     private Reply step(String homework, String step, String token, String body) throws Exception {
@@ -262,8 +270,11 @@ class HomeworkWorkflowComponentTest {
                 "assessment.homework_submission.read", "assessment.homework_submission.create", REPLY);
         String classmate = token(UUID.randomUUID(), school.tenant, List.of(school.institution.toString()),
                 List.of(), "assessment.homework_submission.read", REPLY);
-        String submission = created(call("POST", SUBMISSIONS, student, "{\"homeworkId\":\"" + homework
-                + "\",\"studentId\":\"" + UUID.randomUUID() + "\"}"));
+        String handIn = "{\"homeworkId\":\"" + homework + "\",\"studentId\":\"" + UUID.randomUUID() + "\"}";
+        assertThat(call("POST", SUBMISSIONS, student, handIn).status())
+                .as("a student hands in their own work only, which sis confirms (not running here)").isEqualTo(503);
+        String submission = created(call("POST", SUBMISSIONS, school.admin, handIn));
+        handedInBy(school.tenant, submission, studentUser);
         String check = SUBMISSIONS + "/" + submission + ":check";
         String reply = SUBMISSIONS + "/" + submission + ":reply";
 

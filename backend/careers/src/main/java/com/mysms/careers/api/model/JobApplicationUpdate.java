@@ -1,4 +1,4 @@
-// Owned API contract of careers (JAVA-CODING-RULES §7); first materialized from api/openapi/careers.yaml on 2026-11-10.
+// Owned API contract of careers.
 package com.mysms.careers.api.model;
 
 import java.net.URI;
@@ -22,30 +22,7 @@ import java.util.*;
 public class JobApplicationUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID applicantUserId;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID resumeFileId;
-
-  public JobApplicationUpdate applicantUserId(@Nullable UUID applicantUserId) {
-    this.applicantUserId = applicantUserId;
-    return this;
-  }
-
-  /**
-   * Applicant.
-   * @return applicantUserId
-   */
-  @Valid 
-  @JsonProperty("applicantUserId")
-  public @Nullable UUID getApplicantUserId() {
-    return applicantUserId;
-  }
-
-  @JsonProperty("applicantUserId")
-  public void setApplicantUserId(@Nullable UUID applicantUserId) {
-    this.applicantUserId = applicantUserId;
-  }
 
   public JobApplicationUpdate resumeFileId(@Nullable UUID resumeFileId) {
     this.resumeFileId = resumeFileId;
@@ -76,20 +53,18 @@ public class JobApplicationUpdate {
       return false;
     }
     JobApplicationUpdate jobApplicationUpdate = (JobApplicationUpdate) o;
-    return Objects.equals(this.applicantUserId, jobApplicationUpdate.applicantUserId) &&
-        Objects.equals(this.resumeFileId, jobApplicationUpdate.resumeFileId);
+    return Objects.equals(this.resumeFileId, jobApplicationUpdate.resumeFileId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(applicantUserId, resumeFileId);
+    return Objects.hash(resumeFileId);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class JobApplicationUpdate {\n");
-    sb.append("    applicantUserId: ").append(toIndentedString(applicantUserId)).append("\n");
     sb.append("    resumeFileId: ").append(toIndentedString(resumeFileId)).append("\n");
     sb.append("}");
     return sb.toString();

@@ -23,11 +23,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to sis.program_enrollment (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to sis.program_enrollment: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. Every statement filters the caller's tenant itself; row-level security
+ * is the backstop.
  */
 @Repository
 public class ProgramEnrollmentRepository {
@@ -66,6 +64,7 @@ public class ProgramEnrollmentRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String OF_STUDENT = SELECT_LIVE + " AND r.student_id = :studentId ORDER BY r.created_at, r.id";
     private static final String INSERT = """
             INSERT INTO sis.program_enrollment
             (id, tenant_id, student_id, course_id, batch_id, academic_year_id, academic_term_id, roll_number, status,
@@ -142,6 +141,11 @@ public class ProgramEnrollmentRepository {
         List<ProgramEnrollmentEntity> rows = jdbc.sql(sql).params(where.params()).params(page.limitParams())
                 .query(ProgramEnrollmentRepository::map).list();
         return page.toPage(rows, e -> sortValues(page.sort(), e), ProgramEnrollmentEntity::getId);
+    }
+
+    /** The student's course registrations, oldest first. */
+    public List<ProgramEnrollmentEntity> ofStudent(UUID studentId) {
+        return jdbc.sql(OF_STUDENT).param("studentId", studentId).query(ProgramEnrollmentRepository::map).list();
     }
 
     /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
@@ -228,7 +232,7 @@ public class ProgramEnrollmentRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

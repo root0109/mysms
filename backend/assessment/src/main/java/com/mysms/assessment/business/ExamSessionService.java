@@ -49,10 +49,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of assessment.exam_session (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
+ * Business service of assessment.exam_session: audit and domain event commit in the same transaction as every change.
+ * Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class ExamSessionService extends AppTransactionManager {
@@ -139,8 +137,8 @@ public class ExamSessionService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public ExamSession updateExamSession(UUID id, String ifMatch, ExamSessionUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -204,9 +202,8 @@ public class ExamSessionService extends AppTransactionManager {
     }
 
     /**
-     * assessment.ScheduleExamSession: Schedule. The row must be visible and writable for the caller, and the step is
-     * allowed while status is draft; in any other state
-     * the answer is 409 and nothing changes.
+     * assessment.ScheduleExamSession: Schedule. Allowed while status is draft, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public ExamSession scheduleExamSession(UUID id, ScheduleExamSessionRequest request) {
         DataScope scope = DataScope.current(PERMISSION_SCHEDULE_EXAM_SESSION);
@@ -237,9 +234,8 @@ public class ExamSessionService extends AppTransactionManager {
     }
 
     /**
-     * assessment.MarkExamSessionHeld: Mark held. The row must be visible and writable for the caller, and the step is
-     * allowed while status is scheduled; in any other state
-     * the answer is 409 and nothing changes.
+     * assessment.MarkExamSessionHeld: Mark held. Allowed while status is scheduled, on a row the caller may see and
+     * write; otherwise 409 and nothing changes.
      */
     public ExamSession markExamSessionHeld(UUID id, MarkExamSessionHeldRequest request) {
         DataScope scope = DataScope.current(PERMISSION_MARK_EXAM_SESSION_HELD);
@@ -270,9 +266,8 @@ public class ExamSessionService extends AppTransactionManager {
     }
 
     /**
-     * assessment.CompleteExamSession: Done. The row must be visible and writable for the caller, and the step is
-     * allowed while status is held; in any other state
-     * the answer is 409 and nothing changes.
+     * assessment.CompleteExamSession: Done. Allowed while status is held, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public ExamSession completeExamSession(UUID id, CompleteExamSessionRequest request) {
         DataScope scope = DataScope.current(PERMISSION_COMPLETE_EXAM_SESSION);
@@ -303,9 +298,8 @@ public class ExamSessionService extends AppTransactionManager {
     }
 
     /**
-     * assessment.CancelExamSession: Cancel. The row must be visible and writable for the caller, and the step is
-     * allowed while status is draft or scheduled; in any other state
-     * the answer is 409 and nothing changes.
+     * assessment.CancelExamSession: Cancel. Allowed while status is draft or scheduled, on a row the caller may see and
+     * write; otherwise 409 and nothing changes.
      */
     public ExamSession cancelExamSession(UUID id, CancelExamSessionRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CANCEL_EXAM_SESSION);
@@ -337,9 +331,8 @@ public class ExamSessionService extends AppTransactionManager {
     }
 
     /**
-     * assessment.ResetExamSession: Back to draft. The row must be visible and writable for the caller, and the step is
-     * allowed while status is cancelled; in any other state
-     * the answer is 409 and nothing changes.
+     * assessment.ResetExamSession: Back to draft. Allowed while status is cancelled, on a row the caller may see and
+     * write; otherwise 409 and nothing changes.
      */
     public ExamSession resetExamSession(UUID id, ResetExamSessionRequest request) {
         DataScope scope = DataScope.current(PERMISSION_RESET_EXAM_SESSION);
@@ -379,12 +372,12 @@ public class ExamSessionService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(ExamSessionEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected ExamSessionUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected ExamSessionUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(ExamSessionEntity entity, ExamSessionUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

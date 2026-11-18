@@ -24,11 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.course (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live rows
- * only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.course: live rows only, keyset paging, and the row_version guard on every update and delete.
+ * Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class LmsCourseRepository {
@@ -125,6 +122,98 @@ public class LmsCourseRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** lms.SubmitCourseForReview: allowed while status is in_progress. */
+    private static final String STEP_SUBMIT_FOR_REVIEW = """
+            UPDATE lms.course
+               SET status = 'under_review',
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** lms.ApproveCourse: allowed while status is under_review. */
+    private static final String STEP_APPROVE = """
+            UPDATE lms.course
+               SET status = 'approved',
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** lms.PublishCourse: allowed from draft once the review approved the course. */
+    private static final String STEP_PUBLISH = """
+            UPDATE lms.course
+               SET lifecycle_status = 'published', is_published = true, published_on = COALESCE(published_on, :today),
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** lms.UnpublishCourse: allowed while published. */
+    private static final String STEP_UNPUBLISH = """
+            UPDATE lms.course
+               SET lifecycle_status = 'draft', is_published = false,
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** lms.DeactivateCourse: allowed while published. */
+    private static final String STEP_DEACTIVATE = """
+            UPDATE lms.course
+               SET lifecycle_status = 'deactivated', is_published = false, deactivated_on = :today,
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** lms.ReactivateCourse: allowed while deactivated. */
+    private static final String STEP_REACTIVATE = """
+            UPDATE lms.course
+               SET lifecycle_status = 'published', is_published = true, deactivated_on = NULL,
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** lms.PublishCatalogListing: allowed from draft or archived while the course is published. */
+    private static final String STEP_PUBLISH_CATALOG_LISTING = """
+            UPDATE lms.course
+               SET catalog_status = 'published', is_in_catalog = true,
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** lms.HideCatalogListing: allowed while the listing is published. */
+    private static final String STEP_HIDE_CATALOG_LISTING = """
+            UPDATE lms.course
+               SET catalog_status = 'archived', is_in_catalog = false,
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** A student enrolled: the cached count follows (lms.EnrollInCourse). */
+    private static final String COUNT_ENROLLMENT = """
+            UPDATE lms.course SET enrollment_count = enrollment_count + 1, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id AND deleted_at IS NULL
+            """;
+    /** The courses listed in the catalogue at a moment: published, active, listing published, in its window. */
+    public static SqlFragment inCatalog(OffsetDateTime now) {
+        return new SqlFragment("""
+                r.is_published AND r.lifecycle_status = 'published' AND r.is_in_catalog
+                AND r.catalog_status = 'published'
+                AND (r.catalog_visible_from IS NULL OR r.catalog_visible_from <= :catalogNow)
+                AND (r.catalog_visible_until IS NULL OR r.catalog_visible_until > :catalogNow)""",
+                Map.of("catalogNow", now));
+    }
+
+    /** Courses of one category. */
+    public static SqlFragment ofCategory(UUID categoryId) {
+        return new SqlFragment("r.category_id = :categoryId", Map.of("categoryId", categoryId));
+    }
+
+    /** Courses whose title or introduction contains the words (case-insensitive, LIKE wildcards taken literally). */
+    public static SqlFragment matching(String query) {
+        String literal = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+        return new SqlFragment("(r.title ILIKE :query OR r.short_introduction ILIKE :query)",
+                Map.of("query", "%" + literal + "%"));
+    }
+
+    /** Courses among the ids. */
+    public static SqlFragment among(List<UUID> ids) {
+        return new SqlFragment("r.id = ANY(:ids)", Map.of("ids", ids.toArray(UUID[]::new)));
+    }
+
+    /** The courses the public sees: published and active. */
+    public static final SqlFragment PUBLISHED = new SqlFragment("r.is_published AND r.lifecycle_status = 'published'",
+            Map.of());
+
     private static final String INSERT = """
             INSERT INTO lms.course
             (id, tenant_id, institution_id, title, short_introduction, description, image_file_id, video_url,
@@ -464,6 +553,35 @@ public class LmsCourseRepository {
                 .query(LmsCourseRepository::map).single();
     }
 
+    /** The course's guarded steps; the guard was checked on the row as read. */
+    public enum CourseStep {
+        SUBMIT_FOR_REVIEW(STEP_SUBMIT_FOR_REVIEW),
+        APPROVE(STEP_APPROVE),
+        PUBLISH(STEP_PUBLISH),
+        UNPUBLISH(STEP_UNPUBLISH),
+        DEACTIVATE(STEP_DEACTIVATE),
+        REACTIVATE(STEP_REACTIVATE),
+        PUBLISH_CATALOG_LISTING(STEP_PUBLISH_CATALOG_LISTING),
+        HIDE_CATALOG_LISTING(STEP_HIDE_CATALOG_LISTING);
+
+        private final String sql;
+
+        CourseStep(String sql) {
+            this.sql = sql;
+        }
+    }
+
+    /** Counts one more enrolment on the course. */
+    public void countEnrollment(UUID id) {
+        jdbc.sql(COUNT_ENROLLMENT).param("id", id).update();
+    }
+
+    /** Runs one guarded step; 0 rows means the row changed (or vanished) since it was read. */
+    public int step(CourseStep step, UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(step.sql).param("id", id).param("expected", expected).param("now", now)
+                .param("today", now.toLocalDate()).param("actor", actor).update();
+    }
+
     /** Updates under the ETag guard; 0 rows means the row changed (or vanished) since it was read. */
     public int update(LmsCourseEntity e, int expectedVersion) {
         return jdbc.sql(UPDATE)
@@ -754,7 +872,7 @@ public class LmsCourseRepository {
                 .single());
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

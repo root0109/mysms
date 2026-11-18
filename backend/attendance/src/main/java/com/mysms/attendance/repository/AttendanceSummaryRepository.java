@@ -84,9 +84,8 @@ public class AttendanceSummaryRepository {
     }
 
     /**
-     * One group's counts (a projection, JAVA-CODING-RULES §5.4).
-     *
-     * @param groupId   the student or class section, when grouped by one
+     * One group's counts (a projection).
+     * @param groupId the student or class section, when grouped by one
      * @param groupDate the day, when grouped by date
      */
     public record Counts(UUID groupId, LocalDate groupDate, int present, int absent, int late, int excused) {

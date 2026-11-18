@@ -1,23 +1,29 @@
 package com.mysms.attendance.business;
 
+import com.mysms.attendance.integration.OrgGrpcClient;
+import com.mysms.attendance.integration.SisGrpcClient;
+import com.mysms.attendance.integration.TimetableGrpcClient;
+import com.mysms.common.v1.PageableRequest;
 import com.mysms.core.error.FieldError;
 import com.mysms.core.error.InvalidStateException;
 import com.mysms.core.error.PermissionDeniedException;
 import com.mysms.core.error.UnavailableException;
 import com.mysms.core.error.ValidationFailedException;
-import com.mysms.core.paging.PagingUtil;
-import com.mysms.sdk.org.api.InstitutionApi;
-import com.mysms.sdk.sis.api.StudentApi;
-import com.mysms.sdk.sis.api.StudentEnrollmentApi;
-import com.mysms.sdk.sis.model.PagingInfoStudent;
-import com.mysms.sdk.sis.model.PagingInfoStudentEnrollment;
-import com.mysms.sdk.sis.model.Student;
-import com.mysms.sdk.sis.model.StudentEnrollment;
-import com.mysms.sdk.timetable.api.SessionApi;
-import com.mysms.sdk.timetable.model.PagingInfoSessionStudent;
-import com.mysms.sdk.timetable.model.Session;
-import com.mysms.sdk.timetable.model.SessionStudent;
+import com.mysms.core.grpc.IntegrationGrpcClientException;
+import com.mysms.org.v1.GetInstitutionRequest;
+import com.mysms.sis.v1.ListClassRosterRequest;
+import com.mysms.sis.v1.ListClassRosterResponse;
+import com.mysms.sis.v1.ListStudentsRequest;
+import com.mysms.sis.v1.ListStudentsResponse;
+import com.mysms.sis.v1.Student;
+import com.mysms.sis.v1.StudentEnrollment;
+import com.mysms.timetable.v1.GetSessionRequest;
+import com.mysms.timetable.v1.ListSessionStudentsRequest;
+import com.mysms.timetable.v1.ListSessionStudentsResponse;
+import com.mysms.timetable.v1.Session;
+import com.mysms.timetable.v1.SessionStudent;
 import java.time.DateTimeException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -32,19 +38,16 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 
 /**
- * Gateway to what other modules own about a timetable session and about students (an Adapter over their SDK clients,
- * so the attendance workflow never sees HTTP): the session itself from timetable, its expected students — the
- * session's own student list, or the class roster from sis when it has none — the institution's time zone from org,
- * which decides the attendance date of the session, and whether a student id names a student of an institution
- * (the reference check of a new mark, JAVA-CODING-RULES §2). Every call carries the caller's own token, so the
- * caller sees through this gateway exactly what they may read in those modules.
+ * Adapter over the timetable, sis and org gRPC clients: the session, its expected students (its own list, else the
+ * class roster from sis), the institution's time zone that decides the attendance date, and whether a student id names
+ * a student of an institution. Every call carries the caller's own identity, so the caller sees exactly what they may
+ * read in those modules.
  */
+@Component
 public class SessionLookup {
 
     /** Page size of the downstream lists; the largest the API serves. */
@@ -69,54 +72,48 @@ public class SessionLookup {
         }
     }
 
-    private final SessionApi sessions;
-    private final StudentEnrollmentApi enrollments;
-    private final StudentApi students;
-    private final InstitutionApi institutions;
+    private final TimetableGrpcClient timetable;
+    private final SisGrpcClient sis;
+    private final OrgGrpcClient org;
 
-    /** The SDK clients of the three services — all of them, or none when the deployment does not configure them. */
-    public SessionLookup(SessionApi sessions, StudentEnrollmentApi enrollments, StudentApi students,
-            InstitutionApi institutions) {
-        this.sessions = sessions;
-        this.enrollments = enrollments;
-        this.students = students;
-        this.institutions = institutions;
-    }
-
-    /** The lookup of a deployment without the three services: every request is answered 503. */
-    public static SessionLookup unconfigured() {
-        return new SessionLookup(null, null, null, null);
+    public SessionLookup(TimetableGrpcClient timetable, SisGrpcClient sis, OrgGrpcClient org) {
+        this.timetable = timetable;
+        this.sis = sis;
+        this.org = org;
     }
 
     /**
      * Reads the session and its expected students. An unknown or invisible session is a validation failure of the
      * request's field (422); a cancelled one cannot have attendance taken (409); a caller without the read
-     * permissions in the other modules is refused (403); an unconfigured or failing service is 503.
+     * permissions in the other modules is refused (403); an unreachable or failing service is 503.
      */
     public SessionPlan plan(UUID sessionId) {
-        requireConfigured();
-        Session session = call("timetable", "timetable.session.read", () -> sessions.getSession(sessionId, null))
+        Session session = call("timetable", "timetable.session.read", () -> timetable.getSession(GetSessionRequest
+                .newBuilder().setId(sessionId.toString()).build()).getSession())
                 .orElseThrow(() -> new ValidationFailedException(List.of(
                         new FieldError("timetableSessionId", "timetable session does not exist", "NOT_FOUND"))));
-        if (session.getInstitutionId() == null || session.getStartAt() == null) {
+        if (session.getInstitutionId().isEmpty() || !session.hasStartAt()) {
             LOG.warn("the timetable service answered a session without its institution or start");
             throw new UnavailableException("The timetable service could not answer.");
         }
-        if (session.getStatus() == Session.StatusEnum.CANCELLED) {
+        if (session.getStatus() == Session.Status.STATUS_CANCELLED) {
             throw new InvalidStateException("The timetable session is cancelled.");
         }
-        ZoneId zone = call("org", "org.institution.read",
-                () -> institutions.getInstitution(session.getInstitutionId(), null))
+        UUID institutionId = UUID.fromString(session.getInstitutionId());
+        ZoneId zone = call("org", "org.institution.read", () -> org.getInstitution(GetInstitutionRequest.newBuilder()
+                .setId(session.getInstitutionId()).build()).getInstitution())
                 .map(institution -> zoneOf(institution.getTimezone()))
                 .orElseThrow(() -> new PermissionDeniedException(
                         "The session's institution is outside the caller's scope."));
-        LocalDate date = session.getStartAt().atZoneSameInstant(zone).toLocalDate();
+        LocalDate date = Instant.ofEpochSecond(session.getStartAt().getSeconds(), session.getStartAt().getNanos())
+                .atZone(zone).toLocalDate();
+        UUID classSectionId = id(session.getClassSectionId());
         List<UUID> students = sessionStudents(sessionId);
-        if (students.isEmpty() && session.getClassSectionId() != null) {
-            students = classRoster(session.getClassSectionId(), date);
+        if (students.isEmpty() && classSectionId != null) {
+            students = classRoster(classSectionId, date);
         }
-        return new SessionPlan(sessionId, session.getInstitutionId(), date, session.getClassSectionId(),
-                session.getCourseId(), session.getBatchId(), session.getSubjectId(), session.getStaffId(), students);
+        return new SessionPlan(sessionId, institutionId, date, classSectionId, id(session.getCourseId()),
+                id(session.getBatchId()), id(session.getSubjectId()), id(session.getStaffId()), students);
     }
 
     /**
@@ -129,7 +126,6 @@ public class SessionLookup {
      */
     public Set<UUID> unknownStudents(UUID institutionId, UUID classSectionId, LocalDate date,
             Collection<UUID> studentIds) {
-        requireConfigured();
         Set<UUID> unknown = new LinkedHashSet<>(studentIds);
         if (classSectionId != null && !unknown.isEmpty()) {
             try {
@@ -143,39 +139,33 @@ public class SessionLookup {
         for (int start = 0; start < remaining.size(); start += ID_CHUNK) {
             List<UUID> chunk = remaining.subList(start, Math.min(start + ID_CHUNK, remaining.size()));
             String filter = chunk.stream().map(id -> "id = \"" + id + "\"").collect(Collectors.joining(" OR "));
-            PagingInfoStudent found = call("sis", "sis.student.read",
-                    () -> students.listStudents(1, ID_CHUNK, null, filter, null, null))
+            ListStudentsResponse found = call("sis", "sis.student.read", () -> sis.listStudents(ListStudentsRequest
+                    .newBuilder().setFilter(filter)
+                    .setPageable(PageableRequest.newBuilder().setPage(1).setSize(ID_CHUNK)).build()))
                     .orElseThrow(() -> new UnavailableException("The sis service did not list the students."));
-            for (Student student : found.getData()) {
-                if (institutionId.equals(student.getInstitutionId())) {
-                    unknown.remove(student.getId());
+            for (Student student : found.getItemsList()) {
+                if (institutionId.toString().equals(student.getInstitutionId())) {
+                    unknown.remove(UUID.fromString(student.getId()));
                 }
             }
         }
         return unknown;
     }
 
-    private void requireConfigured() {
-        if (sessions == null || enrollments == null || students == null || institutions == null) {
-            throw new UnavailableException("Attendance needs the timetable, sis and org services for this, and "
-                    + "they are not configured for this deployment.");
-        }
-    }
-
     /** The students named on the session itself (elective groups, combined classes). */
     private List<UUID> sessionStudents(UUID sessionId) {
         Set<UUID> students = new LinkedHashSet<>();
-        Optional<String> cursor = Optional.empty();
+        String cursor = null;
         for (int page = 1; page <= MAX_PAGES; page++) {
-            int number = page;
-            String after = cursor.orElse(null);
-            PagingInfoSessionStudent list = call("timetable", "timetable.session_student.read",
-                    () -> sessions.listSessionStudents(sessionId, number, PAGE_SIZE, after, null, null, null))
+            PageableRequest pageable = page(page, cursor);
+            ListSessionStudentsResponse list = call("timetable", "timetable.session_student.read",
+                    () -> timetable.listSessionStudents(ListSessionStudentsRequest.newBuilder()
+                            .setSessionId(sessionId.toString()).setPageable(pageable).build()))
                     .orElseThrow(() -> new UnavailableException("The timetable service did not list the session."));
-            for (SessionStudent student : list.getData()) {
-                students.add(student.getStudentId());
+            for (SessionStudent student : list.getItemsList()) {
+                students.add(UUID.fromString(student.getStudentId()));
             }
-            cursor = PagingUtil.cursorOf(list.getPaging().getNext());
+            cursor = list.getPagination().getNextCursor();
             if (cursor.isEmpty()) {
                 return new ArrayList<>(students);
             }
@@ -186,26 +176,40 @@ public class SessionLookup {
     /** The students placed in the class on the date: an enrollment that starts later or ended before is not expected. */
     private List<UUID> classRoster(UUID classSectionId, LocalDate date) {
         Set<UUID> students = new LinkedHashSet<>();
-        Optional<String> cursor = Optional.empty();
+        String cursor = null;
         for (int page = 1; page <= MAX_PAGES; page++) {
-            int number = page;
-            String after = cursor.orElse(null);
-            PagingInfoStudentEnrollment list = call("sis", "sis.student_enrollment.list_class_roster",
-                    () -> enrollments.listClassRoster(classSectionId, number, PAGE_SIZE, after))
+            PageableRequest pageable = page(page, cursor);
+            ListClassRosterResponse list = call("sis", "sis.student_enrollment.list_class_roster",
+                    () -> sis.listClassRoster(ListClassRosterRequest.newBuilder()
+                            .setClassSectionId(classSectionId.toString()).setPageable(pageable).build()))
                     .orElseThrow(() -> new UnavailableException("The sis service did not list the class roster."));
-            for (StudentEnrollment enrollment : list.getData()) {
-                LocalDate from = enrollment.getEffectiveFrom();
-                LocalDate to = enrollment.getEffectiveTo();
+            for (StudentEnrollment enrollment : list.getItemsList()) {
+                LocalDate from = enrollment.hasEffectiveFrom() ? LocalDate.parse(enrollment.getEffectiveFrom()) : null;
+                LocalDate to = enrollment.hasEffectiveTo() ? LocalDate.parse(enrollment.getEffectiveTo()) : null;
                 if ((from == null || !from.isAfter(date)) && (to == null || !to.isBefore(date))) {
-                    students.add(enrollment.getStudentId());
+                    students.add(UUID.fromString(enrollment.getStudentId()));
                 }
             }
-            cursor = PagingUtil.cursorOf(list.getPaging().getNext());
+            cursor = list.getPagination().getNextCursor();
             if (cursor.isEmpty()) {
                 return new ArrayList<>(students);
             }
         }
         throw new InvalidStateException("The class roster is larger than attendance can pre-fill.");
+    }
+
+    /** One page of a downstream list: the first by number, the next ones by the cursor the previous page gave. */
+    private static PageableRequest page(int number, String cursor) {
+        PageableRequest.Builder page = PageableRequest.newBuilder().setPage(number).setSize(PAGE_SIZE);
+        if (cursor != null) {
+            page.setCursor(cursor);
+        }
+        return page.build();
+    }
+
+    /** An optional id of a proto message: empty is "not set". */
+    private static UUID id(String value) {
+        return value.isEmpty() ? null : UUID.fromString(value);
     }
 
     /** An institution without a (valid) time zone keeps its sessions' dates in UTC; an invalid one is logged. */
@@ -222,26 +226,21 @@ public class SessionLookup {
     }
 
     /**
-     * One downstream read: the body, or empty when the other module answers 404 (the row does not exist for this
+     * One downstream read: the answer, or empty when the other module answers 404 (the row does not exist for this
      * caller). 403 becomes this operation's 403 naming the permission the caller lacks; anything else is 503 — the
      * downstream status and message never reach the client.
      */
-    private static <T> Optional<T> call(String service, String permission, Supplier<ResponseEntity<T>> request) {
+    private static <T> Optional<T> call(String service, String permission, Supplier<T> request) {
         try {
-            return Optional.ofNullable(request.get().getBody());
-        } catch (RestClientResponseException e) {
-            HttpStatusCode status = e.getStatusCode();
-            if (status.value() == 404) {
+            return Optional.of(request.get());
+        } catch (IntegrationGrpcClientException e) {
+            if (e.httpStatus() == HttpStatus.NOT_FOUND.value()) {
                 return Optional.empty();
             }
-            if (status.value() == 403) {
+            if (e.httpStatus() == HttpStatus.FORBIDDEN.value()) {
                 throw new PermissionDeniedException("Taking attendance for a session also needs " + permission + ".");
             }
-            LOG.warn("the {} service answered {} to the session lookup", service, status.value());
-            throw new UnavailableException("The " + service + " service could not answer.");
-        } catch (RestClientException e) {
-            LOG.warn("the {} service could not be reached for the session lookup ({})", service,
-                    e.getClass().getSimpleName());
+            LOG.warn("the {} service answered {} ({}) to the session lookup", service, e.httpStatus(), e.statusCode());
             throw new UnavailableException("The " + service + " service could not answer.");
         }
     }

@@ -15,8 +15,8 @@ import com.mysms.payroll.controller.StaffSalaryController;
 import org.junit.jupiter.api.Test;
 
 /**
- * The contract operations payroll does not serve yet answer 501 NOT_IMPLEMENTED explicitly — none falls through, and a
- * newly served operation changes the count on purpose.
+ * The operations payroll does not serve yet answer 501 explicitly; a newly served operation changes the count on
+ * purpose.
  */
 class PayrollControllerStubsTest {
 
@@ -27,7 +27,7 @@ class PayrollControllerStubsTest {
         assertThat(ControllerStubs.count(PayComponentController.class)).as("PayComponent").isEqualTo(0);
         assertThat(ControllerStubs.count(PaymentTypeController.class)).as("PaymentType").isEqualTo(0);
         assertThat(ControllerStubs.count(PayrollPaymentController.class)).as("PayrollPayment").isEqualTo(0);
-        assertThat(ControllerStubs.count(PayslipController.class)).as("Payslip").isEqualTo(2);
+        assertThat(ControllerStubs.count(PayslipController.class)).as("Payslip").isEqualTo(0);
         assertThat(ControllerStubs.count(SalaryTemplateController.class)).as("SalaryTemplate").isEqualTo(0);
         assertThat(ControllerStubs.count(StaffBankAccountController.class)).as("StaffBankAccount").isEqualTo(0);
         assertThat(ControllerStubs.count(StaffSalaryController.class)).as("StaffSalary").isEqualTo(0);

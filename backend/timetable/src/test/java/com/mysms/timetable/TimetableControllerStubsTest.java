@@ -8,9 +8,8 @@ import com.mysms.timetable.controller.SessionController;
 import org.junit.jupiter.api.Test;
 
 /**
- * The contract operations timetable does not serve yet answer 501 NOT_IMPLEMENTED explicitly — none falls through, and
- * a
- * newly served operation changes the count on purpose.
+ * The operations timetable does not serve yet answer 501 explicitly; a newly served operation changes the count on
+ * purpose.
  */
 class TimetableControllerStubsTest {
 

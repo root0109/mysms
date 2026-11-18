@@ -67,13 +67,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of comms.event (JAVA-CODING-RULES §4): one plain class, explicit methods, transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a Event
- * are served here too — EventAttendee, EventGalleryItem, EventInstitution, EventOccurrence.
+ * Business service of comms.event and of the records that exist only as part of a Event (EventAttendee,
+ * EventGalleryItem, EventInstitution, EventOccurrence): audit and domain event commit in the same transaction as every
+ * change. Rows outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide
+ * grant.
  */
 @Service
 public class EventService extends AppTransactionManager {
@@ -224,8 +221,8 @@ public class EventService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public Event updateEvent(UUID id, String ifMatch, EventUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
@@ -292,9 +289,8 @@ public class EventService extends AppTransactionManager {
     }
 
     /**
-     * comms.ActivateEvent: Approve / show. The row must be visible and writable for the caller, and the step is allowed
-     * while status is inactive; in any other state
-     * the answer is 409 and nothing changes.
+     * comms.ActivateEvent: Approve / show. Allowed while status is inactive, on a row the caller may see and write;
+     * otherwise 409 and nothing changes.
      */
     public Event activateEvent(UUID id, ActivateEventRequest request) {
         DataScope scope = DataScope.current(PERMISSION_ACTIVATE_EVENT);
@@ -325,9 +321,8 @@ public class EventService extends AppTransactionManager {
     }
 
     /**
-     * comms.DeactivateEvent: Hide. The row must be visible and writable for the caller, and the step is allowed while
-     * status is active; in any other state
-     * the answer is 409 and nothing changes.
+     * comms.DeactivateEvent: Hide. Allowed while status is active, on a row the caller may see and write; otherwise 409
+     * and nothing changes.
      */
     public Event deactivateEvent(UUID id, DeactivateEventRequest request) {
         DataScope scope = DataScope.current(PERMISSION_DEACTIVATE_EVENT);
@@ -366,12 +361,12 @@ public class EventService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOf(EventEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected EventUpdate fields; explicit per field so a mask can clear values (no reflection). */
+    /** Applies the selected EventUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(EventEntity entity, EventUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -445,7 +440,7 @@ public class EventService extends AppTransactionManager {
 
     }
 
-    // ---- EventAttendee: a record of the Event aggregate ----
+    // ---- EventAttendee ----
 
     public EventAttendee getEventAttendee(UUID eventId, UUID id) {
         return doInReadTransaction(() -> {
@@ -499,8 +494,8 @@ public class EventService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public EventAttendee updateEventAttendee(UUID eventId, UUID id, String ifMatch, EventAttendeeUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -561,14 +556,12 @@ public class EventService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the comms.event it belongs to). */
+    /** The institution of the comms.event the row belongs to. */
     private Optional<UUID> institutionOfEventAttendee(EventAttendeeEntity entity) {
         return eventAttendeeRepository.institutionOf(entity.getEventId());
     }
 
-    /**
-     * Applies the selected EventAttendeeUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected EventAttendeeUpdate fields; explicit per field so a mask can clear values. */
     private static void applyEventAttendee(EventAttendeeEntity entity, EventAttendeeUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -601,7 +594,7 @@ public class EventService extends AppTransactionManager {
         }
     }
 
-    // ---- EventGalleryItem: a record of the Event aggregate ----
+    // ---- EventGalleryItem ----
 
     public EventGalleryItem getEventGalleryItem(UUID eventId, UUID id) {
         return doInReadTransaction(() -> {
@@ -656,8 +649,8 @@ public class EventService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public EventGalleryItem updateEventGalleryItem(UUID eventId, UUID id, String ifMatch,
             EventGalleryItemUpdate changes, String updateMask, boolean validateOnly) {
@@ -720,15 +713,12 @@ public class EventService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the comms.event it belongs to). */
+    /** The institution of the comms.event the row belongs to. */
     private Optional<UUID> institutionOfEventGalleryItem(EventGalleryItemEntity entity) {
         return eventGalleryItemRepository.institutionOf(entity.getEventId());
     }
 
-    /**
-     * Applies the selected EventGalleryItemUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected EventGalleryItemUpdate fields; explicit per field so a mask can clear values. */
     private static void applyEventGalleryItem(EventGalleryItemEntity entity, EventGalleryItemUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -764,7 +754,7 @@ public class EventService extends AppTransactionManager {
 
     }
 
-    // ---- EventInstitution: a record of the Event aggregate ----
+    // ---- EventInstitution ----
 
     public EventInstitution getEventInstitution(UUID eventId, UUID id) {
         return doInReadTransaction(() -> {
@@ -816,8 +806,8 @@ public class EventService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public EventInstitution updateEventInstitution(UUID eventId, UUID id, String ifMatch,
             EventInstitutionUpdate changes, String updateMask, boolean validateOnly) {
@@ -880,15 +870,12 @@ public class EventService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (its own institution column). */
+    /** The institution that owns the row. */
     private Optional<UUID> institutionOfEventInstitution(EventInstitutionEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /**
-     * Applies the selected EventInstitutionUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
+    /** Applies the selected EventInstitutionUpdate fields; explicit per field so a mask can clear values. */
     private static void applyEventInstitution(EventInstitutionEntity entity, EventInstitutionUpdate changes,
             List<String> fields) {
         for (String field : fields) {
@@ -923,7 +910,7 @@ public class EventService extends AppTransactionManager {
         }
     }
 
-    // ---- EventOccurrence: a record of the Event aggregate ----
+    // ---- EventOccurrence ----
 
     public EventOccurrence getEventOccurrence(UUID eventId, UUID id) {
         return doInReadTransaction(() -> {
@@ -977,8 +964,8 @@ public class EventService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public EventOccurrence updateEventOccurrence(UUID eventId, UUID id, String ifMatch, EventOccurrenceUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -1032,9 +1019,8 @@ public class EventService extends AppTransactionManager {
     }
 
     /**
-     * comms.CancelEventOccurrence: Cancel one occurrence. The row must be visible and writable for the caller, and the
-     * step is allowed while is_cancelled is false; in any other state
-     * the answer is 409 and nothing changes.
+     * comms.CancelEventOccurrence: Cancel one occurrence. Allowed while is_cancelled is false, on a row the caller may
+     * see and write; otherwise 409 and nothing changes.
      */
     public EventOccurrence cancelEventOccurrence(UUID eventId, UUID id, CancelEventOccurrenceRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CANCEL_EVENT_OCCURRENCE);
@@ -1077,14 +1063,12 @@ public class EventService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the comms.event it belongs to). */
+    /** The institution of the comms.event the row belongs to. */
     private Optional<UUID> institutionOfEventOccurrence(EventOccurrenceEntity entity) {
         return eventOccurrenceRepository.institutionOf(entity.getEventId());
     }
 
-    /**
-     * Applies the selected EventOccurrenceUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected EventOccurrenceUpdate fields; explicit per field so a mask can clear values. */
     private static void applyEventOccurrence(EventOccurrenceEntity entity, EventOccurrenceUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {

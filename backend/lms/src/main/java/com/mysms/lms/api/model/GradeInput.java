@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -35,7 +35,7 @@ public class GradeInput {
   private @Nullable String teacherComment;
 
   /**
-   * Grading state (default graded).
+   * Grading state (omitted: kept, except that points given grade an entry not excused).
    */
   public enum StatusEnum {
     GRADED("graded"),
@@ -146,7 +146,7 @@ public class GradeInput {
   }
 
   /**
-   * Grading state (default graded).
+   * Grading state (omitted: kept, except that points given grade an entry not excused).
    * @return status
    */
   

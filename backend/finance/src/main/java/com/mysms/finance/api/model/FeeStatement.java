@@ -1,4 +1,4 @@
-// Owned API contract of finance (JAVA-CODING-RULES §7); first materialized from api/openapi/finance.yaml on 2026-11-10.
+// Owned API contract of finance.
 package com.mysms.finance.api.model;
 
 import java.net.URI;
@@ -27,13 +27,13 @@ import java.util.*;
 public class FeeStatement {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid StudentFeeDue> dues = new ArrayList<>();
+  private @Nullable List<@Valid StudentFeeDue> dues = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid Invoice> invoices = new ArrayList<>();
+  private @Nullable List<@Valid Invoice> invoices = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<@Valid Payment> payments = new ArrayList<>();
+  private @Nullable List<@Valid Payment> payments = new ArrayList<>();
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private String totalDue;
@@ -45,7 +45,10 @@ public class FeeStatement {
   private String balance;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private String currencyCode;
+  private @Nullable UUID currencyId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String currencyCode;
 
   public FeeStatement() {
     super();
@@ -54,11 +57,10 @@ public class FeeStatement {
   /**
    * Constructor with only required parameters
    */
-  public FeeStatement(String totalDue, String totalPaid, String balance, String currencyCode) {
+  public FeeStatement(String totalDue, String totalPaid, String balance) {
     this.totalDue = totalDue;
     this.totalPaid = totalPaid;
     this.balance = balance;
-    this.currencyCode = currencyCode;
   }
 
   public FeeStatement dues(List<@Valid StudentFeeDue> dues) {
@@ -205,23 +207,43 @@ public class FeeStatement {
     this.balance = balance;
   }
 
-  public FeeStatement currencyCode(String currencyCode) {
+  public FeeStatement currencyId(@Nullable UUID currencyId) {
+    this.currencyId = currencyId;
+    return this;
+  }
+
+  /**
+   * Currency of every amount of the statement (master.currency); absent while the student has no fee records.
+   * @return currencyId
+   */
+  @Valid 
+  @JsonProperty("currencyId")
+  public @Nullable UUID getCurrencyId() {
+    return currencyId;
+  }
+
+  @JsonProperty("currencyId")
+  public void setCurrencyId(@Nullable UUID currencyId) {
+    this.currencyId = currencyId;
+  }
+
+  public FeeStatement currencyCode(@Nullable String currencyCode) {
     this.currencyCode = currencyCode;
     return this;
   }
 
   /**
-   * Currency.
+   * ISO 4217 code of the currency, when master could be read.
    * @return currencyCode
    */
-  @NotNull 
+  
   @JsonProperty("currencyCode")
-  public String getCurrencyCode() {
+  public @Nullable String getCurrencyCode() {
     return currencyCode;
   }
 
   @JsonProperty("currencyCode")
-  public void setCurrencyCode(String currencyCode) {
+  public void setCurrencyCode(@Nullable String currencyCode) {
     this.currencyCode = currencyCode;
   }
 
@@ -240,12 +262,13 @@ public class FeeStatement {
         Objects.equals(this.totalDue, feeStatement.totalDue) &&
         Objects.equals(this.totalPaid, feeStatement.totalPaid) &&
         Objects.equals(this.balance, feeStatement.balance) &&
+        Objects.equals(this.currencyId, feeStatement.currencyId) &&
         Objects.equals(this.currencyCode, feeStatement.currencyCode);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(dues, invoices, payments, totalDue, totalPaid, balance, currencyCode);
+    return Objects.hash(dues, invoices, payments, totalDue, totalPaid, balance, currencyId, currencyCode);
   }
 
   @Override
@@ -258,6 +281,7 @@ public class FeeStatement {
     sb.append("    totalDue: ").append(toIndentedString(totalDue)).append("\n");
     sb.append("    totalPaid: ").append(toIndentedString(totalPaid)).append("\n");
     sb.append("    balance: ").append(toIndentedString(balance)).append("\n");
+    sb.append("    currencyId: ").append(toIndentedString(currencyId)).append("\n");
     sb.append("    currencyCode: ").append(toIndentedString(currencyCode)).append("\n");
     sb.append("}");
     return sb.toString();

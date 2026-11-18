@@ -7,10 +7,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
- * Entity ⇄ contract DTO for people.person_document. The way in ignores the id, the tenant, the audit set and every
- * read-only field, so
- * a request can never choose an id, re-tenant a row or set a value only workflows change; the ETag always comes from
- * row_version.
+ * Entity ⇄ contract DTO for people.person_document. The way in ignores the id, tenant, audit set and read-only fields,
+ * so a request can never choose an id, re-tenant a row or set a workflow-only value.
  */
 @Mapper(config = PeopleMapperConfig.class, imports = {Etags.class})
 public interface PersonDocumentMapper {

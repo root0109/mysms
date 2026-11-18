@@ -2,13 +2,22 @@ import { isApiError, useCompleteMfa, useI18n, useSession, useSignIn } from '@mys
 import { Banner, Button, Screen, Text, TextInput } from '@mysms/ui-native';
 import { useState } from 'react';
 
-/** ACC-01 on phones and tablets, with the MFA step. */
+/** ACC-01 on phones and tablets, with the MFA step and the ways to a password reset and sign-up. */
 export function SignInScreen({
   defaultTenantCode = '',
   tablet = false,
+  onForgot,
+  onSignUp,
+  onBrowseCourses,
 }: {
   defaultTenantCode?: string;
   tablet?: boolean;
+  /** Opens the password reset (ACC-02). */
+  onForgot: () => void;
+  /** Opens sign-up (ACC-03), where the app offers it (the tablet learning app). */
+  onSignUp?: () => void;
+  /** Opens the course catalogue as a guest (LMS-01), where the app names its school. */
+  onBrowseCourses?: () => void;
 }) {
   const { t } = useI18n();
   const status = useSession((s) => s.status);
@@ -78,6 +87,19 @@ export function SignInScreen({
           <Button loading={signIn.isPending} onPress={submit}>
             {t('acc.signIn.submit')}
           </Button>
+          <Button variant="ghost" onPress={onForgot}>
+            {t('acc.signIn.forgot')}
+          </Button>
+          {onSignUp ? (
+            <Button variant="ghost" onPress={onSignUp}>
+              {t('acc.signIn.signUp')}
+            </Button>
+          ) : null}
+          {onBrowseCourses ? (
+            <Button variant="ghost" onPress={onBrowseCourses}>
+              {t('lms.native.browseCourses')}
+            </Button>
+          ) : null}
         </>
       )}
     </Screen>

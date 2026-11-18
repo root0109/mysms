@@ -16,6 +16,11 @@
   <artifactId>conformance</artifactId>
   <name>MySMS conformance check</name>
 
+  <properties>
+    <!-- no layer packages here: SpotBugs analyses the module's own root package -->
+    <mysms.spotbugs.onlyAnalyze>com.mysms.conformance.-</mysms.spotbugs.onlyAnalyze>
+  </properties>
+
   <dependencies>
     <!-- reads the API contracts (operation ids, permissions, security) -->
     <dependency>

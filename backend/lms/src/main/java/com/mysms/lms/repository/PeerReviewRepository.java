@@ -9,6 +9,7 @@ import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.paging.ValueType;
 import com.mysms.lms.config.LmsDatabaseConfig;
 import com.mysms.lms.domain.PeerReviewEntity;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -23,11 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.peer_review (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.peer_review: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class PeerReviewRepository {
@@ -201,9 +199,47 @@ public class PeerReviewRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    private static final String OF_GROUP = SELECT_LIVE + " AND r.assignment_group_id = :groupId ORDER BY r.created_at";
+    private static final String OF_REVIEWER = SELECT_LIVE
+            + " AND r.assignment_group_id = :groupId AND r.reviewer_user_id = :reviewer ORDER BY r.created_at";
+    private static final String FIND_REVIEW = SELECT_LIVE + " AND r.assignment_group_id = :groupId"
+            + " AND r.reviewer_user_id = :reviewer AND r.reviewee_user_id = :reviewee";
+    private static final String SET_POINTS = """
+            UPDATE lms.peer_review
+               SET points = :points,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+
+    /** The group's live reviews, oldest first. */
+    public List<PeerReviewEntity> ofGroup(UUID groupId) {
+        return jdbc.sql(OF_GROUP).param("groupId", groupId).query(PeerReviewRepository::map).list();
+    }
+
+    /** The reviews one member wrote in the group, oldest first. */
+    public List<PeerReviewEntity> ofReviewer(UUID groupId, UUID reviewer) {
+        return jdbc.sql(OF_REVIEWER).param("groupId", groupId).param("reviewer", reviewer)
+                .query(PeerReviewRepository::map).list();
+    }
+
+    /** The reviewer's live review of one member in the group. */
+    public Optional<PeerReviewEntity> findReview(UUID groupId, UUID reviewer, UUID reviewee) {
+        return jdbc.sql(FIND_REVIEW).param("groupId", groupId).param("reviewer", reviewer).param("reviewee", reviewee)
+                .query(PeerReviewRepository::map).optional();
+    }
+
+    /** Replaces the points given; 0 rows means the row changed since it was read. */
+    public int setPoints(UUID id, BigDecimal points, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(SET_POINTS).param("id", id).param("points", points).param("expected", expected)
+                .param("now", now).param("actor", actor).update();
     }
 
     private static List<Object> sortValues(SortSpec sort, PeerReviewEntity e) {

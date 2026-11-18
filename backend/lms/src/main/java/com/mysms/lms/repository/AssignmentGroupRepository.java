@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.assignment_group (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.assignment_group: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class AssignmentGroupRepository {
@@ -295,14 +292,35 @@ public class AssignmentGroupRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }
 
-    /** Children of one parent row (the parent id of the path). */
+    /** Children of the path's parent row. */
     public static SqlFragment ofParent(UUID parentId) {
         return new SqlFragment("r.content_item_id = :parentId", Map.of("parentId", parentId));
+    }
+
+    private static final String OF_ITEM = SELECT_LIVE + " AND r.content_item_id = :itemId ORDER BY r.created_at";
+    private static final String MARK_REASSIGNED = """
+            UPDATE lms.assignment_group
+               SET is_reassigned = true,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND deleted_at IS NULL
+            """;
+
+    /** The item's live groups, oldest first. */
+    public List<AssignmentGroupEntity> ofItem(UUID itemId) {
+        return jdbc.sql(OF_ITEM).param("itemId", itemId).query(AssignmentGroupRepository::map).list();
+    }
+
+    /** Marks the group reassigned for a fresh attempt. */
+    public void markReassigned(UUID id, OffsetDateTime now, UUID actor) {
+        jdbc.sql(MARK_REASSIGNED).param("id", id).param("now", now).param("actor", actor).update();
     }
 
     private static List<Object> sortValues(SortSpec sort, AssignmentGroupEntity e) {

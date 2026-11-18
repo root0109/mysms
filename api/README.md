@@ -6,7 +6,7 @@ MySMS exposes every capability through two equivalent interfaces: a **REST/JSON 
 
 | Modules | Resource services | Operations (REST = gRPC) | Standard CRUD | Workflow / query / integration operations | Protobuf messages |
 |---:|---:|---:|---:|---:|---:|
-| 21 | 226 | 2049 | 1702 | 347 | 4546 |
+| 21 | 226 | 2055 | 1702 | 353 | see each module's proto |
 
 ## Files
 
@@ -14,16 +14,13 @@ MySMS exposes every capability through two equivalent interfaces: a **REST/JSON 
 |---|---|
 | `README.md` | This design guide. |
 | `operations.md` | Index of every operation: REST method and path, gRPC service and method, permission code. |
-| `openapi/<module>.yaml` | REST contract of one module (OpenAPI 3.1). |
-| `openapi/common.yaml` | Shared parameters, error responses, security scheme and shared schemas. |
-| `proto/mysms/<module>/v1/<module>.proto` | gRPC contract of one module (`package mysms.<module>.v1`). |
-| `proto/mysms/common/v1/common.proto` | Shared gRPC messages (Operation, upload/download targets, search hits...). |
-| `proto/buf.yaml`, `openapi/redocly.yaml` | Lint configuration used to validate the contracts. |
-| `proto/field-numbers.lock.json` | Assigned proto field / enum numbers (keeps the wire format stable across regenerations). |
+| `../backend/<module>/target/openapi/api-docs.yml` | REST contract of one module (OpenAPI 3.1), written by the module's build from its code (springdoc, `<Module>OpenApiComponentTest`); not kept in git. |
+| `../backend/<module>/src/main/resources/proto/mysms/<module>/v1/<module>.proto` | gRPC contract of one module (`package mysms.<module>.v1`), owned by the module; a module that calls another carries a byte-identical copy of the callee's proto. |
+| `../backend/core/src/main/resources/proto/mysms/common/v1/` | Shared gRPC messages (Operation, upload/download targets, search hits..., the `ErrorMessage` of refused calls). |
+| `../backend/conformance/src/main/resources/field-numbers.lock.json` | Assigned proto field numbers (keeps the wire format stable; checked by the conformance build, G2). |
 | `standard-resources.json` | Owned data, checked by the build (`OperationStatusReportTest`): the resources whose standard operations and state transitions the backend serves (read by the clients' record screens). |
 | `operations-status.md` | Generated: whether this build serves each operation, and why not when it answers 501. |
 | `state-machines.md` | Generated: the state transitions the backend serves, with the states each is allowed from and what it sets. |
-| `tools/OpenApiBundler.java` | Makes each module file self-contained for the code generators and writes its operation table (see *Code generation*). |
 
 Everything about the API lives in this one folder; paths are relative to it.
 
@@ -126,7 +123,7 @@ Every operation that returns a list page by page (the standard List and the cust
 
 ## Authentication and tenancy
 
-- **Tokens:** OAuth 2.0 / OpenID Connect bearer JWT in `Authorization: Bearer …` (REST) or the `authorization` metadata key (gRPC). `iam.Login` and `iam.RefreshToken` issue tokens for first-party apps. `iam.SignUp` creates the account and sends a verification; the student then signs in with `iam.Login`. Partners use the OAuth client-credentials flow. Access tokens live 15 minutes and refresh tokens rotate on every use. Logout revokes refresh tokens and push devices.
+- **Tokens:** OAuth 2.0 / OpenID Connect bearer JWT in `Authorization: Bearer …` (REST) or the `authorization` metadata key (gRPC). `iam.Login` and `iam.RefreshToken` issue tokens for first-party apps. `iam.SignUp` creates the account at the school the student names (one of the active schools `iam.ListSignUpInstitutions` offers; the sign-up role is granted at that school only, never tenant-wide) and sends a verification; the student then signs in with `iam.Login`. Partners use the OAuth client-credentials flow. Access tokens live 15 minutes and refresh tokens rotate on every use. Logout revokes refresh tokens and push devices.
 - **Claims:** `sub` (user account id), `tid` (tenant id), `roles` (codes with scope), `perms` (the effective permission codes, resolved by the issuer from the roles), `ins` (institutions the roles are scoped to; `*` when a tenant-wide grant covers every institution), `jti` (token id, for audit and revocation), `amr` (authentication methods; platform staff tokens carry `mfa`), `act` (impersonating administrator, when present), `pid` (the person record linked to the account, when there is one; `people.GetMyPerson` and `people.UpdateMyPerson` act on it), `sid` (the sign-in session, which `iam.Logout` ends). Every module verifies tokens locally against the issuer's keys; no call to the issuer per request. The tenant is always taken from the token. A request can never address another tenant, and PostgreSQL row-level security on `tenant_id` enforces the same rule.
 - **Institution context:** the optional `X-Institution-Id` header (`x-institution-id` metadata) selects which of the caller's institutions a request acts in. It must fall within the caller's role scopes. Claim `tperms` lists the permissions carried by tenant-wide (or direct) grants; only those reach every institution and tenant-level records.
 - **Authorization:** every operation declares a permission code (`x-permission`, e.g. `attendance.attendance_sheet.update`, `admission.application.enroll_applicant`). Codes are rows of `iam.permission`; roles bundle them, and `iam.user_role` scopes grants (institution, class section, course, cohort...). Data-level rules apply on top of the permission check, for example:
@@ -136,10 +133,13 @@ Every operation that returns a list page by page (the standard List and the cust
   - personal resources marked with `x-owner-field` (such as notification preference sets) are always restricted to the
     authenticated account, even when a tenant-wide permission is present; nested resources inherit that owner boundary.
 - **Platform administration:** operations that act across tenants are reserved to platform staff and use the separate `platformAdminAuth` scheme (audience `mysms-platform-admin`, MFA required). They cover tenant management, SaaS plans, system settings, user types, reserved keywords, sales-enquiry handling, reference-data maintenance and clearing demo data. A tenant user's token can never call them.
-- **Impersonation:** `iam.StartImpersonation` requires a reason and returns a single non-refreshable access token valid for at most 30 minutes. The target must have strictly lower privileges and lie within the administrator's institution scope. Every call carries both identities in the audit log, and `iam.StopImpersonation` ends the session.
+- **Impersonation:** `iam.StartImpersonation` requires a reason and returns a single non-refreshable access token valid for at most 30 minutes (15 today). The target must have strictly lower privileges and lie within the administrator's institution scope. Every call carries both identities in the audit log (`act.sub` in the token, `impersonatorUserId` on every audit record), and `iam.StopImpersonation` ends the session; the token itself stays verifiable until it expires (tokens are verified locally, there is no revocation list). Nothing that outlives the impersonation — passwords, second factors, API tokens, terms, another impersonation, a role switch — can be done with it.
+- **Personal API tokens:** `iam.CreateApiToken` answers the secret (`mysms_pat_…`) once; only its SHA-256 is stored. Presented as the `refreshToken` of `iam.RefreshToken`, it is exchanged for a 15-minute access token of its owner, limited to the token's `abilities`; it is not rotated. Owners list and revoke their own tokens; administrators need the permission tenant-wide.
+- **Mailed secrets:** password-reset, sign-up and e-mail verification codes are `<tenant>.<256 random bits>`, stored as SHA-256, single use; a reset code works 30 minutes, a sign-up or verification code 24 hours. `iam.RequestPasswordReset` and `iam.SignUp` answer the same whether or not the account exists. At most three codes of a kind per account in 30 minutes.
 - **Role grants:** `iam.SetUserRoles` and user-role creation only grant roles whose permissions are a subset of the caller's own, within the caller's scopes, so no privilege escalation is possible.
-- **Public operations** (callable without a token): login, refresh, sign-up and password reset; branding and institution finder; the published LMS catalogue (course and cohort lists, course outline, preview lessons, cohort courses, reviews, related courses, categories, programs, statistics, public settings, public member profiles); certificate verification; downloads of files owned by published catalogue content; job listings; reference lists (countries, states, cities, currencies); SaaS plans; creating a sales enquiry. Guest reads return published rows only, with internal fields omitted (guest projection).
-- **Inbound webhooks** (`finance.ReceiveGatewayWebhook`, `lms.ReceiveConferencingWebhook`, `lms.ReceivePlagiarismWebhook`, `lms.ReceiveEbookConversion`, `lms.ReceiveToolOutcome`) carry no token. They are authenticated by the provider's signature over the raw request body, which is passed through unchanged. The tenant is resolved from the stored reference (gateway order id, meeting id, provider submission id, conversion job reference or LTI result id), and events are de-duplicated by the provider event id.
+- **Public operations** (callable without a token): login, refresh, sign-up (and the schools it offers) and password reset; branding and institution finder; the published LMS catalogue (course and cohort lists, course outline, preview lessons, cohort courses, reviews, related courses, categories, programs, statistics, public settings, public member profiles); certificate verification; downloads of files owned by published catalogue content; job listings; reference lists (countries, states, cities, currencies); SaaS plans; creating a sales enquiry. Guest reads return published rows only, with internal fields omitted (guest projection).
+- **Guests:** a request without a token names its school with `X-Tenant-Code` (`x-tenant-code` metadata). The edge of a module that serves guest reads resolves it through `iam.ResolveTenantCode` over gRPC (answers kept for a minute) and binds that tenant only; an unknown, suspended or closed school is 404, and 503 when iam cannot answer. The header is ignored next to a token and by modules without guest reads. A guest read that names no school is 404. A signed-in caller without the operation's read permission gets the same guest projection.
+- **Inbound webhooks** (`finance.ReceiveGatewayWebhook`, `platform.ReceiveSubscriptionWebhook`, `lms.ReceiveConferencingWebhook`, `lms.ReceivePlagiarismWebhook`, `lms.ReceiveEbookConversion`, `lms.ReceiveToolOutcome`) carry no token. They are authenticated by the provider's signature over the raw request body, which is passed through unchanged. The tenant is resolved from the stored reference (gateway order id, meeting id, provider submission id, conversion job reference or LTI result id), and events are de-duplicated by the provider event id.
 
 ## Errors
 
@@ -154,11 +154,12 @@ REST errors use RFC 9457 `application/problem+json` with a stable `code`, a `tra
 | Not found / not visible | 404 | NOT_FOUND | `NOT_FOUND` |
 | Duplicate / invalid state transition | 409 | ALREADY_EXISTS / FAILED_PRECONDITION | `DUPLICATE`, `INVALID_STATE_TRANSITION`, `SETTING_LOCKED`, `REQUEST_IN_PROGRESS` (a retry while the first request with its `Idempotency-Key` still runs) |
 | `Idempotency-Key` reused for a different request | 422 | INVALID_ARGUMENT | `IDEMPOTENCY_KEY_REUSED` |
+| An entity type the contract lists that no module imports yet (`platform.StartImport`, `platform.GetImportTemplate`: `lms_course_package`) | 422 | INVALID_ARGUMENT | `IMPORT_TYPE_UNAVAILABLE` |
 | Stale ETag | 412 | ABORTED | `ETAG_MISMATCH` |
 | If-Match missing (or `*`) on an update or delete | 428 | FAILED_PRECONDITION | `PRECONDITION_REQUIRED` |
 | Rate limited | 429 | RESOURCE_EXHAUSTED | `RATE_LIMITED` (with `Retry-After`) |
 | Operation in the contract but not served by this release | 501 | UNIMPLEMENTED | `NOT_IMPLEMENTED` |
-| Server error / unavailable | 500 / 503 | INTERNAL / UNAVAILABLE | |
+| Server error / unavailable | 500 / 503 | INTERNAL / UNAVAILABLE | `NOT_CONFIGURED` (503: an external provider this operation needs — SMTP, SMS, file store, payment gateway, stock photos — is not configured for the deployment) |
 
 ## Concurrency, idempotency and long-running work
 
@@ -177,7 +178,7 @@ REST errors use RFC 9457 `application/problem+json` with a stable `code`, a `tra
 - Limits are applied per token and per tenant; every operation declares a `429` response, and `429`s carry `Retry-After` plus `RateLimit-Limit`, `RateLimit-Remaining` and `RateLimit-Reset`.
 - The major version is in the path (`/v1`) and in the proto package (`.v1`). Additive changes (new fields, operations or enum values) do not change the version, so clients must ignore unknown fields and tolerate unknown enum values (every enum is marked `x-extensible-enum: true`; render unknown values neutrally). Breaking changes ship as `/v2` / `.v2`, with both versions served for at least 12 months. `buf breaking` and the OpenAPI diff run in CI to block accidental breaks.
 - Deprecated operations are marked `deprecated: true` and `option deprecated = true`, and responses include a `Sunset` header.
-- **Wire stability:** `proto/field-numbers.lock.json` records the field numbers of **every** message (4,546, map fields included), so any regeneration preserves the wire format.
+- **Wire stability:** `backend/conformance/src/main/resources/field-numbers.lock.json` records the field numbers of **every** message (4,546, map fields included), so any regeneration preserves the wire format.
 
 ## Deep links
 
@@ -201,8 +202,8 @@ REST errors use RFC 9457 `application/problem+json` with a stable `code`, a `tra
 |---|---|---|---:|---:|---:|---:|
 | Master Data | `/v1/master/` | `mysms.master.v1` | 4 | 20 | 0 | 4 |
 | Platform & Tenancy | `/v1/platform/` | `mysms.platform.v1` | 18 | 84 | 13 | 17 |
-| Identity & Access | `/v1/iam/` | `mysms.iam.v1` | 15 | 88 | 29 | 6 |
-| Organisation & Calendar | `/v1/org/` | `mysms.org.v1` | 9 | 49 | 4 | 6 |
+| Identity & Access | `/v1/iam/` | `mysms.iam.v1` | 15 | 90 | 30 | 6 |
+| Organisation & Calendar | `/v1/org/` | `mysms.org.v1` | 9 | 50 | 5 | 6 |
 | People & Profiles | `/v1/people/` | `mysms.people.v1` | 14 | 73 | 4 | 4 |
 | Academic Structure | `/v1/academics/` | `mysms.academics.v1` | 14 | 75 | 5 | 11 |
 | Student Information | `/v1/sis/` | `mysms.sis.v1` | 18 | 108 | 20 | 14 |
@@ -226,12 +227,12 @@ REST errors use RFC 9457 `application/problem+json` with a stable `code`, a `tra
 The custom operations, grouped by business process. Each runs in one transaction, checks the allowed source state (409 `INVALID_STATE_TRANSITION` otherwise), writes the audit log and emits a domain event.
 
 - **`iam.mfa_credential`**: `EnrollMfa`, `CompleteMfa`, `DisableMfa`, `ListMfaCredentials`, `RegenerateRecoveryCodes`
-- **`iam.user_account`**: `Login`, `RefreshToken`, `Logout`, `SignUp`, `RequestPasswordReset`, `ResetPassword`, `ChangePassword`, `RequestVerification`, `ConfirmVerification`, `GetMe`, `StartImpersonation`, `StopImpersonation`, `ActivateUser`, `DeactivateUser`, `UnlockUser`, `ForcePasswordReset`, `CreateApiToken`, `SetUserCredentials`, `SetUserRoles`, `SwitchRole`, `AcceptTerms`, `CheckUsernameAvailable`, `ImportUsers`, `ListMySettings`, `SetMySetting`, `ResetMySetting`
+- **`iam.user_account`**: `Login`, `RefreshToken`, `Logout`, `SignUp`, `RequestPasswordReset`, `ResetPassword`, `ChangePassword`, `RequestVerification`, `ConfirmVerification`, `GetMe`, `StartImpersonation`, `StopImpersonation`, `ActivateUser`, `DeactivateUser`, `UnlockUser`, `ForcePasswordReset`, `CreateApiToken`, `SetUserCredentials`, `SetUserRoles`, `SwitchRole`, `AcceptTerms`, `CheckUsernameAvailable`, `ListSignUpInstitutions`, `ImportUsers`, `ListMySettings`, `SetMySetting`, `ResetMySetting`
 - **`platform.file_object`**: `CreateUploadUrl`, `CompleteUpload`, `GetDownloadUrl`, `CopyFile`
 - **`platform.tenant`**: `GetBranding`, `ClearDemoData`, `GlobalSearch`, `ListReportDefinitions`, `RunReport`, `GetImportTemplate`, `StartImport`, `SearchStockImages`
-- **`org.institution`**: `FindInstitutions`
-- **`platform.tenant_subscription`**: `StartSubscriptionCheckout`, `CancelSubscription`
-- **`platform.sales_enquiry`**: `MarkEnquiryContacted`
+- **`org.institution`**: `FindInstitutions`, `ListActiveInstitutions` (internal: MySMS services only)
+- **`platform.tenant_subscription`**: `StartSubscriptionCheckout`, `ConfirmSubscriptionCheckout`, `ReceiveSubscriptionWebhook`, `CancelSubscription`
+- **`platform.sales_enquiry`**: `MarkEnquiryContacted` (platform staff)
 - **`org.academic_year`**: `ActivateAcademicYear`, `CloseAcademicYear`, `GenerateTerms`
 - **`people.person`**: `ListBirthdays`, `SendGreetings`, `GetConsentStatus`, `GetMyPerson`, `UpdateMyPerson` (the caller's own record; contact and self-description fields only)
 - **`sis.student`**: `ChangeStudentStatus`, `GetStudentSummary`, `IssueBonafideCertificate`, `CreateStudentPortalAccount`
@@ -328,28 +329,22 @@ The server-side Java contracts are NOT generated: each backend module owns its A
 its edge operation table (`src/main/resources/META-INF/mysms/operations/<module>.json`: method, path, `x-permission`,
 security schemes, token optional or not, idempotency — enforced by the auth filter). springdoc writes each running
 service's OpenAPI document from that code (`/v3/api-docs.yaml`; core's `OpenApiConfiguration` restores the contract
-operationIds, `x-permission` and security), and every module's service component test keeps it as
-`target/openapi/<module>.yaml` on `mvn verify`. The conformance build fails when a module's operation table, the
-controllers or `operations-status.md` drift from the files here, so this directory and the code cannot diverge
-silently; a contract change edits the module's api package, its operation table and the module file here in one
-reviewed change.
+operationIds, `x-permission`, security and the contract tags), and every module's `<Module>OpenApiComponentTest`
+writes it to `backend/<module>/target/openapi/api-docs.yml` on `mvn verify`. The conformance build fails when a
+module's controllers, protos or `operations-status.md` drift from its operation table.
 
-The clients are still generated from these files by [OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator)
-7.26.0, one run per module file. Each module file is first bundled by `tools/OpenApiBundler.java`, which copies every
-referenced `common.yaml` (or other module) schema into the module document under its own name.
+The TypeScript clients for the React and React Native apps (`@mysms/sdk`, one namespace per module) are generated by
+[OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator) 7.26.0 (`typescript-fetch`) from those written
+documents, so the backend build runs before client generation. Modules call each other over gRPC only, through the
+`@GrpcClient` stubs of their `integration` package; there is no Java REST client.
 
-| Output | Where | How |
-|---|---|---|
-| Java clients for module-to-module calls (`com.mysms.sdk.<module>.api` / `.model`) | `backend/sdk` | generator `spring`, library `spring-http-interface` |
-| TypeScript clients for the React and React Native apps (`@mysms/sdk`, one namespace per module) | `clients/packages/sdk` | generator `typescript-fetch`, run by `pnpm generate` |
-
-The gRPC stubs and protobuf messages (`com.mysms.<module>.v1`) are compiled from `proto/` into `backend/sdk` in one
-protoc run (`protobuf-maven-plugin` with OS-resolved `protoc` and `protoc-gen-grpc-java`, the reference mechanism),
-so they sit on every module's classpath for the gRPC resolvers to come.
+The gRPC stubs and protobuf messages (`com.mysms.<module>.v1`) are compiled from each module's own
+`src/main/resources/proto` into its jar (`protobuf-maven-plugin` with OS-resolved `protoc` and
+`protoc-gen-grpc-java`, the reference mechanism); the shared `mysms/common` protos once, in core.
 
 ```bash
-cd backend && mvn -pl sdk -am install                # Java SDK
-cd clients && pnpm --filter @mysms/sdk generate      # TypeScript SDK
+cd backend && mvn install                            # every module, its stubs and its OpenAPI document
+cd clients && pnpm --filter @mysms/sdk generate      # TypeScript SDK from backend/*/target/openapi/api-docs.yml
 ```
 
 ## Internal tables with no API resource
@@ -358,11 +353,11 @@ Every module schema except `master` has its own `idempotency_key` (backs the Ide
 
 ## Verification performed
 
-- **Proto compilation:** all 22 files compiled with `protoc` (grpcio-tools) into Python stubs: 226 services, 2049 RPCs, 4,546 messages, 0 errors; no existing field number changed.
-- **REST ↔ gRPC parity:** each of the 2049 REST operations maps through `x-grpc` to exactly one existing RPC and every RPC is reachable from REST (0 mismatches, checked mechanically).
-- **OpenAPI:** every module file parses and bundles with 0 unresolved references, and `redocly lint` of each module file passes. There is no joined all-modules file: it was a pre-built copy that drifted from the module files; a portal reads each service's own document (`/v3/api-docs.yaml`, written to `backend/<module>/target/openapi/<module>.yaml` by every build).
+- **Proto compilation:** all 22 files compiled with `protoc` (grpcio-tools) into Python stubs: 226 services, 2051 RPCs, 4,550 messages, 0 errors; no existing field number changed.
+- **REST ↔ gRPC parity:** each of the 2051 REST operations maps through `x-grpc` to exactly one existing RPC and every RPC is reachable from REST (0 mismatches, checked mechanically).
+- **OpenAPI:** every module file parses and bundles with 0 unresolved references, and `redocly lint` of each module file passes. There is no joined all-modules file: it was a pre-built copy that drifted from the module files; a portal reads each service's own document (`/v3/api-docs.yaml`, written to `backend/<module>/target/openapi/api-docs.yml` by every build).
 - **Generator-ready schemas:** every JSON request and response body is a named schema (no inline objects; free-form webhook payloads excepted), and no schema name is defined in two files — both checked mechanically, so generated clients and servers get stable class names.
-- **Generated code compiles:** the Java and TypeScript SDK clients of all 21 modules are generated from these files and compiled on every build (`backend/`, `clients/`); the owned server contracts compile in their modules.
-- **Wire stability:** `proto/field-numbers.lock.json` records the field numbers of **every** message (4,546, map fields included), so any regeneration preserves the wire format.
+- **Generated code compiles:** every module compiles its own protos and its copies of its callees' on every build; the TypeScript SDK is generated from the written OpenAPI documents and compiled by `pnpm verify`; the owned server contracts compile in their modules.
+- **Wire stability:** `backend/conformance/src/main/resources/field-numbers.lock.json` records the field numbers of **every** message (4,546, map fields included), so any regeneration preserves the wire format.
 - **Terminology:** the contracts use *student* and *teacher* throughout — schema names, field names, paths, permissions and descriptions (each concept has exactly one name; the old synonyms are gone from every identifier and description).
 - **Database alignment:** resources removed with their tables (user types, app modules, localities, timezones, release condition types, result lines); resources renamed/moved with their tables (exam results; import/export jobs, access logs and drive to `lms`; acquisition sources to `finance`); new resources for new tables (fee structures + publish/archive, fee concessions, refunds, payment gateway accounts, payment allocations on Payment, staff bank accounts, student leave requests, staff attendance, leave balances, MFA credentials via the auth ops). A second review pass then locked down writable surfaces: MFA-challenge logins return no tokens or user object, encrypted links are write-only, tenant subscriptions are read-only to tenants (checkout is the only write), fee-due status and enrollment grade/certificate fields are workflow-only.

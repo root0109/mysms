@@ -6,8 +6,8 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * W3C Trace Context (`traceparent: 00-<trace-id>-<parent-id>-<flags>`). Every inbound request, outbound SDK call
- * and published event carries it (JAVA-CODING-RULES §2), so one trace id follows a request across modules.
+ * W3C Trace Context (`traceparent: 00-<trace-id>-<parent-id>-<flags>`), carried by every request, outbound call and
+ * event so one trace id follows a request across modules.
  */
 public record TraceContext(String traceId, String spanId, boolean sampled) {
 

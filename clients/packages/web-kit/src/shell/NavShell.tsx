@@ -12,6 +12,8 @@ import type { MessageKey } from '@mysms/i18n';
 import { AppShell, Button } from '@mysms/ui-web';
 import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router';
+import { TermsGate } from '../screens/account/TermsScreen';
+import { ImpersonationBanner, PersonaSwitcher } from './AccountBar';
 
 export interface NavItem {
   to: string;
@@ -54,7 +56,8 @@ function currentEntry(items: readonly NavItem[], path: string, search: string): 
 }
 
 /**
- * The signed-in web shell: navigation, user, sign-out and an optional environment band (ui/02 §1.2). A group opens
+ * The signed-in web shell: navigation, the persona switcher (ACC-06), user, sign-out, the impersonation banner, the
+ * terms gate (ACC-04) and an optional environment band (ui/02 §1.2). A group opens
  * on its own when it holds the page being shown, so the last group (Setup) stays out of the way otherwise; the
  * "find a screen" box (`/` or Ctrl/⌘-K) searches every entry the role may open (ui/02 §2.1.2).
  */
@@ -62,10 +65,13 @@ export function NavShell({
   items,
   groups = [],
   environmentBand,
+  termsGate = false,
 }: {
   items: readonly NavItem[];
   groups?: readonly NavGroup[];
   environmentBand?: MessageKey;
+  /** Tenant apps ask for the terms (ACC-04) before any page; the platform console does not. */
+  termsGate?: boolean;
 }) {
   const { t } = useI18n();
   const username = useSession((s) => s.me?.user?.username ?? '');
@@ -178,6 +184,7 @@ export function NavShell({
       }
       actions={
         <>
+          <PersonaSwitcher />
           <span className="shell-user">{username}</span>
           <Button
             variant="secondary"
@@ -191,7 +198,14 @@ export function NavShell({
         </>
       }
     >
-      <Outlet />
+      <ImpersonationBanner />
+      {termsGate ? (
+        <TermsGate>
+          <Outlet />
+        </TermsGate>
+      ) : (
+        <Outlet />
+      )}
     </AppShell>
   );
 }

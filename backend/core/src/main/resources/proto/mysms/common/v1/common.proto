@@ -1,0 +1,777 @@
+// MySMS shared gRPC messages. Generated; do not edit by hand.
+syntax = "proto3";
+
+package mysms.common.v1;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "CommonProto";
+option java_package = "com.mysms.common.v1";
+
+message TokenPair {
+  // Short-lived JWT access token. Required.
+  string access_token = 1;
+  // Refresh token (rotating). Required.
+  string refresh_token = 2;
+  // Access-token lifetime. Required.
+  int32 expires_in_seconds = 3;
+  // Always "Bearer". Required.
+  string token_type = 4;
+}
+
+message RoleGrant {
+  // Role code. Required.
+  string role_code = 1;
+  // Scope type (same values as iam.user_role.scope_type). Required. One of: tenant, institution, department, class_section, course, lms_course, lms_cohort.
+  string scope_type = 2;
+  // Scope record. [UUID]
+  optional string scope_id = 3;
+  // The role's id (output only; iam.SwitchRole takes it). [UUID]
+  optional string role_id = 4;
+}
+
+message UploadTarget {
+  // File record created in pending state. Required. [UUID]
+  string file_id = 1;
+  // Pre-signed URL to PUT the bytes to. Required.
+  string upload_url = 2;
+  // Headers the client must send with the PUT.
+  google.protobuf.Value upload_headers = 3;
+  // URL expiry. Required.
+  google.protobuf.Timestamp expires_at = 4;
+}
+
+message DownloadLink {
+  // Pre-signed download URL. Required.
+  string url = 1;
+  // URL expiry. Required.
+  google.protobuf.Timestamp expires_at = 2;
+}
+
+message Operation {
+  // Operation id. Required. [UUID]
+  string operation_id = 1;
+  // Operation kind, e.g. report.run, import.students. Required.
+  string kind = 2;
+  // State. Required. One of: queued, running, succeeded, failed, cancelled.
+  string status = 3;
+  // Progress 0-100.
+  optional int32 progress_percent = 4;
+  // Output file (reports / exports). [UUID]
+  optional string result_file_id = 5;
+  // Structured result summary.
+  google.protobuf.Value result = 6;
+  // Failure reason.
+  optional string error_message = 7;
+  // Submitted at. Required.
+  google.protobuf.Timestamp create_time = 8;
+  // Finished at.
+  google.protobuf.Timestamp done_time = 9;
+  // Module that owns the operation; poll and cancel it at that module's OperationService. Required.
+  string module = 10;
+}
+
+message ImportRowError {
+  // 1-based row number. Required.
+  int32 row_number = 1;
+  // Column.
+  optional string field = 2;
+  // Problem. Required.
+  string message = 3;
+}
+
+message SearchHit {
+  // Resource type, e.g. sis.student. Required.
+  string entity_type = 1;
+  // Record id. Required. [UUID]
+  string entity_id = 2;
+  // Display title. Required.
+  string title = 3;
+  // Secondary text.
+  optional string subtitle = 4;
+  // App route.
+  optional string url_path = 5;
+}
+
+message Branding {
+  // Tenant name. Required.
+  string tenant_name = 1;
+  // Institution name.
+  optional string institution_name = 2;
+  // Logo URL.
+  optional string logo_file_url = 3;
+  // Brand colour.
+  optional string primary_color = 4;
+  // Default locale.
+  optional string locale = 5;
+  // Default time zone.
+  optional string timezone = 6;
+}
+
+message Recipients {
+  // Individual users. [UUID]
+  repeated string user_ids = 1;
+  // Groups. [UUID]
+  repeated string audience_group_ids = 2;
+  // All students of these classes. [UUID]
+  repeated string class_section_ids = 3;
+  // Also send to the guardians of the selected students.
+  optional bool include_guardians = 4;
+  // Only staff members of the selected scope.
+  optional bool staff_only = 5;
+  // Students of these LMS cohorts. [UUID]
+  repeated string cohort_ids = 6;
+}
+
+message AttendanceMark {
+  // Student. Required. [UUID]
+  string student_id = 1;
+  // Status. Required. One of: present, absent, late, excused.
+  string status = 2;
+  // Configured mark. [UUID]
+  optional string attendance_type_id = 3;
+  // Reason. [UUID]
+  optional string absence_reason_id = 4;
+  // Remark.
+  optional string remark = 5;
+}
+
+message AttendanceSummary {
+  // Student (when grouped by student). [UUID]
+  optional string student_id = 1;
+  // Class (when grouped by class). [UUID]
+  optional string class_section_id = 2;
+  // Date (when grouped by date). [ISO-8601 date (YYYY-MM-DD)]
+  optional string date = 3;
+  // Present count. Required.
+  int32 present = 4;
+  // Absent count. Required.
+  int32 absent = 5;
+  // Late count. Required.
+  int32 late = 6;
+  // Excused count. Required.
+  int32 excused = 7;
+  // Present+late / total marks. Required. [Decimal string]
+  string attendance_percent = 8;
+}
+
+message MarkEntry {
+  // Student. Required. [UUID]
+  string student_id = 1;
+  // Attendance. Required. One of: present, absent, exempted.
+  string attendance_status = 2;
+  // Marks. [Decimal string]
+  optional string marks_obtained = 3;
+  // Note.
+  optional string note = 4;
+  // The attendee row's entity tag as last read; when sent, a row changed since is refused (FAILED_PRECONDITION).
+  optional string etag = 5;
+}
+
+message WeeklySlot {
+  // ISO weekday 1-7. Required.
+  int32 weekday = 1;
+  // Period. Required. [UUID]
+  string period_id = 2;
+  // Subject. Required. [UUID]
+  string subject_id = 3;
+  // Teacher. Required. [UUID]
+  string staff_id = 4;
+  // Room. [UUID]
+  optional string room_id = 5;
+}
+
+// Computed leave position per leave type; not the stored hr.LeaveBalance resource.
+message LeaveBalanceSummary {
+  // Leave type. Required. [UUID]
+  string leave_type_id = 1;
+  // Entitlement. Required. [Decimal string]
+  string entitled_days = 2;
+  // Approved days taken. Required. [Decimal string]
+  string taken_days = 3;
+  // Days pending approval. Required. [Decimal string]
+  string pending_days = 4;
+  // Remaining. Required. [Decimal string]
+  string available_days = 5;
+}
+
+message OrderQuote {
+  // List price. Required. [Decimal string]
+  string original_amount = 1;
+  // Coupon discount. Required. [Decimal string]
+  string discount_amount = 2;
+  // Tax. Required. [Decimal string]
+  string tax_amount = 3;
+  // Payable. Required. [Decimal string]
+  string total_amount = 4;
+  // Currency. Required.
+  string currency_code = 5;
+  // Coupon valid and applied. Required.
+  bool coupon_applied = 6;
+  // Why a coupon was rejected.
+  optional string coupon_message = 7;
+}
+
+message QuizQuestionView {
+  // Quiz question. Required. [UUID]
+  string quiz_question_id = 1;
+  // Question. Required. [UUID]
+  string question_id = 2;
+  // Question. Required.
+  string question_text = 3;
+  // Type. Required.
+  string question_type = 4;
+  // Multiple answers allowed. Required.
+  bool allows_multiple = 5;
+  // Marks. Required. [Decimal string]
+  string marks = 6;
+  // Choices (correctness hidden).
+  repeated OptionView options = 7;
+  // Maximum options that may be ticked.
+  optional int32 max_selections = 8;
+  // Blanks of a fill-in-the-blanks question.
+  repeated BlankView blanks = 9;
+  // Left column of a matching question.
+  repeated OptionView match_left = 10;
+  // Right column of a matching question, shuffled.
+  repeated OptionView match_right = 11;
+  // Image of a hot-spot question. [UUID]
+  optional string hotspot_image_file_id = 12;
+  // Hot-spot selection mode. One of: single, multiple.
+  optional string hotspot_selection = 13;
+  // Text answers are case sensitive.
+  optional bool case_sensitive = 14;
+}
+
+message BlankView {
+  // Blank. Required. [UUID]
+  string blank_id = 1;
+  // Blank label / placeholder. Required.
+  string label = 2;
+}
+
+message BlankAnswer {
+  // Blank. Required. [UUID]
+  string blank_id = 1;
+  // Answer typed in the blank. Required.
+  string text = 2;
+}
+
+message MatchAnswer {
+  // Left item. Required. [UUID]
+  string left_id = 1;
+  // Matched right item. Required. [UUID]
+  string right_id = 2;
+}
+
+message HotspotPoint {
+  // X coordinate (image pixels). Required. [Decimal string]
+  string x = 1;
+  // Y coordinate (image pixels). Required. [Decimal string]
+  string y = 2;
+}
+
+message OptionView {
+  // Choice id. Required. [UUID]
+  string option_id = 1;
+  // Choice. Required.
+  string option_text = 2;
+}
+
+message QuizAnswerInput {
+  // Question. Required. [UUID]
+  string question_id = 1;
+  // Chosen options (choices, true/false). [UUID]
+  repeated string selected_option_ids = 2;
+  // Typed answer (short / open-ended / pattern).
+  optional string answer_text = 3;
+  // Numeric answer. [Decimal string]
+  optional string numeric_value = 4;
+  // Answers per blank.
+  repeated BlankAnswer blank_answers = 5;
+  // Matched pairs.
+  repeated MatchAnswer match_answers = 6;
+  // Points clicked on the image.
+  repeated HotspotPoint hotspot_points = 7;
+  // Client time the answer was given (offline ordering).
+  google.protobuf.Timestamp answered_at = 8;
+}
+
+message ViolationEvent {
+  // Event. Required. One of: tab_switch, no_face, multiple_faces, focus_loss, camera_disconnect.
+  string event_type = 1;
+  // Severity. Required. One of: violation, warning.
+  string severity = 2;
+  // When. Required.
+  google.protobuf.Timestamp occurred_at = 3;
+}
+
+message AnswerCheck {
+  // Correct. Required.
+  bool is_correct = 1;
+  // Explanation.
+  optional string explanation = 2;
+  // Correct choices (when the quiz shows answers). [UUID]
+  repeated string correct_option_ids = 3;
+}
+
+message TestOutput {
+  // Test case. Required. [UUID]
+  string test_case_id = 1;
+  // Output produced by the sandbox. Required.
+  string actual_output = 2;
+}
+
+message CourseOutlineLesson {
+  // Lesson. Required. [UUID]
+  string lesson_id = 1;
+  // Title. Required.
+  string title = 2;
+  // Position. Required.
+  int32 sort_order = 3;
+  // Previewable. Required.
+  bool include_in_preview = 4;
+  // Caller progress.
+  optional string progress_status = 5;
+}
+
+message CourseOutlineChapter {
+  // Chapter. Required. [UUID]
+  string chapter_id = 1;
+  // Title. Required.
+  string title = 2;
+  // Position. Required.
+  int32 sort_order = 3;
+  // SCORM. Required.
+  bool is_scorm_package = 4;
+  // Lessons.
+  repeated CourseOutlineLesson lessons = 5;
+}
+
+message ScormLaunch {
+  // URL of the SCORM launch file. Required.
+  string launch_url = 1;
+  // Saved CMI data.
+  google.protobuf.Value runtime_state = 2;
+}
+
+message DailyCount {
+  // Day. Required. [ISO-8601 date (YYYY-MM-DD)]
+  string date = 1;
+  // Count. Required.
+  int32 count = 2;
+}
+
+message ProgressBucket {
+  // e.g. 0-25%. Required.
+  string range_label = 1;
+  // Students. Required.
+  int32 students = 2;
+}
+
+message CertificateVerification {
+  // Certificate exists and is published. Required.
+  bool valid = 1;
+  // Student.
+  optional string student_name = 2;
+  // Course / cohort.
+  optional string title = 3;
+  // Issued. [ISO-8601 date (YYYY-MM-DD)]
+  optional string issue_date = 4;
+  // Expires. [ISO-8601 date (YYYY-MM-DD)]
+  optional string expiry_date = 5;
+}
+
+message EvaluatorSlot {
+  // Evaluator. Required. [UUID]
+  string evaluator_user_id = 1;
+  // Date. Required. [ISO-8601 date (YYYY-MM-DD)]
+  string date = 2;
+  // Start. Required. [Time of day (HH:MM[:SS])]
+  string start_time = 3;
+  // End. Required. [Time of day (HH:MM[:SS])]
+  string end_time = 4;
+}
+
+message CohortStudentProgress {
+  // Student. Required. [UUID]
+  string user_id = 1;
+  // Per course.
+  repeated CourseProgress course_progress = 2;
+  // Completed. Required.
+  int32 assessments_completed = 3;
+  // Total. Required.
+  int32 assessments_total = 4;
+}
+
+message CourseProgress {
+  // Course. Required. [UUID]
+  string course_id = 1;
+  // Completion. Required. [Decimal string]
+  string progress_percent = 2;
+}
+
+message BatchEnrollPreview {
+  // User. Required. [UUID]
+  string user_id = 1;
+  // Already enrolled. Required.
+  bool already_enrolled = 2;
+  // Payment needed. Required.
+  bool payment_required = 3;
+}
+
+message BirthdayEntry {
+  // Person. Required. [UUID]
+  string person_id = 1;
+  // Name. Required.
+  string display_name = 2;
+  // Birthday / joining date. Required. [ISO-8601 date (YYYY-MM-DD)]
+  string date = 3;
+  // Occasion. Required. One of: birthday, work_anniversary.
+  string kind = 4;
+  // Role. Required. One of: student, staff, guardian.
+  string role = 5;
+  // Age / years of service.
+  optional int32 years = 6;
+}
+
+message SendResult {
+  // Messages queued. Required.
+  int32 queued = 1;
+  // Recipients without a usable address. Required.
+  int32 skipped = 2;
+  // Background operation for large sends.
+  Operation operation = 3;
+}
+
+message LmsStatistics {
+  // Published courses. Required.
+  int32 published_courses = 1;
+  // Students with an enrolment. Required.
+  int32 students = 2;
+  // Enrolments. Required.
+  int32 enrollments = 3;
+  // Published certificates. Required.
+  int32 certificates_issued = 4;
+  // Share of enrolments at 100%. Required. [Decimal string]
+  string completion_percent = 5;
+}
+
+message ImpersonationToken {
+  // Access token acting as the target user (not refreshable). Required.
+  string access_token = 1;
+  // Lifetime (maximum 1800). Required.
+  int32 expires_in_seconds = 2;
+  // Target user. Required. [UUID]
+  string impersonated_user_id = 3;
+}
+
+message ExternalLink {
+  // URL to open (provider meeting, OAuth consent page...). Required.
+  string url = 1;
+  // When the link stops working, if known.
+  google.protobuf.Timestamp expires_at = 2;
+}
+
+message InstitutionCard {
+  // Institution. Required. [UUID]
+  string institution_id = 1;
+  // Tenant code to sign in with. Required.
+  string tenant_code = 2;
+  // Name. Required.
+  string name = 3;
+  // City.
+  optional string city = 4;
+  // Logo.
+  optional string logo_file_url = 5;
+}
+
+message ReportDefinition {
+  // Report code. Required.
+  string report_code = 1;
+  // Owning module. Required.
+  string module = 2;
+  // Title. Required.
+  string title = 3;
+  // csv / xlsx / pdf. Required.
+  repeated string formats = 4;
+  // JSON Schema of parameters.
+  google.protobuf.Value parameters = 5;
+}
+
+message StockImage {
+  // Image URL. Required.
+  string url = 1;
+  // Thumbnail. Required.
+  string thumb_url = 2;
+  // Photographer credit.
+  optional string author = 3;
+}
+
+message GradeInput {
+  // Points awarded (omit to leave unchanged). [Decimal string]
+  optional string points = 1;
+  // Feedback to the student.
+  optional string feedback = 2;
+  // Private note.
+  optional string teacher_comment = 3;
+  // Grading state (omitted: kept, except that points given grade an entry not excused). One of: graded, excused, not_submitted.
+  optional string status = 4;
+  // Chosen rubric cells (one per criterion). [UUID]
+  repeated string rubric_cell_ids = 5;
+  // Publish to the student immediately.
+  optional bool publish = 6;
+}
+
+message GradebookColumn {
+  // Graded item. Required. [UUID]
+  string content_item_id = 1;
+  // Item title. Required.
+  string title = 2;
+  // Item kind. Required.
+  string item_kind = 3;
+  // Category. [UUID]
+  optional string grading_category_id = 4;
+  // Maximum points. [Decimal string]
+  optional string points = 5;
+  // Weight in its category. [Decimal string]
+  optional string weight_percent = 6;
+  // Due date.
+  google.protobuf.Timestamp due_at = 7;
+}
+
+message GradebookCell {
+  // Item. Required. [UUID]
+  string content_item_id = 1;
+  // Gradebook entry (absent when not graded yet). [UUID]
+  optional string entry_id = 2;
+  // Points. [Decimal string]
+  optional string points = 3;
+  // Grading state. Required.
+  string status = 4;
+  // Visible to the student. Required.
+  bool is_published = 5;
+  // Submitted after the due date.
+  optional bool is_late = 6;
+}
+
+message GradebookRow {
+  // Student. Required. [UUID]
+  string user_id = 1;
+  // Student name. Required.
+  string student_name = 2;
+  // One cell per column.
+  repeated GradebookCell cells = 3;
+  // Percentage per grading category.
+  google.protobuf.Value category_percents = 4;
+  // Weighted total. [Decimal string]
+  optional string total_percent = 5;
+  // Letter grade from the scale.
+  optional string letter_grade = 6;
+  // Final grade awarded (cohort enrolment).
+  optional string final_grade = 7;
+}
+
+message CohortPerformance {
+  // Item. Required. [UUID]
+  string content_item_id = 1;
+  // Average. [Decimal string]
+  optional string average_percent = 2;
+  // Median. [Decimal string]
+  optional string median_percent = 3;
+  // Submissions. Required.
+  int32 submitted = 4;
+  // Graded. Required.
+  int32 graded = 5;
+  // Not submitted after the due date. Required.
+  int32 missing = 6;
+}
+
+message RosterEntry {
+  // Member. Required. [UUID]
+  string user_id = 1;
+  // Name. Required.
+  string display_name = 2;
+  // E-mail; returned only to cohort staff and administrators (empty for students, guardians and observers).
+  optional string email = 3;
+  // Role in the cohort (student, teacher, assistant, observer...). Required.
+  string role_code = 4;
+  // Active member. Required.
+  bool is_active = 5;
+  // Student enrolment. [UUID]
+  optional string enrollment_id = 6;
+  // Staff membership. [UUID]
+  optional string teacher_id = 7;
+}
+
+message MemberAssignment {
+  // User. Required. [UUID]
+  string user_id = 1;
+  // Cohort role (staff); omit for students. [UUID]
+  optional string role_id = 2;
+  // Label shown for the role.
+  optional string role_label = 3;
+}
+
+message CalendarItem {
+  // Kind of item. Required. One of: event, occurrence, due_date, live_class, cohort_session, holiday.
+  string item_type = 1;
+  // Record id. Required. [UUID]
+  string id = 2;
+  // Title. Required.
+  string title = 3;
+  // Start. Required.
+  google.protobuf.Timestamp start_at = 4;
+  // End.
+  google.protobuf.Timestamp end_at = 5;
+  // All-day item.
+  optional bool all_day = 6;
+  // Colour.
+  optional string color = 7;
+  // Cohort. [UUID]
+  optional string cohort_id = 8;
+  // Item due. [UUID]
+  optional string content_item_id = 9;
+  // Cancelled occurrence.
+  optional bool is_cancelled = 10;
+  // Submitted / completed by the caller.
+  optional bool is_completed = 11;
+}
+
+message ReleaseStatus {
+  // Item. Required. [UUID]
+  string content_item_id = 1;
+  // Released to the student. Required.
+  bool is_released = 2;
+  // Rule outcome or manual grant.
+  optional string reason = 3;
+  // Conditions not yet met.
+  repeated string pending_conditions = 4;
+}
+
+message UnreadCounts {
+  // Unread discussion posts. Required.
+  int32 forum_posts = 1;
+  // Unread notifications. Required.
+  int32 notifications = 2;
+  // Unread internal mail. Required.
+  int32 mailbox = 3;
+  // Unread posts per cohort id.
+  google.protobuf.Value per_cohort = 4;
+}
+
+message Dependencies {
+  // No blocking dependants. Required.
+  bool can_delete = 1;
+  // Counts of dependent records per type (cohorts, versions, catalogue entries...).
+  google.protobuf.Value blocking = 2;
+}
+
+message LtiLaunch {
+  // Tool launch URL. Required.
+  string launch_url = 1;
+  // HTTP method (POST for LTI 1.1 / 1.3 form launch). Required.
+  string method = 2;
+  // Signed launch parameters / id_token to auto-submit. Required.
+  google.protobuf.Value form_fields = 3;
+  // Launch expiry.
+  google.protobuf.Timestamp expires_at = 4;
+}
+
+message QuizAutosaveResult {
+  // Answers stored (stale ones ignored). Required.
+  int32 saved_count = 1;
+  // Answers ignored because a newer one is stored. Required.
+  int32 ignored_stale = 2;
+  // Server clock, for timer correction. Required.
+  google.protobuf.Timestamp server_time = 3;
+  // When the attempt closes (time limit / window).
+  google.protobuf.Timestamp deadline_at = 4;
+  // Time left on a timed attempt.
+  optional int32 remaining_seconds = 5;
+}
+
+message PeerPoints {
+  // Group member reviewed. Required. [UUID]
+  string user_id = 1;
+  // Points awarded. Required. [Decimal string]
+  string points = 2;
+}
+
+message AnswerGrade {
+  // Question. Required. [UUID]
+  string question_id = 1;
+  // Marks awarded. Required. [Decimal string]
+  string marks = 2;
+  // Feedback on the answer.
+  optional string feedback = 3;
+}
+
+message GradeEntryInput {
+  // Graded item. Required. [UUID]
+  string content_item_id = 1;
+  // Student. [UUID]
+  optional string user_id = 2;
+  // Group. [UUID]
+  optional string group_id = 3;
+  // Concurrency token of the existing entry (send when updating).
+  optional string etag = 4;
+  // Grade. Required.
+  GradeInput grade = 5;
+}
+
+message Availability {
+  // The value is free. Required.
+  bool available = 1;
+  // A free alternative when not available.
+  optional string suggestion = 2;
+}
+
+// The page a list request reads (api/README "Pagination"): pages are one-based; a request without a cursor reads by
+// OFFSET (at most 10,000 rows deep), a request with the cursor of the previous response's pagination continues right
+// after that response's last item.
+message PageableRequest {
+  // One-based page number (default 1).
+  int32 page = 1;
+  // Page size (1-500, default 50).
+  int32 size = 2;
+  // Sort criteria in priority order (default: the resource's default order).
+  repeated Sort sort = 3;
+  // Opaque cursor from the previous response's pagination.next_cursor, sent with page = pagination.next.
+  string cursor = 4;
+}
+
+// Where a list response's page is and how to reach the others.
+message Pagination {
+  // Items in this page.
+  int32 size = 1;
+  // Number of the first page (always 1).
+  int32 first = 2;
+  // Number of the previous page; 0 on the first page and where the previous page lies beyond OFFSET reach.
+  int32 previous = 3;
+  // Number of the next page; 0 on the last page.
+  int32 next = 4;
+  // Number of this page.
+  int32 page = 5;
+  // Cursor to send with page = next; empty on the last page.
+  string next_cursor = 6;
+}
+
+// One sort criterion of a list request.
+message Sort {
+  // Direction of the sort.
+  enum Direction {
+    // Ascending (the default).
+    DIRECTION_UNSPECIFIED = 0;
+    // Ascending.
+    DIRECTION_ASC = 1;
+    // Descending.
+    DIRECTION_DESC = 2;
+  }
+  // The field to sort by (its JSON name). Required.
+  string field = 1;
+  // The direction of the sort.
+  Direction direction = 2;
+}

@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -14,7 +14,6 @@ import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
-
 import java.util.*;
 
 /**
@@ -22,9 +21,6 @@ import java.util.*;
  */
 
 public class DriveItemUpdate {
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID ownerUserId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID fileId;
@@ -59,32 +55,6 @@ public class DriveItemUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Boolean isShared;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer likeCount;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer dislikeCount;
-
-  public DriveItemUpdate ownerUserId(@Nullable UUID ownerUserId) {
-    this.ownerUserId = ownerUserId;
-    return this;
-  }
-
-  /**
-   * Owner.
-   * @return ownerUserId
-   */
-  @Valid 
-  @JsonProperty("ownerUserId")
-  public @Nullable UUID getOwnerUserId() {
-    return ownerUserId;
-  }
-
-  @JsonProperty("ownerUserId")
-  public void setOwnerUserId(@Nullable UUID ownerUserId) {
-    this.ownerUserId = ownerUserId;
-  }
 
   public DriveItemUpdate fileId(@Nullable UUID fileId) {
     this.fileId = fileId;
@@ -306,46 +276,6 @@ public class DriveItemUpdate {
     this.isShared = isShared;
   }
 
-  public DriveItemUpdate likeCount(@Nullable Integer likeCount) {
-    this.likeCount = likeCount;
-    return this;
-  }
-
-  /**
-   * Cached likes.
-   * @return likeCount
-   */
-  
-  @JsonProperty("likeCount")
-  public @Nullable Integer getLikeCount() {
-    return likeCount;
-  }
-
-  @JsonProperty("likeCount")
-  public void setLikeCount(@Nullable Integer likeCount) {
-    this.likeCount = likeCount;
-  }
-
-  public DriveItemUpdate dislikeCount(@Nullable Integer dislikeCount) {
-    this.dislikeCount = dislikeCount;
-    return this;
-  }
-
-  /**
-   * Cached dislikes.
-   * @return dislikeCount
-   */
-  
-  @JsonProperty("dislikeCount")
-  public @Nullable Integer getDislikeCount() {
-    return dislikeCount;
-  }
-
-  @JsonProperty("dislikeCount")
-  public void setDislikeCount(@Nullable Integer dislikeCount) {
-    this.dislikeCount = dislikeCount;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -355,8 +285,7 @@ public class DriveItemUpdate {
       return false;
     }
     DriveItemUpdate driveItemUpdate = (DriveItemUpdate) o;
-    return Objects.equals(this.ownerUserId, driveItemUpdate.ownerUserId) &&
-        Objects.equals(this.fileId, driveItemUpdate.fileId) &&
+    return Objects.equals(this.fileId, driveItemUpdate.fileId) &&
         Objects.equals(this.itemType, driveItemUpdate.itemType) &&
         Objects.equals(this.icon, driveItemUpdate.icon) &&
         Objects.equals(this.title, driveItemUpdate.title) &&
@@ -366,21 +295,18 @@ public class DriveItemUpdate {
         Objects.equals(this.linkUrl, driveItemUpdate.linkUrl) &&
         Objects.equals(this.uploadedAt, driveItemUpdate.uploadedAt) &&
         Objects.equals(this.courseId, driveItemUpdate.courseId) &&
-        Objects.equals(this.isShared, driveItemUpdate.isShared) &&
-        Objects.equals(this.likeCount, driveItemUpdate.likeCount) &&
-        Objects.equals(this.dislikeCount, driveItemUpdate.dislikeCount);
+        Objects.equals(this.isShared, driveItemUpdate.isShared);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(ownerUserId, fileId, itemType, icon, title, description, keywords, sizeBytes, linkUrl, uploadedAt, courseId, isShared, likeCount, dislikeCount);
+    return Objects.hash(fileId, itemType, icon, title, description, keywords, sizeBytes, linkUrl, uploadedAt, courseId, isShared);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class DriveItemUpdate {\n");
-    sb.append("    ownerUserId: ").append(toIndentedString(ownerUserId)).append("\n");
     sb.append("    fileId: ").append(toIndentedString(fileId)).append("\n");
     sb.append("    itemType: ").append(toIndentedString(itemType)).append("\n");
     sb.append("    icon: ").append(toIndentedString(icon)).append("\n");
@@ -392,8 +318,6 @@ public class DriveItemUpdate {
     sb.append("    uploadedAt: ").append(toIndentedString(uploadedAt)).append("\n");
     sb.append("    courseId: ").append(toIndentedString(courseId)).append("\n");
     sb.append("    isShared: ").append(toIndentedString(isShared)).append("\n");
-    sb.append("    likeCount: ").append(toIndentedString(likeCount)).append("\n");
-    sb.append("    dislikeCount: ").append(toIndentedString(dislikeCount)).append("\n");
     sb.append("}");
     return sb.toString();
   }

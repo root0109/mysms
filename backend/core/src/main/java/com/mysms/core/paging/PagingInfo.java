@@ -10,9 +10,9 @@ import java.util.List;
  * @param <T> the contract DTO listed
  */
 public record PagingInfo<T>(
-        @Schema(description = "Data retrieved in the paginated request.")
+        @Schema(description = "Data retrieved in the paginated request.", requiredMode = Schema.RequiredMode.REQUIRED)
         List<T> data,
-        @Schema(description = "Navigation info of the paginated request.")
+        @Schema(description = "Navigation info of the paginated request.", requiredMode = Schema.RequiredMode.REQUIRED)
         NavigationInfo paging) {
 
     public PagingInfo {

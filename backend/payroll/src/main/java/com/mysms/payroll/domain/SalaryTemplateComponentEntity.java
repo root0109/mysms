@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of payroll.salary_template_component (column for column; the audit set comes from {@link BaseEntity}). */
+/** A row of payroll.salary_template_component. */
 @Getter
 @Setter
 @SuperBuilder

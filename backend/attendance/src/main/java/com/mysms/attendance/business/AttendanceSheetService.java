@@ -51,14 +51,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of attendance.attendance_sheet (JAVA-CODING-RULES §4): one plain class, explicit methods,
- * transactions driven
- * on the module's PlatformTransactionManager, audit + domain event in the same transaction as every change, and the data-level
- * rules of api/README "Authorization" (rows outside the caller's institutions are invisible; tenant-level rows change
- * only through a tenant-wide grant).
- *
- * <p>One service per aggregate (owner decision of 2026-11-10): the records that exist only as part of a AttendanceSheet
- * are served here too — AttendanceRecord.
+ * Business service of attendance.attendance_sheet and of the records that exist only as part of a AttendanceSheet
+ * (AttendanceRecord): audit and domain event commit in the same transaction as every change. Rows outside the caller's
+ * institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class AttendanceSheetService extends AppTransactionManager {
@@ -154,8 +149,8 @@ public class AttendanceSheetService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
+     * non-null fields apply; the merged row must validate and stay in the caller's scope.
      */
     public AttendanceSheet updateAttendanceSheet(UUID id, String ifMatch, AttendanceSheetUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -212,9 +207,8 @@ public class AttendanceSheetService extends AppTransactionManager {
     }
 
     /**
-     * attendance.StartAttendanceSheet: Start taking attendance. The row must be visible and writable for the caller,
-     * and the step is allowed while status is draft; in any other state
-     * the answer is 409 and nothing changes.
+     * attendance.StartAttendanceSheet: Start taking attendance. Allowed while status is draft, on a row the caller may
+     * see and write; otherwise 409 and nothing changes.
      */
     public AttendanceSheet startAttendanceSheet(UUID id, StartAttendanceSheetRequest request) {
         DataScope scope = DataScope.current(PERMISSION_START_ATTENDANCE_SHEET);
@@ -246,9 +240,8 @@ public class AttendanceSheetService extends AppTransactionManager {
     }
 
     /**
-     * attendance.CancelAttendanceSheet: Cancel. The row must be visible and writable for the caller, and the step is
-     * allowed while status is draft or in_progress; in any other state
-     * the answer is 409 and nothing changes.
+     * attendance.CancelAttendanceSheet: Cancel. Allowed while status is draft or in_progress, on a row the caller may
+     * see and write; otherwise 409 and nothing changes.
      */
     public AttendanceSheet cancelAttendanceSheet(UUID id, CancelAttendanceSheetRequest request) {
         DataScope scope = DataScope.current(PERMISSION_CANCEL_ATTENDANCE_SHEET);
@@ -281,9 +274,8 @@ public class AttendanceSheetService extends AppTransactionManager {
     }
 
     /**
-     * attendance.ResetAttendanceSheet: Back to draft. The row must be visible and writable for the caller, and the step
-     * is allowed while status is cancelled or done — reopening a completed sheet to correct it (ui/03 flow F3) keeps
-     * its marks; in any other state the answer is 409 and nothing changes.
+     * attendance.ResetAttendanceSheet: Back to draft. Allowed while status is cancelled or done, on a row the caller may
+     * see and write; otherwise 409 and nothing changes. Reopening a completed sheet to correct it keeps its marks.
      */
     public AttendanceSheet resetAttendanceSheet(UUID id, ResetAttendanceSheetRequest request) {
         DataScope scope = DataScope.current(PERMISSION_RESET_ATTENDANCE_SHEET);
@@ -324,14 +316,12 @@ public class AttendanceSheetService extends AppTransactionManager {
         return entity;
     }
 
-    /** The institution that owns the row (the institution of the attendance.attendance_register it belongs to). */
+    /** The institution of the attendance.attendance_register the row belongs to. */
     private Optional<UUID> institutionOf(AttendanceSheetEntity entity) {
         return repository.institutionOf(entity.getRegisterId());
     }
 
-    /**
-     * Applies the selected AttendanceSheetUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
+    /** Applies the selected AttendanceSheetUpdate fields; explicit per field so a mask can clear values. */
     private static void apply(AttendanceSheetEntity entity, AttendanceSheetUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
@@ -372,7 +362,7 @@ public class AttendanceSheetService extends AppTransactionManager {
 
     }
 
-    // ---- AttendanceRecord: a record of the AttendanceSheet aggregate ----
+    // ---- AttendanceRecord ----
 
     public AttendanceRecord getAttendanceRecord(UUID sheetId, UUID id) {
         return doInReadTransaction(() -> {
@@ -409,10 +399,7 @@ public class AttendanceSheetService extends AppTransactionManager {
         return entity;
     }
 
-    /**
-     * The institution that owns the row (the institution of the attendance.attendance_sheet →
-     * attendance.attendance_register it belongs to).
-     */
+    /** The institution of the attendance.attendance_sheet → attendance.attendance_register the row belongs to. */
     private Optional<UUID> institutionOfAttendanceRecord(AttendanceRecordEntity entity) {
         return attendanceRecordRepository.institutionOf(entity.getSheetId());
     }

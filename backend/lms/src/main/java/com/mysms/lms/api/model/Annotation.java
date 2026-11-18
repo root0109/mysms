@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -28,7 +28,7 @@ public class Annotation {
   private @Nullable UUID id;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID userId;
+  private @Nullable UUID userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable UUID contentItemId;
@@ -190,8 +190,7 @@ public class Annotation {
   /**
    * Constructor with only required parameters
    */
-  public Annotation(UUID userId, AnnotationTypeEnum annotationType) {
-    this.userId = userId;
+  public Annotation(AnnotationTypeEnum annotationType) {
     this.annotationType = annotationType;
   }
 
@@ -215,23 +214,23 @@ public class Annotation {
     this.id = id;
   }
 
-  public Annotation userId(UUID userId) {
+  public Annotation userId(@Nullable UUID userId) {
     this.userId = userId;
     return this;
   }
 
   /**
-   * Author.
+   * Author. Output only: the caller, from the token.
    * @return userId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("userId")
-  public UUID getUserId() {
+  public @Nullable UUID getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(UUID userId) {
+  public void setUserId(@Nullable UUID userId) {
     this.userId = userId;
   }
 

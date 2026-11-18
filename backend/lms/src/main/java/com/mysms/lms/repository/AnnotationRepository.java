@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to lms.annotation (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters, live
- * rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to lms.annotation: live rows only, keyset paging, and the row_version guard on every update and
+ * delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class AnnotationRepository {
@@ -159,6 +156,8 @@ public class AnnotationRepository {
              p0.institution_id IS NULL)) OR r.cohort_id IS NULL)
             """;
 
+    private static final String OWNED_BY = "r.user_id = :ownerId";
+
     private final JdbcClient jdbc;
 
     public AnnotationRepository(@Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database) {
@@ -284,7 +283,12 @@ public class AnnotationRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** The rows of one owner. */
+    public static SqlFragment ownedBy(UUID owner) {
+        return new SqlFragment(OWNED_BY, Map.of("ownerId", owner));
+    }
+
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

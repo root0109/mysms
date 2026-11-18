@@ -10,7 +10,6 @@ import com.mysms.lms.api.model.LiveClassParticipant;
 import com.mysms.lms.api.model.LiveClassParticipantList;
 import com.mysms.lms.api.model.LiveClassUpdate;
 import com.mysms.lms.api.model.ScheduleLiveClassRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.lms.business.LiveClassService;
 import java.net.URI;
@@ -19,10 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the LiveClass operations: implements the generated contract interface, so paths, parameters and payloads
- * cannot drift from api/openapi/lms.yaml (JAVA-CODING-RULES §9). Thin: delegate, then shape the HTTP response.
- * Authentication and the x-permission check already happened in the auth-client filter; operations not served yet
- * answer 501 NOT_IMPLEMENTED.
+ * REST edge of the LiveClass operations; authentication and the permission check already ran in the auth-client filter.
+ * Operations not served yet answer 501.
  */
 @RestController
 public class LiveClassController implements LiveClassApi {
@@ -53,7 +50,8 @@ public class LiveClassController implements LiveClassApi {
 
     @Override
     public ResponseEntity<LiveClass> endLiveClass(UUID liveClassId, Object body, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LiveClass ended = liveClassService.endLiveClass(liveClassId);
+        return ResponseEntity.ok().eTag(ended.getEtag()).body(ended);
     }
 
     @Override
@@ -72,13 +70,13 @@ public class LiveClassController implements LiveClassApi {
 
     @Override
     public ResponseEntity<ExternalLink> getLiveClassStartUrl(UUID liveClassId) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(liveClassService.getLiveClassStartUrl(liveClassId));
     }
 
     @Override
     public ResponseEntity<ExternalLink> joinLiveClass(UUID liveClassId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(liveClassService.joinLiveClass(liveClassId));
     }
 
     @Override
@@ -103,19 +101,21 @@ public class LiveClassController implements LiveClassApi {
     @Override
     public ResponseEntity<LiveClass> retryLiveClassInvites(UUID liveClassId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LiveClass queued = liveClassService.retryLiveClassInvites(liveClassId);
+        return ResponseEntity.ok().eTag(queued.getEtag()).body(queued);
     }
 
     @Override
     public ResponseEntity<LiveClass> scheduleLiveClass(ScheduleLiveClassRequest scheduleLiveClassRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        LiveClass scheduled = liveClassService.scheduleLiveClass(scheduleLiveClassRequest);
+        return ResponseEntity.ok().eTag(scheduled.getEtag()).body(scheduled);
     }
 
     @Override
     public ResponseEntity<LiveClassParticipantList> syncLiveClassAttendance(UUID liveClassId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(liveClassService.syncLiveClassAttendance(liveClassId));
     }
 
     @Override

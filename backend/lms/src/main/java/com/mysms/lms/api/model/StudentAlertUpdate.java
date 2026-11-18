@@ -1,4 +1,4 @@
-// Owned API contract of lms (JAVA-CODING-RULES §7); first materialized from api/openapi/lms.yaml on 2026-11-10.
+// Owned API contract of lms.
 package com.mysms.lms.api.model;
 
 import java.net.URI;
@@ -13,7 +13,6 @@ import org.springframework.lang.Nullable;
 import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-
 
 import java.util.*;
 
@@ -41,9 +40,6 @@ public class StudentAlertUpdate {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private @Nullable OffsetDateTime sentAt;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID sentBy;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String subject;
@@ -178,26 +174,6 @@ public class StudentAlertUpdate {
     this.sentAt = sentAt;
   }
 
-  public StudentAlertUpdate sentBy(@Nullable UUID sentBy) {
-    this.sentBy = sentBy;
-    return this;
-  }
-
-  /**
-   * Sender (NULL = automatic).
-   * @return sentBy
-   */
-  @Valid 
-  @JsonProperty("sentBy")
-  public @Nullable UUID getSentBy() {
-    return sentBy;
-  }
-
-  @JsonProperty("sentBy")
-  public void setSentBy(@Nullable UUID sentBy) {
-    this.sentBy = sentBy;
-  }
-
   public StudentAlertUpdate subject(@Nullable String subject) {
     this.subject = subject;
     return this;
@@ -293,7 +269,6 @@ public class StudentAlertUpdate {
         Objects.equals(this.metricCode, studentAlertUpdate.metricCode) &&
         Objects.equals(this.contentItemId, studentAlertUpdate.contentItemId) &&
         Objects.equals(this.sentAt, studentAlertUpdate.sentAt) &&
-        Objects.equals(this.sentBy, studentAlertUpdate.sentBy) &&
         Objects.equals(this.subject, studentAlertUpdate.subject) &&
         Objects.equals(this.message, studentAlertUpdate.message) &&
         Objects.equals(this.details, studentAlertUpdate.details) &&
@@ -302,7 +277,7 @@ public class StudentAlertUpdate {
 
   @Override
   public int hashCode() {
-    return Objects.hash(userId, cohortId, courseId, metricCode, contentItemId, sentAt, sentBy, subject, message, details, readAt);
+    return Objects.hash(userId, cohortId, courseId, metricCode, contentItemId, sentAt, subject, message, details, readAt);
   }
 
   @Override
@@ -315,7 +290,6 @@ public class StudentAlertUpdate {
     sb.append("    metricCode: ").append(toIndentedString(metricCode)).append("\n");
     sb.append("    contentItemId: ").append(toIndentedString(contentItemId)).append("\n");
     sb.append("    sentAt: ").append(toIndentedString(sentAt)).append("\n");
-    sb.append("    sentBy: ").append(toIndentedString(sentBy)).append("\n");
     sb.append("    subject: ").append(toIndentedString(subject)).append("\n");
     sb.append("    message: ").append(toIndentedString(message)).append("\n");
     sb.append("    details: ").append(toIndentedString(details)).append("\n");

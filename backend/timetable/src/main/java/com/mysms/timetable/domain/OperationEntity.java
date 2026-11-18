@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-/** A row of timetable.operation: one long-running job of this module (column for column). */
+/** A row of timetable.operation: one long-running job of this module. */
 @Getter
 @Setter
 @SuperBuilder

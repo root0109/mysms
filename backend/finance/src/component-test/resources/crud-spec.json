@@ -311,6 +311,88 @@
      "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM finance.payment_gateway_account WHERE id = '{id}' AND (webhook_secret_enc IS NULL OR webhook_secret_enc NOT LIKE 'v1.%' OR strpos(webhook_secret_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
     }
    ]
+  },
+  {
+   "name": "Invoice",
+   "table": "finance.invoice",
+   "ops": [
+    "Create",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/invoices",
+   "item": "/v1/finance/invoices/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "studentId": "0196f000-0000-7000-8000-0000000f5001",
+    "billToName": "t-bill-to-3c1f9a20",
+    "invoiceDate": "2026-04-01",
+    "currencyId": "0196f000-0000-7000-8000-0000000fc001"
+   },
+   "update": {
+    "billToName": "Updated bill-to name"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "StudentFeeDue",
+   "table": "finance.student_fee_due",
+   "ops": [
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/student-fee-dues",
+   "item": "/v1/finance/student-fee-dues/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "update": {
+    "dueDate": "2026-05-01"
+   },
+   "duplicateConflicts": false,
+   "seedId": "0196f000-0000-7000-8000-0000000fd001",
+   "seed": [
+    "INSERT INTO finance.student_fee_due (id, tenant_id, institution_id, student_id, academic_year_id, due_date, amount, currency_id, discount_amount, net_amount, row_version) VALUES ('0196f000-0000-7000-8000-0000000fd001', :tenant, '0196f000-0000-7000-8000-00000000a001', '0196f000-0000-7000-8000-0000000f5001', '0196f000-0000-7000-8000-0000000fa001', '2026-04-01', 1200.00, '0196f000-0000-7000-8000-0000000fc001', 0, 1200.00, 1)"
+   ]
+  },
+  {
+   "name": "Payment",
+   "table": "finance.payment",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/finance/payments",
+   "item": "/v1/finance/payments/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "duplicateConflicts": false,
+   "seedId": "0196f000-0000-7000-8000-0000000fe001",
+   "seed": [
+    "INSERT INTO finance.payment (id, tenant_id, institution_id, payer_name, purpose, amount, currency_id, billing_name, status, payment_method, received_at, receipt_number, row_version) VALUES ('0196f000-0000-7000-8000-0000000fe001', :tenant, '0196f000-0000-7000-8000-00000000a001', 't-payer-91a2', 'fees', 500.00, '0196f000-0000-7000-8000-0000000fc001', 't-billing-77d1', 'received', 'cash', now(), 'RCT-SEED-1', 1)"
+   ]
+  },
+  {
+   "name": "Refund",
+   "table": "finance.refund",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/finance/refunds",
+   "item": "/v1/finance/refunds/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO finance.payment (id, tenant_id, institution_id, payer_name, purpose, amount, currency_id, billing_name, status, payment_method, received_at, row_version) VALUES ('0196f000-0000-7000-8000-0000000fe002', :tenant, '0196f000-0000-7000-8000-00000000a001', 't-payer-4c19', 'fees', 800.00, '0196f000-0000-7000-8000-0000000fc001', 't-billing-2b0e', 'received', 'cash', now(), 1) ON CONFLICT (id) DO NOTHING"
+   ],
+   "duplicateConflicts": false,
+   "seedId": "0196f000-0000-7000-8000-0000000ff001",
+   "seed": [
+    "INSERT INTO finance.refund (id, tenant_id, payment_id, amount, reason, status, refund_method, refunded_at, row_version) VALUES ('0196f000-0000-7000-8000-0000000ff001', :tenant, '0196f000-0000-7000-8000-0000000fe002', 100.00, 'Seeded refund', 'processed', 'cash', now(), 1)"
+   ]
   }
  ]
 }

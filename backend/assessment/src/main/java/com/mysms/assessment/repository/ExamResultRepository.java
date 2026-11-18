@@ -25,11 +25,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 /**
- * Plain-JDBC access to assessment.exam_result (JAVA-CODING-RULES §6): schema-qualified constant SQL, named parameters,
- * live rows only,
- * keyset paging over an allowlisted order and the row_version guard on every update and delete. Every statement
- * filters the caller's tenant itself ({@code tenant_id = :tenantId}, bound by core's TenantJdbcClient); row-level
- * security is the backstop.
+ * Plain-JDBC access to assessment.exam_result: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
  */
 @Repository
 public class ExamResultRepository {
@@ -81,7 +78,8 @@ public class ExamResultRepository {
             (id, tenant_id, exam_id, student_id, room_id, attendance_status, max_marks, credits, note, created_at, created_by,
              updated_at, updated_by, row_version)
             VALUES (:id, :tenantId, :examId, :studentId, :roomId,
-                    COALESCE(:attendanceStatus, 'expected'::character varying), :maxMarks, :credits, :note, :createdAt, :createdBy,
+                    COALESCE(:attendanceStatus, 'expected'::character varying), :maxMarks, :credits, :note, :createdAt,
+                    :createdBy,
                     :updatedAt, :updatedBy, :rowVersion)
             RETURNING id, tenant_id, max_marks, grade_label, grade_point, credits, result_status, marksheet_line_id,
                       evaluated_by_user_id, evaluated_at, exam_id, student_id, room_id, attendance_status, marks, note,
@@ -125,6 +123,24 @@ public class ExamResultRepository {
                    credits = :credits, marksheet_line_id = :lineId, updated_at = :now, updated_by = :actor,
                    row_version = row_version + 1
              WHERE tenant_id = :tenantId AND id = :id AND row_version = :expected AND deleted_at IS NULL
+               AND marksheet_line_id IS NULL
+            """;
+    private static final String LINKED_TO_LIVE_MARKSHEET = """
+            SELECT EXISTS (SELECT 1 FROM assessment.exam_result er
+                             JOIN assessment.exam e ON e.tenant_id = :tenantId AND e.id = er.exam_id
+                             JOIN assessment.marksheet_line ml ON ml.tenant_id = :tenantId AND ml.id = er.marksheet_line_id
+                             JOIN assessment.marksheet m ON m.tenant_id = :tenantId AND m.id = ml.marksheet_id
+                            WHERE er.tenant_id = :tenantId AND er.deleted_at IS NULL AND e.exam_session_id = :sessionId
+                              AND m.deleted_at IS NULL AND m.status <> 'cancelled')
+            """;
+    private static final String UNLINK_MARKSHEET = """
+            UPDATE assessment.exam_result
+               SET marksheet_line_id = NULL, grade_label = NULL, grade_point = NULL, updated_at = :now,
+                   updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND deleted_at IS NULL
+               AND marksheet_line_id IN (SELECT ml.id FROM assessment.marksheet_line ml
+                                          WHERE ml.tenant_id = :tenantId AND ml.marksheet_id = :marksheetId)
+            RETURNING id
             """;
     private static final String INSERT_CHANGE_LOG = """
             INSERT INTO assessment.result_change_log
@@ -145,13 +161,12 @@ public class ExamResultRepository {
     private static final String UPDATE = """
             UPDATE assessment.exam_result
                SET room_id = :roomId,
-                   attendance_status = :attendanceStatus,
                    note = :note,
                    updated_at = :updatedAt,
                    updated_by = :updatedBy,
                    row_version = row_version + 1
              WHERE tenant_id = :tenantId
-               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL AND marksheet_line_id IS NULL
             """;
     private static final String UQ_EXAM_RESULT_1_TAKEN = """
             SELECT EXISTS (SELECT 1 FROM assessment.exam_result
@@ -272,12 +287,26 @@ public class ExamResultRepository {
                 .query(ExamResultRepository::map).single();
     }
 
-    /** Updates under the ETag guard; 0 rows means the row changed (or vanished) since it was read. */
+    /** Whether a result of the session's papers belongs to a marksheet that is not cancelled. */
+    public boolean linkedToLiveMarksheet(UUID sessionId) {
+        return Boolean.TRUE.equals(jdbc.sql(LINKED_TO_LIVE_MARKSHEET).param("sessionId", sessionId)
+                .query(Boolean.class).single());
+    }
+
+    /** Releases the results of a marksheet's lines (link and grade cleared); answers the ids of the rows released. */
+    public List<UUID> unlinkMarksheet(UUID marksheetId, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(UNLINK_MARKSHEET).param("marksheetId", marksheetId).param("now", now).param("actor", actor)
+                .query(UUID.class).list();
+    }
+
+    /**
+     * Updates under the ETag guard; 0 rows means the row changed (or vanished) since it was read, or it now belongs to
+     * a marksheet.
+     */
     public int update(ExamResultEntity e, int expectedVersion) {
         return jdbc.sql(UPDATE)
                 .param("id", e.getId())
                 .param("roomId", e.getRoomId())
-                .param("attendanceStatus", e.getAttendanceStatus())
                 .param("note", e.getNote())
                 .param("updatedAt", e.getUpdatedAt())
                 .param("updatedBy", e.getUpdatedBy())
@@ -330,7 +359,7 @@ public class ExamResultRepository {
                 .optional().flatMap(found -> found);
     }
 
-    /** Rows of the caller's institutions only (api/README "Authorization"). */
+    /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

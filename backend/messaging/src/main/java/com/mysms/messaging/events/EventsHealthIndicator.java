@@ -3,7 +3,7 @@ package com.mysms.messaging.events;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-/** Readiness of the event machinery ({@link EventRuntime#health()}): the bus connection and the relays. */
+/** Readiness of the event machinery: the bus connection and the relays. */
 public final class EventsHealthIndicator implements HealthIndicator {
 
     private final EventRuntime runtime;

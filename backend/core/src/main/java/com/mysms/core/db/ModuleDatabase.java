@@ -24,9 +24,8 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 /**
- * Everything one module needs to reach its own schema, and nothing that could reach another's
- * (JAVA-CODING-RULES §2): its own connection pool, transaction manager, {@link JdbcClient}, transaction definitions,
- * the tenant binding and Flyway history. Created by the module's database configuration from `mysms.<module>.datasource.*`.
+ * Everything one module needs to reach its own schema, and nothing that could reach another's: pools, transaction
+ * manager, {@link JdbcClient}, tenant binding and Flyway history, from `mysms.<module>.datasource.*`.
  */
 public final class ModuleDatabase implements AutoCloseable {
 
@@ -112,10 +111,8 @@ public final class ModuleDatabase implements AutoCloseable {
     }
 
     /**
-     * One connection pool of the module (the {@code DataSourceManager} of the owner's {@code common} module, from
-     * the environment instead of files): named {@code <module>} for the primary and {@code <module>-replica} for the
-     * replica, which is also the PostgreSQL {@code application_name} of its sessions, so each shows in
-     * {@code pg_stat_activity} as what it is.
+     * One connection pool, named {@code <module>} or {@code <module>-replica}; the name is also the sessions'
+     * {@code application_name}, so each shows in {@code pg_stat_activity} as what it is.
      */
     private static HikariDataSource pool(String module, DatabaseRole role, String url, String username,
                                          String password, int size) {
@@ -239,10 +236,7 @@ public final class ModuleDatabase implements AutoCloseable {
         return new DriverManagerDataSource(settings.url(), settings.migrateUsername(), settings.migratePassword());
     }
 
-    /**
-     * A read-write transaction of this module: READ COMMITTED, bounded by the module's transaction timeout. Services
-     * pass it to their module's {@code PlatformTransactionManager} bean (JAVA-CODING-RULES §4).
-     */
+    /** A read-write transaction of this module: READ COMMITTED, bounded by the module's transaction timeout. */
     public TransactionDefinition writeDefinition() {
         return writeDefinition;
     }
@@ -253,10 +247,8 @@ public final class ModuleDatabase implements AutoCloseable {
     }
 
     /**
-     * Binds the call's tenant to the transaction just opened — {@code set_config('app.tenant_id', …, true)}, the
-     * transaction-local setting row-level security reads — so every statement of it sees that tenant's rows only.
-     * Called first in every tenant transaction; a module of global tables (master) binds nothing. Never called for
-     * a transaction over global tables, which must bind no tenant.
+     * Binds the call's tenant to the transaction just opened (the transaction-local {@code app.tenant_id} row-level
+     * security reads), so every statement sees that tenant's rows only. Never called for global tables.
      *
      * @throws IllegalStateException when no tenant is in the call context (a programming error: the edge sets it)
      */

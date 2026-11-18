@@ -16,7 +16,7 @@ export interface UiPreferences {
   landingScreen: string;
 }
 
-/** What applies when the server sent no settings (the catalogue defaults of iam V1_030_003). */
+/** What applies when the server sent no settings (the setting catalogue defaults of the iam baseline migration). */
 export const DEFAULT_PREFERENCES: UiPreferences = {
   theme: 'system',
   density: 'comfortable',

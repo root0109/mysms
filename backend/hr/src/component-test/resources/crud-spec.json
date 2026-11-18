@@ -199,7 +199,31 @@
    "update": {
     "employeeCode": "Updated employee_code"
    },
-   "duplicateConflicts": true
+   "duplicateConflicts": true,
+   "transitions": [
+    {
+     "operation": "hr.ChangeStaffStatus",
+     "path": "/v1/hr/staff/{id}:changeStatus",
+     "permission": "hr.staff.change_staff_status",
+     "guard": {
+      "status": [
+       "active"
+      ]
+     },
+     "prepare": [
+      "UPDATE hr.staff SET status = 'active' WHERE id = '{id}'"
+     ],
+     "body": {
+      "status": "inactive"
+     },
+     "sets": {
+      "status": "inactive"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
   },
   {
    "name": "StaffDepartment",
