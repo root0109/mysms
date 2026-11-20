@@ -1,5 +1,6 @@
 package com.mysms.core.db;
 
+import com.mysms.core.trace.RequestCost;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
 import java.util.Optional;
@@ -9,7 +10,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 /**
  * Binds the current call's tenant to every statement that names {@code :tenantId}, so tenant tables are filtered
  * explicitly and row-level security is only the backstop. Without a bound tenant the statement fails, never runs
- * unfiltered.
+ * unfiltered. Each statement started counts towards the request's {@link RequestCost}.
  */
 public final class TenantJdbcClient implements JdbcClient {
 
@@ -34,6 +35,7 @@ public final class TenantJdbcClient implements JdbcClient {
 
     @Override
     public StatementSpec sql(String sql) {
+        RequestCost.statement();
         StatementSpec spec = delegate.sql(sql);
         if (sql.contains(MARKER)) {
             Optional<UUID> tenant = currentTenant();

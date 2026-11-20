@@ -1,8 +1,6 @@
 package com.mysms.finance.integration;
 
 import com.mysms.core.grpc.IntegrationGrpcClientException;
-import com.mysms.sis.v1.GetProgramEnrollmentRequest;
-import com.mysms.sis.v1.GetProgramEnrollmentResponse;
 import com.mysms.sis.v1.GetStudentSummaryRequest;
 import com.mysms.sis.v1.GetStudentSummaryResponse;
 import com.mysms.sis.v1.GuardianServiceGrpc;
@@ -63,10 +61,6 @@ public class SisGrpcClient {
 
     public ListClassRosterResponse listClassRoster(ListClassRosterRequest request) {
         return IntegrationGrpcClientException.call(SERVICE, () -> studentEnrollments.listClassRoster(request));
-    }
-
-    public GetProgramEnrollmentResponse getProgramEnrollment(GetProgramEnrollmentRequest request) {
-        return IntegrationGrpcClientException.call(SERVICE, () -> programEnrollments.getProgramEnrollment(request));
     }
 
     public ListProgramEnrollmentsResponse listProgramEnrollments(ListProgramEnrollmentsRequest request) {

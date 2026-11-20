@@ -4,6 +4,7 @@ import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.grpc.GrpcEdge;
 import com.mysms.core.trace.TraceContext;
+import com.mysms.core.trace.RequestCost;
 import com.mysms.core.trace.TraceHolder;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
@@ -20,7 +21,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 /**
  * Adds to every outgoing gRPC call the caller's own token, institution and tenant, the trace and a default deadline;
  * a call made with {@link ServiceTokenProvider#callCredentials} keeps its own identity. A call inside a database
- * transaction is refused with {@link IllegalStateException}: a transaction never waits on another service.
+ * transaction is refused with {@link IllegalStateException}: a transaction never waits on another service. Every call
+ * counts towards the request's {@link RequestCost}.
  */
 @GrpcGlobalClientInterceptor
 public final class GrpcCallerInterceptor implements ClientInterceptor {
@@ -39,6 +41,7 @@ public final class GrpcCallerInterceptor implements ClientInterceptor {
             throw new IllegalStateException("A call to " + method.getFullMethodName() + " was made inside a database "
                     + "transaction; call other modules before or after the transaction, never inside it.");
         }
+        RequestCost.remoteCall();
         CallOptions options = callOptions.getDeadline() == null
                 ? callOptions.withDeadlineAfter(deadline.toMillis(), TimeUnit.MILLISECONDS) : callOptions;
         boolean ownCredentials = options.getCredentials() != null;

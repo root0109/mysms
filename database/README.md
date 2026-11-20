@@ -23,7 +23,7 @@ Everything about the database lives in this one folder; paths below are relative
 | `migrations/<module>/V1_NNN_001__<module>_baseline.sql` | The one Flyway script of a module (21 modules, 21 files): creates its schema, tables, comments, indexes (including one on every logical-reference column), foreign keys, partitions and row-level-security policies, and seeds the product catalogues it owns (iam: the setting and permission catalogues). Until the first release a schema change edits the baseline in place; incremental migrations start after the release (see "Applying the schema"). A migration never touches another module's schema. |
 | (conformance rule P1) | Every tenant `x-permission` of the contracts must be seeded in iam's permission catalogue (`md5('mysms.permission:' \|\| code)::uuid` ids); a new operation adds its permission to the catalogue in iam's baseline. |
 | `verification/smoke.sql` | Executable schema test: seeds two tenants and proves the guard rails (cross-tenant links, duplicate payments/dues/loans/terms/placements, RLS isolation) reject bad data, the distributed-deployment invariants (no cross-schema foreign key, module-local infrastructure tables, RLS on them) and the settings rules. |
-| `table-consolidation.md` | Standing schema principles and the remaining (not yet applied) consolidation proposals. |
+| `../ROADMAP.md` | The remaining (not yet applied) schema consolidation proposals. The standing schema principles are in this README ("Schema principles"). |
 
 ## Conventions
 
@@ -196,9 +196,51 @@ for f in $(ls migrations/*/V*.sql | awk -F/ '{print $NF"\t"$0}' | sort | cut -f2
 psql -v ON_ERROR_STOP=1 -d mysms -f verification/smoke.sql
 ```
 
-## Verification performed
+## Verification
 
-- The 21 baselines were applied in module order to a clean **PostgreSQL 16** database with `ON_ERROR_STOP` (2026-11-12). The catalog then held **465 tables** (640 relations including monthly partitions — the monolith's component test asserts the same 640), **7,172 columns**, **474 foreign keys — 0 of them cross-schema**, **375 check constraints**, **235 unique constraints**, **256 partial/expression unique indexes** and **457 row-level-security policies**; all 451 tenant-owned tables have `FORCE` RLS (counted in the MySMS schemas only).
-- Every column has a description (`COMMENT ON COLUMN`): 0 missing. Every foreign-key column is indexed, and so is every one of the 494 logical-reference columns (checked by the register generator, which refuses to write a register that disagrees with the catalog). The catalog holds no extensions, functions or triggers created by the schema.
-- `verification/smoke.sql` passed: it seeds two tenants and proves that a cross-tenant guardian link is rejected by the tenant-composite FK; a duplicate gateway payment, a payerless payment, a target-less allocation, a duplicate fee due, a duplicate nested-term start, a second open placement in one year and a second open loan on one copy are all rejected; nested terms and same-year re-placement (history) are accepted; staff attendance routes into its monthly partition; and — connected as a non-owner role with `app.tenant_id` set — each tenant sees only its own rows (RLS isolation, both directions). Its third part asserts the distributed-deployment invariants: no foreign key crosses schemas; `idempotency_key` and `operation` exist in every service schema and `number_sequence` in exactly the seven number-issuing schemas; RLS isolates the module-local tables; a module issues a document number from its own sequence with `SELECT ... FOR UPDATE`. Its fourth part (SMOKE4) covers the hierarchical settings: one value per setting and scope, a tenant-level value names no scope id, a user-level value can never be locked, only catalogue settings can be set, and each tenant sees only its own values.
-- ER diagrams are generated from the migrations alone; the generator asserts every table is drawn exactly once and every foreign key appears exactly once across the diagrams; the 494 cross-module logical references are noted on their rows from the same register as `logical-references.md`.
+- Applying the 21 baselines in module order to a clean **PostgreSQL 16** database with `ON_ERROR_STOP` builds the catalogue counted under "At a glance" (the monolith's component test asserts the relation count, monthly partitions included); no foreign key is cross-schema and every tenant-owned table has `FORCE` RLS.
+- Every column has a description (`COMMENT ON COLUMN`). Every foreign-key column is indexed, and so is every logical-reference column (checked by the register generator, which refuses to write a register that disagrees with the catalog). The catalog holds no extensions, functions or triggers created by the schema.
+- `verification/smoke.sql` seeds two tenants and proves that a cross-tenant guardian link is rejected by the tenant-composite FK; a duplicate gateway payment, a payerless payment, a target-less allocation, a duplicate fee due, a duplicate nested-term start, a second open placement in one year and a second open loan on one copy are all rejected; nested terms and same-year re-placement (history) are accepted; staff attendance routes into its monthly partition; and — connected as a non-owner role with `app.tenant_id` set — each tenant sees only its own rows (RLS isolation, both directions). Its third part asserts the distributed-deployment invariants: no foreign key crosses schemas; `idempotency_key` and `operation` exist in every service schema and `number_sequence` in exactly the seven number-issuing schemas; RLS isolates the module-local tables; a module issues a document number from its own sequence with `SELECT ... FOR UPDATE`. Its fourth part (SMOKE4) covers the hierarchical settings: one value per setting and scope, a tenant-level value names no scope id, a user-level value can never be locked, only catalogue settings can be set, and each tenant sees only its own values.
+- ER diagrams are generated from the migrations alone; the generator asserts every table is drawn exactly once and every foreign key appears exactly once across the diagrams; the cross-module logical references are noted on their rows from the same register as `logical-references.md`.
+
+## Schema principles (standing rules for every schema change)
+
+1. **One table per domain concept.** Each pick-list stays its own small typed table, owned by its module, with its
+   own constraints and foreign keys. Uniformity comes from one column shape and one code path (generic repository,
+   API template, cache), not from one shared lookup table.
+2. **A `kind` column only for an exclusive arc** (kinds share key and columns). Merge two tables only when the same
+   concept is modelled twice; never to save a table. New `lms.content_item` types follow its pattern: a typed FK plus
+   the exactly-one and kind-match CHECKs.
+3. **Catalogues that change only with code and carry no run-time state are enums.** `comms.notification_type` stays
+   a table because tenants switch types on and off.
+4. **No JSON for structured data.** Typed columns, or key/value rows for genuinely open-ended sets. JSON only for
+   opaque documents the database never queries (lesson content, audit properties, outbox payloads).
+5. **Integrity lives in the database.** Foreign keys, unique constraints and CHECKs stay. Link tables stay link
+   tables; arrays only for closed lists of codes, never for references to rows.
+6. **Published content is versioned, never edited in place,** once anything (an attempt, a grade, an enrolment)
+   refers to it. Lesson, quiz, question, assignment and rubric carry `version` / `superseded_by_id` / `published_at`.
+7. **Each table lives in the module that owns its concept.** Module dependencies form a DAG; a reference against
+   that direction is a logical id with an event-driven delete rule. Joins inside a service are fine; joins across
+   services never happen. Across services use batch calls, caches and event-carried copies.
+8. **No N+1:** every repository method that loads children takes a list of parent ids (`= ANY(:ids)`).
+9. **Polymorphic rows** (`platform.entity_attachment`, `tag_assignment`, `entity_note`, `audit_log`, `deletion_log`,
+   `file_object.owner_entity_type`) are owned by the service of the entity type: it validates the id and emits the
+   deleted events platform acts on; platform stores the pair opaquely; allowed entity types live in the owning
+   service's configuration, not in a CHECK in platform's schema.
+10. **Files are only soft-deleted.** Owners release a file by event when the referencing row goes; a reaper
+    hard-deletes unreferenced files after a grace period (`platform.file_object.status`).
+11. **The LMS split line.** If `lms` (about 130 tables around `content_item`) is ever split, it is into authoring
+    (course, chapter, lesson, quiz, question bank, rubric, e-book, external tools) and delivery (cohort, enrolment,
+    `content_item`, gradebook, release rules, forums, live classes). Keep new LMS tables on one side of that line.
+12. **Institution attributes (EAV)** (`org.attribute_definition`, `org.institution_attribute`) are for genuinely
+    custom fields; promote any attribute product logic depends on to a typed column.
+13. **Archival units:** sis, assessment, attendance, finance by institution + academic year; lms by cohort end date;
+    comms and logs by month (partitions). `platform.deletion_log` is kept for at least the longest offline-sync
+    window: a tombstone that expires before a tablet syncs is a correctness bug.
+
+Considered and rejected (do not reopen): lookup tables for simple pick-lists; `lms.bookmark` into `lms.annotation`
+(different concepts); folding `comms.notification_preference_set` into its preferences (quiet hours need the set);
+`lms.external_tool_option` as code arrays; merging the question answer tables, rubric criterion/level/cell or
+catalogue-page tables; merging `cohort_enrollment` and `cohort_teacher`; `homework` into `assignment` (and their
+approval and submission tables); `public_profile` into `person`; reactions across modules; link tables as arrays;
+fewer, larger services.

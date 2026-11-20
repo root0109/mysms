@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,6 +78,8 @@ public class CohortEnrollmentRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String OF_COHORT_USERS = SELECT_LIVE
+            + " AND r.cohort_id = :cohortId AND r.user_id = ANY(:userIds)";
     /** A student's active cohort enrolments, newest first (the student dashboard). */
     private static final String OWN_ACTIVE = SELECT_LIVE
             + " AND r.user_id = :userId AND r.is_active AND r.removed_at IS NULL ORDER BY r.created_at DESC, r.id"
@@ -151,6 +154,16 @@ public class CohortEnrollmentRepository {
 
     public Optional<CohortEnrollmentEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(CohortEnrollmentRepository::map).optional();
+    }
+
+    /** The users' live enrolment rows in the cohort, active or not, in one statement (the gradebook's final grades). */
+    public List<CohortEnrollmentEntity> ofCohortUsers(UUID cohortId, Collection<UUID> userIds) {
+        if (userIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(OF_COHORT_USERS).param("cohortId", cohortId)
+                .param("userIds", userIds.stream().distinct().toArray(UUID[]::new))
+                .query(CohortEnrollmentRepository::map).list();
     }
 
     public Page<CohortEnrollmentEntity> list(PageRequest page, SqlFragment filter) {

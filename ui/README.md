@@ -2,7 +2,7 @@
 
 Everything a UI developer — or a UI agent — needs to design and build the MySMS clients. The backend inputs are frozen contracts: the API in [`../api/`](../api/README.md) (OpenAPI 3.1 + gRPC, 2,052 operations) and the database design in [`../database/`](../database/README.md). This package translates them into products, screens, flows and front-end architecture.
 
-**Status.** Design specification; the client workspace that implements it is [`../clients/`](../clients/README.md). Where a spec depends on a pending backend decision (see [`../PRINCIPAL-REVIEW.md`](../PRINCIPAL-REVIEW.md)), it says so and names the item; the full list is in [07-open-dependencies.md](07-open-dependencies.md). Nothing here requires waiting: UI work is built against the OpenAPI contract and the running backend; fakes are used only inside tests (see 05 §13, "Mocking only in tests").
+**Status.** Design specification; the client workspace that implements it is [`../clients/`](../clients/README.md). Where a spec depends on a pending backend decision, it says so and names the item; the open backend items the UI depends on, with the interim approach for each, are in [`../ROADMAP.md`](../ROADMAP.md). Nothing here requires waiting: UI work is built against the OpenAPI contract and the running backend; fakes are used only inside tests (see 05 §13, "Mocking only in tests").
 
 ## The clients
 
@@ -27,7 +27,6 @@ One account works in every client; a deep link (`mysms://…` or `https://<tenan
 | [04-design-system.md](04-design-system.md) | Design tokens, tenant theming, the component inventory, interaction patterns, accessibility, internationalisation, configurability and personalisation | Building components, reviewing design |
 | [05-frontend-architecture.md](05-frontend-architecture.md) | Monorepo layout, stack, generated SDK, auth and session, data layer, offline sync, push, files, errors, testing, mocking only in tests | Setting up or extending the codebase |
 | [06-agent-playbook.md](06-agent-playbook.md) | How a UI agent picks up work: inputs, conventions, definition of done, self-checks | Automating UI work |
-| [07-open-dependencies.md](07-open-dependencies.md) | Backend items the UI depends on, each mapped to a PRINCIPAL-REVIEW id, with the interim approach | Sprint planning |
 
 ## Ground rules (bind every client)
 
@@ -39,8 +38,6 @@ One account works in every client; a deep link (`mysms://…` or `https://<tenan
 6. **Every screen ships its five states:** loading (skeleton), empty, error, offline, and content (02 §1.4).
 7. **Accessible and localised by default:** WCAG 2.2 AA, 44 px touch targets, every string through i18n, no hard-coded formats (04 §6–7).
 
-## What exists for UI work today, and what was missing
+## What UI work builds on
 
-Already available: the complete REST/gRPC contracts with permission codes, the deep-link scheme, tenant theme storage, consent gating rules, offline quiz primitives (attempt token, client sequence, per-answer timestamps), two-step file upload, cursor pagination, and problem+json errors.
-
-This package adds what was missing: a product map, navigation and a screen inventory, user flows, a design system, client architecture, and the dependency list. With these and the backend, UI development is unblocked end to end; fakes are used only inside tests.
+From the backend: the complete REST/gRPC contracts with permission codes, the deep-link scheme, tenant theme storage, consent gating rules, offline quiz primitives (attempt token, client sequence, per-answer timestamps), two-step file upload, cursor pagination, and problem+json errors. From this package: the product map, navigation and screen inventory, user flows, design system and client architecture. With these and the running backend, UI development is unblocked end to end; fakes are used only inside tests.

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.mysms.academics.v1.ClassSection;
@@ -12,6 +14,7 @@ import com.mysms.academics.v1.ListClassSectionsResponse;
 import com.mysms.academics.v1.ListCoursesResponse;
 import com.mysms.core.error.UnavailableException;
 import com.mysms.core.error.ValidationFailedException;
+import com.mysms.core.filter.FilterParser;
 import com.mysms.core.testkit.GrpcRefusals;
 import com.mysms.finance.integration.AcademicsGrpcClient;
 import com.mysms.finance.integration.OrgGrpcClient;
@@ -20,18 +23,19 @@ import com.mysms.finance.model.DueTarget;
 import com.mysms.org.v1.AcademicYear;
 import com.mysms.org.v1.GetAcademicYearRequest;
 import com.mysms.org.v1.GetAcademicYearResponse;
-import com.mysms.sis.v1.GetProgramEnrollmentRequest;
-import com.mysms.sis.v1.GetProgramEnrollmentResponse;
 import com.mysms.sis.v1.ListClassRosterRequest;
 import com.mysms.sis.v1.ListClassRosterResponse;
+import com.mysms.sis.v1.ListProgramEnrollmentsRequest;
 import com.mysms.sis.v1.ListProgramEnrollmentsResponse;
 import com.mysms.sis.v1.ProgramEnrollment;
 import com.mysms.sis.v1.StudentEnrollment;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.IntStream;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
 
 /** Which students a fee run charges, as sis, academics and org answer (mocks stand in for the three clients). */
@@ -79,15 +83,48 @@ class RosterLookupTest {
         UUID own = UUID.randomUUID();
         UUID other = UUID.randomUUID();
         UUID missing = UUID.randomUUID();
-        when(sis.getProgramEnrollment(get(own))).thenReturn(GetProgramEnrollmentResponse.newBuilder()
-                .setProgramEnrollment(registration(own, year)).build());
-        when(sis.getProgramEnrollment(get(other))).thenReturn(GetProgramEnrollmentResponse.newBuilder()
-                .setProgramEnrollment(registration(other, UUID.randomUUID())).build());
-        when(sis.getProgramEnrollment(get(missing))).thenThrow(GrpcRefusals.refused("sis", HttpStatus.NOT_FOUND,
-                "NOT_FOUND"));
+        when(sis.listProgramEnrollments(any())).thenReturn(ListProgramEnrollmentsResponse.newBuilder()
+                .addItems(registration(own, year)).addItems(registration(other, UUID.randomUUID())).build());
         assertThat(rosters.registrations(List.of(own), year)).hasSize(1);
         assertThatThrownBy(() -> rosters.registrations(List.of(own, other, missing), year))
                 .isInstanceOf(ValidationFailedException.class);
+        when(sis.listProgramEnrollments(any())).thenThrow(GrpcRefusals.unreachable("sis"));
+        assertThatThrownBy(() -> rosters.registrations(List.of(own), year)).isInstanceOf(UnavailableException.class);
+    }
+
+    @Test
+    void namedRegistrationsAreReadInChunksNotOneCallEach() {
+        List<UUID> ids = IntStream.range(0, 2 * RosterLookup.ID_CHUNK + 1).mapToObj(i -> UUID.randomUUID()).toList();
+        ListProgramEnrollmentsResponse.Builder all = ListProgramEnrollmentsResponse.newBuilder();
+        ids.forEach(id -> all.addItems(registration(id, year)));
+        when(sis.listProgramEnrollments(any())).thenReturn(all.build());
+
+        assertThat(rosters.registrations(ids, year)).hasSize(ids.size());
+
+        ArgumentCaptor<ListProgramEnrollmentsRequest> requests = ArgumentCaptor.forClass(
+                ListProgramEnrollmentsRequest.class);
+        verify(sis, times(3)).listProgramEnrollments(requests.capture());
+        assertThat(requests.getAllValues()).allSatisfy(request -> assertThat(request.getFilter().length())
+                .isLessThanOrEqualTo(FilterParser.MAX_LENGTH));
+    }
+
+    @Test
+    void aProgramsCoursesShareOneRegistrationsListPerChunk() {
+        Course.Builder course = Course.newBuilder();
+        ListCoursesResponse.Builder courses = ListCoursesResponse.newBuilder();
+        IntStream.range(0, RosterLookup.COURSE_CHUNK + 1)
+                .forEach(i -> courses.addItems(course.setId(UUID.randomUUID().toString()).build()));
+        when(academics.listCourses(any())).thenReturn(courses.build());
+        when(sis.listProgramEnrollments(any())).thenReturn(ListProgramEnrollmentsResponse.newBuilder()
+                .addItems(registration(UUID.randomUUID(), year)).build());
+
+        rosters.structureRoster(institution, year, null, UUID.randomUUID());
+
+        ArgumentCaptor<ListProgramEnrollmentsRequest> requests = ArgumentCaptor.forClass(
+                ListProgramEnrollmentsRequest.class);
+        verify(sis, times(2)).listProgramEnrollments(requests.capture());
+        assertThat(requests.getAllValues()).allSatisfy(request -> assertThat(request.getFilter().length())
+                .isLessThanOrEqualTo(FilterParser.MAX_LENGTH));
     }
 
     @Test
@@ -127,10 +164,6 @@ class RosterLookupTest {
     private static ListClassRosterRequest roster(UUID section) {
         return ListClassRosterRequest.newBuilder().setClassSectionId(section.toString())
                 .setPageable(com.mysms.common.v1.PageableRequest.newBuilder().setPage(1).setSize(500)).build();
-    }
-
-    private static GetProgramEnrollmentRequest get(UUID id) {
-        return GetProgramEnrollmentRequest.newBuilder().setId(id.toString()).build();
     }
 
     private static GetAcademicYearRequest year(UUID id) {

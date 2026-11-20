@@ -12,6 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -166,12 +168,17 @@ public class QuestionHotspotRepository {
         return new SqlFragment("r.question_id = :parentId", Map.of("parentId", parentId));
     }
 
-    private static final String OF_QUESTION = SELECT_LIVE + " AND r.question_id = :questionId"
-            + " ORDER BY r.created_at";
+    private static final String OF_QUESTIONS = SELECT_LIVE + " AND r.question_id = ANY(:questionIds)"
+            + " ORDER BY r.question_id, r.created_at";
 
-    /** The question's live rows, in order. */
-    public List<QuestionHotspotEntity> ofQuestion(UUID questionId) {
-        return jdbc.sql(OF_QUESTION).param("questionId", questionId).query(QuestionHotspotRepository::map).list();
+    /** The live rows of several questions in one statement: question id → its rows, in order (absent: none). */
+    public Map<UUID, List<QuestionHotspotEntity>> ofQuestions(Collection<UUID> questionIds) {
+        if (questionIds.isEmpty()) {
+            return Map.of();
+        }
+        return jdbc.sql(OF_QUESTIONS).param("questionIds", questionIds.stream().distinct().toArray(UUID[]::new))
+                .query(QuestionHotspotRepository::map).list().stream()
+                .collect(Collectors.groupingBy(QuestionHotspotEntity::getQuestionId, LinkedHashMap::new, Collectors.toList()));
     }
 
     private static List<Object> sortValues(SortSpec sort, QuestionHotspotEntity e) {

@@ -8,8 +8,11 @@ import com.mysms.lms.api.model.QuizAttempt;
 import com.mysms.lms.api.model.QuizQuestionView;
 import com.mysms.lms.domain.ContentItemEntity;
 import com.mysms.lms.domain.ItemOverrideEntity;
+import com.mysms.lms.domain.QuestionBlankEntity;
 import com.mysms.lms.domain.QuestionEntity;
+import com.mysms.lms.domain.QuestionHotspotEntity;
 import com.mysms.lms.domain.QuestionMatchPairEntity;
+import com.mysms.lms.domain.QuestionOptionEntity;
 import com.mysms.lms.domain.QuizSubmissionEntity;
 import com.mysms.lms.repository.ContentItemRepository;
 import com.mysms.lms.repository.ItemOverrideRepository;
@@ -69,10 +72,12 @@ import com.mysms.lms.repository.QuizQuestionRepository;
 import com.mysms.lms.repository.QuizRepository;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -298,9 +303,16 @@ public class QuizService extends AppTransactionManager {
         if (quiz.getLimitQuestionsTo() != null && links.size() > quiz.getLimitQuestionsTo()) {
             links = links.subList(0, quiz.getLimitQuestionsTo());
         }
+        Map<UUID, QuestionEntity> byId = new HashMap<>();
+        questions.findByIds(links.stream().map(QuizQuestionEntity::getQuestionId).toList())
+                .forEach(question -> byId.put(question.getId(), question));
+        Map<UUID, List<QuestionOptionEntity>> options = questionOptions.ofQuestions(ofType(byId, "choices", "true_false"));
+        Map<UUID, List<QuestionBlankEntity>> blanks = questionBlanks.ofQuestions(ofType(byId, "fill_blank"));
+        Map<UUID, List<QuestionMatchPairEntity>> matchPairs = questionMatchPairs.ofQuestions(ofType(byId, "matching"));
+        Map<UUID, List<QuestionHotspotEntity>> hotspots = questionHotspots.ofQuestions(ofType(byId, "hotspot"));
         List<QuizQuestionView> views = new ArrayList<>();
         for (QuizQuestionEntity link : links) {
-            QuestionEntity question = questions.findById(link.getQuestionId()).orElse(null);
+            QuestionEntity question = byId.get(link.getQuestionId());
             if (question == null) {
                 continue;
             }
@@ -313,19 +325,19 @@ public class QuizService extends AppTransactionManager {
             view.setMaxSelections(question.getMaxSelections());
             view.setCaseSensitive(question.getCaseSensitive());
             switch (question.getQuestionType()) {
-                case "choices", "true_false" -> view.setOptions(questionOptions.ofQuestion(question.getId()).stream()
+                case "choices", "true_false" -> view.setOptions(options.getOrDefault(question.getId(), List.of()).stream()
                         .map(o -> new OptionView(o.getId(), o.getOptionText())).toList());
-                case "fill_blank" -> view.setBlanks(questionBlanks.ofQuestion(question.getId()).stream()
+                case "fill_blank" -> view.setBlanks(blanks.getOrDefault(question.getId(), List.of()).stream()
                         .map(b -> new BlankView(b.getId(), b.getBlankText())).toList());
                 case "matching" -> {
-                    List<QuestionMatchPairEntity> pairs = questionMatchPairs.ofQuestion(question.getId());
+                    List<QuestionMatchPairEntity> pairs = matchPairs.getOrDefault(question.getId(), List.of());
                     view.setMatchLeft(pairs.stream().map(m -> new OptionView(m.getId(), m.getLeftText())).toList());
                     List<OptionView> right = new ArrayList<>(pairs.stream()
                             .map(m -> new OptionView(m.getId(), m.getRightText())).toList());
                     Collections.shuffle(right, new Random(attemptId.getLeastSignificantBits()));
                     view.setMatchRight(right);
                 }
-                case "hotspot" -> questionHotspots.ofQuestion(question.getId()).stream().findFirst()
+                case "hotspot" -> hotspots.getOrDefault(question.getId(), List.of()).stream().findFirst()
                         .ifPresent(h -> {
                             view.setHotspotImageFileId(h.getImageFileId());
                             view.setHotspotSelection(QuizQuestionView.HotspotSelectionEnum.fromValue(
@@ -336,6 +348,13 @@ public class QuizService extends AppTransactionManager {
             views.add(view);
         }
         return views;
+    }
+
+    /** The ids of the questions of these types, so each kind of answer part is read once for the whole attempt. */
+    private static List<UUID> ofType(Map<UUID, QuestionEntity> questions, String... types) {
+        Set<String> wanted = Set.of(types);
+        return questions.values().stream().filter(q -> q.getQuestionType() != null
+                && wanted.contains(q.getQuestionType())).map(QuestionEntity::getId).toList();
     }
 
     public Quiz getQuiz(UUID id) {

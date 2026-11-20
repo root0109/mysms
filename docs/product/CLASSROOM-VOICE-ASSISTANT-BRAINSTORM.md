@@ -83,14 +83,14 @@ A 2018 anecdote shows teachers are curious, not that the platform fits: a Mahara
 
 | Topic | Positions | Recommendation |
 |---|---|---|
-| Highest-value voice job | Opus: attendance by roll number, plus after-class admin dictation. Fable: content capture (homework, diary). Sonnet: the long tail of queries. | Ship all three in the pilot. **Rank capture and queries above attendance-by-voice**; keep attendance as the headline *pattern* (tap or voice). |
-| Commit behaviour for attendance | Opus: auto-commit after 5 s unless cancelled. Founder, Sonnet, Fable: explicit confirm. | **Explicit confirm in v1.** A wrong absence can trigger a guardian notification. Consider auto-commit only after the pilot measures wrong-student writes at or below 0.5%. |
+| Highest-value voice job | Opus: attendance by roll number, plus after-class admin dictation. Opus: content capture (homework, diary). Sonnet: the long tail of queries. | Ship all three in the pilot. **Rank capture and queries above attendance-by-voice**; keep attendance as the headline *pattern* (tap or voice). |
+| Commit behaviour for attendance | Opus: auto-commit after 5 s unless cancelled. Founder, Sonnet, Opus: explicit confirm. | **Explicit confirm in v1.** A wrong absence can trigger a guardian notification. Consider auto-commit only after the pilot measures wrong-student writes at or below 0.5%. |
 | Wake word | Founder's draft allowed a local wake phrase. All three experts: push-to-talk only. | **Push-to-talk only.** A wake phrase in a room of 50 children produces false triggers and a permanent "is it listening?" debate. |
-| First room hardware | Opus: networked bell/clock/substitution display. Fable: silent classroom board; the phone is the mic. Sonnet: wall tablet or panel kiosk. | Converge on **output-first**: a panel app where a panel exists, otherwise a cheap display. The teacher's phone stays the mic. |
-| Primary ASR | Founder: Google. Fable: Sarvam or self-hosted AI4Bharat. Opus: Sarvam or AWS. Sonnet: benchmark first. | **Benchmark Sarvam, AWS Transcribe and self-hosted IndicConformer.** Google Chirp 3 only if counsel accepts processing outside India (§6.3). |
-| Device cost | Founder: ₹10,000–18,000 installed. Opus: ₹3,000–5,000 landed for an ESP32 push-to-talk unit. Fable: ₹4,000–7,000. Sonnet: ₹8,000–15,000 for a tablet or SBC pilot. | These describe **different devices**, and all are estimates. The founder's figure fits an installed tablet/SBC kit. A custom ESP32 unit is cheaper per unit but carries ₹11–45 lakh of one-off cost (§7). |
-| WPC ETA for a finished product with a certified module | Opus via GRL: no separate ETA if made in India with the module fitted unmodified. Sonnet via Freyr: a module helps but does not approve the product automatically. Fable: unverified. | **Assume an ETA is needed until a lab confirms in writing.** The GRL route is a reason to assemble in India with a pre-certified module. |
-| DPDP dates | Fable: notified 13 Nov 2025, phase III 13 May 2027. Opus and Sonnet: 14 Nov / 14 May. | Notified **13 Nov 2025**, consent managers from **13 Nov 2026**, children's data and most duties from **13 May 2027** ([AZB](https://www.azbpartners.com/bank/update-indias-digital-personal-data-protection-framework-comes-into-effect/), [SCC Online](https://www.scconline.com/blog/post/2025/11/14/meity-notified-digital-personal-data-protection-rules-2025/)). Press reports dated 14 Nov explain the difference. Plan to be compliant by **April 2027**. |
+| First room hardware | Opus: networked bell/clock/substitution display. Opus: silent classroom board; the phone is the mic. Sonnet: wall tablet or panel kiosk. | Converge on **output-first**: a panel app where a panel exists, otherwise a cheap display. The teacher's phone stays the mic. |
+| Primary ASR | Founder: Google. Opus: Sarvam or self-hosted AI4Bharat. Opus: Sarvam or AWS. Sonnet: benchmark first. | **Benchmark Sarvam, AWS Transcribe and self-hosted IndicConformer.** Google Chirp 3 only if counsel accepts processing outside India (§6.3). |
+| Device cost | Founder: ₹10,000–18,000 installed. Opus: ₹3,000–5,000 landed for an ESP32 push-to-talk unit. Opus: ₹4,000–7,000. Sonnet: ₹8,000–15,000 for a tablet or SBC pilot. | These describe **different devices**, and all are estimates. The founder's figure fits an installed tablet/SBC kit. A custom ESP32 unit is cheaper per unit but carries ₹11–45 lakh of one-off cost (§7). |
+| WPC ETA for a finished product with a certified module | Opus via GRL: no separate ETA if made in India with the module fitted unmodified. Sonnet via Freyr: a module helps but does not approve the product automatically. Opus: unverified. | **Assume an ETA is needed until a lab confirms in writing.** The GRL route is a reason to assemble in India with a pre-certified module. |
+| DPDP dates | Opus: notified 13 Nov 2025, phase III 13 May 2027. Opus and Sonnet: 14 Nov / 14 May. | Notified **13 Nov 2025**, consent managers from **13 Nov 2026**, children's data and most duties from **13 May 2027** ([AZB](https://www.azbpartners.com/bank/update-indias-digital-personal-data-protection-framework-comes-into-effect/), [SCC Online](https://www.scconline.com/blog/post/2025/11/14/meity-notified-digital-personal-data-protection-rules-2025/)). Press reports dated 14 Nov explain the difference. Plan to be compliant by **April 2027**. |
 
 ### 3.3 The founder's draft: right, wrong and missing
 
@@ -130,7 +130,7 @@ A 2018 anecdote shows teachers are curious, not that the platform fits: a Mahara
 
 ### 5.1 Ranking (value × feasibility × MySMS readiness)
 
-Readiness is taken from [operations-status](../api/operations-status.md) as of today. Attendance has 33 of 33 operations served; timetable 23 of 25; comms 202 of 235.
+Readiness is taken from [operations-status](../../api/operations-status.md) as of today. Attendance has 33 of 33 operations served; timetable 23 of 25; comms 202 of 235.
 
 | # | Use case | Value | Voice feasibility | MySMS readiness | Rank |
 |---|---|---|---|---|---|
@@ -260,9 +260,9 @@ Key decisions:
 |---|---|---|
 | ESP32-S3 push-to-talk + display/bell unit (2 MEMS mics, 3 W speaker, small LCD or LED ring, button, hardware mute, moulded wall enclosure) | BOM ₹1,800–3,000; landed ₹3,000–5,000 at 1,000–5,000 units | Opus estimate |
 | Same with XMOS-class far-field front end | add ₹1,500–2,500 | Opus estimate; XVF3800 retail above |
-| Fuller custom unit (front end, LED ring, small screen, PSU, assembly) | ₹4,000–7,000 per unit at 1,000 units | Fable estimate |
+| Fuller custom unit (front end, LED ring, small screen, PSU, assembly) | ₹4,000–7,000 per unit at 1,000 units | Opus estimate |
 | Tablet/SBC kit with mount and installation | ₹8,000–15,000 (Sonnet); ₹10,000–18,000 installed ([funding estimate](FUNDING-AND-CLOUD-COST-ESTIMATE.md)) | Estimates |
-| One-off: industrial design ₹3–10 lakh; tooling ₹5–15 lakh; certification ₹3–8 lakh | **₹11–33 lakh** (Opus); Fable puts tooling plus engineering at ₹15–40 lakh plus "a few lakh" for certification, so **₹11–45 lakh** combined | Estimates; get three ODM/EMS quotes at 100, 1,000 and 5,000 units |
+| One-off: industrial design ₹3–10 lakh; tooling ₹5–15 lakh; certification ₹3–8 lakh | **₹11–33 lakh** (Opus); Opus puts tooling plus engineering at ₹15–40 lakh plus "a few lakh" for certification, so **₹11–45 lakh** combined | Estimates; get three ODM/EMS quotes at 100, 1,000 and 5,000 units |
 
 At 1,000 units, the one-off cost adds ₹1,100–4,500 per unit. A 1,000-unit custom device cannot match a ₹4,999 Echo on price or audio quality. That is one more reason to go output-first and reuse existing hardware.
 
@@ -304,13 +304,13 @@ Indian EMS majors exist; Dixon has had a 50:50 wireless-audio joint venture with
 
 ## 9. Cost per classroom per year (estimates)
 
-Basis: 220 school days; 50 students per classroom; 1,000 classrooms; 3-year device amortisation; 10% annual replacement; field support ₹500–1,000 per device per year (Fable estimate). Speech at Sarvam's ₹0.49/min, or at Google no-logging US$0.024/min × ₹95 = ₹2.28/min as in the [funding estimate](FUNDING-AND-CLOUD-COST-ESTIMATE.md).
+Basis: 220 school days; 50 students per classroom; 1,000 classrooms; 3-year device amortisation; 10% annual replacement; field support ₹500–1,000 per device per year (Opus estimate). Speech at Sarvam's ₹0.49/min, or at Google no-logging US$0.024/min × ₹95 = ₹2.28/min as in the [funding estimate](FUNDING-AND-CLOUD-COST-ESTIMATE.md).
 
 | Configuration | Per classroom/year | Per student/year | Working |
 |---|---|---|---|
 | Speech only, push-to-talk, 3–5 min/day | ₹323–539 (Sarvam); ₹1,505–2,508 (Google no-logging) | ₹6–50 | 660–1,100 min × ₹0.49 or × ₹2.28 |
 | Earlier draft's voice-cloud line (STT + LLM + TTS, 5–20 commands × 15 s/day) | ₹1,080–4,320 if billed 12 months | ₹22–86 | ₹0.9–3.6 lakh/month ÷ 1,000 × 12 |
-| Software-only voice add-on (speech + LLM + hosting) | ₹300–1,500 | ₹6–30 | Fable estimate; LLM only on grammar misses |
+| Software-only voice add-on (speech + LLM + hosting) | ₹300–1,500 | ₹6–30 | Opus estimate; LLM only on grammar misses |
 | Custom ESP32 unit at ₹3,000–6,000 landed, plus speech | ₹2,100–5,100 | ₹42–102 | (₹1,000–2,000 amortisation) + (₹300–600 replacement) + (₹500–1,000 support) + (₹300–1,500 speech) |
 | Tablet/SBC kit at ₹10,000–18,000 installed, plus speech | ₹5,100–10,300 | ₹102–206 | (₹3,333–6,000) + (₹1,000–1,800) + (₹500–1,000) + (₹300–1,500) |
 | Excluded | One-off ₹11–45 lakh design/tooling/certification; a managed SIM at ₹150–400/device/month = ₹1,800–4,800/yr if Wi-Fi is absent ([funding estimate](FUNDING-AND-CLOUD-COST-ESTIMATE.md)) | | |
@@ -356,7 +356,7 @@ The ₹300/₹600/₹900 per-student price scenarios in the funding document rem
 |---|---|---|
 | Wrong-student writes after confirmation | ≤0.5% of accepted changes (the draft's 99.5% precision target) | >2% |
 | Cross-tenant or cross-class data exposure | Zero | Any |
-| Teachers using voice weekly at week 8 (Fable's gate); stretch: ≥3 days/week (the draft's metric) | ≥40% | <20%: keep tap and capture, drop voice-first plans |
+| Teachers using voice weekly at week 8 (Opus's gate); stretch: ≥3 days/week (the draft's metric) | ≥40% | <20%: keep tap and capture, drop voice-first plans |
 | Median attendance time, voice vs tap | Voice no slower than tap | Voice slower **and** low use |
 | Intent success without retry | ≥90% (assumption) | <75% |
 | Post-submit correction rate | <1–2% | >5% |
@@ -377,7 +377,7 @@ The ₹300/₹600/₹900 per-student price scenarios in the funding document rem
 
 - 50–100 room pilot of an **output-first** display/bell unit with optional push-to-talk, built on off-the-shelf boards in an original enclosure (pilot units, not for sale).
 - Three ODM/EMS quotes; written BIS/WPC/MTCTE opinions.
-- **Gate C:** ≥98% device uptime in school hours (assumption); support tickets within budget; signed demand for several thousand rooms before custom ID and tooling (Fable).
+- **Gate C:** ≥98% device uptime in school hours (assumption); support tickets within budget; signed demand for several thousand rooms before custom ID and tooling (Opus).
 
 **Year 2:** custom industrial design, BIS CRS and WPC, assembly by an Indian EMS, sold under a lease-in-subscription model.
 
@@ -385,13 +385,13 @@ The ₹300/₹600/₹900 per-student price scenarios in the funding document rem
 
 ## 12. Non-obvious pivots (ranked)
 
-1. **"Predict, then confirm" attendance:** open the sheet pre-filled with approved leave and earlier-period absences, then ask "Three on approved leave. Anyone else absent?" Prediction saves the time; voice only confirms (Fable). Leave data already exists (`sis.*StudentLeaveRequest` served).
+1. **"Predict, then confirm" attendance:** open the sheet pre-filled with approved leave and earlier-period absences, then ask "Three on approved leave. Anyone else absent?" Prediction saves the time; voice only confirms (Opus). Leave data already exists (`sis.*StudentLeaveRequest` served).
 2. **Absence → guardian notification loop:** "marked absent in period 1" at 9:10, not 4 pm. Parents value this more than teachers value voice; it makes attendance a safety feature (Opus, Sonnet). Needs `comms.SendMessage` (501 today).
 3. **Teacher admin copilot on any surface:** one intent layer for phone, panel, chat and later a speaker. A principal's "which classes are below 85% this week?" and after-class dictation of diary, homework, leave and parent notes are where the minutes are (Opus, Sonnet).
 4. **"Enter attendance once" for state portals:** export or integrate to state portals and UDISE-style reports, plus a printable register (Opus). State-portal APIs **unverified**; start with SATS (Karnataka).
-5. **Output-first classroom display:** networked bell, clock, "Next: Maths, Mrs Rao, Room 12", substitutions, announcements. No microphone, no privacy debate, replaces runner-carried substitution chits, and puts MySMS in every room (Opus, Fable).
+5. **Output-first classroom display:** networked bell, clock, "Next: Maths, Mrs Rao, Room 12", substitutions, announcements. No microphone, no privacy debate, replaces runner-carried substitution chits, and puts MySMS in every room (Opus).
 6. **Panel app via OEM partners:** the school already bought the screen (all three experts).
-7. **One speech server per school:** a mini-PC running an MIT-licensed Indic model serves every room over the LAN; no audio leaves the school (Fable). Feasibility **unverified**; test in phase 2.
+7. **One speech server per school:** a mini-PC running an MIT-licensed Indic model serves every room over the LAN; no audio leaves the school (Opus). Feasibility **unverified**; test in phase 2.
 
 ---
 
@@ -403,7 +403,7 @@ The ₹300/₹600/₹900 per-student price scenarios in the funding document rem
 4. **ASR fails on regional names** in the first staff-room demo (benchmark first).
 5. **Hardware support swamps a software team**: only 63.5% of Indian schools report internet and 93.6% electricity ([UDISE+ 2024-25 summary](https://educationforallinindia.com/63-percent-of-indian-schools-now-online-yet-over-25000-languish-without-electricity/)); in-classroom coverage is worse (assumption).
 6. **DPDP from 13 May 2027** with an unclear fiduciary/processor split or a narrow exemption reading.
-7. **Product readiness**: no substitution or class-diary operations, outbound messaging 501; stay inside tested flows ([STATUS](../STATUS.md)).
+7. **Product readiness**: no substitution or class-diary operations, outbound messaging 501; stay inside tested flows ([STATUS](../../ROADMAP.md)).
 8. **Vendor dependency** on speech pricing, regions and languages (provider abstraction, tap fallback).
 9. **Design-infringement notice** if a device resembles Echo; **device liability** for repair, updates, collection and e-waste.
 
@@ -432,7 +432,7 @@ The ₹300/₹600/₹900 per-student price scenarios in the funding document rem
 
 ## 16. How this brainstorm was produced
 
-The founder's draft was the base. Three independent model brainstorms (**Opus 5.5**, **Sonnet**, **Fable 5.2**) answered the same brief without seeing it; this document synthesises all four, keeps consensus, resolves conflicts with a stated call (§3.2) and corrects the draft. Re-checked on 10 Nov 2026: DPDP phase dates (AZB), the Alexa+ India timeline (TechCrunch), AVS status (Amazon), Chirp 3 regions (Google) and MySMS operation status (`api/operations-status.md`). Unverifiable claims stay marked **unverified**; estimates are judgement with a stated basis, not quotes.
+The founder's draft was the base. Three independent model brainstorms (**Opus 5.5**, **Sonnet**, **Opus 5.5**) answered the same brief without seeing it; this document synthesises all four, keeps consensus, resolves conflicts with a stated call (§3.2) and corrects the draft. Re-checked on 10 Nov 2026: DPDP phase dates (AZB), the Alexa+ India timeline (TechCrunch), AVS status (Amazon), Chirp 3 regions (Google) and MySMS operation status (`api/operations-status.md`). Unverifiable claims stay marked **unverified**; estimates are judgement with a stated basis, not quotes.
 
 ---
 
@@ -458,7 +458,7 @@ The founder's draft was the base. Three independent model brainstorms (**Opus 5.
 
 ## Sources
 
-**MySMS internal:** [operations status](../api/operations-status.md) · [backend status](../STATUS.md) · [architecture](../ARCHITECTURE.md) · [deployment](../DEPLOYMENT.md) · [funding and cloud cost estimate](FUNDING-AND-CLOUD-COST-ESTIMATE.md)
+**MySMS internal:** [operations status](../../api/operations-status.md) · [backend status](../../ROADMAP.md) · [architecture](../../ARCHITECTURE.md) · [deployment](../../DEPLOYMENT.md) · [funding and cloud cost estimate](FUNDING-AND-CLOUD-COST-ESTIMATE.md)
 
 **Amazon / Echo:** [Lab126](https://en.wikipedia.org/wiki/Amazon_Lab126) · [CBS News 2019](https://www.cbsnews.com/news/amazon-echo-devices-children-in-china-forced-to-work-overtime-to-make-your-amazon-devices-report-says/) · [Vice 2019](https://vice.com/en/article/your-amazon-alexa-might-have-been-made-by-overworked-chinese-schoolchildren) · [ChannelNews (unopened)](https://www.channelnews.com.au/foxconn-compal-cash-in-on-amazons-smart-speakers/) · [The Week 2021](https://www.theweek.in/news/biz-tech/2021/02/16/amazon-to-start-device-manufacturing-including-fire-tv-sticks-in-india.html) · [TechRadar 2021](https://www.techradar.com/news/amazon-to-start-device-manufacturing-in-india-with-fire-tv-sticks) · [IndustryWeek 2019](https://www.industryweek.com/supply-chain/article/22028163/apple-iphone-amazon-echo-production-moving-from-china-to-india) · [Business Today, Echo Dot Max India](https://www.businesstoday.in/technology/news/story/amazon-launches-echo-dot-max-and-echo-studio-smart-speakers-in-india-533602-2026-05-27) · [Echo Pop India](https://www.aboutamazon.in/md/news/devices/amazon-launches-the-all-new-echo-pop-in-india) · [AVS deprecated features](https://developer.amazon.com/docs/alexa-voice-service/deprecated-features.html) · [ASP overview](https://developer.amazon.com/docs/alexa/alexa-smart-properties/about-alexa-smart-properties.html) · [ASP comparison](https://developer.amazon.com/docs/alexa/alexa-smart-properties/product-feature-comparison.html) · [Alexa skill policy](https://developer.amazon.com/en-US/docs/alexa/custom-skills/policy-requirements-for-an-alexa-skill.html) · [Kid skills](https://developer.amazon.com/en-US/alexa/alexa-skills-kit/get-deeper/custom-skills/kid-skills) · [Alexa+ India test, Jun 2026](https://techcrunch.com/2026/06/22/amazon-is-testing-alexa-in-india-with-hindi-support/) · [Alexa+ India launch, Sep 2026](https://techcrunch.com/2026/09/16/amazon-launches-alexa-in-india-with-hindi-support/) · [Alexa goes to school 2018](https://www.aboutamazon.in/news/devices/alexa-goes-to-school) · [Alexa Built-in overview](https://developer.amazon.com/en-US/alexa/branding/alexa-guidelines/brand-guidelines/smart-speakers-playbook/2-overview) · [Alexa device programmes](https://developer.amazon.com/en-US/alexa/devices)
 

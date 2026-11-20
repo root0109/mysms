@@ -2,45 +2,12 @@
 
 Java 17 · Spring Boot 4.1 · plain Spring JDBC · Flyway · PostgreSQL 16. Twenty-one domain microservices — one per database schema — that also assemble into one monolith. The rules every line follows are in [`../JAVA-CODING-RULES.md`](../JAVA-CODING-RULES.md); the module graph is in [`../ARCHITECTURE.md`](../ARCHITECTURE.md).
 
-## Requirements
+## Build, run and configure
 
-- JDK 17 (or later; the build targets Java 17 with `--release 17`) and Maven 3.9 or later.
-- For the tests: Docker (Testcontainers starts PostgreSQL 16), **or** an existing PostgreSQL 16 server given by `MYSMS_TEST_JDBC_URL` (an admin connection such as `jdbc:postgresql://localhost:5432/postgres`), `MYSMS_TEST_JDBC_USER` and `MYSMS_TEST_JDBC_PASSWORD`. Each test class gets its own fresh database and a non-superuser role, so row-level security is exercised exactly as in production.
+- Build, test and run locally (prerequisites, `mvn install`, test databases, IDE import, local run, troubleshooting): [`../BUILD-AND-RUN.md`](../BUILD-AND-RUN.md).
+- Every environment variable, database roles, keys, monolith or microservices, events and gRPC in production: [`../DEPLOYMENT.md`](../DEPLOYMENT.md) (configuration reference: §4).
 
-## Commands
-
-```bash
-mvn verify                         # everything: generate, compile, unit + component tests, Checkstyle, SpotBugs, JaCoCo
-mvn -pl master -am package         # the master microservice  -> master/target/master-0.1.0-SNAPSHOT-exec.jar
-mvn -pl app -am package            # the monolith             -> app/target/app-0.1.0-SNAPSHOT-exec.jar
-```
-
-Run a service (all settings come from the environment; nothing secret is in the repository):
-
-```bash
-export MYSMS_DB_URL=jdbc:postgresql://localhost:5432/mysms MYSMS_DB_USER=mysms MYSMS_DB_PASSWORD=...
-export MYSMS_AUTH_ISSUER=https://iam.example.com MYSMS_AUTH_JWK_SET_URI=https://iam.example.com/oauth2/jwks
-java -jar master/target/master-0.1.0-SNAPSHOT-exec.jar      # one microservice (schema master)
-java -jar app/target/app-0.1.0-SNAPSHOT-exec.jar            # all 21 modules in one process
-```
-
-Every module can point at its own database: `MYSMS_<MODULE>_DB_URL`, `_DB_USER`, `_DB_PASSWORD`, `_DB_POOL_SIZE` (and `_DB_MIGRATE_USER`, `_DB_MIGRATE_PASSWORD`) override the shared `MYSMS_DB_*` values. A service refuses to start unless `MYSMS_AUTH_ISSUER` is an absolute http(s) URL. The full deployment guide — database roles, keys, monolith or microservices, clients, tests — is [`../DEPLOYMENT.md`](../DEPLOYMENT.md).
-
-The iam service (and the monolith, which contains it) is the token issuer and also needs:
-
-| Variable | Meaning |
-|---|---|
-| `MYSMS_IAM_SIGNING_KEY` | **Secret.** PEM PKCS#8 RSA private key (2048 bits or more) that signs access tokens; iam refuses to start without it. Its public half is served at `/oauth2/jwks`, which is what `MYSMS_AUTH_JWK_SET_URI` of every service points to. |
-| `MYSMS_IAM_SIGNING_KEY_ID` | Optional `kid`; default: the key's RFC 7638 thumbprint. |
-| `MYSMS_SECRETS_KEYS` | **Secret.** Field-encryption master keys, `<id>:<base64 32 bytes>[,…]` (DEPLOYMENT.md §3a). Every service except master refuses to start without it (secret columns and the encrypted Idempotency-Key responses). `MYSMS_SECRETS_ACTIVE_KEY` picks the key for new values (default: the last listed). |
-| `MYSMS_IAM_ACCESS_TOKEN_TTL`, `MYSMS_IAM_REFRESH_TOKEN_TTL` | Optional; default `PT15M` and `P30D`. |
-| `MYSMS_IAM_PREVIOUS_PUBLIC_KEY` | Key rotation: the retiring key's PEM public key, still published in the JWKS until the access tokens it signed have expired (one access-token lifetime), then removed. |
-| `MYSMS_PEOPLE_URL` | Base URL of the people service (or the monolith itself) so `iam.GetMe` includes the person record; empty = without it. |
-| `MYSMS_TIMETABLE_URL`, `MYSMS_SIS_URL`, `MYSMS_ORG_URL` | Base URLs of the timetable, sis and org services (or the monolith itself) for attendance: `attendance.TakeAttendanceForSession` reads the session, its students and the institution's time zone there with the caller's token; without all three it answers 503, and so does `attendance.RecordAttendance` for a student the sheet has no record of yet (the student is checked with sis). Assessment also uses SIS for exam rosters and student/guardian access checks. |
-| `MYSMS_FACILITY_URL`, `MYSMS_ACADEMICS_URL` | Optional base URLs used by assessment: Facility validates room capacities for `assessment.AllocateExamRooms`; Academics snapshots course-plan credits when populating higher-education exam results. An operation that needs a missing service answers 503; other assessment operations work without it. |
-| `MYSMS_IAM_BOOTSTRAP_TENANT_CODE`, `MYSMS_IAM_BOOTSTRAP_ADMIN_USERNAME`, `MYSMS_IAM_BOOTSTRAP_ADMIN_PASSWORD` | First start of a new installation: when all three are set, iam makes sure the tenant code exists, the tenant has a system role `administrator` with every permission, and an administrator account (password at least 12 characters) holds it, and announces the tenant so the platform registers it (its audit trail refers to it). Idempotent; an existing account's password is never changed. Remove the password from the environment once the administrator has signed in. |
-
-Create a signing key with `openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out iam-signing.pem` and keep it in the secret store, never in git.
+Each module builds to a library jar (used by `app`) and an executable service jar: `<module>/target/<module>-0.1.0-SNAPSHOT-exec.jar` (one microservice, e.g. `mvn -pl master -am package`) and `app/target/app-0.1.0-SNAPSHOT-exec.jar` (all 21 modules in one process, `mvn -pl app -am package`).
 
 ## Modules
 
@@ -48,11 +15,15 @@ Create a signing key with `openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bi
 |---|---|
 | `core` | Plain library in every module: UUIDv7, call and trace context (W3C traceparent), problem+json errors, ETag/If-Match, update and read masks, keyset paging, the `filter` parser, the per-module database factory (own pool, transaction manager, Flyway history) the transaction definitions and the tenant binding for row-level security (services drive the module's `PlatformTransactionManager` themselves), outbox and audit writers, the gRPC edge (exception handler, trace, idempotency) and `IntegrationGrpcClientException`. Its test-jar is the module test kit (`TestDatabase`, `ModuleChecks`). No schema, no domain code. |
 | `auth-client` | The only auth code a module touches: `AuthContext`, `TokenVerifier`, `PermissionChecker` and the edge filter that verifies tokens and enforces each operation's security scheme and `x-permission` (marking the matched operation so an unserved one is answered 501). Its test-jar provides `TestTokens`. |
-| `master` … `careers` | The 21 domain microservices, one per schema. Each boots alone on its own database, migrates only its own schema from `database/migrations/<module>`, and is configured by core, which reads the module from the package its application class scans. Its contract is its own `com.mysms.<module>.api` package (owned interfaces and DTOs) plus its edge operation table (`META-INF/mysms/operations/<module>.json`); its `<Module>OpenApiComponentTest` writes the springdoc document of that code to `target/openapi/api-docs.yml` on every `mvn verify`. |
+| `master` … `careers` | The 21 domain microservices, one per schema (listed below). Each boots alone on its own database, migrates only its own schema from `database/migrations/<module>`, and is configured by core, which reads the module from the package its application class scans. Its contract is its own `com.mysms.<module>.api` package (owned interfaces and DTOs) plus its edge operation table (`META-INF/mysms/operations/<module>.json`); its `<Module>OpenApiComponentTest` writes the springdoc document of that code to `target/openapi/api-docs.yml` on every `mvn verify`. |
 | `app` | Assembly only: all 21 modules in one process, each still with its own pool and Flyway history. |
 | `conformance` | The design-conformance check (JAVA-CODING-RULES §13): last in the reactor, its test reads the whole repository and fails the build on any violation. No runtime code. |
 
+The 21 domain modules, each named after the schema it owns: `master` (Master Data), `platform` (Platform & Tenancy), `iam` (Identity & Access — also the OAuth 2.0 / OIDC issuer), `org` (Organisation & Calendar), `people` (People & Profiles), `academics` (Academic Structure), `sis` (Student Information), `hr` (Workforce / HR), `payroll` (Payroll), `admission` (Admissions), `attendance` (Attendance), `facility` (Rooms & Facilities), `timetable` (Timetable), `assessment` (Assessment & Results), `lms` (Learning Management), `finance` (Fees & Payments), `library` (Library), `transport` (Transport), `comms` (Communication & Community), `frontoffice` (Front Office), `careers` (Careers). Which module may call which: [`../ARCHITECTURE.md` §2](../ARCHITECTURE.md#2-allowed-module-dependencies).
+
 ## Status
+
+What each area serves today. Open work and what comes next: [`../ROADMAP.md`](../ROADMAP.md); every operation, served or not: [`../api/operations-status.md`](../api/operations-status.md).
 
 | Area | State |
 |---|---|
@@ -73,4 +44,5 @@ Create a signing key with `openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bi
 | Partitioned tables | Served (generated): attendance records, staff attendance, outbound messages and content views. A list must bound the partition key on both sides (400 `INVALID_FILTER` otherwise, at most 366 days). Core's `PartitionMaintenanceJob` keeps monthly partitions ahead, alerts on rows in a default partition and drops old months only when a retention is set (`MYSMS_PARTITIONS_*`, DEPLOYMENT.md §5.6) |
 | Tenant filter and design conformance | Every statement over a tenant table states `tenant_id = :tenantId`, bound by core's `TenantJdbcClient`; the `conformance` module checks that and the other mechanical design rules in every build |
 | Events | The `messaging` library owns the `EventBus` API, runtime and RabbitMQ (default), Google Cloud Pub/Sub and in-process adapters; per-module outbox relay (as `mysms_relay`), inbox (exactly once per tenant and event), broker retries and dead-lettering, RabbitMQ unrouted/dead replay through `EventsAdmin`, Pub/Sub dead-letter subscriptions, and an `events` health component. RabbitMQ checks the verified publisher user; Pub/Sub isolates publishers with per-source topics and IAM. Consumers: the platform's audit trail (`audit.recorded` → `platform.audit_log`), the platform's registration of the bootstrap tenant (`iam.tenant_directory.bootstrapped` → `platform.tenant`), iam's tenant directory (`platform.tenant.*` → `iam.tenant_directory`) and the generated reference cleanup of 19 modules (153 actions of database/logical-references.md). DEPLOYMENT.md §5.7 |
-| Not built yet | Rate limiting at the gateway; reference reconciliation against the owners (references are stored as given by decision, and cleaned up from the owners' deletion events). Built meanwhile: the `@GrpcService` servers behind auth-client's `GrpcAuthInterceptor`, the `@GrpcClient` integrations with iam-issued service tokens (`ServiceTokenProvider`), and `iam.tenant_directory` kept from platform tenant events |
+| Service-to-service calls | The `@GrpcService` servers run behind auth-client's `GrpcAuthInterceptor`; the `@GrpcClient` integrations carry iam-issued service tokens (`ServiceTokenProvider`); `iam.tenant_directory` is kept from platform tenant events |
+| Not built yet | Rate limiting at the gateway; reference reconciliation against the owners (references are stored as given and cleaned up from the owners' deletion events) |

@@ -42,7 +42,7 @@
 | A6 | API calls per DAU per day | student 40, guardian 20, teacher 150, administrator 300 | **Assumption**; timetable, homework, LMS, attendance, marks screens |
 | A7 | School days / weekend activity | 22 school days/month; 8 weekend days at 20% of school-day traffic | **Assumption** |
 | A8 | Files | 1 TiB Standard storage in Mumbai, +85 GiB new uploads/month | Founder requirement; growth **assumption** (1 TiB/12) |
-| A9 | Runtime | Modular monolith (all 21 modules in one JVM) on Cloud Run; managed Pub/Sub event bus | Repository supports both monolith and 21 services ([ARCHITECTURE.md](../ARCHITECTURE.md)); the maintainability review recommends monolith-first ([MAINTAINABILITY-REVIEW.md](MAINTAINABILITY-REVIEW.md)) |
+| A9 | Runtime | Modular monolith (all 21 modules in one JVM) on Cloud Run; managed Pub/Sub event bus | Repository supports both monolith and 21 services ([ARCHITECTURE.md](../../ARCHITECTURE.md)); the maintainability review recommends monolith-first ([ROADMAP.md](../../ROADMAP.md)) |
 | A10 | Region | Mumbai `asia-south1`; disaster-recovery copies in Delhi `asia-south2` where stated | Data residency and latency for Indian schools |
 | A11 | Price per student | ₹400/year base, +5%/year; pilots at 50%; implementation fee ₹25,000 per new school | **Assumption**; sensitivity at ₹250/₹300/₹600 in §5.3 |
 | A12 | School churn | 10% of students per year | **Assumption**; sensitivity at 20% in §8 |
@@ -50,7 +50,7 @@
 | A14 | Sales season | Contracts signed January–March for the academic year starting April (CBSE) or June (several state boards) | **Assumption** based on Indian academic calendar |
 | A15 | FX | ₹94.00/USD | RBI/FBIL ₹93.8579 on 9 Nov 2026 |
 
-Product state that the money must also fund: 1,709 of 2,049 API operations are served and 340 still return `501 NOT_IMPLEMENTED`; 88 of 186 inventory screens are built ([STATUS.md](../STATUS.md)). There is no production traffic history and no load test; every capacity figure below must be replaced by measurements from the pilot (gate G2, §10).
+Product state that the money must also fund: 1,709 of 2,049 API operations are served and 340 still return `501 NOT_IMPLEMENTED`; 88 of 186 inventory screens are built ([ROADMAP.md](../../ROADMAP.md)). There is no production traffic history and no load test; every capacity figure below must be replaced by measurements from the pilot (gate G2, §10).
 
 ---
 
@@ -69,7 +69,7 @@ Product state that the money must also fund: 1,709 of 2,049 API operations are s
 
 ### 3.2 Database
 
-The monolith calls co-located modules over loopback HTTP/gRPC ([ARCHITECTURE.md](../ARCHITECTURE.md) §1), and every module unit of work begins a transaction, binds the tenant (`set_config`), runs its SQL and commits.
+The monolith calls co-located modules over loopback HTTP/gRPC ([ARCHITECTURE.md](../../ARCHITECTURE.md) §1), and every module unit of work begins a transaction, binds the tenant (`set_config`), runs its SQL and commits.
 
 | Quantity | Formula | Result |
 |---|---|---|
@@ -82,7 +82,7 @@ The monolith calls co-located modules over loopback HTTP/gRPC ([ARCHITECTURE.md]
 | Year-1 data size | attendance 50,000 × 220 days ≈ 11 M rows ≈ 5 GiB with indexes; audit ~2.5 M writes/month × 1 KB ≈ 28 GiB/yr; other modules 10–20 GiB; outbox/inbox purged weekly | **50–80 GiB** (assumption) |
 | RAM | hot set (current-year rosters, timetables, attendance) < 10 GiB | 16 GiB is comfortable; 8 GiB is tight |
 
-**Connections — a hard limit the draft missed.** Google documents that each Cloud Run instance can open at most **100 connections** to a Cloud SQL database through the built-in Cloud SQL connection ([Cloud SQL from Cloud Run](https://docs.cloud.google.com/sql/docs/postgres/connect-run)). The repository default of 10 connections per module × 21 module pools = **210 per process** ([DEPLOYMENT.md](../DEPLOYMENT.md), [MAINTAINABILITY-REVIEW.md](MAINTAINABILITY-REVIEW.md)), so the monolith as configured today would exceed that limit on Cloud Run. Required production profile:
+**Connections — a hard limit the draft missed.** Google documents that each Cloud Run instance can open at most **100 connections** to a Cloud SQL database through the built-in Cloud SQL connection ([Cloud SQL from Cloud Run](https://docs.cloud.google.com/sql/docs/postgres/connect-run)). The repository default of 10 connections per module × 21 module pools = **210 per process** ([DEPLOYMENT.md](../../DEPLOYMENT.md), [ROADMAP.md](../../ROADMAP.md)), so the monolith as configured today would exceed that limit on Cloud Run. Required production profile:
 
 | Setting | Value | Total |
 |---|---|---|
@@ -91,7 +91,7 @@ The monolith calls co-located modules over loopback HTTP/gRPC ([ARCHITECTURE.md]
 | Worker service (outbox relays, jobs) | 1 instance × 21 × 2 | 42 |
 | PostgreSQL `max_connections` | set explicitly to ~500 | ~420 used at worst case |
 
-Run the 21 outbox relays (500 ms polling, [DEPLOYMENT.md](../DEPLOYMENT.md)) **only** in the worker service. If they run in every API instance, idle polling multiplies with instance count, and with request-based billing the CPU is throttled between requests, so relays would stall.
+Run the 21 outbox relays (500 ms polling, [DEPLOYMENT.md](../../DEPLOYMENT.md)) **only** in the worker service. If they run in every API instance, idle polling multiplies with instance count, and with request-based billing the CPU is throttled between requests, so relays would stall.
 
 ### 3.3 Network egress (what users download)
 
@@ -219,7 +219,7 @@ Buy a 1-year CUD only after 3 months of stable production sizing; a 3-year CUD o
 | **Recommended total** | 239.56 + worker 57.82 | **297.37** |
 | Safe | 3 × 115.63 + 6 × 4 h × 22 × 0.1584 + 2 × 57.82 | 546.16 |
 
-The ~$5/month Cloud Run free tier is ignored (conservative). JVM sizing: 4 GiB per instance allows ~2.5–3 GiB heap plus metaspace for 21 Spring contexts (**assumption**; the full Maven build alone peaks at ~4.5 GB per [DEPLOYMENT.md](../DEPLOYMENT.md), runtime will be lower — measure). Java start-up for 21 modules will be tens of seconds, which is why minimum instances are kept warm.
+The ~$5/month Cloud Run free tier is ignored (conservative). JVM sizing: 4 GiB per instance allows ~2.5–3 GiB heap plus metaspace for 21 Spring contexts (**assumption**; the full Maven build alone peaks at ~4.5 GB per [DEPLOYMENT.md](../../DEPLOYMENT.md), runtime will be lower — measure). Java start-up for 21 modules will be tens of seconds, which is why minimum instances are kept warm.
 
 **When an alternative is cheaper**
 
@@ -684,4 +684,4 @@ Cost controls that remain from the draft: separate budgets and alerts per enviro
 - [DPDP Act 2023](https://www.meity.gov.in/static/uploads/2024/02/Digital-Personal-Data-Protection-Act-2023.pdf) · [DPDP Rules alert (SAM & Co)](https://www.amsshardul.com/wp-content/uploads/2025/11/Regulatory-Alert-Enforcement-of-DPDP-Act-and-Notification-of-DPDP-Rules.pdf) · [DPDP Rules (BDO)](https://www.bdo.in/en-gb/news/2025/digital-personal-data-protection-rules-2025-%E2%80%94-check-provisions,-implementation-plan,-penalties) · [Children's data and ed-tech (LiveLaw)](https://www.livelaw.in/articles/dpdp-child-data-rules-demand-edtech-platforms-555317)
 
 **Repository context**
-- [ARCHITECTURE.md](../ARCHITECTURE.md) · [DEPLOYMENT.md](../DEPLOYMENT.md) · [STATUS.md](../STATUS.md) · [MAINTAINABILITY-REVIEW.md](MAINTAINABILITY-REVIEW.md) · [CLASSROOM-VOICE-ASSISTANT-BRAINSTORM.md](CLASSROOM-VOICE-ASSISTANT-BRAINSTORM.md)
+- [ARCHITECTURE.md](../../ARCHITECTURE.md) · [DEPLOYMENT.md](../../DEPLOYMENT.md) · [ROADMAP.md](../../ROADMAP.md) · [ROADMAP.md](../../ROADMAP.md) · [CLASSROOM-VOICE-ASSISTANT-BRAINSTORM.md](CLASSROOM-VOICE-ASSISTANT-BRAINSTORM.md)

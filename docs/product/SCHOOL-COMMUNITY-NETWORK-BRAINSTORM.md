@@ -62,28 +62,28 @@ The initial scope stays within verified school and same-tenant chain boundaries.
 
 ### 3.1 Organizational and identity foundation — observed
 
-- [`platform.tenant`](../database/migrations/platform/V1_020_001__platform_baseline.sql) represents a customer organization: a trust, group, single school or training company. It is the data-isolation boundary.
-- [`org.institution`](../database/migrations/org/V1_040_001__org_baseline.sql) has `tenant_id`, `parent_institution_id`, configurable institution information and local timezone fields. Its comments explicitly describe nested group/campus institutions. A chain within one tenant fits this design; it does not establish federation between tenants.
-- [`iam`](../database/migrations/iam/V1_030_001__iam_baseline.sql) contains accounts, roles, permissions and scoped settings. `iam.member_record` is an event-maintained projection of **staff and student** records for `GetMe`, not a complete community membership or alumni registry.
+- [`platform.tenant`](../../database/migrations/platform/V1_020_001__platform_baseline.sql) represents a customer organization: a trust, group, single school or training company. It is the data-isolation boundary.
+- [`org.institution`](../../database/migrations/org/V1_040_001__org_baseline.sql) has `tenant_id`, `parent_institution_id`, configurable institution information and local timezone fields. Its comments explicitly describe nested group/campus institutions. A chain within one tenant fits this design; it does not establish federation between tenants.
+- [`iam`](../../database/migrations/iam/V1_030_001__iam_baseline.sql) contains accounts, roles, permissions and scoped settings. `iam.member_record` is an event-maintained projection of **staff and student** records for `GetMe`, not a complete community membership or alumni registry.
 - SIS, HR, people and academics provide enrollment, staff, person, guardian and class context. Each relationship must be evaluated for its specific purpose; a person’s existence is not proof of community entitlement.
-- [`ARCHITECTURE.md`](../ARCHITECTURE.md) defines tenant predicates plus forced PostgreSQL RLS, module-owned schemas, SDK/event integration, no cross-schema SQL, no cross-module foreign keys and no distributed transactions.
+- [`ARCHITECTURE.md`](../../ARCHITECTURE.md) defines tenant predicates plus forced PostgreSQL RLS, module-owned schemas, SDK/event integration, no cross-schema SQL, no cross-module foreign keys and no distributed transactions.
 
 ### 3.2 Community and LMS foundation — observed
 
-[`comms`](../database/migrations/comms/V1_190_001__comms_baseline.sql) already models notices, events, galleries, magazines, conversations/messages, feedback, audience groups, tasks, content views, class/club pages, page members, posts, post audiences, comments, reactions and notification preferences.
+[`comms`](../../database/migrations/comms/V1_190_001__comms_baseline.sql) already models notices, events, galleries, magazines, conversations/messages, feedback, audience groups, tasks, content views, class/club pages, page members, posts, post audiences, comments, reactions and notification preferences.
 
 Current posts require an institution and academic year. Their visibility values are `all_classes`, `selected_classes` and `page_members`; their states are `draft`, `pending`, `posted` and `cancelled`. These are useful starting points, but do not fully model durable alumni membership, story expiry, public export approval, child media permissions or chain audience rules. `class_page_member` records following/reaction state; it should not be assumed to prove the proposed verified relationship lifecycle.
 
-[`PostService.java`](../backend/comms/src/main/java/com/mysms/comms/business/PostService.java) has CRUD and approve/cancel transitions with scope checks, audit and outbox publication. [`PostRepository.java`](../backend/comms/src/main/java/com/mysms/comms/repository/PostRepository.java) applies institution data scope. This is evidence of building blocks, not a verified social authorization implementation covering every class, child, age, consent and audience rule proposed here. Evaluate generic record access as well as new feed endpoints before giving members social permissions.
+[`PostService.java`](../../backend/comms/src/main/java/com/mysms/comms/business/PostService.java) has CRUD and approve/cancel transitions with scope checks, audit and outbox publication. [`PostRepository.java`](../../backend/comms/src/main/java/com/mysms/comms/repository/PostRepository.java) applies institution data scope. This is evidence of building blocks, not a verified social authorization implementation covering every class, child, age, consent and audience rule proposed here. Evaluate generic record access as well as new feed endpoints before giving members social permissions.
 
-[`api/operations-status.md`](../api/operations-status.md) marks `comms.GetFeed`, `comms.SubmitPost`, `comms.FollowClassPage`, `comms.SendMessage` and `comms.ListInAppNotifications` as **501** at the time of the scan. `ListPosts`, class-page CRUD and `ApprovePost` are marked served. Served CRUD does not demonstrate delivery, personalized feed behavior or the proposed safeguards. Recheck the status when implementation begins because the repository is actively changing.
+[`api/operations-status.md`](../../api/operations-status.md) marks `comms.GetFeed`, `comms.SubmitPost`, `comms.FollowClassPage`, `comms.SendMessage` and `comms.ListInAppNotifications` as **501** at the time of the scan. `ListPosts`, class-page CRUD and `ApprovePost` are marked served. Served CRUD does not demonstrate delivery, personalized feed behavior or the proposed safeguards. Recheck the status when implementation begins because the repository is actively changing.
 
-[`lms`](../database/migrations/lms/V1_150_001__lms_baseline.sql) models courses, course/cohort enrollment, teachers, live classes, discussion prompts, forums/topics/posts, report categories, reports and read state. Learning discussion and graded participation must retain LMS ownership. A social reaction must never become a grade or attendance fact implicitly.
+[`lms`](../../database/migrations/lms/V1_150_001__lms_baseline.sql) models courses, course/cohort enrollment, teachers, live classes, discussion prompts, forums/topics/posts, report categories, reports and read state. Learning discussion and graded participation must retain LMS ownership. A social reaction must never become a grade or attendance fact implicitly.
 
 ### 3.3 Home experience — observed
 
-- [`web HomeScreen`](../clients/packages/web-kit/src/screens/HomeScreen.tsx) is currently a welcome card and describes future role-specific dashboards.
-- [`native HomeScreen`](../clients/packages/native-kit/src/HomeScreen.tsx) is a permission-aware list of operational entry points such as timetable, homework, children, leave, payslips, profile and notifications.
+- [`web HomeScreen`](../../clients/packages/web-kit/src/screens/HomeScreen.tsx) is currently a welcome card and describes future role-specific dashboards.
+- [`native HomeScreen`](../../clients/packages/native-kit/src/HomeScreen.tsx) is a permission-aware list of operational entry points such as timetable, homework, children, leave, payslips, profile and notifications.
 - React web, native phone and tablet clients and common core/i18n packages already exist. The proposed community home is new product work, not an existing completed screen.
 - Existing deep-link conventions in the architecture support module links without embedding tokens or personal data. Use them as navigation, with authorization at the destination.
 
@@ -463,7 +463,7 @@ No platform pricing, quota, guaranteed delivery time or deletion guarantee is as
 
 ### 16.1 Existing foundation and proposed extension
 
-[`people.consent_record`](../database/migrations/people/V1_050_001__people_baseline.sql) already records a person, giver, purpose, policy version, timing, channel and optional evidence. Its purposes include photo/video publication, public profile, marketing, third-party sharing and SMS/WhatsApp. [`people.public_profile`](../database/migrations/people/V1_050_001__people_baseline.sql) is described as a public student/alumni profile. Neither is proof of a complete school social consent or alumni verification workflow.
+[`people.consent_record`](../../database/migrations/people/V1_050_001__people_baseline.sql) already records a person, giver, purpose, policy version, timing, channel and optional evidence. Its purposes include photo/video publication, public profile, marketing, third-party sharing and SMS/WhatsApp. [`people.public_profile`](../../database/migrations/people/V1_050_001__people_baseline.sql) is described as a public student/alumni profile. Neither is proof of a complete school social consent or alumni verification workflow.
 
 Reuse the authoritative consent owner where appropriate; add community-specific decision evidence rather than inventing a competing universal consent ledger. A broad current-purpose record may be necessary but insufficient for exact content, destination, depicted people and withdrawal propagation. Public profiles must never activate automatically merely because alumni/social features are enabled.
 

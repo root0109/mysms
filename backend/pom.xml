@@ -305,8 +305,14 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <configuration>
             <parameters>true</parameters>
+            <!--
+              -deprecation: Spring 7 deprecates org.springframework.lang.Nullable, used about 32,000 times in the
+              generated-style API sources; javac kept one diagnostic per use in the shared Maven JVM, which ran it out
+              of memory and buried real errors under the 100-message limit. Turn it back on after the move to
+              org.jspecify.annotations.Nullable.
+            -->
             <compilerArgs>
-              <arg>-Xlint:all,-processing,-serial</arg>
+              <arg>-Xlint:all,-processing,-serial,-deprecation</arg>
             </compilerArgs>
             <!-- Lombok before MapStruct: MapStruct must see the Lombok-generated accessors (§2) -->
             <annotationProcessorPaths>

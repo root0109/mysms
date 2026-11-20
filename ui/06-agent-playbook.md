@@ -8,7 +8,7 @@ How an AI agent (or a new developer) picks up and completes UI work in this repo
 2. The work item: a screen ID (02 §3), a flow (03), or a component (04 §5).
 3. For the screen's operations: [`../api/operations.md`](../api/operations.md) row(s) → exact REST path, gRPC method, permission code; the module's `../backend/<module>/target/openapi/api-docs.yml` (written by the backend build) for request/response shapes.
 4. [05-frontend-architecture.md](05-frontend-architecture.md) — where code goes and which `core` hooks to use.
-5. [07-open-dependencies.md](07-open-dependencies.md) — if the screen cites a pending item, build the interim behaviour named there, behind the named feature flag.
+5. [ROADMAP](../ROADMAP.md) (open dependencies) — if the screen cites a pending item, build the interim behaviour named there, behind the named feature flag.
 
 ## 2. Hard rules (agent must self-enforce)
 
@@ -54,7 +54,7 @@ code never imports fixtures or mocks — ESLint fails the build. Never point dev
 
 ## 6. When the spec and the contract disagree
 
-The contract (`../api/*`) wins for shapes; the spec (this folder) wins for behaviour. Record the discrepancy in `ui/DISCREPANCIES.md` (create if absent) with screen ID, what differed, what you built — these feed the next spec revision. Do not silently improvise.
+The contract (`../api/*`) wins for shapes; the spec (this folder) wins for behaviour. Record the discrepancy in `../ROADMAP.md` (Clients/UI open work) with screen ID, what differed, what you built — these feed the next spec revision. Do not silently improvise.
 
 ## 7. Suggested first work orders
 

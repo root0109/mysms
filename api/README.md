@@ -1,6 +1,6 @@
 # MySMS API design
 
-MySMS exposes every capability through two equivalent interfaces: a **REST/JSON API** (OpenAPI 3.1) for web, mobile and partner integrations, and a **gRPC API** (proto3) for service-to-service calls and high-throughput clients. Both are generated from one API specification, so they always stay in step: each REST operation corresponds to exactly one gRPC method with the same request and response fields.
+MySMS exposes every capability through two equivalent interfaces: a **REST/JSON API** (OpenAPI 3.1) for web, mobile and partner integrations, and a **gRPC API** (proto3) for service-to-service calls and high-throughput clients. Both are thin adapters over the same module contract and services, so they always stay in step: each REST operation corresponds to exactly one gRPC method with the same request and response fields.
 
 ## At a glance
 
@@ -325,7 +325,7 @@ The custom operations, grouped by business process. Each runs in one transaction
 ## The Java contracts, and what is generated
 
 The server-side Java contracts are NOT generated: each backend module owns its API interfaces and DTOs
-(`com.mysms.<module>.api` / `.api.model`, materialized once from these files on 2026-11-10 and edited directly) and
+(`com.mysms.<module>.api` / `.api.model`, edited directly) and
 its edge operation table (`src/main/resources/META-INF/mysms/operations/<module>.json`: method, path, `x-permission`,
 security schemes, token optional or not, idempotency — enforced by the auth filter). springdoc writes each running
 service's OpenAPI document from that code (`/v3/api-docs.yaml`; core's `OpenApiConfiguration` restores the contract
@@ -351,13 +351,12 @@ cd clients && pnpm --filter @mysms/sdk generate      # TypeScript SDK from backe
 
 Every module schema except `master` has its own `idempotency_key` (backs the Idempotency-Key machinery for that module's operations); every module schema has its own `outbox_event` / `inbox_event` (eventing) and, where the module issues numbers, `number_sequence`. They are written only by the owning module's server, never by another module, and deliberately have no REST/gRPC resource. Each module's `operation` table is exposed through that module's `OperationService` (`GetOperation`, `ListOperations`, `CancelOperation`); `platform.operation` additionally holds the job-centre index behind `platform.ListOperations`.
 
-## Verification performed
+## Guarantees kept by the build
 
-- **Proto compilation:** all 22 files compiled with `protoc` (grpcio-tools) into Python stubs: 226 services, 2051 RPCs, 4,550 messages, 0 errors; no existing field number changed.
-- **REST ↔ gRPC parity:** each of the 2051 REST operations maps through `x-grpc` to exactly one existing RPC and every RPC is reachable from REST (0 mismatches, checked mechanically).
-- **OpenAPI:** every module file parses and bundles with 0 unresolved references, and `redocly lint` of each module file passes. There is no joined all-modules file: it was a pre-built copy that drifted from the module files; a portal reads each service's own document (`/v3/api-docs.yaml`, written to `backend/<module>/target/openapi/api-docs.yml` by every build).
-- **Generator-ready schemas:** every JSON request and response body is a named schema (no inline objects; free-form webhook payloads excepted), and no schema name is defined in two files — both checked mechanically, so generated clients and servers get stable class names.
+- **REST ↔ gRPC parity:** each REST operation maps through `x-grpc` to exactly one RPC and every RPC is reachable from REST.
+- **OpenAPI:** each module's document is written by its build and passes `redocly lint` (BUILD-AND-RUN §3.5). There is no joined all-modules file; a portal reads each service's own document (`/v3/api-docs.yaml`, written to `backend/<module>/target/openapi/api-docs.yml` by every build).
+- **Generator-ready schemas:** every JSON request and response body is a named schema (no inline objects; free-form webhook payloads excepted), and no schema name is defined in two files, so generated clients get stable class names.
 - **Generated code compiles:** every module compiles its own protos and its copies of its callees' on every build; the TypeScript SDK is generated from the written OpenAPI documents and compiled by `pnpm verify`; the owned server contracts compile in their modules.
-- **Wire stability:** `backend/conformance/src/main/resources/field-numbers.lock.json` records the field numbers of **every** message (4,546, map fields included), so any regeneration preserves the wire format.
-- **Terminology:** the contracts use *student* and *teacher* throughout — schema names, field names, paths, permissions and descriptions (each concept has exactly one name; the old synonyms are gone from every identifier and description).
-- **Database alignment:** resources removed with their tables (user types, app modules, localities, timezones, release condition types, result lines); resources renamed/moved with their tables (exam results; import/export jobs, access logs and drive to `lms`; acquisition sources to `finance`); new resources for new tables (fee structures + publish/archive, fee concessions, refunds, payment gateway accounts, payment allocations on Payment, staff bank accounts, student leave requests, staff attendance, leave balances, MFA credentials via the auth ops). A second review pass then locked down writable surfaces: MFA-challenge logins return no tokens or user object, encrypted links are write-only, tenant subscriptions are read-only to tenants (checkout is the only write), fee-due status and enrollment grade/certificate fields are workflow-only.
+- **Wire stability:** `backend/conformance/src/main/resources/field-numbers.lock.json` records the field numbers of **every** message (map fields included), so a proto change never renumbers an existing field (conformance G2).
+- **Terminology:** the contracts use *student* and *teacher* throughout — schema names, field names, paths, permissions and descriptions; each concept has exactly one name.
+- **Writable surfaces:** MFA-challenge logins return no tokens or user object, encrypted links are write-only, tenant subscriptions are read-only to tenants (checkout is the only write), fee-due status and enrollment grade/certificate fields are workflow-only.

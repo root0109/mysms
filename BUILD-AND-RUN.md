@@ -70,7 +70,7 @@ cd backend
 mvn install            # or `mvn verify`
 ```
 
-One command runs, for every module (two at a time, `-T 1C`): proto compilation, compile, unit tests,
+One command runs, for every module (two at a time, `-T 2` in `.mvn/maven.config`): proto compilation, compile, unit tests,
 component tests (each module's OpenAPI component test writes `target/openapi/api-docs.yml`) (real PostgreSQL with row-level security, real RabbitMQ and the Pub/Sub emulator), Checkstyle,
 SpotBugs and JaCoCo coverage
 gates. It ends with `BUILD SUCCESS`; any test failure, style or bug-pattern violation fails the build.
@@ -104,17 +104,21 @@ The quality gates (Checkstyle, SpotBugs, JaCoCo) are switched off for the IDE's 
 on the command line (`mvn verify` / `mvn install`). If an old "Failed to execute mojo … spotbugs" marker stays, delete
 it from the *Problems* view and update the projects once more.
 
-If m2e reports `Could not find artifact com.mysms:messaging-rabbitmq` or `com.mysms:messaging`, its workspace still
-has an old/incomplete Maven project set. In Project Explorer, remove the obsolete `messaging-rabbitmq` project from
+If m2e reports `Could not find artifact com.mysms:messaging-rabbitmq` or `com.mysms:messaging`, its workspace
+has an incomplete or stale Maven project set. In Project Explorer, remove any `messaging-rabbitmq` project from
 the workspace **without deleting its contents**, then use *File → Import → Maven → Existing Maven Projects* and
 select `backend/`. Import the parent, `messaging`, and every module; then run *Maven → Update Project…* with all projects
-selected. All broker adapters now live in `backend/messaging`; `messaging-rabbitmq` is no longer a Maven artifact.
+selected. All broker adapters live in `backend/messaging`; there is no `messaging-rabbitmq` artifact.
 
 Rule check: the last module, `conformance`, enforces the mechanical rules of
 [`JAVA-CODING-RULES.md`](JAVA-CODING-RULES.md) on every `mvn verify`; any violation fails the build. Run it alone with
 `mvn -pl conformance test`.
 
 ### 3.2 Clients — one pnpm/turbo build
+
+Build the backend first, with its tests: the SDK generator reads the OpenAPI documents the component tests write and
+refuses to run until all 21 `backend/<module>/target/openapi/api-docs.yml` exist. The OpenAPI Generator needs a JDK on
+`PATH`; without network, set `OPENAPI_GENERATOR_JAR` to a local copy of its jar.
 
 ```bash
 cd clients
@@ -133,6 +137,61 @@ Single packages: `pnpm --filter @mysms/web test`, `pnpm --filter @mysms/web buil
 Yes, if wanted later: a root `pom.xml` aggregating `backend/` and a `clients` module that runs
 `pnpm install` / `pnpm verify` through `frontend-maven-plugin` (or `exec-maven-plugin`), with profiles to skip either
 side. Today the two builds are run separately, as above.
+
+### 3.4 Build time and how to shorten it
+
+The slowest modules are lms, iam, finance and library. What the time goes on:
+
+- **Proto copies.** Each module compiles its callees' protos again (people ×10, org ×9, iam ×7); lms alone has
+  16.5k lines of proto.
+- **Component tests** start a full Spring context and, by default, their own Testcontainers PostgreSQL in every test
+  JVM. JaCoCo, Checkstyle and SpotBugs run on every build.
+
+The build settings, and why:
+
+- `backend/.mvn/jvm.config`: `-Xmx4g` (the build peaks at about 4.5 GB, §1).
+- `backend/.mvn/maven.config`: `-T 2`, two modules at a time, which is what the test-JVM memory is sized for
+  (JAVA-CODING-RULES). `-T 1C` would run one module per CPU core — on a 10–12-core laptop that many javac runs in one
+  heap, plus a 1 GB test JVM and a PostgreSQL container per module — and ends in out-of-memory failures. On a 32 GB
+  machine try `-T 4` and keep whichever is faster.
+- `backend/pom.xml`: `-Xlint:all,-processing,-serial,-deprecation`. Spring 7 deprecates
+  `org.springframework.lang.Nullable`, used about 32,000 times; with deprecation warnings on, javac keeps one
+  diagnostic per use in memory and the flood hides real errors behind the 100-message cap. Turn deprecation back on
+  after moving to `org.jspecify.annotations.Nullable`.
+
+What else shortens it, by effort:
+
+| Effort | Action | Expected gain |
+|---|---|---|
+| none | Use **external PostgreSQL and RabbitMQ** (§2 option B, the `MYSMS_TEST_*` variables) instead of a Testcontainers database per test JVM | Container start-up removed from every module |
+| none | **Inner loop:** `mvn install -o -DskipTests -Dcheckstyle.skip -Dspotbugs.skip -Djacoco.skip -Dmaven.build.cache.skipSave=true` | Compile only, a few minutes. Does not write the OpenAPI documents, so the client SDK keeps the last ones. |
+| none | **Build only what changed:** `mvn install -o -pl lms -am` (a module and what it needs), or `-pl core -amd` (core and everything that uses it) | Skips unrelated modules |
+| none | **Keep the build cache on** (it is: `.mvn/extensions.xml`). A second run with no changes restores modules instead of rebuilding them. Use `-Dmaven.build.cache.enabled=false` only for the gate build. | Unchanged modules are near-instant |
+| low | **Maven daemon (`mvnd`)** instead of `mvn`, to keep a warm JVM between builds | Typically 20–40% faster locally |
+| low | **Testcontainers reuse:** `testcontainers.reuse.enable=true` in `~/.testcontainers.properties` plus `.withReuse(true)` on the containers | Containers survive between test runs |
+| low | **One Spring context per module in tests.** Make every component test of a module share the same configuration so Spring's context cache reuses it, and avoid `@DirtiesContext` and per-test `@MockitoBean`. | Usually the biggest single test-time win |
+| low | **SpotBugs and JaCoCo only in CI or the gate build**, in a `gate` profile, instead of every local build | Minutes per run on lms, iam and finance |
+| medium | **One proto artifact per callee** (`<module>-grpc-api`), compiled once and depended on, instead of verbatim copies | Removes repeated protoc and javac of the copies. Needs the owner to amend the inter-service call rule ([`CLAUDE.md`](CLAUDE.md) §3). |
+| medium | **Merge modules ([`ARCHITECTURE.md` §6](ARCHITECTURE.md#6-proposal-merging-modules)):** 21 → 9 means 12 fewer Spring contexts, fewer proto copies and fewer test JVMs | Large |
+| medium | **CI with a remote build cache** shared by everyone | Most PR builds rebuild only what changed |
+
+### 3.5 Test suites and gates
+
+Backend (run by `mvn verify` / `mvn install`; the database and brokers come from §2; each test class creates and drops
+its own database and roles):
+
+- Unit tests (`src/test`) are the only place test doubles are allowed.
+- Component tests (`src/component-test`) boot the module over HTTP against real PostgreSQL as a non-owner role, so row-level security, grants and Flyway are exercised exactly as in production. Module tests run the events on the in-process bus; `messaging` tests RabbitMQ and Google Pub/Sub against real brokers/emulator, and the monolith test runs against RabbitMQ.
+- Gates: Checkstyle, SpotBugs, JaCoCo (80 % line coverage per module). A failing gate fails the build.
+
+Clients (run by `pnpm verify`): Web components are rendered in jsdom against the fake backend and each passes an axe accessibility check; `@mysms/core` keeps 90 % line coverage.
+
+Contracts and schema:
+
+```bash
+npx @redocly/cli lint backend/attendance/target/openapi/api-docs.yml   # any module's contract, after mvn verify
+psql -v ON_ERROR_STOP=1 -d mysms_scratch -f database/verification/smoke.sql
+```
 
 ## 4. Run it locally
 
@@ -198,15 +257,14 @@ any screen. Phone and tablet apps: see [`DEPLOYMENT.md` §9](DEPLOYMENT.md).
 
 ## 5. Troubleshooting
 
+Build and local-development problems. Problems of a running installation (startup refusals, keys, events, 401/403/501 answers): [`DEPLOYMENT.md` §11](DEPLOYMENT.md#11-troubleshooting).
+
 | Symptom | Cause and fix |
 |---|---|
 | Maven ends with `EXIT 137` / `Killed`, no test failure | Out of memory: stop other builds (especially `pnpm verify`) and rerun. |
 | Component tests fail to connect to `localhost:5432` / `5672` | Server not running, or the `MYSMS_TEST_*` variables point to a wrong port; unset them to use Testcontainers. |
 | `permission denied to create role` in tests | `MYSMS_TEST_JDBC_USER` is not a superuser. |
 | RabbitMQ suites fail with `PRECONDITION_FAILED - inequivalent arg` | Queues left by an old broker run; the tests remove their own queues, otherwise `docker rm -f mysms-rmq` and restart it. |
-| iam refuses to start | `MYSMS_IAM_SIGNING_KEY` missing or not PKCS#8 PEM. |
-| A service refuses to start mentioning the relay user | The relay user must differ from the application and migration users. |
 | `… compiled by a more recent version of the Java Runtime (class file version 65.0)` | Classes left by an earlier Java 21 build: run `mvn clean install` once (in Eclipse/STS also *Project → Clean…*). |
 | Checkstyle fails to start on JDK 17 after a version bump | Checkstyle 13+ needs Java 21; keep `checkstyle.version` at 12.3.x while the project targets Java 17. |
 | `pnpm verify` fails at `prettier --check` | Run `pnpm format`, then verify again. |
-| An API call answers `501 NOT_IMPLEMENTED` | The operation is in the contract but not built yet — see `api/operations-status.md`. |

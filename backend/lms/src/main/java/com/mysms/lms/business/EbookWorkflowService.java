@@ -34,9 +34,12 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -133,8 +136,9 @@ public class EbookWorkflowService extends AppTransactionManager {
             audit.recordTransition(AGGREGATE, id, "publishCuration", List.of("relatedMaterialSeed",
                     "showRelatedMaterials"), null);
             outbox.publish(AGGREGATE + ".publishCuration", AGGREGATE, id, LmsEvents.payload(id));
+            Map<UUID, RelatedMaterial> found = materials(ordered);
             RelatedMaterialList list = new RelatedMaterialList();
-            list.setItems(ordered.stream().map(this::material).toList());
+            list.setItems(ordered.stream().map(found::get).toList());
             return list;
         });
     }
@@ -152,7 +156,10 @@ public class EbookWorkflowService extends AppTransactionManager {
                 return new Page<RelatedMaterial>(List.of(), page.page(), page.size(), "");
             }
             Optional<UUID> rank = repository.myRank(student, id, courseId, fileId);
-            return repository.shown(page, id, rank).map(shown -> material(shown.id()));
+            Page<EbookCurationRepository.Shown> shown = repository.shown(page, id, rank);
+            Map<UUID, RelatedMaterial> found = materials(shown.items().stream()
+                    .map(EbookCurationRepository.Shown::id).toList());
+            return shown.map(row -> found.get(row.id()));
         });
     }
 
@@ -191,9 +198,19 @@ public class EbookWorkflowService extends AppTransactionManager {
         return ebook.institutionId() == null ? scope.tenantWide() : scope.canRead(Optional.of(ebook.institutionId()));
     }
 
-    private RelatedMaterial material(UUID id) {
-        return materialMapper.toDto(materials.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(EbookService.RELATED_MATERIAL_AGGREGATE, id)));
+    /**
+     * The related materials by id, read in one statement rather than one per id; an id with no live material is 404,
+     * as reading it alone would be.
+     */
+    private Map<UUID, RelatedMaterial> materials(Collection<UUID> ids) {
+        Map<UUID, RelatedMaterial> found = new HashMap<>();
+        materials.findByIds(ids).forEach(row -> found.put(row.getId(), materialMapper.toDto(row)));
+        for (UUID id : ids) {
+            if (!found.containsKey(id)) {
+                throw new ResourceNotFoundException(EbookService.RELATED_MATERIAL_AGGREGATE, id);
+            }
+        }
+        return found;
     }
 
     private static RelatedMaterialRank rankDto(RankRow row) {

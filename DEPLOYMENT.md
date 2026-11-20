@@ -8,20 +8,14 @@ What is served today is listed in [`backend/README.md`](backend/README.md#status
 
 ## 1. Prerequisites
 
-| Tool | Version | Used for |
+The build tools (JDK 17, Maven 3.9+, Node.js 22.12+, pnpm 10, OpenSSL, optional Docker) and the build's memory needs are in [`BUILD-AND-RUN.md` §1](BUILD-AND-RUN.md#1-prerequisites). To run an installation you also need:
+
+| Service | Version | Used for |
 |---|---|---|
-| JDK | 17 | backend build and runtime (the build targets Java 17; a newer JDK also works) |
-| Maven | 3.9+ | backend build |
 | PostgreSQL | 16 | the database (no extensions needed) |
 | RabbitMQ | 4.1 (3.13+ works: quorum queues) | default event bus between modules (§5.7) |
 | Google Cloud Pub/Sub | current | optional managed event bus; configure ADC and `MYSMS_EVENTS_BUS=google-pubsub` (§5.7) |
-| Node.js | 22.12+ | clients |
-| pnpm | 10 (`corepack enable`) | clients |
-| OpenSSL | any current | the token-signing key |
-| Docker | optional | backend tests can start PostgreSQL and RabbitMQ through Testcontainers instead of using servers you provide |
-| Expo Go or a device simulator | optional | phone and tablet apps |
-
-Memory: a full backend build peaks at about 4.5 GB. Do not run the backend build and the client build at the same time on a machine with less than 8 GB.
+| Expo Go, a device simulator or EAS Build | current | phone and tablet apps (§9) |
 
 ## 2. The database
 
@@ -53,7 +47,7 @@ GRANT CONNECT ON DATABASE mysms TO mysms_app, mysms_relay, mysms_platform_admin;
 
 That is all. On every start each module runs its own Flyway history (`<schema>.flyway_schema_history`) as `mysms_migrate` and then grants `mysms_app` exactly `USAGE` on the schema, DML on its tables and use of its sequences. Flyway logs a harmless warning `schema "<module>" already exists, skipping` on the first start, because Flyway creates the schema just before the baseline's `CREATE SCHEMA IF NOT EXISTS`.
 
-Each module has exactly one Flyway script, its baseline (`database/migrations/<module>/V1_<order>_001__<module>_baseline.sql`): until the first release a schema change edits the baseline in place (owner decision of 2026-11-10), so a database migrated from an earlier build fails Flyway's checksum validation and must be dropped and created again. Incremental migrations start after the first release (`database/README.md` "Applying the schema").
+Each module has exactly one Flyway script, its baseline (`database/migrations/<module>/V1_<order>_001__<module>_baseline.sql`): until the first release a schema change edits the baseline in place, so a database migrated from an earlier build fails Flyway's checksum validation and must be dropped and created again. Incremental migrations start after the first release (`database/README.md` "Applying the schema").
 
 If `MYSMS_DB_MIGRATE_USER` is left empty the migrations run as the application user — acceptable on a developer machine, **never in production**, because the application would then own its tables and bypass row-level security.
 
@@ -146,14 +140,14 @@ No secret is in the repository — a secret is only ever named by its variable.
 
 | Variable | Required | Meaning |
 |---|---|---|
-| `MYSMS_IAM_SIGNING_KEY` | yes | **secret**, the PEM private key from §3 |
+| `MYSMS_IAM_SIGNING_KEY` | yes | **secret**, the PEM PKCS#8 RSA private key (2048 bits or more) from §3 |
 | `MYSMS_IAM_SIGNING_KEY_ID` | no | `kid`; default the key's RFC 7638 thumbprint |
 | `MYSMS_IAM_PREVIOUS_PUBLIC_KEY` | no | the retiring public key during rotation |
 | `MYSMS_IAM_ACCESS_TOKEN_TTL`, `MYSMS_IAM_REFRESH_TOKEN_TTL` | no | ISO-8601 durations, default `PT15M` and `P30D` |
 | `MYSMS_IAM_SERVICECLIENTS_<MODULE>_SECRETSHA256` | for service calls | the lower-case hex SHA-256 of that module's client secret (`printf %s "$SECRET" \| sha256sum`); a module without one cannot obtain a service token (§5.9). Property form: `mysms.iam.service-clients.<module>.secret-sha256` |
 | `MYSMS_IAM_SERVICECLIENTS_<MODULE>_PERMISSIONS` | no | comma-separated permission codes the module's service tokens carry: the operations of audience `internal` it may call. Default none |
 | `MYSMS_IAM_SERVICE_TOKEN_TTL` | no | lifetime of a service token, ISO-8601, default `PT5M`, at most `PT1H` |
-| `MYSMS_PEOPLE_URL` | no | base URL of the people service (for the monolith: its own URL) so `GetMe` includes the person record |
+| `MYSMS_PEOPLE_URL` | no | base URL of the people service (for the monolith: its own URL) so `GetMe` includes the person record; empty = without it |
 | `MYSMS_TIMETABLE_URL`, `MYSMS_SIS_URL`, `MYSMS_ORG_URL` | no | read by attendance: base URLs of the timetable, sis and org services (for the monolith: its own URL, three times). Without all three, `attendance.TakeAttendanceForSession` and a mark for a student a sheet has no record of yet answer 503; everything else in attendance works. Assessment also reads SIS for exam rosters and student/guardian result access |
 | `MYSMS_FACILITY_URL`, `MYSMS_ACADEMICS_URL` | no | read by assessment: Facility supplies exam room capacities; Academics supplies course-plan credits for higher-education exam results. The operation that needs an unset service answers 503 |
 | `MYSMS_IAM_BOOTSTRAP_TENANT_CODE`, `MYSMS_IAM_BOOTSTRAP_ADMIN_USERNAME`, `MYSMS_IAM_BOOTSTRAP_ADMIN_PASSWORD` | first start only | see §5.3 |
@@ -198,11 +192,7 @@ the webhook secret set above, and subscribe to `order.paid`, `payment.captured`,
 
 ### 5.1 Build
 
-```bash
-cd backend
-mvn verify                          # compile protos, compile, unit + component tests, Checkstyle, SpotBugs, JaCoCo
-mvn -pl app -am package -DskipTests # just the monolith jar, when the tests already ran
-```
+Build with `mvn verify` in `backend/` ([`BUILD-AND-RUN.md` §3.1](BUILD-AND-RUN.md#31-backend--one-multi-module-maven-build)); `mvn -pl app -am package -DskipTests` builds just the jars when the tests already ran.
 
 Outputs: `app/target/app-0.1.0-SNAPSHOT-exec.jar` (the monolith) and `<module>/target/<module>-0.1.0-SNAPSHOT-exec.jar` for each of the 21 services. Every build writes each module's OpenAPI document to `<module>/target/openapi/api-docs.yml` (its OpenAPI component test) and its gRPC descriptor set to `<module>/target/docs/protos/grpc.protobin`.
 
@@ -503,26 +493,9 @@ server {
 
 Serve the platform console the same way on its own host name (e.g. `console.example.org`), for platform operators only.
 
-**Development against a real backend:**
-
-```bash
-MYSMS_API_PROXY=http://localhost:8080 pnpm --filter @mysms/web dev   # http://localhost:5173
-```
-
-Sign in with the bootstrap tenant code, username and password.
-
 ## 8. Developing the web apps against a local backend
 
-There is no mock API: mocking is done only in tests. Run the monolith (§5.2) on `:8080`, then:
-
-```bash
-cd clients
-pnpm --filter @mysms/web dev                 # http://localhost:5173, proxies /v1 to http://localhost:8080
-pnpm --filter @mysms/platform-console dev    # http://localhost:5174
-MYSMS_API_PROXY=http://other-host:8080 pnpm --filter @mysms/web dev   # another backend
-```
-
-Sign in with the bootstrap tenant code, username and password (§5.3).
+See [`BUILD-AND-RUN.md` §4.3](BUILD-AND-RUN.md#43-start-the-web-apps). There is no mock API: mocking is done only in tests.
 
 ## 9. Phone and tablet apps
 
@@ -543,38 +516,7 @@ cd clients/apps/tablet && npx expo export --platform ios --output-dir /tmp/table
 
 ## 10. Tests
 
-### Backend
-
-```bash
-cd backend
-mvn verify                       # uses Docker (Testcontainers, PostgreSQL 16) when no server is given
-# or with your own PostgreSQL 16 (an administrative connection; each test class creates and drops its own database and roles):
-MYSMS_TEST_JDBC_URL=jdbc:postgresql://localhost:5432/postgres \
-MYSMS_TEST_JDBC_USER=postgres MYSMS_TEST_JDBC_PASSWORD=<password> \
-MYSMS_TEST_AMQP_URI=amqp://guest:guest@localhost:5672 mvn verify   # and your own RabbitMQ
-mvn -pl iam -am verify           # one module and what it depends on
-```
-
-- Unit tests (`src/test`) are the only place test doubles are allowed.
-- Component tests (`src/component-test`) boot the module over HTTP against real PostgreSQL as a non-owner role, so row-level security, grants and Flyway are exercised exactly as in production. Module tests run the events on the in-process bus; `messaging` tests RabbitMQ and Google Pub/Sub against real brokers/emulator, and the monolith test runs against RabbitMQ.
-- Gates: Checkstyle, SpotBugs, JaCoCo (80 % line coverage per module). A failing gate fails the build.
-
-### Clients
-
-```bash
-cd clients
-pnpm verify                      # everything
-pnpm --filter @mysms/web test    # one package
-```
-
-Web components are rendered in jsdom against the fake backend and each passes an axe accessibility check; `@mysms/core` keeps 90 % line coverage.
-
-### Contracts and schema
-
-```bash
-npx @redocly/cli lint backend/attendance/target/openapi/api-docs.yml   # any module's contract, after mvn verify
-psql -v ON_ERROR_STOP=1 -d mysms_scratch -f database/verification/smoke.sql
-```
+The test suites, their gates and how to run them: [`BUILD-AND-RUN.md` §3.5](BUILD-AND-RUN.md#35-test-suites-and-gates).
 
 ## 11. Troubleshooting
 

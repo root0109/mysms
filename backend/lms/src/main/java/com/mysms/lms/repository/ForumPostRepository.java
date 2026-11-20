@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -78,6 +79,7 @@ public class ForumPostRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String FIND_BY_IDS = SELECT_LIVE + " AND r.id = ANY(:ids)";
     private static final String INSERT = """
             INSERT INTO lms.forum_post
             (id, tenant_id, forum_topic_id, parent_post_id, title, body, author_user_id, posted_at, is_draft,
@@ -192,6 +194,15 @@ public class ForumPostRepository {
 
     public Optional<ForumPostEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(ForumPostRepository::map).optional();
+    }
+
+    /** The live rows among the ids in one statement, in no particular order; an id with no live row is absent. */
+    public List<ForumPostEntity> findByIds(Collection<UUID> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(FIND_BY_IDS).param("ids", ids.stream().distinct().toArray(UUID[]::new))
+                .query(ForumPostRepository::map).list();
     }
 
     public Page<ForumPostEntity> list(PageRequest page, SqlFragment filter) {

@@ -50,6 +50,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -378,11 +379,15 @@ public class CohortGradebookService extends AppTransactionManager {
         if (!staff) {
             cells = cells.stream().filter(GradeCell::isPublished).toList();
         }
+        Map<UUID, String> gradeOf = new HashMap<>();
+        enrollments.ofCohortUsers(cohortId, students.items()).stream()
+                .filter(row -> staff || Boolean.TRUE.equals(row.getGradePublished()))
+                .forEach(row -> gradeOf.put(row.getUserId(), row.getFinalGrade()));
         Map<UUID, String> finals = new LinkedHashMap<>();
         for (UUID student : students.items()) {
-            members.enrollmentOf(cohortId, student).flatMap(placed -> enrollments.findById(placed.id()))
-                    .filter(row -> staff || Boolean.TRUE.equals(row.getGradePublished()))
-                    .ifPresent(row -> finals.put(student, row.getFinalGrade()));
+            if (gradeOf.containsKey(student)) {
+                finals.put(student, gradeOf.get(student));
+            }
         }
         return new Grades(cohort, staff, items, categoriesOf(cohortId), students, cells, finals);
     }

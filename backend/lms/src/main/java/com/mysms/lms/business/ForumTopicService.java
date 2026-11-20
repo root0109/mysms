@@ -46,9 +46,11 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -728,11 +730,12 @@ public class ForumTopicService extends AppTransactionManager {
         runInWriteTransaction(() -> {
             loadVisible(scope, topicId);
             List<UUID> posts = postIds == null ? List.of() : postIds.stream().distinct().toList();
-            for (UUID post : posts) {
-                if (forumPostRepository.findById(post).filter(row -> topicId.equals(row.getForumTopicId())).isEmpty()) {
-                    throw new ValidationFailedException(List.of(new FieldError("forumPostIds",
-                            "every post must belong to the topic", "NOT_FOUND")));
-                }
+            Set<UUID> ofTopic = new HashSet<>();
+            forumPostRepository.findByIds(posts).stream().filter(row -> topicId.equals(row.getForumTopicId()))
+                    .forEach(row -> ofTopic.add(row.getId()));
+            if (!ofTopic.containsAll(posts)) {
+                throw new ValidationFailedException(List.of(new FieldError("forumPostIds",
+                        "every post must belong to the topic", "NOT_FOUND")));
             }
             OffsetDateTime now = now();
             moderation.markRead(UuidV7.next(clock), caller.userId(), topicId, null, now);
