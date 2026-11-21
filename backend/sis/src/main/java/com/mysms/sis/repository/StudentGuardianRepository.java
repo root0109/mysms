@@ -127,11 +127,22 @@ public class StudentGuardianRepository {
     private static final String INSTITUTION_OF = """
             SELECT p0.institution_id FROM sis.student p0 WHERE p0.tenant_id = :tenantId AND p0.id = :ref
             """;
+    /** The persons a link joins and the guardian's login account, whether or not either record is live. */
+    private static final String PARTIES = """
+            SELECT s.person_id AS student_person_id, g.person_id AS guardian_person_id, g.user_id AS guardian_user_id
+              FROM sis.student s
+              JOIN sis.guardian g ON g.tenant_id = :tenantId AND g.id = :guardianId
+             WHERE s.tenant_id = :tenantId AND s.id = :studentId
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.student_id IN (SELECT p0.id FROM sis.student p0 WHERE p0.tenant_id = :tenantId
                  AND (p0.institution_id =
              ANY(:scopeIds))))
             """;
+
+    /** Whom a link joins: the student's person, the guardian's person and the guardian's login account (may be absent). */
+    public record Parties(UUID studentPersonId, UUID guardianPersonId, UUID guardianUserId) {
+    }
 
     private final JdbcClient jdbc;
 
@@ -149,6 +160,14 @@ public class StudentGuardianRepository {
         List<StudentGuardianEntity> rows = jdbc.sql(sql).params(where.params()).params(page.limitParams())
                 .query(StudentGuardianRepository::map).list();
         return page.toPage(rows, e -> sortValues(page.sort(), e), StudentGuardianEntity::getId);
+    }
+
+    /** Whom the link of this student and guardian joins (sis.student and sis.guardian as they stand). */
+    public Parties partiesOf(UUID studentId, UUID guardianId) {
+        return jdbc.sql(PARTIES).param("studentId", studentId).param("guardianId", guardianId)
+                .query((rs, row) -> new Parties(rs.getObject("student_person_id", UUID.class),
+                        rs.getObject("guardian_person_id", UUID.class), rs.getObject("guardian_user_id", UUID.class)))
+                .single();
     }
 
     /** The student's guardian links, the primary contact first. */

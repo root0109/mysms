@@ -2,14 +2,25 @@ package com.mysms.iam;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.mysms.authclient.AuthContext;
+import com.mysms.authclient.RolePermissionResolver;
+import com.mysms.authclient.TokenVerifier;
+import com.mysms.authclient.VerifiedToken;
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.testkit.TestDatabase;
 import com.mysms.iam.IamHttp.Reply;
+import com.mysms.iam.business.AccessClaims;
+import com.mysms.iam.business.ClaimsFactory;
 import com.mysms.iam.business.RefreshTokens;
 import com.mysms.iam.config.IamDatabaseConfig;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
@@ -23,6 +34,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * The tokens iam issues besides sign-in, and the grants behind them, end to end over HTTP against real PostgreSQL:
@@ -40,6 +52,7 @@ class IamTokenGrantsComponentTest {
     private static final String TENANT_CODE = "grants";
     private static final String ADMIN_PASSWORD = "bootstrap-admin-secret-5";
     private static final String READ_USERS = "iam.user_account.read";
+    private static final JsonMapper JSON = JsonMapper.builder().build();
 
     @LocalServerPort
     private int port;
@@ -49,6 +62,22 @@ class IamTokenGrantsComponentTest {
     private ModuleDatabase database;
 
     private IamHttp iam;
+
+    @Autowired
+    private TokenVerifier verifier;
+
+    @Autowired
+    private RolePermissionResolver roles;
+
+    @Autowired
+    private ClaimsFactory claimsFactory;
+
+    /** The permissions the filter resolves for a token, from its role claims and iam's role data. */
+    private Set<String> permissionsOf(String token) {
+        VerifiedToken verified = verifier.verify(token);
+        return roles.resolve(verified.context().tenantId().orElseThrow(), verified.roleClaims().orElseThrow(), token)
+                .permissions();
+    }
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
@@ -120,11 +149,22 @@ class IamTokenGrantsComponentTest {
         assertThat(exchanged.body().path("refreshToken").asString()).as("not rotated").isEqualTo(secret);
         String access = exchanged.body().path("accessToken").asString();
         JsonNode claims = IamHttp.claims(access);
-        assertThat(texts(claims.path("perms"))).containsExactly(READ_USERS);
+        assertThat(claims.has("perms")).as("roles and abl, never a permission list").isFalse();
+        assertThat(texts(claims.path("abl"))).as("the limit travels as abl").containsExactly(READ_USERS);
+        assertThat(permissionsOf(access)).containsExactly(READ_USERS);
         assertThat(claims.path("sid").asString()).isEqualTo(id);
         assertThat(iam.call("GET", "/v1/iam/users", access, null).status()).isEqualTo(200);
         assertThat(iam.call("POST", path, access, "{\"name\":\"more\"}").status())
                 .as("beyond the token's limits").isEqualTo(403);
+        Map<String, Object> capped = new HashMap<>();
+        IamHttp.claims(access).properties().forEach(c -> capped.put(c.getKey(), JSON.convertValue(c.getValue(),
+                Object.class)));
+        capped.put("abl", List.of());
+        for (String own : List.of("exp", "iat", "nbf", "iss", "jti")) {
+            capped.remove(own);
+        }
+        assertThat(iam.call("GET", "/v1/iam/users", TOKENS.custom(capped, Instant.now().plusSeconds(300)), null)
+                .status()).as("an empty abl allows nothing, whatever the roles hold").isEqualTo(403);
 
         String tokenPath = "/v1/iam/users/" + coder + "/api-tokens/" + id;
         assertThat(iam.call("DELETE", tokenPath, token, null).status()).isEqualTo(428);
@@ -203,6 +243,103 @@ class IamTokenGrantsComponentTest {
         assertThat(iam.call("POST", path, admin, "{\"reason\":\"x\"}").status()).as("inactive").isEqualTo(409);
     }
 
+    /**
+     * The permissions the filter resolves from the role claims and iam's role data are exactly those the database
+     * grants (SEC-0 equivalence): every catalogue code, for a full sign-in with tenant and institution roles, a
+     * direct grant and denies (one of a code no deny removes), and for a session switched into the tenant-wide role —
+     * where only the codes every role holds are no longer tenant-wide (owner, 2026-11-21: accepted narrowing).
+     */
+    @Test
+    @Order(3)
+    void theRoleClaimsResolveToExactlyThePermissionsTheDatabaseGrants() throws Exception {
+        UUID user = iam.user("equivalence", null, "iam.role.read", "iam.role.update", "iam.user_account.read");
+        UUID reviewer = iam.role("equivalence-reviewer", "iam.user_device.read", "iam.role.read");
+        iam.grant(user, reviewer, "institution", UUID.randomUUID());
+        UUID tenant = iam.tenant();
+        for (String[] direct : new String[][] {{"hr.staff.read", "grant"}, {"iam.role.update", "deny"},
+            {"iam.user_account.accept_terms", "deny"}}) {
+            iam.sql(() -> iam.jdbc().sql("""
+                    INSERT INTO iam.user_permission (id, tenant_id, user_id, permission_id, effect)
+                    SELECT :id, :tenant, :user, pm.id, :effect FROM iam.permission pm WHERE pm.code = :code
+                    """).param("id", UUID.randomUUID()).param("tenant", tenant).param("user", user)
+                    .param("effect", direct[1]).param("code", direct[0]).update());
+        }
+        List<String> catalogue = iam.sql(() -> iam.jdbc().sql("SELECT code FROM iam.permission WHERE deleted_at IS NULL")
+                .query(String.class).list());
+        List<String> common = iam.sql(() -> iam.jdbc().sql(
+                "SELECT code FROM iam.permission WHERE applies_to_all_roles AND deleted_at IS NULL")
+                .query(String.class).list());
+
+        String full = IamHttp.access(iam.signIn("equivalence", IamHttp.PASSWORD));
+        assertSameAnswers(full, iam.sql(() -> claimsFactory.full(user, Optional.empty(), tenant, UUID.randomUUID(),
+                Optional.empty())), catalogue, List.of());
+
+        UUID tenantRole = texts(IamHttp.claims(full).path("rgr")).stream().filter(g -> g.endsWith("@tenant"))
+                .map(g -> UUID.fromString(g.split("@")[0])).findFirst().orElseThrow();
+        Reply switched = iam.call("POST", "/v1/iam/me:switchRole", full, "{\"roleId\":\"" + tenantRole + "\"}");
+        assertThat(switched.status()).as(switched.text()).isEqualTo(200);
+        assertSameAnswers(switched.body().path("tokens").path("accessToken").asString(),
+                iam.sql(() -> claimsFactory.forRole(user, Optional.empty(), tenant, UUID.randomUUID(), tenantRole,
+                        Optional.empty())), catalogue, common);
+    }
+
+    /**
+     * For every code: the permissions the database states (what the claims factory still computes, the former
+     * {@code perms}/{@code tperms}) and those the filter resolves from the token's role claims agree, tenant-wide ones
+     * except {@code exempt}.
+     */
+    private void assertSameAnswers(String token, AccessClaims expected, List<String> catalogue, List<String> exempt) {
+        VerifiedToken verified = verifier.verify(token);
+        AuthContext context = verified.context();
+        AuthContext listed = context.withPermissions(expected.permissions(), expected.tenantWidePermissions());
+        RolePermissionResolver.Resolved resolved = roles.resolve(context.tenantId().orElseThrow(),
+                verified.roleClaims().orElseThrow(), token);
+        AuthContext fromRoles = context.withPermissions(resolved.permissions(), resolved.tenantWidePermissions());
+        for (String code : catalogue) {
+            assertThat(fromRoles.hasPermission(code)).as(code).isEqualTo(listed.hasPermission(code));
+            if (!exempt.contains(code)) {
+                assertThat(fromRoles.hasTenantWidePermission(code)).as("tenant-wide " + code)
+                        .isEqualTo(listed.hasTenantWidePermission(code));
+            }
+        }
+    }
+
+    /**
+     * The role-based claims the permissions filter will resolve from (SEC-0): every counted role grant by id and
+     * scope, the direct grants, the denies (never of a non-modifiable code) and the tenant's authorisation version.
+     */
+    @Test
+    @Order(3)
+    void aTokenCarriesItsRoleGrantsDirectGrantsDeniesAndTheAuthorisationVersion() throws Exception {
+        UUID user = iam.user("authzclaims", null, "iam.role.read", "iam.role.update");
+        UUID reviewer = iam.role("authz-reviewer", "iam.user_device.read");
+        UUID institution = UUID.randomUUID();
+        iam.grant(user, reviewer, "institution", institution);
+        iam.grant(user, reviewer, "institution", UUID.randomUUID());
+        UUID tenant = iam.tenant();
+        for (String[] direct : new String[][] {{"hr.staff.read", "grant"}, {"iam.role.update", "deny"},
+            {"iam.user_account.accept_terms", "deny"}}) {
+            iam.sql(() -> iam.jdbc().sql("""
+                    INSERT INTO iam.user_permission (id, tenant_id, user_id, permission_id, effect)
+                    SELECT :id, :tenant, :user, pm.id, :effect FROM iam.permission pm WHERE pm.code = :code
+                    """).param("id", UUID.randomUUID()).param("tenant", tenant).param("user", user)
+                    .param("effect", direct[1]).param("code", direct[0]).update());
+        }
+
+        JsonNode claims = IamHttp.claims(IamHttp.access(iam.signIn("authzclaims", IamHttp.PASSWORD)));
+
+        assertThat(texts(claims.path("rgr"))).as("each role once; a role held on units only has no scope")
+                .hasSize(2).contains(reviewer.toString())
+                .anyMatch(grant -> grant.endsWith("@tenant") && !grant.startsWith(reviewer.toString()));
+        assertThat(texts(claims.path("dg"))).containsExactly("hr.staff.read");
+        assertThat(texts(claims.path("dd"))).as("a self-service code is never denied").containsExactly("iam.role.update");
+        assertThat(claims.path("azv").isIntegralNumber()).isTrue();
+        assertThat(claims.has("abl")).as("only a limited API token carries abilities").isFalse();
+        assertThat(claims.has("perms") || claims.has("tperms")).as("no permission lists (SEC-0)").isFalse();
+        assertThat(permissionsOf(IamHttp.access(iam.signIn("authzclaims", IamHttp.PASSWORD))))
+                .contains("iam.role.read", "hr.staff.read", "iam.user_device.read").doesNotContain("iam.role.update");
+    }
+
     @Test
     @Order(3)
     void aSwitchedSessionCarriesOneRoleAcrossRefresh() throws Exception {
@@ -212,7 +349,7 @@ class IamTokenGrantsComponentTest {
         Reply login = iam.signIn("multi", IamHttp.PASSWORD);
         String token = IamHttp.access(login);
         String oldRefresh = login.body().path("tokens").path("refreshToken").asString();
-        assertThat(texts(IamHttp.claims(token).path("perms"))).contains("iam.role.read", "iam.user_device.read");
+        assertThat(permissionsOf(token)).contains("iam.role.read", "iam.user_device.read");
         Reply me = iam.call("GET", "/v1/iam/me", token, null);
         assertThat(me.body().path("roles")).hasSize(2);
         me.body().path("roles").forEach(r -> assertThat(r.hasNonNull("roleId")).isTrue());
@@ -222,9 +359,12 @@ class IamTokenGrantsComponentTest {
         assertThat(notMine.firstErrorCode()).isEqualTo("NOT_GRANTED");
         Reply switched = iam.call("POST", "/v1/iam/me:switchRole", token, "{\"roleId\":\"" + second + "\"}");
         assertThat(switched.status()).as(switched.text()).isEqualTo(200);
-        JsonNode claims = IamHttp.claims(switched.body().path("tokens").path("accessToken").asString());
-        assertThat(texts(claims.path("perms"))).contains("iam.user_device.read").doesNotContain("iam.role.read");
+        String switchedToken = switched.body().path("tokens").path("accessToken").asString();
+        JsonNode claims = IamHttp.claims(switchedToken);
+        assertThat(permissionsOf(switchedToken)).contains("iam.user_device.read").doesNotContain("iam.role.read");
         assertThat(texts(claims.path("roles"))).containsExactly("reviewer@tenant");
+        assertThat(texts(claims.path("rgr"))).containsExactly(second + "@tenant");
+        assertThat(texts(claims.path("dg"))).as("no direct grants while working in one role").isEmpty();
         assertThat(switched.body().path("me").path("activeRole").path("roleCode").asString()).isEqualTo("reviewer");
         assertThat(texts(switched.body().path("me").path("permissions"))).doesNotContain("iam.role.read");
         Integer remembered = iam.sql(() -> iam.jdbc().sql("SELECT count(*) FROM iam.user_account WHERE id = :id "
@@ -237,7 +377,7 @@ class IamTokenGrantsComponentTest {
         Reply refreshed = iam.call("POST", "/v1/iam/auth:refresh", null, "{\"refreshToken\":\""
                 + switched.body().path("tokens").path("refreshToken").asString() + "\"}");
         assertThat(refreshed.status()).as(refreshed.text()).isEqualTo(200);
-        assertThat(texts(IamHttp.claims(refreshed.body().path("accessToken").asString()).path("perms")))
+        assertThat(permissionsOf(refreshed.body().path("accessToken").asString()))
                 .as("the role stays across refresh").doesNotContain("iam.role.read");
     }
 

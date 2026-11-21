@@ -30,7 +30,7 @@ public final class TestDatabase implements AutoCloseable {
      */
     public static final List<String> SERVICES = List.of("academics", "admission", "assessment", "attendance", "careers",
             "comms", "facility", "finance", "frontoffice", "hr", "iam", "library", "lms", "master", "org", "payroll",
-            "people", "platform", "sis", "timetable", "transport");
+            "people", "platform", "privacy", "sis", "timetable", "transport");
 
     private static final String TEST_SECRET_KEY = randomKey();
 

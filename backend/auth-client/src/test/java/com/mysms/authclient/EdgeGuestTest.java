@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.mysms.authclient.internal.JwtTokenVerifier;
+import com.mysms.authclient.testing.TestRoleData;
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
@@ -67,7 +68,8 @@ class EdgeGuestTest {
     };
     private final AuthFilter filter = new AuthFilter(OPERATIONS, new EdgeAuthorizer(
             JwtTokenVerifier.from(new AuthClientProperties(TestTokens.ISSUER, null, TOKENS.publicKeyPem(), null,
-                    List.of("authtest"), null, false)), new ClaimsPermissionChecker(), new TenantCodes(iam, clock)),
+                    List.of("authtest"), null, false)), new ClaimsPermissionChecker(), new TenantCodes(iam, clock),
+                    TestRoleData.resolver()),
             new ProblemResponseWriter(JsonMapper.builder().build()), List.of());
     private final AtomicReference<Optional<UUID>> boundTenant = new AtomicReference<>();
     private final AtomicReference<Boolean> guest = new AtomicReference<>();

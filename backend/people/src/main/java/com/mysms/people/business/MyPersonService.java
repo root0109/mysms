@@ -97,7 +97,8 @@ public class MyPersonService extends AppTransactionManager {
                 }
                 entity.setRowVersion(expected + 1);
                 audit.recordUpdate(AGGREGATE, person, fields);
-                outbox.publish(AGGREGATE + PeopleEvents.UPDATED, AGGREGATE, person, PeopleEvents.payload(person));
+                outbox.publish(AGGREGATE + PeopleEvents.UPDATED, AGGREGATE, person,
+                        PeopleEvents.personPayload(person, entity.getDateOfBirth(), entity.getRowVersion()));
             }
             return selfView(entity);
         });

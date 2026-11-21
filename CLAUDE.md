@@ -44,8 +44,8 @@ strong in React, React Native and front-end/mobile engineering, and a master of 
   the operation's permission in the serving process before any controller or resolver runs. Each module publishes
   its API-permission catalogue (its operation table) to iam at start-up; iam owns the role→permission data, and the
   filter resolves the caller's roles through a cache iam keeps current, failing closed. No module writes its own
-  filter, and no central service or gateway takes the decision. JAVA-CODING-RULES §16.2; the publishing and cache
-  part is ROADMAP SEC-0, the next item built, before the Privacy and Consent Centre.
+  filter, and no central service or gateway takes the decision. JAVA-CODING-RULES §16.2; the publishing and the
+  role cache are built (auth-client `ApiPermissionPublisher`, `RolePermissionResolver`).
 - **Privacy and Consent Centre** (approved design: `docs/design/PRIVACY-AND-CONSENT-CENTRE.md`):
   - a new `privacy` module with its own schema;
   - a shared flat Maven module `privacy-client` (the consent checker every module uses), allowed as an exception to
@@ -109,13 +109,15 @@ strong in React, React Native and front-end/mobile engineering, and a master of 
 
 ## 8. Models and agents
 
-- **Choose the model that fits the job.** Implementation agents and the coordinator run on Claude Opus 5.5; the one
-  independent review per batch also runs on Claude Opus 5.5, as a separate agent that did not write the code under
-  review. If the chosen model's usage limit is reached, fall back to the next best available model and say so in the
-  report rather than stopping the work.
+- **Choose the model that fits the job.** Implementation agents and the coordinator run on Claude Opus 5.5. The one
+  independent review per batch runs on **Claude Sonnet, the highest version available in the owner's plan without
+  separate billing**, as a separate agent that did not write the code under review (a second model catches what the
+  first one is blind to). If the chosen model's usage limit is reached, fall back to the next best available model and
+  say so in the report rather than stopping the work.
 - **No Fable.** Claude Fable is never used for any work in this repository — implementation, review or otherwise.
-- **No Sonnet or Haiku for this codebase.** The rules (tenant isolation, owner-only data, transactions, contract
-  parity) are dense, and a missed rule costs more to find and fix than the cheaper model saves.
+- **Sonnet reviews, it does not implement; no Haiku.** The rules (tenant isolation, owner-only data, transactions,
+  contract parity) are dense, and a missed rule costs more to find and fix than the cheaper model saves. Sonnet is used
+  only for the independent review above; never a model that needs separate billing.
 - **At most two or three agents at a time.**
 
 ## 9. How to start any piece of work

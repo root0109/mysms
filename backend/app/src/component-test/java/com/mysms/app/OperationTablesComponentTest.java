@@ -19,12 +19,12 @@ class OperationTablesComponentTest {
 
     private static final List<String> MODULES = List.of("academics", "admission", "assessment", "attendance", "careers",
             "comms", "facility", "finance", "frontoffice", "hr", "iam", "library", "lms", "master", "org", "payroll", "people",
-            "platform", "sis", "timetable", "transport");
+            "platform", "privacy", "sis", "timetable", "transport");
 
     @Test
     void everyOperationMatchesItsOwnRule() throws Exception {
         OperationTable table = OperationTable.load(MODULES);
-        assertThat(table.size()).isEqualTo(2055);
+        assertThat(table.size()).isEqualTo(2077);
         JsonMapper json = JsonMapper.builder().build();
         int checked = 0;
         for (String module : MODULES) {
@@ -40,7 +40,7 @@ class OperationTablesComponentTest {
                 }
             }
         }
-        assertThat(checked).isEqualTo(2055);
+        assertThat(checked).isEqualTo(2077);
     }
 
     /**
@@ -65,6 +65,6 @@ class OperationTablesComponentTest {
                 }
             }
         }
-        assertThat(checked).isEqualTo(2055);
+        assertThat(checked).isEqualTo(2077);
     }
 }

@@ -137,6 +137,31 @@ public class GrantRepository {
              ORDER BY pm.code
             """;
     private static final String CATALOGUE = "SELECT code FROM iam.permission WHERE deleted_at IS NULL ORDER BY code";
+    /** The codes granted to the user directly (the token's {@code dg}): they reach every scope. */
+    private static final String DIRECT_GRANTS = """
+            SELECT pm.code
+              FROM iam.permission pm
+             WHERE pm.deleted_at IS NULL
+               AND EXISTS (SELECT 1 FROM iam.user_permission ug
+                            WHERE ug.tenant_id = :tenantId
+                              AND ug.permission_id = pm.id AND ug.user_id = :user AND ug.deleted_at IS NULL
+                              AND ug.effect = 'grant')
+             ORDER BY pm.code
+            """;
+    /**
+     * The codes denied to the user directly (the token's {@code dd}); a deny never removes a non-modifiable
+     * (self-service) code, so those are left out.
+     */
+    private static final String DENIES = """
+            SELECT pm.code
+              FROM iam.permission pm
+             WHERE pm.deleted_at IS NULL AND pm.is_modifiable
+               AND EXISTS (SELECT 1 FROM iam.user_permission dn
+                            WHERE dn.tenant_id = :tenantId
+                              AND dn.permission_id = pm.id AND dn.user_id = :user AND dn.deleted_at IS NULL
+                              AND dn.effect = 'deny')
+             ORDER BY pm.code
+            """;
 
     private final JdbcClient jdbc;
 
@@ -176,6 +201,14 @@ public class GrantRepository {
                 .query((rs, row) -> new RoleGrantRow(code, rs.getString("scope_type"),
                         Optional.ofNullable(rs.getObject("scope_id", UUID.class)), false))
                 .list();
+    }
+
+    public List<String> directGrants(UUID user) {
+        return jdbc.sql(DIRECT_GRANTS).param("user", user).query(String.class).list();
+    }
+
+    public List<String> denies(UUID user) {
+        return jdbc.sql(DENIES).param("user", user).query(String.class).list();
     }
 
     /** Every permission code that exists (global catalogue). */

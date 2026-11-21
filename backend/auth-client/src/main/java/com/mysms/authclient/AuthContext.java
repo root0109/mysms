@@ -13,7 +13,8 @@ import java.util.UUID;
  * @param tenantId            the tenant (`tid`); empty for platform staff
  * @param institutionIds      institutions the caller's roles are scoped to
  * @param activeInstitutionId the institution selected with `X-Institution-Id`, validated against the scopes
- * @param permissions         effective permission codes (`perms`)
+ * @param permissions         effective permission codes: for a tenant user resolved at the edge from the role
+ *                            claims (JAVA-CODING-RULES §16.2); for platform staff and services the token's `perms`
  * @param tokenId             the token id (`jti`), for audit and revocation
  * @param impersonatorId      the administrator acting as this user (`act.sub`), when impersonating
  * @param platformOperator    true for platform staff tokens (audience mysms-platform-admin, MFA)
@@ -103,6 +104,15 @@ public record AuthContext(UUID userId, Optional<UUID> tenantId, Set<UUID> instit
                 impersonatorId, platformOperator, personId, sessionId, allInstitutions, tenantWidePermissions, service);
     }
 
+    /**
+     * The same identity with the permissions the edge resolved from the token's role claims (JAVA-CODING-RULES
+     * §16.2), replacing whatever the token listed itself.
+     */
+    public AuthContext withPermissions(Set<String> resolved, Set<String> resolvedTenantWide) {
+        return new AuthContext(userId, tenantId, institutionIds, activeInstitutionId, resolved, tokenId,
+                impersonatorId, platformOperator, personId, sessionId, allInstitutions, resolvedTenantWide, service);
+    }
+
     /** Whether the caller may act in this institution (the edge checks X-Institution-Id with it). */
     public boolean coversInstitution(UUID institution) {
         return allInstitutions || institutionIds.contains(institution);
@@ -141,6 +151,11 @@ public record AuthContext(UUID userId, Optional<UUID> tenantId, Set<UUID> instit
     /** How the current request's token was obtained (`amr`: pwd, mfa); empty without a token. */
     public static Set<String> currentAuthMethods() {
         return AuthContextHolder.authMethods();
+    }
+
+    /** The current caller's role claims, when the token carried them (iam's role-data service reads them). */
+    public static Optional<RoleClaims> currentRoleClaims() {
+        return AuthContextHolder.roleClaims();
     }
 
     /** The current identity; the edge filter guarantees one on every non-public operation. */

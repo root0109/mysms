@@ -37,6 +37,8 @@ public final class GrpcAuthInterceptor implements ServerInterceptor {
             Metadata.Key.of("x-tenant-code", Metadata.ASCII_STRING_MARSHALLER);
     /** The package of every MySMS gRPC service ({@code mysms.<module>.v1.<Service>}); every other is infrastructure. */
     private static final String MYSMS_SERVICES = "mysms.";
+    /** iam's role-data method ({@code iam_authz.proto}), authorised by {@link EdgeAuthorizer#authenticate}. */
+    static final String ROLE_DATA = "mysms.iam.v1.IamAuthzService/GetRolePermissions";
     private static final Metadata.Key<String> CHALLENGE =
             Metadata.Key.of("www-authenticate", Metadata.ASCII_STRING_MARSHALLER);
 
@@ -58,6 +60,9 @@ public final class GrpcAuthInterceptor implements ServerInterceptor {
             // the starter's health and reflection services carry no MySMS data and need no token
             return next.startCall(call, headers);
         }
+        if (ROLE_DATA.equals(call.getMethodDescriptor().getFullMethodName())) {
+            return roleData(call, headers, next);
+        }
         Optional<OperationRule> rule = operations.forGrpcMethod(call.getMethodDescriptor().getFullMethodName());
         if (rule.isEmpty()) {
             return refuse(call, new Problem(HttpStatus.NOT_FOUND, "NOT_FOUND", "No such operation.", List.of()), false);
@@ -76,6 +81,26 @@ public final class GrpcAuthInterceptor implements ServerInterceptor {
         CallBinding binding = () -> EdgeIdentity.bind(admitted);
         try (CallBinding.Scope scope = binding.bind()) {
             return new BoundListener<>(Contexts.interceptCall(marked, call, headers, next), binding);
+        }
+    }
+
+    /**
+     * iam's role-data method, which every permissions filter calls to resolve permissions: a person's valid token is
+     * enough (checking a permission would recurse), and the service answers only about that token's tenant and roles.
+     * It is in no operation table (it has no REST twin), so the call carries no operation id: nothing that keys on
+     * one (idempotency, the not-served answer) applies to it.
+     */
+    private <ReqT, RespT> ServerCall.Listener<ReqT> roleData(ServerCall<ReqT, RespT> call, Metadata headers,
+                                                             ServerCallHandler<ReqT, RespT> next) {
+        EdgeDecision decision = authorizer.authenticate(headers.get(AUTHORIZATION));
+        if (decision instanceof EdgeDecision.Refused refused) {
+            return refuse(call, new Problem(refused.status(), refused.code(), refused.detail(), List.of()),
+                    refused.challenge());
+        }
+        EdgeDecision.Admitted admitted = (EdgeDecision.Admitted) decision;
+        CallBinding binding = () -> EdgeIdentity.bind(admitted);
+        try (CallBinding.Scope scope = binding.bind()) {
+            return new BoundListener<>(next.startCall(call, headers), binding);
         }
     }
 

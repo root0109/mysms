@@ -622,6 +622,15 @@ A subscription becomes active only on proof of payment, once, whichever proof ar
 comes from the order notes the signature covers. Gateway calls are never made inside a database transaction. Events:
 `platform.tenant_subscription.created`, `.activate`, `.cancel`.
 
+## privacy.NoticeVersion (`privacy.notice_version`) — hand-written
+
+A version is edited while `draft`; once published it never changes, and its translations change only while it is a
+draft (409 otherwise). One version per notice is `active`.
+
+| Operation | Allowed from | Sets | Reason kept |
+|---|---|---|---|
+| `privacy.PublishNoticeVersion` | `status` ∈ {"draft"} and at least one live translation | `status` = "active", `published_at` = `$now`; the notice's previously active version: `status` = "retired", `superseded_by_id` = this version (its own `retire` audit record and `privacy.notice_version.retired` event) | no |
+
 ## sis.Promotion (`sis.promotion`)
 
 | Operation | Allowed from | Sets | Reason kept |

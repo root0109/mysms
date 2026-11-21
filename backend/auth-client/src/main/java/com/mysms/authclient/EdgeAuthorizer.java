@@ -18,6 +18,8 @@ import org.springframework.http.HttpStatus;
  * it reads with {@code X-Tenant-Code}, which the module's {@link TenantCodes} resolve to the active tenant bound for
  * the call — an unknown, suspended or closed school is 404, an identity service that cannot answer 503; without a
  * resolver in the module the code is not read;</li>
+ * <li>a person's permissions come from the token's role claims through iam's role data
+ * ({@link RolePermissionResolver}); when iam cannot answer what the cache lacks — 503, never admitted;</li>
  * <li>the token's kind must suit the operation's audience: a service token only on {@code internal} operations, a
  * person's token never on them — else 403;</li>
  * <li>a person's token must suit the operation's scheme: tenant users ({@code bearerAuth}) or platform staff
@@ -27,6 +29,8 @@ import org.springframework.http.HttpStatus;
  * the token's, so the header is ignored for people;</li>
  * <li>the operation's permission must be granted — else 403.</li>
  * </ol>
+ * iam's role-data method is decided by {@link #authenticate} alone (a tenant user's own valid token), because every
+ * filter calls it to resolve permissions.
  */
 public final class EdgeAuthorizer {
 
@@ -37,16 +41,15 @@ public final class EdgeAuthorizer {
     private final TokenVerifier verifier;
     private final PermissionChecker permissions;
     private final TenantCodes tenantCodes;
-
-    public EdgeAuthorizer(TokenVerifier verifier, PermissionChecker permissions) {
-        this(verifier, permissions, null);
-    }
+    private final RolePermissionResolver roles;
 
     /** {@code tenantCodes} is null when the module serves no guest by school code. */
-    public EdgeAuthorizer(TokenVerifier verifier, PermissionChecker permissions, TenantCodes tenantCodes) {
+    public EdgeAuthorizer(TokenVerifier verifier, PermissionChecker permissions, TenantCodes tenantCodes,
+                          RolePermissionResolver roles) {
         this.verifier = verifier;
         this.permissions = permissions;
         this.tenantCodes = tenantCodes;
+        this.roles = java.util.Objects.requireNonNull(roles, "a tenant user's permissions come from the role cache");
     }
 
     /** {@link #decide(OperationRule, String, String, String, String)} for a call that names no school code. */
@@ -84,6 +87,16 @@ public final class EdgeAuthorizer {
             return new EdgeDecision.Refused(HttpStatus.UNAUTHORIZED, e.code(), e.getMessage(), true);
         }
         AuthContext context = token.context();
+        if (token.roleClaims().isPresent() && !context.isService() && context.tenantId().isPresent()) {
+            try {
+                RolePermissionResolver.Resolved resolved =
+                        roles.resolve(context.tenantId().get(), token.roleClaims().get(), raw);
+                context = context.withPermissions(resolved.permissions(), resolved.tenantWidePermissions());
+            } catch (UnavailableException e) {
+                return new EdgeDecision.Refused(HttpStatus.SERVICE_UNAVAILABLE, "UNAVAILABLE",
+                        "The caller's permissions could not be resolved; try again later.", false);
+            }
+        }
         if (rule.isInternal() != context.isService()) {
             return forbidden(context.isService() ? "This operation is not available to service principals."
                     : "This operation is only available to MySMS services.");
@@ -113,7 +126,33 @@ public final class EdgeAuthorizer {
         if (!rule.isPublic() && !permissions.isPermitted(context, rule.permission())) {
             return forbidden("Missing permission " + rule.permission() + ".");
         }
-        return new EdgeDecision.Admitted(Optional.of(context), raw, token.authMethods());
+        return new EdgeDecision.Admitted(Optional.of(context), raw, token.authMethods(), Optional.empty(),
+                token.roleClaims());
+    }
+
+    /**
+     * The decision for iam's role-data service ({@code IamAuthzService}) alone: a person's valid token of a tenant,
+     * and no permission check — the permissions filter of every module calls it to resolve permissions, so checking
+     * one there would recurse. The service answers only about the token's own tenant and roles.
+     */
+    public EdgeDecision authenticate(String authorization) {
+        if (authorization == null || !authorization.startsWith(BEARER_PREFIX)
+                || authorization.length() == BEARER_PREFIX.length()) {
+            return unauthenticated("A bearer token is required.");
+        }
+        String raw = authorization.substring(BEARER_PREFIX.length()).trim();
+        VerifiedToken token;
+        try {
+            token = verifier.verify(raw);
+        } catch (InvalidTokenException e) {
+            return new EdgeDecision.Refused(HttpStatus.UNAUTHORIZED, e.code(), e.getMessage(), true);
+        }
+        if (token.context().isService() || token.context().tenantId().isEmpty()
+                || !token.audiences().contains(AuthClientProperties.TENANT_AUDIENCE)) {
+            return forbidden("Only a tenant user's own token reads role data.");
+        }
+        return new EdgeDecision.Admitted(Optional.of(token.context()), raw, token.authMethods(), Optional.empty(),
+                token.roleClaims());
     }
 
     /** A guest who named a school: admitted in its active tenant, else 404 (503 when iam cannot answer). */

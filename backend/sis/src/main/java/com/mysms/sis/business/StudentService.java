@@ -380,7 +380,7 @@ public class StudentService extends AppTransactionManager {
             StudentGuardianEntity stored = studentGuardianRepository.insert(entity);
             audit.recordCreate(STUDENT_GUARDIAN_AGGREGATE, stored.getId());
             outbox.publish(STUDENT_GUARDIAN_AGGREGATE + SisEvents.CREATED, STUDENT_GUARDIAN_AGGREGATE, stored.getId(),
-                    SisEvents.payload(stored.getId()));
+                    eventPayloadStudentGuardian(stored));
             return studentGuardianMapper.toDto(stored);
         });
     }
@@ -414,7 +414,8 @@ public class StudentService extends AppTransactionManager {
             }
             entity.setRowVersion(expected + 1);
             audit.recordUpdate(STUDENT_GUARDIAN_AGGREGATE, id, fields);
-            outbox.publish(STUDENT_GUARDIAN_AGGREGATE + SisEvents.UPDATED, STUDENT_GUARDIAN_AGGREGATE, id, SisEvents.payload(id));
+            outbox.publish(STUDENT_GUARDIAN_AGGREGATE + SisEvents.UPDATED, STUDENT_GUARDIAN_AGGREGATE, id,
+                    eventPayloadStudentGuardian(entity));
             return studentGuardianMapper.toDto(entity);
         });
     }
@@ -433,9 +434,23 @@ public class StudentService extends AppTransactionManager {
             if (studentGuardianRepository.softDelete(entity, expected) == 0) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
+            entity.setRowVersion(expected + 1);
             audit.recordDelete(STUDENT_GUARDIAN_AGGREGATE, id);
-            outbox.publish(STUDENT_GUARDIAN_AGGREGATE + SisEvents.DELETED, STUDENT_GUARDIAN_AGGREGATE, id, SisEvents.payload(id));
+            outbox.publish(STUDENT_GUARDIAN_AGGREGATE + SisEvents.DELETED, STUDENT_GUARDIAN_AGGREGATE, id,
+                    eventPayloadStudentGuardian(entity));
         });
+    }
+
+    /**
+     * The event payload of a guardian link as stored: the persons it joins and the guardian's account (read in the
+     * same transaction), its kind, status and row version (SisEvents.guardianLink).
+     */
+    private Map<String, Object> eventPayloadStudentGuardian(StudentGuardianEntity link) {
+        StudentGuardianRepository.Parties parties =
+                studentGuardianRepository.partiesOf(link.getStudentId(), link.getGuardianId());
+        return SisEvents.guardianLink(link.getId(), parties.studentPersonId(), parties.guardianPersonId(),
+                parties.guardianUserId(), Boolean.TRUE.equals(link.getIsLegalGuardian()),
+                Boolean.TRUE.equals(link.getHasCustody()), link.getStatus(), link.getRowVersion());
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */

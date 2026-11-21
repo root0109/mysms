@@ -1,0 +1,38 @@
+// iam's internal authorisation contract: the role data every service's permissions filter resolves from.
+// Not part of the REST contract — these RPCs have no operation of iam's operation table and no HTTP route.
+syntax = "proto3";
+
+package mysms.iam.v1;
+
+option java_multiple_files = true;
+option java_outer_classname = "IamAuthzProto";
+option java_package = "com.mysms.iam.v1";
+
+// IamAuthzService: what a service's permissions filter needs to decide, fetched in one call per cache miss.
+service IamAuthzService {
+  // The permission codes of the named roles of one tenant, with the tenant's authorisation version.
+  rpc GetRolePermissions(GetRolePermissionsRequest) returns (GetRolePermissionsResponse);
+}
+
+message GetRolePermissionsRequest {
+  // Tenant the roles belong to; it must be the caller's own. [UUID]
+  string tenant_id = 1;
+  // Roles to resolve, at most 100. [UUID]
+  repeated string role_ids = 2;
+}
+
+message GetRolePermissionsResponse {
+  // One entry per requested role that the tenant holds, is live and has codes of its own; others are absent.
+  repeated RolePermissionCodes roles = 1;
+  // The tenant's authorisation version the answer was read at; 0 when nothing has changed it yet.
+  int64 authz_version = 2;
+  // The codes every role holds implicitly (self-service), given once and also to a caller without any role grant.
+  repeated string common_permission_codes = 3;
+}
+
+message RolePermissionCodes {
+  // The role. [UUID]
+  string role_id = 1;
+  // Its own permission codes (the codes every role holds come once, in common_permission_codes).
+  repeated string permission_codes = 2;
+}

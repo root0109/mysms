@@ -31,12 +31,7 @@ public class PeopleReferenceCleanup implements EventSubscriptions {
     }
 
     static final Map<String, List<Step>> STEPS = Map.ofEntries(
-        Map.entry("iam.user_account.deleted", List.of(
-            new Step(ReferenceCleanupRepository.CLEAR_CONSENT_RECORD_RECORDED_BY_USER_ID,
-                    "people.consent_record", "recordedByUserId"))),
         Map.entry("platform.file_object.deleted", List.of(
-            new Step(ReferenceCleanupRepository.CLEAR_CONSENT_RECORD_EVIDENCE_FILE_ID,
-                    "people.consent_record", "evidenceFileId"),
             new Step(ReferenceCleanupRepository.CLEAR_PERSON_PHOTO_FILE_ID,
                     "people.person", "photoFileId"),
             new Step(ReferenceCleanupRepository.CLEAR_PUBLIC_PROFILE_COVER_IMAGE_FILE_ID,

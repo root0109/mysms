@@ -504,11 +504,10 @@ deletion arrives through `PayrollReferenceCleanup`, the module's one handler of 
 deletion is applied by the copy itself (a tombstone), and payslip reads apply the owner-only rule without reading
 hr's schema.
 
-## people (10 references)
+## people (9 references)
 
 | Column | References (owner) | Event action on owner deletion |
 |---|---|---|
-| `people.consent_record.evidence_file_id` | `platform.file_object` | null the column |
 | `people.person.nationality_country_id` | `master.country` | owner is never hard-deleted (archived by status); no action needed |
 | `people.person.photo_file_id` | `platform.file_object` | null the column |
 | `people.person_address.city_id` | `master.city` | owner is never hard-deleted (archived by status); no action needed |
@@ -527,6 +526,25 @@ hr's schema.
 | `platform.tenant.country_id` | `master.country` | owner is never hard-deleted (archived by status); no action needed |
 | `platform.tenant.default_currency_id` | `master.currency` | owner is never hard-deleted (archived by status); no action needed |
 | `platform.tenant_subscription.currency_id` | `master.currency` | owner is never hard-deleted (archived by status); no action needed |
+
+## privacy (5 references)
+
+| Column | References (owner) | Event action on owner deletion |
+|---|---|---|
+| `privacy.consent_record.evidence_file_id` | `platform.file_object` | kept: the signed form is consent evidence; no action needed |
+| `privacy.consent_record.giver_person_id` | `people.person` | kept: a consent decision is evidence and never changes; no action needed |
+| `privacy.consent_record.recorded_by_user_id` | `iam.user_account` | kept: who recorded a paper form is evidence; no action needed |
+| `privacy.consent_record.verified_by_user_id` | `iam.user_account` | kept: who verified a paper form is evidence; no action needed |
+| `privacy.notice_version.document_file_id` | `platform.file_object` | kept: a notice version is consent evidence and never changes once published; no action needed |
+
+`privacy.subject` and `privacy.guardian_link` are not sets of references but copies kept from events, like
+`iam.member_record`: a subject mirrors one `people.person` row's birth date and the `sis.student` rows of that person
+(their accounts and institutions), a guardian link one `sis.student_guardian` row with the persons it joins and the
+guardian's account, each from the row's own created, updated and deleted events (`SubjectSync`, `GuardianLinkSync`).
+The owner's deletion is applied by the copy itself — the person's birth date cleared, the student record a tombstone,
+the link inactive — and the consent rules read them without reading another schema.
+Consent records and consent states name their subject through an in-module foreign key to `privacy.subject`,
+not a logical reference.
 
 ## sis (38 references)
 
@@ -608,7 +626,6 @@ These point against the module dependency graph; the owner is unaware of them. V
 | `platform.storage_quota.user_id` → `iam.user_account` | on owner deletion, delete the row. |
 | `platform.storage_quota.institution_id` → `org.institution` | on owner deletion, delete the row. |
 | `platform.import_job.institution_id` → `org.institution` | on owner deletion, archive/retain (the row is evidence; it keeps the id). |
-| `people.consent_record.recorded_by_user_id` → `iam.user_account` | on owner deletion, null the column. |
 | `sis.promotion.based_on_exam_session_id` → `assessment.exam_session` | on owner deletion, null the column. |
 | `hr.staff_subject.subject_id` → `academics.subject` | on owner deletion, archive/retain (the row is evidence; it keeps the id). |
 | `hr.leave_application.absence_reason_id` → `attendance.absence_reason` | on owner deletion, archive/retain (the row is evidence; it keeps the id). |

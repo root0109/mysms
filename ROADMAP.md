@@ -189,7 +189,6 @@ Columns: **ID**, **Pri**, **What and why**, **Where / refs / depends on**.
 | C-2...C-4 | - | Copied keys: `cohort_id` on `lms.forum_topic`/`forum_post` (J2); `class_section_id`, `subject_id` on `academics.teaching_assignment` with `UNIQUE (id, class_section_id, subject_id)` on `class_subject` (J3); `register_id` on `attendance.attendance_record` with `UNIQUE (id, register_id)` on `attendance_sheet` (J4). | ARC-1 |
 | C-5 | - | Person cards copied to consumers: `display_name` + `photo_file_id` on `iam.user_account`; `display_name` + `sort_name` on `sis.student`, `sis.guardian`, `hr.staff`, fed by person-updated events, so lists sort and page in their own service. | Alternative or complement to P1-34 |
 | C-7 / P2-04 | S | Effective-dated staff history `hr.staff_position` (designation, department, reporting_to, employment_type, effective dates, no overlap); exit/probation/contract dates on staff. | |
-| C-8 | - | Authorisation without joins: now part of **SEC-0** (role grants + `authz_version` in the token, per-tenant role→permission cache refreshed by iam events). | SEC-0; P1-27 |
 | P2-03 | M | Weekly timetable template (class x weekday x period -> subject, teacher, room, effective dates); clash detection as an application rule. | UI-2 timetable builder |
 | P2-05 | S | Offline-created rows: client UUIDv7 ids, `client_device_id`, `client_created_at`, idempotent insert. | ui D-08 (`offline.clientIds`) |
 | P2-07 | S | Institution type stored twice (varchar + FK): keep one. EAV only for custom fields. | |
@@ -207,8 +206,7 @@ Columns: **ID**, **Pri**, **What and why**, **Where / refs / depends on**.
 
 | ID | Pri | What and why | Where / refs / depends on |
 |---|---|---|---|
-| SEC-0 | **P0 — next item built** | **API permissions published to iam; role-based permissions filter in every module.** The filter itself exists (auth-client `AuthFilter`, `GrpcAuthInterceptor`, auto-configured in all 21 modules); permissions come only from the token's `perms`/`tperms` claims, and the catalogue is seeded in iam's baseline. Build: (1) auth-client `ApiPermissionPublisher`: on `ApplicationReadyEvent` read `META-INF/mysms/operations/<module>.json` and publish `<module>.api_permissions.published` (module, release version, catalogue SHA-256, entries: operation id, method, path template, permission, scheme, public flag); idempotent, never blocks start-up. (2) iam: `iam.api_permission` catalogue (platform-level, no tenant_id; module, operation_id, method, path_template, permission_code, first_seen_at, last_seen_at, retired_at), upsert into `iam.permission`, retire codes no longer published and flag roles holding them; admin read operation for the catalogue. (3) iam emits `iam.role_permissions.changed` (tenant, role ids, new `authz_version`) on role, role-permission, user-role and direct-grant changes, and serves batch gRPC `GetRolePermissions(tenant, role ids)`. (4) Token: keep `roles` with each grant's scope (tenant-wide or institution ids) plus direct `user_permission` grants and `authz_version`; drop the full `perms` list once the cache is live (smaller tokens). (5) auth-client `RolePermissionChecker` replaces `ClaimsPermissionChecker`: Caffeine cache per (tenant, role) → permission set, invalidated by the event, TTL safety net (about 5 min), refetch when the token's `authz_version` is newer than the cached one, in-process call in the monolith, fail closed (503) when unresolvable; keeps the tenant-wide vs institution split that `DataScope` needs (`tperms`). (6) Tests: real signed tokens through the real filter (§16.3); a component-test permission source that reads role data from the module's test fixtures, never a mocked checker; a test that a role change is enforced on the next request. Effect: role changes apply immediately instead of at token expiry (15 min), and iam always knows every operation of every deployed release. | JAVA-CODING-RULES §16.2; CLAUDE.md §2; replaces C-8; uses PERF-2 (Caffeine, approved); conformance `PermissionCatalogueRule` stays. Must be done before SEC-11. |
-| SEC-11 | **P0 — after SEC-0** | **Privacy and Consent Centre (approved).** New `privacy` module and schema, shared `privacy-client` module (approved exception like auth-client), Caffeine consent cache, retire `people.consent_record` and people's 501 consent operations into privacy. DPDP: verifiable parental consent for minors, re-consent at 18, access/export/correction/erasure requests, retention engine, breach register. Phases, schema, APIs, client and per-module enforcement points: the design doc. | [docs/design/PRIVACY-AND-CONSENT-CENTRE.md](docs/design/PRIVACY-AND-CONSENT-CENTRE.md); depends on SEC-0; absorbs ARC-6 export/erasure; NM-1, NM-3, NM-5, NM-8, NM-10 depend on it |
+| SEC-11 | **P0 — next item built** | **Privacy and Consent Centre (approved).** New `privacy` module and schema, shared `privacy-client` module (approved exception like auth-client), Caffeine consent cache, retire `people.consent_record` and people's 501 consent operations into privacy. DPDP: verifiable parental consent for minors, re-consent at 18, access/export/correction/erasure requests, retention engine, breach register. Phases, schema, APIs, client and per-module enforcement points: the design doc. | [docs/design/PRIVACY-AND-CONSENT-CENTRE.md](docs/design/PRIVACY-AND-CONSENT-CENTRE.md); absorbs ARC-6 export/erasure; NM-1, NM-3, NM-5, NM-8, NM-10 depend on it |
 | SEC-1 | H | **Owner credentials at runtime** (D8): run migrations and partition DDL outside the app; app holds only `mysms_app`. Fail startup outside dev when running as the migration role (today only a warning). | D8 |
 | SEC-2 | M | **Tenant isolation soft spots:** the `TenantPredicates` scanner cannot see dynamically concatenated SQL; a missing tenant shows as 500. Add a wrong-tenant negative component test per module (target 21/21). | conformance |
 | SEC-3 | P1 | **`mustResetPassword` not enforced:** a password change or temporary password sets the flag, but the server does not limit the session to the password change. | STATUS limit 7; iam |
@@ -225,7 +223,7 @@ Columns: **ID**, **Pri**, **What and why**, **Where / refs / depends on**.
 | ID | Pri | What and why | Where / refs / depends on |
 |---|---|---|---|
 | PERF-1 | P2 | **Measured performance budgets:** component tests with realistic volumes (2,000-student school, a year of attendance) asserting query counts and a time ceiling; `pg_stat_statements` everywhere; Micrometer timers per operation id with a p95 objective. Targets: list p95 < 300 ms at 1,000-row tenant data, <= 10 queries per request with no N+1. | E48 |
-| PERF-2 | M | **Caching:** none today. Caffeine (approved dependency) for catalogues and permissions with event invalidation (first users: SEC-0's role→permission cache and privacy-client); ETag caching of reference data. | C-1, C-8, E40 |
+| PERF-2 | M | **Caching:** none today. Caffeine (approved dependency) for catalogues and permissions with event invalidation (in use: the permissions filter's role→permission cache in auth-client; next: privacy-client); ETag caching of reference data. | C-1, C-8, E40 |
 | PERF-3 | M | **Cross-module call cost:** each call is its own BEGIN, `set_config`, COMMIT plus double JSON. | D1, DEC-1 |
 | PERF-4 | P2 | **Reports off the primary:** route reports and dashboards to the replica (opt-in, D5); an event-fed reporting and search projection. | E40 |
 | PERF-5 | M | Partition maintenance with `pg_partman`/`pg_cron`; a get-by-id on a partitioned table probes every month's index. | D7 |
@@ -1049,7 +1047,7 @@ parent-facing layer of NM-4, CP-6 shares NM-9's document renderer).
 | CP-4 | P3 / L | **School website** with CBSE mandatory disclosure pages fed by MySMS. **Parked: approach to be decided** | New `website` module; DEC-10, P1-28, ARC-4, SEC-11, CP-1, IN-10 |
 | CP-5 | P3 / M | **School store:** uniforms, books, stationery; online orders, payment, pickup | Extend NM-4 `inventory` + `finance` gateway; D5 (review), ARC-2, CP-3, IN-12 |
 | CP-6 | P1 / M | **ID card generator** for students and staff, with QR verification | Extend `people`; renderer shared with NM-9; ARC-4, SEC-11, NM-6 |
-| CP-7 | P1 / L | **Management dashboards** for principal, management and school groups | New read-model module `insights`; D12/ARC-5, PERF-4, PERF-2, OPS-1, SEC-0, D1 (review)/P1-27, CP-1 |
+| CP-7 | P1 / L | **Management dashboards** for principal, management and school groups | New read-model module `insights`; D12/ARC-5, PERF-4, PERF-2, OPS-1, D1 (review)/P1-27, CP-1 |
 
 #### CP-1 Admission enquiry CRM
 
@@ -1483,11 +1481,11 @@ parent-facing layer of NM-4, CP-6 shares NM-9's document renderer).
 - **Privacy and security.** Facts hold counts and ids only, no names; small cells (under 5 students) suppressed at
   group level; health and counselling never aggregated per class; learning-analytics figures follow the privacy
   design's `lms.learning_analytics` rule; group-level access needs the multi-institution authority model
-  (D1 (review), P1-27) and SEC-0 permissions.
+  (D1 (review), P1-27) and the role-based permissions (JAVA-CODING-RULES §16.2).
 - **Performance.** Facts are small (institutions x days x classes); target p95 under 500 ms (PERF-1 budgets); read
   from the replica (PERF-4); tile cache of a few minutes (PERF-2); event lag and reconciliation drift as OPS-1
   metrics; monthly partitions for facts (PERF-5).
-- **Depends on.** D12/ARC-5 (event payloads and ordering), PERF-4, PERF-2, OPS-1, SEC-0, D1 (review)/P1-27 for
+- **Depends on.** D12/ARC-5 (event payloads and ordering), PERF-4, PERF-2, OPS-1, D1 (review)/P1-27 for
   groups, DEC-7, CP-1 for admissions. **Priority P1 / L**, delivered in slices: attendance and fees first.
 - **Owner decision:** campuses are never ranked against each other; group views show each campus against its own
   targets and history only.
@@ -1525,7 +1523,7 @@ where a gap is already an item elsewhere, the row raises or extends that item ra
 
 | ID | Pri | Gap and what to build | Today / evidence |
 |---|---|---|---|
-| GK-1 | P0 | **Message delivery: SMS, e-mail, push** (MSG91/Twilio-class SMS, SMTP, FCM/APNs) and the 33 comms 501s — Build ARC-2 next after SEC-0. Ship at least one Indian SMS provider (MSG91 or similar, DLT templates), SMTP and FCM. It unblocks absence alerts, fee reminders, password-reset links, homework and notice pushes. | Today: ARC-2 planned; tables exist; `SendMessage` 501. GegoK12: G140, G141, G045, G083, G095, G152, G110, G120, G129, G151 |
+| GK-1 | P0 | **Message delivery: SMS, e-mail, push** (MSG91/Twilio-class SMS, SMTP, FCM/APNs) and the 33 comms 501s — Build ARC-2 in the §5.1 order. Ship at least one Indian SMS provider (MSG91 or similar, DLT templates), SMTP and FCM. It unblocks absence alerts, fee reminders, password-reset links, homework and notice pushes. | Today: ARC-2 planned; tables exist; `SendMessage` 501. GegoK12: G140, G141, G045, G083, G095, G152, G110, G120, G129, G151 |
 | GK-2 | P0 | **In-app notifications inbox** (list, mark read, mark all read) — Part of ARC-2 but can ship first: the bell icon is on every GegoK12 screen. | Today: 501. GegoK12: G149, G176 |
 | GK-3 | P0 | **Library return** (and fines, return reminders, lost) — A library that cannot take a book back fails a demo. Small job. | Today: `ReturnLoan`, `InvoiceLoanFine`, `RequestLoanReturn`, `MarkLoanLost` 501. GegoK12: G127, G128, G129 |
 | GK-4 | P0 | **Calendar view** (events + holidays + exams per user) — Every GegoK12 portal and app has `/events`. | Today: `GetMyCalendar`, `ExportCalendar` 501. GegoK12: G145 |
@@ -1545,7 +1543,7 @@ where a gap is already an item elsewhere, the row raises or extends that item ra
 | GK-18 | P2 | Alumni module — give it a ROADMAP id. | Today: docs/product only. GegoK12: G169, G058 |
 | GK-19 | P3 | Facility maintenance work orders, incidents — add to `campus` (Plan A) or NM-4. | Today: Missing. GegoK12: G167 |
 | GK-20 | P2 | Add-on catalogue / per-module entitlement on plans — needed for any core/Pro packaging (§6.3). | Today: Missing (to verify). GegoK12: G006 |
-| GK-21 | P0 | Role templates for GegoK12's 13 personas and 7 functional roles; SEC-0 — (already next). | Today: SEC-0 P0. GegoK12: G029-G031 |
+| GK-21 | P0 | Role templates for GegoK12's 13 personas and 7 functional roles, on the role-based permissions (JAVA-CODING-RULES §16.2). | Today: role-based permissions built; no templates. GegoK12: G029-G031 |
 | GK-22 | P2 | reCAPTCHA (or equivalent) on public admission form and sign-in — . | Today: Missing. GegoK12: G017 |
 | GK-23 | P2 | Teacher/parent app connect by QR code — QR encodes tenant code + invite token. | Today: Missing. GegoK12: G190 |
 | GK-24 | P1 | Phone screens for parent/teacher flows GegoK12's Android apps already have (attendance taking, homework submit, leave apply, notices, calendar, lesson plans, teacher list, approvals) — audit `clients/apps/mobile` against the G170-G191 list. | Today: many "to verify". GegoK12: G171-G189 |
@@ -1571,8 +1569,7 @@ letter suffix (21a-29b) place the competitive parity features of section 3.12 on
 
 | # | Phase | Work | Items |
 |---|---|---|---|
-| 0a | next | **Built first:** API permissions published to iam; role→permission cache in every module's permissions filter | SEC-0 |
-| 0b | next | Privacy and Consent Centre, phase by phase as in its design | SEC-11 |
+| 0 | next | Privacy and Consent Centre, phase by phase as in its design | SEC-11 |
 | 1 | 0 | CI pipeline: backend reactor and tests, `pnpm verify`, clean Flyway + `smoke.sql`, migration-upgrade rehearsal, images | BLD-1, DB-4 |
 | 2 | 0 | Connection budget: shared or small pools, worker mode for relays and jobs, PgBouncer, `max_connections` formula | D9, OPS-3 |
 | 3 | 0 | Backup and DR: PITR, dump role, restore drill, RPO/RTO | OPS-2 |

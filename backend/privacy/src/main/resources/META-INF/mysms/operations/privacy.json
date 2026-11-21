@@ -1,0 +1,217 @@
+[ {
+  "operationId" : "privacy.CreateNotice",
+  "method" : "POST",
+  "path" : "/v1/privacy/notices",
+  "permission" : "privacy.notice.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.CreateNoticeTranslation",
+  "method" : "POST",
+  "path" : "/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations",
+  "permission" : "privacy.notice_translation.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.CreateNoticeVersion",
+  "method" : "POST",
+  "path" : "/v1/privacy/notices/{noticeId}/versions",
+  "permission" : "privacy.notice_version.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.DeleteNotice",
+  "method" : "DELETE",
+  "path" : "/v1/privacy/notices/{noticeId}",
+  "permission" : "privacy.notice.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.DeleteNoticeTranslation",
+  "method" : "DELETE",
+  "path" : "/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}",
+  "permission" : "privacy.notice_translation.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetConsentRecord",
+  "method" : "GET",
+  "path" : "/v1/privacy/consent-records/{consentRecordId}",
+  "permission" : "privacy.consent_record.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetMyNotice",
+  "method" : "GET",
+  "path" : "/v1/privacy/my/notices/{noticeCode}",
+  "permission" : "privacy.my_consent.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetNotice",
+  "method" : "GET",
+  "path" : "/v1/privacy/notices/{noticeId}",
+  "permission" : "privacy.notice.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetNoticeTranslation",
+  "method" : "GET",
+  "path" : "/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}",
+  "permission" : "privacy.notice_translation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetNoticeVersion",
+  "method" : "GET",
+  "path" : "/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}",
+  "permission" : "privacy.notice_version.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetPurpose",
+  "method" : "GET",
+  "path" : "/v1/privacy/purposes/{purposeId}",
+  "permission" : "privacy.tenant_purpose.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ListConsentRecords",
+  "method" : "GET",
+  "path" : "/v1/privacy/consent-records",
+  "permission" : "privacy.consent_record.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ListMyConsents",
+  "method" : "GET",
+  "path" : "/v1/privacy/my/consents",
+  "permission" : "privacy.my_consent.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ListNoticeTranslations",
+  "method" : "GET",
+  "path" : "/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations",
+  "permission" : "privacy.notice_translation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ListNoticeVersions",
+  "method" : "GET",
+  "path" : "/v1/privacy/notices/{noticeId}/versions",
+  "permission" : "privacy.notice_version.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ListNotices",
+  "method" : "GET",
+  "path" : "/v1/privacy/notices",
+  "permission" : "privacy.notice.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ListPurposes",
+  "method" : "GET",
+  "path" : "/v1/privacy/purposes",
+  "permission" : "privacy.tenant_purpose.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.PublishNoticeVersion",
+  "method" : "POST",
+  "path" : "/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}:publish",
+  "permission" : "privacy.notice_version.publish",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.RecordConsentOnBehalf",
+  "method" : "POST",
+  "path" : "/v1/privacy/consent-records",
+  "permission" : "privacy.consent_record.record_on_behalf",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.RecordMyConsent",
+  "method" : "POST",
+  "path" : "/v1/privacy/my/consents",
+  "permission" : "privacy.my_consent.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.UpdateNotice",
+  "method" : "PATCH",
+  "path" : "/v1/privacy/notices/{noticeId}",
+  "permission" : "privacy.notice.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.UpdateNoticeTranslation",
+  "method" : "PATCH",
+  "path" : "/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}",
+  "permission" : "privacy.notice_translation.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.UpdateNoticeVersion",
+  "method" : "PATCH",
+  "path" : "/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}",
+  "permission" : "privacy.notice_version.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.UpdatePurpose",
+  "method" : "PATCH",
+  "path" : "/v1/privacy/purposes/{purposeId}",
+  "permission" : "privacy.tenant_purpose.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.VerifyConsentRecord",
+  "method" : "POST",
+  "path" : "/v1/privacy/consent-records/{consentRecordId}:verify",
+  "permission" : "privacy.consent_record.verify",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.WithdrawMyConsent",
+  "method" : "POST",
+  "path" : "/v1/privacy/my/consents/{consentRecordId}:withdraw",
+  "permission" : "privacy.my_consent.withdraw",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+} ]

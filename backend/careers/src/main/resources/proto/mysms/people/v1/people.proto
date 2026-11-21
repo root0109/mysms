@@ -129,20 +129,10 @@ service PersonService {
   rpc UpdatePersonSocialLink(UpdatePersonSocialLinkRequest) returns (UpdatePersonSocialLinkResponse);
   // Soft-delete PersonSocialLink.
   rpc DeletePersonSocialLink(DeletePersonSocialLinkRequest) returns (DeletePersonSocialLinkResponse);
-  // List ConsentRecords.
-  rpc ListConsentRecords(ListConsentRecordsRequest) returns (ListConsentRecordsResponse);
-  // Get ConsentRecord.
-  rpc GetConsentRecord(GetConsentRecordRequest) returns (GetConsentRecordResponse);
-  // Create ConsentRecord.
-  rpc CreateConsentRecord(CreateConsentRecordRequest) returns (CreateConsentRecordResponse);
   // Birthdays and work anniversaries in a date window.
   rpc ListBirthdays(ListBirthdaysRequest) returns (ListBirthdaysResponse);
   // Send birthday / anniversary greetings.
   rpc SendGreetings(SendGreetingsRequest) returns (SendGreetingsResponse);
-  // Withdraw a consent (sets withdrawnAt). Publishing that depends on it stops immediately, and already published media for that purpose is unpublished by a background job.
-  rpc WithdrawConsent(WithdrawConsentRequest) returns (WithdrawConsentResponse);
-  // Consents currently in force for a person, one per purpose (latest record with withdrawnAt empty).
-  rpc GetConsentStatus(GetConsentStatusRequest) returns (GetConsentStatusResponse);
 }
 
 // QualificationService: operations on the Qualification aggregate.
@@ -1021,51 +1011,6 @@ message DeletePersonSocialLinkRequest {
 message DeletePersonSocialLinkResponse {
 }
 
-message ListConsentRecordsRequest {
-  // Person id (UUID).
-  string person_id = 1;
-  // Filter expression (AIP-160 subset).
-  string filter = 4;
-  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
-  mysms.common.v1.PageableRequest pageable = 6;
-  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
-  // criteria and a cursor carried by the response's pagination.
-  reserved 2, 3, 5;
-  reserved "page_size", "page_token", "order_by";
-}
-message ListConsentRecordsResponse {
-  repeated ConsentRecord items = 1;
-  // Where this page is and how to reach the next one (api/README "Pagination").
-  mysms.common.v1.Pagination pagination = 4;
-  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
-  // rows.
-  reserved 2, 3;
-  reserved "next_page_token", "total_size";
-}
-
-message GetConsentRecordRequest {
-  // Person id (UUID).
-  string person_id = 1;
-  // ConsentRecord id (UUID).
-  string id = 2;
-}
-message GetConsentRecordResponse {
-  ConsentRecord consent_record = 1;
-}
-
-message CreateConsentRecordRequest {
-  // Person id (UUID).
-  string person_id = 1;
-  ConsentRecord consent_record = 2;
-  // Idempotency key (UUID); retries with the same key return the original result.
-  string request_id = 3;
-  // Validate without persisting.
-  bool validate_only = 4;
-}
-message CreateConsentRecordResponse {
-  ConsentRecord consent_record = 1;
-}
-
 message ListBirthdaysRequest {
   // Institution. Required.
   string institution_id = 1;
@@ -1116,40 +1061,6 @@ message SendGreetingsRequest {
 }
 message SendGreetingsResponse {
   mysms.common.v1.SendResult result = 1;
-}
-
-message WithdrawConsentRequest {
-  // Path parameter personId.
-  string person_id = 1;
-  // Path parameter consentRecordId.
-  string consent_record_id = 2;
-  // Reason given by the person or guardian.
-  optional string reason = 3;
-  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
-  optional string request_id = 4;
-}
-message WithdrawConsentResponse {
-  ConsentRecord consent_record = 1;
-}
-
-message GetConsentStatusRequest {
-  // Path parameter personId.
-  string person_id = 1;
-  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
-  mysms.common.v1.PageableRequest pageable = 4;
-  // Fields 2 (page_size), 3 (page_token) replaced by pageable: one-based pages, repeated sort
-  // criteria and a cursor carried by the response's pagination.
-  reserved 2, 3;
-  reserved "page_size", "page_token";
-}
-message GetConsentStatusResponse {
-  repeated ConsentRecord items = 1;
-  // Where this page is and how to reach the next one (api/README "Pagination").
-  mysms.common.v1.Pagination pagination = 3;
-  // Fields 2 (next_page_token) replaced by pagination; lists no longer count their
-  // rows.
-  reserved 2;
-  reserved "next_page_token";
 }
 
 // Name prefix such as Mr, Ms, Dr.
@@ -1785,74 +1696,6 @@ message PersonSocialLink {
     NETWORK_WEBSITE = 10;
     // "other"
     NETWORK_OTHER = 11;
-  }
-}
-
-// Consent given (or withdrawn) for processing a person's data for one purpose; for minors the consent is given by a guardian. Current consent = latest row per person and purpose with withdrawn_at NULL.
-message ConsentRecord {
-  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
-  string id = 1;
-  // Person the data belongs to. [UUID] Set from the parent path on create.
-  string person_id = 2;
-  // Person who gave the consent (the person, or a guardian for a minor). [UUID]
-  string given_by_person_id = 3;
-  // What the consent covers.
-  Purpose purpose = 4;
-  // Version of the privacy notice / consent text shown.
-  string policy_version = 5;
-  // When consent was given.
-  google.protobuf.Timestamp granted_at = 6;
-  // When consent was withdrawn (NULL = in force).
-  google.protobuf.Timestamp withdrawn_at = 7;
-  // How consent was captured.
-  Channel channel = 8;
-  // Staff who recorded a paper / in-person consent. [UUID]
-  optional string recorded_by_user_id = 9;
-  // Signed form or other evidence. [UUID]
-  optional string evidence_file_id = 10;
-  // Client address for online consent.
-  optional string ip_address = 11;
-  // Row creation time. Output only.
-  google.protobuf.Timestamp create_time = 12;
-  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
-  optional string created_by = 13;
-  // Last update time. Output only.
-  google.protobuf.Timestamp update_time = 14;
-  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
-  optional string updated_by = 15;
-  // Entity tag (row version). Output only on reads; send back on update/delete.
-  string etag = 16;
-  // Allowed values of purpose; REST/JSON uses the lowercase value shown in each comment.
-  enum Purpose {
-    PURPOSE_UNSPECIFIED = 0;
-    // "data_processing"
-    PURPOSE_DATA_PROCESSING = 1;
-    // "photo_video_publication"
-    PURPOSE_PHOTO_VIDEO_PUBLICATION = 2;
-    // "public_profile"
-    PURPOSE_PUBLIC_PROFILE = 3;
-    // "marketing"
-    PURPOSE_MARKETING = 4;
-    // "third_party_sharing"
-    PURPOSE_THIRD_PARTY_SHARING = 5;
-    // "sms_whatsapp_messages"
-    PURPOSE_SMS_WHATSAPP_MESSAGES = 6;
-    // "biometric_data"
-    PURPOSE_BIOMETRIC_DATA = 7;
-  }
-  // Allowed values of channel; REST/JSON uses the lowercase value shown in each comment.
-  enum Channel {
-    CHANNEL_UNSPECIFIED = 0;
-    // "web"
-    CHANNEL_WEB = 1;
-    // "mobile_app"
-    CHANNEL_MOBILE_APP = 2;
-    // "paper_form"
-    CHANNEL_PAPER_FORM = 3;
-    // "email"
-    CHANNEL_EMAIL = 4;
-    // "in_person"
-    CHANNEL_IN_PERSON = 5;
   }
 }
 

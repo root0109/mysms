@@ -36,6 +36,7 @@ import com.mysms.iam.repository.AccountSecretRepository;
 import com.mysms.iam.repository.OperationRepository;
 import com.mysms.iam.repository.SettingDefinitionRepository;
 import com.mysms.iam.repository.SettingValueRepository;
+import com.mysms.iam.repository.TenantAuthzVersionRepository;
 import com.mysms.iam.repository.TenantDirectoryRepository;
 import com.mysms.iam.repository.UserAccountRepository;
 import com.mysms.iam.repository.UserRoleRepository;
@@ -122,6 +123,7 @@ public class AccountProvisioningService extends AppTransactionManager {
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
+    private final TenantAuthzVersionRepository authzVersions;
 
     public AccountProvisioningService(@Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(IamDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
@@ -131,7 +133,8 @@ public class AccountProvisioningService extends AppTransactionManager {
             OperationMapper operationMapper, AccessRules rules, MailDelivery mail, SignUpSchools schools,
             AccountMessages messages,
             @Qualifier(IamEventsConfig.OUTBOX) OutboxWriter outbox,
-            @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator, Clock clock) {
+            @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator, Clock clock,
+            TenantAuthzVersionRepository authzVersions) {
         super(database, transactions);
         this.tenants = tenants;
         this.contacts = contacts;
@@ -151,6 +154,7 @@ public class AccountProvisioningService extends AppTransactionManager {
         this.audit = audit;
         this.validator = validator;
         this.clock = clock;
+        this.authzVersions = authzVersions;
     }
 
     /** iam.SignUp: a student account in a tenant that allows self-registration; see the class comment. */
@@ -263,7 +267,10 @@ public class AccountProvisioningService extends AppTransactionManager {
             audit.recordCreate(IamEvents.USER_ACCOUNT, id);
             outbox.publish(IamEvents.USER_ACCOUNT + IamEvents.CREATED, IamEvents.USER_ACCOUNT, id,
                     IamEvents.payload(id));
-            grant.ifPresent(r -> insertGrant(id, r.id(), INSTITUTION, school));
+            if (grant.isPresent()) {
+                insertGrant(id, grant.get().id(), INSTITUTION, school);
+                authzVersions.bump();
+            }
             secrets.insert(UuidV7.next(clock), tenant, id, AccountSecretRepository.PASSWORD_RESET, "sign_up",
                     RefreshTokens.hash(secret), email, clientIp, now.plus(SIGN_UP_TTL), now, id);
             outbox.publish(IamEvents.SIGNED_UP, IamEvents.USER_ACCOUNT, id, IamEvents.payload(id));
@@ -348,6 +355,9 @@ public class AccountProvisioningService extends AppTransactionManager {
             if (!dryRun) {
                 for (int i = 0; i < rowsIn.size(); i++) {
                     created.add(createImported(tenant, rowsIn.get(i), resolved.get(i)).toString());
+                }
+                if (resolved.stream().anyMatch(rowGrants -> !rowGrants.isEmpty())) {
+                    authzVersions.bump();
                 }
             }
             OperationEntity operation = OperationEntity.builder().tenantId(tenant)

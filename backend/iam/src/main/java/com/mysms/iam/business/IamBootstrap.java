@@ -14,6 +14,7 @@ import com.mysms.iam.domain.MeAccountEntity;
 import com.mysms.iam.events.IamEvents;
 import com.mysms.iam.repository.AccountRepository;
 import com.mysms.iam.repository.RoleSeedRepository;
+import com.mysms.iam.repository.TenantAuthzVersionRepository;
 import com.mysms.iam.repository.TenantDirectoryRepository;
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -55,12 +56,14 @@ public class IamBootstrap extends AppTransactionManager implements ApplicationRu
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final Clock clock;
+    private final TenantAuthzVersionRepository authzVersions;
 
     public IamBootstrap(IamProperties properties, @Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(IamDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
                         TenantDirectoryRepository tenants, RoleSeedRepository roles, AccountRepository users,
                         PasswordHasher passwords, @Qualifier(IamEventsConfig.OUTBOX) OutboxWriter outbox,
-                        @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, Clock clock) {
+                        @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, Clock clock,
+                        TenantAuthzVersionRepository authzVersions) {
 
         super(database, transactions);
         this.settings = properties.bootstrap();
@@ -71,6 +74,7 @@ public class IamBootstrap extends AppTransactionManager implements ApplicationRu
         this.outbox = outbox;
         this.audit = audit;
         this.clock = clock;
+        this.authzVersions = authzVersions;
     }
 
     @Override
@@ -126,12 +130,19 @@ public class IamBootstrap extends AppTransactionManager implements ApplicationRu
                 audit.recordCreate("iam.role", role);
             }
             int granted = roles.grantEveryPermission(tenant, role, now, null, clock);
+            boolean assigned = false;
             if (!users.usernameTaken(username)) {
                 UUID admin = UuidV7.next(clock);
                 users.insert(admin, tenant, username, hash, "admin", now, null);
                 roles.assignTenantWide(UuidV7.next(clock), tenant, admin, role, now, null);
                 audit.recordCreate(MeAccountEntity.TABLE, admin);
+                assigned = true;
                 LOG.info("bootstrap: administrator account created in tenant {}", tenant);
+            }
+            if (granted > 0 || assigned) {
+                // a release that added permission codes widens the administrator role of a tenant already running,
+                // and a re-run that only creates the administrator still grants it the role
+                authzVersions.bump();
             }
             LOG.info("bootstrap: tenant {} ready ({} permissions added to the administrator role)", tenant, granted);
         });

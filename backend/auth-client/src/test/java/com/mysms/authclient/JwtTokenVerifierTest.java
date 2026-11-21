@@ -70,10 +70,25 @@ class JwtTokenVerifierTest {
         assertThat(context.sessionId()).contains(SESSION);
         assertThat(context.activeInstitutionId()).isEmpty();
         assertThat(context.withActiveInstitution(institution).activeInstitutionId()).contains(institution);
-        assertThat(context.hasPermission("master.country.read")).isTrue();
+        assertThat(context.permissions()).as("a tenant user's permissions come from roles, never from the token")
+                .isEmpty();
+        assertThat(verified.roleClaims()).as("the test token's permissions travel as a role").isPresent();
         assertThat(context.platformOperator()).isFalse();
         assertThat(verified.audiences()).containsExactly("mysms");
         assertThat(verified.expiresAt()).isAfter(Instant.now());
+    }
+
+    /** SEC-0: a tenant user's token is never read for a permission list; only service and platform tokens keep one. */
+    @Test
+    void aTenantUsersOwnPermissionListIsIgnored() {
+        VerifiedToken raw = verifier.verify(tokens.asGiven(Map.of("sub", USER.toString(), "tid", TENANT.toString(),
+                "aud", "mysms", "perms", List.of("*"), "tperms", List.of("*"), "ins", List.of("*")),
+                Instant.now().plusSeconds(60)));
+        assertThat(raw.context().permissions()).isEmpty();
+        assertThat(raw.context().tenantWidePermissions()).isEmpty();
+        assertThat(raw.roleClaims()).as("no rgr: no role, so no permission at all").isEmpty();
+        assertThat(verifier.verify(tokens.platformOperator(USER, "master.country.create")).context().permissions())
+                .containsExactly("master.country.create");
     }
 
     @Test

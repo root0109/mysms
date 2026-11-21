@@ -54,6 +54,7 @@ import com.mysms.iam.mapper.UserPermissionMapper;
 import com.mysms.iam.mapper.UserPreferenceMapper;
 import com.mysms.iam.mapper.UserRoleMapper;
 import com.mysms.iam.mapper.UserSessionMapper;
+import com.mysms.iam.repository.TenantAuthzVersionRepository;
 import com.mysms.iam.repository.UserAccountRepository;
 import com.mysms.iam.repository.UserDepartmentAccessRepository;
 import com.mysms.iam.repository.UserDeviceRepository;
@@ -171,6 +172,7 @@ public class UserAccountService extends AppTransactionManager {
     private final UserSessionRepository userSessionRepository;
     private final UserSessionMapper userSessionMapper;
     private final UserSessionRules userSessionRules;
+    private final TenantAuthzVersionRepository authzVersions;
 
     public UserAccountService(UserAccountRepository repository,
             UserAccountMapper mapper,
@@ -195,7 +197,8 @@ public class UserAccountService extends AppTransactionManager {
             UserRoleRules userRoleRules,
             UserSessionRepository userSessionRepository,
             UserSessionMapper userSessionMapper,
-            UserSessionRules userSessionRules) {
+            UserSessionRules userSessionRules,
+            TenantAuthzVersionRepository authzVersions) {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
@@ -219,6 +222,7 @@ public class UserAccountService extends AppTransactionManager {
         this.userSessionRepository = userSessionRepository;
         this.userSessionMapper = userSessionMapper;
         this.userSessionRules = userSessionRules;
+        this.authzVersions = authzVersions;
     }
 
     public UserAccount getUserAccount(UUID id) {
@@ -869,6 +873,7 @@ public class UserAccountService extends AppTransactionManager {
             audit.recordCreate(USER_PERMISSION_AGGREGATE, stored.getId());
             outbox.publish(USER_PERMISSION_AGGREGATE + IamEvents.CREATED, USER_PERMISSION_AGGREGATE, stored.getId(),
                     IamEvents.payload(stored.getId()));
+            authzVersions.bump();
             return userPermissionMapper.toDto(stored);
         });
     }
@@ -905,6 +910,7 @@ public class UserAccountService extends AppTransactionManager {
             entity.setRowVersion(expected + 1);
             audit.recordUpdate(USER_PERMISSION_AGGREGATE, id, fields);
             outbox.publish(USER_PERMISSION_AGGREGATE + IamEvents.UPDATED, USER_PERMISSION_AGGREGATE, id, IamEvents.payload(id));
+            authzVersions.bump();
             return userPermissionMapper.toDto(entity);
         });
     }
@@ -926,6 +932,7 @@ public class UserAccountService extends AppTransactionManager {
             }
             audit.recordDelete(USER_PERMISSION_AGGREGATE, id);
             outbox.publish(USER_PERMISSION_AGGREGATE + IamEvents.DELETED, USER_PERMISSION_AGGREGATE, id, IamEvents.payload(id));
+            authzVersions.bump();
             userPermissionRules.afterDelete(entity);
         });
     }
@@ -1183,6 +1190,7 @@ public class UserAccountService extends AppTransactionManager {
             audit.recordCreate(USER_ROLE_AGGREGATE, stored.getId());
             outbox.publish(USER_ROLE_AGGREGATE + IamEvents.CREATED, USER_ROLE_AGGREGATE, stored.getId(),
                     IamEvents.payload(stored.getId()));
+            authzVersions.bump();
             return userRoleMapper.toDto(stored);
         });
     }
@@ -1219,6 +1227,7 @@ public class UserAccountService extends AppTransactionManager {
             entity.setRowVersion(expected + 1);
             audit.recordUpdate(USER_ROLE_AGGREGATE, id, fields);
             outbox.publish(USER_ROLE_AGGREGATE + IamEvents.UPDATED, USER_ROLE_AGGREGATE, id, IamEvents.payload(id));
+            authzVersions.bump();
             return userRoleMapper.toDto(entity);
         });
     }
@@ -1240,6 +1249,7 @@ public class UserAccountService extends AppTransactionManager {
             }
             audit.recordDelete(USER_ROLE_AGGREGATE, id);
             outbox.publish(USER_ROLE_AGGREGATE + IamEvents.DELETED, USER_ROLE_AGGREGATE, id, IamEvents.payload(id));
+            authzVersions.bump();
             userRoleRules.afterDelete(entity);
         });
     }

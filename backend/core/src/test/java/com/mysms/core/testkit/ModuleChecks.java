@@ -20,10 +20,10 @@ import java.util.stream.Stream;
  */
 public final class ModuleChecks {
 
-    /** The 21 module schemas. */
+    /** The 22 module schemas. */
     public static final Set<String> MODULES = Set.of("master", "platform", "iam", "org", "people", "academics", "sis",
             "hr", "payroll", "admission", "attendance", "facility", "timetable", "assessment", "lms", "finance",
-            "library", "transport", "comms", "frontoffice", "careers");
+            "library", "transport", "comms", "frontoffice", "careers", "privacy");
 
     private static final Pattern TEXT_BLOCK = Pattern.compile("\"\"\"(.*?)\"\"\"", Pattern.DOTALL);
     private static final Pattern STRING = Pattern.compile("\"((?:[^\"\\\\\\n]|\\\\.)*)\"");

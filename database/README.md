@@ -69,7 +69,7 @@ Each module is a bounded context and a separately deployable service, and **its 
 |---:|---|---|---:|---|
 | 1 | `master` | Master Data | 6 | Global, tenant-independent master tables (geography, currency) shared by every module. |
 | 2 | `platform` | Platform & Tenancy | 22 | SaaS tenancy, domains, subscription plans, shared files, tags, notes, the central audit trail (fed by every module's outbox), the platform's own operations/idempotency and global settings. |
-| 3 | `iam` | Identity & Access | 21 | Login accounts, roles, permissions, scoped role grants, MFA, tokens and devices. A person (people.person) may own one account per tenant. |
+| 3 | `iam` | Identity & Access | 23 | Login accounts, roles, permissions, scoped role grants, MFA, tokens and devices, the API-permission catalogue every module publishes and the tenant's authorisation version. A person (people.person) may own one account per tenant. |
 | 4 | `org` | Organisation & Calendar | 13 | Institutions (schools, colleges, campuses), their departments, academic years and (nestable) terms. |
 | 5 | `people` | People & Profiles | 18 | Every human known to the system and their personal, contact, education, experience and consent records. |
 | 6 | `academics` | Academic Structure | 18 | Programs, courses (with term/credit-aware subject plans), batches, grade levels, sections, class sections, subjects, teaching assignments, curriculum units and lesson plans. Serves both K-12 and higher education. |

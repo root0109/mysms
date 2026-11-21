@@ -21,6 +21,7 @@ import com.mysms.iam.domain.UserRoleEntity;
 import com.mysms.iam.events.IamEvents;
 import com.mysms.iam.mapper.UserRoleMapper;
 import com.mysms.iam.repository.AccountContactRepository;
+import com.mysms.iam.repository.TenantAuthzVersionRepository;
 import com.mysms.iam.repository.UserAccountRepository;
 import com.mysms.iam.repository.UserRoleRepository;
 import java.time.Clock;
@@ -39,7 +40,8 @@ import org.springframework.transaction.PlatformTransactionManager;
  * the set are kept as they are (dates, active flag, primary unit); the others are removed and the missing ones
  * created. Every grant removed or created must be one the caller could make (AccessRules#requireGrantable: the
  * caller holds each of the role's permissions at the grant's reach), never on the caller's own account and never
- * while an administrator acts as someone; the user's tokens change at their next refresh.
+ * while an administrator acts as someone; the user's tokens change at their next refresh. A set that changed
+ * anything raises the tenant's authorisation version once, however many grants it moved.
  */
 @Service
 public class RoleGrantService extends AppTransactionManager {
@@ -57,12 +59,14 @@ public class RoleGrantService extends AppTransactionManager {
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
+    private final TenantAuthzVersionRepository authzVersions;
 
     public RoleGrantService(@Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(IamDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             UserRoleRepository userRoles, UserRoleMapper mapper, UserAccountRepository accounts,
             AccountContactRepository roles, AccessRules rules, @Qualifier(IamEventsConfig.OUTBOX) OutboxWriter outbox,
-            @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator, Clock clock) {
+            @Qualifier(IamEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator, Clock clock,
+            TenantAuthzVersionRepository authzVersions) {
         super(database, transactions);
         this.userRoles = userRoles;
         this.mapper = mapper;
@@ -73,6 +77,7 @@ public class RoleGrantService extends AppTransactionManager {
         this.audit = audit;
         this.validator = validator;
         this.clock = clock;
+        this.authzVersions = authzVersions;
     }
 
     public UserRoleList setUserRoles(UUID userId, SetUserRolesRequest request) {
@@ -92,6 +97,7 @@ public class RoleGrantService extends AppTransactionManager {
             Set<Key> desired = resolve(wanted);
             List<UserRoleEntity> current = userRoles.findByUser(userId);
             List<UserRoleEntity> result = new ArrayList<>();
+            int changed = 0;
             for (UserRoleEntity grant : current) {
                 Key key = new Key(grant.getRoleId(), grant.getScopeType(), grant.getScopeId());
                 if (desired.remove(key)) {
@@ -107,6 +113,7 @@ public class RoleGrantService extends AppTransactionManager {
                 audit.recordDelete(UserAccountService.USER_ROLE_AGGREGATE, grant.getId());
                 outbox.publish(UserAccountService.USER_ROLE_AGGREGATE + IamEvents.DELETED,
                         UserAccountService.USER_ROLE_AGGREGATE, grant.getId(), IamEvents.payload(grant.getId()));
+                changed++;
             }
             for (Key key : desired) {
                 rules.requireGrantable(key.roleId(), key.scopeType(), key.scopeId());
@@ -119,6 +126,10 @@ public class RoleGrantService extends AppTransactionManager {
                 outbox.publish(UserAccountService.USER_ROLE_AGGREGATE + IamEvents.CREATED,
                         UserAccountService.USER_ROLE_AGGREGATE, stored.getId(), IamEvents.payload(stored.getId()));
                 result.add(stored);
+                changed++;
+            }
+            if (changed > 0) {
+                authzVersions.bump();
             }
             outbox.publish(IamEvents.ROLES_SET, IamEvents.USER_ACCOUNT, userId, IamEvents.payload(userId));
             return new UserRoleList(result.stream().map(mapper::toDto).toList());

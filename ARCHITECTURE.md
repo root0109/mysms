@@ -23,7 +23,7 @@ Each domain module has its own `@SpringBootApplication`, its own configuration n
 
 ## 2. Allowed module dependencies
 
-A module may call (over gRPC, from its `integration` package, with copies of the callees' protos) only the modules whose data it references. The table is derived from the 468 forward logical references in `database/logical-references.md`; the number is how many reference columns point at that module. Tenant references are not dependencies (the tenant comes from the token). Every module also uses `core`, `messaging` and `auth-client`.
+A module may call (over gRPC, from its `integration` package, with copies of the callees' protos) only the modules whose data it references. The table is derived from the 468 forward logical references in `database/logical-references.md`; the number is how many reference columns point at that module. Tenant references are not dependencies (the tenant comes from the token). Every module also uses `core`, `messaging` and `auth-client`; auth-client's permissions filter reads iam's role data (`iam_authz.proto`, over gRPC or, where iam runs in the same process, directly) and every module publishes its API-permission catalogue to iam, so every module reaches iam through auth-client whatever its row says (JAVA-CODING-RULES §16.2).
 
 | Module | May depend on |
 |---|---|
@@ -48,6 +48,7 @@ A module may call (over gRPC, from its `integration` package, with copies of the
 | `comms` | `academics` (5), `iam` (27), `org` (26), `platform` (10), `sis` (4) |
 | `frontoffice` | `hr` (1), `iam` (2), `org` (7), `platform` (1), `sis` (1) |
 | `careers` | `iam` (2), `master` (1), `people` (1), `platform` (2) |
+| `privacy` | — |
 
 **The graph is a DAG.** The 27 references that point against an arrow are event-only: the owner does not know about them, the referencing module cleans them up from the owner's events, and it never calls the owner for them (listed at the end of `database/logical-references.md`). Each module calls only the modules in its row, through one `<Callee>GrpcClient` per callee; a plain JUnit check in `core`'s test kit (`ModuleChecks`) fails the build if a module imports the gRPC contract (`com.mysms.<x>.v1`) of a module outside its row, and conformance G1 fails it if a module carries the proto of one.
 
@@ -119,6 +120,7 @@ That makes 26 caller→callee edges and about 66 RPCs. Modules that call nobody:
 |---|---|
 | lms | org 3, iam 2, platform 2, comms 2, academics 1, assessment 1, finance 1 |
 | comms | iam 3, lms 2, academics 1, org 1, platform 1, sis 1 |
+| privacy | sis 6, people 3 |
 | finance | lms 2, sis 2, academics 1, people 1, platform 1 |
 | admission | people 2, finance 1, platform 1, sis 1 |
 | platform | iam 2, lms 1, org 1 |
@@ -128,7 +130,7 @@ That makes 26 caller→callee edges and about 66 RPCs. Modules that call nobody:
 | library | academics 2, platform 1 |
 | others | 1–2 each (mostly `platform.file_object.deleted` and `hr.staff.deleted`) |
 
-Nearly all are `*.deleted` cleanup events ([`database/logical-references.md`](database/logical-references.md) rule 3). Because they are asynchronous and the outbox and inbox make them reliable, they are cheap coupling.
+Nearly all are `*.deleted` cleanup events ([`database/logical-references.md`](database/logical-references.md) rule 3). The exceptions carry state for a copy the consumer keeps: `sis.student` and `hr.staff` into `iam.member_record`, `hr.staff` into `payroll.staff_member`, and `people.person`, `sis.student` and `sis.student_guardian` into privacy's subjects and guardian links (`privacy.subject`, `privacy.guardian_link`). Because they are asynchronous and the outbox and inbox make them reliable, they are cheap coupling.
 
 ### 5.3 Data references (logical, no FK)
 

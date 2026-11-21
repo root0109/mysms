@@ -22,24 +22,26 @@ public sealed interface EdgeDecision {
      * @param token       the raw bearer token, forwarded on the caller's SDK calls
      * @param authMethods how the token was obtained ({@code amr})
      * @param guestTenant for a guest (no caller), the tenant its {@code X-Tenant-Code} named; empty otherwise
+     * @param roleClaims  the caller's role claims, when the token carried them
      */
-    record Admitted(Optional<AuthContext> caller, String token, Set<String> authMethods, Optional<UUID> guestTenant)
-            implements EdgeDecision {
+    record Admitted(Optional<AuthContext> caller, String token, Set<String> authMethods, Optional<UUID> guestTenant,
+                    Optional<RoleClaims> roleClaims) implements EdgeDecision {
 
         public Admitted {
             authMethods = Set.copyOf(authMethods);
+            roleClaims = roleClaims == null ? Optional.empty() : roleClaims;
             if (caller.isPresent() && guestTenant.isPresent()) {
                 throw new IllegalArgumentException("a caller with a token is never a guest");
             }
         }
 
         public Admitted(Optional<AuthContext> caller, String token, Set<String> authMethods) {
-            this(caller, token, authMethods, Optional.empty());
+            this(caller, token, authMethods, Optional.empty(), Optional.empty());
         }
 
         /** A guest reading the school its code named. */
         static Admitted guest(UUID tenant) {
-            return new Admitted(Optional.empty(), null, Set.of(), Optional.of(tenant));
+            return new Admitted(Optional.empty(), null, Set.of(), Optional.of(tenant), Optional.empty());
         }
     }
 }

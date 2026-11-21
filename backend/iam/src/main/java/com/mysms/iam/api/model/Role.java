@@ -64,6 +64,9 @@ public class Role {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String etag;
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable Boolean holdsRetiredPermissions;
+
   public Role() {
     super();
   }
@@ -335,6 +338,26 @@ public class Role {
     this.etag = etag;
   }
 
+  public Role holdsRetiredPermissions(@Nullable Boolean holdsRetiredPermissions) {
+    this.holdsRetiredPermissions = holdsRetiredPermissions;
+    return this;
+  }
+
+  /**
+   * The role still holds a permission code no deployed module publishes any more (retired); output only.
+   * @return holdsRetiredPermissions
+   */
+  
+  @JsonProperty("holdsRetiredPermissions")
+  public @Nullable Boolean getHoldsRetiredPermissions() {
+    return holdsRetiredPermissions;
+  }
+
+  @JsonProperty("holdsRetiredPermissions")
+  public void setHoldsRetiredPermissions(@Nullable Boolean holdsRetiredPermissions) {
+    this.holdsRetiredPermissions = holdsRetiredPermissions;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -356,12 +379,13 @@ public class Role {
         Objects.equals(this.createdBy, role.createdBy) &&
         Objects.equals(this.updateTime, role.updateTime) &&
         Objects.equals(this.updatedBy, role.updatedBy) &&
-        Objects.equals(this.etag, role.etag);
+        Objects.equals(this.etag, role.etag) &&
+        Objects.equals(this.holdsRetiredPermissions, role.holdsRetiredPermissions);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, code, displayName, description, isSystem, isActive, authorityLevel, parentRoleId, createTime, createdBy, updateTime, updatedBy, etag);
+    return Objects.hash(id, code, displayName, description, isSystem, isActive, authorityLevel, parentRoleId, createTime, createdBy, updateTime, updatedBy, etag, holdsRetiredPermissions);
   }
 
   @Override
@@ -381,6 +405,7 @@ public class Role {
     sb.append("    updateTime: ").append(toIndentedString(updateTime)).append("\n");
     sb.append("    updatedBy: ").append(toIndentedString(updatedBy)).append("\n");
     sb.append("    etag: ").append(toIndentedString(etag)).append("\n");
+    sb.append("    holdsRetiredPermissions: ").append(toIndentedString(holdsRetiredPermissions)).append("\n");
     sb.append("}");
     return sb.toString();
   }

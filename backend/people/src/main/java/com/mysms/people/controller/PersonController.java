@@ -6,7 +6,6 @@ import com.mysms.core.paging.PagingInfo;
 import com.mysms.people.api.PersonApi;
 import com.mysms.people.api.model.Certification;
 import com.mysms.people.api.model.CertificationUpdate;
-import com.mysms.people.api.model.ConsentRecord;
 import com.mysms.people.api.model.EducationHistory;
 import com.mysms.people.api.model.EducationHistoryUpdate;
 import com.mysms.people.api.model.EmergencyContact;
@@ -26,7 +25,6 @@ import com.mysms.people.api.model.PublicProfile;
 import com.mysms.people.api.model.PublicProfileUpdate;
 import com.mysms.people.api.model.SendGreetingsRequest;
 import com.mysms.people.api.model.SendResult;
-import com.mysms.people.api.model.WithdrawConsentRequest;
 import com.mysms.people.api.model.WorkExperience;
 import com.mysms.people.api.model.WorkExperienceUpdate;
 import com.mysms.core.error.NotImplementedException;
@@ -67,12 +65,6 @@ public class PersonController implements PersonApi {
         return ResponseEntity.created(
                 URI.create("/v1/people/persons/" + personId + "/certifications/" + created.getId()))
                         .eTag(created.getEtag()).body(created);
-    }
-
-    @Override
-    public ResponseEntity<ConsentRecord> createConsentRecord(UUID personId, ConsentRecord consentRecord,
-            UUID idempotencyKey, Boolean validateOnly) {
-        throw new NotImplementedException();
     }
 
     @Override
@@ -259,18 +251,6 @@ public class PersonController implements PersonApi {
     }
 
     @Override
-    public ResponseEntity<ConsentRecord> getConsentRecord(UUID personId, UUID consentRecordId,
-            String fields) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public ResponseEntity<PagingInfo<ConsentRecord>> getConsentStatus(UUID personId, Integer page, Integer size,
-            String cursor) {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public ResponseEntity<EducationHistory> getEducationHistory(UUID personId, UUID educationHistoryId,
             String fields) {
         EducationHistory found = personService.getEducationHistory(personId, educationHistoryId);
@@ -351,12 +331,6 @@ public class PersonController implements PersonApi {
                 PagingUtil.pagingInfo(personService.listCertifications(personId, page, size, cursor, filter, sort));
         list.data().forEach(item -> ReadMask.apply(item, fields));
         return ResponseEntity.ok(list);
-    }
-
-    @Override
-    public ResponseEntity<PagingInfo<ConsentRecord>> listConsentRecords(UUID personId, Integer page, Integer size,
-            String cursor, String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
     }
 
     @Override
@@ -538,11 +512,5 @@ public class PersonController implements PersonApi {
                         updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
-    }
-
-    @Override
-    public ResponseEntity<ConsentRecord> withdrawConsent(UUID personId, UUID consentRecordId,
-            WithdrawConsentRequest withdrawConsentRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
     }
 }

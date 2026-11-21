@@ -17,6 +17,7 @@ public interface RoleMapper {
     @Mapping(target = "createTime", source = "createdAt")
     @Mapping(target = "updateTime", source = "updatedAt")
     @Mapping(target = "etag", expression = "java(Etags.of(entity.getRowVersion()))")
+    @Mapping(target = "holdsRetiredPermissions", ignore = true)
     Role toDto(RoleEntity entity);
 
     @Mapping(target = "id", ignore = true)
@@ -27,6 +28,5 @@ public interface RoleMapper {
     @Mapping(target = "updatedBy", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "rowVersion", ignore = true)
-
     RoleEntity toEntity(Role dto);
 }

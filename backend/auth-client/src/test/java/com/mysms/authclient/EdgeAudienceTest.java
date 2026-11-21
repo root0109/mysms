@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.protobuf.StringValue;
 import com.google.rpc.ErrorInfo;
 import com.mysms.authclient.internal.JwtTokenVerifier;
+import com.mysms.authclient.testing.TestRoleData;
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
@@ -62,7 +63,7 @@ class EdgeAudienceTest {
     private static final OperationTable OPERATIONS = OperationTable.load(List.of("authtest"));
     private static final EdgeAuthorizer AUTHORIZER = new EdgeAuthorizer(
             JwtTokenVerifier.from(new AuthClientProperties(TestTokens.ISSUER, null, TOKENS.publicKeyPem(), null,
-                    List.of("authtest"), null, false)), new ClaimsPermissionChecker());
+                    List.of("authtest"), null, false)), new ClaimsPermissionChecker(), null, TestRoleData.resolver());
     private static final GrpcStatuses STATUSES = new GrpcStatuses(new ConstraintMapper(MessageUtil.ofCatalogue()));
     private static final AtomicReference<AuthContext> SEEN = new AtomicReference<>();
     private static Server server;

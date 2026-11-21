@@ -416,6 +416,28 @@ class IamGrpcParityComponentTest {
         }
     }
 
+    /**
+     * The API-permission catalogue, here iam's own as its publisher sent it at start-up, reads alike for platform staff
+     * and is refused alike to a tenant user and to a caller without a token.
+     */
+    @Test
+    void theApiPermissionCatalogueReadsAlike() throws Exception {
+        String staff = TOKENS.platformOperator(UUID.randomUUID(), "iam.api_permission.read");
+        String path = "/v1/iam/api-permissions?size=3&filter=moduleCode%20%3D%20%22iam%22";
+        long until = System.currentTimeMillis() + 20_000;
+        Answer page = rest("GET", path, staff, null);
+        while (page.body().path("data").size() < 3 && System.currentTimeMillis() < until) {
+            Thread.sleep(100);
+            page = rest("GET", path, staff, null);
+        }
+        JsonNode pageGrpc = ok(grpc("ListApiPermissions", staff,
+                "{\"pageable\":{\"size\":3},\"filter\":\"moduleCode = \\\"iam\\\"\"}"));
+        assertThat(ids(pageGrpc.path("items"))).isEqualTo(ids(ok(page).path("data"))).hasSize(3);
+        GrpcParity.assertSameResource(page.body().path("data").get(0), pageGrpc.path("items").get(0));
+        same(rest("GET", "/v1/iam/api-permissions", ADMIN, null), grpc("ListApiPermissions", ADMIN, "{}"));
+        same(rest("GET", "/v1/iam/api-permissions", null, null), grpc("ListApiPermissions", null, "{}"));
+    }
+
     /** A request_id is REST's Idempotency-Key: a retry replays the first answer, another request with it is 422. */
     @Test
     void aRequestIdReplaysTheFirstAnswer() {
@@ -659,7 +681,7 @@ class IamGrpcParityComponentTest {
 
         JsonNode exchanged = ok(grpc("RefreshToken", null, "{\"refreshToken\":\"" + secret + "\"}")).path("result");
         assertThat(exchanged.path("refreshToken").asString()).as("an API token is not rotated").isEqualTo(secret);
-        assertThat(IamHttp.claims(exchanged.path("accessToken").asString()).path("perms").toString())
+        assertThat(IamHttp.claims(exchanged.path("accessToken").asString()).path("abl").toString())
                 .isEqualTo("[\"" + READ_USERS + "\"]");
 
         String key = owner + ",\"id\":\"" + id + "\"";
@@ -701,8 +723,8 @@ class IamGrpcParityComponentTest {
         same(rest("POST", "/v1/iam/me:switchRole", token, notMine), grpc("SwitchRole", token, notMine));
         JsonNode switched = ok(grpc("SwitchRole", token, "{\"roleId\":\"" + second + "\"}")).path("result");
         assertThat(switched.path("me").path("activeRole").path("roleCode").asString()).isEqualTo("reviewer");
-        assertThat(IamHttp.claims(switched.path("tokens").path("accessToken").asString()).path("perms").toString())
-                .contains("iam.user_device.read").doesNotContain("iam.role.read");
+        assertThat(IamHttp.claims(switched.path("tokens").path("accessToken").asString()).path("rgr").toString())
+                .isEqualTo("[\"" + second + "@tenant\"]");
         JsonNode overRest = ok(rest("POST", "/v1/iam/me:switchRole", token, "{\"roleId\":\"" + second + "\"}"));
         GrpcParity.assertSameResource(overRest.path("me").path("user"), switched.path("me").path("user"));
 

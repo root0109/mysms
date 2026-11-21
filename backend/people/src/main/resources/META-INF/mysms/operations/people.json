@@ -8,15 +8,6 @@
   "idempotency" : "optional",
   "audience" : "public"
 }, {
-  "operationId" : "people.CreateConsentRecord",
-  "method" : "POST",
-  "path" : "/v1/people/persons/{personId}/consents",
-  "permission" : "people.consent_record.create",
-  "schemes" : [ "bearerAuth" ],
-  "anonymous" : false,
-  "idempotency" : "optional",
-  "audience" : "public"
-}, {
   "operationId" : "people.CreateEducationHistory",
   "method" : "POST",
   "path" : "/v1/people/persons/{personId}/education",
@@ -237,22 +228,6 @@
   "anonymous" : false,
   "audience" : "public"
 }, {
-  "operationId" : "people.GetConsentRecord",
-  "method" : "GET",
-  "path" : "/v1/people/persons/{personId}/consents/{consentRecordId}",
-  "permission" : "people.consent_record.read",
-  "schemes" : [ "bearerAuth" ],
-  "anonymous" : false,
-  "audience" : "public"
-}, {
-  "operationId" : "people.GetConsentStatus",
-  "method" : "GET",
-  "path" : "/v1/people/persons/{personId}:consentStatus",
-  "permission" : "people.person.get_consent_status",
-  "schemes" : [ "bearerAuth" ],
-  "anonymous" : false,
-  "audience" : "public"
-}, {
   "operationId" : "people.GetEducationHistory",
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/education/{educationHistoryId}",
@@ -369,14 +344,6 @@
   "method" : "GET",
   "path" : "/v1/people/persons/{personId}/certifications",
   "permission" : "people.certification.read",
-  "schemes" : [ "bearerAuth" ],
-  "anonymous" : false,
-  "audience" : "public"
-}, {
-  "operationId" : "people.ListConsentRecords",
-  "method" : "GET",
-  "path" : "/v1/people/persons/{personId}/consents",
-  "permission" : "people.consent_record.read",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "audience" : "public"
@@ -588,14 +555,5 @@
   "permission" : "people.work_experience.update",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
-  "audience" : "public"
-}, {
-  "operationId" : "people.WithdrawConsent",
-  "method" : "POST",
-  "path" : "/v1/people/persons/{personId}/consents/{consentRecordId}:withdraw",
-  "permission" : "people.consent_record.withdraw_consent",
-  "schemes" : [ "bearerAuth" ],
-  "anonymous" : false,
-  "idempotency" : "optional",
   "audience" : "public"
 } ]

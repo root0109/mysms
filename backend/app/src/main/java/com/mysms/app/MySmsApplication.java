@@ -37,7 +37,8 @@ import org.springframework.context.annotation.FullyQualifiedAnnotationBeanNameGe
         "com.mysms.transport",
         "com.mysms.comms",
         "com.mysms.frontoffice",
-        "com.mysms.careers"},
+        "com.mysms.careers",
+        "com.mysms.privacy"},
         excludeFilters = @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = SpringBootApplication.class),
         nameGenerator = FullyQualifiedAnnotationBeanNameGenerator.class)
 public class MySmsApplication {

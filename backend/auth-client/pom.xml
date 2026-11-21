@@ -32,6 +32,16 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-oauth2-jose</artifactId>
     </dependency>
+    <!-- the per-process role→permission cache of the permissions filter (approved: CLAUDE.md §2) -->
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+    </dependency>
+    <!-- the event bus the API-permission catalogue is published on (JAVA-CODING-RULES §16.2) -->
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>messaging</artifactId>
+    </dependency>
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-inprocess</artifactId>
@@ -41,6 +51,11 @@
 
   <build>
     <plugins>
+      <!-- a verbatim copy of iam's iam_authz.proto: the permissions filter's gRPC client of iam's role data -->
+      <plugin>
+        <groupId>org.xolstice.maven.plugins</groupId>
+        <artifactId>protobuf-maven-plugin</artifactId>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
@@ -53,6 +68,7 @@
             <configuration>
               <includes>
                 <include>com/mysms/authclient/testing/**</include>
+                <include>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</include>
               </includes>
             </configuration>
           </execution>

@@ -67,7 +67,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The monolith assembles all 21 modules, each on its own database with its own migrations, all 641 tables present,
+ * The monolith assembles all 22 modules, each on its own database with its own migrations, all 682 tables present,
  * every operation routed at the edge — and a real cross-module flow: sign-in at iam, GetMe reading the person from
  * people over in-process gRPC with the caller's token, a profile update at people.
  */
@@ -96,7 +96,8 @@ class MySmsApplicationComponentTest {
             "transport",
             "comms",
             "frontoffice",
-            "careers"};
+            "careers",
+            "privacy"};
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
     private static final TestTokens TOKENS = new TestTokens();
     private static final HttpClient HTTP = HttpClient.newHttpClient();
@@ -122,6 +123,9 @@ class MySmsApplicationComponentTest {
 
     @Autowired
     private ServiceTokenProvider serviceTokens;
+
+    @Autowired
+    private com.mysms.authclient.RolePermissionSource roleData;
 
     private static int freePort() {
         try (ServerSocket socket = new ServerSocket(0)) {
@@ -338,21 +342,29 @@ class MySmsApplicationComponentTest {
         assertThat(directory).as("iam's directory follows platform.tenant.created").isOne();
     }
 
+    /** In one process every module's permissions filter reads iam's role data directly, never over gRPC. */
+    @Test
+    void everyFilterReadsIamsRoleDataInProcess() {
+        assertThat(roleData).isInstanceOfSatisfying(com.mysms.authclient.testing.TestRoleData.class, test ->
+                assertThat(test.iam()).as("behind the component tests' role fixtures")
+                        .isInstanceOf(com.mysms.iam.business.LocalRolePermissions.class));
+    }
+
     @Test
     void everyModuleOwnsItsDatabaseAndSchema() {
-        assertThat(databases).hasSize(21);
+        assertThat(databases).hasSize(22);
         ModuleDatabase any = databases.get("masterDatabase");
         Integer tables = any.jdbc().sql(
                 "SELECT count(*) FROM information_schema.tables WHERE table_name <> 'flyway_schema_history'"
                         + " AND table_schema = ANY(:schemas)")
                 .param("schemas", MODULES).query(Integer.class).single();
-        assertThat(tables).as("every CREATE TABLE of database/migrations").isEqualTo(641);
+        assertThat(tables).as("every CREATE TABLE of database/migrations").isEqualTo(682);
         Integer histories = any.jdbc().sql(
                 // the catalog, not information_schema: the application role has no privilege on the Flyway history
                 "SELECT count(*) FROM pg_catalog.pg_class WHERE relname = 'flyway_schema_history' AND relkind = 'r'")
                 .query(Integer.class).single();
-        assertThat(histories).isEqualTo(21);
-        assertThat(operations.size()).isEqualTo(2055);
+        assertThat(histories).isEqualTo(22);
+        assertThat(operations.size()).isEqualTo(2077);
     }
 
     @Test
@@ -781,8 +793,8 @@ class MySmsApplicationComponentTest {
         List<String> institutions = new ArrayList<>();
         claims.path("ins").forEach(i -> institutions.add(i.asString()));
         assertThat(institutions).as("the one school it signed up at, never every institution").containsExactly(north);
-        assertThat(claims.has("tperms") && !claims.path("tperms").isEmpty()).as("no tenant-wide permission")
-                .isFalse();
+        assertThat(claims.path("rgr").toString()).as("no tenant-wide role").doesNotContain("@tenant");
+        assertThat(claims.path("dg")).as("and no direct grant, which would reach every institution").isEmpty();
         assertThat(call("GET", "/v1/org/institutions/" + north, student, null, 200).path("name").asString())
                 .isEqualTo("North school");
         call("GET", "/v1/org/institutions/" + south, student, null, 404);

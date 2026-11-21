@@ -396,6 +396,14 @@
   "idempotency" : "optional",
   "audience" : "public"
 }, {
+  "operationId" : "iam.ListApiPermissions",
+  "method" : "GET",
+  "path" : "/v1/iam/api-permissions",
+  "permission" : "iam.api_permission.read",
+  "schemes" : [ "platformAdminAuth" ],
+  "anonymous" : false,
+  "audience" : "platform"
+}, {
   "operationId" : "iam.ListAuthTokens",
   "method" : "GET",
   "path" : "/v1/iam/users/{userAccountId}/api-tokens",

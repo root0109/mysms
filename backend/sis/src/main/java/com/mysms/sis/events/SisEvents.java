@@ -35,4 +35,24 @@ public final class SisEvents {
         payload.put("rowVersion", rowVersion);
         return payload;
     }
+
+    /**
+     * The payload of a guardian link (sis.student_guardian)'s events: besides its id, whom it joins — the student's
+     * person, the guardian's person and login account (may be absent) — whether the guardian is a legal guardian and
+     * has custody, its status and the row version the event reflects. privacy keeps who may consent for a minor from
+     * these (privacy.guardian_link); the version lets it ignore a late event.
+     */
+    public static Map<String, Object> guardianLink(UUID id, UUID studentPersonId, UUID guardianPersonId,
+            UUID guardianUserId, boolean isLegalGuardian, boolean hasCustody, String status, int rowVersion) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("id", id.toString());
+        payload.put("studentPersonId", studentPersonId.toString());
+        payload.put("guardianPersonId", guardianPersonId.toString());
+        payload.put("guardianUserId", guardianUserId == null ? null : guardianUserId.toString());
+        payload.put("isLegalGuardian", isLegalGuardian);
+        payload.put("hasCustody", hasCustody);
+        payload.put("status", status);
+        payload.put("rowVersion", rowVersion);
+        return payload;
+    }
 }

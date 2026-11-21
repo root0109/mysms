@@ -233,27 +233,13 @@ class PeopleGrpcParityComponentTest {
     @Test
     void theOperationsThisReleaseDoesNotServeAre501OnBoth() throws Exception {
         String person = UUID.randomUUID().toString();
-        String consent = UUID.randomUUID().toString();
-        String consents = "/v1/people/persons/" + person + "/consents";
-        String keys = "{\"personId\":\"" + person + "\",\"id\":\"" + consent + "\"}";
-        GrpcParityContract.assertSameAnswer(rest("GET", consents, ADMIN, null),
-                grpc("ListConsentRecords", ADMIN, "{\"personId\":\"" + person + "\"}"));
-        GrpcParityContract.assertSameAnswer(rest("GET", consents + "/" + consent, ADMIN, null),
-                grpc("GetConsentRecord", ADMIN, keys));
-        GrpcParityContract.assertSameAnswer(rest("POST", consents, ADMIN, "{\"givenByPersonId\":\"" + person
-                + "\",\"purpose\":\"marketing\",\"policyVersion\":\"1\",\"grantedAt\":\"2027-01-01T00:00:00Z\","
-                + "\"channel\":\"web\"}"),
-                grpc("CreateConsentRecord", ADMIN, "{\"personId\":\"" + person + "\"}"));
-        GrpcParityContract.assertSameAnswer(rest("POST", consents + "/" + consent + ":withdraw", ADMIN, "{}"),
-                grpc("WithdrawConsent", ADMIN, "{\"personId\":\"" + person + "\",\"consentRecordId\":\"" + consent + "\"}"));
-        GrpcParityContract.assertSameAnswer(rest("GET", "/v1/people/persons/" + person + ":consentStatus", ADMIN, null),
-                grpc("GetConsentStatus", ADMIN, "{\"personId\":\"" + person + "\"}"));
+        String template = UUID.randomUUID().toString();
         GrpcParityContract.assertSameAnswer(rest("GET", "/v1/people/persons:birthdays?institutionId=" + person
                 + "&fromDate=2027-01-01&toDate=2027-01-31", ADMIN, null), grpc("ListBirthdays", ADMIN, "{}"));
         GrpcParityContract.assertSameAnswer(rest("POST", "/v1/people/persons:sendGreetings", ADMIN, "{\"personIds\":[\""
-                + person + "\"],\"templateId\":\"" + consent + "\",\"channel\":\"sms\"}"),
+                + person + "\"],\"templateId\":\"" + template + "\",\"channel\":\"sms\"}"),
                 grpc("SendGreetings", ADMIN, "{}"));
-        for (String rpc : List.of("ListConsentRecords", "GetConsentStatus", "ListBirthdays", "SendGreetings")) {
+        for (String rpc : List.of("ListBirthdays", "SendGreetings")) {
             assertThat(grpc(rpc, ADMIN, "{}").status()).as("%s is not served: 501, never a default answer", rpc)
                     .isEqualTo(501);
         }

@@ -17,18 +17,19 @@ misleading 404.
 | finance | 79 | 79 | 0 |
 | frontoffice | 21 | 20 | 1 |
 | hr | 40 | 40 | 0 |
-| iam | 90 | 90 | 0 |
+| iam | 91 | 91 | 0 |
 | library | 95 | 90 | 5 |
 | lms | 712 | 712 | 0 |
 | master | 20 | 20 | 0 |
 | org | 50 | 47 | 3 |
 | payroll | 58 | 58 | 0 |
-| people | 73 | 66 | 7 |
+| people | 68 | 66 | 2 |
 | platform | 86 | 86 | 0 |
+| privacy | 26 | 26 | 0 |
 | sis | 108 | 108 | 0 |
 | timetable | 25 | 23 | 2 |
 | transport | 15 | 15 | 0 |
-| **all** | **2055** | **2004** | **51** |
+| **all** | **2077** | **2031** | **46** |
 
 ## academics
 
@@ -854,6 +855,7 @@ misleading 404.
 | `iam.GetUserRole` | GET | `/v1/iam/users/{userAccountId}/roles/{userRoleId}` | `iam.user_role.read` | served |  |
 | `iam.GetUserSession` | GET | `/v1/iam/users/{userAccountId}/sessions/{userSessionId}` | `iam.user_session.read` | served |  |
 | `iam.ImportUsers` | POST | `/v1/iam/users:import` | `iam.user_account.import_users` | served |  |
+| `iam.ListApiPermissions` | GET | `/v1/iam/api-permissions` | `iam.api_permission.read` | served |  |
 | `iam.ListAuthTokens` | GET | `/v1/iam/users/{userAccountId}/api-tokens` | `iam.auth_token.read` | served |  |
 | `iam.ListMfaCredentials` | GET | `/v1/iam/mfa` | `iam.mfa_credential.read` | served |  |
 | `iam.ListMySettings` | GET | `/v1/iam/me/settings` | `iam.setting.read_mine` | served |  |
@@ -1863,7 +1865,6 @@ misleading 404.
 | Operation | Method | Path | Permission | Status | Why not served |
 |---|---|---|---|---|---|
 | `people.CreateCertification` | POST | `/v1/people/persons/{personId}/certifications` | `people.certification.create` | served |  |
-| `people.CreateConsentRecord` | POST | `/v1/people/persons/{personId}/consents` | `people.consent_record.create` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
 | `people.CreateEducationHistory` | POST | `/v1/people/persons/{personId}/education` | `people.education_history.create` | served |  |
 | `people.CreateEmergencyContact` | POST | `/v1/people/persons/{personId}/emergency-contacts` | `people.emergency_contact.create` | served |  |
 | `people.CreateHonorific` | POST | `/v1/people/honorifics` | `people.honorific.create` | served |  |
@@ -1890,8 +1891,6 @@ misleading 404.
 | `people.DeleteSkill` | DELETE | `/v1/people/skills/{skillId}` | `people.skill.delete` | served |  |
 | `people.DeleteWorkExperience` | DELETE | `/v1/people/persons/{personId}/work-experience/{workExperienceId}` | `people.work_experience.delete` | served |  |
 | `people.GetCertification` | GET | `/v1/people/persons/{personId}/certifications/{certificationId}` | `people.certification.read` | served |  |
-| `people.GetConsentRecord` | GET | `/v1/people/persons/{personId}/consents/{consentRecordId}` | `people.consent_record.read` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
-| `people.GetConsentStatus` | GET | `/v1/people/persons/{personId}:consentStatus` | `people.person.get_consent_status` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
 | `people.GetEducationHistory` | GET | `/v1/people/persons/{personId}/education/{educationHistoryId}` | `people.education_history.read` | served |  |
 | `people.GetEmergencyContact` | GET | `/v1/people/persons/{personId}/emergency-contacts/{emergencyContactId}` | `people.emergency_contact.read` | served |  |
 | `people.GetHonorific` | GET | `/v1/people/honorifics/{honorificId}` | `people.honorific.read` | served |  |
@@ -1907,7 +1906,6 @@ misleading 404.
 | `people.GetWorkExperience` | GET | `/v1/people/persons/{personId}/work-experience/{workExperienceId}` | `people.work_experience.read` | served |  |
 | `people.ListBirthdays` | GET | `/v1/people/persons:birthdays` | `people.person.list_birthdays` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
 | `people.ListCertifications` | GET | `/v1/people/persons/{personId}/certifications` | `people.certification.read` | served |  |
-| `people.ListConsentRecords` | GET | `/v1/people/persons/{personId}/consents` | `people.consent_record.read` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
 | `people.ListEducationHistory` | GET | `/v1/people/persons/{personId}/education` | `people.education_history.read` | served |  |
 | `people.ListEmergencyContacts` | GET | `/v1/people/persons/{personId}/emergency-contacts` | `people.emergency_contact.read` | served |  |
 | `people.ListHonorifics` | GET | `/v1/people/honorifics` | `people.honorific.read` | served |  |
@@ -1934,7 +1932,6 @@ misleading 404.
 | `people.UpdateQualification` | PATCH | `/v1/people/qualifications/{qualificationId}` | `people.qualification.update` | served |  |
 | `people.UpdateSkill` | PATCH | `/v1/people/skills/{skillId}` | `people.skill.update` | served |  |
 | `people.UpdateWorkExperience` | PATCH | `/v1/people/persons/{personId}/work-experience/{workExperienceId}` | `people.work_experience.update` | served |  |
-| `people.WithdrawConsent` | POST | `/v1/people/persons/{personId}/consents/{consentRecordId}:withdraw` | `people.consent_record.withdraw_consent` | 501 | workflow / custom operation |
 
 ## platform
 
@@ -2026,6 +2023,37 @@ misleading 404.
 | `platform.UpdateTenant` | PATCH | `/v1/platform/tenants/{tenantId}` | `platform.tenant.update` | served |  |
 | `platform.UpdateTheme` | PATCH | `/v1/platform/themes/{themeId}` | `platform.theme.update` | served |  |
 | `platform.UpdateUploadPolicy` | PATCH | `/v1/platform/upload-policies/{uploadPolicyId}` | `platform.upload_policy.update` | served |  |
+
+## privacy
+
+| Operation | Method | Path | Permission | Status | Why not served |
+|---|---|---|---|---|---|
+| `privacy.CreateNotice` | POST | `/v1/privacy/notices` | `privacy.notice.create` | served |  |
+| `privacy.CreateNoticeTranslation` | POST | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations` | `privacy.notice_translation.create` | served |  |
+| `privacy.CreateNoticeVersion` | POST | `/v1/privacy/notices/{noticeId}/versions` | `privacy.notice_version.create` | served |  |
+| `privacy.DeleteNotice` | DELETE | `/v1/privacy/notices/{noticeId}` | `privacy.notice.delete` | served |  |
+| `privacy.DeleteNoticeTranslation` | DELETE | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}` | `privacy.notice_translation.delete` | served |  |
+| `privacy.GetConsentRecord` | GET | `/v1/privacy/consent-records/{consentRecordId}` | `privacy.consent_record.read` | served |  |
+| `privacy.GetMyNotice` | GET | `/v1/privacy/my/notices/{noticeCode}` | `privacy.my_consent.read` | served |  |
+| `privacy.GetNotice` | GET | `/v1/privacy/notices/{noticeId}` | `privacy.notice.read` | served |  |
+| `privacy.GetNoticeTranslation` | GET | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}` | `privacy.notice_translation.read` | served |  |
+| `privacy.GetNoticeVersion` | GET | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}` | `privacy.notice_version.read` | served |  |
+| `privacy.GetPurpose` | GET | `/v1/privacy/purposes/{purposeId}` | `privacy.tenant_purpose.read` | served |  |
+| `privacy.ListConsentRecords` | GET | `/v1/privacy/consent-records` | `privacy.consent_record.read` | served |  |
+| `privacy.ListMyConsents` | GET | `/v1/privacy/my/consents` | `privacy.my_consent.read` | served |  |
+| `privacy.ListNoticeTranslations` | GET | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations` | `privacy.notice_translation.read` | served |  |
+| `privacy.ListNoticeVersions` | GET | `/v1/privacy/notices/{noticeId}/versions` | `privacy.notice_version.read` | served |  |
+| `privacy.ListNotices` | GET | `/v1/privacy/notices` | `privacy.notice.read` | served |  |
+| `privacy.ListPurposes` | GET | `/v1/privacy/purposes` | `privacy.tenant_purpose.read` | served |  |
+| `privacy.PublishNoticeVersion` | POST | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}:publish` | `privacy.notice_version.publish` | served |  |
+| `privacy.RecordConsentOnBehalf` | POST | `/v1/privacy/consent-records` | `privacy.consent_record.record_on_behalf` | served |  |
+| `privacy.RecordMyConsent` | POST | `/v1/privacy/my/consents` | `privacy.my_consent.create` | served |  |
+| `privacy.UpdateNotice` | PATCH | `/v1/privacy/notices/{noticeId}` | `privacy.notice.update` | served |  |
+| `privacy.UpdateNoticeTranslation` | PATCH | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}` | `privacy.notice_translation.update` | served |  |
+| `privacy.UpdateNoticeVersion` | PATCH | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}` | `privacy.notice_version.update` | served |  |
+| `privacy.UpdatePurpose` | PATCH | `/v1/privacy/purposes/{purposeId}` | `privacy.tenant_purpose.update` | served |  |
+| `privacy.VerifyConsentRecord` | POST | `/v1/privacy/consent-records/{consentRecordId}:verify` | `privacy.consent_record.verify` | served |  |
+| `privacy.WithdrawMyConsent` | POST | `/v1/privacy/my/consents/{consentRecordId}:withdraw` | `privacy.my_consent.withdraw` | served |  |
 
 ## sis
 

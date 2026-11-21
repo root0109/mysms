@@ -5,6 +5,8 @@ import com.mysms.core.error.ProblemResponseWriter;
 import com.mysms.core.grpc.GrpcEdgeAutoConfiguration;
 import com.mysms.core.grpc.GrpcStatuses;
 import com.mysms.core.imports.ImportIdentity;
+import com.mysms.messaging.events.EventBus;
+import net.devh.boot.grpc.client.channelfactory.GrpcChannelFactory;
 import java.time.Clock;
 import java.time.Duration;
 import org.springframework.beans.factory.ObjectProvider;
@@ -12,14 +14,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import tools.jackson.databind.json.JsonMapper;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
 /** Wires the edge filter and the auth facade into every module. */
-@AutoConfiguration(after = GrpcEdgeAutoConfiguration.class)
+@AutoConfiguration(after = GrpcEdgeAutoConfiguration.class,
+        afterName = {"com.mysms.messaging.rabbitmq.RabbitEventsAutoConfiguration",
+                "com.mysms.messaging.pubsub.GooglePubSubEventsAutoConfiguration",
+                "com.mysms.messaging.inprocess.InProcessEventsAutoConfiguration"})
 @EnableConfigurationProperties(AuthClientProperties.class)
 public class AuthClientAutoConfiguration {
+
+    /** The gRPC client name of iam ({@code grpc.client.iam-service.*}), as every caller of iam names it. */
+    static final String IAM_SERVICE = "iam-service";
 
     @Bean
     public OperationTable operationTable(AuthClientProperties properties) {
@@ -39,16 +48,34 @@ public class AuthClientAutoConfiguration {
     }
 
     /**
+     * Where the role cache reads iam's role data: iam's gRPC service, unless the process serves iam and offers its own
+     * source (iam's {@code LocalRolePermissions}, the monolith included).
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public RolePermissionSource rolePermissionSource(GrpcChannelFactory channels) {
+        return new IamAuthzGrpcClient(channels.createChannel(IAM_SERVICE));
+    }
+
+    /** The per-process role→permission cache of the permissions filter ({@code mysms.auth.role-cache-ttl}). */
+    @Bean
+    public RolePermissionResolver rolePermissionResolver(RolePermissionSource source,
+                                                         @Value("${mysms.auth.role-cache-ttl}") Duration ttl) {
+        return new RolePermissionResolver(source, ttl);
+    }
+
+    /**
      * The one authentication and authorization decision of both edges (servlet filter and gRPC interceptor). A module
      * serving guests provides a {@link TenantCodeResolver} (its iam client); in the monolith several modules do and
      * any one answers for all, since each asks the same iam.
      */
     @Bean
     public EdgeAuthorizer edgeAuthorizer(TokenVerifier verifier, PermissionChecker permissions,
-                                         ObjectProvider<TenantCodeResolver> resolvers, Clock clock) {
+                                         ObjectProvider<TenantCodeResolver> resolvers, Clock clock,
+                                         RolePermissionResolver roles) {
         TenantCodes tenantCodes = resolvers.orderedStream().findFirst()
                 .map(resolver -> new TenantCodes(resolver, clock)).orElse(null);
-        return new EdgeAuthorizer(verifier, permissions, tenantCodes);
+        return new EdgeAuthorizer(verifier, permissions, tenantCodes, roles);
     }
 
     @Bean
@@ -83,6 +110,20 @@ public class AuthClientAutoConfiguration {
     public ServiceTokenProvider serviceTokenProvider(Environment environment, JsonMapper jsonMapper, Clock clock) {
         return new ServiceTokenProvider(environment.getProperty("mysms.auth.token-uri"),
                 module -> environment.getProperty("mysms." + module + ".service-client.secret"), jsonMapper, clock);
+    }
+
+    /**
+     * Publishes the served modules' API-permission catalogues to iam at start-up and every
+     * {@code mysms.auth.catalogue-interval} (JAVA-CODING-RULES §16.2), as the release {@code mysms.auth.release} names
+     * it. Absent without an event bus ({@code mysms.events.bus=none}).
+     */
+    @Bean
+    @ConditionalOnBean(EventBus.class)
+    public ApiPermissionPublisher apiPermissionPublisher(OperationTable operations, EventBus bus, JsonMapper jsonMapper,
+                                                         Clock clock,
+                                                         @Value("${mysms.auth.release}") String release,
+                                                         @Value("${mysms.auth.catalogue-interval}") Duration interval) {
+        return new ApiPermissionPublisher(operations, bus, jsonMapper, clock, release, interval);
     }
 
     /** The importing user's narrowed identity the rows of an import batch are created under. */

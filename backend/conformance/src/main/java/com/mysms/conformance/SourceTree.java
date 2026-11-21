@@ -22,7 +22,7 @@ import java.util.stream.Stream;
  */
 public final class SourceTree {
 
-    /** Modules that are libraries or the assembly, not one of the 21 domain modules. */
+    /** Modules that are libraries or the assembly, not one of the 22 domain modules. */
     public static final Set<String> SHARED =
             Set.of("core", "auth-client", "messaging", "app", "conformance");
 
@@ -66,7 +66,7 @@ public final class SourceTree {
         return modules.stream().filter(m -> !"conformance".equals(m)).toList();
     }
 
-    /** The 21 domain modules (one per schema). */
+    /** The 22 domain modules (one per schema). */
     public List<String> domainModules() {
         return modules.stream().filter(m -> !SHARED.contains(m)).toList();
     }

@@ -12,9 +12,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -64,6 +66,13 @@ public class RoleRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** The roles among the given ones that still hold a retired permission code (SEC-0 (4)). */
+    private static final String HOLDING_RETIRED = """
+            SELECT DISTINCT rp.role_id
+              FROM iam.role_permission rp
+              JOIN iam.permission pm ON pm.id = rp.permission_id AND pm.retired_at IS NOT NULL
+             WHERE rp.tenant_id = :tenantId AND rp.role_id = ANY(:roleIds) AND rp.deleted_at IS NULL
+            """;
     private static final String INSERT = """
             INSERT INTO iam.role
             (id, tenant_id, code, display_name, description, is_system, is_active, authority_level, parent_role_id,
@@ -127,6 +136,12 @@ public class RoleRepository {
 
     public RoleRepository(@Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** Of the given roles, those that still hold a permission code no deployed module publishes; one statement. */
+    public Set<UUID> holdingRetiredCodes(Collection<UUID> roleIds) {
+        return Set.copyOf(jdbc.sql(HOLDING_RETIRED).param("roleIds", roleIds.toArray(UUID[]::new))
+                .query(UUID.class).list());
     }
 
     public Optional<RoleEntity> findById(UUID id) {

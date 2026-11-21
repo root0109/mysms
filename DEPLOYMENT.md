@@ -132,6 +132,9 @@ No secret is in the repository — a secret is only ever named by its variable.
 | `MYSMS_<MODULE>_SERVICE_PORT_RPC` | no | the gRPC port of the `<module>` service a module calls, default `9112` (Kubernetes sets it for a service port named `rpc`) |
 | `MYSMS_<MODULE>_GRPC_ADDRESS` | no | the whole target of a called service, overriding the two above (e.g. `static://10.0.0.5:9112`); in the monolith the default is the in-process server |
 | `MYSMS_GRPC_CLIENT_DEADLINE` | no | how long a call to another module may take when its stub sets no deadline, default `10s` |
+| `MYSMS_RELEASE` | no | the deployed release, published with every module's API-permission catalogue (§5.10), default `development` |
+| `MYSMS_CATALOGUE_INTERVAL` | no | how often each module publishes its API-permission catalogue again, default `6h`; must stay well below iam's `MYSMS_IAM_API_PERMISSION_RETIRE_AFTER` |
+| `MYSMS_ROLE_CACHE_TTL` | no | how long the permissions filter keeps a role's permission codes before asking iam again (§5.10), ISO-8601, default `PT1M`; a token issued after a role change refreshes them at once |
 | `MYSMS_GRPC_REFLECTION` | no | `true` serves gRPC server reflection (for grpcurl and similar tools). Off by default: like the OpenAPI document it maps every service and message |
 | `MYSMS_AUTH_TOKEN_URI` | for service calls | iam's token endpoint, `<iam base URL>/oauth2/token`, where a module obtains its service token (§5.9). Blank = the module makes no service calls; one that needs to answers 503 |
 | `MYSMS_<MODULE>_SERVICE_CLIENT_SECRET` | for service calls | **secret**, the module's client secret for that endpoint (e.g. `MYSMS_FINANCE_SERVICE_CLIENT_SECRET`), at least 32 random characters; iam holds only its SHA-256 (§4.2). Never logged |
@@ -147,10 +150,12 @@ No secret is in the repository — a secret is only ever named by its variable.
 | `MYSMS_IAM_SERVICECLIENTS_<MODULE>_SECRETSHA256` | for service calls | the lower-case hex SHA-256 of that module's client secret (`printf %s "$SECRET" \| sha256sum`); a module without one cannot obtain a service token (§5.9). Property form: `mysms.iam.service-clients.<module>.secret-sha256` |
 | `MYSMS_IAM_SERVICECLIENTS_<MODULE>_PERMISSIONS` | no | comma-separated permission codes the module's service tokens carry: the operations of audience `internal` it may call. Default none |
 | `MYSMS_IAM_SERVICE_TOKEN_TTL` | no | lifetime of a service token, ISO-8601, default `PT5M`, at most `PT1H` |
+| `MYSMS_IAM_API_PERMISSION_RETIRE_AFTER` | no | an operation (and the tenant-user code only it carries) is retired once no module has published it for this long, ISO-8601, default `P3D`; keep it well above every module's `MYSMS_CATALOGUE_INTERVAL` |
 | `MYSMS_PEOPLE_URL` | no | base URL of the people service (for the monolith: its own URL) so `GetMe` includes the person record; empty = without it |
 | `MYSMS_TIMETABLE_URL`, `MYSMS_SIS_URL`, `MYSMS_ORG_URL` | no | read by attendance: base URLs of the timetable, sis and org services (for the monolith: its own URL, three times). Without all three, `attendance.TakeAttendanceForSession` and a mark for a student a sheet has no record of yet answer 503; everything else in attendance works. Assessment also reads SIS for exam rosters and student/guardian result access |
 | `MYSMS_FACILITY_URL`, `MYSMS_ACADEMICS_URL` | no | read by assessment: Facility supplies exam room capacities; Academics supplies course-plan credits for higher-education exam results. The operation that needs an unset service answers 503 |
 | `MYSMS_IAM_BOOTSTRAP_TENANT_CODE`, `MYSMS_IAM_BOOTSTRAP_ADMIN_USERNAME`, `MYSMS_IAM_BOOTSTRAP_ADMIN_PASSWORD` | first start only | see §5.3 |
+| `MYSMS_PRIVACY_AGE_OF_MAJORITY` | no | read by privacy: the age, in years, at which a person becomes an adult (a subject's status and majority date), default 18 |
 
 ### 4.3 Web apps (build time)
 
@@ -367,7 +372,8 @@ declared by an earlier release without the alternate exchange is refused the sam
 What flows today: every module's audit records (`audit.recorded`) into the platform's `platform.audit_log` (a module
 may audit only its own entities; a record of a tenant the platform does not know fails its foreign key and is
 dead-lettered after the delivery limit), the bootstrap tenant from iam into `platform.tenant` (§5.3), the platform's
-tenant events into `iam.tenant_directory`, and the reference cleanup of database/logical-references.md (an owner's `*.deleted`
+tenant events into `iam.tenant_directory`, people's person and sis's student and guardian-link events into privacy's
+subjects and guardian links (`privacy.subject`, `privacy.guardian_link`), and the reference cleanup of database/logical-references.md (an owner's `*.deleted`
 event clears or archives the rows that referenced it in other modules).
 
 #### Google Cloud Pub/Sub
@@ -419,7 +425,7 @@ Every operation is also a gRPC method (api/README; service `mysms.<module>.v1.<R
 
 Served over gRPC in this release: all 21 modules — every operation REST serves is served over gRPC through the same operation-table row (each module's `<Module>GrpcParityComponentTest` proves the answers match); an operation REST answers 501 answers `UNIMPLEMENTED`.
 
-Modules call each other only over gRPC (JAVA-CODING-RULES §10): a split deployment addresses each called module by its Kubernetes DNS name (`MYSMS_NAMESPACE`, `MYSMS_<MODULE>_SERVICE_PORT_RPC`, or `MYSMS_<MODULE>_GRPC_ADDRESS`), plaintext; the monolith calls its own in-process server. Each module configures a client only for the modules it calls (its `application.properties`).
+Modules call each other only over gRPC (JAVA-CODING-RULES §10): a split deployment addresses each called module by its Kubernetes DNS name (`MYSMS_NAMESPACE`, `MYSMS_<MODULE>_SERVICE_PORT_RPC`, or `MYSMS_<MODULE>_GRPC_ADDRESS`), plaintext; the monolith calls its own in-process server. Each module configures a client only for the modules it calls (its `application.properties`). Every module also has a client of iam: its permissions filter reads iam's role data (§5.10).
 
 ```bash
 java -jar backend/app/target/app-0.1.0-SNAPSHOT-exec.jar
@@ -446,6 +452,12 @@ MYSMS_IAM_SERVICECLIENTS_FINANCE_PERMISSIONS=<internal operations' permissions, 
 Self sign-up (`iam.SignUp`, `iam.ListSignUpInstitutions`) reads the tenant's active schools from org as iam's own service principal, so a deployment that opens sign-up gives iam a service identity too: `MYSMS_IAM_SERVICE_CLIENT_SECRET` at iam, the hash in `MYSMS_IAM_SERVICECLIENTS_IAM_SECRETSHA256` and `MYSMS_IAM_SERVICECLIENTS_IAM_PERMISSIONS=org.institution.list_active`. Without it both operations answer 503.
 
 iam never holds the plaintext secret; rotating it means setting a new secret on the module and the new hash at iam (restart both; the module's cached token stays valid until it expires). If `MYSMS_AUTH_AUDIENCES` (`mysms.auth.audiences`) is set explicitly, include `mysms-internal`.
+
+### 5.10 Permissions: catalogues and the role cache
+
+Every module publishes its API-permission catalogue (its operation table: each operation with the permission guarding it) to iam as the event `<module>.api_permissions.published`, at start-up and every `MYSMS_CATALOGUE_INTERVAL`; iam keeps it in `iam.api_permission` (platform staff read it with `iam.ListApiPermissions`), adds new tenant-user permission codes to the catalogue roles are composed from, and retires (never deletes) an operation, and a code only it carried, that no module has published for `MYSMS_IAM_API_PERMISSION_RETIRE_AFTER`. iam therefore consumes every module's catalogue event: on Google Cloud Pub/Sub its source modules must include all 21 modules.
+
+Each module's filter decides every call itself. A person's access token names their role grants (`rgr`), direct grants and denies and the tenant's authorisation version (`azv`); the filter resolves the permissions through a per-process cache of each role's codes, fetched from iam's `IamAuthzService.GetRolePermissions` over gRPC on a miss (with the caller's own token; iam answers only about that caller's tenant and roles) — in iam and the monolith from iam directly. A cached role older than the token's `azv` is fetched again, so a token issued after a role change sees it at once; other changes show within `MYSMS_ROLE_CACHE_TTL`. When iam cannot answer what the cache lacks, the call is refused with 503 `UNAVAILABLE`, never admitted: an iam outage (or a rollout with no ready iam replica) longer than `MYSMS_ROLE_CACHE_TTL` therefore refuses every person's call in every module — run iam with at least two replicas and a rolling update. Changes no tenant version records — a permission code made common to every role, deleted or retired — show within `MYSMS_ROLE_CACHE_TTL`.
 
 ## 6. Production checklist
 

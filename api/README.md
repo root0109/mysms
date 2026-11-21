@@ -152,7 +152,7 @@ REST errors use RFC 9457 `application/problem+json` with a stable `code`, a `tra
 | Not authenticated | 401 | UNAUTHENTICATED | `UNAUTHENTICATED`, `TOKEN_EXPIRED`, `INVALID_CREDENTIALS` (sign-in and refresh: one answer for every failure, so accounts cannot be probed) |
 | Not permitted | 403 | PERMISSION_DENIED | `PERMISSION_DENIED` |
 | Not found / not visible | 404 | NOT_FOUND | `NOT_FOUND` |
-| Duplicate / invalid state transition | 409 | ALREADY_EXISTS / FAILED_PRECONDITION | `DUPLICATE`, `INVALID_STATE_TRANSITION`, `SETTING_LOCKED`, `REQUEST_IN_PROGRESS` (a retry while the first request with its `Idempotency-Key` still runs) |
+| Duplicate / invalid state transition | 409 | ALREADY_EXISTS / FAILED_PRECONDITION | `DUPLICATE`, `INVALID_STATE_TRANSITION`, `SETTING_LOCKED`, `CONSENT_FOUR_EYES` (a paper consent verified by the staff member who recorded it), `REQUEST_IN_PROGRESS` (a retry while the first request with its `Idempotency-Key` still runs) |
 | `Idempotency-Key` reused for a different request | 422 | INVALID_ARGUMENT | `IDEMPOTENCY_KEY_REUSED` |
 | An entity type the contract lists that no module imports yet (`platform.StartImport`, `platform.GetImportTemplate`: `lms_course_package`) | 422 | INVALID_ARGUMENT | `IMPORT_TYPE_UNAVAILABLE` |
 | Stale ETag | 412 | ABORTED | `ETAG_MISMATCH` |
@@ -235,6 +235,7 @@ The custom operations, grouped by business process. Each runs in one transaction
 - **`platform.sales_enquiry`**: `MarkEnquiryContacted` (platform staff)
 - **`org.academic_year`**: `ActivateAcademicYear`, `CloseAcademicYear`, `GenerateTerms`
 - **`people.person`**: `ListBirthdays`, `SendGreetings`, `GetConsentStatus`, `GetMyPerson`, `UpdateMyPerson` (the caller's own record; contact and self-description fields only)
+- **`privacy.notice_version`**: `PublishNoticeVersion`
 - **`sis.student`**: `ChangeStudentStatus`, `GetStudentSummary`, `IssueBonafideCertificate`, `CreateStudentPortalAccount`
 - **`sis.guardian`**: `CreatePortalAccount`, `ListMyChildren`
 - **`sis.promotion`**: `ProposePromotions`, `ApprovePromotion`, `RejectPromotion`, `ApplyPromotions`

@@ -34,19 +34,21 @@ import com.mysms.iam.mapper.RoleMapper;
 import com.mysms.iam.mapper.RolePermissionMapper;
 import com.mysms.iam.repository.RolePermissionRepository;
 import com.mysms.iam.repository.RoleRepository;
+import com.mysms.iam.repository.TenantAuthzVersionRepository;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Business service of iam.role and of the records that exist only as part of a Role (RolePermission): audit and domain
- * event commit in the same transaction as every change. Rows outside the caller's institutions are invisible;
- * tenant-level rows change only through a tenant-wide grant.
+ * Business service of iam.role and of the records that exist only as part of a Role (RolePermission): audit, domain
+ * event and the tenant's raised authorisation version commit in the same transaction as every change. Rows outside
+ * the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
  */
 @Service
 public class RoleService extends AppTransactionManager {
@@ -80,6 +82,7 @@ public class RoleService extends AppTransactionManager {
     private final RolePermissionRepository rolePermissionRepository;
     private final RolePermissionMapper rolePermissionMapper;
     private final RolePermissionRules rolePermissionRules;
+    private final TenantAuthzVersionRepository authzVersions;
 
     public RoleService(RoleRepository repository,
             RoleMapper mapper,
@@ -92,7 +95,8 @@ public class RoleService extends AppTransactionManager {
             Clock clock,
             RolePermissionRepository rolePermissionRepository,
             RolePermissionMapper rolePermissionMapper,
-            RolePermissionRules rolePermissionRules) {
+            RolePermissionRules rolePermissionRules,
+            TenantAuthzVersionRepository authzVersions) {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
@@ -104,11 +108,12 @@ public class RoleService extends AppTransactionManager {
         this.rolePermissionRepository = rolePermissionRepository;
         this.rolePermissionMapper = rolePermissionMapper;
         this.rolePermissionRules = rolePermissionRules;
+        this.authzVersions = authzVersions;
     }
 
     public Role getRole(UUID id) {
         return doInReadTransaction(() -> {
-            return mapper.toDto(loadVisible(DataScope.current(PERMISSION_GET), id));
+            return flagged(List.of(mapper.toDto(loadVisible(DataScope.current(PERMISSION_GET), id)))).get(0);
         });
     }
 
@@ -120,8 +125,21 @@ public class RoleService extends AppTransactionManager {
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
         return doInReadTransaction(() -> {
             Page<RoleEntity> rows = repository.list(page, where);
-            return rows.map(mapper::toDto);
+            Page<Role> roles = rows.map(mapper::toDto);
+            flagged(roles.items());
+            return roles;
         });
+    }
+
+    /**
+     * Sets {@code holdsRetiredPermissions} on the roles read (SEC-0 (4)): derived from the data in one statement for
+     * the whole page, never stored. Returns the same roles.
+     */
+    private List<Role> flagged(List<Role> roles) {
+        Set<UUID> holding = roles.isEmpty() ? Set.of()
+                : repository.holdingRetiredCodes(roles.stream().map(Role::getId).toList());
+        roles.forEach(role -> role.setHoldsRetiredPermissions(holding.contains(role.getId())));
+        return roles;
     }
 
     /** Creates the row; with validateOnly every check runs and nothing is written. */
@@ -142,6 +160,7 @@ public class RoleService extends AppTransactionManager {
             RoleEntity stored = repository.insert(entity);
             audit.recordCreate(AGGREGATE, stored.getId());
             outbox.publish(AGGREGATE + IamEvents.CREATED, AGGREGATE, stored.getId(), IamEvents.payload(stored.getId()));
+            authzVersions.bump();
             return mapper.toDto(stored);
         });
     }
@@ -177,7 +196,8 @@ public class RoleService extends AppTransactionManager {
             entity.setRowVersion(expected + 1);
             audit.recordUpdate(AGGREGATE, id, fields);
             outbox.publish(AGGREGATE + IamEvents.UPDATED, AGGREGATE, id, IamEvents.payload(id));
-            return mapper.toDto(entity);
+            authzVersions.bump();
+            return flagged(List.of(mapper.toDto(entity))).get(0);
         });
     }
 
@@ -213,6 +233,7 @@ public class RoleService extends AppTransactionManager {
             }
             audit.recordDelete(AGGREGATE, id);
             outbox.publish(AGGREGATE + IamEvents.DELETED, AGGREGATE, id, IamEvents.payload(id));
+            authzVersions.bump();
             rules.afterDelete(entity);
         });
     }
@@ -319,6 +340,7 @@ public class RoleService extends AppTransactionManager {
             audit.recordCreate(ROLE_PERMISSION_AGGREGATE, stored.getId());
             outbox.publish(ROLE_PERMISSION_AGGREGATE + IamEvents.CREATED, ROLE_PERMISSION_AGGREGATE, stored.getId(),
                     IamEvents.payload(stored.getId()));
+            authzVersions.bump();
             return rolePermissionMapper.toDto(stored);
         });
     }
@@ -355,6 +377,7 @@ public class RoleService extends AppTransactionManager {
             entity.setRowVersion(expected + 1);
             audit.recordUpdate(ROLE_PERMISSION_AGGREGATE, id, fields);
             outbox.publish(ROLE_PERMISSION_AGGREGATE + IamEvents.UPDATED, ROLE_PERMISSION_AGGREGATE, id, IamEvents.payload(id));
+            authzVersions.bump();
             return rolePermissionMapper.toDto(entity);
         });
     }
@@ -376,6 +399,7 @@ public class RoleService extends AppTransactionManager {
             }
             audit.recordDelete(ROLE_PERMISSION_AGGREGATE, id);
             outbox.publish(ROLE_PERMISSION_AGGREGATE + IamEvents.DELETED, ROLE_PERMISSION_AGGREGATE, id, IamEvents.payload(id));
+            authzVersions.bump();
             rolePermissionRules.afterDelete(entity);
         });
     }

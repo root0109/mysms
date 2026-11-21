@@ -134,10 +134,13 @@ public final class TokenIssuer {
                 .claim("tid", claims.tenantId().toString())
                 .claim("sid", claims.sessionId().toString())
                 .claim("amr", List.copyOf(authMethods))
-                .claim("perms", List.copyOf(claims.permissions()))
                 .claim("ins", institutionsClaim(claims))
-                .claim("tperms", claims.tenantWidePermissions().stream().sorted().toList())
-                .claim("roles", claims.roles());
+                .claim("roles", claims.roles())
+                .claim("rgr", claims.authorization().roleGrants())
+                .claim("dg", claims.authorization().directGrants())
+                .claim("dd", claims.authorization().denies())
+                .claim("azv", claims.authorization().version());
+        claims.authorization().abilities().ifPresent(abilities -> set.claim("abl", abilities.stream().sorted().toList()));
         claims.personId().ifPresent(person -> set.claim("pid", person.toString()));
         if (actor != null) {
             set.claim("act", Map.of("sub", actor.toString()));

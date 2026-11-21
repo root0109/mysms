@@ -41,10 +41,12 @@ class TokenIssuerTest {
         UUID person = UUID.randomUUID();
         UUID session = UUID.randomUUID();
         UUID institution = UUID.randomUUID();
+        UUID role = UUID.randomUUID();
         TokenIssuer issuer = issuer(null);
         TokenIssuer.IssuedToken issued = issuer.issue(new AccessClaims(user, tenant, Optional.of(person), session,
                 Set.of("iam.*", "people.person.read_mine"), Set.of(institution), List.of("teacher@tenant"), false,
-                Set.of("people.person.read_mine")));
+                Set.of("people.person.read_mine"), new AccessClaims.Authorization(List.of(role + "@tenant"),
+                        List.of("hr.staff.read"), List.of("iam.role.delete"), 7, Optional.of(Set.of("iam.role.read")))));
         VerifiedToken verified = verifier.verify(issued.token());
         AuthContext context = verified.context();
         assertThat(context.userId()).isEqualTo(user);
@@ -53,26 +55,29 @@ class TokenIssuerTest {
         assertThat(context.sessionId()).contains(session);
         assertThat(context.institutionIds()).containsExactly(institution);
         assertThat(context.tokenId()).isEqualTo(issued.tokenId());
-        assertThat(context.hasPermission("iam.role.create")).isTrue();
-        assertThat(context.hasPermission("people.person.read_mine")).isTrue();
-        assertThat(context.hasPermission("people.person.read")).isFalse();
+        assertThat(context.permissions()).as("no permission list: the edge resolves the roles (SEC-0)").isEmpty();
+        assertThat(context.tenantWidePermissions()).isEmpty();
+        assertThat(verified.roleClaims().orElseThrow().roleIds()).containsExactly(role);
         assertThat(context.platformOperator()).isFalse();
-        assertThat(context.tenantWidePermissions()).containsExactly("people.person.read_mine");
-        assertThat(context.hasTenantWidePermission("people.person.read_mine")).as("needs ins=*").isFalse();
         assertThat(verified.audiences()).containsExactly("mysms");
         assertThat(verified.authMethods()).containsExactly("pwd");
         assertThat(Duration.between(java.time.Instant.now(), issued.expiresAt())).isBetween(Duration.ofMinutes(14),
                 Duration.ofMinutes(15));
         String header = new String(Base64.getUrlDecoder().decode(issued.token().split("\\.")[0]), StandardCharsets.UTF_8);
         assertThat(header).contains("\"kid\":\"" + issuer.keyId() + "\"").contains("RS256");
+        String payload = new String(Base64.getUrlDecoder().decode(issued.token().split("\\.")[1]), StandardCharsets.UTF_8);
+        assertThat(payload).doesNotContain("\"perms\"").doesNotContain("\"tperms\"");
+        assertThat(payload).as("the role-based claims (SEC-0)").contains("\"rgr\":[\"" + role + "@tenant\"]")
+                .contains("\"dg\":[\"hr.staff.read\"]").contains("\"dd\":[\"iam.role.delete\"]")
+                .contains("\"azv\":7").contains("\"abl\":[\"iam.role.read\"]");
     }
 
     @Test
     void aTokenWithoutAPersonHasNoPid() {
         TokenIssuer.IssuedToken issued = issuer("k1").issue(new AccessClaims(UUID.randomUUID(), UUID.randomUUID(),
                 Optional.empty(), UUID.randomUUID(), Set.of("iam.role.read"), Set.of(), List.of(), true,
-                Set.of("iam.role.read")));
-        assertThat(verifier.verify(issued.token()).context().hasTenantWidePermission("iam.role.read")).isTrue();
+                Set.of("iam.role.read"), new AccessClaims.Authorization(List.of(), List.of(), List.of(), 0,
+                        Optional.empty())));
         assertThat(verifier.verify(issued.token()).context().coversInstitution(UUID.randomUUID())).isTrue();
         assertThat(verifier.verify(issued.token()).context().personId()).isEmpty();
     }

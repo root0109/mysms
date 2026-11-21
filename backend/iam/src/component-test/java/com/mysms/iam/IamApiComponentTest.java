@@ -204,13 +204,13 @@ class IamApiComponentTest {
     void bootstrapCreatesTheTenantAndAnAdministratorWithEveryPermission() throws Exception {
         String admin = accessToken("admin", ADMIN_PASSWORD);
         JsonNode claims = claims(admin);
-        assertThat(claims.path("perms")).hasSize(1);
-        assertThat(claims.path("perms").get(0).asString()).isEqualTo("*");
+        assertThat(claims.has("perms")).as("roles, never a permission list (SEC-0)").isFalse();
+        assertThat(claims.path("rgr")).as("one tenant-wide role").hasSize(1);
+        assertThat(claims.path("rgr").get(0).asString()).endsWith("@tenant");
         assertThat(claims.path("roles").get(0).asString()).isEqualTo("administrator@tenant");
         assertThat(claims.path("tid").asString()).isEqualTo(tenant().toString());
         assertThat(claims.path("ins").get(0).asString()).as("a tenant-wide grant covers every institution").isEqualTo("*");
-        assertThat(claims.path("tperms").toString()).as("its permissions all come from the tenant-wide grant")
-                .isEqualTo("[\"*\"]");
+        assertThat(claims.has("tperms")).isFalse();
         assertThat(claims.has("pid")).isFalse();
         Reply me = call("GET", "/v1/iam/me", admin, null);
         assertThat(me.status()).isEqualTo(200);
@@ -271,10 +271,9 @@ class IamApiComponentTest {
         assertThat(claims.path("pid").asString()).isEqualTo(PERSON.toString());
         assertThat(claims.path("aud").toString()).contains("mysms");
         assertThat(claims.path("ins").get(0).asString()).isEqualTo(INSTITUTION.toString());
-        assertThat(claims.path("tperms")).as("no tenant-wide grant: nothing reaches every institution").isEmpty();
-        // both self-service setting permissions are the whole iam.setting resource: compacted to one wildcard
-        assertThat(claims.path("perms").toString()).contains("iam.role.read").contains("\"iam.setting.*\"")
-                .doesNotContain("iam.role.create");
+        assertThat(claims.path("rgr")).as("no tenant-wide grant: nothing reaches every institution").hasSize(1);
+        assertThat(claims.path("rgr").get(0).asString()).doesNotContain("@");
+        assertThat(claims.has("perms") || claims.has("tperms")).isFalse();
         assertThat(claims.path("roles").toString()).contains("teacher@department:" + DEPARTMENT);
 
         String header = new String(Base64.getUrlDecoder().decode(tokens.path("accessToken").asString().split("\\.")[0]),

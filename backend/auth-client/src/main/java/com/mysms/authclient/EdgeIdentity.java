@@ -29,7 +29,7 @@ final class EdgeIdentity {
         // an administrator acting as the user (iam.StartImpersonation): every audit record names both
         CallContextHolder.set(CallContext.anonymous(traceId).withIdentity(context.tenantId().orElse(null),
                 context.userId()).withImpersonator(context.impersonatorId().orElse(null)));
-        AuthContextHolder.set(context, admitted.token(), admitted.authMethods());
+        AuthContextHolder.set(context, admitted.token(), admitted.authMethods(), admitted.roleClaims());
         context.tenantId().ifPresent(t -> MDC.put(MDC_TENANT, t.toString()));
         MDC.put(MDC_USER, context.userId().toString());
         return () -> {

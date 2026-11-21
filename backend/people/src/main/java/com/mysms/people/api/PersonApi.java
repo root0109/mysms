@@ -5,7 +5,6 @@ import com.mysms.people.api.model.BirthdayEntry;
 import com.mysms.core.paging.PagingInfo;
 import com.mysms.people.api.model.Certification;
 import com.mysms.people.api.model.CertificationUpdate;
-import com.mysms.people.api.model.ConsentRecord;
 import org.springframework.format.annotation.DateTimeFormat;
 import com.mysms.people.api.model.EducationHistory;
 import com.mysms.people.api.model.EducationHistoryUpdate;
@@ -29,7 +28,6 @@ import com.mysms.people.api.model.PublicProfileUpdate;
 import com.mysms.people.api.model.SendGreetingsRequest;
 import com.mysms.people.api.model.SendResult;
 import java.util.UUID;
-import com.mysms.people.api.model.WithdrawConsentRequest;
 import com.mysms.people.api.model.WorkExperience;
 import com.mysms.people.api.model.WorkExperienceUpdate;
 import org.springframework.http.ResponseEntity;
@@ -75,40 +73,6 @@ public interface PersonApi {
     ResponseEntity<Certification> createCertification(
          @PathVariable("personId") UUID personId,
          @Valid @RequestBody Certification certification,
-         @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey,
-         @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
-    );
-
-
-    String PATH_CREATE_CONSENT_RECORD = "/v1/people/persons/{personId}/consents";
-    /**
-     * POST /v1/people/persons/{personId}/consents : Create ConsentRecord
-     * Create a ConsentRecord. Supports Idempotency-Key and validateOnly.
-     *
-     * @param personId Person id. (required)
-     * @param consentRecord  (required)
-     * @param idempotencyKey Client-generated UUID; repeating a request with the same key returns the original result for 24 h. (optional)
-     * @param validateOnly Validate the request without persisting. (optional, default to false)
-     * @return validateOnly — every check ran and nothing was persisted; the would-be resource. (status code 200)
-     *         or Created (status code 201)
-     *         or Malformed request. (status code 400)
-     *         or Missing or invalid credentials. (status code 401)
-     *         or Authenticated but not permitted. (status code 403)
-     *         or Resource not found (or not visible to the caller). (status code 404)
-     *         or Conflict with the current state (duplicate, invalid state transition). (status code 409)
-     *         or Validation failed; see errors[]. (status code 422)
-     *         or Rate limit exceeded. (status code 429)
-     *         or Unexpected server error. (status code 500)
-     */
-    @RequestMapping(
-        method = RequestMethod.POST,
-        value = PersonApi.PATH_CREATE_CONSENT_RECORD,
-        produces = { "application/json", "application/problem+json" },
-        consumes = { "application/json" }
-    )
-    ResponseEntity<ConsentRecord> createConsentRecord(
-         @PathVariable("personId") UUID personId,
-         @Valid @RequestBody ConsentRecord consentRecord,
          @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
@@ -754,66 +718,6 @@ public interface PersonApi {
     );
 
 
-    String PATH_GET_CONSENT_RECORD = "/v1/people/persons/{personId}/consents/{consentRecordId}";
-    /**
-     * GET /v1/people/persons/{personId}/consents/{consentRecordId} : Get ConsentRecord
-     * Get one ConsentRecord by id. The ETag header carries the row version.
-     *
-     * @param personId Person id. (required)
-     * @param consentRecordId ConsentRecord id. (required)
-     * @param fields Comma-separated fields to return (partial response). (optional)
-     * @return OK (status code 200)
-     *         or Malformed request. (status code 400)
-     *         or Missing or invalid credentials. (status code 401)
-     *         or Authenticated but not permitted. (status code 403)
-     *         or Resource not found (or not visible to the caller). (status code 404)
-     *         or Rate limit exceeded. (status code 429)
-     *         or Unexpected server error. (status code 500)
-     */
-    @RequestMapping(
-        method = RequestMethod.GET,
-        value = PersonApi.PATH_GET_CONSENT_RECORD,
-        produces = { "application/json", "application/problem+json" }
-    )
-    ResponseEntity<ConsentRecord> getConsentRecord(
-         @PathVariable("personId") UUID personId,
-         @PathVariable("consentRecordId") UUID consentRecordId,
-         @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
-    );
-
-
-    String PATH_GET_CONSENT_STATUS = "/v1/people/persons/{personId}:consentStatus";
-    /**
-     * GET /v1/people/persons/{personId}:consentStatus : Consents currently in force for a person, one per purpose (latest record with withdrawnAt empty)
-     * Consents currently in force for a person, one per purpose (latest record with withdrawnAt empty).
-     *
-     * @param personId  (required)
-     * @param page One-based page number (default 1). (optional, default to 1)
-     * @param size Page size (1-500, default 50). (optional, default to 50)
-     * @param cursor Opaque cursor carried by the next link. (optional)
-     * @return OK (status code 200)
-     *         or Malformed request. (status code 400)
-     *         or Missing or invalid credentials. (status code 401)
-     *         or Authenticated but not permitted. (status code 403)
-     *         or Resource not found (or not visible to the caller). (status code 404)
-     *         or Conflict with the current state (duplicate, invalid state transition). (status code 409)
-     *         or Validation failed; see errors[]. (status code 422)
-     *         or Rate limit exceeded. (status code 429)
-     *         or Unexpected server error. (status code 500)
-     */
-    @RequestMapping(
-        method = RequestMethod.GET,
-        value = PersonApi.PATH_GET_CONSENT_STATUS,
-        produces = { "application/json", "application/problem+json" }
-    )
-    ResponseEntity<PagingInfo<ConsentRecord>> getConsentStatus(
-         @PathVariable("personId") UUID personId,
-        @Min(value = 1)  @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-        @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
-         @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor
-    );
-
-
     String PATH_GET_EDUCATION_HISTORY = "/v1/people/persons/{personId}/education/{educationHistoryId}";
     /**
      * GET /v1/people/persons/{personId}/education/{educationHistoryId} : Get EducationHistory
@@ -1154,42 +1058,6 @@ public interface PersonApi {
         produces = { "application/json", "application/problem+json" }
     )
     ResponseEntity<PagingInfo<Certification>> listCertifications(
-         @PathVariable("personId") UUID personId,
-        @Min(value = 1)  @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-        @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
-         @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
-        @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
-         @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
-    );
-
-
-    String PATH_LIST_CONSENT_RECORDS = "/v1/people/persons/{personId}/consents";
-    /**
-     * GET /v1/people/persons/{personId}/consents : List ConsentRecords
-     * List ConsentRecords visible to the caller, page by page, with filtering and sorting.
-     *
-     * @param personId Person id. (required)
-     * @param page One-based page number (default 1). (optional, default to 1)
-     * @param size Page size (1-500, default 50). (optional, default to 50)
-     * @param cursor Opaque cursor carried by the next link. (optional)
-     * @param filter Filter expression (AIP-160 subset) over the resource fields, e.g. &#x60;status &#x3D; \&quot;active\&quot; AND academicYearId &#x3D; \&quot;…\&quot;&#x60;. (optional)
-     * @param sort Sort criteria `field,asc|desc`; repeat for several. (optional)
-     * @param fields Comma-separated fields to return (partial response). (optional)
-     * @return OK (status code 200)
-     *         or Malformed request. (status code 400)
-     *         or Missing or invalid credentials. (status code 401)
-     *         or Authenticated but not permitted. (status code 403)
-     *         or Resource not found (or not visible to the caller). (status code 404)
-     *         or Rate limit exceeded. (status code 429)
-     *         or Unexpected server error. (status code 500)
-     */
-    @RequestMapping(
-        method = RequestMethod.GET,
-        value = PersonApi.PATH_LIST_CONSENT_RECORDS,
-        produces = { "application/json", "application/problem+json" }
-    )
-    ResponseEntity<PagingInfo<ConsentRecord>> listConsentRecords(
          @PathVariable("personId") UUID personId,
         @Min(value = 1)  @Valid @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
@@ -1935,39 +1803,6 @@ public interface PersonApi {
          @Valid @RequestBody WorkExperienceUpdate workExperienceUpdate,
          @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
-    );
-
-
-    String PATH_WITHDRAW_CONSENT = "/v1/people/persons/{personId}/consents/{consentRecordId}:withdraw";
-    /**
-     * POST /v1/people/persons/{personId}/consents/{consentRecordId}:withdraw : Withdraw a consent (sets withdrawnAt)
-     * Withdraw a consent (sets withdrawnAt). Publishing that depends on it stops immediately, and already published media for that purpose is unpublished by a background job.
-     *
-     * @param personId  (required)
-     * @param consentRecordId  (required)
-     * @param withdrawConsentRequest  (required)
-     * @param idempotencyKey Client-generated UUID; repeating a request with the same key returns the original result for 24 h. (optional)
-     * @return OK (status code 200)
-     *         or Malformed request. (status code 400)
-     *         or Missing or invalid credentials. (status code 401)
-     *         or Authenticated but not permitted. (status code 403)
-     *         or Resource not found (or not visible to the caller). (status code 404)
-     *         or Conflict with the current state (duplicate, invalid state transition). (status code 409)
-     *         or Validation failed; see errors[]. (status code 422)
-     *         or Rate limit exceeded. (status code 429)
-     *         or Unexpected server error. (status code 500)
-     */
-    @RequestMapping(
-        method = RequestMethod.POST,
-        value = PersonApi.PATH_WITHDRAW_CONSENT,
-        produces = { "application/json", "application/problem+json" },
-        consumes = { "application/json" }
-    )
-    ResponseEntity<ConsentRecord> withdrawConsent(
-         @PathVariable("personId") UUID personId,
-         @PathVariable("consentRecordId") UUID consentRecordId,
-         @Valid @RequestBody WithdrawConsentRequest withdrawConsentRequest,
-         @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey
     );
 
 }

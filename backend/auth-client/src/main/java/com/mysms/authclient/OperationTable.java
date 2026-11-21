@@ -34,9 +34,11 @@ public final class OperationTable {
 
     private final List<Entry> entries;
     private final Map<String, OperationRule> byId;
+    private final Map<String, List<OperationRule>> byModule;
 
-    private OperationTable(List<Entry> entries) {
+    private OperationTable(List<Entry> entries, Map<String, List<OperationRule>> byModule) {
         this.entries = List.copyOf(entries);
+        this.byModule = Map.copyOf(byModule);
         Map<String, OperationRule> rules = new HashMap<>();
         entries.forEach(e -> rules.put(e.rule().operationId(), e.rule()));
         this.byId = Map.copyOf(rules);
@@ -51,7 +53,9 @@ public final class OperationTable {
         PathPatternParser parser = new PathPatternParser();
         List<Entry> entries = new ArrayList<>();
         Set<String> seen = new HashSet<>();
+        Map<String, List<OperationRule>> byModule = new HashMap<>();
         for (String module : modules) {
+            List<OperationRule> rules = new ArrayList<>();
             String resource = "META-INF/mysms/operations/" + module + ".json";
             try (InputStream in = OperationTable.class.getClassLoader().getResourceAsStream(resource)) {
                 if (in == null) {
@@ -70,12 +74,28 @@ public final class OperationTable {
                         throw new IllegalStateException("duplicate operation " + rule.method() + " " + rule.path());
                     }
                     entries.add(new Entry(parser.parse(rule.path()), rule));
+                    rules.add(rule);
                 }
+                byModule.put(module, List.copyOf(rules));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
         }
-        return new OperationTable(entries);
+        return new OperationTable(entries, byModule);
+    }
+
+    /** The modules this process serves, as {@code mysms.auth.modules} names them. */
+    public Set<String> modules() {
+        return byModule.keySet();
+    }
+
+    /** One served module's operations, in its table's order: its API-permission catalogue. */
+    public List<OperationRule> rulesOf(String module) {
+        List<OperationRule> rules = byModule.get(module);
+        if (rules == null) {
+            throw new IllegalArgumentException("this process does not serve module " + module);
+        }
+        return rules;
     }
 
     /** The operation a request addresses; the most specific template wins (`/x/{id}:cancel` over `/x/{id}`). */

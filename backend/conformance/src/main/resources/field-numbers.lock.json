@@ -7953,6 +7953,25 @@
 "iam.ActivateUserResponse": {
 "user_account": 1
 },
+"iam.ApiPermission": {
+"audience": 9,
+"catalogue_sha256": 11,
+"create_time": 15,
+"etag": 17,
+"first_seen_time": 12,
+"http_method": 4,
+"id": 1,
+"is_anonymous": 8,
+"last_seen_time": 13,
+"module_code": 2,
+"operation_id": 3,
+"path_template": 5,
+"permission_code": 6,
+"release": 10,
+"retire_time": 14,
+"schemes": 7,
+"update_time": 16
+},
 "iam.ApiTokenCreated": {
 "auth_token": 2,
 "token": 1
@@ -8309,6 +8328,14 @@
 "iam.ImportUsersResponse": {
 "result": 1
 },
+"iam.ListApiPermissionsRequest": {
+"filter": 3,
+"pageable": 5
+},
+"iam.ListApiPermissionsResponse": {
+"items": 1,
+"pagination": 4
+},
 "iam.ListAuthTokensRequest": {
 "filter": 4,
 "pageable": 6,
@@ -8547,6 +8574,7 @@
 "description": 4,
 "display_name": 3,
 "etag": 10,
+"holds_retired_permissions": 14,
 "id": 1,
 "is_active": 11,
 "is_system": 5,
@@ -18850,24 +18878,6 @@
 "update_time": 11,
 "updated_by": 12
 },
-"people.ConsentRecord": {
-"channel": 8,
-"create_time": 12,
-"created_by": 13,
-"etag": 16,
-"evidence_file_id": 10,
-"given_by_person_id": 3,
-"granted_at": 6,
-"id": 1,
-"ip_address": 11,
-"person_id": 2,
-"policy_version": 5,
-"purpose": 4,
-"recorded_by_user_id": 9,
-"update_time": 14,
-"updated_by": 15,
-"withdrawn_at": 7
-},
 "people.CreateCertificationRequest": {
 "certification": 2,
 "person_id": 1,
@@ -18876,15 +18886,6 @@
 },
 "people.CreateCertificationResponse": {
 "certification": 1
-},
-"people.CreateConsentRecordRequest": {
-"consent_record": 2,
-"person_id": 1,
-"request_id": 3,
-"validate_only": 4
-},
-"people.CreateConsentRecordResponse": {
-"consent_record": 1
 },
 "people.CreateEducationHistoryRequest": {
 "education_history": 2,
@@ -19107,21 +19108,6 @@
 "people.GetCertificationResponse": {
 "certification": 1
 },
-"people.GetConsentRecordRequest": {
-"id": 2,
-"person_id": 1
-},
-"people.GetConsentRecordResponse": {
-"consent_record": 1
-},
-"people.GetConsentStatusRequest": {
-"pageable": 4,
-"person_id": 1
-},
-"people.GetConsentStatusResponse": {
-"items": 1,
-"pagination": 3
-},
 "people.GetEducationHistoryRequest": {
 "id": 2,
 "person_id": 1
@@ -19237,15 +19223,6 @@
 "person_id": 1
 },
 "people.ListCertificationsResponse": {
-"items": 1,
-"pagination": 4
-},
-"people.ListConsentRecordsRequest": {
-"filter": 4,
-"pageable": 6,
-"person_id": 1
-},
-"people.ListConsentRecordsResponse": {
 "items": 1,
 "pagination": 4
 },
@@ -19623,15 +19600,6 @@
 },
 "people.UpdateWorkExperienceResponse": {
 "work_experience": 1
-},
-"people.WithdrawConsentRequest": {
-"consent_record_id": 2,
-"person_id": 1,
-"reason": 3,
-"request_id": 4
-},
-"people.WithdrawConsentResponse": {
-"consent_record": 1
 },
 "people.WorkExperience": {
 "company": 5,
@@ -20524,6 +20492,334 @@
 "role_id": 2,
 "update_time": 9,
 "updated_by": 10
+},
+"privacy.ConsentRecord": {
+"channel": 14,
+"create_time": 21,
+"created_by": 22,
+"decision": 7,
+"etag": 25,
+"evidence_file_id": 20,
+"giver_capacity": 4,
+"giver_person_id": 3,
+"id": 1,
+"notice_language": 9,
+"notice_version_id": 8,
+"purpose_code": 5,
+"recorded_by_user_id": 19,
+"scope": 6,
+"subject_person_id": 2,
+"superseded_by_id": 13,
+"update_time": 23,
+"updated_by": 24,
+"valid_from": 10,
+"valid_until": 11,
+"verification_method": 16,
+"verification_status": 15,
+"verified_at": 18,
+"verified_by_user_id": 17,
+"withdrawn_at": 12
+},
+"privacy.CreateNoticeRequest": {
+"notice": 1,
+"request_id": 2,
+"validate_only": 3
+},
+"privacy.CreateNoticeResponse": {
+"notice": 1
+},
+"privacy.CreateNoticeTranslationRequest": {
+"notice_id": 1,
+"notice_translation": 3,
+"notice_version_id": 2,
+"request_id": 4,
+"validate_only": 5
+},
+"privacy.CreateNoticeTranslationResponse": {
+"notice_translation": 1
+},
+"privacy.CreateNoticeVersionRequest": {
+"notice_id": 1,
+"notice_version": 2,
+"request_id": 3,
+"validate_only": 4
+},
+"privacy.CreateNoticeVersionResponse": {
+"notice_version": 1
+},
+"privacy.DeleteNoticeRequest": {
+"etag": 2,
+"id": 1
+},
+"privacy.DeleteNoticeResponse": {},
+"privacy.DeleteNoticeTranslationRequest": {
+"etag": 4,
+"id": 3,
+"notice_id": 1,
+"notice_version_id": 2
+},
+"privacy.DeleteNoticeTranslationResponse": {},
+"privacy.GetConsentRecordRequest": {
+"id": 1
+},
+"privacy.GetConsentRecordResponse": {
+"consent_record": 1
+},
+"privacy.GetMyNoticeRequest": {
+"language": 2,
+"notice_code": 1
+},
+"privacy.GetMyNoticeResponse": {
+"my_notice": 1
+},
+"privacy.GetNoticeRequest": {
+"id": 1
+},
+"privacy.GetNoticeResponse": {
+"notice": 1
+},
+"privacy.GetNoticeTranslationRequest": {
+"id": 3,
+"notice_id": 1,
+"notice_version_id": 2
+},
+"privacy.GetNoticeTranslationResponse": {
+"notice_translation": 1
+},
+"privacy.GetNoticeVersionRequest": {
+"id": 2,
+"notice_id": 1
+},
+"privacy.GetNoticeVersionResponse": {
+"notice_version": 1
+},
+"privacy.GetPurposeRequest": {
+"id": 1
+},
+"privacy.GetPurposeResponse": {
+"purpose": 1
+},
+"privacy.GrievanceContact": {
+"email": 3,
+"name": 1,
+"phone": 4,
+"role": 2
+},
+"privacy.ListConsentRecordsRequest": {
+"filter": 1,
+"pageable": 2
+},
+"privacy.ListConsentRecordsResponse": {
+"items": 1,
+"pagination": 2
+},
+"privacy.ListMyConsentsRequest": {},
+"privacy.ListMyConsentsResponse": {
+"items": 1,
+"pagination": 2
+},
+"privacy.ListNoticeTranslationsRequest": {
+"filter": 5,
+"notice_id": 1,
+"notice_version_id": 2,
+"pageable": 7
+},
+"privacy.ListNoticeTranslationsResponse": {
+"items": 1,
+"pagination": 4
+},
+"privacy.ListNoticeVersionsRequest": {
+"filter": 4,
+"notice_id": 1,
+"pageable": 6
+},
+"privacy.ListNoticeVersionsResponse": {
+"items": 1,
+"pagination": 4
+},
+"privacy.ListNoticesRequest": {
+"filter": 3,
+"pageable": 5
+},
+"privacy.ListNoticesResponse": {
+"items": 1,
+"pagination": 4
+},
+"privacy.ListPurposesRequest": {
+"filter": 3,
+"pageable": 5
+},
+"privacy.ListPurposesResponse": {
+"items": 1,
+"pagination": 4
+},
+"privacy.MyConsent": {
+"channel": 9,
+"decided_at": 7,
+"effective_widest_scope": 6,
+"etag": 10,
+"id": 1,
+"my_status": 5,
+"notice_version": 8,
+"purpose_code": 3,
+"scope": 4,
+"subject_person_id": 2
+},
+"privacy.MyNotice": {
+"body_markdown": 8,
+"content_sha256": 10,
+"grievance_contact": 7,
+"language": 4,
+"notice_code": 2,
+"notice_version_id": 1,
+"published_at": 11,
+"purpose_codes": 5,
+"requires_reconsent": 6,
+"summary_for_children": 9,
+"version": 3
+},
+"privacy.Notice": {
+"code": 2,
+"create_time": 4,
+"created_by": 5,
+"etag": 8,
+"id": 1,
+"title": 3,
+"update_time": 6,
+"updated_by": 7
+},
+"privacy.NoticeTranslation": {
+"body_markdown": 4,
+"content_sha256": 6,
+"create_time": 7,
+"created_by": 8,
+"etag": 11,
+"id": 1,
+"language": 3,
+"notice_version_id": 2,
+"summary_for_children": 5,
+"update_time": 9,
+"updated_by": 10
+},
+"privacy.NoticeVersion": {
+"create_time": 11,
+"created_by": 12,
+"document_file_id": 8,
+"etag": 15,
+"grievance_contact": 7,
+"id": 1,
+"notice_id": 2,
+"published_at": 9,
+"purpose_codes": 6,
+"requires_reconsent": 5,
+"status": 4,
+"superseded_by_id": 10,
+"update_time": 13,
+"updated_by": 14,
+"version": 3
+},
+"privacy.PublishNoticeVersionRequest": {
+"etag": 3,
+"notice_id": 1,
+"notice_version_id": 2,
+"request_id": 4
+},
+"privacy.PublishNoticeVersionResponse": {
+"notice_version": 1
+},
+"privacy.Purpose": {
+"code": 2,
+"default_valid_months": 7,
+"enabled": 10,
+"etag": 14,
+"fiduciary": 4,
+"forbidden_for_minors": 5,
+"id": 1,
+"majority_grace": 6,
+"max_scope": 11,
+"notice_id": 12,
+"scope_kind": 3,
+"status": 8,
+"update_time": 13,
+"version": 9
+},
+"privacy.RecordConsentOnBehalfRequest": {
+"decision": 6,
+"evidence_file_id": 9,
+"giver_capacity": 3,
+"giver_person_id": 2,
+"notice_language": 8,
+"notice_version_id": 7,
+"purpose_code": 4,
+"request_id": 10,
+"scope": 5,
+"subject_person_id": 1
+},
+"privacy.RecordConsentOnBehalfResponse": {
+"consent_record": 1
+},
+"privacy.RecordMyConsentRequest": {
+"decision": 4,
+"notice_language": 6,
+"notice_version_id": 5,
+"purpose_code": 2,
+"request_id": 7,
+"scope": 3,
+"subject_person_id": 1
+},
+"privacy.RecordMyConsentResponse": {
+"my_consent": 1
+},
+"privacy.UpdateNoticeRequest": {
+"notice": 1,
+"update_mask": 2,
+"validate_only": 3
+},
+"privacy.UpdateNoticeResponse": {
+"notice": 1
+},
+"privacy.UpdateNoticeTranslationRequest": {
+"notice_id": 1,
+"notice_translation": 3,
+"notice_version_id": 2,
+"update_mask": 4,
+"validate_only": 5
+},
+"privacy.UpdateNoticeTranslationResponse": {
+"notice_translation": 1
+},
+"privacy.UpdateNoticeVersionRequest": {
+"notice_id": 1,
+"notice_version": 2,
+"update_mask": 3,
+"validate_only": 4
+},
+"privacy.UpdateNoticeVersionResponse": {
+"notice_version": 1
+},
+"privacy.UpdatePurposeRequest": {
+"purpose": 1,
+"update_mask": 2,
+"validate_only": 3
+},
+"privacy.UpdatePurposeResponse": {
+"purpose": 1
+},
+"privacy.VerifyConsentRecordRequest": {
+"consent_record_id": 1,
+"etag": 2,
+"request_id": 3
+},
+"privacy.VerifyConsentRecordResponse": {
+"consent_record": 1
+},
+"privacy.WithdrawMyConsentRequest": {
+"consent_record_id": 1,
+"etag": 2,
+"request_id": 3
+},
+"privacy.WithdrawMyConsentResponse": {
+"my_consent": 1
 },
 "sis.ActivityType": {
 "code": 9,

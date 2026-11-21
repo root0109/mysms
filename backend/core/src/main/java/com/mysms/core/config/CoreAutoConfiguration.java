@@ -37,10 +37,13 @@ public class CoreAutoConfiguration {
         return Clock.systemUTC();
     }
 
-    /** The process's JSON mapper ({@link JsonMappers}); Spring Boot's own Jackson configuration backs off. */
+    /**
+     * The process's JSON mapper ({@link JsonMappers}). Named as Spring Boot names its own, which therefore backs off,
+     * as the reference service does.
+     */
     @Bean
     @Primary
-    public JsonMapper jsonMapper() {
+    public JsonMapper jacksonJsonMapper() {
         return JsonMappers.create();
     }
 

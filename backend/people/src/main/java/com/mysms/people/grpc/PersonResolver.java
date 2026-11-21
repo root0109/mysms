@@ -28,8 +28,6 @@ import com.mysms.people.business.MyPersonService;
 import com.mysms.people.business.PersonService;
 import com.mysms.people.v1.CreateCertificationRequest;
 import com.mysms.people.v1.CreateCertificationResponse;
-import com.mysms.people.v1.CreateConsentRecordRequest;
-import com.mysms.people.v1.CreateConsentRecordResponse;
 import com.mysms.people.v1.CreateEducationHistoryRequest;
 import com.mysms.people.v1.CreateEducationHistoryResponse;
 import com.mysms.people.v1.CreateEmergencyContactRequest;
@@ -70,10 +68,6 @@ import com.mysms.people.v1.DeleteWorkExperienceRequest;
 import com.mysms.people.v1.DeleteWorkExperienceResponse;
 import com.mysms.people.v1.GetCertificationRequest;
 import com.mysms.people.v1.GetCertificationResponse;
-import com.mysms.people.v1.GetConsentRecordRequest;
-import com.mysms.people.v1.GetConsentRecordResponse;
-import com.mysms.people.v1.GetConsentStatusRequest;
-import com.mysms.people.v1.GetConsentStatusResponse;
 import com.mysms.people.v1.GetEducationHistoryRequest;
 import com.mysms.people.v1.GetEducationHistoryResponse;
 import com.mysms.people.v1.GetEmergencyContactRequest;
@@ -98,8 +92,6 @@ import com.mysms.people.v1.ListBirthdaysRequest;
 import com.mysms.people.v1.ListBirthdaysResponse;
 import com.mysms.people.v1.ListCertificationsRequest;
 import com.mysms.people.v1.ListCertificationsResponse;
-import com.mysms.people.v1.ListConsentRecordsRequest;
-import com.mysms.people.v1.ListConsentRecordsResponse;
 import com.mysms.people.v1.ListEducationHistoryRequest;
 import com.mysms.people.v1.ListEducationHistoryResponse;
 import com.mysms.people.v1.ListEmergencyContactsRequest;
@@ -141,8 +133,6 @@ import com.mysms.people.v1.UpdatePublicProfileRequest;
 import com.mysms.people.v1.UpdatePublicProfileResponse;
 import com.mysms.people.v1.UpdateWorkExperienceRequest;
 import com.mysms.people.v1.UpdateWorkExperienceResponse;
-import com.mysms.people.v1.WithdrawConsentRequest;
-import com.mysms.people.v1.WithdrawConsentResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 
@@ -592,24 +582,6 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
 
     /** Not served by this release (REST answers 501 too): UNIMPLEMENTED. */
     @Override
-    public void listConsentRecords(ListConsentRecordsRequest request, StreamObserver<ListConsentRecordsResponse> out) {
-        throw new NotImplementedException();
-    }
-
-    /** Not served by this release (REST answers 501 too): UNIMPLEMENTED. */
-    @Override
-    public void getConsentRecord(GetConsentRecordRequest request, StreamObserver<GetConsentRecordResponse> out) {
-        throw new NotImplementedException();
-    }
-
-    /** Not served by this release (REST answers 501 too): UNIMPLEMENTED. */
-    @Override
-    public void createConsentRecord(CreateConsentRecordRequest request, StreamObserver<CreateConsentRecordResponse> out) {
-        throw new NotImplementedException();
-    }
-
-    /** Not served by this release (REST answers 501 too): UNIMPLEMENTED. */
-    @Override
     public void listBirthdays(ListBirthdaysRequest request, StreamObserver<ListBirthdaysResponse> out) {
         throw new NotImplementedException();
     }
@@ -617,18 +589,6 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
     /** Not served by this release (REST answers 501 too): UNIMPLEMENTED. */
     @Override
     public void sendGreetings(SendGreetingsRequest request, StreamObserver<SendGreetingsResponse> out) {
-        throw new NotImplementedException();
-    }
-
-    /** Not served by this release (REST answers 501 too): UNIMPLEMENTED. */
-    @Override
-    public void withdrawConsent(WithdrawConsentRequest request, StreamObserver<WithdrawConsentResponse> out) {
-        throw new NotImplementedException();
-    }
-
-    /** Not served by this release (REST answers 501 too): UNIMPLEMENTED. */
-    @Override
-    public void getConsentStatus(GetConsentStatusRequest request, StreamObserver<GetConsentStatusResponse> out) {
         throw new NotImplementedException();
     }
 }

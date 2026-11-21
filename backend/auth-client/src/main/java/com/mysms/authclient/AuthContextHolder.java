@@ -6,7 +6,8 @@ import java.util.Set;
 /** Thread-bound identity and raw token of the current request. Written only by auth-client's own filter. */
 final class AuthContextHolder {
 
-    private record Bound(AuthContext context, String token, Set<String> authMethods) {
+    private record Bound(AuthContext context, String token, Set<String> authMethods,
+                         Optional<RoleClaims> roleClaims) {
     }
 
     private static final ThreadLocal<Bound> CURRENT = new ThreadLocal<>();
@@ -19,7 +20,15 @@ final class AuthContextHolder {
     }
 
     static void set(AuthContext context, String token, Set<String> authMethods) {
-        CURRENT.set(new Bound(context, token, Set.copyOf(authMethods)));
+        set(context, token, authMethods, Optional.empty());
+    }
+
+    static void set(AuthContext context, String token, Set<String> authMethods, Optional<RoleClaims> roleClaims) {
+        CURRENT.set(new Bound(context, token, Set.copyOf(authMethods), roleClaims));
+    }
+
+    static Optional<RoleClaims> roleClaims() {
+        return Optional.ofNullable(CURRENT.get()).flatMap(Bound::roleClaims);
     }
 
     static Set<String> authMethods() {

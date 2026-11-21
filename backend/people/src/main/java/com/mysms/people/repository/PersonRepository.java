@@ -155,14 +155,6 @@ public class PersonRepository {
             SELECT EXISTS (SELECT 1 FROM people.certification WHERE tenant_id = :tenantId
                 AND person_id = :id AND deleted_at IS NULL)
             """;
-    private static final String REFERENCED_BY_CONSENT_RECORD_GIVEN_BY_PERSON_ID = """
-            SELECT EXISTS (SELECT 1 FROM people.consent_record WHERE tenant_id = :tenantId
-                AND given_by_person_id = :id AND deleted_at IS NULL)
-            """;
-    private static final String REFERENCED_BY_CONSENT_RECORD_PERSON_ID = """
-            SELECT EXISTS (SELECT 1 FROM people.consent_record WHERE tenant_id = :tenantId
-                AND person_id = :id AND deleted_at IS NULL)
-            """;
     private static final String REFERENCED_BY_EDUCATION_HISTORY_PERSON_ID = """
             SELECT EXISTS (SELECT 1 FROM people.education_history WHERE tenant_id = :tenantId
                 AND person_id = :id AND deleted_at IS NULL)
@@ -314,18 +306,6 @@ public class PersonRepository {
     public boolean referencedByCertificationPersonId(UUID id) {
         return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_CERTIFICATION_PERSON_ID).param("id", id).query(Boolean.class)
                 .single());
-    }
-
-    /** Whether live people.consent_record rows still reference the row. */
-    public boolean referencedByConsentRecordGivenByPersonId(UUID id) {
-        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_CONSENT_RECORD_GIVEN_BY_PERSON_ID).param("id", id)
-                .query(Boolean.class).single());
-    }
-
-    /** Whether live people.consent_record rows still reference the row. */
-    public boolean referencedByConsentRecordPersonId(UUID id) {
-        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_CONSENT_RECORD_PERSON_ID).param("id", id)
-                .query(Boolean.class).single());
     }
 
     /** Whether live people.education_history rows still reference the row. */

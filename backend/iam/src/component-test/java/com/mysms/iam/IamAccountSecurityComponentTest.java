@@ -424,6 +424,7 @@ class IamAccountSecurityComponentTest {
         claims.put("aud", "mysms");
         claims.put("perms", List.of());
         assertThat(call("POST", "/v1/iam/me:acceptTerms", TOKENS.custom(claims, Instant.now().plusSeconds(60)),
-                "{\"termsVersion\":\"2026-11\"}").status()).as("the permission is required").isEqualTo(403);
+                "{\"termsVersion\":\"2026-11\"}").status())
+                .as("a self-service code every tenant user holds: an unknown account is simply not found").isEqualTo(404);
     }
 }

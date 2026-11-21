@@ -1,6 +1,6 @@
 # Privacy and Consent Centre — technical design
 
-Status: **approved by the owner; nothing built yet.** Implementation starts after ROADMAP SEC-0 (API permissions published to iam, role-based permissions filter), tracked as ROADMAP SEC-11. Author: principal engineering review, 18 Nov 2026. Binding rules stay in
+Status: **approved by the owner; nothing built yet.** Its prerequisite (API permissions published to iam, role-based permissions filter, JAVA-CODING-RULES §16.2) is built; implementation is tracked as ROADMAP SEC-11. Author: principal engineering review, 18 Nov 2026. Binding rules stay in
 [`CLAUDE.md`](../../CLAUDE.md), [`ARCHITECTURE.md`](../../ARCHITECTURE.md) and
 [`JAVA-CODING-RULES.md`](../../JAVA-CODING-RULES.md); where this document proposes to change one of them it says so
 and has the owner's approval (section 16).
@@ -441,21 +441,35 @@ CREATE TABLE privacy.notice_translation (
 
 ### 5.3 Subjects and guardian links (projections)
 
+Both tables are copies kept from other modules' events (event-carried state, the house precedent of `sis.student` →
+`iam.member_record`); privacy never reads another schema and makes no gRPC call for them. `people.person` events carry
+`{id, dateOfBirth, rowVersion}`; `sis.student` events `{id, userId, personId, institutionId, rowVersion}`;
+`sis.student_guardian` events `{id, studentPersonId, guardianPersonId, guardianUserId, isLegalGuardian, hasCustody,
+status, rowVersion}` (sis resolves the persons and the guardian's account in the publishing transaction). Every copy
+changes only to a newer source row version, so out-of-order and repeated deliveries are harmless, and nothing is
+hard-deleted: a deleted person keeps its row with the birth date cleared, a deleted link turns `inactive`, a deleted or
+moved student record stays as a tombstone. Handlers: `SubjectSync` (people.person, sis.student) and `GuardianLinkSync`
+(sis.student_guardian). The age of majority is `mysms.privacy.age-of-majority` (`MYSMS_PRIVACY_AGE_OF_MAJORITY`,
+default 18) until it becomes tenant data (§4.3).
+
 ```sql
 CREATE TABLE privacy.subject (
     tenant_id uuid NOT NULL,
     person_id uuid NOT NULL,                       -- logical reference to people.person
-    status varchar(8) NOT NULL DEFAULT 'unknown',  -- minor | adult | unknown (treated as minor)
-    birth_date date,                               -- copied from people events for the majority job only
-    majority_date date,
-    student_id uuid, user_ids uuid[] NOT NULL DEFAULT '{}',
-    institution_ids uuid[] NOT NULL DEFAULT '{}',
-    source_row_version bigint NOT NULL,            -- last applied people.person row_version (idempotent replay)
+    status varchar(8) NOT NULL DEFAULT 'unknown',  -- minor | adult | unknown (treated as minor; no birth date)
+    birth_date date,                               -- copied from people events for the majority only
+    majority_date date,                            -- birth_date + age of majority
+    student_ids uuid[] NOT NULL DEFAULT '{}',      -- live sis.student records of the person ...
+    user_ids uuid[] NOT NULL DEFAULT '{}',         -- ... their login accounts
+    institution_ids uuid[] NOT NULL DEFAULT '{}',  -- ... and institutions, all derived from student_records
+    student_records jsonb NOT NULL DEFAULT '{}',   -- per sis.student id: {userId, institutionId, rowVersion, live}
+    person_row_version integer NOT NULL DEFAULT 0, -- last applied people.person row_version (0 = none yet)
     updated_at timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT pk_subject PRIMARY KEY (tenant_id, person_id),
     CONSTRAINT ck_subject_status CHECK (status IN ('minor', 'adult', 'unknown'))
 );
 CREATE INDEX ix_subject_majority ON privacy.subject (tenant_id, majority_date) WHERE status <> 'adult';
+CREATE INDEX ix_subject_student_records ON privacy.subject USING gin (student_records);
 
 CREATE TABLE privacy.guardian_link (
     tenant_id uuid NOT NULL,
@@ -465,13 +479,18 @@ CREATE TABLE privacy.guardian_link (
     guardian_user_id uuid,
     is_legal_guardian boolean NOT NULL,
     has_custody boolean NOT NULL,
-    status varchar(10) NOT NULL,                   -- active | inactive
-    source_row_version bigint NOT NULL,
+    status varchar(10) NOT NULL,                   -- active | inactive (inactive also once deleted)
+    source_row_version integer NOT NULL,
+    updated_at timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT pk_guardian_link PRIMARY KEY (tenant_id, link_id)
 );
 CREATE INDEX ix_guardian_link_student ON privacy.guardian_link (tenant_id, student_person_id) WHERE status = 'active';
 CREATE INDEX ix_guardian_link_guardian ON privacy.guardian_link (tenant_id, guardian_person_id) WHERE status = 'active';
 ```
+
+The per-record `student_records` (not in the first draft) is what makes the arrays safe under out-of-order delivery: a
+person can hold several student records, and a record can move to another person, so each entry keeps its own row
+version. The daily job that turns minors into adults (§4.3) reads `ix_subject_majority`.
 
 ### 5.4 Consent records, evidence and state
 

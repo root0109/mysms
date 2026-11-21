@@ -51,11 +51,54 @@ public class PermissionCatalogRepository {
              WHERE p.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND p.id = :id";
+    /**
+     * The tenant-user permission codes a module's catalogue carries: new codes join the catalogue, retired ones are
+     * published again; codes already published are left untouched.
+     */
+    private static final String PUBLISH = """
+            INSERT INTO iam.permission (id, code, module_code, created_at, updated_at, row_version)
+            SELECT c.id, c.code, :module, :now, :now, 1
+              FROM unnest(CAST(:ids AS uuid[]), CAST(:codes AS varchar[])) AS c (id, code)
+            ON CONFLICT (code) DO UPDATE
+               SET retired_at = NULL,
+                   updated_at = EXCLUDED.updated_at,
+                   row_version = iam.permission.row_version + 1
+             WHERE iam.permission.retired_at IS NOT NULL AND iam.permission.deleted_at IS NULL
+            """;
+    /**
+     * The module's codes no live operation callable by tenant users carries any more: retired, never deleted. Derived
+     * from iam.api_permission, so a code follows the operations that use it.
+     */
+    private static final String RETIRE_UNUSED = """
+            UPDATE iam.permission p
+               SET retired_at = :now,
+                   updated_at = :now,
+                   row_version = p.row_version + 1
+             WHERE p.module_code = :module AND p.retired_at IS NULL AND p.deleted_at IS NULL
+               AND NOT EXISTS (SELECT 1 FROM iam.api_permission a
+                                WHERE a.permission_code = p.code AND a.retired_at IS NULL AND a.deleted_at IS NULL
+                                  AND ' ' || a.schemes || ' ' LIKE :scheme)
+            """;
 
     private final JdbcClient jdbc;
 
     public PermissionCatalogRepository(@Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /**
+     * Publishes the tenant-user permission codes a module's catalogue carries (with its derived id when new; a retired
+     * one becomes live again), then retires the module's codes no live tenant-user operation carries.
+     *
+     * @param ids    the derived id of each code, index for index
+     * @param scheme the tenant users' security scheme (bearerAuth)
+     * @return the number of codes retired
+     */
+    public int publish(String module, List<UUID> ids, List<String> codes, String scheme, OffsetDateTime now) {
+        jdbc.sql(PUBLISH).param("module", module).param("now", now).param("ids", ids.toArray(UUID[]::new))
+                .param("codes", codes.toArray(String[]::new)).update();
+        return jdbc.sql(RETIRE_UNUSED).param("module", module).param("now", now)
+                .param("scheme", "% " + scheme + " %").update();
     }
 
     public Optional<PermissionEntity> findById(UUID id) {

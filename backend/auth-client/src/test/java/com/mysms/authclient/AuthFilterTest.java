@@ -3,6 +3,7 @@ package com.mysms.authclient;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mysms.authclient.internal.JwtTokenVerifier;
+import com.mysms.authclient.testing.TestRoleData;
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
@@ -28,7 +29,8 @@ class AuthFilterTest {
     private final TestTokens tokens = new TestTokens();
     private final AuthFilter filter = new AuthFilter(OperationTable.load(List.of("master", "org")),
             new EdgeAuthorizer(JwtTokenVerifier.from(new AuthClientProperties(TestTokens.ISSUER, null,
-                    tokens.publicKeyPem(), null, List.of("master", "org"), null, false)), new ClaimsPermissionChecker()),
+                    tokens.publicKeyPem(), null, List.of("master", "org"), null, false)), new ClaimsPermissionChecker(),
+                    null, TestRoleData.resolver()),
             new ProblemResponseWriter(JsonMapper.builder().build()),
             List.of("/actuator/health", "/actuator/health/**"));
 

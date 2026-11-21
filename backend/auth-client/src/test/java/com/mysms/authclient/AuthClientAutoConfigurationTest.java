@@ -20,8 +20,11 @@ class AuthClientAutoConfigurationTest {
         OperationTable table = config.operationTable(properties);
         assertThat(table.size()).isEqualTo(20);
         TokenVerifier verifier = config.tokenVerifier(properties);
+        RolePermissionResolver roles = config.rolePermissionResolver((tenant, roleIds, token) -> {
+            throw new com.mysms.core.error.UnavailableException("no iam in this test");
+        }, java.time.Duration.ofMinutes(1));
         assertThat(config.authFilter(table, config.edgeAuthorizer(verifier, config.permissionChecker(),
-                new StaticListableBeanFactory().getBeanProvider(TenantCodeResolver.class), Clock.systemUTC()),
+                new StaticListableBeanFactory().getBeanProvider(TenantCodeResolver.class), Clock.systemUTC(), roles),
                 new ProblemResponseWriter(JsonMapper.builder().build()), properties)).isNotNull();
         assertThat(config.grpcCallerInterceptor(java.time.Duration.ofSeconds(3))).isNotNull();
     }

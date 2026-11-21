@@ -78,6 +78,7 @@ import com.mysms.people.repository.WorkExperienceRepository;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -328,8 +329,7 @@ public class PersonService extends AppTransactionManager implements Initializing
             }
             PersonEntity stored = repository.insert(entity);
             audit.recordCreate(AGGREGATE, stored.getId());
-            outbox.publish(AGGREGATE + PeopleEvents.CREATED, AGGREGATE, stored.getId(),
-                    PeopleEvents.payload(stored.getId()));
+            outbox.publish(AGGREGATE + PeopleEvents.CREATED, AGGREGATE, stored.getId(), personPayload(stored));
             return dto(stored);
         });
     }
@@ -362,7 +362,7 @@ public class PersonService extends AppTransactionManager implements Initializing
             }
             entity.setRowVersion(expected + 1);
             audit.recordUpdate(AGGREGATE, id, fields);
-            outbox.publish(AGGREGATE + PeopleEvents.UPDATED, AGGREGATE, id, PeopleEvents.payload(id));
+            outbox.publish(AGGREGATE + PeopleEvents.UPDATED, AGGREGATE, id, personPayload(entity));
             return dto(entity);
         });
     }
@@ -380,14 +380,6 @@ public class PersonService extends AppTransactionManager implements Initializing
             if (repository.referencedByCertificationPersonId(id)) {
                 throw new InvalidStateException(
                         "The person is still referenced by people.certification rows; remove those first.");
-            }
-            if (repository.referencedByConsentRecordGivenByPersonId(id)) {
-                throw new InvalidStateException(
-                        "The person is still referenced by people.consent_record rows; remove those first.");
-            }
-            if (repository.referencedByConsentRecordPersonId(id)) {
-                throw new InvalidStateException(
-                        "The person is still referenced by people.consent_record rows; remove those first.");
             }
             if (repository.referencedByEducationHistoryPersonId(id)) {
                 throw new InvalidStateException(
@@ -429,9 +421,15 @@ public class PersonService extends AppTransactionManager implements Initializing
             if (repository.softDelete(entity, expected) == 0) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
+            entity.setRowVersion(expected + 1);
             audit.recordDelete(AGGREGATE, id);
-            outbox.publish(AGGREGATE + PeopleEvents.DELETED, AGGREGATE, id, PeopleEvents.payload(id));
+            outbox.publish(AGGREGATE + PeopleEvents.DELETED, AGGREGATE, id, personPayload(entity));
         });
+    }
+
+    /** The event payload of a person as stored: its date of birth and row version (PeopleEvents.personPayload). */
+    private static Map<String, Object> personPayload(PersonEntity person) {
+        return PeopleEvents.personPayload(person.getId(), person.getDateOfBirth(), person.getRowVersion());
     }
 
     /** Stores nationalId encrypted for the row's tenant and column; never the plaintext. */

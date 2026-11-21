@@ -12,6 +12,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,7 @@ import tools.jackson.databind.json.JsonMapper;
 class IamServiceComponentTest {
 
     /** CREATE TABLE statements in database/migrations/iam (partitions included). */
-    private static final int TABLES = 21;
+    private static final int TABLES = 23;
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
     private static final TestTokens TOKENS = new TestTokens();
     private static final HttpClient HTTP = HttpClient.newHttpClient();
@@ -102,11 +103,16 @@ class IamServiceComponentTest {
         assertThat(asOperator).isEqualTo(403);
     }
 
-    private static JsonNode firstOperationRequiringAToken() throws Exception {
+    /** The first operation that needs a token and a permission not every tenant user holds (self-service ones). */
+    private JsonNode firstOperationRequiringAToken() throws Exception {
+        List<String> everyRole = database.jdbc().sql(
+                "SELECT code FROM iam.permission WHERE applies_to_all_roles AND deleted_at IS NULL")
+                .query(String.class).list();
         try (InputStream in = IamServiceComponentTest.class.getClassLoader()
                 .getResourceAsStream("META-INF/mysms/operations/iam.json")) {
             for (JsonNode operation : JsonMapper.builder().build().readTree(in)) {
-                if (!operation.path("anonymous").asBoolean()) {
+                if (!operation.path("anonymous").asBoolean()
+                        && !everyRole.contains(operation.path("permission").asString())) {
                     return operation;
                 }
             }

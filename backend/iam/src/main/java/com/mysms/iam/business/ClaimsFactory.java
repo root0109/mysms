@@ -4,10 +4,13 @@ import com.mysms.iam.repository.ActiveRoleRepository;
 import com.mysms.iam.repository.GrantRepository;
 import com.mysms.iam.repository.RoleGrantRow;
 import com.mysms.iam.repository.SessionStateRepository;
+import com.mysms.iam.repository.TenantAuthzVersionRepository;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -29,13 +32,15 @@ public class ClaimsFactory {
     private final GrantRepository grants;
     private final ActiveRoleRepository roles;
     private final SessionStateRepository sessions;
+    private final TenantAuthzVersionRepository versions;
     private final Clock clock;
 
     public ClaimsFactory(GrantRepository grants, ActiveRoleRepository roles, SessionStateRepository sessions,
-                         Clock clock) {
+                         TenantAuthzVersionRepository versions, Clock clock) {
         this.grants = grants;
         this.roles = roles;
         this.sessions = sessions;
+        this.versions = versions;
         this.clock = clock;
     }
 
@@ -56,8 +61,11 @@ public class ClaimsFactory {
     public AccessClaims full(UUID user, Optional<UUID> person, UUID tenant, UUID session,
                              Optional<Set<String>> abilities) {
         LocalDate today = today();
+        AccessClaims.Authorization authorization = new AccessClaims.Authorization(
+                roleGrants(roles.grants(user, today)), grants.directGrants(user), grants.denies(user),
+                versions.current(), abilities);
         return build(user, person, tenant, session, grants.activeGrants(user, today),
-                grants.effectivePermissions(user, today), grants.tenantWidePermissions(user, today), abilities);
+                grants.effectivePermissions(user, today), grants.tenantWidePermissions(user, today), authorization);
     }
 
     /**
@@ -67,12 +75,14 @@ public class ClaimsFactory {
      */
     public AccessClaims forRole(UUID user, Optional<UUID> person, UUID tenant, UUID session, UUID role,
                                 Optional<UUID> scope) {
-        List<RoleGrantRow> selected = selectedGrants(user, role, scope).stream()
-                .map(ActiveRoleRepository.Grant::row).toList();
+        List<ActiveRoleRepository.Grant> grantsOfRole = selectedGrants(user, role, scope);
+        List<RoleGrantRow> selected = grantsOfRole.stream().map(ActiveRoleRepository.Grant::row).toList();
         List<String> permissions = roles.rolePermissions(user, selected.isEmpty() ? null : role);
         boolean tenantWide = selected.stream().anyMatch(g -> RoleGrantRow.TENANT.equals(g.scopeType()));
+        AccessClaims.Authorization authorization = new AccessClaims.Authorization(roleGrants(grantsOfRole), List.of(),
+                grants.denies(user), versions.current(), Optional.empty());
         return build(user, person, tenant, session, selected, permissions, tenantWide ? permissions : List.of(),
-                Optional.empty());
+                authorization);
     }
 
     /** The user's counted grants of the role, narrowed to the unit when one is given. */
@@ -84,7 +94,9 @@ public class ClaimsFactory {
     }
 
     private AccessClaims build(UUID user, Optional<UUID> person, UUID tenant, UUID session, List<RoleGrantRow> rows,
-                               List<String> permissions, List<String> tenantWide, Optional<Set<String>> abilities) {
+                               List<String> permissions, List<String> tenantWide,
+                               AccessClaims.Authorization authorization) {
+        Optional<Set<String>> abilities = authorization.abilities();
         List<String> catalogue = grants.catalogue();
         List<String> held = abilities.map(a -> permissions.stream().filter(a::contains).toList()).orElse(permissions);
         List<String> heldTenantWide = abilities.map(a -> tenantWide.stream().filter(a::contains).toList())
@@ -96,7 +108,19 @@ public class ClaimsFactory {
         return new AccessClaims(user, tenant, person, session, PermissionCompactor.compact(held, catalogue),
                 institutions, rows.stream().map(RoleGrantRow::claim).distinct().toList(),
                 rows.stream().anyMatch(g -> RoleGrantRow.TENANT.equals(g.scopeType())),
-                PermissionCompactor.compact(heldTenantWide, catalogue));
+                PermissionCompactor.compact(heldTenantWide, catalogue), authorization);
+    }
+
+    /**
+     * The role grants in their claim form ({@code rgr}): each role once, tenant-wide when any of its grants is. The
+     * filter needs no more (the institutions travel in {@code ins}), and one entry per role keeps the token small
+     * however many units a role is granted on.
+     */
+    private static List<String> roleGrants(List<ActiveRoleRepository.Grant> grants) {
+        Map<UUID, Boolean> tenantWide = new LinkedHashMap<>();
+        grants.forEach(g -> tenantWide.merge(g.roleId(), RoleGrantRow.TENANT.equals(g.scopeType()), Boolean::logicalOr));
+        return tenantWide.entrySet().stream()
+                .map(e -> AccessClaims.Authorization.roleGrant(e.getKey(), e.getValue())).toList();
     }
 
     private LocalDate today() {

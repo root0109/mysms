@@ -4,6 +4,7 @@ import com.mysms.authclient.AuthClientProperties;
 import com.mysms.authclient.AuthContext;
 import com.mysms.authclient.InvalidTokenException;
 import com.mysms.authclient.IssuerUrls;
+import com.mysms.authclient.RoleClaims;
 import com.mysms.authclient.TokenVerifier;
 import com.mysms.authclient.VerifiedToken;
 import java.security.KeyFactory;
@@ -119,24 +120,45 @@ public final class JwtTokenVerifier implements TokenVerifier {
             if (tokenId == null || tokenId.isBlank() || subject == null || jwt.getExpiresAt() == null) {
                 throw new IllegalArgumentException("sub, jti and exp are required");
             }
+            Optional<UUID> tenant = Optional.ofNullable(jwt.getClaimAsString("tid")).map(UUID::fromString);
             AuthContext context = new AuthContext(
                     UUID.fromString(subject),
-                    Optional.ofNullable(jwt.getClaimAsString("tid")).map(UUID::fromString),
+                    tenant,
                     institutions,
                     Optional.empty(),
-                    Set.copyOf(Optional.ofNullable(jwt.getClaimAsStringList("perms")).orElse(List.of())),
+                    // a tenant user's permissions come from the role claims through iam's role data (the edge
+                    // resolves them, JAVA-CODING-RULES §16.2), never from a list in the token; platform staff keep theirs
+                    tenant.isPresent() ? Set.of()
+                            : Set.copyOf(Optional.ofNullable(jwt.getClaimAsStringList("perms")).orElse(List.of())),
                     tokenId,
                     impersonator,
                     platform,
                     Optional.ofNullable(jwt.getClaimAsString("pid")).map(UUID::fromString),
                     Optional.ofNullable(jwt.getClaimAsString("sid")).map(UUID::fromString),
                     allInstitutions,
-                    // absent claim: no tenant-wide permission at all (fail closed)
-                    Set.copyOf(Optional.ofNullable(jwt.getClaimAsStringList("tperms")).orElse(List.of())));
-            return new VerifiedToken(context, jwt.getExpiresAt(), audiences, amr);
+                    // a tenant user's come from the role claims too; an absent claim means none (fail closed)
+                    tenant.isPresent() ? Set.of()
+                            : Set.copyOf(Optional.ofNullable(jwt.getClaimAsStringList("tperms")).orElse(List.of())));
+            return new VerifiedToken(context, jwt.getExpiresAt(), audiences, amr, roleClaims(jwt));
         } catch (IllegalArgumentException e) {
             throw new InvalidTokenException(InvalidTokenException.UNAUTHENTICATED, "The access token claims are not valid.", e);
         }
+    }
+
+    /** A person's role-based claims (SEC-0), when the token carries {@code rgr}; malformed claims make it invalid. */
+    private static Optional<RoleClaims> roleClaims(Jwt jwt) {
+        List<String> roleGrants = jwt.getClaimAsStringList("rgr");
+        if (roleGrants == null) {
+            return Optional.empty();
+        }
+        Object version = jwt.getClaim("azv");
+        if (!(version instanceof Number number)) {
+            throw new IllegalArgumentException("azv is required with rgr");
+        }
+        return Optional.of(RoleClaims.of(roleGrants,
+                Optional.ofNullable(jwt.getClaimAsStringList("dg")).orElse(List.of()),
+                Optional.ofNullable(jwt.getClaimAsStringList("dd")).orElse(List.of()), number.longValue(),
+                Optional.ofNullable(jwt.getClaimAsStringList("abl"))));
     }
 
     /** A service token: sub service:&lt;module&gt;, audience mysms-internal only, no tenant, no person claims. */
@@ -151,7 +173,7 @@ public final class JwtTokenVerifier implements TokenVerifier {
         }
         Set<String> permissions = Set.copyOf(Optional.ofNullable(jwt.getClaimAsStringList("perms")).orElse(List.of()));
         return new VerifiedToken(AuthContext.service(module, permissions, jwt.getId()), jwt.getExpiresAt(), audiences,
-                amr);
+                amr, Optional.empty());
     }
 
     static RSAPublicKey rsaPublicKey(String pem) {
