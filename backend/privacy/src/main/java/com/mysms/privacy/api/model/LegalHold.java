@@ -1,0 +1,583 @@
+// Owned API contract of privacy.
+package com.mysms.privacy.api.model;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.lang.Nullable;
+
+/**
+ * A legal hold of the tenant: data of a subject, of a data category or a set of records that no erasure or retention may remove until the hold is released, reviewed by a set date. Data protection officer and safeguarding lead only.
+ */
+
+public class LegalHold {
+
+  /**
+   * Why the data is held: safeguarding, litigation, regulator or audit.
+   */
+  public enum ReasonCodeEnum {
+    AUDIT("audit"),
+    
+    LITIGATION("litigation"),
+    
+    REGULATOR("regulator"),
+    
+    SAFEGUARDING("safeguarding");
+
+    private final String value;
+
+    ReasonCodeEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static ReasonCodeEnum fromValue(String value) {
+      for (ReasonCodeEnum b : ReasonCodeEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
+  /**
+   * What is held: subject (all of a data principal's data), category (one data category, of a subject or of everyone) or records (named records of one module). Fixed once placed.
+   */
+  public enum ScopeEnum {
+    CATEGORY("category"),
+    
+    RECORDS("records"),
+    
+    SUBJECT("subject");
+
+    private final String value;
+
+    ScopeEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static ScopeEnum fromValue(String value) {
+      for (ScopeEnum b : ScopeEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
+  /**
+   * active or released. Output only.
+   */
+  public enum StatusEnum {
+    ACTIVE("active"),
+    
+    RELEASED("released");
+
+    private final String value;
+
+    StatusEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static StatusEnum fromValue(String value) {
+      for (StatusEnum b : StatusEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID id;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private ReasonCodeEnum reasonCode;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private ScopeEnum scope;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID subjectPersonId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String categoryCode;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String module;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String entityType;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable List<UUID> entityIds;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+  private LocalDate reviewBy;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable Boolean reviewDue;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable StatusEnum status;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID placedByUserId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private @Nullable OffsetDateTime placedAt;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private @Nullable OffsetDateTime releasedAt;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable UUID releasedByUserId;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String etag;
+
+  public LegalHold() {
+    super();
+  }
+
+  public LegalHold id(@Nullable UUID id) {
+    this.id = id;
+    return this;
+  }
+
+  /**
+   * Surrogate primary key (UUIDv7 generated by the application). Output only.
+   * @return id
+   */
+  @Valid 
+  @JsonProperty("id")
+  public @Nullable UUID getId() {
+    return id;
+  }
+
+  @JsonProperty("id")
+  public void setId(@Nullable UUID id) {
+    this.id = id;
+  }
+
+  public LegalHold reasonCode(ReasonCodeEnum reasonCode) {
+    this.reasonCode = reasonCode;
+    return this;
+  }
+
+  /**
+   * Why the data is held: safeguarding, litigation, regulator or audit.
+   * @return reasonCode
+   */
+  @NotNull 
+  @JsonProperty("reasonCode")
+  public ReasonCodeEnum getReasonCode() {
+    return reasonCode;
+  }
+
+  @JsonProperty("reasonCode")
+  public void setReasonCode(ReasonCodeEnum reasonCode) {
+    this.reasonCode = reasonCode;
+  }
+
+  public LegalHold scope(ScopeEnum scope) {
+    this.scope = scope;
+    return this;
+  }
+
+  /**
+   * What is held: subject (all of a data principal's data), category (one data category, of a subject or of everyone) or records (named records of one module). Fixed once placed.
+   * @return scope
+   */
+  @NotNull 
+  @JsonProperty("scope")
+  public ScopeEnum getScope() {
+    return scope;
+  }
+
+  @JsonProperty("scope")
+  public void setScope(ScopeEnum scope) {
+    this.scope = scope;
+  }
+
+  public LegalHold subjectPersonId(@Nullable UUID subjectPersonId) {
+    this.subjectPersonId = subjectPersonId;
+    return this;
+  }
+
+  /**
+   * The data principal whose data is held: required for scope subject, optional for category and records (absent = everyone's). Fixed once placed.
+   * @return subjectPersonId
+   */
+  @Valid 
+  @JsonProperty("subjectPersonId")
+  public @Nullable UUID getSubjectPersonId() {
+    return subjectPersonId;
+  }
+
+  @JsonProperty("subjectPersonId")
+  public void setSubjectPersonId(@Nullable UUID subjectPersonId) {
+    this.subjectPersonId = subjectPersonId;
+  }
+
+  public LegalHold categoryCode(@Nullable String categoryCode) {
+    this.categoryCode = categoryCode;
+    return this;
+  }
+
+  /**
+   * The data category held (the catalogue's data categories): required for scope category, absent otherwise. Fixed once placed.
+   * @return categoryCode
+   */
+  @Size(max = 40) 
+  @JsonProperty("categoryCode")
+  public @Nullable String getCategoryCode() {
+    return categoryCode;
+  }
+
+  @JsonProperty("categoryCode")
+  public void setCategoryCode(@Nullable String categoryCode) {
+    this.categoryCode = categoryCode;
+  }
+
+  public LegalHold module(@Nullable String module) {
+    this.module = module;
+    return this;
+  }
+
+  /**
+   * The module holding the records (a module code such as sis): required for scope records, absent otherwise. Fixed once placed.
+   * @return module
+   */
+  @Size(max = 30) 
+  @JsonProperty("module")
+  public @Nullable String getModule() {
+    return module;
+  }
+
+  @JsonProperty("module")
+  public void setModule(@Nullable String module) {
+    this.module = module;
+  }
+
+  public LegalHold entityType(@Nullable String entityType) {
+    this.entityType = entityType;
+    return this;
+  }
+
+  /**
+   * The kind of record held, as the module names it (e.g. student): required for scope records, absent otherwise. Fixed once placed.
+   * @return entityType
+   */
+  @Size(max = 80) 
+  @JsonProperty("entityType")
+  public @Nullable String getEntityType() {
+    return entityType;
+  }
+
+  @JsonProperty("entityType")
+  public void setEntityType(@Nullable String entityType) {
+    this.entityType = entityType;
+  }
+
+  public LegalHold entityIds(@Nullable List<UUID> entityIds) {
+    this.entityIds = entityIds;
+    return this;
+  }
+
+  public LegalHold addEntityIdsItem(UUID entityIdsItem) {
+    if (this.entityIds == null) {
+      this.entityIds = new ArrayList<>();
+    }
+    this.entityIds.add(entityIdsItem);
+    return this;
+  }
+
+  /**
+   * The records held (1-1000 ids): required for scope records, absent otherwise. Fixed once placed.
+   * @return entityIds
+   */
+  @Size(max = 1000) 
+  @JsonProperty("entityIds")
+  public @Nullable List<UUID> getEntityIds() {
+    return entityIds;
+  }
+
+  @JsonProperty("entityIds")
+  public void setEntityIds(@Nullable List<UUID> entityIds) {
+    this.entityIds = entityIds;
+  }
+
+  public LegalHold reviewBy(LocalDate reviewBy) {
+    this.reviewBy = reviewBy;
+    return this;
+  }
+
+  /**
+   * When the hold must be reviewed (today or later when placed or moved); holds are reviewed, never forgotten.
+   * @return reviewBy
+   */
+  @NotNull @Valid 
+  @JsonProperty("reviewBy")
+  public LocalDate getReviewBy() {
+    return reviewBy;
+  }
+
+  @JsonProperty("reviewBy")
+  public void setReviewBy(LocalDate reviewBy) {
+    this.reviewBy = reviewBy;
+  }
+
+  public LegalHold reviewDue(@Nullable Boolean reviewDue) {
+    this.reviewDue = reviewDue;
+    return this;
+  }
+
+  /**
+   * The hold is active and its review date has come. Output only.
+   * @return reviewDue
+   */
+   
+  @JsonProperty("reviewDue")
+  public @Nullable Boolean getReviewDue() {
+    return reviewDue;
+  }
+
+  @JsonProperty("reviewDue")
+  public void setReviewDue(@Nullable Boolean reviewDue) {
+    this.reviewDue = reviewDue;
+  }
+
+  public LegalHold status(@Nullable StatusEnum status) {
+    this.status = status;
+    return this;
+  }
+
+  /**
+   * active or released. Output only.
+   * @return status
+   */
+   
+  @JsonProperty("status")
+  public @Nullable StatusEnum getStatus() {
+    return status;
+  }
+
+  @JsonProperty("status")
+  public void setStatus(@Nullable StatusEnum status) {
+    this.status = status;
+  }
+
+  public LegalHold placedByUserId(@Nullable UUID placedByUserId) {
+    this.placedByUserId = placedByUserId;
+    return this;
+  }
+
+  /**
+   * The staff member who placed the hold. Output only.
+   * @return placedByUserId
+   */
+  @Valid 
+  @JsonProperty("placedByUserId")
+  public @Nullable UUID getPlacedByUserId() {
+    return placedByUserId;
+  }
+
+  @JsonProperty("placedByUserId")
+  public void setPlacedByUserId(@Nullable UUID placedByUserId) {
+    this.placedByUserId = placedByUserId;
+  }
+
+  public LegalHold placedAt(@Nullable OffsetDateTime placedAt) {
+    this.placedAt = placedAt;
+    return this;
+  }
+
+  /**
+   * When the hold was placed. Output only.
+   * @return placedAt
+   */
+  @Valid 
+  @JsonProperty("placedAt")
+  public @Nullable OffsetDateTime getPlacedAt() {
+    return placedAt;
+  }
+
+  @JsonProperty("placedAt")
+  public void setPlacedAt(@Nullable OffsetDateTime placedAt) {
+    this.placedAt = placedAt;
+  }
+
+  public LegalHold releasedAt(@Nullable OffsetDateTime releasedAt) {
+    this.releasedAt = releasedAt;
+    return this;
+  }
+
+  /**
+   * When the hold was released; absent while active. Output only.
+   * @return releasedAt
+   */
+  @Valid 
+  @JsonProperty("releasedAt")
+  public @Nullable OffsetDateTime getReleasedAt() {
+    return releasedAt;
+  }
+
+  @JsonProperty("releasedAt")
+  public void setReleasedAt(@Nullable OffsetDateTime releasedAt) {
+    this.releasedAt = releasedAt;
+  }
+
+  public LegalHold releasedByUserId(@Nullable UUID releasedByUserId) {
+    this.releasedByUserId = releasedByUserId;
+    return this;
+  }
+
+  /**
+   * The staff member who released the hold. Output only.
+   * @return releasedByUserId
+   */
+  @Valid 
+  @JsonProperty("releasedByUserId")
+  public @Nullable UUID getReleasedByUserId() {
+    return releasedByUserId;
+  }
+
+  @JsonProperty("releasedByUserId")
+  public void setReleasedByUserId(@Nullable UUID releasedByUserId) {
+    this.releasedByUserId = releasedByUserId;
+  }
+
+  public LegalHold etag(@Nullable String etag) {
+    this.etag = etag;
+    return this;
+  }
+
+  /**
+   * Entity tag (row version). Output only on reads; send back as If-Match on update and in the body of a release.
+   * @return etag
+   */
+   
+  @JsonProperty("etag")
+  public @Nullable String getEtag() {
+    return etag;
+  }
+
+  @JsonProperty("etag")
+  public void setEtag(@Nullable String etag) {
+    this.etag = etag;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    LegalHold other = (LegalHold) o;
+    return Objects.equals(this.id, other.id) &&
+        Objects.equals(this.reasonCode, other.reasonCode) &&
+        Objects.equals(this.scope, other.scope) &&
+        Objects.equals(this.subjectPersonId, other.subjectPersonId) &&
+        Objects.equals(this.categoryCode, other.categoryCode) &&
+        Objects.equals(this.module, other.module) &&
+        Objects.equals(this.entityType, other.entityType) &&
+        Objects.equals(this.entityIds, other.entityIds) &&
+        Objects.equals(this.reviewBy, other.reviewBy) &&
+        Objects.equals(this.reviewDue, other.reviewDue) &&
+        Objects.equals(this.status, other.status) &&
+        Objects.equals(this.placedByUserId, other.placedByUserId) &&
+        Objects.equals(this.placedAt, other.placedAt) &&
+        Objects.equals(this.releasedAt, other.releasedAt) &&
+        Objects.equals(this.releasedByUserId, other.releasedByUserId) &&
+        Objects.equals(this.etag, other.etag);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, reasonCode, scope, subjectPersonId, categoryCode, module, entityType, entityIds, reviewBy, reviewDue, status, placedByUserId, placedAt, releasedAt, releasedByUserId, etag);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("class LegalHold {\n");
+    sb.append("    id: ").append(toIndentedString(id)).append("\n");
+    sb.append("    reasonCode: ").append(toIndentedString(reasonCode)).append("\n");
+    sb.append("    scope: ").append(toIndentedString(scope)).append("\n");
+    sb.append("    subjectPersonId: ").append(toIndentedString(subjectPersonId)).append("\n");
+    sb.append("    categoryCode: ").append(toIndentedString(categoryCode)).append("\n");
+    sb.append("    module: ").append(toIndentedString(module)).append("\n");
+    sb.append("    entityType: ").append(toIndentedString(entityType)).append("\n");
+    sb.append("    entityIds: ").append(toIndentedString(entityIds)).append("\n");
+    sb.append("    reviewBy: ").append(toIndentedString(reviewBy)).append("\n");
+    sb.append("    reviewDue: ").append(toIndentedString(reviewDue)).append("\n");
+    sb.append("    status: ").append(toIndentedString(status)).append("\n");
+    sb.append("    placedByUserId: ").append(toIndentedString(placedByUserId)).append("\n");
+    sb.append("    placedAt: ").append(toIndentedString(placedAt)).append("\n");
+    sb.append("    releasedAt: ").append(toIndentedString(releasedAt)).append("\n");
+    sb.append("    releasedByUserId: ").append(toIndentedString(releasedByUserId)).append("\n");
+    sb.append("    etag: ").append(toIndentedString(etag)).append("\n");
+    sb.append("}");
+    return sb.toString();
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(@Nullable Object o) {
+    return o == null ? "null" : o.toString().replace("\n", "\n    ");
+  }
+}

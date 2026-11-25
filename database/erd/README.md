@@ -1,6 +1,10 @@
 # MySMS ER diagrams
 
-Every diagram here is generated from the SQL migrations in `../migrations/` alone: the DDL is parsed with the PostgreSQL parser and turned into Mermaid `erDiagram` text, then rendered to PNG. Nothing is drawn by hand, so the diagrams always match the schema.
+> **Stale.** Covers 466 tables of 21 schemas; the baselines now have 489 tables in 22 schemas (privacy and later
+> additions are missing). The generator is not in the repository; regenerate once a Java generator exists in the
+> build (ROADMAP DOC-1). The baselines are the source of truth.
+
+Every diagram here is generated from the SQL migrations in `../migrations/` alone: the DDL is parsed with the PostgreSQL parser and turned into Mermaid `erDiagram` text, then rendered to PNG. Nothing is drawn by hand.
 
 **Formats.** Each diagram is a Mermaid source file (`.mmd`, plain text, renders on GitHub, GitLab, Azure DevOps, Confluence, IntelliJ, VS Code and mermaid.live) and a PNG next to it. The diagrams are also embedded below, so this page renders them directly wherever Mermaid is supported.
 

@@ -85,12 +85,16 @@ public final class ServiceTokenProvider {
         }
     }
 
-    /** gRPC call credentials that call as the module, in the tenant of the calling thread's call context (if any). */
+    /**
+     * gRPC call credentials that call as the module, in the tenant of the calling thread's call context (if any). The
+     * tenant is read here, on the thread that makes the call: gRPC may apply the credentials later on another thread
+     * (on a channel's first connection, for one), where the call context is not set.
+     */
     public CallCredentials callCredentials(String module) {
+        Optional<UUID> tenant = tenant();
         return new CallCredentials() {
             @Override
             public void applyRequestMetadata(RequestInfo request, Executor executor, MetadataApplier applier) {
-                Optional<UUID> tenant = tenant();
                 executor.execute(() -> {
                     try {
                         Metadata metadata = new Metadata();

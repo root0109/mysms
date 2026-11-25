@@ -20493,6 +20493,135 @@
 "update_time": 9,
 "updated_by": 10
 },
+"privacy.AccessSummary": {
+"activities": 4,
+"generated_at": 3,
+"subject_person_id": 1,
+"subject_roles": 5,
+"subject_status": 2
+},
+"privacy.AccessSummaryActivity": {
+"activity_code": 1,
+"consent_allowed_scopes": 9,
+"cross_border": 7,
+"data_categories": 5,
+"legal_basis": 4,
+"module": 2,
+"purpose_code": 3,
+"recipients": 6,
+"retention_policy_code": 8
+},
+"privacy.AccessSummaryRecipient": {
+"country": 3,
+"kind": 1,
+"name": 2
+},
+"privacy.ActiveLegalHold": {
+"category_code": 5,
+"entity_ids": 8,
+"entity_type": 7,
+"id": 1,
+"module": 6,
+"reason_code": 2,
+"scope": 3,
+"subject_person_id": 4
+},
+"privacy.AssignRightsRequestRequest": {
+"assignee_user_id": 2,
+"etag": 3,
+"request_id": 4,
+"rights_request_id": 1
+},
+"privacy.AssignRightsRequestResponse": {
+"rights_request": 1
+},
+"privacy.BatchCheckConsentRequest": {
+"activity_code": 1,
+"scope": 3,
+"subject_person_ids": 2
+},
+"privacy.BatchCheckConsentResponse": {
+"decisions": 1
+},
+"privacy.Breach": {
+"became_aware_at": 5,
+"board_report_due_at": 6,
+"board_report_sent_at": 16,
+"categories": 10,
+"closed_at": 18,
+"description": 9,
+"detected_at": 4,
+"estimated_principals": 12,
+"etag": 20,
+"hours_remaining": 8,
+"id": 1,
+"likely_consequences": 13,
+"mitigation": 14,
+"modules": 11,
+"not_a_breach_reason": 17,
+"notifications": 19,
+"number": 2,
+"overdue": 7,
+"owner_user_id": 15,
+"status": 3
+},
+"privacy.BreachNotification": {
+"audience": 2,
+"document_file_id": 5,
+"id": 1,
+"kind": 3,
+"sent_at": 4
+},
+"privacy.CheckConsentRequest": {
+"activity_code": 1,
+"scope": 3,
+"subject_person_id": 2
+},
+"privacy.CheckConsentResponse": {
+"decision": 1
+},
+"privacy.CloseBreachRequest": {
+"breach_id": 1,
+"etag": 2,
+"request_id": 3
+},
+"privacy.CloseBreachResponse": {
+"breach": 1
+},
+"privacy.CloseRightsRequestRequest": {
+"etag": 4,
+"note": 3,
+"outcome_code": 2,
+"request_id": 5,
+"response": 6,
+"rights_request_id": 1
+},
+"privacy.CloseRightsRequestResponse": {
+"rights_request": 1
+},
+"privacy.ConsentCoverage": {
+"institution_id": 2,
+"purpose_code": 1,
+"scopes": 4,
+"subjects": 3
+},
+"privacy.ConsentCoverageDenial": {
+"reason": 1,
+"subjects": 2
+},
+"privacy.ConsentCoverageScope": {
+"allowed": 2,
+"denied": 4,
+"not_answered": 3,
+"scope": 1
+},
+"privacy.ConsentDecision": {
+"allowed": 2,
+"legal_basis": 4,
+"reason": 3,
+"state_version": 5,
+"subject_person_id": 1
+},
 "privacy.ConsentRecord": {
 "channel": 14,
 "create_time": 21,
@@ -20519,6 +20648,17 @@
 "verified_at": 18,
 "verified_by_user_id": 17,
 "withdrawn_at": 12
+},
+"privacy.ConsentedSubject": {
+"subject_person_id": 1
+},
+"privacy.ContainBreachRequest": {
+"breach_id": 1,
+"etag": 2,
+"request_id": 3
+},
+"privacy.ContainBreachResponse": {
+"breach": 1
 },
 "privacy.CreateNoticeRequest": {
 "notice": 1,
@@ -20559,11 +20699,73 @@
 "notice_version_id": 2
 },
 "privacy.DeleteNoticeTranslationResponse": {},
+"privacy.ExtendRightsRequestRequest": {
+"due_at": 2,
+"etag": 4,
+"reason": 3,
+"request_id": 5,
+"rights_request_id": 1
+},
+"privacy.ExtendRightsRequestResponse": {
+"rights_request": 1
+},
+"privacy.FulfilAccessRequestRequest": {
+"etag": 2,
+"request_id": 3,
+"rights_request_id": 1
+},
+"privacy.FulfilAccessRequestResponse": {
+"rights_request": 1
+},
+"privacy.FulfilWithdrawAllRequestRequest": {
+"etag": 2,
+"request_id": 3,
+"rights_request_id": 1
+},
+"privacy.FulfilWithdrawAllRequestResponse": {
+"rights_request": 1
+},
+"privacy.GetAccessSummaryRequest": {
+"rights_request_id": 1
+},
+"privacy.GetAccessSummaryResponse": {
+"access_summary": 1
+},
+"privacy.GetBreachRequest": {
+"id": 1
+},
+"privacy.GetBreachResponse": {
+"breach": 1
+},
+"privacy.GetConsentCoverageRequest": {
+"institution_id": 3,
+"purpose_code": 1,
+"scope": 2
+},
+"privacy.GetConsentCoverageResponse": {
+"consent_coverage": 1
+},
 "privacy.GetConsentRecordRequest": {
 "id": 1
 },
 "privacy.GetConsentRecordResponse": {
 "consent_record": 1
+},
+"privacy.GetLegalHoldRequest": {
+"id": 1
+},
+"privacy.GetLegalHoldResponse": {
+"legal_hold": 1
+},
+"privacy.GetMyAccessSummaryRequest": {
+"rights_request_id": 1
+},
+"privacy.GetMyAccessSummaryResponse": {
+"access_summary": 1
+},
+"privacy.GetMyNomineeRequest": {},
+"privacy.GetMyNomineeResponse": {
+"my_nominee": 1
 },
 "privacy.GetMyNoticeRequest": {
 "language": 2,
@@ -20571,6 +20773,12 @@
 },
 "privacy.GetMyNoticeResponse": {
 "my_notice": 1
+},
+"privacy.GetMyRequestRequest": {
+"id": 1
+},
+"privacy.GetMyRequestResponse": {
+"my_rights_request": 1
 },
 "privacy.GetNoticeRequest": {
 "id": 1
@@ -20593,17 +20801,72 @@
 "privacy.GetNoticeVersionResponse": {
 "notice_version": 1
 },
+"privacy.GetProcessingRegisterExportRequest": {},
+"privacy.GetProcessingRegisterExportResponse": {
+"processing_register_export": 1
+},
 "privacy.GetPurposeRequest": {
 "id": 1
 },
 "privacy.GetPurposeResponse": {
 "purpose": 1
 },
+"privacy.GetPurposeStatusRequest": {
+"activity_code": 1
+},
+"privacy.GetPurposeStatusResponse": {
+"purpose_status": 1
+},
+"privacy.GetRetentionPolicyRequest": {
+"id": 1
+},
+"privacy.GetRetentionPolicyResponse": {
+"retention_policy": 1
+},
+"privacy.GetRightsRequestRequest": {
+"id": 1
+},
+"privacy.GetRightsRequestResponse": {
+"rights_request": 1
+},
 "privacy.GrievanceContact": {
 "email": 3,
 "name": 1,
 "phone": 4,
 "role": 2
+},
+"privacy.LegalHold": {
+"category_code": 5,
+"entity_ids": 8,
+"entity_type": 7,
+"etag": 16,
+"id": 1,
+"module": 6,
+"placed_at": 13,
+"placed_by_user_id": 12,
+"reason_code": 2,
+"released_at": 14,
+"released_by_user_id": 15,
+"review_by": 9,
+"review_due": 10,
+"scope": 3,
+"status": 11,
+"subject_person_id": 4
+},
+"privacy.ListActiveHoldsRequest": {
+"module": 2,
+"subject_person_id": 1
+},
+"privacy.ListActiveHoldsResponse": {
+"holds": 1
+},
+"privacy.ListBreachesRequest": {
+"filter": 1,
+"pageable": 2
+},
+"privacy.ListBreachesResponse": {
+"items": 1,
+"pagination": 2
 },
 "privacy.ListConsentRecordsRequest": {
 "filter": 1,
@@ -20613,8 +20876,23 @@
 "items": 1,
 "pagination": 2
 },
+"privacy.ListLegalHoldsRequest": {
+"filter": 1,
+"pageable": 2
+},
+"privacy.ListLegalHoldsResponse": {
+"items": 1,
+"pagination": 2
+},
 "privacy.ListMyConsentsRequest": {},
 "privacy.ListMyConsentsResponse": {
+"items": 1,
+"pagination": 2
+},
+"privacy.ListMyRequestsRequest": {
+"pageable": 1
+},
+"privacy.ListMyRequestsResponse": {
 "items": 1,
 "pagination": 2
 },
@@ -20645,6 +20923,14 @@
 "items": 1,
 "pagination": 4
 },
+"privacy.ListProcessingActivitiesRequest": {
+"filter": 3,
+"pageable": 5
+},
+"privacy.ListProcessingActivitiesResponse": {
+"items": 1,
+"pagination": 4
+},
 "privacy.ListPurposesRequest": {
 "filter": 3,
 "pageable": 5
@@ -20653,17 +20939,74 @@
 "items": 1,
 "pagination": 4
 },
+"privacy.ListRetentionPoliciesRequest": {
+"filter": 1,
+"pageable": 2
+},
+"privacy.ListRetentionPoliciesResponse": {
+"items": 1,
+"pagination": 2
+},
+"privacy.ListRetentionRunsRequest": {
+"filter": 1,
+"pageable": 2
+},
+"privacy.ListRetentionRunsResponse": {
+"items": 1,
+"pagination": 2
+},
+"privacy.ListRightsRequestsRequest": {
+"filter": 1,
+"pageable": 2
+},
+"privacy.ListRightsRequestsResponse": {
+"items": 1,
+"pagination": 2
+},
+"privacy.ListSubjectsWithConsentRequest": {
+"activity_code": 1,
+"institution_ids": 3,
+"pageable": 5,
+"scope": 2
+},
+"privacy.ListSubjectsWithConsentResponse": {
+"items": 1,
+"pagination": 4
+},
+"privacy.MarkBreachNotABreachRequest": {
+"breach_id": 1,
+"etag": 3,
+"reason": 2,
+"request_id": 4
+},
+"privacy.MarkBreachNotABreachResponse": {
+"breach": 1
+},
 "privacy.MyConsent": {
+"allowed_scopes": 14,
+"capacity": 11,
 "channel": 9,
 "decided_at": 7,
+"decides_from": 15,
 "effective_widest_scope": 6,
 "etag": 10,
 "id": 1,
 "my_status": 5,
+"notice_code": 12,
 "notice_version": 8,
+"notice_version_id": 13,
 "purpose_code": 3,
 "scope": 4,
 "subject_person_id": 2
+},
+"privacy.MyNominee": {
+"activated_at": 5,
+"created_at": 6,
+"etag": 7,
+"id": 1,
+"nominee_contact_masked": 4,
+"nominee_name_masked": 3,
+"nominee_person_id": 2
 },
 "privacy.MyNotice": {
 "body_markdown": 8,
@@ -20677,6 +21020,23 @@
 "requires_reconsent": 6,
 "summary_for_children": 9,
 "version": 3
+},
+"privacy.MyRightsRequest": {
+"closed_at": 11,
+"correction": 13,
+"description": 7,
+"due_at": 9,
+"grievance_category": 14,
+"id": 1,
+"number": 2,
+"outcome_code": 12,
+"overdue": 10,
+"requester_capacity": 5,
+"response": 15,
+"status": 6,
+"subject_person_id": 4,
+"submitted_at": 8,
+"type": 3
 },
 "privacy.Notice": {
 "code": 2,
@@ -20718,6 +21078,32 @@
 "updated_by": 14,
 "version": 3
 },
+"privacy.PlaceLegalHoldRequest": {
+"legal_hold": 1,
+"request_id": 2
+},
+"privacy.PlaceLegalHoldResponse": {
+"legal_hold": 1
+},
+"privacy.ProcessingActivity": {
+"categories": 11,
+"code": 3,
+"cross_border": 8,
+"education_exemption_clause": 6,
+"id": 1,
+"legal_basis": 5,
+"module": 2,
+"purpose_code": 4,
+"retention_policy_code": 9,
+"targets_minors": 7,
+"version": 10
+},
+"privacy.ProcessingRegisterExport": {
+"activities": 3,
+"csv": 4,
+"file_name": 1,
+"generated_at": 2
+},
 "privacy.PublishNoticeVersionRequest": {
 "etag": 3,
 "notice_id": 1,
@@ -20742,6 +21128,26 @@
 "status": 8,
 "update_time": 13,
 "version": 9
+},
+"privacy.PurposeStatus": {
+"active_notice_version_id": 6,
+"activity_code": 1,
+"enabled": 4,
+"legal_basis": 3,
+"max_scope": 5,
+"purpose_code": 2
+},
+"privacy.RecordBreachNotificationRequest": {
+"audience": 2,
+"breach_id": 1,
+"document_file_id": 5,
+"etag": 6,
+"kind": 3,
+"request_id": 7,
+"sent_at": 4
+},
+"privacy.RecordBreachNotificationResponse": {
+"breach": 1
 },
 "privacy.RecordConsentOnBehalfRequest": {
 "decision": 6,
@@ -20769,6 +21175,174 @@
 },
 "privacy.RecordMyConsentResponse": {
 "my_consent": 1
+},
+"privacy.RejectRightsRequestRequest": {
+"etag": 3,
+"reason_code": 2,
+"request_id": 4,
+"rights_request_id": 1
+},
+"privacy.RejectRightsRequestResponse": {
+"rights_request": 1
+},
+"privacy.ReleaseLegalHoldRequest": {
+"etag": 2,
+"legal_hold_id": 1,
+"request_id": 3
+},
+"privacy.ReleaseLegalHoldResponse": {
+"legal_hold": 1
+},
+"privacy.ReportBreachRequest": {
+"breach": 1,
+"request_id": 2
+},
+"privacy.ReportBreachResponse": {
+"breach": 1
+},
+"privacy.RetentionPolicy": {
+"action": 8,
+"category_code": 3,
+"code": 2,
+"etag": 12,
+"id": 1,
+"legal_reference": 10,
+"minimum_period_days": 7,
+"module": 4,
+"notify_before_days": 9,
+"overridden": 11,
+"period_days": 6,
+"trigger": 5
+},
+"privacy.RetentionRun": {
+"action": 5,
+"affected": 8,
+"category_code": 3,
+"completed_at": 11,
+"cutoff": 6,
+"held": 9,
+"id": 1,
+"module": 4,
+"policy_code": 2,
+"started_at": 10,
+"status": 7
+},
+"privacy.RetryRightsRequestTaskRequest": {
+"etag": 3,
+"request_id": 4,
+"rights_request_id": 1,
+"task_id": 2
+},
+"privacy.RetryRightsRequestTaskResponse": {
+"rights_request": 1
+},
+"privacy.RevokeMyNomineeRequest": {
+"etag": 1,
+"request_id": 2
+},
+"privacy.RevokeMyNomineeResponse": {},
+"privacy.RightsRequest": {
+"assignee_user_id": 10,
+"closed_at": 15,
+"correction": 19,
+"description": 9,
+"due_at": 12,
+"etag": 18,
+"extended_reason": 14,
+"grievance_category": 20,
+"id": 1,
+"identity_check": 8,
+"number": 2,
+"outcome_code": 16,
+"outcome_note": 17,
+"overdue": 13,
+"requester_capacity": 6,
+"requester_person_id": 5,
+"response": 21,
+"status": 7,
+"subject_person_id": 4,
+"submitted_at": 11,
+"tasks": 22,
+"type": 3
+},
+"privacy.RightsRequestCorrection": {
+"fields": 4,
+"module": 1,
+"record_id": 3,
+"record_type": 2
+},
+"privacy.RightsRequestCorrectionField": {
+"field": 1,
+"requested_value": 2
+},
+"privacy.RightsRequestTask": {
+"action": 4,
+"affected_rows": 10,
+"attempts": 7,
+"completed_at": 9,
+"dispatched_at": 8,
+"etag": 15,
+"file_id": 13,
+"held_items": 11,
+"id": 1,
+"last_error_code": 14,
+"module": 3,
+"next_attempt_at": 16,
+"policy_codes": 12,
+"rights_request_id": 2,
+"status": 6,
+"wave": 5
+},
+"privacy.SetMyNomineeRequest": {
+"etag": 4,
+"nominee_contact": 2,
+"nominee_name": 1,
+"nominee_person_id": 3,
+"request_id": 5
+},
+"privacy.SetMyNomineeResponse": {
+"my_nominee": 1
+},
+"privacy.StartRightsRequestFulfilmentRequest": {
+"etag": 2,
+"request_id": 3,
+"rights_request_id": 1
+},
+"privacy.StartRightsRequestFulfilmentResponse": {
+"rights_request": 1
+},
+"privacy.SubmitMyRequestRequest": {
+"correction": 5,
+"description": 3,
+"grievance_category": 6,
+"request_id": 4,
+"subject_person_id": 2,
+"type": 1
+},
+"privacy.SubmitMyRequestResponse": {
+"my_rights_request": 1
+},
+"privacy.TriageBreachRequest": {
+"breach_id": 1,
+"etag": 2,
+"request_id": 3
+},
+"privacy.TriageBreachResponse": {
+"breach": 1
+},
+"privacy.UpdateBreachRequest": {
+"breach": 1,
+"update_mask": 2
+},
+"privacy.UpdateBreachResponse": {
+"breach": 1
+},
+"privacy.UpdateLegalHoldRequest": {
+"legal_hold": 1,
+"update_mask": 2
+},
+"privacy.UpdateLegalHoldResponse": {
+"legal_hold": 1
 },
 "privacy.UpdateNoticeRequest": {
 "notice": 1,
@@ -20805,6 +21379,13 @@
 "privacy.UpdatePurposeResponse": {
 "purpose": 1
 },
+"privacy.UpdateRetentionPolicyRequest": {
+"retention_policy": 1,
+"update_mask": 2
+},
+"privacy.UpdateRetentionPolicyResponse": {
+"retention_policy": 1
+},
 "privacy.VerifyConsentRecordRequest": {
 "consent_record_id": 1,
 "etag": 2,
@@ -20812,6 +21393,15 @@
 },
 "privacy.VerifyConsentRecordResponse": {
 "consent_record": 1
+},
+"privacy.VerifyRightsRequestIdentityRequest": {
+"etag": 3,
+"identity_check": 2,
+"request_id": 4,
+"rights_request_id": 1
+},
+"privacy.VerifyRightsRequestIdentityResponse": {
+"rights_request": 1
 },
 "privacy.WithdrawMyConsentRequest": {
 "consent_record_id": 1,

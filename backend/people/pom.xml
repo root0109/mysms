@@ -26,6 +26,11 @@
       <groupId>com.mysms</groupId>
       <artifactId>auth-client</artifactId>
     </dependency>
+    <!-- the consent check of a public profile (ROADMAP SEC-11, design PRIVACY-AND-CONSENT-CENTRE §8) -->
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>privacy-client</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.mapstruct</groupId>
       <artifactId>mapstruct</artifactId>
@@ -49,6 +54,12 @@
     <dependency>
       <groupId>com.mysms</groupId>
       <artifactId>auth-client</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>privacy-client</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

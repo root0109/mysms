@@ -1,6 +1,6 @@
 # MySMS UI specification
 
-Everything a UI developer — or a UI agent — needs to design and build the MySMS clients. The backend inputs are frozen contracts: the API in [`../api/`](../api/README.md) (OpenAPI 3.1 + gRPC, 2,052 operations) and the database design in [`../database/`](../database/README.md). This package translates them into products, screens, flows and front-end architecture.
+Everything a UI developer — or a UI agent — needs to design and build the MySMS clients. The backend inputs are frozen contracts: the API in [`../api/`](../api/README.md) (OpenAPI 3.1 + gRPC; counts in [`operations-status.md`](../api/operations-status.md)) and the database design in [`../database/`](../database/README.md). This package translates them into products, screens, flows and front-end architecture.
 
 **Status.** Design specification; the client workspace that implements it is [`../clients/`](../clients/README.md). Where a spec depends on a pending backend decision, it says so and names the item; the open backend items the UI depends on, with the interim approach for each, are in [`../ROADMAP.md`](../ROADMAP.md). Nothing here requires waiting: UI work is built against the OpenAPI contract and the running backend; fakes are used only inside tests (see 05 §13, "Mocking only in tests").
 
@@ -22,7 +22,7 @@ One account works in every client; a deep link (`mysms://…` or `https://<tenan
 | Doc | Contents | Read it when |
 |---|---|---|
 | [01-product-map.md](01-product-map.md) | Personas, roles, the six clients, role → client matrix, feature parity matrix, interoperability model | Planning anything |
-| [02-navigation-and-screens.md](02-navigation-and-screens.md) | Navigation trees per client and the full screen inventory: 186 screens with routes, roles, API operations and states | Building a screen |
+| [02-navigation-and-screens.md](02-navigation-and-screens.md) | Navigation trees per client and the full screen inventory: 193 screens with routes, roles, API operations and states | Building a screen |
 | [03-user-flows.md](03-user-flows.md) | 15 end-to-end journeys, step by step with the exact API calls, error paths and notifications | Building a flow that spans screens |
 | [04-design-system.md](04-design-system.md) | Design tokens, tenant theming, the component inventory, interaction patterns, accessibility, internationalisation, configurability and personalisation | Building components, reviewing design |
 | [05-frontend-architecture.md](05-frontend-architecture.md) | Monorepo layout, stack, generated SDK, auth and session, data layer, offline sync, push, files, errors, testing, mocking only in tests | Setting up or extending the codebase |

@@ -417,6 +417,29 @@ public class UserAccountService extends AppTransactionManager {
     }
 
     /**
+     * The erasure of an account (a privacy task of wave 1, design PRIVACY-AND-CONSENT-CENTRE §9.1): deactivated as
+     * iam.DeactivateUser does — inactive, audited, announced and signed out everywhere — without a caller's data
+     * scope (privacy names the account's person), inside the caller's transaction. An account no longer active or
+     * locked is left as it is.
+     */
+    public void deactivateForErasure(UUID id) {
+        runInWriteTransaction(() -> {
+            Optional<UserAccountEntity> entity = repository.findById(id);
+            if (entity.isEmpty() || !Set.of("active", "locked").contains(entity.get().getStatus())) {
+                return;
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            if (repository.deactivateUser(id, entity.get().getRowVersion(), now, null) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, "deactivateUser", List.of("status"), null);
+            outbox.publish(AGGREGATE + ".deactivateUser", AGGREGATE, id, IamEvents.payload(id));
+            rules.afterDeactivate(id);
+        });
+    }
+
+    /**
      * iam.UnlockUser: Clear a lock caused by failed logins. Allowed in every state, on a row the caller may see and
      * write.
      */

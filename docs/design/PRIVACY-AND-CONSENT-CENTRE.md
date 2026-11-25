@@ -1,14 +1,21 @@
 # Privacy and Consent Centre — technical design
 
-Status: **approved by the owner; nothing built yet.** Its prerequisite (API permissions published to iam, role-based permissions filter, JAVA-CODING-RULES §16.2) is built; implementation is tracked as ROADMAP SEC-11. Author: principal engineering review, 18 Nov 2026. Binding rules stay in
-[`CLAUDE.md`](../../CLAUDE.md), [`ARCHITECTURE.md`](../../ARCHITECTURE.md) and
-[`JAVA-CODING-RULES.md`](../../JAVA-CODING-RULES.md); where this document proposes to change one of them it says so
-and has the owner's approval (section 16).
+The `privacy` module and the `privacy-client` library: consent, notices, the processing register, data-principal
+rights, retention and breaches under India's DPDP Act 2023 and DPDP Rules 2025. Approved by the owner. Open work and
+its order: ROADMAP §3.1 (SEC-11). Questions for counsel: [PRIVACY-LEGAL-REVIEW-BRIEF.md](PRIVACY-LEGAL-REVIEW-BRIEF.md).
+Binding rules stay in [`CLAUDE.md`](../../CLAUDE.md), [`ARCHITECTURE.md`](../../ARCHITECTURE.md) and
+[`JAVA-CODING-RULES.md`](../../JAVA-CODING-RULES.md).
 
-Related work this design absorbs or re-targets: ROADMAP `ARC-6` (tenant export, erasure, archival, `platform.ExportMyData`,
-`platform.retention_policy`), `BE-1` (people's 7 consent operations answering 501), the community network design
-([`SCHOOL-COMMUNITY-NETWORK-TECHNICAL-DESIGN.md`](../product/SCHOOL-COMMUNITY-NETWORK-TECHNICAL-DESIGN.md) §8.4 consent
-rule K17, §12.7 consent centre COM-10, prerequisites PR-1, PR-2, PR-3, PR-18, PR-22) and the DPDP notes in
+Each section says what is **built** (present tense) and what is **planned** (marked *Planned*). Sources of truth for
+what is built: the baseline `database/migrations/privacy/V1_220_001__privacy_baseline.sql`, the contract in
+`com.mysms.privacy.api`, `backend/privacy/src/main/resources/proto/mysms/privacy/v1/privacy.proto` and the operation
+table `META-INF/mysms/operations/privacy.json`.
+
+This design absorbs: the subject-level part of ROADMAP ARC-6 (export, erasure, retention; `platform.ExportMyData` and
+`platform.retention_policy` are replaced by §9–§10); people's former consent table and operations (removed); the
+consent prerequisites of the community network design
+([`SCHOOL-COMMUNITY-NETWORK-TECHNICAL-DESIGN.md`](../product/SCHOOL-COMMUNITY-NETWORK-TECHNICAL-DESIGN.md) §8.4 rule
+K17, §12.7, its consent-centre panel COM-39 in ui/02 ACC-13, PR-1, PR-2, PR-3, PR-18, PR-22); and the DPDP notes of
 [`CLASSROOM-VOICE-ASSISTANT-BRAINSTORM.md`](../product/CLASSROOM-VOICE-ASSISTANT-BRAINSTORM.md) §8.
 
 ---
@@ -17,175 +24,155 @@ rule K17, §12.7 consent centre COM-10, prerequisites PR-1, PR-2, PR-3, PR-18, P
 
 ### 1.1 Summary
 
-MySMS processes the personal data of children at scale: names, photos, marks, attendance, health notes, fees, GPS
-positions on the bus, learning analytics. Under India's DPDP Act 2023 and DPDP Rules 2025 each school (the tenant) is
-the **Data Fiduciary** and MySMS is, for almost everything, its **Data Processor**. The fiduciary needs tools that a
-processor must supply: notices, verifiable parental consent, purpose-bound processing, rights requests with deadlines,
-erasure that actually reaches every module, retention, and a breach register. Today MySMS has one table
-(`people.consent_record`, `database/migrations/people/V1_050_001__people_baseline.sql` line 539), seven consent
-operations that answer 501, and no erasure or retention machinery.
+MySMS processes children's personal data at scale: names, photos, marks, attendance, health notes, fees, bus GPS
+positions, learning analytics. Under the DPDP Act each school (the tenant) is the **Data Fiduciary** and MySMS, for
+almost everything, its **Data Processor**. The fiduciary needs tools a processor must supply: notices, verifiable
+parental consent, purpose-bound processing, rights requests with deadlines, erasure that reaches every module,
+retention and a breach register.
 
-The **Privacy and Consent Centre** is a new domain module, `privacy`, with its own schema, that owns:
+`privacy` is a domain module with its own schema. It owns:
 
-1. the catalogue of purposes, data categories and processing activities (a RoPA-lite generated from the modules);
+1. the catalogue of purposes, data categories and processing activities (a RoPA-lite register);
 2. versioned, multilingual notices;
-3. consent records with full evidence, guardian capacity and verification, and a precomputed **effective consent state**;
-4. a small **decision API** (gRPC) and a thin client facade (`privacy-client`) that every module uses to ask
-   "may I process subject S for purpose P at scope W?" in batch, cached, fail-closed;
-5. data-principal rights requests (access, correction, erasure, grievance, nomination) with SLA state machines and
-   event-driven fan-out to the modules that hold the data;
-6. a retention and deletion engine (policies per data category, legal holds, per-module sweeps);
-7. a breach register with the notification clock.
+3. consent records with evidence, guardian capacity and verification, and a precomputed **effective consent state**;
+4. a small decision API (gRPC) and the `privacy-client` facade every module uses to ask "may I process subject S for
+   activity A at scope W?" in batch, cached, fail-closed;
+5. data-principal rights requests with deadlines and (planned) event-driven fan-out to the modules holding the data;
+6. *Planned:* a retention and deletion engine (policies per data category, legal holds, per-module sweeps);
+7. a breach register with the Board's 72-hour clock and the notices recorded (sending them through comms is planned).
 
 ### 1.2 Goals
 
 | # | Goal | Measured by |
 |---|---|---|
 | G1 | No processing that needs consent happens without a live, verified consent at the right scope | Every enforcement point in §8 has a component test that proves a refusal blocks it |
-| G2 | One place for parents, adult students and staff to see and change what they agreed to | COM-10 screens built on privacy's self-service API |
+| G2 | One place for parents, adult students and staff to see and change what they agreed to | The consent centre (ACC-13) on privacy's self-service API |
 | G3 | Rights requests answered within the deadline the tenant configures (default 30 days; legal maximum to verify) | SLA dashboard; overdue = 0 |
-| G4 | Erasure reaches all modules that hold the subject's data, idempotently, with evidence | Per-module task receipts; `ErasureSagaComponentTest` across a monolith with all modules |
-| G5 | Consent checks do not slow down hot paths | p99 of a batch check of 500 subjects < 15 ms in-process, < 40 ms remote; cache hit ratio > 95 % |
-| G6 | Ready for DPDP's main obligations (13 May 2027) with a margin | Phases P0–P3 of §15 done by March 2027 |
+| G4 | Erasure reaches every module holding the subject's data, idempotently, with evidence | Per-module task receipts; `ErasureSagaComponentTest` across a monolith with all modules |
+| G5 | Consent checks do not slow hot paths | p99 of a batch check of 500 subjects < 15 ms in-process, < 40 ms remote; cache hit ratio > 95 % |
+| G6 | Ready for DPDP's main obligations (13 May 2027) with a margin | Phases P1–P3 of §15.1 done before then |
 
 ### 1.3 Non-goals
 
-- **Not an authorisation service.** Who may run an operation stays with iam roles, the edge `AuthFilter`/`EdgeAuthorizer`
-  and `DataScope` (JAVA-CODING-RULES §16). Consent answers a different question: *may this data be used for this
-  purpose*, independent of who is asking. API permissions are published to iam, not to privacy (JAVA-CODING-RULES §16.2).
-- **Not a general policy engine** (no OPA/Cedar now; §15.4 keeps the door open).
-- **Not a legal opinion.** Statements of law here are engineering inputs; anything marked *to verify with counsel* must be
+- **Not an authorisation service.** Who may run an operation stays with iam roles, auth-client's filter and
+  `DataScope` (JAVA-CODING-RULES §16). Consent answers a different question: *may this data be used for this
+  purpose*, whoever asks. API permissions are published to iam, not to privacy (JAVA-CODING-RULES §16.2).
+- **Not a general policy engine** (no OPA/Cedar; §15.4 keeps the door open).
+- **Not a legal opinion.** Statements of law are engineering inputs; anything marked *to verify with counsel* is
   confirmed before the feature it drives ships.
-- **Not a tenant-offboarding tool.** Whole-tenant export/erasure (ARC-6 first half) reuses the same per-module handlers
-  but is a platform operation, specified in ARC-6.
-- **No field-level redaction framework.** Modules decide what to omit with explicit mapping, not reflection (§3).
+- **Not a tenant-offboarding tool.** Whole-tenant export and erasure (ARC-6) reuse the per-module handlers of §9.1 but
+  are a platform operation.
+- **No field-level redaction framework.** Modules omit data by explicit mapping, never by reflection (§3).
 
-### 1.4 Decision: a separate `privacy` module
+### 1.4 Why a separate `privacy` module
 
-**Decision: build `privacy` as the 22nd module with its own schema, service and contract. Under ARCHITECTURE §6.2
-Plan A it stays a module of its own (the 10th), not part of `identity`.**
-
-Options considered:
+`privacy` is the 22nd domain module, with its own schema, service and contract; in the decided reorganisation
+([MODULE-AND-PRODUCT-REORGANISATION.md](MODULE-AND-PRODUCT-REORGANISATION.md)) it stays a kernel module of its own,
+not part of `identity`.
 
 | Option | For | Against |
 |---|---|---|
-| A. Inside `people` (where `consent_record` lives today) | No new service; consent sits beside the person | people is a profile store with a self-service and HR flavour; rights orchestration, retention, breach and notices are a different capability with a different user (the school's grievance/data-protection officer). people would have to *receive* completion events from all 21 modules and orchestrate them: it becomes the busiest event consumer in the system and its blast radius grows. people is read by 8 modules today; consent checks would make it hot for every module. |
-| B. Inside `iam` | iam is already on every request | Rule 3 of ARCHITECTURE §6.1: identity must scale on its own and stay small and security-reviewed. Consent is not authentication. Mixing them invites "consent as a permission"; permissions belong to iam (§16.2), consent to privacy. |
-| C. Inside `platform` (ARC-6 assumed `platform.retention_policy` and `platform.ExportMyData`) | platform is tenant-level infrastructure; owns files and audit log | platform is "read-mostly, changed by tenant admins only" (ARCHITECTURE §6.2). Consent and rights requests are written by parents and students at scale. platform's other users (sales enquiry, themes, storage quota) are unrelated. |
-| **D. New `privacy` module** | One capability, one owner, one audit boundary; can be scaled and secured on its own; decision API is a narrow, stable contract; orchestration (fan-out, SLAs, holds) lives in one place; matches the owner's inclination | One more service (in the monolith it is one more schema and a few beans); one more proto copy in callers; needs a dependency-graph slot (below) |
+| A. Inside `people` | No new service; consent beside the person | people is a profile store; rights orchestration, retention, breach and notices are a different capability with a different user (the school's grievance / data-protection officer). people would receive completion events from all modules and become the busiest event consumer; it is read by 8 modules and consent checks would make it hot for every module |
+| B. Inside `iam` | iam is on every request | ARCHITECTURE §6 rule 3: identity scales on its own and stays small and security-reviewed. Consent is not authentication; mixing invites "consent as a permission" |
+| C. Inside `platform` | Tenant infrastructure; owns files and audit log | platform is read-mostly, changed by tenant admins; consent and requests are written by parents and students at scale |
+| **D. New `privacy` module (chosen)** | One capability, one owner, one audit boundary; scaled and secured on its own; narrow, stable decision contract; orchestration in one place | One more service (in the monolith one more schema and a few beans); one more proto copy (inside `privacy-client`) |
 
-Why D survives the merge rules of ARCHITECTURE §6.1: it is a **distinct business capability with distinct users**
-(rule 1), has **weak synchronous coupling** to people (only a person card lookup; subject facts arrive by events —
-rule 2), and has **its own data sensitivity and audit regime** (rule 3: like finance and iam, it stays apart). If the
-owner ever takes Plan B (6 modules), privacy may join `foundation` as a second schema without any change to its
-contract, because callers only ever see the decision API.
+D meets the merge rules of ARCHITECTURE §6: a distinct capability with distinct users (rule 1), weak synchronous
+coupling (subject facts arrive by events, rule 2), its own sensitivity and audit regime (rule 3).
 
-**Place in the dependency DAG** (ARCHITECTURE §2):
+**Place in the dependency graph** (ARCHITECTURE §2):
 
-| Module | May depend on (gRPC) | Learns from events only |
+| Module | Calls (gRPC) | Learns from events only |
 |---|---|---|
-| `privacy` | `people` (person card), `iam` (user → person), `org` (institution names, jurisdiction), `platform` (files for evidence and export packages, tenant settings) | `sis.student_guardian.*`, `sis.student.*`, `sis.student_enrollment.*`, `people.person.*`, `hr.staff.*`, every module's `<module>.privacy_task.*` |
-| every module that enforces consent (`comms`, `lms`, `sis`, `assessment`, `attendance`, `transport`, `finance`, `admission`, `careers`, `library`, `frontoffice`, `hr`) | gains `privacy` | `privacy.consent_state.changed`, `privacy.rights_request.*`, `privacy.retention.due` |
+| `privacy` | none today. *Planned:* `platform` (files for evidence and export packages) | `people.person.*`, `sis.student.*`, `sis.student_guardian.*`, `hr.staff.*`, `<module>.privacy_task.completed` of each module of `mysms.privacy.erasure.modules`. *Planned:* `<module>.retention_run.completed` |
+| modules that enforce consent or hold personal data | `privacy` through `privacy-client` (people today; §8 lists the rest). *Planned:* `ListActiveHolds` from their erasure and retention handlers | *Planned:* `privacy.rights_request.task_assigned`, `privacy.retention.due` |
 
-privacy never calls `sis` or any module that calls privacy, so the graph stays a DAG: guardian links and enrolments
-reach privacy as events (the same "event-only, against the arrow" pattern listed at the end of
-`database/logical-references.md`). Orchestration of erasure and export is **events out, events back**, never gRPC from
-privacy into the modules.
+privacy never calls a module that calls privacy, so the graph stays acyclic: guardian links and enrolments arrive as
+events (the "event-only, against the arrow" pattern of `database/logical-references.md`). Erasure and export are
+events out, events back, never gRPC from privacy into the modules.
 
 ---
 
 ## 2. Regulatory drivers (engineering view)
 
-Sources the team already relies on: the DPDP Act 2023 and the DPDP Rules 2025 (notified 13/14 Nov 2025), as summarised in
-`CLASSROOM-VOICE-ASSISTANT-BRAINSTORM.md` §8. Phasing: the Board provisions applied at once; **consent-manager
-provisions from 13 Nov 2026** (in force now); **children's data, notice/consent standards and most fiduciary duties from
-13 May 2027**. Everything below is a requirement on the *product*, phrased so a developer can test it.
+Sources: the DPDP Act 2023 and the DPDP Rules 2025 (notified 13/14 Nov 2025; summary in
+`CLASSROOM-VOICE-ASSISTANT-BRAINSTORM.md` §8; commencement questions: legal brief Q1). Phasing: Board provisions at
+once; consent-manager provisions from 13 Nov 2026; children's data, notice and consent standards and most fiduciary
+duties from **13 May 2027**. Each row is a requirement on the product, phrased so it can be tested.
 
-| Ref | Obligation (summary) | What the product must do | Confidence |
+| Ref | Obligation (summary) | What the product does | Confidence |
 |---|---|---|---|
-| Act s.5, Rule 3 | Notice before or at consent: itemised data and purposes, how to withdraw, how to complain, how to reach the Board; plain language; available in English and Eighth Schedule languages on request | Versioned, itemised notices per purpose; per-language translations; a notice version is recorded with every consent; withdraw and complaint links on every notice | High; exact itemisation format *to verify with counsel* |
-| s.6 | Consent free, specific, informed, unconditional, unambiguous, by clear affirmative action, limited to necessary data; withdrawal as easy as giving | No pre-ticked boxes; one purpose per toggle; no bundling a non-essential purpose into enrolment; withdraw is one tap in the same screen | High |
-| s.6(7)–(9), Rule 4 | Consent Managers (registered with the Board) may give, manage, review and withdraw consent on a principal's behalf | Consent records carry `channel = consent_manager` and an external artefact id; an inbound adapter placeholder (§15.4) | Medium: technical standards for artefacts *to verify* |
-| s.7 | Legitimate uses that do not need consent (e.g. data voluntarily provided for a specified purpose where the principal has not objected; legal obligations; medical emergency; employment) | Every processing activity records its **legal basis**; consent checks are skipped (and logged as such) for non-consent bases | High that the section exists; which school activities fit *to verify with counsel* |
-| s.8(4)–(5) | Reasonable security safeguards | Existing floor (RLS, `_enc` columns, no PII in logs) plus privacy's own audit | High |
-| s.8(6), Rule 7 | Breach: intimate the Board and each affected principal; Rules require intimation without delay and a detailed report to the Board within 72 hours | Breach register with two clocks; templated principal notices through comms | High on the 72 h report; exact contents *to verify* |
-| s.8(7) | Erase when consent is withdrawn or the purpose is no longer served, unless retention is required by law; also cause processors to erase | Erasure saga; retention engine; per-module handlers; legal holds | High |
-| Rule 8 + schedule | Specified classes of fiduciaries erase after periods of inactivity with 48 h prior notice; logs kept a minimum of one year | Retention policies support "inactive for N" triggers and pre-erasure notice; audit and access logs kept ≥ 1 year | Medium: which classes apply to schools *to verify* |
-| s.8(9)–(10), s.13 | Publish contact of a person who answers questions; grievance redressal; Rules fix a response period (stated as up to 90 days) | Grievance request type with SLA; tenant publishes DPO/grievance contact in every notice | Medium on the period: *to verify* |
-| s.9(1), Rule 10 | **Verifiable consent of a parent or lawful guardian** before processing a child's (under 18) data; check the person is an identifiable adult (reliable details already held, or a virtual token e.g. through DigiLocker) | Guardian capacity on each consent; verification method and evidence; a minor's own toggle never counts alone | High on the rule; DigiLocker integration specifics *to verify* |
-| s.9(2)–(3) | No processing likely to harm a child's well-being; **no tracking, behavioural monitoring or targeted advertising directed at children** | Purposes `behavioural_analytics`, `targeted_advertising` are **forbidden for minors** in the catalogue (not even with consent); a build-time check that no activity of those kinds targets minors | High |
-| Fourth Schedule | Educational institutions exempt from s.9(1) and s.9(3) for tracking/monitoring restricted to educational activities or children's safety | Activities flagged `education_exemption = true` record the clause relied on; read narrowly (brainstorm §8) | Medium: scope contested, *to verify* |
-| s.11 | Right to a summary of personal data processed, processing activities, and the fiduciaries/processors it was shared with | Access request returns a summary generated from the RoPA-lite and per-module counts; full export is an extra, not the legal minimum | High |
-| s.12 | Correction, completion, updating, erasure | Correction request routed to the owning module's normal update operation, with audit | High |
-| s.14 | Nominate another person to exercise rights on death or incapacity | `privacy.nominee` table and a nomination request type | High |
-| s.10 | Significant Data Fiduciary (if notified): DPO in India, independent audit, DPIA | Reports exportable for an auditor; DPIA templates are outside the product | Medium: schools unlikely to be notified; MySMS itself might be if it becomes a fiduciary at scale |
-| Penalties | Up to ₹250 crore for security failures; up to ₹200 crore for breach-notification and children's obligations | Prioritise G1, G3, breach clock | Amounts *to verify* |
+| Act s.5, Rule 3 | Notice before or at consent: itemised data and purposes, how to withdraw, how to complain, how to reach the Board; plain language; English and Eighth Schedule languages on request | Versioned, itemised notices per purpose; translations per language; the notice version shown is recorded with every consent; withdraw and complaint links in every notice | High; itemisation format *to verify* |
+| s.6 | Consent free, specific, informed, unconditional, unambiguous, by clear affirmative action, limited to necessary data; withdrawal as easy as giving | No pre-ticked boxes; one purpose per toggle; no non-essential purpose bundled into enrolment; withdraw is one tap on the same screen | High |
+| s.6(7)–(9), Rule 4 | Registered Consent Managers may give, manage, review and withdraw consent for a principal | Records carry `channel = consent_manager` and an external artefact id; inbound adapter planned (§15.4) | Medium: artefact standards *to verify* |
+| s.7 | Legitimate uses without consent (voluntary provision for a specified purpose, legal obligation, medical emergency, employment …) | Every processing activity records its **legal basis**; non-consent bases skip the consent check | High that the section exists; which school activities fit *to verify* (brief Q2–Q8) |
+| s.8(4)–(5) | Reasonable security safeguards | RLS, `_enc` columns, no PII in logs, privacy's own evidence ledger | High |
+| s.8(6), Rule 7 | Breach: intimate the Board and each affected principal without delay; detailed report to the Board within 72 hours | Breach register with two clocks; templated notices through comms (§11) | High on 72 h; contents *to verify* |
+| s.8(7) | Erase when consent is withdrawn or the purpose is served, unless law requires retention; make processors erase | Erasure saga, retention engine, per-module handlers, legal holds (§9–§10) | High |
+| Rule 8 + schedule | Specified classes erase after inactivity with 48 h prior notice; logs kept at least one year | "Inactive for N" triggers with pre-erasure notice; audit and access logs ≥ 1 year | Medium: whether schools are a class *to verify* |
+| s.8(9)–(10), s.13 | Publish a contact who answers questions; grievance redressal within the period the Rules fix (stated as up to 90 days) | Grievance request type with a deadline; every notice version names the grievance officer | Medium on the period |
+| s.9(1), Rule 10 | **Verifiable consent of a parent or lawful guardian** before processing a child's (under 18) data; check the giver is an identifiable adult (reliable details held, or a virtual token such as DigiLocker) | Guardian capacity and verification on every consent; a minor's own decision never counts | High on the rule; DigiLocker *to verify* |
+| s.9(2)–(3) | No processing harmful to a child; **no tracking, behavioural monitoring or targeted advertising directed at children** | Purposes `behavioural_analytics`, `targeted_advertising`, `biometric_or_video_monitoring`, `product_analytics` are forbidden for minors (no consent can allow them) | High |
+| Fourth Schedule | Educational institutions exempt from s.9(1) and 9(3) for tracking restricted to educational activities or children's safety | `processing_activity.education_exemption_clause` records the clause relied on; read narrowly | Medium: scope contested (brief Q3, Q4) |
+| s.11 | Summary of the personal data processed, the processing activities and the recipients | Access summary from the register (§9.6) | High; "may concern" vs "applies to" (brief Q15) |
+| s.12 | Correction, completion, updating, erasure | Correction routed to the owning module's update operation (§9.4); erasure saga (§9.2) | High |
+| s.14 | Nominate a person to exercise rights on death or incapacity | `privacy.nominee` and a nomination request (§9.4) | High |
+| s.10 | Significant Data Fiduciary (if notified): DPO in India, independent audit, DPIA | Reports exportable for an auditor | Medium |
+| Penalties | Up to ₹250 crore for security failures; up to ₹200 crore for breach-notification and children's obligations | Prioritise G1, G3 and the breach clock | Amounts *to verify* |
 
-**POCSO and safeguarding touch points.** Counselling notes, health records and incident cases can contain disclosures
-that the POCSO Act 2012 obliges staff to report (failure to report is an offence). Engineering consequences:
-consent withdrawal and erasure **never** delete records under a safeguarding legal hold; a guardian's access request
-excludes case files about that guardian's own conduct (counted, not shown — mirrors community design §12.7); the
-`health` and `counselling` data categories are restricted-access by default and their erasure requires a second
-reviewer. All *to verify with counsel*, and the hold always wins over automation.
+**POCSO and safeguarding.** Counselling notes, health records and incident cases can hold disclosures staff must
+report under the POCSO Act 2012. Withdrawal and erasure never delete records under a safeguarding hold; a guardian's
+access request excludes case files about that guardian's own conduct (counted, not shown); `health` and `counselling`
+are restricted categories whose erasure needs a second reviewer. All *to verify with counsel*; a hold always wins over
+automation.
 
-**Other retention law to verify.** School record-keeping (admission registers, transfer certificates, board exam
-records), accounts (tax and company law commonly cited as 8 years), and payroll records each impose minimum retention
-that overrides erasure. The retention catalogue (§10) carries a `legal_reference` text per policy so counsel can
-review one table.
+**Other retention law.** School registers, transfer certificates, board exam records, accounts (commonly 8 years) and
+payroll records impose minimum retention that overrides erasure. Each retention policy carries a `legal_reference` so
+counsel reviews one table (brief Q11).
 
-**Roles.** By default the tenant is the fiduciary and MySMS the processor; notices name the school. Where MySMS acts on
-its own account (marketing its own products, product analytics across tenants, model training) MySMS is a fiduciary and
-those purposes are platform purposes with MySMS as the named fiduciary (`purpose.fiduciary = platform`). Model training
-on children's data is not offered.
+**Roles.** The tenant is the fiduciary and MySMS the processor; notices name the school. Where MySMS acts on its own
+account (its own marketing, cross-tenant product analytics) it is the fiduciary: those purposes have
+`fiduciary = platform`. Model training on children's data is not offered.
 
 ---
 
-## 3. What the reference projects do, and what we take
+## 3. What the reference projects do, and what MySMS takes
 
-`plt-access-control-service` (ACS) is a Spring service (Spring Data JDBC, Liquibase, Redis, GCP Pub/Sub, gRPC) that
-combines RBAC (roles, permissions, features/operations, user roles) with a FHIR-flavoured consent model:
-**consent templates** (`consent_template`: name, `version`, `parent_id` grouping versions, `status` DRAFT / PROPOSED /
-ACTIVE / REJECTED / INACTIVE / ENTERED_IN_ERROR, `type` PERMIT / DENY, JSONB `action`, `scope`, `category`, `purpose`,
-`policy`, `security_label`, attachment for the legal text), **field groups** (`field_group`: a named set of fields of
-a `resource_type`, published by each service at start-up), and **consent assignments** (`consent_assignment`: giver,
-receiver type user/role, receiver id, organisation, `start_date`/`end_date`, `performer`, `verified`, `verified_with`,
-`verification_date`, with `assignment_field_group` rows down to a resource id). A scheduler with ShedLock soft-deletes
-expired assignments; `LegalDocumentService` derives ACCEPTED / ACCEPTED_EXPIRED / REVIEW_REQUIRED / NOT_ACCEPTED by
-comparing a user's accepted version with the latest version of each template; a `BaseGdprService.hardDelete(subjectId)`
-interface with FAILED / PARTIALLY / SUCCEED results deletes a subject's rows. The service populates Redis with
-consent assignments, templates, field groups and user roles (on authentication events), guarded by
-"population in progress" keys.
+`plt-access-control-service` (ACS) combines RBAC with a FHIR-flavoured consent model: versioned **consent templates**
+(`parent_id` groups versions; DRAFT / PROPOSED / ACTIVE / REJECTED / INACTIVE / ENTERED_IN_ERROR; PERMIT / DENY;
+JSONB action, scope, category, purpose, policy, security label; an attachment for the legal text), **field groups**
+published by each service at start-up, and **consent assignments** (giver, receiver user/role, organisation,
+validity window, performer, verification fields, field groups down to a resource id). A ShedLock scheduler
+soft-deletes expired assignments; `LegalDocumentService` derives ACCEPTED / ACCEPTED_EXPIRED / REVIEW_REQUIRED /
+NOT_ACCEPTED per user; `BaseGdprService.hardDelete(subjectId)` returns FAILED / PARTIALLY / SUCCEED; Redis is
+populated with assignments, templates, field groups and roles, guarded by "population in progress" keys.
+`access-control-library` is the embedded client: `checkConsentOnResource` per action returning consented fields,
+reflection-based field blanking, list filtering, Redis first with gRPC fallback, a global on/off flag, "own data is
+always consented", start-up publishers and a `PermissionsFilter`.
 
-`access-control-library` is the client every service embeds: a 2,000-line `ConsentService` answering
-`checkConsentOnResource(giverId, action, resourceType, resourceIds)` (READ/CREATE/UPDATE/DELETE) and returning the
-consented fields, a `checkFieldsConsent` that **blanks un-consented fields by reflection**, `findConsentResources`
-for list filtering, a Redis-first read with fallback to the ACS gRPC stub, a global on/off property, "a user always has
-consent to their own data", start-up publishers that push the service's field groups and API permissions to ACS, and a
-`PermissionsFilter` that enforces API permissions from the cache.
-
-| Idea in the references | Verdict for MySMS | How it appears here |
+| Reference idea | Verdict | In MySMS |
 |---|---|---|
-| Versioned consent template with a version group (`parent_id`) and a lifecycle | **Adopt, simplified** | `notice` + `notice_version` (DRAFT → ACTIVE → RETIRED); a material change sets `requires_reconsent` |
-| Accepted / accepted-expired / review-required / not-accepted derived per user | **Adopt** | `ConsentStatus` in the self-service API: `GRANTED`, `REFUSED`, `NOT_ANSWERED`, `RECONSENT_REQUIRED`, `EXPIRED` |
-| PERMIT vs DENY templates | **Adopt as `decision`** | Explicit `refused` records; most-restrictive wins among legal guardians (community K17) |
-| Validity window, `verified`, `verified_with`, `verification_date`, `performer` | **Adopt** | `valid_from`/`valid_until`, `verification_status`, `verification_method`, `verified_by`, `recorded_by` |
-| Field groups published by each service at start-up | **Adapt**: build-time, not runtime | Each module ships `META-INF/mysms/privacy/<module>.json` (processing activities, data categories with tables/columns, handlers); the conformance build checks it; privacy's baseline seeds it. Runtime publication is not needed here: the manifest only changes with a release, so the build checks and seeds it |
-| `hardDelete(subjectId)` with FAILED/PARTIALLY/SUCCEED | **Adopt and extend** | Per-module `PrivacyTaskHandler` for erase/anonymise/export/restrict with typed outcomes and counts, idempotent by task id |
-| Scheduled expiry of consents with a cluster lock | **Adopt** | Daily expiry and majority jobs on the ARC-4 job pattern (one runner per tenant shard, lock in privacy's schema) |
-| Client checks in batch over resource ids | **Adopt** | `BatchCheckConsent` and `ConsentChecker.check(Set<UUID>…)` |
-| Cache first, remote fallback | **Adopt** | In-process bounded cache, remote on miss, event-driven invalidation |
-| Global enable flag | **Adapt** | `mysms.privacy.enforcement = off / shadow / enforce`, global default with a per-tenant override; `shadow` logs would-be denials without blocking |
-| Owner always has consent to own data | **Adopt** | Self-access never consults consent (it is access, not a new purpose) |
-| Attachment holding the legal text | **Adopt** | `notice_version.document_file_id` in `platform.file_object` plus the rendered text stored in privacy |
-| Requirement traceability (API-ACSxx → SRS ids) | **Adopt lightly** | Requirement ids `PCC-nn` in this doc map to named component tests |
-| Receiver model (consent given *to* a user or role), org-hierarchy search | **Skip** | MySMS access is RBAC + `DataScope`; consent here is *purpose*-based. A recipient is recorded only for third-party sharing |
-| CRUD-per-field consent (READ/CREATE/UPDATE/DELETE per field) | **Skip** | Over-fine for schools; purposes × scopes cover the real decisions |
-| Reflection-based field blanking (`checkFieldsConsent`) | **Skip** | Hidden mutation of DTOs; MySMS maps explicitly (MapStruct) and modules omit data by design |
-| Shared Redis cache populated by the server and read by every client; "population in progress" flags | **Skip** | Complex, cross-service coupling through a cache; MySMS uses per-process caches + events + a precomputed state table |
-| API permissions published to the access-control service; `PermissionsFilter` in each service | **Adopted, outside this design** | Each module publishes its operation table to iam at start-up and auth-client's filter enforces role permissions through an iam-fed cache (JAVA-CODING-RULES §16.2, ROADMAP SEC-0, built before this centre). Consent is not part of that filter |
-| FHIR Consent resource shape (JSONB `policy`, `security_label`, `class`, `code`) | **Skip now, map later** | Purposes carry an optional `external_code` for consent-manager interoperability |
-| Thread-pool fan-out of many single checks | **Skip** | One batch RPC instead |
-| Liquibase, Spring Data JDBC, Lombok, Feign | **Skip** | MySMS conventions (Flyway baseline, JdbcClient, records, gRPC) |
+| Versioned template with version group and lifecycle | Adopt, simplified | `notice` + `notice_version` (draft → active → retired); `requires_reconsent` on a material change |
+| Accepted / expired / review-required / not-accepted per user | Adopt | `MyConsentStatus`: `GRANTED`, `REFUSED`, `NOT_ANSWERED`, `RECONSENT_REQUIRED`, `EXPIRED` |
+| PERMIT vs DENY | Adopt as `decision` | Explicit `refused` records; most restrictive guardian wins (K17) |
+| Validity window, verified, verified-with, verification date, performer | Adopt | `valid_from`/`valid_until`, `verification_status`, `verification_method`, `verified_by_user_id`, `recorded_by_user_id` |
+| Field groups published at start-up | Adapt: build time | *Planned:* per-module manifests `META-INF/mysms/privacy/<module>.json` checked by conformance; today the baseline seeds the register |
+| `hardDelete(subjectId)` with typed outcome | Adopt and extend | Per-module task handler for erase / anonymise / export / restrict, idempotent by task id (§9.1; built in every module holding personal data except lms) |
+| Scheduled expiry with a cluster lock | Adopt | Expiry and majority jobs on core's job runtime (ARC-4, `privacy.job_schedule`) |
+| Batch checks over resource ids | Adopt | `BatchCheckConsent`, `ConsentChecker.checkAll` |
+| Cache first, remote fallback | Adopt | Per-process Caffeine cache in `privacy-client`, TTL only (§7.2) |
+| Global enable flag | Adapt | *Planned:* `off / shadow / enforce` when the first rollout needs it; enforce-only today |
+| Owner always consents to own data | Adopt | Self-access never consults consent |
+| Attachment with the legal text | Adopt | `notice_version.document_file_id` plus the rendered text in `notice_translation` |
+| Requirement traceability | Adopt lightly | Requirement ids map to named component tests |
+| Receiver model, org-hierarchy search | Skip | Access is RBAC + `DataScope`; consent is purpose-based; a recipient is recorded only for third-party sharing |
+| CRUD-per-field consent | Skip | Purposes × scopes cover the real decisions |
+| Reflection-based field blanking | Skip | Hidden DTO mutation; MySMS maps explicitly |
+| Shared Redis populated by the server | Skip | Per-process caches and a precomputed state table |
+| API permissions published to the access service; per-service filter | Adopted outside this design | Each module publishes its operation table to iam; auth-client enforces (JAVA-CODING-RULES §16.2) |
+| FHIR Consent shape | Skip now, map later | `purpose.external_code` for consent-manager interoperability |
+| Thread-pool fan-out of single checks | Skip | One batch RPC |
+| Liquibase, Spring Data JDBC, Lombok, Feign | Skip | Flyway baseline, JdbcClient, records, gRPC |
 
 ---
 
@@ -195,716 +182,337 @@ consent to their own data", start-up publishers that push the service's field gr
 
 | Concept | Meaning | Owner | Lifecycle |
 |---|---|---|---|
-| **Purpose** | Why data is processed (`photo_video_publication`, `community_naming`, `marketing_comms`, `learning_analytics`, `third_party_payment`, `transport_live_location`, `biometric_attendance`, `health_record_keeping` …) | platform-wide catalogue, seeded by privacy's baseline; tenant can enable/disable and attach notices | `active`, `deprecated` (no new consents; existing still evaluated), `retired` |
-| **Legal basis** | `consent`, `legitimate_use_voluntary`, `legal_obligation`, `education_exemption`, `medical_emergency`, `employment`, `contract` (adults, e.g. fee payer) | per processing activity | fixed per activity version |
-| **Scope (width)** | How far the processing reaches: `class < institution < inter_school < public` for publication purposes; `tenant` for others | per purpose (`scope_kind`) | a consent at a width covers every narrower width (community K17) |
-| **Data category** | `identity`, `contact`, `photo_media`, `academic_record`, `attendance`, `health`, `counselling`, `financial`, `location`, `biometric`, `device_usage`, `government_id` … each with a sensitivity level | catalogue | used by notices, RoPA, export, erasure, retention |
-| **Processing activity** | Module × activity × purpose × legal basis × categories × recipients × retention policy (RoPA-lite row) | declared by each module's manifest; versioned | `version` increments on change; a material change can force re-consent |
-| **Notice** | The text shown to the principal for a purpose (or a bundle of purposes), per tenant, per language | tenant admin (`privacy.notice.*`) | `draft → active → retired`; one active version per notice |
-| **Consent record** | One decision by one giver for one subject × purpose × scope, under one notice version | privacy | `granted` or `refused`; may be **withdrawn**, **superseded** by a newer decision of the same giver, or **expire** (`valid_until`) |
-| **Consent evidence** | Append-only ledger of everything that happened to consent records (who, how, channel, IP, device, notice version, verification) | privacy | never updated or deleted (kept for the retention of consent evidence) |
-| **Effective consent state** | The computed answer per subject × purpose × scope: `allowed`, `denied`, `not_answered`, with the basis | privacy, recomputed on every change | rewritten in the transaction of the change; published as an event |
-| **Subject** | A data principal known to privacy: person id, user ids, majority status, institutions | projection from people, iam, sis, hr events | `minor`, `adult`, `unknown` (= minor) |
-| **Guardian link** | Projection of `sis.student_guardian` (legal guardian, custody, status) | from sis events | only `active` + `is_legal_guardian` links can give consent for a minor |
-| **Verification** | How the giver was established as an adult guardian (Rule 10): `existing_record` (guardian identity already held and linked by the school), `in_person_staff_check`, `digilocker_token`, `otp_on_registered_mobile` (weak; to verify), `paper_form_countersigned` | privacy | a consent counts only when its verification is `verified` |
-| **Rights request** | `access`, `export`, `correction`, `erasure`, `grievance`, `nomination`, `withdraw_all` | privacy | SLA state machine (§4.3) with per-module **tasks** |
-| **Legal hold** | Freezes erasure/retention for a subject, a category or a record set (safeguarding, litigation, audit) | privacy (safeguarding lead, DPO) | `active → released` |
-| **Retention policy** | Data category × trigger × period × action (`delete`, `anonymise`, `archive`) | catalogue default, tenant override within legal bounds | versioned |
-| **Breach** | An incident affecting personal data, with clocks for Board and principal notifications | privacy (DPO) | §11 |
-| **Nominee** | Person nominated by an adult principal to exercise rights on death or incapacity | privacy | `active`, `revoked` |
+| **Purpose** | Why data is processed (`photo_video_publication`, `community_naming`, `marketing_comms`, `learning_analytics` …; 20 in the baseline) | platform catalogue, seeded by the baseline; a tenant switches a purpose on (`tenant_purpose`) and attaches a notice | `active`, `deprecated` (no new consents; existing still evaluated), `retired` |
+| **Legal basis** | `consent`, `legitimate_use`, `legitimate_use_voluntary`, `legal_obligation`, `education_exemption`, `medical_emergency`, `employment`, `contract` (mapping to the Act: brief Q2) | per processing activity | fixed per activity version |
+| **Scope (width)** | How far processing reaches: `class < institution < inter_school < public` for width purposes; `tenant` for the rest | per purpose (`scope_kind`) | a consent at a width covers every narrower width (K17) |
+| **Data category** | `identity`, `contact`, `photo_media`, `academic_record`, `attendance`, `health`, `counselling`, `financial`, `location`, `biometric`, `device_usage`, `government_id`, with a sensitivity | catalogue | restricted = health, counselling, biometric; sensitive = government_id, financial, location, photo_media; normal = the rest (levels: DEC-17) |
+| **Processing activity** | module × activity × purpose × basis × categories × recipients × retention policy (a register row) | catalogue (18 seeded; *planned:* module manifests) | `version` increments on change; a material change can force re-consent |
+| **Notice** | The text shown for a purpose or bundle of purposes, per tenant and language | tenant admin | versions `draft → active → retired`; one active version per notice |
+| **Consent record** | One decision by one giver for one subject × purpose × scope, under one notice version | privacy | `granted` or `refused`; may be withdrawn, superseded by the same giver's newer decision, or expire |
+| **Consent evidence** | Append-only, hash-chained ledger of everything that happened to consent records | privacy | never updated or deleted |
+| **Effective consent state** | The answer per subject × purpose × scope: allowed or denied, with a reason | privacy | rewritten in the transaction of every change; published as an event |
+| **Subject** | A data principal known to privacy: person, accounts, student records, institutions, majority status | projection of people and sis events | `minor`, `adult`, `unknown` (= minor) |
+| **Guardian link** | Projection of `sis.student_guardian` | from sis events | only an active link of a legal guardian may consent for a minor |
+| **Verification** | How the giver was established as an adult guardian: `existing_record`, `in_person_staff_check`, `digilocker_token`, `otp_on_registered_mobile` (weak; to verify), `paper_form_countersigned` | privacy | a consent counts only when `verified` |
+| **Rights request** | `access`, `correction`, `grievance`, `nomination`, `export`, `erasure`, `withdraw_all` | privacy | §4.3, §9.6 |
+| **Legal hold** | Freezes erasure and retention for a subject, a category or a record set (safeguarding, litigation, regulator, audit) | DPO, safeguarding lead | `active → released`, with a review date |
+| **Retention policy** | category × trigger × period (days) × action (`delete`, `anonymise`, `archive`), with a legal floor | platform catalogue (`retention_policy`); the tenant's own period and action (`tenant_retention_policy`), never below the floor | the catalogue changes with the baseline; a tenant setting is versioned by `row_version` |
+| **Breach** | An incident affecting personal data, with the Board's clock and the notices sent | DPO | §11 |
+| **Nominee** | Person an adult principal names to exercise rights on death or incapacity; acts for them once their nomination request is fulfilled | privacy | `active` (acting once activated), `revoked` |
 
 ### 4.2 Effective-consent rule
 
-The rule generalises community design §8.4 (K17) to every purpose. Inputs: the subject's majority status, the live
-records for (subject, purpose), the active legal-guardian links, the purpose's settings for the tenant, the legal basis
-of the activity asking.
+Generalises the community design's K17 to every purpose. Inputs: the subject's majority status, the live records for
+(subject, purpose), the active legal-guardian links, the tenant's purpose setting, the activity's legal basis.
+Implemented as `EffectiveConsentRule` (Strategy; `DefaultEffectiveConsentRule`), a pure function; its output for every
+scope is stored in `privacy.consent_state` and published. Consumers never re-implement it.
 
 ```
 decide(subject S, purpose P, scope W, activity A):
-  if A.legalBasis != consent                      -> ALLOWED (basis = A.legalBasis)        // logged, not stored
-  if P.forbiddenForMinors and S.status != adult   -> DENIED  (reason = FORBIDDEN_FOR_MINOR)
-  if tenantPurpose(P).disabled                    -> DENIED  (reason = PURPOSE_DISABLED)
-  live = records(S, P) where withdrawn_at is null and not superseded
-                         and (valid_until is null or valid_until >= today)
-                         and verification_status = verified
-  if S.status == adult:
-      givers = {S}                                // only the student's own records count
-  else:
-      givers = { g | link(g, S).active and link.isLegalGuardian }
+  if A.legalBasis != consent                      -> ALLOWED (basis = A.legalBasis)        // answered, not stored
+  if P.forbiddenForMinors and S.status != adult   -> DENIED  (FORBIDDEN_FOR_MINOR)
+  if tenantPurpose(P) is off                      -> DENIED  (PURPOSE_DISABLED)
+  live = records(S, P) not withdrawn, not superseded, not expired, verification_status = verified
+  givers = S.status == adult ? {S} : { g | link(g, S) active and legal guardian }
   relevant = live where giver in givers
-  if any r in relevant: r.decision == refused and r.scope <= W   -> DENIED (REFUSED)
-  if any r in relevant: r.decision == granted and r.scope <  W
-         and S.status != adult                                    -> DENIED (NARROWER_GRANT)  // most restrictive guardian
-  if any r in relevant: r.decision == granted and r.scope >= W    -> ALLOWED (CONSENT)
-  if notice(P).activeVersion.requiresReconsent and the grant predates it -> DENIED (RECONSENT_REQUIRED)
-  -> DENIED (NOT_ANSWERED)                                         // silence never allows
+  if any refused with scope <= W                            -> DENIED (REFUSED)
+  if S not adult and any granted with scope < W             -> DENIED (NARROWER_GRANT)   // most restrictive guardian
+  if any granted with scope >= W                            -> ALLOWED (CONSENT)
+  if the purpose's active notice requires reconsent and the grant predates it -> DENIED (RECONSENT_REQUIRED)
+  -> DENIED (NOT_ANSWERED)                                                               // silence never allows
 ```
 
-"Silence of a second guardian does not block" holds because only *recorded* refusals and narrower grants of other legal
-guardians count. The rule is a pure function (`EffectiveConsentRule`, a Strategy) so a policy engine can replace it later
-(§15.4). Its output for every scope is stored in `privacy.consent_state` and published; consumers never re-implement it.
+Only *recorded* refusals and narrower grants of other legal guardians count, so a second guardian's silence does not
+block.
 
 ### 4.3 State machines
 
-**Consent record** (`decision` is fixed for the row; changes create a new row):
+**Consent record** (a row's decision never changes; a change is a new row):
 
 ```
             record(granted|refused)
    (none) ───────────────────────────▶ LIVE ──withdraw──▶ WITHDRAWN
-                                         │
-                                         ├──newer decision by same giver──▶ SUPERSEDED
-                                         └──valid_until passed (daily job)─▶ EXPIRED
-   LIVE + verification_status=unverified ──verify (second staff member)──▶ LIVE(verified)
+                                         ├──newer decision by the same giver──▶ SUPERSEDED
+                                         └──valid_until passed (expiry job)───▶ EXPIRED
+   LIVE + unverified ──verify (a second staff member)──▶ LIVE (verified)
 ```
 
-**Rights request**:
+**Rights request** (statuses in `ck_rights_request_status`; behaviour in §9.6):
 
 ```
-SUBMITTED ─identity verified─▶ VERIFIED ─triage─▶ IN_PROGRESS ─all tasks done─▶ FULFILLED ─▶ CLOSED
-    │                              │                    │   │
-    │                              │                    │   └─task failed / partly─▶ ACTION_REQUIRED ─retry/override─▶ IN_PROGRESS
-    │                              │                    └─hold blocks part─▶ PARTIALLY_FULFILLED ─▶ CLOSED
-    └─identity not verified────────┴─▶ REJECTED (reason code, appealable as grievance)
-EXTENDED: an SLA extension with recorded reason (tenant policy); OVERDUE is a derived flag, not a state.
+SUBMITTED ─verifyIdentity─▶ VERIFIED ─assign─▶ IN_PROGRESS ─close(fulfilled | partially_fulfilled | declined)─▶ CLOSED
+    │ (signed-in requester: VERIFIED at once;        │ └─fulfilAccess (access only)─▶ CLOSED (fulfilled)
+    │  a nominee's request stays SUBMITTED)          │   (nomination: fulfilled activates the nominee; never partly)
+    └──────────────reject (SUBMITTED | VERIFIED)─────┴──▶ REJECTED (reason; appealable as a grievance)
+IN_PROGRESS (erasure | export) ─startFulfilment─▶ IN_PROGRESS with tasks
+    ─every task answered─▶ CLOSED (fulfilled | partially_fulfilled when a module kept rows)
+    ─a task failed for the 5th time, the others answered─▶ ACTION_REQUIRED ─retryTask─▶ IN_PROGRESS
+IN_PROGRESS (withdraw_all) ─fulfilWithdrawAll─▶ CLOSED (fulfilled)
+Extension moves due_at (not a status); overdue is derived at read time.
 ```
 
-SLA clocks: `due_at = submitted_at + tenant SLA for the type`; reminders at 50 %, 80 %, 100 % to the assignee and the DPO
-role through comms. Grievances have their own SLA (default 30 days, legal outer bound *to verify*).
+*Planned:* reminders at 50 %, 80 % and 100 % of the deadline to the assignee and the DPO role through comms (blocked on
+comms delivery, ARC-2).
 
-**Erasure task** (one per module per request): `PENDING → DISPATCHED → DONE | PARTIAL | FAILED | NOT_APPLICABLE`,
-with `attempts`, `last_error_code`, counts per table, and `held_items` (count of rows kept under a hold or a legal-retention
-policy, with the policy code).
+**Rights request task** (`rights_request_task`, one per module of an erasure or export request): `PENDING` (its wave
+has not started) `→ DISPATCHED → DONE | PARTIAL | FAILED | NOT_APPLICABLE`; a `FAILED` answer before the fifth attempt
+waits its back-off (`next_attempt_at`, shown on the task as `nextAttemptAt`) and goes back to `DISPATCHED`, as a staff retry does at once, under the same task id, as does the sweep's re-dispatch of an unanswered task.
+The answer keeps the counts per table, `heldItems` (rows kept under a hold or a legal-retention policy) and the
+policy codes; a failure its error code.
 
-**Age-of-majority transition.** A daily job (per tenant, jurisdiction age from the tenant's country, 18 for India)
-marks subjects whose 18th birthday is today: `subject.status = adult`, publish `privacy.subject.majority_reached`,
-recompute all states. From that moment only the student's own records count, so every consent purpose for that student
-becomes `NOT_ANSWERED` unless the policy below applies; the student gets a "you can now decide" task in the consent centre;
-guardians lose the consent toggles for that student (they keep the read of what was published under their consent).
-Grandfathering per purpose (`purpose.majority_grace`): publication at class/institution width stays allowed for already
-published items (community design §8.4 default), new processing needs the student's own grant; marketing and analytics
-lapse at once. *Open decision 9 in the community design remains the owner's to rule; this design implements that
-default.*
+**Legal hold** (`legal_hold`): `ACTIVE ─updateLegalHold (review date)─▶ ACTIVE ─release─▶ RELEASED`; released holds
+never change and are never deleted; due for review once active on or past `review_by`.
+
+**Age-of-majority transition.** `MajorityJob` (core job runtime, per tenant, every
+`mysms.privacy.majority-job.interval`) turns subjects whose majority date has come into adults
+(`mysms.privacy.age-of-majority`, default 18), publishes `privacy.subject.majority_reached` and recomputes their
+states. From then on only the student's own records count: every consent purpose becomes `NOT_ANSWERED` unless the
+purpose's `majority_grace` keeps it; guardians lose the toggles for that student. Grace per purpose: publication
+(`photo_video_publication`, `community_naming`) is `keep_published` — already published items stay, new processing
+needs the student's own grant; marketing and analytics lapse at once. The community design's open decision 9 remains
+the owner's; this is its default. *Planned:* a "you can now decide" task for the student; age of majority as tenant
+data (country) rather than configuration.
 
 ### 4.4 Legitimate-use bases
 
-The catalogue marks each activity; the client library short-circuits non-consent bases locally (no RPC), records a
-`basis` in its metrics, and never asks parents to consent to what the school must do anyway (attendance, marks,
-fees). Asking for consent where the basis is legal obligation would be misleading: withdrawal could not be honoured.
+The register marks each activity's basis. `privacy-client` answers a non-consent activity without asking privacy once
+it has learned the basis (§7.2), and parents are never asked to consent to what the school must do anyway
+(attendance, marks, fees): asking where the basis is a legal obligation would mislead, since withdrawal could not be
+honoured.
 
 ---
 
 ## 5. Database schema (`privacy`)
 
-Conventions (database/README, JAVA-CODING-RULES §5, §6, §14): `tenant_id uuid NOT NULL` on every tenant table; ids are
-UUIDv7 from Java (`gen_random_uuid()` only as fallback default); `FORCE ROW LEVEL SECURITY` with the policy
-`tenant_isolation`; in-module FKs are tenant-composite `(x_id, tenant_id) → (id, tenant_id)` with a matching unique
-key; audit columns `created_at/by, updated_at/by`, `deleted_at` soft delete only where a row can be "removed" by a user,
-`row_version` for optimistic locking; enums as `varchar` with CHECK; partial unique indexes `WHERE deleted_at IS NULL`;
-COMMENT on every table and column (omitted below for length). File:
-`database/migrations/privacy/V1_215_001__privacy_baseline.sql` (next free number after `V1_210`).
+Conventions (database/README, JAVA-CODING-RULES §5, §6, §14): `tenant_id` on every tenant table with `FORCE ROW
+LEVEL SECURITY` and policy `tenant_isolation`; tenant-composite in-module foreign keys; audit columns, `row_version`,
+`deleted_at` only where a user can remove a row; enums as `varchar` + CHECK; COMMENT on every table and column. The
+baseline is the source of truth; this section records what each table is for and the constraints that carry a rule.
+Global catalogue ids are `md5('mysms.<table>:' || code)::uuid`, stable across environments.
 
 ### 5.1 Catalogue (global, platform-maintained)
 
-```sql
-CREATE SCHEMA IF NOT EXISTS privacy;
+| Table | Holds | Rules in the schema |
+|---|---|---|
+| `purpose` | 20 purposes: `scope_kind` (`width` / `tenant`), `fiduciary` (`tenant` / `platform`), `forbidden_for_minors`, `majority_grace` (`none` / `keep_published` / `keep_narrow_widths`), `default_valid_months`, `external_code`, `status`, `version` | Forbidden for minors: `behavioural_analytics`, `targeted_advertising`, `biometric_or_video_monitoring`, `product_analytics` (platform fiduciary) |
+| `data_category` | 12 categories with sensitivity `normal` / `sensitive` / `restricted` | §4.1 |
+| `processing_activity` | The register: module, code `<module>.<activity>`, purpose, `legal_basis`, `education_exemption_clause`, `targets_minors`, `audiences` (whose data: `student`, `guardian`, `staff`), `recipients` (jsonb array), `cross_border`, `retention_policy_code`, `version` | Code must start with its module; `education_exemption` needs a clause; audiences a non-empty subset of the three roles |
+| `processing_activity_category` | Categories per activity | |
 
--- Global catalogue: no tenant_id, read-only for the application role (like iam.permission).
-CREATE TABLE privacy.data_category (
-    id uuid NOT NULL,                              -- md5('mysms.data_category:' || code)::uuid, stable across envs
-    code varchar(40) NOT NULL,
-    sensitivity varchar(12) NOT NULL,              -- normal | sensitive | restricted
-    description text NOT NULL,
-    CONSTRAINT pk_data_category PRIMARY KEY (id),
-    CONSTRAINT uq_data_category_code UNIQUE (code),
-    CONSTRAINT ck_data_category_sensitivity CHECK (sensitivity IN ('normal', 'sensitive', 'restricted'))
-);
+The baseline seeds the 18 activities of §8. Recipients, cross-border flags and retention policies are empty until
+legal review (brief Q9–Q11). Served as `privacy.ListProcessingActivities`.
 
-CREATE TABLE privacy.purpose (
-    id uuid NOT NULL,
-    code varchar(40) NOT NULL,                     -- photo_video_publication, marketing_comms, learning_analytics ...
-    scope_kind varchar(12) NOT NULL,               -- width (class..public) | tenant
-    fiduciary varchar(10) NOT NULL DEFAULT 'tenant',   -- tenant | platform (MySMS on its own account)
-    forbidden_for_minors boolean NOT NULL DEFAULT false,
-    majority_grace varchar(20) NOT NULL DEFAULT 'none',  -- none | keep_published | keep_narrow_widths
-    default_valid_months integer,                  -- NULL = until withdrawn
-    external_code varchar(80),                     -- mapping for consent-manager artefacts (future)
-    status varchar(12) NOT NULL DEFAULT 'active',
-    version integer NOT NULL DEFAULT 1,
-    CONSTRAINT pk_purpose PRIMARY KEY (id),
-    CONSTRAINT uq_purpose_code UNIQUE (code),
-    CONSTRAINT ck_purpose_scope_kind CHECK (scope_kind IN ('width', 'tenant')),
-    CONSTRAINT ck_purpose_fiduciary CHECK (fiduciary IN ('tenant', 'platform')),
-    CONSTRAINT ck_purpose_status CHECK (status IN ('active', 'deprecated', 'retired'))
-);
-
--- RoPA-lite, generated from every module's META-INF/mysms/privacy/<module>.json at build time.
-CREATE TABLE privacy.processing_activity (
-    id uuid NOT NULL,
-    module varchar(30) NOT NULL,
-    code varchar(60) NOT NULL,                     -- comms.marketing_broadcast, lms.learning_analytics ...
-    purpose_id uuid NOT NULL REFERENCES privacy.purpose (id),
-    legal_basis varchar(30) NOT NULL,
-    education_exemption_clause varchar(60),        -- Fourth Schedule clause relied on, if any
-    targets_minors boolean NOT NULL,
-    recipients jsonb NOT NULL DEFAULT '[]',        -- [{kind: processor|fiduciary, name, country}]
-    cross_border boolean NOT NULL DEFAULT false,
-    retention_policy_code varchar(60),
-    version integer NOT NULL,
-    CONSTRAINT pk_processing_activity PRIMARY KEY (id),
-    CONSTRAINT uq_processing_activity_code UNIQUE (code),
-    CONSTRAINT ck_processing_activity_basis CHECK (legal_basis IN ('consent', 'legitimate_use_voluntary',
-        'legal_obligation', 'education_exemption', 'medical_emergency', 'employment', 'contract')),
-    CONSTRAINT ck_processing_activity_exemption CHECK (legal_basis <> 'education_exemption'
-        OR education_exemption_clause IS NOT NULL)
-);
-
-CREATE TABLE privacy.processing_activity_category (
-    activity_id uuid NOT NULL REFERENCES privacy.processing_activity (id),
-    category_id uuid NOT NULL REFERENCES privacy.data_category (id),
-    CONSTRAINT pk_processing_activity_category PRIMARY KEY (activity_id, category_id)
-);
-```
-
-A conformance rule (P1, §14) fails the build when an activity with `targets_minors = true` uses a purpose with
-`forbidden_for_minors = true`, or when code calls `ConsentChecker` with a purpose code absent from the catalogue.
+*Planned:* per-module manifests `META-INF/mysms/privacy/<module>.json` (activities, categories with the tables and
+subject columns holding them, supported handlers; example in §8) that the build checks and seeds from; a conformance
+rule failing the build when an activity with `targets_minors` uses a purpose forbidden for minors, or when code uses an
+`ActivityCode` absent from the register.
 
 ### 5.2 Tenant settings and notices
 
-```sql
-CREATE TABLE privacy.tenant_purpose (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL,
-    purpose_id uuid NOT NULL,                      -- logical reference into the global catalogue
-    enabled boolean NOT NULL DEFAULT false,        -- off until the school switches it on with a notice
-    max_scope varchar(20),                         -- school-level ceiling (e.g. never inter_school)
-    notice_id uuid,
-    created_at timestamptz NOT NULL DEFAULT now(), created_by uuid,
-    updated_at timestamptz NOT NULL DEFAULT now(), updated_by uuid,
-    row_version integer NOT NULL DEFAULT 0,
-    CONSTRAINT pk_tenant_purpose PRIMARY KEY (id),
-    CONSTRAINT uq_tenant_purpose UNIQUE (tenant_id, purpose_id),
-    CONSTRAINT uq_tenant_purpose_tenant UNIQUE (id, tenant_id)
-);
-
-CREATE TABLE privacy.notice (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL,
-    code varchar(60) NOT NULL,                     -- e.g. 'community_photos', 'general_privacy_notice'
-    title varchar(200) NOT NULL,
-    created_at timestamptz NOT NULL DEFAULT now(), created_by uuid,
-    updated_at timestamptz NOT NULL DEFAULT now(), updated_by uuid,
-    deleted_at timestamptz,
-    row_version integer NOT NULL DEFAULT 0,
-    CONSTRAINT pk_notice PRIMARY KEY (id),
-    CONSTRAINT uq_notice_tenant UNIQUE (id, tenant_id)
-);
-CREATE UNIQUE INDEX ux_notice_code ON privacy.notice (tenant_id, code) WHERE deleted_at IS NULL;
-
-CREATE TABLE privacy.notice_version (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL,
-    notice_id uuid NOT NULL,
-    version integer NOT NULL,
-    status varchar(10) NOT NULL DEFAULT 'draft',   -- draft | active | retired (published versions are immutable)
-    requires_reconsent boolean NOT NULL DEFAULT false,
-    purpose_codes varchar(40)[] NOT NULL,
-    grievance_contact jsonb NOT NULL,              -- name/role, email, phone of the school's officer
-    published_at timestamptz,
-    superseded_by_id uuid,
-    document_file_id uuid,                         -- optional signed PDF in platform.file_object
-    created_at timestamptz NOT NULL DEFAULT now(), created_by uuid,
-    updated_at timestamptz NOT NULL DEFAULT now(), updated_by uuid,
-    row_version integer NOT NULL DEFAULT 0,
-    CONSTRAINT pk_notice_version PRIMARY KEY (id),
-    CONSTRAINT uq_notice_version_tenant UNIQUE (id, tenant_id),
-    CONSTRAINT uq_notice_version_number UNIQUE (tenant_id, notice_id, version),
-    CONSTRAINT fk_notice_version_notice FOREIGN KEY (notice_id, tenant_id) REFERENCES privacy.notice (id, tenant_id),
-    CONSTRAINT ck_notice_version_status CHECK (status IN ('draft', 'active', 'retired'))
-);
-CREATE UNIQUE INDEX ux_notice_version_active ON privacy.notice_version (tenant_id, notice_id) WHERE status = 'active';
-
-CREATE TABLE privacy.notice_translation (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL,
-    notice_version_id uuid NOT NULL,
-    language varchar(10) NOT NULL,                 -- BCP 47: en, hi, ta, te, kn, mr, bn ...
-    body_markdown text NOT NULL,                   -- itemised data, purposes, withdraw and complaint links
-    summary_for_children text,                     -- short plain version shown to the minor alongside
-    content_sha256 char(64) NOT NULL,              -- hash of what was shown, copied into consent evidence
-    created_at timestamptz NOT NULL DEFAULT now(), created_by uuid,
-    CONSTRAINT pk_notice_translation PRIMARY KEY (id),
-    CONSTRAINT uq_notice_translation UNIQUE (tenant_id, notice_version_id, language),
-    CONSTRAINT fk_notice_translation_version FOREIGN KEY (notice_version_id, tenant_id)
-        REFERENCES privacy.notice_version (id, tenant_id)
-);
-```
+| Table | Holds | Rules |
+|---|---|---|
+| `tenant_purpose` | A tenant's switch per purpose: `enabled`, `max_scope` (tenant ceiling, e.g. never `inter_school`), `notice_id` | No row = off; one row per tenant and purpose; set by tenant administrators only |
+| `notice` | Tenant notice: `code`, `title`; soft-deletable | Code unique per tenant among live notices |
+| `notice_version` | `version`, `status` (`draft` / `active` / `retired`), `requires_reconsent`, `purpose_codes`, `grievance_contact` (jsonb: name, role, email, phone), `published_at`, `superseded_by_id`, `document_file_id` | One active version per notice; published versions never change |
+| `notice_translation` | `language` (BCP 47), `body_markdown`, `summary_for_children`, `content_sha256` | One per version and language; changes only while the version is a draft; the hash is copied into evidence |
 
 ### 5.3 Subjects and guardian links (projections)
 
-Both tables are copies kept from other modules' events (event-carried state, the house precedent of `sis.student` →
-`iam.member_record`); privacy never reads another schema and makes no gRPC call for them. `people.person` events carry
-`{id, dateOfBirth, rowVersion}`; `sis.student` events `{id, userId, personId, institutionId, rowVersion}`;
-`sis.student_guardian` events `{id, studentPersonId, guardianPersonId, guardianUserId, isLegalGuardian, hasCustody,
-status, rowVersion}` (sis resolves the persons and the guardian's account in the publishing transaction). Every copy
-changes only to a newer source row version, so out-of-order and repeated deliveries are harmless, and nothing is
-hard-deleted: a deleted person keeps its row with the birth date cleared, a deleted link turns `inactive`, a deleted or
-moved student record stays as a tombstone. Handlers: `SubjectSync` (people.person, sis.student) and `GuardianLinkSync`
-(sis.student_guardian). The age of majority is `mysms.privacy.age-of-majority` (`MYSMS_PRIVACY_AGE_OF_MAJORITY`,
-default 18) until it becomes tenant data (§4.3).
+Kept from other modules' events (event-carried state); privacy reads no other schema and makes no call for them.
+`people.person` events carry `{id, dateOfBirth, rowVersion}`; `sis.student` and `hr.staff` events `{id, userId,
+personId, institutionId, rowVersion}`; `sis.student_guardian` events `{id, studentPersonId, guardianPersonId, guardianUserId,
+isLegalGuardian, hasCustody, status, rowVersion}` (sis resolves persons and the guardian's account when publishing).
+A copy changes only to a newer source row version, so out-of-order and repeated deliveries are harmless; nothing is
+hard-deleted (a deleted person keeps its row with the birth date cleared, a deleted link turns `inactive`, a deleted
+or moved student record stays as a tombstone). Handlers: `SubjectSync`, `StaffSync`, `GuardianLinkSync`. The roles they give a person — student (a live student
+record), guardian (an active link as guardian), staff (a live staff record) — filter the access summary (§9.6), and
+the accounts they name feed the conflict-of-interest check of rights requests.
 
-```sql
-CREATE TABLE privacy.subject (
-    tenant_id uuid NOT NULL,
-    person_id uuid NOT NULL,                       -- logical reference to people.person
-    status varchar(8) NOT NULL DEFAULT 'unknown',  -- minor | adult | unknown (treated as minor; no birth date)
-    birth_date date,                               -- copied from people events for the majority only
-    majority_date date,                            -- birth_date + age of majority
-    student_ids uuid[] NOT NULL DEFAULT '{}',      -- live sis.student records of the person ...
-    user_ids uuid[] NOT NULL DEFAULT '{}',         -- ... their login accounts
-    institution_ids uuid[] NOT NULL DEFAULT '{}',  -- ... and institutions, all derived from student_records
-    student_records jsonb NOT NULL DEFAULT '{}',   -- per sis.student id: {userId, institutionId, rowVersion, live}
-    person_row_version integer NOT NULL DEFAULT 0, -- last applied people.person row_version (0 = none yet)
-    updated_at timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT pk_subject PRIMARY KEY (tenant_id, person_id),
-    CONSTRAINT ck_subject_status CHECK (status IN ('minor', 'adult', 'unknown'))
-);
-CREATE INDEX ix_subject_majority ON privacy.subject (tenant_id, majority_date) WHERE status <> 'adult';
-CREATE INDEX ix_subject_student_records ON privacy.subject USING gin (student_records);
-
-CREATE TABLE privacy.guardian_link (
-    tenant_id uuid NOT NULL,
-    link_id uuid NOT NULL,                         -- sis.student_guardian.id
-    student_person_id uuid NOT NULL,
-    guardian_person_id uuid NOT NULL,
-    guardian_user_id uuid,
-    is_legal_guardian boolean NOT NULL,
-    has_custody boolean NOT NULL,
-    status varchar(10) NOT NULL,                   -- active | inactive (inactive also once deleted)
-    source_row_version integer NOT NULL,
-    updated_at timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT pk_guardian_link PRIMARY KEY (tenant_id, link_id)
-);
-CREATE INDEX ix_guardian_link_student ON privacy.guardian_link (tenant_id, student_person_id) WHERE status = 'active';
-CREATE INDEX ix_guardian_link_guardian ON privacy.guardian_link (tenant_id, guardian_person_id) WHERE status = 'active';
-```
-
-The per-record `student_records` (not in the first draft) is what makes the arrays safe under out-of-order delivery: a
-person can hold several student records, and a record can move to another person, so each entry keeps its own row
-version. The daily job that turns minors into adults (§4.3) reads `ix_subject_majority`.
+| Table | Holds | Rules |
+|---|---|---|
+| `subject` | Per person: `status` (`minor` / `adult` / `unknown`), `birth_date`, `majority_date`, `student_ids`, `user_ids`, `institution_ids`, `student_records` (jsonb per sis student: user, institution, row version, live), `staff_records` (the same per hr staff record, `StaffSync`), `person_row_version`, `state_version` | Unknown status ⇔ no birth date; `ix_subject_majority` drives the majority job. `student_records` keeps a row version per record, so a person with several records, or a record moving to another person, stays correct out of order |
+| `guardian_link` | Per sis link: student and guardian persons, guardian account, `is_legal_guardian`, `has_custody`, `status`, `source_row_version` | Indexed by student and by guardian on active links |
 
 ### 5.4 Consent records, evidence and state
 
-```sql
-CREATE TABLE privacy.consent_record (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL,
-    subject_person_id uuid NOT NULL,
-    giver_person_id uuid NOT NULL,
-    giver_capacity varchar(10) NOT NULL,           -- self | guardian | nominee
-    purpose_code varchar(40) NOT NULL,
-    scope varchar(20) NOT NULL,                    -- class | institution | inter_school | public | tenant
-    decision varchar(8) NOT NULL,                  -- granted | refused
-    notice_version_id uuid NOT NULL,
-    notice_language varchar(10) NOT NULL,
-    valid_from timestamptz NOT NULL,
-    valid_until date,
-    withdrawn_at timestamptz,
-    superseded_by_id uuid,
-    channel varchar(20) NOT NULL,                  -- web | mobile_app | paper_form | in_person | email | consent_manager | import
-    verification_status varchar(12) NOT NULL,      -- verified | unverified | rejected
-    verification_method varchar(30),
-    verified_by_user_id uuid,
-    verified_at timestamptz,
-    recorded_by_user_id uuid,                      -- staff recording a paper form
-    evidence_file_id uuid,                         -- signed form (platform.file_object)
-    external_artefact_id varchar(120),             -- consent-manager artefact id (future)
-    created_at timestamptz NOT NULL DEFAULT now(), created_by uuid,
-    updated_at timestamptz NOT NULL DEFAULT now(), updated_by uuid,
-    row_version integer NOT NULL DEFAULT 0,
-    CONSTRAINT pk_consent_record PRIMARY KEY (id),
-    CONSTRAINT uq_consent_record_tenant UNIQUE (id, tenant_id),
-    CONSTRAINT fk_consent_record_notice FOREIGN KEY (notice_version_id, tenant_id)
-        REFERENCES privacy.notice_version (id, tenant_id),
-    CONSTRAINT ck_consent_record_decision CHECK (decision IN ('granted', 'refused')),
-    CONSTRAINT ck_consent_record_capacity CHECK (giver_capacity IN ('self', 'guardian', 'nominee')),
-    CONSTRAINT ck_consent_record_self CHECK (giver_capacity <> 'self' OR giver_person_id = subject_person_id),
-    CONSTRAINT ck_consent_record_paper CHECK (channel <> 'paper_form'
-        OR (evidence_file_id IS NOT NULL AND recorded_by_user_id IS NOT NULL)),
-    CONSTRAINT ck_consent_record_verifier CHECK (verified_by_user_id IS NULL
-        OR verified_by_user_id IS DISTINCT FROM recorded_by_user_id),   -- four-eyes on paper consents
-    CONSTRAINT ck_consent_record_withdrawn CHECK (withdrawn_at IS NULL OR withdrawn_at >= valid_from)
-);
--- One live decision per giver, subject, purpose (a newer decision supersedes).
-CREATE UNIQUE INDEX ux_consent_record_live ON privacy.consent_record
-    (tenant_id, subject_person_id, purpose_code, giver_person_id)
-    WHERE withdrawn_at IS NULL AND superseded_by_id IS NULL;
-CREATE INDEX ix_consent_record_giver ON privacy.consent_record (tenant_id, giver_person_id);
-CREATE INDEX ix_consent_record_expiry ON privacy.consent_record (tenant_id, valid_until)
-    WHERE withdrawn_at IS NULL AND superseded_by_id IS NULL AND valid_until IS NOT NULL;
+| Table | Holds | Rules |
+|---|---|---|
+| `consent_record` | subject, giver, `giver_capacity` (`self` / `guardian` / `nominee`), purpose, `scope`, `decision`, notice version and language, validity, `withdrawn_at`, `superseded_by_id`, `channel` (`web`, `mobile_app`, `paper_form`, `in_person`, `email`, `consent_manager`, `import`), verification status / method / verifier / time, `recorded_by_user_id`, `evidence_file_id`, `external_artefact_id` | One live decision per giver, subject and purpose (`ux_consent_record_live`); `self` ⇒ giver = subject; a paper form needs an evidence file and the recording staff member; the verifier differs from the recorder (four eyes); a verified record has a method and a time |
+| `consent_evidence` | Ledger entries: `event` (`recorded`, `verified`, `rejected`, `withdrawn`, `superseded`, `expired`, `majority_lapsed`), actor user and person, capacity, channel (also `system`), notice content hash, IP, user-agent hash (never the raw agent), `impersonator_user_id`, `occurred_at`, `previous_hash`, `entry_hash` | Partitioned by month (`occurred_at`; core partition maintenance adds months; the baseline creates 2026–2027 and a default partition). Per-tenant hash chain |
+| `evidence_chain` | The head of each tenant's chain (last hash, last time) | A writer locks the tenant's row, so entries are appended one at a time, each naming its predecessor |
+| `consent_state` | One row per subject × purpose × scope: `result` (`allowed` / `denied`), `reason`, `state_version`, `computed_at` | allowed ⇔ reason `CONSENT`; `ix_consent_state_allowed` serves `ListSubjectsWithConsent`. Not partitioned: a 3,000-student school with 8 purposes × ~4 widths is ≈ 100 k rows |
 
--- Append-only evidence ledger; monthly partitions (volume: every toggle, every verification, every replay).
-CREATE TABLE privacy.consent_evidence (
-    id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    consent_record_id uuid NOT NULL,
-    event varchar(20) NOT NULL,                    -- recorded | verified | rejected | withdrawn | superseded | expired | majority_lapsed
-    actor_user_id uuid, actor_person_id uuid,
-    on_behalf_of_capacity varchar(10),
-    channel varchar(20) NOT NULL,
-    notice_content_sha256 char(64),
-    ip_address inet,
-    user_agent_hash char(64),                      -- hash only: no device fingerprint stored in clear
-    impersonator_user_id uuid,                     -- AuthContext.impersonatorId, never hidden
-    occurred_at timestamptz NOT NULL,
-    previous_hash char(64),                        -- hash chain per tenant: tamper evidence
-    entry_hash char(64) NOT NULL,
-    CONSTRAINT pk_consent_evidence PRIMARY KEY (id, occurred_at)
-) PARTITION BY RANGE (occurred_at);
--- The app role gets INSERT and SELECT only; no UPDATE/DELETE grant (append-only by privilege, not by convention).
+Evidence is append-only by convention: the application role still holds UPDATE and DELETE on it. Append-only by
+privilege needs core's `ApplicationRoleGrants` (ROADMAP DEC-18, SEC-6). *Planned:* a nightly verification of each
+tenant's chain with an alert on mismatch; evidence retention (longest consent life + limitation period, *to verify*,
+default 8 years).
 
--- Precomputed answer: one row per subject × purpose × scope; the only table read on the hot path.
-CREATE TABLE privacy.consent_state (
-    tenant_id uuid NOT NULL,
-    subject_person_id uuid NOT NULL,
-    purpose_code varchar(40) NOT NULL,
-    scope varchar(20) NOT NULL,
-    result varchar(14) NOT NULL,                   -- allowed | denied
-    reason varchar(30) NOT NULL,                   -- CONSENT | REFUSED | NARROWER_GRANT | NOT_ANSWERED | EXPIRED | RECONSENT_REQUIRED | FORBIDDEN_FOR_MINOR | PURPOSE_DISABLED
-    state_version bigint NOT NULL,                 -- monotonic per (tenant, subject): consumers drop stale events
-    computed_at timestamptz NOT NULL,
-    CONSTRAINT pk_consent_state PRIMARY KEY (tenant_id, subject_person_id, purpose_code, scope)
-);
-CREATE INDEX ix_consent_state_allowed ON privacy.consent_state (tenant_id, purpose_code, scope)
-    WHERE result = 'allowed';                      -- ListSubjectsWithConsent
-```
+### 5.5 Rights requests
 
-### 5.5 Rights requests, nominees, holds
+| Table | Holds | Rules |
+|---|---|---|
+| `rights_request` | `number` (`PRV-<year>-<6+ digits>`), `type`, subject, requester, `requester_capacity`, `status`, `identity_check` (`signed_in_session` / `in_person` / `document`), `details` (jsonb), `assignee_user_id`, `submitted_at`, `due_at`, `extended_reason`, `closed_at`, `outcome_code`, `outcome_note`, `outcome_response` (the answer the requester sees), `outcome_file_id`, `access_summary` (jsonb) | CHECKs: type in the seven of §4.1; status in `submitted`, `verified`, `in_progress`, `action_required`, `rejected`, `closed` (fulfilled and partially fulfilled are outcomes of `closed`); verified unless submitted or rejected; in progress or action required ⇒ assignee; closed or rejected ⇔ `closed_at` ⇔ outcome; an access summary only on a closed access request, and an access request closed as (partially) fulfilled must carry one; a nominee's request is verified in person or by document, never by session |
+| `number_sequence` | Counter per tenant, sequence code (`rights_request`, `breach`) and period (modelled on `admission.number_sequence`, without institution: privacy's data is tenant-level) | Row locked in the issuing transaction |
 
-```sql
-CREATE TABLE privacy.rights_request (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL,
-    number varchar(30) NOT NULL,                   -- module document numbering: PRV-2026-000123
-    type varchar(14) NOT NULL,                     -- access | export | correction | erasure | grievance | nomination | withdraw_all
-    subject_person_id uuid NOT NULL,
-    requester_person_id uuid NOT NULL,
-    requester_capacity varchar(10) NOT NULL,       -- self | guardian | nominee
-    status varchar(20) NOT NULL DEFAULT 'submitted',
-    identity_check varchar(20),                    -- signed_in_session | in_person | document
-    details jsonb NOT NULL DEFAULT '{}',           -- typed per request type (validated by DtoValidator)
-    assignee_user_id uuid,
-    submitted_at timestamptz NOT NULL,
-    due_at timestamptz NOT NULL,
-    extended_reason text,
-    closed_at timestamptz,
-    outcome_code varchar(30),
-    outcome_file_id uuid,                          -- export package or response letter
-    created_at timestamptz NOT NULL DEFAULT now(), created_by uuid,
-    updated_at timestamptz NOT NULL DEFAULT now(), updated_by uuid,
-    row_version integer NOT NULL DEFAULT 0,
-    CONSTRAINT pk_rights_request PRIMARY KEY (id),
-    CONSTRAINT uq_rights_request_tenant UNIQUE (id, tenant_id),
-    CONSTRAINT uq_rights_request_number UNIQUE (tenant_id, number),
-    CONSTRAINT ck_rights_request_status CHECK (status IN ('submitted', 'verified', 'in_progress', 'action_required',
-        'extended', 'partially_fulfilled', 'fulfilled', 'rejected', 'closed'))
-);
-CREATE INDEX ix_rights_request_queue ON privacy.rights_request (tenant_id, status, due_at) WHERE closed_at IS NULL;
+| `nominee` | Per adult principal: `nominee_person_id` (when the nominee signs in), `nominee_name_enc`, `nominee_contact_enc` (core `FieldCipher`, answered masked), `status` (`active` / `revoked`), `activated_at` and `activated_by_request_id` (the fulfilled nomination request), `revoked_at` | One active nominee per principal (`uq_nominee_active`); never oneself; activated ⇔ the activating request is named; rows never deleted |
 
-CREATE TABLE privacy.rights_request_task (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL,
-    request_id uuid NOT NULL,
-    module varchar(30) NOT NULL,
-    action varchar(12) NOT NULL,                   -- export | erase | anonymise | restrict | correct
-    status varchar(16) NOT NULL DEFAULT 'pending',
-    attempts integer NOT NULL DEFAULT 0,
-    dispatched_at timestamptz, completed_at timestamptz,
-    result jsonb,                                  -- {tables: {name: count}, heldItems: n, policyCodes: [...], fileId}
-    last_error_code varchar(60),
-    row_version integer NOT NULL DEFAULT 0,
-    CONSTRAINT pk_rights_request_task PRIMARY KEY (id),
-    CONSTRAINT uq_rights_request_task UNIQUE (tenant_id, request_id, module, action),
-    CONSTRAINT fk_rights_request_task_request FOREIGN KEY (request_id, tenant_id)
-        REFERENCES privacy.rights_request (id, tenant_id),
-    CONSTRAINT ck_rights_request_task_status CHECK (status IN ('pending', 'dispatched', 'done', 'partial',
-        'failed', 'not_applicable'))
-);
+| `rights_request_task` | Per erasure or export request and module of `mysms.privacy.erasure.modules`: `module`, `action` (`erase` / `export`), `wave` (1: `mysms.privacy.erasure.first-wave`, comms and iam, for an erasure, and every export task; 2: the rest), `status`, `attempts`, `dispatched_at`, `completed_at`, `result` (jsonb `{counts: {table: rows}, heldItems, policyCodes, fileId}`), `last_error_code` | `uq_rights_request_task (tenant_id, request_id, module, action)`; FK to `rights_request`; pending ⇔ no dispatch ⇔ 0 attempts; answered ⇔ `completed_at`; a result only once answered; rows never deleted |
+| `legal_hold` | `reason_code` (`safeguarding` / `litigation` / `regulator` / `audit`), `scope` (`subject` / `category` / `records`), `subject_person_id`, `category_code` (FK to `data_category.code`), `module`, `entity_type`, `entity_ids` (uuid[]), `placed_by_user_id`, `placed_at`, `review_by` (date, mandatory), `released_at`, `released_by_user_id` | CHECKs per scope: subject ⇒ the subject and nothing else; category ⇒ the category, optionally a subject; records ⇒ module, entity type and 1–1000 ids, optionally a subject; released ⇔ released by; rows never deleted |
 
-CREATE TABLE privacy.nominee (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL,
-    principal_person_id uuid NOT NULL,
-    nominee_name_enc bytea NOT NULL,               -- may be outside the school: encrypted, masked for display
-    nominee_contact_enc bytea NOT NULL,
-    nominee_contact_masked varchar(40) NOT NULL,
-    status varchar(10) NOT NULL DEFAULT 'active',
-    created_at timestamptz NOT NULL DEFAULT now(), created_by uuid,
-    updated_at timestamptz NOT NULL DEFAULT now(), updated_by uuid,
-    deleted_at timestamptz,
-    row_version integer NOT NULL DEFAULT 0,
-    CONSTRAINT pk_nominee PRIMARY KEY (id)
-);
-CREATE UNIQUE INDEX ux_nominee_active ON privacy.nominee (tenant_id, principal_person_id)
-    WHERE status = 'active' AND deleted_at IS NULL;
+### 5.6 Breach register (P4) and retention (P3)
 
-CREATE TABLE privacy.legal_hold (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL,
-    reason_code varchar(30) NOT NULL,              -- safeguarding | litigation | regulator | audit
-    subject_person_id uuid,                        -- NULL = category-wide hold
-    category_code varchar(40),
-    module varchar(30), entity_type varchar(80), entity_ids uuid[],
-    placed_by_user_id uuid NOT NULL,
-    placed_at timestamptz NOT NULL,
-    review_by date NOT NULL,                       -- holds are reviewed, never forgotten
-    released_at timestamptz, released_by_user_id uuid,
-    row_version integer NOT NULL DEFAULT 0,
-    CONSTRAINT pk_legal_hold PRIMARY KEY (id),
-    CONSTRAINT ck_legal_hold_target CHECK (subject_person_id IS NOT NULL OR category_code IS NOT NULL)
-);
-```
+| Table | Holds | Rules |
+|---|---|---|
+| `breach` | `number` (`PRB-<year>-<6+ digits>`, from `number_sequence`), `status`, `detected_at`, `became_aware_at` (the clock start), `board_report_due_at`, `description`, `categories` (data-category codes), `modules`, `estimated_principals`, `likely_consequences`, `mitigation`, `owner_user_id`, `board_report_sent_at`, `not_a_breach_reason`, `closed_at`; audit columns, `row_version` | CHECKs: status in `reported`, `triaged`, `contained`, `board_initial_sent`, `board_report_sent`, `principals_notified`, `closed`, `not_a_breach`; `became_aware_at >= detected_at`; `board_report_due_at = became_aware_at + 72 h`; `board_report_sent_at` set at `board_report_sent` and `closed`, absent before; `not_a_breach` ⇔ its reason; closed or not a breach ⇔ `closed_at`; texts 1–4000 characters (the reason 1–1000); rows never deleted |
+| `breach_notification` | Per notice recorded: `breach_id` (FK to `breach`), `audience` (`board` / `principals` / `processor` / `tenant`), `kind` (`initial` / `detailed` / `update`), `sent_at`, `document_file_id` | Append-only; no `comms_message_id` until notices go through comms |
 
-### 5.6 Retention, breach, standard tables
+`description`, `likely_consequences` and `mitigation` hold **ids and counts only** (record ids, tables, numbers of rows
+or people) — never a name, contact or other personal data — and never reach an event. *Planned:* `affected_query`
+(jsonb, how the affected set was derived) with the identify task of §11, and `comms_message_id` on a notice once comms
+delivers breach notices.
 
-```sql
-CREATE TABLE privacy.retention_policy (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL,
-    code varchar(60) NOT NULL,                     -- e.g. attendance.after_leaving
-    category_code varchar(40) NOT NULL,
-    trigger varchar(30) NOT NULL,                  -- after_leaving | after_record_date | after_inactivity | after_purpose_end
-    period interval NOT NULL,
-    minimum_period interval NOT NULL,              -- legal floor from the catalogue; tenant cannot go below
-    action varchar(10) NOT NULL,                   -- delete | anonymise | archive
-    notify_before interval,                        -- e.g. 48 hours (Rule 8 classes)
-    legal_reference text,
-    version integer NOT NULL DEFAULT 1,
-    row_version integer NOT NULL DEFAULT 0,
-    CONSTRAINT pk_retention_policy PRIMARY KEY (id),
-    CONSTRAINT uq_retention_policy UNIQUE (tenant_id, code),
-    CONSTRAINT ck_retention_policy_floor CHECK (period >= minimum_period)
-);
+Retention:
 
-CREATE TABLE privacy.retention_run (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL,
-    policy_code varchar(60) NOT NULL,
-    module varchar(30) NOT NULL,
-    cutoff timestamptz NOT NULL,
-    status varchar(10) NOT NULL,                   -- dispatched | done | partial | failed
-    affected integer, held integer,
-    started_at timestamptz NOT NULL, completed_at timestamptz,
-    CONSTRAINT pk_retention_run PRIMARY KEY (id)
-);
+| Table | Holds | Rules |
+|---|---|---|
+| `retention_policy` (global) | The platform catalogue, seeded by the baseline: `code` (`<module>.<what>`), `category_code` (FK to `data_category.code`), `module`, `trigger_code` (`after_leaving` / `after_record_date` / `after_inactivity` / `after_purpose_end`), `period_days`, `minimum_period_days` (the legal floor), `action` (`delete` / `anonymise` / `archive`), `notify_before_days`, `legal_reference`; ids `md5('mysms.retention_policy:' \|\| code)` | `period_days >= minimum_period_days >= 1`; ten policies, every value conservative and **to verify** with counsel (COMMENTs say so) |
+| `tenant_retention_policy` | A tenant's own `period_days` and `action` for one policy; no row = the catalogue's | `uq (tenant_id, policy_id)`; never below the floor (the service: 422 `RETENTION_BELOW_LEGAL_FLOOR`) |
+| `retention_run` | Per tenant, policy and cutoff: `module`, `action` (in force that day), `cutoff`, `status` (`dispatched` / `done` / `partial` / `failed`), `affected`, `held`, `started_at`, `completed_at` | `uq (tenant_id, policy_id, cutoff)`: one run a day; dispatched ⇔ not completed; rows never deleted |
 
-CREATE TABLE privacy.breach (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL,
-    number varchar(30) NOT NULL,
-    status varchar(20) NOT NULL,                   -- reported | triaged | contained | board_initial_sent | board_report_sent | principals_notified | closed | not_a_breach
-    detected_at timestamptz NOT NULL,
-    became_aware_at timestamptz NOT NULL,          -- clock start (to verify which instant counts)
-    board_report_due_at timestamptz NOT NULL,      -- became_aware_at + 72 h
-    description text NOT NULL,                     -- ids and counts, never names
-    categories varchar(40)[] NOT NULL,
-    modules varchar(30)[] NOT NULL,
-    estimated_principals integer,
-    affected_query jsonb,                          -- how the affected set was derived (reproducible)
-    likely_consequences text, mitigation text,
-    owner_user_id uuid NOT NULL,
-    created_at timestamptz NOT NULL DEFAULT now(), created_by uuid,
-    updated_at timestamptz NOT NULL DEFAULT now(), updated_by uuid,
-    row_version integer NOT NULL DEFAULT 0,
-    CONSTRAINT pk_breach PRIMARY KEY (id),
-    CONSTRAINT uq_breach_number UNIQUE (tenant_id, number)
-);
-CREATE TABLE privacy.breach_notification (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    tenant_id uuid NOT NULL,
-    breach_id uuid NOT NULL,
-    audience varchar(12) NOT NULL,                 -- board | principals | processor | tenant
-    kind varchar(10) NOT NULL,                     -- initial | detailed | update
-    sent_at timestamptz, comms_message_id uuid, document_file_id uuid,
-    CONSTRAINT pk_breach_notification PRIMARY KEY (id)
-);
 
--- Standard module tables, same shape as people's: outbox_event, inbox_event, idempotency_key, operation.
+Every tenant table, built or planned, has RLS (`tenant_isolation`). Volumes: requests and breaches are low.
 
--- RLS on every tenant table (pattern; repeat per table):
-ALTER TABLE privacy.consent_record ENABLE ROW LEVEL SECURITY;
-ALTER TABLE privacy.consent_record FORCE ROW LEVEL SECURITY;
-CREATE POLICY tenant_isolation ON privacy.consent_record
-    USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
-```
+### 5.7 People's consent parts
 
-**Partitioning.** `consent_evidence` by month (core partition maintenance attaches months; retention of evidence =
-the longest consent life + limitation period, *to verify*, default keep 8 years). `consent_state` is not partitioned:
-rows = subjects × enabled purposes × widths (a 3,000-student school with 8 purposes × ~4 widths ≈ 100 k rows), small.
-`rights_request` and `breach` are low volume.
+`people.consent_record`, people's seven consent operations and their permission seeds are gone; consent lives only
+in privacy. Community-design prerequisites map here: PR-1 (schema) and PR-2 (operations) → §5.4 and §6; PR-3 events
+`people.consent_record.*` → `privacy.consent_record.*` and `privacy.consent_state.changed`;
+`people.person.majority_reached` → `privacy.subject.majority_reached`; PR-18 erasure → §9; PR-22 purposes
+`community_naming`, `community_participation` → the catalogue.
 
-### 5.7 Migrating `people.consent_record`
-
-Pre-release, so the baseline rule applies (CLAUDE.md §7: edit baselines in place):
-
-1. Remove `people.consent_record`, its indexes, FKs, RLS lines and the 7 consent operations from people's baseline,
-   contract (`PersonApi.PATH_CREATE_CONSENT_RECORD` and siblings, `api/model/ConsentRecord`, `WithdrawConsentRequest`),
-   proto (`people.proto` rpcs `ListConsentRecords` … `GetConsentStatus`) and the iam permission seeds
-   (`people.consent_record.*`, `people.person.get_consent_status`; iam baseline lines ~2330–2347). They answer 501
-   today (ROADMAP BE-1), so no client depends on working behaviour.
-2. Update the verbatim proto copies in the 8 modules that carry `people.proto` (admission, assessment, attendance,
-   careers, finance, hr, iam, lms) when people's proto changes.
-3. Re-target community-design prerequisites: PR-1 (consent schema) and PR-2 (operations) → privacy §5.4 and §6;
-   PR-3 events `people.consent_record.*` → `privacy.consent_record.*` plus `privacy.consent_state.changed`;
-   `people.person.majority_reached` → `privacy.subject.majority_reached`; PR-18 erasure workflow → §9; PR-22 purposes
-   `community_naming`, `community_participation` → privacy catalogue.
-4. If any pilot tenant holds rows, a one-off Java import (`privacy` `ImportLegacyConsents` operation, platform-operator
-   only) copies them as `channel = import`, `verification_status = unverified`, `scope = class` for photo consents
-   (narrowest, per community §8.4 "legacy and paper consents"), and writes `consent_evidence` rows marked `imported`.
+*Planned:* if a pilot tenant ever holds consents from another system, a platform-operator-only
+`privacy.ImportLegacyConsents` copies them as `channel = import`, `verification_status = unverified`, photo consents at
+`scope = class` (the narrowest, community §8.4 "legacy and paper consents"), with evidence entries.
 
 ---
 
 ## 6. APIs
 
-### 6.1 REST (contract interfaces in `com.mysms.privacy.api`, DTOs in `api.model`)
+### 6.1 REST
 
-Permission codes follow the existing `<module>.<resource>.<action>` form (seeded in iam like
-`people.consent_record.create`). Self-service operations carry a `my_` resource and act only on the token's `pid` and
-the caller's active legal-guardian links (data rule in the service, JAVA-CODING-RULES §16 "Data rules stay in the service").
+Contract interfaces in `com.mysms.privacy.api` (one per resource), DTOs in `api.model`, thin controllers. Permission
+codes follow `<module>.<resource>.<action>`. Self-service operations (`my_` resources) act only on the token's person
+and the caller's active legal-guardian links (a data rule in the service, JAVA-CODING-RULES §16).
 
-| Operation id | Method and path | Permission | Who |
+**Built** (71 operations; generated status: [api/operations-status.md](../../api/operations-status.md)):
+
+| Area | Operations (all under `/v1/privacy`) | Permission | Who |
 |---|---|---|---|
-| `privacy.ListMyConsents` | GET `/v1/privacy/my/consents` | `privacy.my_consent.read` | guardian, adult student, staff |
-| `privacy.RecordMyConsent` | POST `/v1/privacy/my/consents` | `privacy.my_consent.create` | guardian (for a linked minor), adult self |
-| `privacy.WithdrawMyConsent` | POST `/v1/privacy/my/consents/{id}:withdraw` | `privacy.my_consent.withdraw` | the giver |
-| `privacy.GetMyNotice` | GET `/v1/privacy/my/notices/{code}?lang=hi` | `privacy.my_consent.read` | everyone signed in |
-| `privacy.SubmitMyRequest` | POST `/v1/privacy/my/requests` | `privacy.my_request.create` | principal, guardian, nominee |
-| `privacy.ListMyRequests` / `GetMyRequest` | GET `/v1/privacy/my/requests[/{id}]` | `privacy.my_request.read` | requester |
-| `privacy.ManageMyNominee` | PUT `/v1/privacy/my/nominee` | `privacy.my_nominee.update` | adult principal |
-| `privacy.RecordConsentOnBehalf` | POST `/v1/privacy/consent-records` | `privacy.consent_record.record_on_behalf` | office staff (paper forms) |
-| `privacy.VerifyConsentRecord` | POST `/v1/privacy/consent-records/{id}:verify` | `privacy.consent_record.verify` | second staff member |
-| `privacy.ListConsentRecords` | GET `/v1/privacy/consent-records` | `privacy.consent_record.read` | DPO, office |
-| `privacy.GetConsentCoverage` | GET `/v1/privacy/coverage?purpose=&scope=&classSectionId=` | `privacy.coverage.read` | class teacher, principal: counts only |
-| `privacy.*Notice*` | `/v1/privacy/notices`, `/notices/{id}/versions`, `:publish`, `/translations` | `privacy.notice.*` | tenant admin |
-| `privacy.*TenantPurpose*` | `/v1/privacy/purposes` (catalogue + tenant switches) | `privacy.tenant_purpose.*` | tenant admin |
-| `privacy.*RightsRequest*` | `/v1/privacy/requests`, `:verify-identity`, `:assign`, `:extend`, `:close`, `/tasks/{id}:retry` | `privacy.rights_request.*` | DPO / grievance officer |
-| `privacy.*LegalHold*` | `/v1/privacy/legal-holds`, `:release` | `privacy.legal_hold.*` | DPO, safeguarding lead |
-| `privacy.*RetentionPolicy*` | `/v1/privacy/retention-policies` | `privacy.retention_policy.*` | tenant admin (within floors) |
-| `privacy.*Breach*` | `/v1/privacy/breaches`, `:triage`, `:notify` | `privacy.breach.*` | DPO |
-| `privacy.GetProcessingRegister` | GET `/v1/privacy/processing-activities` | `privacy.processing_activity.read` | DPO, auditor (RoPA export) |
+| Purposes | `ListPurposes`, `GetPurpose`, `UpdatePurpose` (`/purposes`) — catalogue plus the tenant's switch, ceiling and notice | `privacy.tenant_purpose.read` / `.update` | tenant admin |
+| Notices | `List/Get/Create/Update/DeleteNotice`; `List/Get/Create/UpdateNoticeVersion`, `PublishNoticeVersion` (`:publish`); `List/Get/Create/Update/DeleteNoticeTranslation` | `privacy.notice.*`, `privacy.notice_version.*`, `privacy.notice_translation.*` | tenant admin |
+| Register | `ListProcessingActivities` (`/processing-activities`); `GetProcessingRegisterExport` (GET `/processing-activities:export`: the whole register as CSV text — code, module, purpose, legal basis, exemption clause, minors, audiences, categories, recipients, cross-border, retention policy — inside a JSON answer `{fileName, generatedAt, activities, csv}`, so REST and gRPC answer alike) | `privacy.processing_activity.read` | DPO, auditor |
+| My consents | `ListMyConsents`, `RecordMyConsent` (`/my/consents`), `WithdrawMyConsent` (`:withdraw`), `GetMyNotice` (`/my/notices/{noticeCode}`) | `privacy.my_consent.read` / `.create` / `.withdraw` | guardian, adult student, staff |
+| Consent records | `ListConsentRecords`, `GetConsentRecord`, `RecordConsentOnBehalf` (paper forms), `VerifyConsentRecord` (`:verify`, a second staff member) | `privacy.consent_record.read` / `.record_on_behalf` / `.verify` | DPO, office |
+| My requests | `SubmitMyRequest`, `ListMyRequests`, `GetMyRequest`, `GetMyAccessSummary` (`/my/requests/{id}/access-summary`) | `privacy.my_request.create` / `.read` | principal, guardian, nominee |
+| My nominee | `GetMyNominee` (GET `/my/nominee`), `SetMyNominee` (POST `/my/nominee:set`), `RevokeMyNominee` (POST `/my/nominee:revoke`, 204) | `privacy.my_nominee.read` / `.set` / `.revoke` | adult principal |
+| Rights requests | `ListRightsRequests`, `GetRightsRequest` (with an erasure or export request's `tasks`), `GetAccessSummary`; `VerifyRightsRequestIdentity`, `AssignRightsRequest`, `ExtendRightsRequest`, `RejectRightsRequest`, `CloseRightsRequest`, `FulfilAccessRequest`, `StartRightsRequestFulfilment`, `FulfilWithdrawAllRequest` (`:verifyIdentity`, `:assign`, `:extend`, `:reject`, `:close`, `:fulfilAccess`, `:startFulfilment`, `:fulfilWithdrawAll`); `RetryRightsRequestTask` (`/rights-requests/{id}/tasks/{taskId}:retry`) — §9.2, §9.6 | `privacy.rights_request.read` / `.verify_identity` / `.assign` / `.extend` / `.reject` / `.close` / `.fulfil` / `.retry_task` | DPO / grievance officer |
+| Legal holds | `ListLegalHolds` (filter `active`, `reviewBy` — review due: `active = true AND reviewBy <= "<today>"`), `GetLegalHold`, `PlaceLegalHold` (POST `/legal-holds`), `UpdateLegalHold` (PATCH, If-Match: the review date), `ReleaseLegalHold` (`:release`) — tenant-wide grant, refused while impersonating | `privacy.legal_hold.read` / `.place` / `.update` / `.release` | DPO, safeguarding lead |
+| Retention | `ListRetentionPolicies`, `GetRetentionPolicy`, `UpdateRetentionPolicy` (PATCH `/retention-policies/{id}`, If-Match `"0"` while never set: the tenant's period and action, never below the floor); `ListRetentionRuns` (`/retention-runs`) — §10 | `privacy.retention_policy.read` / `.update`, `privacy.retention_run.read` | tenant admin, DPO |
+| Breaches | `ListBreaches`, `GetBreach`, `ReportBreach` (POST `/breaches`), `UpdateBreach` (PATCH, If-Match, while open); `TriageBreach`, `ContainBreach`, `RecordBreachNotification`, `CloseBreach`, `MarkBreachNotABreach` (`:triage`, `:contain`, `:recordNotification`, `:close`, `:markNotABreach`) — §11 | `privacy.breach.read` / `.report` / `.update` / `.triage` / `.contain` / `.record_notification` / `.close` / `.mark_not_a_breach` | DPO |
+| Coverage | `GetConsentCoverage` (GET `/coverage?purposeCode=&scope=&institutionId=`): per width the purpose takes (or the one asked), subjects allowed, denied per reason (all six, zero included) and not answered (stored `NOT_ANSWERED` or no answer computed yet), over the tenant's data principals (a tenant-wide grant) or one institution's students (`subject.institution_ids`, within the caller's grant) — counts only, never person ids | `privacy.coverage.read` | principal, class teacher (own institution), DPO |
+| Decisions (internal REST twins of §6.2) | `CheckConsent` (`/consent-decisions:check`), `BatchCheckConsent` (`:batchCheck`), `GetPurposeStatus` (`:purposeStatus`), `ListSubjectsWithConsent` (`:subjects`) | `privacy.consent_decision.check` / `.batch_check` / `.get_purpose_status` / `.list_subjects` | service principals |
+| Holds check (internal) | `ListActiveHolds` (GET `/legal-holds:active?subjectPersonId=&module=`): the active holds that may cover a subject's data — the subject's own and every category or record-set hold of the subject or of everyone, record sets narrowed to the module — read on the primary, for a module's erasure or sweep (§9.1) | `privacy.legal_hold.check` | service principals |
 
-Contract interface, MySMS style (mappings on the interface, thin controller implements it):
+*Planned:*
 
-```java
-@Validated
-public interface MyConsentApi {
+| Operation | Path | Permission | Who |
+|---|---|---|---|
+| Coverage per class | `classSectionId` on `GetConsentCoverage` (privacy keeps no class membership yet) | `privacy.coverage.read` | class teacher: counts only |
+| Export package download | a short-lived signed link to the assembled ZIP (§9.3) | `privacy.my_request.read` | requester |
+| Breach notices through comms | `:notify` sending the Board's and the principals' notices (comms delivery is not built: notices are recorded today) | `privacy.breach.*` | DPO |
+| RoPA export as PDF | the register as a printable document (CSV is built) | `privacy.processing_activity.read` | DPO, auditor |
+| `ImportLegacyConsents` | §5.7 | platform operator | |
 
-    String PATH_RECORD_MY_CONSENT = "/v1/privacy/my/consents";
+**`RecordMyConsent`** takes `subjectPersonId` (self, or a minor the caller is an active legal guardian of),
+`purposeCode`, `scope`, `decision` (`GRANTED` / `REFUSED`), `noticeVersionId` (the version shown) and
+`noticeLanguage`; the giver is always the caller, never a field. Supports `Idempotency-Key`; a newer decision by the
+same giver supersedes the live one.
 
-    /**
-     * POST /v1/privacy/my/consents : Record a consent decision for oneself or a linked minor.
-     * Supports Idempotency-Key. A newer decision by the same giver supersedes the live one.
-     */
-    @RequestMapping(method = RequestMethod.POST, value = PATH_RECORD_MY_CONSENT,
-            produces = {"application/json", "application/problem+json"}, consumes = {"application/json"})
-    ResponseEntity<MyConsent> recordMyConsent(
-            @Valid @RequestBody RecordMyConsentRequest request,
-            @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey);
-}
-```
+**`MyConsent`** (one row of the consent centre): id, subject, purpose, `capacity` (`SELF` / `GUARDIAN` /
+`MINOR_SELF`), scope, `myStatus` (`GRANTED`, `REFUSED`, `NOT_ANSWERED`, `RECONSENT_REQUIRED`, `EXPIRED`; absent on a
+`MINOR_SELF` row), `effectiveWidestScope`, `noticeCode` and `noticeVersionId` (to show and decide under),
+`allowedScopes` (the purpose's widths within the tenant's ceiling), `decidesFrom` (`MINOR_SELF` only: the majority
+date), decided-at, notice version, channel, etag. privacy keeps no names: clients take a child's name from
+`sis.ListMyChildren` and show "You" on the caller's own rows. A minor's own rows carry the effective result and
+`decidesFrom` only — no decision, record id or giver — so a student never sees which guardian decided what; a person
+of unknown age sees no own row.
 
-```java
-/** Body of RecordMyConsent; the giver is always the caller (AuthContext.personId), never a field. */
-public record RecordMyConsentRequest(
-        @NotNull UUID subjectPersonId,            // self, or a minor the caller is an active legal guardian of
-        @NotNull @Size(max = 40) String purposeCode,
-        @NotNull ConsentScope scope,
-        @NotNull ConsentDecision decision,        // GRANTED | REFUSED
-        @NotNull UUID noticeVersionId,            // the version actually shown
-        @NotNull @Size(max = 10) String noticeLanguage) {
-}
+**Errors** (problem+json, message catalogue): a caller who is not the subject's active legal guardian gets core's
+generic 404 `NOT_FOUND` (never confirming a child exists); a decision while impersonating gets core's generic 403
+`PERMISSION_DENIED`. Field errors: `CONSENT_NOTICE_NOT_ACTIVE`, `CONSENT_PURPOSE_DISABLED`,
+`CONSENT_FORBIDDEN_FOR_MINOR`, `CONSENT_SCOPE_ABOVE_TENANT_MAX`, `RIGHTS_REQUEST_DUE_AT_NOT_LATER`,
+`RIGHTS_REQUEST_DETAILS_REQUIRED`, `RIGHTS_REQUEST_DETAILS_NOT_ALLOWED`, `RIGHTS_REQUEST_TYPE_NOT_ALLOWED`,
+`RIGHTS_REQUEST_NOMINEE_NOT_ACTIVE`, `RIGHTS_REQUEST_RESPONSE_REQUIRED`, `BREACH_TIME_IN_FUTURE`, `BREACH_AWARE_BEFORE_DETECTED`,
+`BREACH_NOTICE_BEFORE_AWARE`, `BREACH_CATEGORY_UNKNOWN`, `BREACH_MODULE_INVALID`, `SCOPE_NOT_APPLICABLE`,
+`LEGAL_HOLD_TARGET_REQUIRED`, `LEGAL_HOLD_TARGET_NOT_ALLOWED`, `LEGAL_HOLD_CATEGORY_UNKNOWN`, `LEGAL_HOLD_MODULE_INVALID`,
+`LEGAL_HOLD_REVIEW_BY_PAST`, `RETENTION_BELOW_LEGAL_FLOOR`; 409 `RIGHTS_REQUEST_CONFLICT_OF_INTEREST`; planned
+`REQUEST_IDENTITY_NOT_VERIFIED`. Rights-request rules: §9.6.
 
-/** One row of the consent centre: own decision and the effective result, never another giver's decision. */
-public record MyConsent(UUID id, UUID subjectPersonId, String subjectDisplayName, String purposeCode,
-        ConsentScope scope, MyConsentStatus myStatus,   // GRANTED | REFUSED | NOT_ANSWERED | RECONSENT_REQUIRED | EXPIRED
-        ConsentScope effectiveWidestScope,               // "currently shared with: his class"
-        OffsetDateTime decidedAt, Integer noticeVersion, String channel, long rowVersion) {
-}
-```
+### 6.2 gRPC
 
-Errors (problem+json codes from the message catalogue): `CONSENT_NOT_GUARDIAN` (404, not 403: no confirmation that the
-child exists), `CONSENT_NOTICE_NOT_ACTIVE`, `CONSENT_PURPOSE_DISABLED`, `CONSENT_FORBIDDEN_FOR_MINOR`,
-`CONSENT_SCOPE_ABOVE_TENANT_MAX`, `REQUEST_IDENTITY_NOT_VERIFIED`, `RETENTION_BELOW_LEGAL_FLOOR`.
-
-### 6.2 gRPC (`backend/privacy/src/main/resources/proto/mysms/privacy/v1/privacy_decision.proto`)
+privacy's one proto file, `privacy.proto` (`PrivacyProto`), serves `PurposeService`, `NoticeService`,
+`ProcessingActivityService`, `ConsentService`, `RightsRequestService`, `NomineeService`, `BreachService`,
+`ConsentCoverageService`, `LegalHoldService` (with the internal `ListActiveHolds`), `RetentionService` (one RPC per REST
+operation) and the hot-path
+`ConsentDecisionService`:
 
 ```proto
-syntax = "proto3";
-package mysms.privacy.v1;
-option java_multiple_files = true;
-option java_package = "com.mysms.privacy.grpc.v1";
-
-// Hot-path decisions for other modules. Tenant comes from the caller's service token + tenant metadata.
+// Hot-path decisions for other modules; tenant from the caller's service token and tenant metadata.
 service ConsentDecisionService {
   rpc CheckConsent(CheckConsentRequest) returns (CheckConsentResponse);
   rpc BatchCheckConsent(BatchCheckConsentRequest) returns (BatchCheckConsentResponse);   // <= 1000 subjects
   rpc GetPurposeStatus(GetPurposeStatusRequest) returns (GetPurposeStatusResponse);      // tenant switch + notice
   rpc ListSubjectsWithConsent(ListSubjectsWithConsentRequest) returns (ListSubjectsWithConsentResponse); // paged
 }
-
-message CheckConsentRequest {
-  string activity_code = 1;          // e.g. "comms.marketing_broadcast" - resolves purpose and legal basis
-  string subject_person_id = 2;
-  Scope scope = 3;
-}
-message CheckConsentResponse { Decision decision = 1; }
-
-message BatchCheckConsentRequest {
-  string activity_code = 1;
-  repeated string subject_person_ids = 2;
-  Scope scope = 3;
-}
-message BatchCheckConsentResponse { repeated Decision decisions = 1; }   // same order as the request
-
-message Decision {
-  string subject_person_id = 1;
-  bool allowed = 2;
-  Reason reason = 3;
-  string legal_basis = 4;            // "consent", "legal_obligation", ...
-  int64 state_version = 5;           // for cache coherence with events
-}
-
-enum Scope { SCOPE_UNSPECIFIED = 0; SCOPE_TENANT = 1; SCOPE_CLASS = 2; SCOPE_INSTITUTION = 3;
-             SCOPE_INTER_SCHOOL = 4; SCOPE_PUBLIC = 5; }
-enum Reason { REASON_UNSPECIFIED = 0; CONSENT = 1; NON_CONSENT_BASIS = 2; REFUSED = 3; NARROWER_GRANT = 4;
-              NOT_ANSWERED = 5; EXPIRED = 6; RECONSENT_REQUIRED = 7; FORBIDDEN_FOR_MINOR = 8;
-              PURPOSE_DISABLED = 9; UNKNOWN_ACTIVITY = 10; }
-
-message ListSubjectsWithConsentRequest {
-  string activity_code = 1; Scope scope = 2;
-  repeated string institution_ids = 3;   // optional narrowing
-  string page_token = 4; int32 page_size = 5;
-}
-message ListSubjectsWithConsentResponse { repeated string subject_person_ids = 1; string next_page_token = 2; }
 ```
 
-Callers pass an **activity code**, not a purpose: privacy resolves purpose and legal basis from the RoPA, so a module
-cannot pick a convenient basis at the call site, and the register stays true. The resolver is a `@GrpcService` behind
-the global exception interceptor (JAVA-CODING-RULES §10.3); reads run in `doInReadTransaction` on the replica pool.
+Requests carry an **activity code** (`comms.marketing_broadcast`), subject person ids and `scope` as a string; the
+answer per subject is a `ConsentDecision` (allowed, `ConsentDecision.Reason` with `REASON_` prefix, legal basis,
+state version), in request order. Enums are nested in their messages (`ConsentDecision.Reason`,
+`BatchCheckConsentRequest.Scope`). Callers pass an activity, not a purpose: privacy resolves purpose and basis from
+the register, so a module cannot pick a convenient basis at the call site and the register stays true. Resolvers sit
+behind the global exception interceptor (JAVA-CODING-RULES §10.3); reads run in `doInReadTransaction`.
 
 ### 6.3 Events (outbox → EventBus)
 
-| Type | When | Payload (no names, ids only) |
+Payloads carry ids, codes and statuses only, never names, descriptions, reasons or notes.
+
+| Type | When | Payload |
 |---|---|---|
+| `privacy.tenant_purpose.updated` | purpose switch changes | `{id, purposeId, enabled}` |
+| `privacy.notice*.created` / `.updated` / `.deleted`; `privacy.notice_version.published` / `.retired` | notice changes | ids; a published version adds `{noticeId, version, purposeCodes, requiresReconsent}` |
 | `privacy.consent_record.recorded` / `.withdrawn` / `.superseded` / `.expired` / `.verified` | each change | `{id, subjectPersonId, giverPersonId, giverCapacity, purposeCode, scope, decision, validUntil, verificationStatus, withdrawnAt, rowVersion}` |
-| `privacy.consent_state.changed` | every recompute that changes a row | `{subjectPersonId, purposeCode, states: [{scope, allowed, reason}], stateVersion}` (event-carried state: enough for a projection such as `comms.media_consent_state`) |
-| `privacy.consent_state.snapshot` | replay on demand per tenant (cold start of a consumer) | same, batched, with `snapshotId` and `lastStateVersion` |
-| `privacy.subject.majority_reached` | daily job | `{personId, majorityDate, stateVersion}` |
-| `privacy.rights_request.task_assigned` | request moves to `in_progress` | `{requestId, taskId, type, action, subjectPersonId, relatedPersonIds, categories, exportFormat, deadline}` |
-| `<module>.privacy_task.completed` | each module, after its handler commits | `{taskId, requestId, status, tables: {name: count}, heldItems, policyCodes, fileId}` |
-| `privacy.rights_request.fulfilled` / `.closed` | end of saga | `{requestId, type, outcomeCode}` |
-| `privacy.erasure.completed` | erasure fulfilled | `{requestId, subjectPersonId}`: tombstone for DR replay (§9.5) |
-| `privacy.retention.due` | retention scheduler | `{runId, policyCode, categoryCode, module, cutoff, action}` |
-| `privacy.breach.reported` | DPO registers | `{breachId, number, boardReportDueAt}` (to ops alerting) |
+| `privacy.consent_state.changed` | a recompute changes a row | the subject, purpose, per-scope results and `stateVersion` (event-carried state, enough for a projection such as `comms.media_consent_state`) |
+| `privacy.subject.majority_reached` | majority job | `{personId, majorityDate, stateVersion}` |
+| `privacy.rights_request.submitted` / `.verified` / `.assigned` / `.extended` / `.rejected` / `.closed` | each step | ids, type, status |
+| `privacy.breach.reported` / `.updated` / `.triaged` / `.contained` / `.notification_recorded` / `.closed` / `.not_a_breach` | each change of a breach | `{id, number, status, boardReportDueAt, boardReportSent}`; a recorded notice adds `{notificationId, audience, kind}` — never the description, consequences, mitigation or reason (to ops alerting) |
+| `privacy.rights_request.fulfilment_started` / `.task_retried` / `.action_required` | an erasure or export request's fulfilment started, a task retried, a task failed for good | as the request's other steps; a saga close is `.closed` with outcome `fulfilled` or `partially_fulfilled` |
+| `privacy.rights_request.task_assigned` | a task dispatched (start, next wave, a failed answer before the fifth attempt, retry, sweep) | `{requestId, taskId, type, action, subjectPersonId, module, wave, deadline}` — no hold: the module asks `ListActiveHolds` |
+| `privacy.erasure.completed` | an erasure closed (fulfilled or partially) | `{requestId, subjectPersonId}` — tombstone for DR replay (§9.5) |
+| `privacy.legal_hold.placed` / `.updated` / `.released` | each change of a hold | `{id, reasonCode, scope, subjectPersonId, categoryCode, module, reviewBy, active}` |
+| `privacy.tenant_retention_policy.updated` | a tenant sets a retention policy | `{id, policyId, policyCode, periodDays, action}` |
+| `privacy.retention.due` | the daily retention run, per policy | `{runId, policyCode, categoryCode, module, cutoff, action}` |
+| `privacy.nominee.created` / `.revoked` / `.activated` | a nominee named, revoked or replaced, or activated by a fulfilled nomination request | `{id, principalPersonId, nomineePersonId, status, activated}` — never the name or contact |
+| `<module>.privacy_task.completed` (published by the modules with a handler, §9.1) | a module's handler answered its task (§9.1); privacy's `TaskAnswerHandler` records it (§9.2) | aggregate `<module>.privacy_task`, id = the task id; `{taskId, requestId, status (done / partial / failed / not_applicable), counts: {table: rows}, heldItems, policyCodes, fileId}`, or `{taskId, requestId, status: failed, errorCode}` |
+| `<module>.privacy_retention.completed` (published by sis and iam) | a module answered a retention run (§10); privacy's `RetentionAnswerHandler` records it on the run | aggregate `<module>.privacy_retention`, id = the run id; `{runId, status (done / partial / failed), affected, held, errorCode}` |
+
+*Planned:*
+
+| Type | When | Payload |
+|---|---|---|
+| `privacy.consent_state.snapshot` | replay per tenant for a consumer's cold start | as `.changed`, batched, with `snapshotId`, `lastStateVersion` |
+| `<module>.privacy_task.completed`, `<module>.privacy_retention.completed` | every other module holding personal data, once its handler exists (§9.1) | as above |
+| `privacy.rights_request.task_assigned` additions | `relatedPersonIds`, `categories`, `exportFormat` once the modules' handlers need them | |
 
 ---
 
@@ -912,135 +520,82 @@ the global exception interceptor (JAVA-CODING-RULES §10.3); reads run in `doInR
 
 ### 7.1 Shape and placement
 
-A new flat Maven module **`privacy-client`**, built like `auth-client`: a hand-written facade, the only privacy
-surface a domain module touches. It owns the copy of `privacy_decision.proto`, the gRPC client, the cache and the event
-subscription that invalidates it, and exposes three types. **This deviates** from CLAUDE.md §3 ("each caller keeps
-verbatim copies of the callees' protos and its own `<Callee>GrpcClient`") and Appendix A ("no shared client module").
-The justification is the same one that made `auth-client` an exception: the behaviour must be **identical and
-fail-closed in every module**; twelve hand-copied cache-and-fallback implementations would drift. If the owner rejects
-the exception, the fallback is the standard pattern (each module a `PrivacyGrpcClient` in `integration/`) plus a
-`ConsentCache` in `core`; the API below stays the same.
+`backend/privacy-client` is a flat shared library beside `auth-client`: the only privacy surface a domain module
+touches. It is an approved exception to CLAUDE.md §3 (each caller keeps its own proto copies and gRPC client) for the
+same reason as `auth-client`: the behaviour must be identical and fail-closed in every module. Conformance treats it
+as a shared module, an allowed dependency of domain modules, with no application.properties; rule G1 checks its copy
+of `privacy.proto` is byte-identical to privacy's.
 
-**Explicit calls, no annotations or aspects.** The project has no AOP anywhere, permissions are checked at the edge
-and data rules in the service (`DataScope.current(...)`). Consent is a data rule, so it is an explicit call in the
-business service, next to `DataScope`. An `@RequiresConsent` aspect was considered and rejected: it hides a remote call,
-cannot batch, and cannot see which subjects a list operation will touch.
+Public API: `ConsentChecker` (`check`, `checkAll`, `allowed`), `ActivityCode` (`<module>.<activity>`),
+`ConsentScope`, `ConsentDecision` (allowed, reason, legal basis, state version), `ConsentReason` (privacy's reasons
+plus `UNAVAILABLE`).
 
-```java
-package com.mysms.privacyclient;
+**Explicit calls, no annotations or aspects.** Permissions are checked at the edge and data rules in the service
+(`DataScope.current(...)`); consent is a data rule, so it is an explicit call in the business service, next to
+`DataScope`. An `@RequiresConsent` aspect was rejected: it hides a remote call, cannot batch, and cannot see which
+subjects a list operation touches.
 
-/** Answers whether personal data of subjects may be used for a module's processing activity. Fail-closed. */
-public interface ConsentChecker {
+### 7.2 Behaviour
 
-    ConsentDecision check(ActivityCode activity, UUID subjectPersonId, ConsentScope scope);
+- `PrivacyDecisionGrpcClient` (Strategy `ConsentDecisionSource`) calls `BatchCheckConsent` as the **asking module's
+  service principal** (the module part of the activity code) in the tenant of the current call, within
+  `mysms.privacy-client.deadline`.
+- `CachingConsentChecker` (Decorator, cache-aside, Caffeine) keys answers by tenant, activity, scope and subject for
+  `mysms.privacy-client.cache-ttl`, refusals included, and asks only the misses, 1000 at a time. **No invalidation
+  event**: every replica of a module shares one event queue, so an event would reach one replica only; a change shows
+  everywhere within the TTL, like the role cache.
+- The activity's legal basis is learned from an allow that rests on a non-consent basis and cached for one TTL from
+  that answer, so legitimate-use processing keeps working through a privacy outage of up to one TTL. A process that
+  has never reached privacy cannot tell, and fails closed.
+- **Fail closed**: a failed call, or an answer that does not fit the question (count, order, an unknown reason, an
+  allow its reason does not support), answers every subject of the batch `UNAVAILABLE`, never cached; only the count,
+  the activity and privacy's status are logged. Any other exception — a check inside a database transaction, where
+  no gRPC call may be made — is a programming error and reaches the caller.
+- **Enforce only.** An `off / shadow / enforce` switch (global default, tenant override set by platform operators;
+  shadow logs would-be denials without blocking) is *planned* for the first module whose rollout needs it.
+- **Monolith and services behave the same**: in `app` the client calls privacy's in-process gRPC server.
+- **Self-access short-circuit**: a principal reading their own data, or a guardian reading their child's under
+  `DataScope`, is access, not a new purpose; no check.
+- *Planned* **projection mode** for very hot per-item reads (the community feed): the consumer keeps its own table fed
+  by `privacy.consent_state.changed` and `.snapshot` (community design `comms.media_consent_state`, dirty = unavailable)
+  instead of calling per read; `privacy-client` would supply the payload record and a `ConsentStateProjector` for the
+  version check, while the table and its SQL stay in the consumer's schema.
 
-    /** One remote call at most for the cache misses; result keyed by subject. */
-    Map<UUID, ConsentDecision> checkAll(ActivityCode activity, Collection<UUID> subjectPersonIds, ConsentScope scope);
-
-    /** Convenience for filters: the subset allowed. */
-    default Set<UUID> allowed(ActivityCode activity, Collection<UUID> subjects, ConsentScope scope) {
-        return checkAll(activity, subjects, scope).entrySet().stream()
-                .filter(e -> e.getValue().allowed()).map(Map.Entry::getKey).collect(Collectors.toUnmodifiableSet());
-    }
-}
-
-/** A module's processing activity as declared in META-INF/mysms/privacy/<module>.json; checked by conformance. */
-public record ActivityCode(String value) {
-    public ActivityCode {
-        if (!value.matches("[a-z]+\\.[a-z_]+")) {
-            throw new IllegalArgumentException("activity code must be <module>.<activity>");
-        }
-    }
-}
-
-public record ConsentDecision(boolean allowed, ConsentReason reason, String legalBasis, long stateVersion) {
-    public static ConsentDecision unavailable() {      // fail-closed answer when privacy cannot be reached
-        return new ConsentDecision(false, ConsentReason.UNAVAILABLE, "consent", -1);
-    }
-}
-```
-
-### 7.2 Implementation
-
-```java
-/** Cache-aside decorator over the gRPC stub (Decorator); invalidated by privacy.consent_state.changed. */
-final class CachingConsentChecker implements ConsentChecker {
-
-    private final PrivacyDecisionGrpc grpc;              // wraps ConsentDecisionServiceBlockingStub, deadline 300 ms
-    private final ActivityCatalogue catalogue;           // basis per activity, loaded from privacy at start, refreshed hourly
-    private final DecisionCache cache;                   // bounded, per process: key (tenant, activity, subject, scope)
-    private final EnforcementMode mode;                  // off | shadow | enforce (global default, tenant override)
-    private final ConsentMetrics metrics;
-
-    @Override
-    public Map<UUID, ConsentDecision> checkAll(ActivityCode activity, Collection<UUID> subjects, ConsentScope scope) {
-        UUID tenant = AuthContextHolder.current().tenantId().orElseThrow();
-        if (catalogue.basis(activity).isNonConsent()) {                  // legitimate use: no remote call
-            return metrics.nonConsent(activity, subjects);
-        }
-        Map<UUID, ConsentDecision> result = new HashMap<>(cache.getAll(tenant, activity, scope, subjects));
-        List<UUID> misses = subjects.stream().filter(s -> !result.containsKey(s)).toList();
-        for (List<UUID> chunk : chunks(misses, 1000)) {           // the RPC accepts at most 1000 subjects
-            try {
-                Map<UUID, ConsentDecision> fetched = grpc.batchCheck(activity, chunk, scope);
-                cache.putAll(tenant, activity, scope, fetched);
-                result.putAll(fetched);
-            } catch (IntegrationGrpcClientException e) {
-                metrics.unavailable(activity, chunk.size());               // counted, alerted; no subject ids logged
-                chunk.forEach(s -> result.put(s, ConsentDecision.unavailable()));
-            }
-        }
-        return mode.apply(tenant, activity, result, metrics);           // shadow: log would-be denials, allow
-    }
-}
-```
-
-- **Cache.** Bounded (default 200 k entries per process), TTL 120 s as a safety net, keys include `tenant_id`; entries
-  are dropped by `ConsentCacheInvalidator` (an `EventSubscriptions` bean in privacy-client) on
-  `privacy.consent_state.changed` and `privacy.subject.majority_reached`, comparing `stateVersion` so an old event never
-  resurrects a stale allow. Negative answers are cached too. Library choice: Caffeine (one new dependency, owner
-  approval) or core's planned `CacheAdapter`.
-- **Fail-closed.** Timeouts (300 ms deadline), unavailability or an unknown activity answer `allowed = false` for
-  consent-based activities. Legitimate-use activities never depend on privacy being up.
-- **Monolith vs services.** In `app` the same client calls privacy's in-process gRPC server (ARCHITECTURE §1 "calls are
-  remote by contract"), so behaviour is identical; latency is sub-millisecond and the cache is shared by all modules in
-  the process, but each module still subscribes through its own inbox.
-- **Projection mode** for very hot, per-item reads (the community feed): the consumer keeps its own table fed by
-  `privacy.consent_state.changed` and `.snapshot` (community design `comms.media_consent_state`, dirty = unavailable)
-  and does not call `ConsentChecker` per read. privacy-client supplies the payload record and a
-  `ConsentStateProjector` helper for the version check; the table and its SQL stay in the consumer's schema.
-- **Self-access short-circuit.** `ConsentChecker` is not called for a principal reading their own data (or a guardian
-  reading their child's data under `DataScope`): that is access, not a new purpose.
+**Adopting it in a module**: add the dependency; set `mysms.privacy-client.deadline`, `mysms.privacy-client.cache-ttl`
+and `grpc.client.privacy-service.*` in the module's application.properties; give the module's service identity
+`privacy.consent_decision.batch_check` (DEPLOYMENT §5.9); add an auto-configuration test. `people` is the first
+consumer.
 
 ### 7.3 Usage examples
 
 ```java
-// comms: a marketing broadcast to guardians filters recipients in one call.
+// comms: a marketing broadcast filters recipients in one call — before the write transaction, since no gRPC call
+// may be made inside one (GrpcCallerInterceptor refuses it).
 public SendResult sendBroadcast(UUID broadcastId) {
+    List<Recipient> recipients = doInReadTransaction(() -> audience.resolve(
+            broadcasts.load(DataScope.current(PERMISSION_SEND), broadcastId)));
+    Set<UUID> allowed = consent.allowed(MARKETING_BROADCAST, Recipient.personIds(recipients), ConsentScope.TENANT);
     return doInWriteTransaction(() -> {
         Broadcast b = broadcasts.load(DataScope.current(PERMISSION_SEND), broadcastId);
-        List<Recipient> recipients = audience.resolve(b);                       // person ids of guardians/students
-        Set<UUID> allowed = consent.allowed(MARKETING_BROADCAST, Recipient.personIds(recipients), ConsentScope.TENANT);
         List<Recipient> sendable = recipients.stream().filter(r -> allowed.contains(r.personId())).toList();
         deliveries.queue(b, sendable);
         audit.record("comms.broadcast", broadcastId, Map.of("excludedForConsent", recipients.size() - sendable.size()));
         return new SendResult(sendable.size(), recipients.size() - sendable.size());
     });
 }
-// Operational notices (fee due, school closed, attendance alert) use activity comms.operational_notice:
-// legal basis legitimate_use, no remote call, never filtered.
+// Operational notices use comms.operational_notice (legitimate use): never filtered; privacy is asked once per TTL.
 ```
 
 ```java
-// lms: learning analytics on a cohort; minors are excluded by the catalogue (behavioural monitoring is forbidden
-// unless the activity is declared under the education exemption, which the RoPA records and counsel signs off).
+// lms: learning analytics on a cohort; minors are covered only if the activity is declared under the education
+// exemption (the register records it, counsel signs off).
 Map<UUID, ConsentDecision> d = consent.checkAll(LEARNING_ANALYTICS, cohort.learnerPersonIds(), ConsentScope.TENANT);
 analytics.computeFor(cohort.learners().stream().filter(l -> d.get(l.personId()).allowed()).toList());
 ```
 
 ```java
-// comms community: at approval of a post, the subjects of each image are checked at the post's width and the
-// projection rows are written in the same transaction (community design §8.4); reads use the projection.
+// comms community: at approval, the subjects of each image are checked at the post's width and the projection row
+// is written in the same unit of work (community design §8.4); reads use the projection.
 Map<UUID, ConsentDecision> d = consent.checkAll(COMMUNITY_PHOTO_PUBLICATION, media.subjectPersonIds(), post.width());
 mediaConsentState.write(media.id(), post.width(), d.values().stream().allMatch(ConsentDecision::allowed));
 ```
@@ -1049,28 +604,31 @@ mediaConsentState.write(media.id(), post.width(), d.values().stream().allMatch(C
 
 ## 8. Enforcement points across modules
 
-| Module | Processing | Activity code (purpose) | Basis | Where the check runs |
-|---|---|---|---|---|
-| comms | Community photos and videos of students | `comms.community_photo_publication` (`photo_video_publication`, width) | consent | at approval + projection on read (§7.2) |
-| comms | Naming/crediting students in posts | `comms.community_naming` (`community_naming`) | consent | at approval; projection |
-| comms | Student participation in the community | `comms.community_participation` | consent (guardian) | at membership grant |
-| comms | Promotional or third-party messages | `comms.marketing_broadcast` (`marketing_comms`) | consent | recipient resolution, batch |
-| comms | WhatsApp/SMS channel for non-essential messages | `comms.whatsapp_optional` (`sms_whatsapp_messages`) | consent | channel selection per recipient |
-| comms | Operational notices | `comms.operational_notice` | legitimate use | none (catalogue short-circuit) |
-| lms | Learning analytics, engagement scores, recommendations | `lms.learning_analytics` | consent (adults) / education exemption (minors, *to verify*) | before computing; dashboards filter |
-| lms / assessment | AI features (tutoring, auto-grading with external model) | `lms.ai_assist_external` (`third_party_ai_processing`) | consent; vendor named as processor | before each call to the provider, batch per class |
-| lms | Proctoring with webcam | `lms.proctoring_video` (`biometric_or_video_monitoring`) | consent, adults only; forbidden for minors unless counsel approves | at exam start |
-| attendance | Biometric or face attendance | `attendance.biometric_capture` (`biometric_data`) | consent | device enrolment; fallback manual |
-| transport | Live bus location to parents | `transport.live_location_share` (`transport_live_location`) | legitimate use (safety, Fourth Schedule *to verify*) | none, recorded in RoPA |
-| sis / people | Public profile, alumni directory | `people.public_profile` (`public_profile`) | consent | on publish of profile |
-| sis | Health and medical notes | `sis.health_record` (`health_record_keeping`) | legal obligation / medical emergency (*to verify*) | access restricted by permission; erasure needs second reviewer |
-| finance | Payment gateway sharing | `finance.payment_gateway` (`third_party_payment`) | contract (payer is an adult) | none; recipient recorded |
-| careers | Sharing CVs with employers | `careers.employer_sharing` (`third_party_sharing`) | consent (adult student) | per application batch |
-| admission | Applicant data before enrolment | `admission.application` | legitimate use voluntary | none; retention policy `applicant.not_admitted` |
-| frontoffice | Visitor photo and ID | `frontoffice.visitor_log` | legitimate use (safety) | none; short retention |
-| platform | MySMS product analytics across tenants | `platform.product_analytics` (fiduciary = platform) | consent, adults only, off for minors | client SDK init |
+| Module | Processing | Activity code (purpose) | Basis | Check | Status |
+|---|---|---|---|---|---|
+| people | Public profile, alumni directory | `people.public_profile` (`public_profile`) | consent | `CreatePublicProfile` needs the person's consent (422 `CONSENT_REQUIRED`, after the write-permission and person checks); `GetPublicProfile` and `UpdatePublicProfile` serve another person's profile only with it (404 otherwise, the same with or without a profile), the person's own always; privacy unavailable → 503 | **Enforced** |
+| comms | Community photos and videos of students | `comms.community_photo_publication` (`photo_video_publication`, width) | consent | at approval + projection on read | processing not built |
+| comms | Naming students in posts | `comms.community_naming` | consent | at approval; projection | not built |
+| comms | Student participation in the community | `comms.community_participation` | consent (guardian) | at membership grant | not built |
+| comms | Promotional or third-party messages | `comms.marketing_broadcast` (`marketing_comms`) | consent | recipient resolution, batch | not built (delivery 501, ARC-2) |
+| comms | WhatsApp / SMS for non-essential messages | `comms.whatsapp_optional` (`sms_whatsapp_messages`) | consent | channel selection per recipient | not built |
+| comms | Operational notices | `comms.operational_notice` (`operational_communication`) | legitimate use | none | — |
+| lms | Learning analytics, engagement scores, recommendations | `lms.learning_analytics` | consent (adults) / education exemption for minors (*to verify*, brief Q3) | before computing; dashboards filter | not built |
+| lms / assessment | AI features with an external model | `lms.ai_assist_external` (`third_party_ai_processing`) | consent; vendor named as processor | before each provider call, batch per class | not built |
+| lms | Webcam proctoring | `lms.proctoring_video` (`biometric_or_video_monitoring`) | consent, adults only | at exam start | not built |
+| lms | Plagiarism check by an outside provider | none yet | — | — | **built without a register row** (brief Q14) |
+| attendance | Biometric or face attendance | `attendance.biometric_capture` (`biometric_data`) | consent | device enrolment; manual fallback | not built |
+| transport | Live bus location to parents | `transport.live_location_share` | legitimate use (safety; brief Q4) | none | — |
+| sis | Health and medical notes | `sis.health_record` (`health_record_keeping`) | legal obligation / medical emergency (*to verify*, brief Q5) | permission-restricted; erasure needs a second reviewer | — |
+| finance | Payment gateway sharing | `finance.payment_gateway` (`third_party_payment`) | contract (adult payer; brief Q2) | none; recipient recorded | — |
+| careers | Sharing CVs with employers | `careers.employer_sharing` (`third_party_sharing`) | consent (adult student) | per application batch | not built |
+| admission | Applicant data before enrolment | `admission.application` (`admission_processing`) | legitimate use, voluntary (brief Q8) | none; retention `applicant.not_admitted` | — |
+| frontoffice | Visitor photo and ID | `frontoffice.visitor_log` (`visitor_safety`) | legitimate use (brief Q7) | none; short retention | — |
+| platform | MySMS product analytics | `platform.product_analytics` (fiduciary = platform) | consent, adults only | client SDK init | not built |
 
-Every row is one entry in the module's `META-INF/mysms/privacy/<module>.json`:
+Each consent-based row adds its check through `privacy-client` when its processing is built (ROADMAP SEC-11 P1).
+
+*Planned* module manifest (one entry per row, `META-INF/mysms/privacy/<module>.json`):
 
 ```json
 {
@@ -1090,176 +648,351 @@ Every row is one entry in the module's `META-INF/mysms/privacy/<module>.json`:
 
 ## 9. Data-principal rights fulfilment
 
-### 9.1 The per-module handler (the `hardDelete(subjectId)` idea, generalised)
+### 9.1 The per-module handler (built in every module holding personal data except lms; P3)
 
-Each module that holds personal data implements one `EventSubscriptions` bean in its `events/` package, subscribed to
-`privacy.rights_request.task_assigned` for its own module name. It reads its manifest, runs one write transaction per
-table batch, and publishes `<module>.privacy_task.completed` through its outbox in the same transaction as the last
-batch. Idempotency: the inbox already de-duplicates by event id; the handler also writes a receipt row
-(`<module>.privacy_task_receipt(task_id PK, status, result)`) so a re-dispatched task returns the stored result.
+privacy dispatches tasks as `privacy.rights_request.task_assigned` and retention runs as `privacy.retention.due`; a
+module answers with `<module>.privacy_task.completed` (§9.2) or `<module>.privacy_retention.completed` (§10) and asks
+`ListActiveHolds` which holds cover the subject (the task carries none, so a hold placed after the dispatch still
+counts). A module without a handler leaves its tasks `dispatched` (re-dispatched by the sweep every
+`mysms.privacy.erasure.redispatch-after`) and its runs `dispatched`.
 
-```java
-/** Erases, anonymises, restricts or exports one subject's data held by this module (Template Method per action). */
-@Component
-public class SisPrivacyTasks implements EventSubscriptions {
-
-    @Override public String module() { return "sis"; }
-
-    @Override public Map<String, EventHandler> handlers() {
-        return Map.of("privacy.rights_request.task_assigned", this::handle);
-    }
-
-    int handle(EventEnvelope event) {
-        PrivacyTask task = PrivacyTask.from(event);                    // record from privacy-client
-        if (!task.module().equals("sis")) {
-            return 0;
-        }
-        return receipts.once(task.taskId(), () -> switch (task.action()) {
-            case ERASE, ANONYMISE -> eraser.run(task, holds.activeFor(task.subjectPersonId()));
-            case EXPORT -> exporter.run(task);                          // writes a JSON part to platform files
-            case RESTRICT -> restrictor.run(task);                      // flags rows: processing paused
-            case CORRECT -> TaskResult.notApplicable();                 // corrections go through normal update operations
-        });
-    }
-}
-```
-
-Rules every handler follows: rows under a legal hold or a legal-retention policy are **kept and counted** (`heldItems`,
-`policyCodes`), never silently skipped; anonymisation overwrites identifying columns with deterministic placeholders
-(`"Former student"`, `NULL`, masked) and clears `_enc` columns; files are deleted through platform's file operation
-(which purges object storage); cross-module copies (person cards on `sis.student`, `iam.user_account`, ROADMAP C-5)
-are cleared by each holder in its own handler.
-
-### 9.2 Erasure saga (orchestrated by privacy, choreographed by events)
+**privacy-client's `PrivacyTaskHandler`** (Template Method; a module extends it once, in its `events/` package, and
+declares its tables as `ErasureStep`s — table, data category, the select and the erase statement, constants of the
+module's repository layer — and its `RetentionSweep`s):
 
 ```
-DPO verifies identity ─▶ privacy: request in_progress; one task per module in the manifest union
-  (same tx) outbox: privacy.rights_request.task_assigned × N (with deadline)
-modules: handle → commit → <module>.privacy_task.completed
-privacy inbox: task status, result; when all tasks terminal:
-   all done/not_applicable      → fulfilled; consent records withdrawn; subject projection anonymised
-   any partial (holds/policies) → partially_fulfilled with the reasons shown to the requester
-   any failed after 5 attempts  → action_required (DPO dashboard), retry button re-dispatches the same task id
-SLA sweep every 15 min: tasks dispatched > 24 h without completion are re-dispatched; overdue requests alert.
+inbox (event's tenant transaction)   task_assigned / retention.due naming this module
+  → <module>.privacy_task_receipt (task_id PK, tenant_id, kind, payload, status, result, created_at, completed_at; RLS)
+      new → received, tenant enrolled in the job <module>.privacy_tasks
+      failed → received again (privacy's retry under the same task id)
+      done / partial / not_applicable → the stored answer published again; received → nothing (it runs)
+job <module>.privacy_tasks (core job runtime, every mysms.privacy-client.task-interval, batches of 100)
+  erase / anonymise: ListActiveHolds (gRPC, no transaction open; privacy.legal_hold.check as service:<module>)
+      privacy cannot answer → failed LEGAL_HOLDS_UNAVAILABLE, nothing erased
+  one write transaction: each step's rows of the subject — a row a hold keeps (subject hold; category hold of the
+      step's category; record-set hold naming the table and id) is counted in heldItems, every other row erased,
+      audited and announced (<table>.deleted or .updated); receipt finished; <module>.privacy_task.completed
+  export: rows per table, no file yet (fileId absent); restrict: not_applicable
+  retention: the policy's RetentionSweep — subjects with rows due, 100 at a time; per subject the holds asked, then
+      one write transaction; <module>.privacy_retention.completed {runId, status, affected, held}; a policy the module
+      does not sweep, or the action archive, answers failed RETENTION_POLICY_UNSUPPORTED
+  an unexpected failure rolls the work back and answers failed PRIVACY_TASK_ERROR
 ```
 
-Order matters for two modules only: `comms` (stop sending, hide media) and `iam` (disable sign-in of the erased account)
-run first; privacy dispatches them in wave 1 and the rest in wave 2, so no notification goes out to an account being
-erased. Evidence: `rights_request_task.result`, the request's outcome letter (file), and `platform.audit_log` entries
-written by each module's `AuditWriter` carrying the task id.
+Erasure clears every identifying column (text the schema requires gets a fixed placeholder such as `Erased`) and
+soft-deletes the row, or anonymises a row other records refer to and keeps it; soft-deleted rows are erased too (soft
+delete is not erasure); `_enc` columns are cleared. Rows under a legal hold are kept and counted, never silently
+skipped.
+
+| Module | Erasure | Retention |
+|---|---|---|
+| people | addresses, emergency contacts, education history, work experience, certifications, skills, documents, public profile, social links cleared and soft-deleted; the person anonymised (`Erased person`, national id envelope cleared) and kept | no policy |
+| sis | health records, activities, leave requests cleared and soft-deleted; the student's exit reason cleared; the subject as a guardian anonymised (occupation, income, contact). Kept: the admission register (number, dates, enrolments, promotions) and discipline incidents — *owner and counsel to decide* | `sis.health_after_leaving`: health records of students who left before the cutoff |
+| iam (wave 1) | each account anonymised (`erased-<id>`, no address, number, password or signature) and deactivated through iam.DeactivateUser's service path (signed out everywhere) | `iam.after_inactivity` not swept: its 48 hours' notice is not built (answers failed) |
+| hr | the staff record anonymised and kept (qualification, specialisation, interests cleared); leave applications' remarks and decision comments cleared | no policy |
+| payroll | bank accounts cleared and soft-deleted (holder `Erased`, account-number envelope cleared); salary structures, components, payslips, lines and payments kept and counted under `payroll.after_leaving` | kept rows answered with the policy code |
+| admission | each application of the person with its guardians and emergency contacts cleared and soft-deleted (birth date `1900-01-01`, gender `other`; the application number stays); a guardian's own request finds nothing (guardians have no person link) | `admission.applicant_not_admitted` not swept: most applications have no person |
+| attendance | nothing changed: the person's student and staff attendance counted as kept under `attendance.after_leaving` (person known from `attendance.member_record`, fed by hr.staff and sis.student events) | `attendance.after_leaving`: student marks anonymised (student `md5(id)`, remark and leave request cleared) for students not marked since the cutoff (no leaving date in attendance); staff attendance not swept |
+| assessment | homework submissions cleared and soft-deleted; assignment answers and feedback cleared, marks kept; exam results and marksheet lines kept and counted under `assessment.after_leaving` (person known from `assessment.student_record`, fed by sis.student events) | archive: not swept |
+| comms (wave 1) | for a student (person from `comms.student_record`, fed by sis.student events): unsent outbound messages cancelled and every message to them cleared; in-app notifications cleared and archived; preferences, group memberships, mailbox, receipts, chat messages and participation, feedback threads about them, tasks, event attendance, calendar exports, class-page membership, reactions, content views, posts and comments cleared and soft-deleted. Guardian and staff accounts are not reached (iam's account events carry no person) | `comms.media_after_withdrawal`: comms stores no media of a person — answers `RETENTION_POLICY_UNSUPPORTED` |
+| academics | lesson plans' notes cleared (plan kept); teaching assignments and class-teacher designations kept (operational records); person from `academics.staff_record`, fed by hr.staff events | no policy |
+| careers | candidate preferences (functions, industries, profile) cleared and soft-deleted; job applications are keyed by account only and not reached | no policy |
+| finance | gateway notifications' raw bodies cleared for the subject's payments; fee dues, concessions, invoices, payments and refunds kept and counted under `finance.after_leaving` (person from `finance.student_record`, fed by sis.student events; account-only payers not found) | archive: not swept |
+| frontoffice | no register names a person: erase and export answer `not_applicable` | `frontoffice.visitor_log`: entries older than the cutoff anonymised and soft-deleted, each entry a pseudo-subject (a hold on the entry keeps it) |
+| library | reservations cleared and soft-deleted; purchase requests' requester cleared; loans' borrower account cleared; cards deactivated, anonymised and soft-deleted; an open loan (copy out or fine not yet invoiced) kept with its card and counted | no policy |
+| platform | notes, attachments, tag assignments and files owned by or attached only to the person (polymorphic references to `people.person`) erased and soft-deleted; the audit log kept (the erasure's evidence); file bytes stay in the store until platform's purge exists | `platform.access_log` has no platform table (the access log is `lms.access_log`): answers failed — *owner: move the policy to lms* |
+| transport | `not_applicable`: its rows name sis students and transport consumes no events | no policy |
+
+Rows a module keeps under a retention policy are declared once as `keptRows()` (privacy-client `KeptRows`): the base
+handler counts them as held with their policy code and adds them to an export's counts.
+
+*Still to do* (no stubs): lms (it keys everyone by account and stores no person: needs iam's account events to carry
+`personId`, or an `lms.member_record` fed by sis.student and hr.staff events — owner decision); guardian and staff
+accounts in comms and job applications in careers (same cause); export parts written as platform files (§9.3); files
+deleted through platform's file operation (people's documents and photo, platform's erased files keep their bytes);
+iam's MFA and legacy credentials; restriction (`restrict`); privacy's pre-erasure notice for `iam.after_inactivity`;
+purging soft-deleted rows past a grace period (§10).
+
+### 9.2 Erasure and export saga (privacy side built, P3)
+
+`RightsRequestSaga` (a saga of the rights request aggregate), `TaskAnswerHandler` (the answers), `TaskSweepJob` (the
+SLA sweep).
+
+```
+DPO verifies identity, assigns ─▶ :startFulfilment (etag required) ─▶ one task per module of
+  mysms.privacy.erasure.modules; wave 1 dispatched in the same transaction:
+  outbox privacy.rights_request.task_assigned × N {requestId, taskId, type, action, subjectPersonId, module, wave, deadline}
+modules: ListActiveHolds → handle → commit → <module>.privacy_task.completed       (modules of §9.1)
+privacy inbox (the request's row locked first): the task's answer recorded;
+   failed before the 5th attempt → waits retry-delay doubled per attempt (≤ redispatch-after, next_attempt_at),
+                                   then the sweep dispatches it again under the same task id
+   once no started task waits: any failed → action_required; else the next wave dispatched; else, all answered:
+   all done / not_applicable     → closed, fulfilled
+   any partial (holds, policies) → closed, partially_fulfilled
+   an erasure, either way        → every live consent decision about the subject withdrawn (evidence, channel system),
+                                   privacy.erasure.completed {requestId, subjectPersonId}; fully fulfilled only:
+                                   the subject's birth date and majority forgotten (status unknown) — a partial
+                                   erasure keeps them, since what a hold kept still needs the subject's age
+retryTask (action_required or in progress): a failed or unanswered task dispatched again, the request in progress
+sweep (TaskSweepJob, every mysms.privacy.erasure.sweep-interval, default 15 min): a task dispatched longer ago than
+   mysms.privacy.erasure.redispatch-after (default PT24H) without an answer is dispatched again; so is a failed task
+   whose next_attempt_at has come
+```
+
+An erasure runs in two waves: `mysms.privacy.erasure.first-wave` (`comms` to stop sending and hide media, `iam` to
+disable sign-in) first, the rest once every first-wave task answered done or not applicable, so nothing goes out to
+an account being erased; an export's tasks all start at once (wave 1). A late or repeated answer changes nothing; an
+answer about no task of that module is rejected (never retried). `:close` declines an erasure or export request only
+before its fulfilment started, and never fulfils one (409). Evidence: the tasks' results (counts, held items, policy
+codes), the request's events and audit records, and `platform.audit_log` entries written by each module's
+`AuditWriter` with the task id. *Planned:* overdue alerts; the outcome letter (file).
 
 ### 9.3 Access and export
 
-The legal minimum (s.11) is a **summary**: categories held, processing activities and their purposes, recipients —
-generated by privacy from the RoPA plus per-module counts (export tasks run with `summaryOnly = true`). The full
-**export package** (a nicety, and ROADMAP's `platform.ExportMyData`, which this replaces) asks each module for a JSON
-part written to `platform.file_object` (bucket with 7-day expiry), then privacy assembles a ZIP with a manifest and
-an index in the requester's language, and delivers it through a short-lived signed link after re-authentication. A
-guardian's export of a child excludes safeguarding cases and other people's data (counts only, community §12.7).
+The legal minimum (s.11) is a **summary**: categories, processing activities and purposes, recipients. Built: the
+summary from privacy's register (§9.6). An **export** request runs as the saga of §9.2 (action `export`, every task in
+wave 1); each module's answer names its JSON part (`fileId`), kept in the task's result. *Planned (P3):* per-module
+counts (export tasks with `summaryOnly = true`) and the **export package**: each module writes a JSON part to
+`platform.file_object` (bucket with 7-day expiry), privacy assembles a ZIP with a manifest and an index in the requester's language, delivered by a short-lived signed link after
+re-authentication. A guardian's export of a child excludes safeguarding cases and other people's data (counts only,
+community §12.7). This replaces ROADMAP's `platform.ExportMyData`.
 
 ### 9.4 Correction, grievance, nomination
 
-- **Correction**: the request names fields; privacy routes it to the owning module's existing update operation as a
-  task for staff (the request page deep-links to the record, ARCHITECTURE §4). privacy never writes another module's
-  data. The task closes when the module's `*.updated` event for that record arrives or the staff member records a refusal
-  with a reason.
-- **Grievance**: free text + category; assigned to the tenant's grievance officer; SLA clock; the response is a letter
-  file and a comms message; escalation path to the Board is shown in the closing message.
-- **Nomination**: an adult principal names one nominee (encrypted contact). A nominee submits requests with
-  `requester_capacity = nominee` and proof (death certificate or incapacity document), always verified in person or by
-  document by the DPO.
+- **Correction**: the request names the record — the module holding it, the kind of record, its id when known — and
+  each field with the value asked for (`details.correction`, 1–20 fields). privacy never writes another module's
+  data: the staff correct the record there through its own operation, then close the request as fulfilled, or
+  decline it with the reason the requester sees (422 without). *Planned:* a deep link from the request to the record
+  (ARCHITECTURE §4), and closing the task when the module's `*.updated` event for that record arrives.
+- **Grievance**: free text and a category (`consent`, `access`, `correction`, `data_security`, `communication`,
+  `other`); always closed with an answer the requester sees. *Planned:* the answer as a letter file and a comms message
+  (ARC-2), and the escalation path to the Board in the closing message.
+- **Nomination**: an adult principal names one nominee (`SetMyNominee`; name and contact encrypted, answered masked;
+  naming another revokes the active one; `RevokeMyNominee`). A nominee named with their person must be a person
+  privacy knows (404) and an adult (403). A nominee who signs in (named with their person)
+  submits a `nomination` request for the principal — that the principal died or is incapacitated, with proof — which
+  waits in `submitted` for the staff to verify in person or by document, and is fulfilled or declined, never partly.
+  Fulfilling it activates the nominee: from then on they submit any other request for the principal as `nominee`,
+  always staff-verified. Only a nominee submits a nomination request (422 `RIGHTS_REQUEST_TYPE_NOT_ALLOWED`), and a
+  nominee not yet activated submits nothing else (422 `RIGHTS_REQUEST_NOMINEE_NOT_ACTIVE`). A nominee outside the
+  school reaches the staff in person. *Planned:* staff recording a request on a nominee's behalf.
 
-### 9.5 Backups and disaster recovery
+### 9.5 Backups and disaster recovery (*planned*)
 
-Erased data stays in database backups until they rotate (state the window in the notice). privacy keeps an erasure
-tombstone ledger (ids only, `privacy.erasure.completed`); the DR runbook replays tombstones after any restore, the same
-approach as the community design's off-lineage safety log (PR-21).
+Erased data stays in database backups until they rotate (the notice states the window). privacy publishes an erasure
+tombstone for every erasure it closes (ids only, `privacy.erasure.completed`), and its closed erasure requests are the
+ledger. *Planned:* the DR runbook that replays tombstones after any restore, as the community design's off-lineage
+safety log (PR-21).
+
+### 9.6 Rights requests: behaviour
+
+`RightsRequestService` (requests), `AccessSummaryFactory` (summaries), `RightsRequestSla` (deadlines).
+
+- **Types accepted:** `access`, `correction`, `grievance`, `nomination`, `export`, `erasure`, `withdraw_all` (clients
+  treat enums as open). Erasure and export are fulfilled by the saga of §9.2 (`:startFulfilment`); withdraw-all by
+  `:fulfilWithdrawAll` (`privacy.rights_request.fulfil`, etag required; in progress only, 409 otherwise), which takes
+  the subject's row lock and withdraws every live consent decision the requester gave about the subject — the
+  principal's own too when the requester is their nominee — each with a `withdrawn` evidence entry (channel `system`,
+  the staff member as actor), audit record and `privacy.consent_record.withdrawn`, the answers recomputed, and closes
+  the request as fulfilled, in one transaction. A separate step rather than on assignment: assigning only staffs a
+  request (and may reassign it), and the withdrawal, which cannot be undone, is the staff's deliberate act on the
+  version they reviewed, as `:fulfilAccess` is. None of the three is closed as (partially) fulfilled by `:close` (409).
+- **Who may submit:** as for consent decisions — an adult for themself (`self`), the active legal guardian of a minor
+  (`guardian`; unknown age counts as a minor) — or the active nominee of an adult (`nominee`, §9.4). Anyone else, **a minor asking for themself included**, gets core's
+  generic 404 `NOT_FOUND` on the subject (their legal guardian exercises their rights). Refused while impersonating
+  (403 `PERMISSION_DENIED`, staff steps too). The requester is always the token's person. Entitlement is read under
+  the subject's row lock, as consent changes take it.
+- **Identity:** a signed-in requester is verified by the session (`identity_check = signed_in_session`, status
+  `verified` at once; one `.submitted` event carrying status `verified`). A nominee's request stays `submitted` until
+  the staff verify it (`:verifyIdentity`, `in_person` / `document`).
+- **Deadline:** `due_at = submitted_at + mysms.privacy.rights.sla.<type>` (ISO-8601, default `P30D` each, DEPLOYMENT
+  §4.2a; legal periods *to verify*). **Extension is not a status**: `:extend` moves `due_at` later (422
+  `RIGHTS_REQUEST_DUE_AT_NOT_LATER` otherwise) and keeps `extended_reason`; every extension is audited with its reason.
+  `overdue` is derived at read time. The number's year and the deadline are UTC.
+- **Steps:** submitted → verified (`:verifyIdentity`); verified | in_progress → in_progress (`:assign`, reassignment
+  allowed); submitted | verified → rejected (`:reject`, reason `identity_not_verified` | `not_entitled` | `duplicate`
+  | `other`, kept in `outcome_code` and shown to the requester, who may appeal as a grievance); in_progress → closed
+  (`:close`, outcome `fulfilled` | `partially_fulfilled` | `declined`, an optional staff note — a blank note is no
+  note — and the answer the requester sees, `response`, required for a grievance and a declined correction; the
+  requester sees the outcome and the answer, not the note).
+- **Separation of duties:** no staff member takes a step on a request they are the subject or the requester of —
+  recognised by the token's person or by its login account — and none is assigned one through a login account privacy
+  knows for either person: of their student or staff records (`privacy.subject`, tombstones of deleted records keep
+  their account) or their guardian links: 409 `RIGHTS_REQUEST_CONFLICT_OF_INTEREST`, the four-eyes answer
+  consent verification gives. A staff account privacy has not seen (no hr staff record yet) is not caught.
+- **Numbers:** `PRV-<year>-<6 digits>` per tenant from `privacy.number_sequence`.
+- **Details:** `details` holds `{"description": "..."}` (required, ≤ 4000 characters), a correction's record and
+  fields, a grievance's category (§9.4); no other type carries either (422). Events never carry them.
+- **The requester's view** (`MyRightsRequest`): number, type, subject, capacity, status, description, submitted, due,
+  overdue, closed, outcome, the correction or grievance details and the school's answer — never the assignee, how
+  identity was checked, the extension reason or the staff note. A requester sees their requests only while they still
+  decide for the subject (a guardian whose link ended, or whose ward came of age, no longer sees them; a nominee
+  whose nomination was revoked, the principal's; staff still handle them).
+
+**Access summary (s.11), from the register only.** `AccessSummaryFactory` generates it from one query over the
+register (`processing_activity`, `purpose`, `data_category`) with the tenant's `tenant_purpose` and the subject's
+`consent_state`, plus the subject's status:
+
+- **Content:** subject, status (`minor` / `adult` / `unknown`; no subject row = unknown), `subjectRoles`,
+  `generatedAt`, and per activity that may concern them — code, module, purpose, legal basis, data categories (sorted), recipients,
+  cross-border, retention policy, and for a consent-based activity `consentAllowedScopes` (the widths allowed,
+  narrowest first; empty = not allowed). Non-consent activities are always listed; a consent-based one only while the
+  tenant has its purpose on (so a platform-fiduciary purpose never). For anyone not known to be an adult, only
+  activities with `targets_minors` and never a purpose forbidden for minors. No other module's records or counts yet.
+- **Filtered by role:** each register activity names its audiences (`student`, `guardian`, `staff`); the summary
+  lists an activity only when the subject holds one of them — student (a live student record), guardian (an active
+  link as guardian), staff (a live staff record, from hr's events). A person privacy knows no role of (a visitor, or
+  someone whose records have not arrived) gets every activity that may concern them: the conservative answer, still
+  "may concern" (brief Q15).
+- **`GetAccessSummary`** (staff, `privacy.rights_request.read`; 409 for a non-access request) previews the current
+  summary only while the request is open (`submitted` | `verified` | `in_progress`); once ended it answers the kept
+  summary, or 404 when it ended without one (rejected, or closed as `declined`). The preview takes no lock.
+- **`FulfilAccessRequest`** (`privacy.rights_request.fulfil`; tenant-wide; refused while impersonating; **body etag
+  required** — 422 `VALIDATION_FAILED` without, 412 when stale; only an `access` request `in_progress`, 409 otherwise)
+  takes the subject's row lock, then the time of the step (taken after the lock), generates the summary, keeps it in
+  `rights_request.access_summary` and closes the request as `fulfilled` in one transaction (`generatedAt` =
+  `closedAt`); audit step `fulfil_access`; event `privacy.rights_request.closed` without the summary.
+- **`GetMyAccessSummary`** answers the kept summary with `GetMyRequest`'s visibility; 404 until fulfilled, for another
+  type, another person's request, or a ward the requester no longer decides for.
+- **Only `FulfilAccessRequest` fulfils an access request:** `:close` closes one only as `declined` (409
+  `INVALID_STATE_TRANSITION` for `fulfilled` | `partially_fulfilled`, after the permission, existence, etag and state
+  checks); the guarded close statement and `ck_rights_request_access_fulfilled` enforce it too. A partial answer to an
+  access request is not modelled.
+- **Versioning:** the kept summary carries `schemaVersion` (`AccessSummarySnapshot.SCHEMA_VERSION`, 2 — adding the
+  roles; a kept version 1 reads with no roles; not in the contract) and is never rewritten; the reader skips unknown properties, so a summary kept by a later version stays
+  readable. A change a reader must understand raises the version.
+- **Consistency:** the factory reads the subject's status and then the register under READ COMMITTED. Consent changes
+  and coming of age cannot land in between while fulfilling (both take the subject's lock), but a tenant switching a
+  purpose is not serialised by it: a switch committed in between shows in a summary dated a moment before it.
+  Accepted — a switch is a rare administrative act.
+
 
 ---
 
-## 10. Retention and deletion engine
+## 10. Retention and deletion engine (privacy side built, P3)
 
-- **Policies** per data category and trigger, seeded from the catalogue with legal floors; tenants may lengthen, or
-  shorten down to the floor (CHECK in §5.6). Examples: `applicant.not_admitted` 1 year after decision;
-  `attendance.after_leaving` 5 years; `visitor_log` 90 days; `community_media.after_withdrawal` 30 days (*all values to
-  verify with counsel and the owner*).
-- **Scheduler** (daily per tenant, ARC-4 job pattern): computes the cutoff per policy, writes `retention_run`, publishes
-  `privacy.retention.due` to the owning module. The module's sweep (same handler class as §9.1, action `RETENTION`)
-  deletes or anonymises rows past the cutoff in bounded batches, skipping rows under holds, and replies with counts.
-- **Pre-erasure notice**: for policies with `notify_before` (inactivity classes in Rule 8, *to verify*) privacy sends the
-  notice through comms and runs the sweep only after the interval.
-- **Soft delete**: `deleted_at` is not erasure. Retention also purges rows soft-deleted longer than the policy's grace
-  period (default 30 days), so "deleted" eventually means gone.
-- **Partitions**: for partitioned logs (audit, xAPI statements, message logs) retention is the configured partition drop
-  of core's partition maintenance (JAVA-CODING-RULES §1 rule 2); privacy's policy is the single source of the number,
-  exposed to each module's configuration (`mysms.<module>.partition.retention`).
-- **Legal holds** override everything; a hold has a mandatory review date and the DPO dashboard lists holds due for review.
+- **Policies** (`RetentionPolicyService`): the platform catalogue `retention_policy` (seeded by the baseline, ten
+  policies: `admission.applicant_not_admitted` 365 days, floor 90; `assessment.after_leaving` 10 years, archive;
+  `attendance.after_leaving` 5 years, anonymise; `comms.media_after_withdrawal` 30 days; `finance` and `payroll` 8
+  years at the floor; `frontoffice.visitor_log` 90 days; `iam.after_inactivity` 3 years with 2 days' notice;
+  `platform.access_log` 1 year at the floor; `sis.health_after_leaving` 365 days — *all values to verify with counsel
+  and the owner*, brief Q11) with each tenant's own period and action (`tenant_retention_policy`; no row = the
+  catalogue's), set by a tenant administrator (tenant-wide grant, If-Match `"0"` while never set) and never below the
+  floor (422 `RETENTION_BELOW_LEGAL_FLOOR`) — the pattern of purposes and `tenant_purpose`. Periods are whole days.
+- **Scheduler** (`RetentionJob`, core job runtime, every `mysms.privacy.retention-job.interval`, default a day; a
+  tenant enrols when privacy first learns of one of its persons): `RetentionRunService` writes one `retention_run` per
+  policy with the cutoff = start of the UTC day − the period in force, and publishes `privacy.retention.due` to the
+  owning module; a repeated run of the same day sends nothing (`uq (tenant, policy, cutoff)`). The module's sweep
+  (§9.1, the same handler) deletes or anonymises rows past the cutoff in bounded batches, keeps rows under holds
+  (`ListActiveHolds`) and answers `<module>.privacy_retention.completed {runId, status, affected, held}`, which
+  `RetentionAnswerHandler` records on the run (status, counts, `completed_at`; a late or repeated answer changes
+  nothing). Built: `sis.health_after_leaving`, `attendance.after_leaving`, `frontoffice.visitor_log`; every other policy's run stays `dispatched` until its module has a
+  sweep (`iam.after_inactivity` answers failed until its notice exists).
+- **Pre-erasure notice**: for policies with `notify_before` (Rule 8 inactivity classes, *to verify*) privacy sends the
+  notice through comms and sweeps only after the interval.
+- **Soft delete is not erasure**: retention also purges rows soft-deleted longer than the policy's grace period
+  (default 30 days).
+- **Partitions**: for partitioned logs (audit, xAPI statements, message logs) retention is core partition maintenance's
+  partition drop (JAVA-CODING-RULES §1 rule 2); privacy's policy is the single source of the number, exposed to each
+  module's `mysms.<module>.partition.retention`.
+- **Legal holds** (`LegalHoldService`, §5.5) override everything; a hold has a mandatory review date and
+  `ListLegalHolds` lists the holds due for review (`active = true AND reviewBy <= "<today>"`). *Planned:* the DPO
+  dashboard and a reminder when a review falls due.
 
 ---
 
-## 11. Breach management
+## 11. Breach management (P4)
 
 ```
 reported ─▶ triaged ─▶ contained ─▶ board_initial_sent ─▶ board_report_sent (≤ 72 h after became_aware_at)
-                │                         └──▶ principals_notified (affected set from affected_query) ─▶ closed
+                │                         │                        └──▶ principals_notified ─▶ closed
+                │                         └──▶ principals_notified (the principals told before the detailed report)
                 └─▶ not_a_breach (reason, kept)
 ```
 
-The register stores ids and counts only. "Affected principals" is computed by a reproducible query run in the affected
-modules through a privacy task (`action = IDENTIFY`), returning person ids to privacy, which sends notices through comms
-in the principal's language with the content the Rules require (*to verify*). Clocks show on the DPO dashboard and page
-the on-call operator when 24 h remain. When MySMS (as processor) detects a breach it opens the record for every
-affected tenant and notifies the tenant first; the tenant (fiduciary) owns the Board submission.
+The data protection officer keeps the tenant's register (`privacy.breach`, §5.6): `ReportBreach` numbers the breach
+`PRB-<year>-<6 digits>`, makes the reporter its owner and fixes the clock — `board_report_due_at` is
+`became_aware_at` + 72 h (which instant counts is *to verify* with counsel); neither time may lie in the future, nor
+awareness before detection (422). While it is open, `UpdateBreach` (If-Match) changes what is known — description,
+categories, modules, estimated principals, consequences, mitigation, owner — never the times. Every change needs a
+tenant-wide grant, is refused while impersonating (403), compares its etag (412) and checks the state it leaves (409),
+and writes its audit record and an event with ids, number and status only.
+
+**Notices are recorded, not sent.** comms cannot deliver them yet (its delivery answers 501), so the officer sends
+each notice outside MySMS and records it with `RecordBreachNotification` (audience, kind, `sentAt` between awareness
+and now, optionally the document as sent). A notice moves the status where it is a step: the Board's `initial`
+intimation moves a `contained` breach to `board_initial_sent`; its `detailed` report, recorded once and only after the
+intimation, sets `board_report_sent_at` and moves `board_initial_sent` to `board_report_sent`; the principals' notice,
+after the intimation, moves the breach to `principals_notified`. A Board update and a processor's or the tenant's
+notice change no status. `CloseBreach` needs the principals told and the Board's detailed report recorded;
+`MarkBreachNotABreach` ends a triaged breach with its reason.
+
+**Clocks** are derived at read time: `overdue` (the detailed report not recorded and `board_report_due_at` passed,
+never for `not_a_breach`) and `hoursRemaining` (whole hours to the deadline, negative once past, absent once the
+report is recorded or the breach is not one). The register lists the nearest deadline first.
+
+*Planned:* notices sent through comms in each principal's language with the content the Rules require (*to verify*);
+the affected principals from a reproducible query run in the affected modules through a privacy task
+(`action = identify`, `affected_query`); clocks on the DPO dashboard and a page to the on-call operator when 24 h
+remain (`privacy_breach_clock_remaining_seconds`); when MySMS (as processor) detects a breach, opening the record for
+every affected tenant and telling the tenant first — the tenant (fiduciary) owns the Board submission.
 
 ---
 
 ## 12. User interface
 
-**Parents (web, mobile — React / React Native):**
+**Built** (ui/02): ACC-13 consent centre (web and phone: guardian per child through the child switcher; a student
+under 18 sees guardians' decisions read-only with the date they decide from; an adult decides), ADM-17 purposes and
+ADM-18 notices (web, tenant admin); ACC-15 my privacy requests (web: see my data, correct my data with the record and
+fields, complain with a category, about oneself or a child; each request's deadline, outcome and answer; a fulfilled
+access summary; the nominee, masked, named, changed and removed — phone: see my data and complain, with the same
+follow-up); ADM-19 privacy requests (web: the open queue nearest deadline first, coloured overdue / due soon / on
+track; each request's details and the steps its state allows; closing writes the requester's answer; an access request
+answered with its previewed summary). Hooks in `packages/core` (`privacy.ts`, `privacyAdmin.ts`, `privacyRights.ts`),
+screens in `web-kit` `screens/privacy/` and `native-kit` (`ConsentCentreScreen`, `MyRequestsScreen`). Purpose titles come from client i18n
+(`enum.privacyPurpose.*`; an unknown code shows "Other"). Notices render as plain text.
 
-- *Privacy dashboard* ("Privacy and consent" in the profile menu): per child, per purpose, toggles with the width
-  selector where relevant; own decision and the effective result without explaining other guardians (community §12.7
-  disclosure rule); badge for `RECONSENT_REQUIRED`; "What is affected" counts before withdrawing.
-- *Notice viewer*: language switcher (all languages the tenant published), short "for your child" summary, link to the
-  full notice and the grievance contact. Consent buttons are equal in weight ("Allow" / "Don't allow"); no pre-selection.
-- *Requests*: submit access, export, correction, erasure, grievance; timeline with status and due date; download of the
-  export after re-authentication.
-- *Onboarding*: at first sign-in, consent tasks appear as a checklist, never as a gate to essential services (fees,
-  attendance, notices).
+*Planned:*
 
-**Students:** minors see a read-only, plain-language view of what their guardians decided and how to ask questions
-(age-appropriate copy, no toggles). From the majority date they see "You can now decide" with all toggles; adult students
-in higher education see only themselves.
-
-**Administrators:** purposes (switch on with a notice), notice editor with versioning, translations and preview,
-coverage report (counts per class, never names to teachers outside their class), paper-consent entry and four-eyes
-verification queue, requests queue with SLA colours and per-module task status, legal holds, retention policies, breach
-register, RoPA export (CSV/PDF) for auditors.
-
-**UX notes:** large targets and plain words (Grade 6 reading level in English, reviewed translations for Hindi and the
-tenant's regional languages); right-to-left not needed for current languages; every toggle change shows the effect
-sentence; withdrawals are as quick as grants (one tap + confirm); offline mobile queues consent changes with the notice
-version actually displayed.
+- **Parents and adult students:** "What is affected" counts before withdrawing; badge for `RECONSENT_REQUIRED`;
+  notice viewer with the tenant's languages, the short "for your child" summary, full notice and grievance contact;
+  consent buttons equal in weight ("Allow" / "Don't allow"), never pre-selected; export and erasure requests (P3) and
+  the export download after re-authentication; corrections and the nominee on the phone; onboarding shows consent tasks as a checklist, never as a
+  gate to essential services (fees, attendance, notices).
+- **Students:** age-appropriate copy; "You can now decide" from the majority date.
+- **Administrators and DPO:** per-module task status in the queue (P3); an assignee picker instead of a user id; coverage report
+  (counts per class, never names to teachers outside their class); paper-consent entry and the four-eyes verification
+  queue; legal holds; retention policies; the breach register and the RoPA export screens (their APIs are built).
+- **UX rules:** large targets and plain words (Grade 6 reading level in English; reviewed Hindi and regional
+  translations); every toggle change shows its effect in one sentence; withdrawal as quick as a grant (one tap +
+  confirm); offline phone queues consent changes with the notice version actually shown; a markdown renderer for
+  notices; axe checks on the privacy screens.
 
 ---
 
 ## 13. Security, multi-tenancy, audit, performance, observability
 
-- **Tenancy**: RLS on every tenant table; services bind `app.tenant_id` through `AppTransactionManager`; every query adds
-  `tenant_id = :tenantId`. Global catalogue tables are read-only for the app role.
-- **Owner-only data**: self-service operations use `AuthContext.personId` and active legal-guardian links only; a guardian
-  never learns another guardian's decision; unknown subject → 404.
-- **Impersonation**: consent changes while impersonating are refused (`CONSENT_IMPERSONATION_FORBIDDEN`); support staff
-  can view but not decide. Recorded in evidence when viewing.
-- **Evidence integrity**: append-only by privilege; per-tenant hash chain verified nightly; mismatch alerts.
-- **No PII in logs/metrics/traces** (JAVA-CODING-RULES §1 rule 5): metrics carry activity codes and counts only.
-- **Encryption**: nominee contact `_enc` via core `FieldCipher`; export packages encrypted at rest, links expire.
-- **Performance**: hot path is `consent_state` primary-key lookups (batch = one `= ANY(:ids)` query); in-process cache
-  hit ratio target > 95 %; recompute of a subject's state touches ≤ purposes × widths rows.
-- **Observability**: `privacy_decisions_total{activity,result,reason}`, `privacy_client_unavailable_total{module}`,
-  `privacy_client_cache_hit_ratio`, `privacy_request_overdue{type}`, `privacy_task_age_seconds{module}`,
-  `privacy_breach_clock_remaining_seconds`, outbox lag of `privacy.consent_state.changed` (the withdrawal-exposure bound in
-  community §8.4 depends on it). Health indicator: decision service reachable.
+- **Tenancy**: RLS on every tenant table; services bind `app.tenant_id` through `AppTransactionManager`; every query
+  adds `tenant_id = :tenantId`. Global catalogue tables are read-only for the application role.
+- **Owner-only data**: self-service uses the token's person and active legal-guardian links only; a guardian never
+  learns another guardian's decision; an unknown or unrelated subject → 404.
+- **Impersonation**: consent decisions, rights-request steps and breach changes while impersonating are refused (403
+  `PERMISSION_DENIED`); support staff can view, not decide; evidence records the impersonator.
+- **Breach register**: tenant-level, changed only through a tenant-wide grant; its texts hold ids and counts only and
+  never reach an event. **Coverage** answers counts only, never person ids; the whole tenant needs a tenant-wide grant,
+  an institution must be within the caller's.
+- **Evidence integrity**: per-tenant hash chain built; append-only by privilege and nightly chain verification
+  planned (§5.4).
+- **No PII in logs, metrics or traces** (JAVA-CODING-RULES §1 rule 5): metrics carry activity codes and counts only.
+- **Encryption**: the nominee's name and contact are `_enc` columns (core `FieldCipher`, per tenant and column),
+  answered masked, never in an event or a log. *Planned:* export packages encrypted at rest with expiring links.
+- **Performance**: the hot path is `consent_state` primary-key lookups (a batch is one `= ANY(:ids)` query); a
+  subject's recompute touches at most purposes × widths rows; cache hit ratio target > 95 %.
+- **Observability** (*planned*, with OPS-1): `privacy_decisions_total{activity,result,reason}`,
+  `privacy_client_unavailable_total{module}`, `privacy_client_cache_hit_ratio`, `privacy_request_overdue{type}`,
+  `privacy_task_age_seconds{module}`, `privacy_breach_clock_remaining_seconds`, outbox lag of
+  `privacy.consent_state.changed` (the community design's withdrawal-exposure bound depends on it); a health
+  indicator for the decision service.
 
 ---
 
@@ -1267,84 +1000,89 @@ version actually displayed.
 
 | Layer (JAVA-CODING-RULES §12) | What |
 |---|---|
-| Unit | `EffectiveConsentRule` truth table (adult/minor/unknown × guardians granted/refused/narrower/silent × expiry × reconsent × forbidden-for-minor), property-based over random record sets; SLA clock maths; retention cutoff maths |
-| Component (Testcontainers PostgreSQL, real `AuthFilter` with `TestTokens`) | Every REST operation 401/403/404; `ConsentCentreDisclosureComponentTest` (two guardians); `MajorityTransitionComponentTest`; paper consent four-eyes; notice publish immutability; evidence append-only (UPDATE fails with permission denied) |
-| Cross-tenant negatives | Tenant A's token cannot read, count or infer tenant B's consents, requests, coverage, or projections; RLS with a deliberately missing `tenant_id` predicate still returns nothing |
-| Contract | `privacy_decision.proto` compatibility check in the build (no field renumbering); events payload schemas checked by a consumer test in comms |
-| End-to-end in `app` | `ErasureSagaComponentTest`: one subject with data in all modules, erasure → every module's receipt, held items reported, re-dispatch idempotent; fail-closed test: privacy stopped → comms marketing sends nothing, operational notices still go |
-| Conformance (new rule P1) | Every `ActivityCode` constant exists in a manifest; no consent-basis activity targets minors with a forbidden purpose; every module with personal-data tables declares handlers |
+| Unit | `EffectiveConsentRule` truth table (adult / minor / unknown × guardians granted / refused / narrower / silent × expiry × reconsent × forbidden-for-minor); majority dates; projection merging (`SubjectSync`, `GuardianLinkSync`, `StudentRecords`); *planned:* property-based tests over random record sets, deadline and retention cutoff maths |
+| Component (Testcontainers PostgreSQL, real auth filter with test tokens) | Every REST operation's 401 / 403 / 404; two-guardian disclosure; majority transition; scheduled jobs; paper consent four-eyes; notice publish immutability; consent decisions, rights requests, access summary, processing register and its CSV export, breach register, consent coverage, recompute (`privacy/src/component-test`); people's public-profile consent (`PublicProfileConsentComponentTest`) |
+| Cross-tenant negatives | Tenant A cannot read, count or infer tenant B's consents, requests, coverage or projections; RLS returns nothing even with a missing `tenant_id` predicate |
+| Contract | `privacy.proto` field numbers locked by conformance (`field-numbers.lock.json`); G1 byte-identical copy in `privacy-client`. *Planned:* consumer tests of event payloads in comms |
+| End-to-end in `app` (*planned*) | `ErasureSagaComponentTest`: one subject with data in every module; erasure → every module's receipt, held items reported, re-dispatch idempotent. Fail-closed test: privacy stopped → marketing sends nothing, operational notices still go |
+| Conformance (*planned* rule) | Every `ActivityCode` constant exists in a manifest; no consent activity targets minors with a forbidden purpose; every module with personal-data tables declares handlers; evidence UPDATE fails with permission denied once SEC-6 lands |
 
 ---
 
 ## 15. Rollout, effort, future-proofing
 
-### 15.1 Phases (one experienced developer + agents; person-weeks)
+### 15.1 Phases still open (one experienced developer + agents; person-weeks)
 
 | Phase | Scope | Effort | Exit |
 |---|---|---|---|
-| P0 Foundations | Module skeleton, baseline schema, catalogue + manifests for comms/lms/sis, notices, consent records + evidence + state, subject/guardian projections, remove people's consent parts (§5.7) | 3–4 | Component tests green; COM-10 API usable |
-| P1 Enforcement | `privacy-client` (cache, fail-closed, shadow mode), decision gRPC, events; enforcement in comms (marketing, community photos/naming), lms analytics, attendance biometrics; parent consent centre UI | 4–5 | Shadow mode in pilot tenant two weeks with zero unexpected denials, then enforce |
-| P2 Rights | Requests (access summary, correction, grievance, nomination) with SLAs, admin queue UI, export package | 3–4 | Pilot DPO handles a mock request end to end |
-| P3 Erasure and retention | Per-module handlers in all modules holding personal data, saga, holds, retention engine, DR tombstones | 6–8 | `ErasureSagaComponentTest` across all modules |
-| P4 Breach and reports | Breach register and clocks, RoPA export, coverage reports, consent-manager inbound placeholder | 2–3 | Tabletop breach exercise |
+| P1 Enforcement | Adopt `privacy-client` at each §8 point whose processing exists (people done); shadow mode when the first rollout needs it; coverage counts | grows with the features of §8 | Each point's refusal test green; for a risky rollout, shadow mode in a pilot tenant for two weeks with no unexpected denials |
+| P2 Rights (rest) | Correction deep links and task closing on the owner's event; grievance letters through comms; staff recording a request on a nominee's behalf; corrections and the nominee on the phone; an assignee picker | 1–2 | A pilot DPO handles a mock request of each type end to end |
+| P3 Erasure and retention (rest) | Task handlers and retention sweeps in every other module holding personal data (§9.1 list; people, sis and iam are built), export parts as files and the ZIP assembly and download, the DR tombstone replay runbook, manifests + conformance rule (privacy's side is built: tasks and saga, holds, retention policies and runs, tombstones) | 5–7 | An erasure across all modules end to end, in a component test per module and the monolith |
+| P4 Breach and reports (rest) | Breach notices through comms (once comms delivers), affected-set identification, clock paging and the DPO dashboard, the breach and coverage screens, coverage per class, RoPA as PDF, consent-manager inbound placeholder (the register, its clocks, the CSV export and coverage counts are built) | 1–2 | Tabletop breach exercise |
 
-Total ≈ 18–24 person-weeks; P0–P3 should finish by March 2027 for the 13 May 2027 obligations.
+P1–P3 should be done before 13 May 2027. Purposes start disabled per tenant; community photos stay blocked until
+their enforcement exists (fail closed, as the community design requires).
 
-**Feature flags**: `mysms.privacy.enforcement` (`off` → `shadow` → `enforce`, global default, tenant override set only by
-platform operators); per-tenant purposes start disabled; community photos stay blocked until enforcement is `enforce`
-(fail closed, matching the community design).
+### 15.2 Seeding
 
-### 15.2 Migration
-
-Pre-release baseline edits (§5.7); seed system notices in English and Hindi as templates the tenant must review before
-enabling a purpose; existing tenants get all consent purposes disabled until they publish notices.
+*Planned:* system notices in English and Hindi seeded as templates a tenant must review before enabling a purpose;
+every consent purpose of an existing tenant stays off until it publishes a notice (today: no `tenant_purpose` row = off).
 
 ### 15.3 Versioning and compatibility
 
 Purposes and activities are versioned; a material change bumps the version and, if the notice says so, sets
-`requires_reconsent`. Proto evolves additively (`v1` package; a breaking change is `v2` served side by side). Event
-payloads are additive; consumers ignore unknown fields.
+`requires_reconsent`. The proto evolves additively (package `mysms.privacy.v1`; a breaking change is `v2` served side
+by side). Event payloads are additive; consumers ignore unknown fields. Kept access summaries carry their own
+`schemaVersion` (§9.6).
 
 ### 15.4 Future-proofing
 
 - **Consent managers** (Rule 4): an inbound adapter (`privacy/integration/ConsentManagerAdapter`) maps external
-  artefacts to `consent_record` with `channel = consent_manager`, `external_artefact_id`, purposes via `external_code`;
-  outbound notifications of withdrawals. Wait for the Board's technical standards (*to verify*).
-- **DigiLocker-based verification** for parental consent: a `VerificationMethod` strategy slot.
-- **Policy engine**: `EffectiveConsentRule` is a pure function behind an interface; OPA or Cedar could replace it if
-  rules become tenant-programmable. Not needed now.
+  artefacts to `consent_record` (`channel = consent_manager`, `external_artefact_id`, purposes via `external_code`);
+  outbound withdrawal notifications. Waits for the Board's technical standards (*to verify*).
+- **DigiLocker verification** of parents: a `VerificationMethod` strategy slot.
+- **Policy engine**: `EffectiveConsentRule` is a pure function behind an interface; OPA or Cedar can replace it if
+  rules become tenant-programmable.
 - **Other jurisdictions**: age of majority, purposes and floors are data (tenant country), not code.
 
 ---
 
 ## 16. Open questions and risks
 
-**Owner decisions**
+**Approved by the owner:** a separate `privacy` module (a kernel module in the decided reorganisation); `privacy-client` as a shared
+facade, an exception like `auth-client` (CLAUDE.md §2); Caffeine for its cache; people's consent parts retired into
+privacy; purpose titles from client i18n; `privacy-client` TTL-only and enforce-only; impersonation and not-a-guardian
+answered with core's generic 403 / 404; a signed-in requester verified by the session; extension as a moved deadline,
+not a status.
 
-**Approved:** a separate `privacy` module (kept separate under Plan A); `privacy-client` as a shared facade module,
-an exception like `auth-client` (recorded in CLAUDE.md §2); Caffeine as the cache dependency; retiring
-`people.consent_record` and people's consent operations into privacy (§5.7).
+**Built on the implementer's judgement, for the owner to confirm (ROADMAP DEC-20):** separation of duties as a 409
+like consent's four eyes; the nominee activated by a fulfilled nomination request, the nominee's other requests always
+staff-verified; nominee operations as `:set` / `:revoke` custom methods (conformance allows no PUT); the access summary
+filtered by the register's audiences and the subject's roles (no role = the conservative "may concern" list), with the
+audiences seeded per activity in the baseline; a grievance and a declined correction always answered.
 
-**Still open**
+**Still open (owner):**
 
-1. Default SLA for rights requests (30 days proposed) and grievances.
+1. Default deadline for rights requests (30 days proposed) and grievances.
 2. Majority transition defaults (community open decision 9).
-3. Is MySMS ever a fiduciary (product analytics, marketing of its own services)? If yes, a platform-level notice and
-   purposes with `fiduciary = platform`.
-4. Retention values per category (counsel input needed for every row of the catalogue).
+3. Is MySMS ever a fiduciary (product analytics, its own marketing)? If yes, a platform-level notice and purposes with
+   `fiduciary = platform`.
+4. Retention values per category (counsel input for every catalogue row).
+5. Data-category sensitivity levels (ROADMAP DEC-17) and evidence append-only by privilege (DEC-18).
 
-**To verify with counsel**: exact Rule 3 notice contents; Rule 10 verification methods acceptable for schools; scope of
-the Fourth Schedule education exemption (analytics, transport GPS, CCTV); which retention laws bind school records;
-grievance period; breach notice contents and clock start; whether schools fall in any Rule 8 erasure class; POCSO
-interaction with access requests.
+**To verify with counsel** ([legal brief](PRIVACY-LEGAL-REVIEW-BRIEF.md)): Rule 3 notice contents; Rule 10
+verification methods acceptable for schools; scope of the Fourth Schedule education exemption (analytics, transport
+GPS, CCTV); legal-basis mapping; retention laws for school records; grievance period; breach notice contents and clock
+start; whether schools fall in a Rule 8 erasure class; POCSO and access requests; the plagiarism provider; whether a
+"may concern" summary satisfies s.11.
 
 **Risks**
 
 | Risk | Mitigation |
 |---|---|
-| Fail-closed blocks legitimate operations if privacy is down | Legitimate-use activities never call privacy; consent activities degrade only non-essential features; health alert; shadow mode before enforce |
-| Low guardian response → photos rarely publishable | Coverage reports, reminders through notices, paper-form flow with four-eyes |
+| Fail-closed blocks legitimate operations when privacy is down | Legitimate-use activities need privacy only once per TTL; consent activities degrade only non-essential features; health alert; shadow mode before enforce for risky rollouts |
+| Low guardian response → photos rarely publishable | Coverage reports, reminders through notices, paper-form flow with four eyes |
 | Erasure misses copies (person cards, exports, caches, backups) | Manifests + conformance; C-5 copies handled per module; tombstone replay after restore |
-| Over-collection of evidence becomes its own privacy risk | Hash user agent, no device fingerprint, evidence retention policy |
-| Scope creep into a generic policy engine | Non-goal; rule is one pure function |
-| Rules change before May 2027 | Purposes, floors and SLAs are data; legal text lives in notices |
+| Evidence becomes its own privacy risk | User-agent hash, no device fingerprint, evidence retention policy |
+| Scope creep into a policy engine | Non-goal; the rule is one pure function |
+| Rules change before May 2027 | Purposes, floors and deadlines are data; legal text lives in notices |

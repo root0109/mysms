@@ -2,7 +2,7 @@
 
 **There are no cross-module (cross-schema) foreign keys anywhere in MySMS** — each module's schema may be deployed on its own PostgreSQL instance, so a reference into another module's schema is *logical*: a plain uuid column, always indexed. Integrity is enforced by five mechanisms instead of the database:
 
-1. **No live check at write time** (decision of 2026-11-07, option C): a reference is stored as given — a uuid, in the caller's tenant (row-level security) — without asking the owning module. A live check would need service-to-service identity (PRINCIPAL-REVIEW P1-34); with the caller's own token, a user who may not read the owner's records could not save a valid reference. Dangling references are prevented and repaired by rules 2 and 3.
+1. **No live check at write time** (owner decision, option C): a reference is stored as given — a uuid, in the caller's tenant (row-level security) — without asking the owning module. A live check would need service-to-service identity (ROADMAP P1-34); with the caller's own token, a user who may not read the owner's records could not save a valid reference. Dangling references are prevented and repaired by rules 2 and 3.
 2. **No hard deletes of referenced entities** — owners archive by status / soft delete; every money- and evidence-protecting RESTRICT rule is an in-module foreign key and stays in the DDL.
 3. **Events drive cleanup** — the owner's `*.deleted` outbox events reach dependents' inboxes over the bus (RabbitMQ by default); the *event action* column below says what the dependent does. Built: each dependent module's `<Module>ReferenceCleanup` (owned source; first written by a generator that has since been retired) clears the column or soft-deletes the row, audits it and announces it on its own outbox (`<table>.updated` / `<table>.deleted`), so the cleanup cascades; it runs exactly once per event through the module's inbox. Both tables below are built — 153 actions in 19 modules: in the against-DAG table "delete the row" is the same soft delete and "archive/retain" needs no action; each action of these tables is implemented in its module's cleanup class. Two actions are kept by design: `comms.in_app_notification` is append-only (no `deleted_at`), so the notifications of a deleted user or cohort age out with the table's partition retention.
 4. **Reconciliation** — a periodic per-module job batch-verifies reference ids against the owner via the SDK and reports orphans (never auto-fixes). **Not built:** like a live check, it needs service-to-service identity (P1-34).
@@ -32,6 +32,10 @@ Validated against the live catalog when it was written (every column exists, is 
 | `academics.subject.department_id` | `org.department` | owner is never hard-deleted (archived by status); no action needed |
 | `academics.subject.institution_id` | `org.institution` | owner is never hard-deleted (archived by status); no action needed |
 | `academics.teaching_assignment.staff_id` | `hr.staff` | owner is never hard-deleted (archived by status); no action needed |
+
+`academics.staff_record` is not a set of references but a copy kept from events, like `iam.member_record`: each row
+mirrors the person of one `hr.staff` row from that row's own created and updated events (`StaffRecordSync`), so
+privacy's tasks find a teacher's lesson plans without reading another schema. A deleted staff record keeps its row.
 
 ## admission (26 references)
 
@@ -109,6 +113,11 @@ Validated against the live catalog when it was written (every column exists, is 
 | `assessment.marksheet_line.student_id` | `sis.student` | owner is never hard-deleted (archived by status); no action needed |
 | `assessment.result_change_log.changed_by_user_id` | `iam.user_account` | owner is never hard-deleted (archived by status); no action needed |
 
+`assessment.student_record` is not a set of references but a copy kept from events, like `iam.member_record`: each
+row mirrors the person of one `sis.student` row from that row's own created and updated events (`StudentRecordSync`),
+so privacy's tasks find a person's submissions and results without reading sis's schema. A deleted student keeps its
+row: its results stay the person's.
+
 ## attendance (15 references)
 
 | Column | References (owner) | Event action on owner deletion |
@@ -128,6 +137,11 @@ Validated against the live catalog when it was written (every column exists, is 
 | `attendance.staff_attendance.leave_application_id` | `hr.leave_application` | null the column |
 | `attendance.staff_attendance.recorded_by_user_id` | `iam.user_account` | owner is never hard-deleted (archived by status); no action needed |
 | `attendance.staff_attendance.staff_id` | `hr.staff` | owner is never hard-deleted (archived by status); no action needed |
+
+`attendance.member_record` is not a set of references but a copy kept from events, like `iam.member_record`: each
+row mirrors the person of one `hr.staff` or `sis.student` row from that row's own created and updated events
+(`MemberRecordSync`), so privacy's tasks and the `attendance.after_leaving` sweep find a person's attendance without
+reading another schema. A deleted record keeps its row: its attendance stays the person's.
 
 ## careers (6 references)
 
@@ -268,6 +282,11 @@ Validated against the live catalog when it was written (every column exists, is 
 | `finance.student_fee_due.student_enrollment_id` | `sis.student_enrollment` | null the column |
 | `finance.student_fee_due.student_id` | `sis.student` | owner is never hard-deleted (archived by status); no action needed |
 
+`finance.student_record` is not a set of references but a copy kept from events, like `iam.member_record`: each row
+mirrors the person of one `sis.student` row from that row's own created and updated events (`StudentRecordSync`), so
+privacy's tasks find a person's fee dues, concessions, invoices and payments without reading sis's schema. A deleted
+student keeps its row: its books of account stay the person's.
+
 ## frontoffice (12 references)
 
 | Column | References (owner) | Event action on owner deletion |
@@ -339,7 +358,7 @@ the copy itself (a tombstone), and `iam.GetMe` reads the caller's records withou
 | `library.reservation.requested_by_person_id` | `people.person` | owner is never hard-deleted (archived by status); no action needed |
 | `library.reservation.requested_by_user_id` | `iam.user_account` | owner is never hard-deleted (archived by status); no action needed |
 
-## lms (124 references)
+## lms (125 references)
 
 | Column | References (owner) | Event action on owner deletion |
 |---|---|---|
@@ -499,10 +518,10 @@ the copy itself (a tombstone), and `iam.GetMe` reads the caller's records withou
 | `payroll.staff_salary.staff_id` | `hr.staff` | owner is never hard-deleted (archived by status); no action needed |
 
 `payroll.staff_member` is not a set of references but a copy kept from events, like `iam.member_record`: each row
-mirrors one `hr.staff` row's account from that row's own created, updated and deleted events (`StaffMemberSync`; the
+mirrors one `hr.staff` row's account and person from that row's own created, updated and deleted events (`StaffMemberSync`; the
 deletion arrives through `PayrollReferenceCleanup`, the module's one handler of `hr.staff.deleted`), so the owner's
-deletion is applied by the copy itself (a tombstone), and payslip reads apply the owner-only rule without reading
-hr's schema.
+deletion is applied by the copy itself (a tombstone), and payslip reads apply the owner-only rule — and privacy's
+tasks find a person's payroll records (`PayrollPrivacyTaskHandler`) — without reading hr's schema.
 
 ## people (9 references)
 
@@ -527,7 +546,7 @@ hr's schema.
 | `platform.tenant.default_currency_id` | `master.currency` | owner is never hard-deleted (archived by status); no action needed |
 | `platform.tenant_subscription.currency_id` | `master.currency` | owner is never hard-deleted (archived by status); no action needed |
 
-## privacy (5 references)
+## privacy (10 references)
 
 | Column | References (owner) | Event action on owner deletion |
 |---|---|---|
@@ -535,16 +554,23 @@ hr's schema.
 | `privacy.consent_record.giver_person_id` | `people.person` | kept: a consent decision is evidence and never changes; no action needed |
 | `privacy.consent_record.recorded_by_user_id` | `iam.user_account` | kept: who recorded a paper form is evidence; no action needed |
 | `privacy.consent_record.verified_by_user_id` | `iam.user_account` | kept: who verified a paper form is evidence; no action needed |
+| `privacy.nominee.nominee_person_id` | `people.person` | kept: who was named is evidence of the nomination; no action needed |
 | `privacy.notice_version.document_file_id` | `platform.file_object` | kept: a notice version is consent evidence and never changes once published; no action needed |
+| `privacy.rights_request.assignee_user_id` | `iam.user_account` | kept: who handled a request is evidence of how a right was honoured; no action needed |
+| `privacy.rights_request.outcome_file_id` | `platform.file_object` | kept: the response letter or export package is evidence of how a right was honoured; no action needed |
+| `privacy.rights_request.requester_person_id` | `people.person` | kept: who asked is evidence of how a right was honoured; no action needed |
+| `privacy.rights_request.subject_person_id` | `people.person` | kept: whom a request was about is evidence of how a right was honoured; no action needed |
 
 `privacy.subject` and `privacy.guardian_link` are not sets of references but copies kept from events, like
 `iam.member_record`: a subject mirrors one `people.person` row's birth date and the `sis.student` rows of that person
-(their accounts and institutions), a guardian link one `sis.student_guardian` row with the persons it joins and the
-guardian's account, each from the row's own created, updated and deleted events (`SubjectSync`, `GuardianLinkSync`).
-The owner's deletion is applied by the copy itself — the person's birth date cleared, the student record a tombstone,
-the link inactive — and the consent rules read them without reading another schema.
-Consent records and consent states name their subject through an in-module foreign key to `privacy.subject`,
-not a logical reference.
+(their accounts and institutions) and the `hr.staff` rows of that person (`staff_records`), a guardian link one
+`sis.student_guardian` row with the persons it joins and the guardian's account, each from the row's own created,
+updated and deleted events (`SubjectSync`, `StaffSync`, `GuardianLinkSync`). The owner's deletion is applied by the
+copy itself — the person's birth date cleared, the student or staff record a tombstone, the link inactive — and the
+consent rules, the access summary's roles and the rights requests' conflict-of-interest check read them without
+reading another schema.
+Consent records, consent states and nominees name their subject or principal through an in-module foreign key to
+`privacy.subject`, not a logical reference.
 
 ## sis (38 references)
 

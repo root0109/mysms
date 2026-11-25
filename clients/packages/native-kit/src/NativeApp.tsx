@@ -19,6 +19,8 @@ import {
 import { LeaveBalanceScreen } from './LeaveBalanceScreen';
 import { LeaveScreen } from './LeaveScreen';
 import { NotificationPreferencesScreen } from './NotificationPreferencesScreen';
+import { ConsentCentreScreen } from './ConsentCentreScreen';
+import { MyRequestsScreen } from './MyRequestsScreen';
 import { PayslipsScreen } from './PayslipsScreen';
 import { FeesScreen } from './FeesScreen';
 import { ProfileScreen } from './ProfileScreen';
@@ -46,6 +48,8 @@ export type Page =
   | 'profile'
   | 'settings'
   | 'notifications'
+  | 'consents'
+  | 'privacyRequests'
   | 'timetable'
   | 'leave'
   | 'children'
@@ -64,12 +68,17 @@ export type Page =
  * catalogue read as a guest of the app's school (LMS-01, LMS-02 and preview lessons).
  */
 type SignedOutPage = 'signIn' | 'reset' | 'signUp' | 'catalog';
-/** Deep-linked screens this kit renders itself (ui/02: ACC-07 profile, ACC-14 settings, TT-03 my timetable). */
+/**
+ * Deep-linked screens this kit renders itself (ui/02: ACC-07 profile, ACC-13 consent centre, ACC-14 settings, ACC-15
+ * privacy requests, TT-03 my timetable).
+ */
 const PAGE_OF_SCREEN: Readonly<Record<string, Page>> = {
   'ACC-05': 'verify',
   'ACC-07': 'profile',
   'ACC-10': 'notifications',
+  'ACC-13': 'consents',
   'ACC-14': 'settings',
+  'ACC-15': 'privacyRequests',
   'TT-03': 'timetable',
   'HR-03': 'leaveBalance',
   'HR-04': 'leave',
@@ -257,6 +266,8 @@ function Root({ client, webOrigin, defaultTenantCode, tablet }: Omit<NativeAppPr
   if (page === 'lms' && lmsRoute) return lmsScreen(home);
   if (page === 'notifications')
     return <NotificationPreferencesScreen tablet={tablet ?? false} onBack={home} />;
+  if (page === 'consents') return <ConsentCentreScreen tablet={tablet ?? false} onBack={home} />;
+  if (page === 'privacyRequests') return <MyRequestsScreen tablet={tablet ?? false} onBack={home} />;
   if (page === 'verify') return <VerifyScreen tablet={tablet ?? false} onBack={home} />;
   if (page === 'persona') return <PersonaScreen tablet={tablet ?? false} onBack={home} />;
   return (

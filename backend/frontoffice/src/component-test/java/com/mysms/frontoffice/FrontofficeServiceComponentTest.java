@@ -32,7 +32,7 @@ import tools.jackson.databind.json.JsonMapper;
 class FrontofficeServiceComponentTest {
 
     /** CREATE TABLE statements in database/migrations/frontoffice (partitions included). */
-    private static final int TABLES = 8;
+    private static final int TABLES = 10;
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
     private static final TestTokens TOKENS = new TestTokens();
     private static final HttpClient HTTP = HttpClient.newHttpClient();

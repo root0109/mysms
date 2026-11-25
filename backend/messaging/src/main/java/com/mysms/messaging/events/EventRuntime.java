@@ -104,6 +104,13 @@ public final class EventRuntime implements SmartLifecycle {
                 failures.remove(relay.module());
                 lastSuccess.put(relay.module(), clock.instant());
             } catch (RuntimeException e) {
+                if (stopping(e)) {
+                    // shutdown interrupted the pass (stop() ends the executor): not a failure; the events wait in the
+                    // outbox for the next start
+                    LOG.debug("relay of module {} stopped by shutdown", relay.module());
+                    Thread.currentThread().interrupt();
+                    return published;
+                }
                 int count = failures.merge(relay.module(), 1, Integer::sum);
                 if (count == FAILURES_BEFORE_DOWN) {
                     LOG.error("relay of module {} failed {} passes in a row; its events wait in its outbox",
@@ -114,6 +121,19 @@ public final class EventRuntime implements SmartLifecycle {
             }
         }
         return published;
+    }
+
+    /** Whether the failure is the relay thread being interrupted, which only shutdown does. */
+    private static boolean stopping(Throwable failure) {
+        if (Thread.currentThread().isInterrupted()) {
+            return true;
+        }
+        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+            if (cause instanceof InterruptedException) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Down when the bus is disconnected or a relay failed several passes in a row. */

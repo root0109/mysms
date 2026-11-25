@@ -32,10 +32,11 @@ import org.springframework.stereotype.Component;
  * answers under the subject's next state version and publishes privacy.consent_state.changed.
  *
  * <p>Runs inside the caller's write transaction of the subject's tenant, never one of its own, so the state changes
- * atomically with what caused it: a consent change here, and (later) a guardian link, a subject's majority, a tenant's
- * purpose setting or the daily expiry run. It locks the subject's row first (creating it, status unknown, when no
- * event has named the person yet), so recomputes of one subject never interleave and its state version only grows;
- * a caller that also appends consent evidence takes the subject's lock before the evidence chain's.
+ * atomically with what caused it: a consent change, a subject's majority or legal guardians (the projections'
+ * events), a tenant's setting of a purpose, a notice version that asks everyone again, and (later) the daily expiry
+ * run. It locks the subject's row first (creating it, status unknown, when no event has named the person yet), so
+ * recomputes of one subject never interleave and its state version only grows; a caller that also appends consent
+ * evidence takes the subject's lock before the evidence chain's.
  */
 @Component
 public class ConsentStateWriter {
@@ -97,6 +98,33 @@ public class ConsentStateWriter {
                 subjectPersonId, PrivacyEvents.consentStateChanged(subjectPersonId, purposeCode, computed,
                         stateVersion));
         return true;
+    }
+
+    /**
+     * Recomputes every purpose the subject has answers for, after a change to the subject's majority or legal
+     * guardians. A purpose without answers needs none: the subject has no decision for it, and no answer already
+     * counts as denied.
+     */
+    public void recomputeSubject(UUID subjectPersonId) {
+        // the subject's lock first (as recompute takes it, creating an unknown subject's row), so a decision still
+        // being written for the subject is seen once it commits
+        subjects.lockStatus(subjectPersonId, OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC));
+        for (String purposeCode : states.purposesOf(subjectPersonId)) {
+            recompute(subjectPersonId, purposeCode);
+        }
+    }
+
+    /**
+     * Recomputes the purpose for every subject with answers for it, after the tenant's setting of the purpose or the
+     * notice it names changed. The caller holds that setting's row lock (the update itself, or
+     * {@code NoticeRepository#purposesNaming}), and a decision share-locks it before the subject's lock
+     * ({@link PurposeRepository#lockSetting}), so no subject's first answer is written unseen in between. Subjects are
+     * locked in person order, the order every caller locking two subjects keeps, so two runs never deadlock.
+     */
+    public void recomputePurpose(String purposeCode) {
+        for (UUID subjectPersonId : states.subjectsOf(purposeCode)) {
+            recompute(subjectPersonId, purposeCode);
+        }
     }
 
     private static GiverDecision decision(ConsentRecordEntity record) {

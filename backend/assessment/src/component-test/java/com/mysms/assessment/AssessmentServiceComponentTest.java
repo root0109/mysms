@@ -32,7 +32,7 @@ import tools.jackson.databind.json.JsonMapper;
 class AssessmentServiceComponentTest {
 
     /** CREATE TABLE statements in database/migrations/assessment (partitions included). */
-    private static final int TABLES = 25;
+    private static final int TABLES = 28;
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
     private static final TestTokens TOKENS = new TestTokens();
     private static final HttpClient HTTP = HttpClient.newHttpClient();

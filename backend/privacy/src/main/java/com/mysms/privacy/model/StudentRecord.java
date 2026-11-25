@@ -16,4 +16,12 @@ public record StudentRecord(UUID userId, UUID institutionId, int rowVersion, boo
     public static StudentRecord gone(int rowVersion) {
         return new StudentRecord(null, null, rowVersion, false);
     }
+
+    /**
+     * A tombstone that keeps the record's last login account: the account stays known for the person (separation of
+     * duties) while staying out of the live accounts, since the record is no longer live.
+     */
+    public static StudentRecord gone(int rowVersion, UUID userId) {
+        return new StudentRecord(userId, null, rowVersion, false);
+    }
 }

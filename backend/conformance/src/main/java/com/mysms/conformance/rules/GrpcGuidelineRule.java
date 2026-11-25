@@ -27,7 +27,8 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
  * <ul>
  * <li>G1 — each module owns its protos ({@code src/main/resources/proto/mysms/<module>/v1}); a caller keeps a
  * byte-identical copy of the callee's proto, only of a callee it may depend on (or one a proto it carries imports); the
- * shared protos are core's alone.</li>
+ * shared protos are core's alone. A library's copies (auth-client's of iam, privacy-client's of privacy) are
+ * byte-identical too.</li>
  * <li>G2 — field numbers are law: every field of every owned message has the number
  * {@code conformance/src/main/resources/field-numbers.lock.json} records, and the lock records every message.</li>
  * <li>G3 — every operation of a module's operation table is an RPC of its own proto, and every RPC an operation.</li>
@@ -72,6 +73,7 @@ public final class GrpcGuidelineRule implements ConformanceRule {
             code(tree, module, found);
             openApiTest(tree, module, found);
         }
+        libraryCopies(tree, found);
         fieldNumbers(tree, found);
         transactions(tree, found);
         return found;
@@ -112,6 +114,24 @@ public final class GrpcGuidelineRule implements ConformanceRule {
             if (!needed.contains(owner)) {
                 found.add(new Violation("G1", tree.relative(root), "carries the proto of " + owner
                         + ", which it may not call (ARCHITECTURE §2) and no proto it carries imports"));
+            }
+        }
+    }
+
+    /** Every proto a library carries is a byte-identical copy of its owner's (core owns the shared protos). */
+    private static void libraryCopies(SourceTree tree, List<Violation> found) {
+        for (String library : SourceTree.SHARED) {
+            if ("core".equals(library)) {
+                continue;
+            }
+            for (Path file : tree.files(tree.backend().resolve(library).resolve(PROTO_ROOT), ".proto")) {
+                String owner = owner(tree.read(file));
+                Path original = owner == null ? null : ownProto(tree, owner).resolveSibling(SourceTree.fileName(file));
+                if (original == null || "common".equals(owner) || !Files.isRegularFile(original)) {
+                    found.add(new Violation("G1", tree.relative(file), "copies no proto a domain module owns"));
+                } else if (!Arrays.equals(bytes(original), bytes(file))) {
+                    found.add(new Violation("G1", tree.relative(file), "differs from " + tree.relative(original)));
+                }
             }
         }
     }

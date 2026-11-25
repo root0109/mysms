@@ -117,7 +117,7 @@ Each intent ships `*, on-*, container, on-container` variants; status chips alwa
 - `SyncStatusChip` + `ConflictTray` (B/T)
 - `PermissionGate` (renders children only when `Me.permissions` allows; the primitive behind README rule 3)
 
-Each component spec (props, states, a11y notes) lives beside its code with a Storybook story; Storybook is the design-review surface.
+Each component spec (props, states, a11y notes) lives beside its code with its tests. *Planned:* a Storybook story per component as the design-review surface (not set up yet).
 
 ## 6. Accessibility — WCAG 2.2 AA
 

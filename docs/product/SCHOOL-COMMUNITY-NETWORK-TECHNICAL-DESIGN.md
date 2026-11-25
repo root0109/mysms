@@ -1,115 +1,845 @@
-# School Community Network — technical design (developer's view)
+# School Community Network — product and technical design
 
-**Date:** 18 November 2026 (revised the same day after the design gate) · **Status:** design for review; **no code is
-to be written from this document until the owner approves it** · **Companion:**
-[`SCHOOL-COMMUNITY-NETWORK-BRAINSTORM.md`](SCHOOL-COMMUNITY-NETWORK-BRAINSTORM.md) (the product requirements;
-requirement ids such as NET-04 or SAFE-11 below point there).
+**Status:** design for the owner's approval; build starts with batch B0a once the owner approves it (Part D). This one
+document holds everything needed to build the feature: the product requirements (Part A), the backend design (Part
+B), the frontend design (Part C) and the delivery plan (Part D), with a traceability appendix that maps every
+requirement id to the design that meets it. Open work and owner decisions: §18 and ROADMAP §3.11 / DOC-5.
 
-The brainstorm says *what* the product should be. This document says *what we would build, piece by piece*, in the
-MySMS codebase as it is today: which existing parts we reuse, which tables, operations, events, jobs and screens are new,
-how every administrator switch is enforced, and how privacy is kept right at each layer. It is written for the engineers
-who will build it and for the owner who decides scope.
+**How to read it.**
+
+- **Section numbers are stable identifiers** used by code comments, other documents and tests. Plain numbers (§1–§22)
+  are the engineering sections. Sections prefixed **A**, **B** or **D** (for example §A6.2, §B22, §D25) are the product
+  requirements, numbered as they were gathered, placed in the Part they belong to.
+- **Requirement ids** (`NET-04`, `SAFE-11`, `ACC-09` …) are defined in the A/B/D sections and point to the design
+  sections that meet them (Appendix T). Inside this document `ACC-nn` are **acceptance scenarios** (§D25), not the
+  `ACC-nn` screens of `ui/02-navigation-and-screens.md`; screens are written `ui/02 ACC-13` when meant.
+- **Screen ids** for the community are `COM-30`–`COM-74` (members, moderators, administrators) and `PC-COM-01`
+  (platform console); they extend `ui/02`'s `COM-01`–`COM-13`. The community replaces `ui/02 COM-08` (class pages and
+  feed).
+- **Priorities:** **P0** needed for a safe, useful pilot; **P1** expansion after pilot evidence; **P2** later optional;
+  **Excluded** deliberately outside the product. Build order is by slice: S1 staff text → S2 guardians → S3 photos →
+  S4 students → P1 → P2 (§16).
+- **Status words:** *served* / *501* refer to `api/operations-status.md` (generated); *to build* marks what this
+  design adds; *to verify* marks a fact this design could not confirm from code or sources.
+
+**Consent is owned by the `privacy` module.** Wherever this document says people's `consent_record`, its events or
+`people.person.majority_reached`, read: privacy's consent records and effective consent state
+([PRIVACY-AND-CONSENT-CENTRE.md](../design/PRIVACY-AND-CONSENT-CENTRE.md) §4.2, §5.4), its events
+`privacy.consent_state.changed` (event-carried state per subject, purpose and width, with `stateVersion`) and
+`privacy.subject.majority_reached`, and `privacy-client` (§7). The rule K17 of §8.4 is privacy's
+`EffectiveConsentRule`; comms' `consent_projection` / `person_status` are a projection of
+`privacy.consent_state.changed` (privacy design §7.2 "projection mode"; the replay event `privacy.consent_state.snapshot`
+is still to build), with a `privacy-client` check at approval. Prerequisites PR-1, PR-2, PR-3 and PR-22 are therefore
+delivered by privacy, except the snapshot replay and the daily checkpoint (§15).
 
 ### Decisions that gate the first build batch
 
-**§18 item 2 is ruled (18 Nov 2026): policy is stored in comms**, so **B1** (the staff-only text slice, §16) may
-start. Before the first (S1) pilot: items 4, 10, 12, 16 and 21. Before guardians (S2): items 8, 13, 15,
-17, 19, 22, 23. Before photos (S3): items 9, 10, 11, 14, 16, 18. Before students (S4): item 20. Phase names used in older
-sections map to slices: P0a-1 = S1 + S2, P0a-2 = S3, P0b = S4.
+**§18 item 2 is ruled: policy is stored in comms**, so **B1** (the staff-only text slice, §16) may start. Before the
+first (S1) pilot: items 4, 10, 12, 16 and 21. Before guardians (S2): items 8, 13, 15, 17, 19, 22, 23. Before photos
+(S3): items 9, 10, 11, 14, 16, 18. Before students (S4): item 20. Phase names used in some sections map to slices:
+P0a-1 = S1 + S2, P0a-2 = S3, P0b = S4.
 
-### Gate changes (18 Nov 2026)
+### Contents
 
-The design gate's 60 questions (`community-gate/QUESTIONS.md`, answers in `community-gate/ANSWERS.md`) changed:
-
-- **Membership rule made explicit** (§7.4): class-page membership is the AND of sis link state, custody, iam account and
-  role, enrolment and policy; any source saying no wins. Mid-year changes, history per role and drafts in a table.
-- **Class page DDL fixed** (§5.1): `class_section_id` and `academic_year_id` not null, one live page per section,
-  `page_category`, `class_page_member`, `class_page_attachment` and `post_comment.attachment_file_id` dropped; membership
-  only in `space_member` with a check that class-page rows come from relationships.
-- **Consent model made real** (§8.4, §15): people's `consent_record` gains `scope` (class < institution < inter_school <
-  public), `decision`, `giver_capacity`, `valid_until`, verification and a per-giver unique index; most restrictive
-  legal guardian wins; adult students give their own; unknown = blocked.
-- **sis gains a restricted guardian link** (§7.7, §15) with confidential restriction records, two operations and events
-  that carry no reason.
-- **Surfaced copies** get a state machine evaluated at read time (§5.2.1).
-- **Review**: author and implicated people can never approve; two distinct moderators are a precondition of enabling
-  community; every image with students needs a second person's subject confirmation (§6.5) — every image at all, since round 3.
-- **Revision hash** covers every content-bearing field, media generations and the audience snapshot (§5.2).
-- **Audience semantics** are formal, exclude wins, groups are snapshot ∩ live, policy narrowing applies at read time
-  (§9.1); the feed statement is given in full with indexes and dataset (§9.2).
-- **Knob order and validation** for every knob (§4.5); widening approval and the two-person rule (§4.6); switches read
-  uncached on every request, platform kill switch (§4.7); floor values are code (§4.8).
-- **Media pipeline** state machine, limits, library (TwelveMonkeys ImageIO; HEIC converted on the client), originals
-  deleted after processing, emergency takedown deletes object generations (§8).
-- **Revocation** measured from source commit, relay heartbeats, degrade-then-close policy (§7.3).
-- **Safeguarding** stored apart, encrypted, every read logged; cases about staff route to an independent handler (§5.4,
-  §10.2).
-- **Notifications** carry no class or child names off-app; rows are rendered at read time and redacted on revocation
-  (§11).
-- **Retention table**, purge with a deletion ledger and all object generations (§5.6, §5.7); erasure discovery (§5.8).
-- **P0a split** into a text-only slice and a photo slice, with a dependency matrix, gates per phase and a traceability
-  table (§15, §16, §20); incident runbook (§21).
-- New knobs **K31a, K36a, K36b** (no existing knob renumbered); nine new open decisions (§18, items 8–16); open decisions 2, 3 and 5 updated.
-
-**Round 2 of the gate (same day, `community-gate/ANSWERS-ROUND2.md`):**
-
-- **Feed admission in one statement** (§9.2): membership, relationship validity, viewer keys, live groups, denies and
-  hydration are all read by the one feed statement (one snapshot); the Java pre-step can only remove homes.
-- **Lost-event detection** (§7.1, §7.3): the source relays stamp a gapless sequence on the streams that revoke
-  (consent, guardian links, enrolment, staff, accounts); gaps fail closed (made per tenant and reorder-tolerant in round
-  3; the sis screen step added in round 2 was replaced in round 3 by comms reading restricted links from sis, §7.7).
-- **Community media bucket** (§5.6, §5.7, PR-11): a dedicated bucket with versioning off, soft delete off and no backup
-  copy; purge verified against the bucket's real settings; guardian wording states the real recoverability.
-- **After hours** (§21, K34a): any responder may take down at any time; outside coverage a report on an image withholds
-  it at once; platform operators can stop media for one tenant or institution without seeing content.
-- **Outside reviewers** see text only (§6.5); **majority** mechanism (§8.4); **consent centre** wording (§12.7);
-  **silence vs no consent** (§8.4); **deny-row lifecycle** (§5.1); **PR-8 and PR-12 verified** from the code (§15).
-- Open decisions 2, 9, 12, 13 restated with recommendations; new 17 (MEM-02/MEM-03 deferral) and 18 (platform on-call).
-
-**Round 3 — independent gap review (`community-gate/GAP-REVIEW.md`, answers in `ANSWERS-ROUND3.md`):**
-
-- **Protected subjects** (§7.7): a restriction now suppresses the protected child, for that guardian, in every home,
-  surfaced copy, inter-school post, comment, notification and media URL, and removes the guardian from school-wide
-  spaces; the sis screen step is gone, replaced by comms reading restricted links from sis.
-- **Global switch row policy** (§4.7, PR-19): tenant transactions can read the global switch; `FOR SHARE` only on
-  tenant rows.
-- **Revocation machinery per tenant and reorder-tolerant** (§7.1, §7.3): per-tenant sequences, a reorder window,
-  automatic repair for callable owners, states for all six sources, a maintenance flag; bulk read RPCs (PR-20); id-only
-  payloads no longer acceptable (PR-5/PR-7 hard); early events parked.
-- **Membership of every space type** (§7.4a); **switch × operation table** (§4.9); **write-surface test** by operation.
-- **Slices restructured** (§16): S1 staff-only text is the first shippable slice; guardians S2, photos S3, students S4;
-  the dependency matrix is per slice (§15.1).
-- **Tests** run in two tiers with an injected clock; a named load-test environment (§14).
-- **Images:** every image needs a second person at every width; covers too; no pixels kept as evidence by default; names
-  have their own consent; posts hide whole when a subject's consent lapses; stable media path and batch URLs;
-  orientation, memory and a separate media worker; precomputed consent state (§8).
-- **Staffing and bootstrap** (§6.5, §4.6): co-teachers confirm, minimum staffing stated, platform onboarding approves the
-  first enablement; proposal lifecycle; safeguarding reads tied to K36/K36a; case-bound member actions (§10.2);
-  report-to-withhold limits and after-hours holds (§21); participation consent for students (§7.4); DR-safe deletion
-  ledger (§5.7).
-- New open decisions 19–21.
-
-**Round 4 — re-check (`community-gate/GAP-RECHECK.md`, answers in `ANSWERS-ROUND4.md`):** §5.5 data model aligned
-with §4.7/§7.3 (heartbeat and per-tenant state tables, no tenant ids readable by tenant sessions); every module's relay
-heartbeats (PR-9); targetless `ReportConcern` and a legal-block column (§4.9); mobile cache revalidates after 120 s;
-`no-store` everywhere; security-incident cases (§21); S2 naming rule and decision 23; zero-subject images available
-(§8.4); DR safety log covers moderation, denies, switches and policy (§5.7); text revocation bound as decision 22; tests
-without fakes (§14); stale text from earlier rounds cleaned.
-
-**Round 5 — final pass (`community-gate/GAP-FINAL.md`):** the safety log has a bounded retention, a local outbox (never
-blocks a safety action) and a reader rule (§5.7, PR-21); every post whose audience includes guardians or students at
-school width or wider is reviewed before publication, official and trusted publishers included (K07 floor, §6.6, §8.4);
-maintenance windows are declared by the deploy tooling with automatic expiry, and short blips cannot close tenants
-(§7.3); B0 is split into B0a and B0b (§16.1).
+- **Part A — Product:** §A1 recommendation and scope · §A2 goals · §A3 codebase baseline · §A4 product options,
+  chosen scope per slice, commercial models · §A5 people, jobs and roles · §A6 network topology and authorization ·
+  §A7 membership · §A8 login home · §A9 posts and interactions · §A10 moments and media · §A11 school use cases ·
+  §A12 LMS · §A13 messaging · §A14 alumni · §A15 external sharing · §A16 consent and privacy · §A17 safety,
+  moderation (end to end) and appeals · §A18 administrator settings · §A19 notifications, search, accessibility ·
+  §A20 international expansion · §A23 sizing and pricing · §A26 exclusions and traps · §A27 distinctive ideas ·
+  §A29 market references and sources · §A30 product decisions.
+- **Part B — Backend:** §1 the build in one page · §2 what is reused · §3 architecture · §4 knobs · §5 data model ·
+  §6 operations · §7 relationships, events, revocation · §8 media pipeline and consent · §9 feed · §10 permissions,
+  cases, safeguarding · §11 notifications · §13 privacy and security invariants · §17 school-specific ideas · §19
+  inter-school · §21 incident runbook · §22 later-phase capabilities (moments, polls and Q&A, showcases, albums and
+  yearbooks, search, messaging, alumni, external release, translation, video) · §B21 technical principles · §B22
+  nonfunctional requirements.
+- **Part C — Frontend:** §12 screens per role and device · §C1–§C14 client architecture, hooks, routes, composer and
+  upload, offline and caching, moderation and report flows, i18n, accessibility, deep links, fixtures, tests.
+- **Part D — Delivery:** §14 test strategy · §15 prerequisites · §16 slices, batches, gates · §18 open decisions ·
+  §20 traceability gate and outbound data flows · §D24 product phases and stopping rules · §D25 acceptance scenarios ·
+  §D28 discovery backlog · §D29 rollout, flags and risks.
+- **Appendix T:** every requirement id → the sections that meet it.
 
 ---
 
-## 1. The product in one page
+# Part A — Product
+
+## A1. Recommendation and scope
+
+**Launch focus:** Indian schools, followed by country-specific expansion.
+
+Build a **verified school community integrated into the MySMS home**, with short posts, photos, school moments, moderated discussion and a separate alumni network. Start with useful school/class updates and bounded student participation. Extend toward clubs, chain collaboration, portfolios and supervised alumni opportunities when schools demonstrate that they can operate the community well.
+
+Borrow the useful interaction patterns from Snapchat and Twitter/X: quick capture, concise updates, stories, replies, topic spaces and timely conversation. Give them school-specific rules: verified relationships, visible audiences, age-sensitive privileges, school ownership, human moderation, accessible alternatives and explicit publication decisions. Do not optimize children's time spent or make essential school work depend on social participation.
+
+The strongest positioning is **"your school life, learning and community in one trusted place."** The defensible advantage is the existing school relationship and workflow context: membership comes from enrollment/employment/guardian links, assignments stay in the LMS, school notices remain authoritative, and graduation can lead to a new alumni relationship. A generic social feed alone offers little differentiation.
+
+### A1.1 Decisions recommended now
+
+1. Community appears on the login home, beneath urgent official items and role-specific tasks. A dedicated Community area supports deeper browsing.
+2. The primary network boundary is a verified school institution inside a tenant. A chain may span nested institutions in that same tenant; chain-wide visibility requires explicit policy and participating institutions.
+3. A child’s class, club, school, chain and alumni audience are distinct. Joining the school does not expose every member, campus or historic class.
+4. Launch with staff publishing and moderated student submissions in selected age groups. Parent participation begins through child-linked audiences and controlled replies.
+5. Begin with text and images. Trial moments/stories after expiry, reporting and media revocation work. Short video follows an operational and cost gate.
+6. Use chronological/relevance-by-subscription feeds with finite pages and a caught-up state. No behavioral engagement ranking for minors.
+7. Give alumni a separately verified, opt-in network. Alumni status alone never grants access to current minors or school operational records.
+8. External sharing is off by default. Distinguish an authenticated link, an approved public derivative, a user-confirmed share, and publication to an official school account.
+9. School discretion operates inside product safety rules and applicable law. An administrator toggle cannot substitute for required consent or make restricted records public.
+10. Extend `comms` first, subject to a capability audit and design review. Preserve the existing module dependency direction; do not introduce another domain service merely because feeds look like a new product.
+
+### A1.2 How to read this document
+
+- **Observed:** directly supported by the current repository scan; a schema or contract is not proof of a complete workflow.
+- **Proposed:** recommended behavior to build and validate.
+- **Optional:** a viable later capability, subject to a decision and operational capacity.
+- **Research gate:** legal, market, integration or usability uncertainty that must be resolved before the dependent release.
+- **P0:** required for a safe, useful pilot; **P1:** expansion after pilot evidence; **P2:** later optional exploration; **Excluded:** deliberately outside the proposed product.
+
+Requirements use stable family IDs. Unless otherwise stated, catalog requirements are proposed. Priorities express a delivery sequence, not evidence that an item already exists. This is a broad discovery specification; country law, school policies and actual user research will refine it.
+
+## A2. Product goals and boundaries
+
+The community should make school life visible, give members useful ways to participate and reduce fragmented communication. Its value depends on accurate school relationships, understandable audiences and manageable staff workload.
+
+- **Belonging:** students, teachers, staff, guardians and alumni can contribute through appropriate, verified relationships.
+- **Daily usefulness:** school tasks, authoritative notices and community updates coexist without obscuring required actions.
+- **Trust:** membership changes, permission withdrawal, reporting and content removal work throughout the content lifecycle.
+- **Operational sustainability:** schools can staff review and escalation, support their languages/devices and afford media delivery.
+- **Continuity:** class rollover, graduation and alumni participation preserve connection through deliberately different access rights.
+
+The initial scope stays within verified school and same-tenant chain boundaries. Public publication, alumni interaction and country expansion each have explicit release gates. The platform does not become a global student directory or an unrestricted consumer social network.
+
+## A3. What the codebase already supports
+
+The engineering inventory, checked against the code, is §2; this section records what it means for the product.
+
+### A3.1 Organizational and identity foundation
+
+- [`platform.tenant`](../../database/migrations/platform/V1_020_001__platform_baseline.sql) is a customer
+  organization (a trust, group, single school or training company) and the data-isolation boundary.
+- [`org.institution`](../../database/migrations/org/V1_040_001__org_baseline.sql) has `tenant_id`,
+  `parent_institution_id`, configurable institution information and local timezone fields; nested group/campus
+  institutions are explicitly supported. A chain within one tenant fits this design; it does not establish federation
+  between tenants.
+- [`iam`](../../database/migrations/iam/V1_030_001__iam_baseline.sql) holds accounts, roles, permissions and scoped
+  role grants. `iam.member_record` is an event-maintained projection of staff and student records for `GetMe`, not a
+  community membership or alumni registry.
+- sis, hr, people and academics provide enrollment, staff, person, guardian and class context. Each relationship is
+  evaluated for its specific purpose; a person's existence is not proof of community entitlement.
+- [`ARCHITECTURE.md`](../../ARCHITECTURE.md) fixes tenant predicates plus forced PostgreSQL RLS, module-owned schemas,
+  no cross-schema SQL, no cross-module foreign keys and no distributed transactions.
+- The `privacy` module owns consent (purposes `photo_video_publication`, `community_naming`,
+  `community_participation`, `public_profile` …), notices, rights requests and the consent centre (`ui/02 ACC-13`);
+  modules use it through `privacy-client`.
+
+### A3.2 Community and LMS foundation
+
+[`comms`](../../database/migrations/comms/V1_190_001__comms_baseline.sql) models notices, events, galleries,
+magazines, conversations and messages, feedback, audience groups, tasks, content views, class/club pages
+(`class_page`, `class_page_member`, `class_page_attachment`, `page_category`), posts (`post`, `post_audience_class`,
+`post_comment`), reactions (`reaction`, exposed as post and comment reactions) and notification preferences.
+
+Posts require an institution and academic year; `visibility` is `all_classes`, `selected_classes` or `page_members`;
+`status` is `draft`, `pending`, `posted` or `cancelled`. These do not model verified relationship membership, story
+expiry, public export approval, child media permissions or chain audiences; `class_page_member` records following and
+a like/dislike reaction and is not a verified relationship. `PostService` has CRUD and approve/cancel transitions with
+scope checks, audit and outbox publication; `PostRepository` applies institution data scope. These are building
+blocks, not a social authorization implementation: generic record access is narrowed before members gain social
+permissions (§6.4).
+
+What is served and what answers 501 ([`api/operations-status.md`](../../api/operations-status.md)): class-page and
+post CRUD and `ApprovePost` are served; `GetFeed`, `SubmitPost`, `FollowClassPage`, `SendMessage`, the in-app
+notification reads and marks, and the post and comment reaction operations answer 501. Platform file operations
+(`CreateUploadUrl`, `CompleteUpload`, `GetDownloadUrl`, file-object reads) are served. Served CRUD does not
+demonstrate delivery, a personalized feed or the safeguards of this design.
+
+[`lms`](../../database/migrations/lms/V1_150_001__lms_baseline.sql) models courses, course/cohort enrollment,
+teachers, live classes, discussion prompts, forums, report categories, reports and read state. Learning discussion and
+graded participation keep LMS ownership; a social reaction never becomes a grade or attendance fact.
+
+### A3.3 Home experience
+
+- The web `HomeScreen` (`clients/packages/web-kit/src/screens/HomeScreen.tsx`) is a welcome card; persona dashboards
+  replace it as they are built.
+- The native `HomeScreen` (`clients/packages/native-kit/src/HomeScreen.tsx`) is a permission-aware list of operational
+  entry points (timetable, homework, children, leave, payslips, profile, notifications).
+- Web, phone and tablet clients share `packages/core` (hooks, session, routes) and `packages/i18n` (en, hi); the
+  community home is new product work (§12.1, §C4).
+- Deep links (`mysms://<module>/<path>`, ARCHITECTURE §4) carry no tokens or personal data; the destination
+  authorizes.
+
+### A3.4 Gaps the design closes
+
+End-user post visibility; anti-spoofing of authors and roles; parent-child audience enforcement; complete
+submit/approve/edit/remove flows; attachment access; notification delivery and revocation; moderation cases and
+appeals; membership revocation; alumni identities; story expiry; external publication; member-facing clients;
+accessibility; operational coverage. Generic CRUD is never opened to students as the pilot's solution.
+
+`comms` may call academics, iam, org, platform and sis (ARCHITECTURE §2) and use `privacy-client`; it may not call
+people, hr or lms. Consent and employment therefore reach comms as events into local projections (§7.1) or through
+`privacy-client`; no convenient owner call that breaks the graph is added.
+
+## A4. Product and business options
+
+### A4.1 Product A — school bulletin and family window
+
+Staff publish school/class updates, celebrations, event photos and official announcements; families view and acknowledge or react. Lowest participation and moderation complexity. Strong pilot and primary-school fit. Weakness: limited student agency, alumni value and peer collaboration. **P0 launch configuration**, with an explicit route toward richer participation.
+
+### A4.2 Product B — moderated school community
+
+Verified members contribute in school-approved spaces. Student/guardian posts may need approval; age and trust tier determine interaction privileges. This supports school identity and student voice without exposing the institution to an unrestricted social graph. Costs include moderation and appeals. **Recommended core product**, introduced through Product A plus a small student-submission pilot.
+
+### A4.3 Product C — learning community and portfolios
+
+Showcase projects, reading, art, experiments and reflections; connect to a course or learning objective where appropriate. Keep assessment evidence in the LMS; create a separate selected community artifact. Attractive for schools valuing visible learning. Risk: duplicate entry and confusing social applause with assessment. **P1**, with careful consent and authorship.
+
+### A4.4 Product D — chain collaboration network
+
+Teacher practice circles, interschool events, shared magazines, competitions and approved student projects across campuses. Requires explicit participating institutions, accountable moderators and scoped publishing rights. **P1 for selected same-tenant spaces**, after school-level boundaries work. A chain-wide bulletin can arrive earlier than cross-campus student interaction.
+
+### A4.5 Product E — alumni association and opportunity network
+
+Verified batches, reunions, career talks, adult mentorship, opt-in directory and school-sponsored opportunities. Builds continuity after graduation and can generate value without access to current children. Verification and reactivation are major product jobs. **P1 separate alumni area with adult-only directory/contact features and restricted minor bulletins/events; P2 supervised minor bridges**.
+
+### A4.6 Product F — school publication and reputation desk
+
+An editorial workflow turns selected internal moments into approved website/social media assets. School communications teams gain a reusable caption, translated copy, permission checks and destination-specific assets. This is a controlled publication product, not automatic forwarding. **P1 manual approved export; P2 official-account connectors**.
+
+### A4.7 Product G — independent open school social platform
+
+Anyone can discover schools, follow individuals, post publicly or message members. This would undermine the closed-network proposition, greatly expand safeguarding scope and create a separate consumer business. **Excluded** from this roadmap.
+
+### A4.8 Commercial models
+
+- **Bundled community:** basic school/class communication included in MySMS. Promotes one daily home and avoids charging families to receive essential updates. Recommended foundation.
+- **School or chain subscription add-on:** advanced moderation workflows, editorial tools, alumni administration, richer archives and chain governance. Charge the institution, not children for visibility.
+- **Usage allowance:** transparent storage, processing, media egress and optional delivery allowances with capped overage. Avoid pricing that discourages reporting or safety review.
+- **Adult alumni association plan:** school-approved adult networking/event administration; optional school-paid or adult association-paid model after demand validation.
+- **Managed publication/moderation services:** separately scoped service with clear human coverage, confidentiality and responsibilities; do not imply software automatically supplies trained school safeguarding staff.
+- **Excluded revenue:** selling student data, targeted advertising to children, pay-to-promote student posts, public popularity boosts, or withholding essential school messages behind a parent premium tier.
+
+Pricing and willingness to pay are hypotheses. Research Indian budget/private, premium, government/aided, international and chain schools separately. Do not assume every school has the same devices, language needs, moderation staff or purchasing power.
+
+### A4.9 Chosen scope per slice
+
+| Product option | Slice | What ships |
+|---|---|---|
+| A — bulletin and family window | S1 (staff text), S2 (guardians read and comment), S3 (photos) | Staff publish to class pages, the school space and the staff room; guardians read their child's class page and the school space |
+| B — moderated school community | S4 (students), then P1 | Reviewed student submissions in selected grade bands (K03); clubs, houses and invite spaces from P1 |
+| C — learning community and portfolios | P1 | LMS showcase (§22.3), contribution portfolio (§A27) |
+| D — chain collaboration | P1 | Inter-school spaces (§19), chain bulletin first, cross-campus student interaction later |
+| E — alumni | P1 (batch bulletins and events, adult directory), P2 (supervised minor bridges) | §22.7 |
+| F — publication desk | P1 (manual approved export), P2 (official-account connectors) | §22.8 |
+| G — open social platform | Excluded | — |
+
+Commercial packaging (§A4.8) follows the same line: S1–S4 are the bundled community; editorial tools, alumni
+administration, chain governance and richer archives are the add-on.
+
+## A5. People, jobs and role boundaries
+
+### A5.1 Students
+
+Read relevant updates, participate in approved clubs, ask questions, contribute school work, celebrate peers, find help and maintain selected memories. Students need comprehensible audiences and a voice in community rules. Being under 18 in India remains legally relevant even where the product gives older teenagers more agency.
+
+**Proposed experience bands, not statutory age bands:** early years/primary use teacher-mediated contributions and guardian access; middle years get guided submissions and structured replies; older teenagers get more autonomous publishing in approved spaces as policy allows; adults use adult rules while school membership remains scoped. Age unknown means restrictive privileges until verified, not a guessed grade-to-age conversion.
+
+### A5.2 Teachers and teaching assistants
+
+Publish once to appropriate classes, moderate a manageable queue, host subject/club spaces, find colleagues and show learning without exposing marks. Need drafts, delegated coverage, scheduling, consent assistance, quiet hours and a predictable workload. Do not make daily content quotas part of teacher evaluation.
+
+### A5.3 Parents, guardians and carers
+
+See relevant school/class updates, manage their own notification/language settings, grant or withdraw appropriate permissions, support events and contact staff through governed channels. Access comes from an active, authorized child relationship. Do not expose another guardian’s contact details, family arrangements or access rights.
+
+### A5.4 Staff and contractors
+
+Office, librarian, counselor, coach, nurse, transport and support staff may have official publishing or participation rights for their jobs. Safeguarding, medical, employment and transport records remain restricted. Contractor presence is verified, sponsored and time bounded; a contractor is not automatically in every student space.
+
+### A5.5 School/chain leadership
+
+Set governance, approve spaces, delegate moderation, publish official statements, coordinate chains and review aggregate outcomes. Leadership authority over an institution does not automatically justify reading every confidential report or private learning artifact. Separate editorial, technical, safeguarding and data-protection powers.
+
+### A5.6 Alumni and former staff
+
+Maintain a voluntary school relationship, reconnect with opt-in adults, attend reunions, offer verified opportunities and support school initiatives. Former teachers and alumni do not retain current student permissions. A person can hold an alumni role and an independently verified current parent/staff role; privileges remain attributable to the appropriate context.
+
+### A5.7 Guests, service providers and platform support
+
+Guest speakers use narrow invitations or submit through a staff sponsor. No public invitation grants roster access. Platform support uses exceptional, time-limited audited access where required, without joining school communities as a normal member. Anonymous visitors see only deliberately published public derivatives, if any.
+
+### A5.8 How each person reaches the community in MySMS
+
+| Person | Source of truth for the relationship | Community role (§7.4, §10.1) |
+|---|---|---|
+| Student | `sis.student` + active `sis.student_enrollment` for the class section and year; iam account with the student role | member of the class page, school space and joined spaces; submitter (K06, S4) |
+| Teacher, teaching assistant | `hr.staff` (status active) + `academics.teaching_assignment` / class teacher of the section; iam account | member and moderator of their class pages (§6.5); publisher per K05 |
+| Guardian | `sis.student_guardian` (active, not restricted; legal guardian for consent) + iam guardian account | member of each linked child's class page and school space, child by child (K04b, K10) |
+| Staff, contractor | `hr.staff` (active); contractors only through a sponsored invite space (§22.7, S4) | staff room; job-specific spaces |
+| Leadership, community owner | iam permissions (`comms.community.*`, §10.1) scoped to the institution | official publisher, owner of the moderation team, policy proposer |
+| Safeguarding lead and deputy | K36 / K36a, safeguarding permission | safeguarding inbox only (§10.2) |
+| Tenant administrator | tenant-wide iam grant | policy ceiling, presets, chain spaces (§4) |
+| Alumni, former staff | P1 alumni verification (§22.7) | alumni network only |
+| Guests, speakers | staff-sponsored invite space (P1) | read-only or submit-through-sponsor |
+| Platform support | platform console, audited time-bounded access | never a member (§13) |
+
+## A6. Network topology and authorization requirements
+
+### A6.1 Vocabulary
+
+- **Tenant:** customer/trust/group isolation boundary.
+- **Institution:** school, campus or nested unit owned by that tenant.
+- **Relationship:** verified student, guardian-child, employment, alumnus, invited sponsor or other approved affiliation, with effective dates and status.
+- **Space:** school, class, club, staff room, cohort, chain project, alumni batch or other approved community area.
+- **Audience:** an explicit set/rule of allowed viewers for a content version.
+- **Follow:** a preference to receive updates from an eligible space; it never creates eligibility.
+- **Public derivative:** a separately approved artifact intended to leave the closed network.
+
+### A6.2 Required policy behavior
+
+- **NET-01 [P0]** Every object and operation carries tenant context from trusted authentication, never a client-supplied tenant selector alone.
+- **NET-02 [P0]** School membership and role grants are independently checked. A role named “teacher” without a valid school assignment cannot publish as that school’s teacher.
+- **NET-03 [P0]** Evaluate read, create, reply, react, moderate, export, download, tag and directory discovery separately.
+- **NET-04 [P0]** Class access uses current enrollment, teaching or child-link entitlement plus explicit audience policy. Institution access alone is insufficient.
+- **NET-05 [P0]** Guardian access is child-specific. Switching children or roles visibly changes context and never combines privileges into a broader directory.
+- **NET-06 [P0]** Audience preview states institution(s), spaces, member categories, age restrictions and whether current/future members can see historical items.
+- **NET-07 [P0]** Default to the narrowest relevant audience. “Whole school,” “whole chain,” guardians and alumni are explicit choices with extra review where needed.
+- **NET-08 [P0]** After the revocation enforcement barrier completes, a removed parent/child/space relationship grants no subsequent protected reads, writes or media grants. Bound and measure source-change-to-enforcement exposure through ARCH-05/07; higher-risk actions require current evidence, and urgent restrictions use emergency invalidation. Old feed entries and notifications confer no rights.
+- **NET-09 [P0]** Deny optional community privileges for missing, ambiguous, expired, suspended or unverified membership. Fail closed when their authorization cannot be established. Essential school access, safety reporting and privacy/complaint routes use their own separately evaluated entitlements; a social restriction must not disable those routes.
+- **NET-10 [P0]** Enforce the same rules on lists, detail URLs, search, counts, attachments, thumbnails, notifications, exports, moderation tools and generic resource routes.
+- **NET-11 [P0]** A block/mute is a social preference or safety restriction, not a way to suppress essential school notices or erase a safeguarding report. Explain its exact effect.
+- **NET-12 [P0]** Explicit denies, safety constraints, jurisdiction requirements and withdrawn permissions cannot be overridden by ordinary space administrators.
+- **NET-13 [P1]** Chain spaces name participating institutions and accountable publisher/moderator owners. Parent-institution hierarchy does not silently grant member-to-member access.
+- **NET-14 [P1]** Cross-campus competitions expose approved team/project artifacts, not full minor directories or private course membership.
+- **NET-15 [P2]** Cross-tenant collaboration requires a separate federation design, school agreements, ownership and revocation plan. Never use privileged database access to assemble it.
+- **NET-16 [P0]** Child/staff membership is never conditioned on fee payment status for community safety, complaints or essential school access. Any nonessential suspension needs a documented policy and appeal.
+- **NET-17 [P0]** Prohibit cross-tenant contact syncing and global person search. Tenant-scoped accounts are not a global social identity.
+- **NET-18 [P0]** A member may belong to multiple institutions/roles; display the authoring identity and school context before publishing.
+
+### A6.3 Policy precedence and history
+
+Proposed resolution: law and platform safety floor → tenant/chain ceiling → institution policy → space policy → content-specific audience/permission → member preference. Lower levels may narrow access; widening beyond an upper-level restriction requires the authorized policy process. Record which policy version produced a decision and provide an administrator-readable explanation without leaking protected facts.
+
+History needs a deliberate setting. For example, a new student joining Class 8B might see this term’s general class updates, while a project group or old trip gallery requires explicit inclusion. An alumnus never inherits a class’s future feed. Changing audience after publication is a new disclosure decision: narrowing takes effect promptly; widening triggers preview and renewed review/permissions where needed.
+
+## A7. Membership, onboarding and lifecycle
+
+- **MEM-01 [P0]** Establish membership from authoritative SIS/HR/guardian records or an approved invitation process, with source and effective dates.
+- **MEM-02 [P0]** Invitations are scoped, expiring, single-use where appropriate, rate-limited and revocable. A photographed school QR code cannot itself prove membership.
+- **MEM-03 [P0]** Support assisted onboarding, school IDs and secure account recovery for users without personal email. A shared phone number is not a unique person identifier. Existing IAM requires unique sign-in identifiers across accounts; shared family contact details need a separate contact/recovery design and cannot simply be reused as every person's login identifier.
+- **MEM-04 [P0]** Present simple role/age/language-appropriate community rules, purposes and privacy information before optional participation.
+- **MEM-05 [P0]** Separate essential school access from optional social activation, optional directory participation and external publication permission.
+- **MEM-06 [P0]** Honor verified guardian restrictions, custody changes and lawful access limitations through a confidential administrative process. Do not expose reasons in the feed.
+- **MEM-07 [P0]** Promotion and academic-year rollover update class relationships without silently expanding old content to the new cohort.
+- **MEM-08 [P0]** Transfers, withdrawals, employment termination, leave and suspension have defined effective-time behavior, including pending drafts, moderation duties and access revocation.
+- **MEM-09 [P0]** Account deactivation does not delete required evidence automatically; ordinary content visibility, retention and identity display are decided separately.
+- **MEM-10 [P0]** Account recovery re-establishes current entitlements and revokes compromised sessions; a recycled phone/SIM must not acquire the prior user’s data.
+- **MEM-11 [P1]** Graduation initiates an invitation/eligibility process for alumni rather than automatic permanent access. Under-18 graduates retain minor protections.
+- **MEM-12 [P0]** Age-of-majority transitions prompt updated notices and independent choices for any eligible pilot user, including a current student who turns 18. Do not suddenly publish an adult profile or preserve guardian access by habit. Alumni-related transition features follow their later release gate.
+- **MEM-13 [P1]** Resolve duplicate records and person merges with verified evidence, an audit trail and re-evaluation of grants; never infer two people are identical from names alone.
+- **MEM-14 [P1]** Handle school closure, tenant exit, school transfer to another trust, institution split/merge and deceased-member memorial requests with explicit ownership and archive/export rules.
+- **MEM-15 [P0]** Offer opt-out and reactivation without loss of essential notices, homework or reporting access. Quiet/nonposting membership is valid.
+
+## A8. Login home and navigation requirements
+
+### A8.1 Information order
+
+Proposed home sequence: visible school/role/child context → urgent official items → “Today / needs action” → an optional P1 school-moments strip → a finite community preview → upcoming relevant events. The P0 home works without stories. The full community feed is one tap away. Administrators can adjust approved layouts within accessibility and essential-task constraints.
+
+- **HOME-01 [P0]** Student home highlights timetable, due work and relevant official notices before optional social items.
+- **HOME-02 [P0]** Teacher home highlights teaching/attendance/work review and moderation tasks, with a quick scoped composer.
+- **HOME-03 [P0]** Guardian home labels each child’s school/class and combines tasks only where their origins remain clear; provide child filters.
+- **HOME-04 [P0]** Staff home shows job-specific actions and relevant school updates; restrict sensitive operational cards to their owning permissions.
+- **HOME-05 [P1]** Alumni home prioritizes alumni events, batch updates and opted-in opportunities rather than a current student feed.
+- **HOME-06 [P0]** Official urgent notices have a separate visual treatment, issuer, validity and acknowledgment state. Likes or story views never count as required acknowledgment.
+- **HOME-07 [P0]** Community failure or loading must not block timetable, attendance, fees, homework, safety reporting or other operational navigation.
+- **HOME-08 [P0]** Provide filters for school, class, clubs and official updates, an accessible composer and persistent report/help entry points.
+- **HOME-09 [P0]** Empty home explains relevant next actions without inventing content, exposing other groups or pushing users to invite strangers.
+- **HOME-10 [P0]** Restore scroll/filter state safely within the active context; clear protected content on account/child/role/tenant switching and sign-out.
+- **HOME-11 [P0]** Mobile/tablet/web support the same entitlement rules. Shared classroom tablets use supervised sessions and automatic return to a safe screen.
+- **HOME-12 [P0]** Standard links open owning-module screens with fresh checks. Personal operational summaries do not become social posts.
+- **HOME-13 [P1]** Allow a simple “tasks first” preference and disable the moments strip per institution/age group without losing the community’s useful text updates.
+
+### A8.2 Feed principles
+
+Reverse chronological within eligible subscriptions is the pilot default. Official pinning is labeled, bounded and expires. Group repetitive system updates into compact cards. Prefer a finite “you’re caught up” experience and explicit load-more. No autoplay, child popularity charts, streaks, follower counts, outrage ranking or dark patterns requiring frequent return.
+
+Eligibility must be applied before pagination, counts and preview generation. A feed projection can propose candidates; it cannot decide authorization. A new student, guardian-link removal or takedown must change results even while background feed updates are delayed.
+
+## A9. Content, creation and interaction catalog
+
+### A9.1 Posts and publishing
+
+- **POST-01 [P0]** Support concise text updates with accessible expansion for longer content; proposed initial composer guidance is roughly 500 characters, not an arbitrary protocol limit.
+- **POST-02 [P0]** Support image posts/carousels with alt text, captions and a low-data variant. Proposed pilot limits: up to 5 images, each bounded by validated upload policy.
+- **POST-03 [P0]** Composer clearly shows the author role, school, space and audience; trusted official badges derive from grants, not editable profile text.
+- **POST-04 [P0]** Drafts, explicit submission, pending review, approve, return/reject with reason, publish, edit, withdraw, remove and archive have clear states.
+- **POST-05 [P0]** Authors see their own pending content and status; pending student submissions are not visible to ordinary members.
+- **POST-06 [P0]** Editing published content creates a version; changes to audience, media or meaning require the applicable review again. Approved content cannot be swapped after review.
+- **POST-07 [P0]** Scheduled publication checks current author eligibility, audience, permissions and media state when execution occurs. A staff member leaving before publication invalidates the schedule or requires an authorized owner.
+- **POST-08 [P0]** Prevent spoofed authorship, official labels and impersonation. Delegated/on-behalf-of publication preserves both actor and represented publisher.
+- **POST-09 [P0]** Cancel/retry must not duplicate posts. Warn before discarding unsaved work. Show upload and review failures distinctly.
+- **POST-10 [P0]** Allow post-level comments/reactions controls bounded by school/space policy and a clear closed-comments state.
+- **POST-11 [P1]** Post templates cover classroom recap, achievement, event recap, club invitation, reading recommendation and student project.
+- **POST-12 [P1]** Collaborative/coauthored artifacts preserve credits and permissions; team membership is not a license to publish every participant’s identity.
+- **POST-13 [P1]** Teacher-reviewed translation and caption assistance may be offered, showing original text and correction options.
+- **POST-14 [P1]** Categories/hashtags are school-scoped, approved and searchable; trending tags do not become a global discovery surface.
+- **POST-15 [P1]** Share a selected artifact to another eligible internal space only through an audience check and renewed approval if widened. Prefer reference/link when it preserves access boundaries.
+- **POST-16 [P2]** Short video/voice notes require transcripts, processing/moderation limits and separate retention/egress budgets. No public live streaming at launch.
+
+### A9.2 Replies, appreciation and discussion
+
+- **INT-01 [P0]** Allow configured reactions such as appreciate/celebrate/helpful; no public dislike/downvote of children or leaderboard of reactions.
+- **INT-02 [P0]** Replies inherit or narrow the parent’s audience and media rules. Deleted/removed parent behavior is defined for the entire thread.
+- **INT-03 [P0]** Limit nesting and provide report/hide controls at comment level. Rate-limit bursts, repeated text and repeated targeting of one member.
+- **INT-04 [P0]** Mentions search only eligible people in the current space. A mention does not expand access or disclose membership to others.
+- **INT-05 [P0]** Protect against dogpiling: temporarily lock a thread, slow replies and hold new comments for review without publicly labeling a child an offender.
+- **INT-06 [P0]** Student reaction counts are hidden or private by default; authors receive useful feedback without competitive comparison.
+- **INT-07 [P1]** Structured polls support school/club decisions; show who can see individual responses and whether the poll is advisory. Do not advertise anonymity if staff can identify respondents.
+- **INT-08 [P1]** Q&A can mark an answer as staff-confirmed; academic graded discussions remain in the LMS.
+- **INT-09 [P1]** Parent discussions and staff-only rooms are separate from student spaces. Staff confidential cases are excluded from ordinary staff social rooms.
+- **INT-10 [P0]** Reporters can communicate privately with authorized reviewers. Anonymous-to-peers reporting may exist; no promise of anonymity from required safeguarding investigation.
+
+## A10. Moments, stories, media and memories
+
+### A10.1 Stories
+
+- **STORY-01 [P1]** An image/text moment has an explicit audience and expiry. Proposed default: 24 hours, with school-approved alternatives.
+- **STORY-02 [P1]** Story capture and submission use the same permission, moderation and media pipeline as posts; “quick” does not bypass review.
+- **STORY-03 [P1]** Expired stories disappear from feeds, detail routes, search and new media access even if the expiry worker runs late.
+- **STORY-04 [P1]** Show a plain explanation: expiry ends ordinary visibility; authorized incident evidence, retention obligations, backups and already exported copies follow separate rules.
+- **STORY-05 [P1]** Support accessible pause, manual navigation, text alternative, reduced motion and no automatic sound/video.
+- **STORY-06 [P1]** A story can be reported while visible; a report preserves only necessary evidence under restricted access even after expiry.
+- **STORY-07 [P1]** Viewer identities/counts are not a social popularity tool for minors; any necessary administrative access is purpose-limited and disclosed.
+- **STORY-08 [P1]** Promoting a story into a permanent highlight/yearbook is a new retention and audience decision requiring the applicable permissions.
+- **STORY-09 [P0]** Never promise screenshot prevention or screenshot detection across all devices. Policy controls cannot recall what a permitted viewer has independently captured.
+
+### A10.2 Media handling
+
+- **MEDIA-01 [P0]** Upload into private quarantine; enforce file signature/type, byte/dimension/duration limits, malware checks and safe processing before visibility.
+- **MEDIA-02 [P0]** Strip unnecessary EXIF/location and embedded identifying metadata; protect originals and every derivative/thumbnail equally.
+- **MEDIA-03 [P0]** Use authenticated media delivery or revocation-aware delivery grants with a documented residual exposure window. A long-lived unrevocable CDN URL does not meet urgent takedown requirements.
+- **MEDIA-04 [P0]** Check rights for depicted/identified children and other people, not just the uploader. Use manual subject confirmation/review; no biometric identification is needed.
+- **MEDIA-05 [P0]** Unidentified children in a group image prevent public export until reviewed, cropped, redacted or otherwise approved under the required policy. Automated blur assistance is not proof of anonymity.
+- **MEDIA-06 [P0]** Prevent media from another tenant, private record or unapproved space being attached by guessing its identifier.
+- **MEDIA-07 [P0]** Caption/alt text must not reveal hidden names, phone numbers, health details, grades or location that the picture itself omits.
+- **MEDIA-08 [P0]** Apply deletion/withdrawal to originals, derivatives, attachment references, search and caches, with separately documented backups/legal holds.
+- **MEDIA-09 [P1]** Offer school albums with explicit attendees/audience and a reviewed cover. Do not automatically tag every attendee.
+- **MEDIA-10 [P1]** Selected memory books and personal artifact export need bystander redaction, rights checks and retention choices. A student's own archive entitlement does not entitle them to every class photo.
+- **MEDIA-11 [P2]** Video includes captions/transcripts, thumbnail review, modest resolution and duration ceilings, processing status and bounded retry.
+
+## A11. School use cases and domain boundaries
+
+The catalog below describes possible community experiences. It does not transfer ownership of the underlying records into `comms`.
+
+### A11.1 Classroom, learning and clubs
+
+- **USE-01 [P0]** Teacher classroom recap: an accessible summary of what the class explored, scoped to the class and approved linked guardians.
+- **USE-02 [P0]** Student work showcase: student/teacher chooses a project artifact, credits creators, checks bystanders and submits for the appropriate audience.
+- **USE-03 [P1]** Subject help/Q&A: approved ungraded questions and shared explanations; personal remediation and grading remain private LMS work.
+- **USE-04 [P1]** Club/society spaces: robotics, debate, eco-club, drama, music, coding, sports, art and school magazine, each with a responsible adult and membership rules.
+- **USE-05 [P1]** Houses and student council: announcements, ideas and supervised debate; official elections require a separately reviewed voting process, not a reaction count.
+- **USE-06 [P1]** Reading/library circles: book reviews, reading recommendations and moderated challenges, without exposing an individual’s borrowing history or fines.
+- **USE-07 [P1]** Service/volunteering: opportunities, organizer-approved photos and reflections; verified service evidence lives with its authorized owner.
+- **USE-08 [P1]** Peer appreciation and quiet contributions: collaborative recognition that includes support staff, effort and service without publishing rankings or inferred character scores.
+- **USE-09 [P2]** Digital citizenship activities: audience-selection exercises, credit/copyright practice and restorative community learning, not automated punishment.
+
+### A11.2 Events and school life
+
+- **USE-10 [P0]** Assemblies, annual day, science fairs, sports days, exhibitions and festival recaps link to official events and approved galleries.
+- **USE-11 [P1]** Trips/camps: permission-aware delayed recaps, attendance-independent publishing and no public real-time location of children.
+- **USE-12 [P1]** Competitions and team achievements: verified official outcomes, team credit, approved names/media; no automatic posting of report-card marks.
+- **USE-13 [P1]** School magazine/newsroom: student editors, staff supervision, issue review, accessible reading and separate public editions.
+- **USE-14 [P1]** PTA and volunteering: opt-in parent opportunities, school-sponsored groups and event logistics; no universal parent contact directory.
+- **USE-15 [P1]** Inclusion and accessibility: text/audio alternatives, sensitive treatment of accommodations and no disability labels in audience-facing cards.
+- **USE-16 [P1]** School history and anniversary archives: verified contributions from former members with permission for depicted people and careful treatment of historic minors.
+- **USE-17 [P1]** Ask the School: shared, staff-confirmed answers to recurring general questions, with private redirection for individual cases. P0 staff may publish ordinary informational posts without a dedicated Q&A workflow.
+
+### A11.3 Staff, leadership and chain
+
+- **USE-18 [P1]** Staff practice circles: teaching ideas, approved resources, professional learning and internal appreciation, without confidential personnel cases.
+- **USE-19 [P1]** Chain teacher exchange: vetted resources and common initiatives across participating campuses; source attribution and licensing are retained.
+- **USE-20 [P1]** Interschool events/projects: a bounded collaboration space with named institutional sponsors, explicit participants and an end date.
+- **USE-21 [P1]** Principal/leadership updates: trusted publisher, official correction process and structured questions. Complaints are never forced into public threads.
+- **USE-22 [P1]** School listening: moderated suggestions and advisory surveys, with clear audience and respondent-identity rules; no sentiment score of individual children.
+- **USE-23 [P2]** Approved resource marketplace between staff: library of reusable school-owned material, reviewed separately for licensing and commercial activity.
+
+### A11.4 Explicit sensitive-data boundary
+
+**Never auto-publish:** marks/grades, assessment feedback, exam accommodations, attendance/absence reasons, fee balances, defaulters, financial aid, payroll, health/medical information, counseling, discipline, safeguarding cases, custody restrictions, addresses, phone numbers, bus routes, precise location, identity documents or credentials. A personal authorized home card may summarize some of these through its owning module; that is not community publication.
+
+Exceptional publication, such as a selected public award, requires a deliberately prepared artifact, proper authorization and the applicable rights. A teacher permission to read records is not permission to publish them. Student refusal to appear in publicity must not reduce teaching access, grades or access to required tasks.
+
+## A12. LMS integration without loss of learning boundaries
+
+- **LMS-01 [P0]** Keep lessons, graded discussions, submissions, quizzes, attendance, feedback, gradebooks and completion rules in their owning modules.
+- **LMS-02 [P0]** A school student, an online course buyer and a cohort learner are distinct memberships. Buying/enrolling in a course does not grant access to schoolchildren’s communities.
+- **LMS-03 [P0]** Home shows authorized assignment/course reminders without placing private content in the shared social timeline or notification preview.
+- **LMS-04 [P0]** Community reactions, view time or posting frequency never determine grades, attendance, progression or discipline automatically.
+- **LMS-05 [P1]** Offer “propose as showcase” from a learning artifact: select content, remove private feedback/marks, verify authorship and media rights, then submit a distinct community revision.
+- **LMS-06 [P1]** A showcase may link to an original only for viewers separately entitled to that original. Hidden course names/rosters are not leaked in fallback cards.
+- **LMS-07 [P1]** Course/cohort community spaces inherit only approved membership projections and policies, not a public catalog course’s discoverability.
+- **LMS-08 [P1]** Teacher can route a social question to a learning discussion without copying private participant history or grading context across audiences.
+- **LMS-09 [P1]** Project groups and clubs can share selected artifacts, with group credits and contribution permissions. Peer assessment remains private to its intended LMS audience.
+- **LMS-10 [P1]** Course/cohort expiration, withdrawal, cancellation and subscription expiry have defined community consequences; essential complaint and safety reporting remain available.
+- **LMS-11 [P1]** Learning portfolios distinguish private evidence, family sharing, school showcase and public export. Changing one does not silently change the others.
+- **LMS-12 [P2]** Teacher professional learning communities can span campuses through explicitly approved spaces; do not use student courses as staff networking areas.
+
+The existing architecture allows LMS → comms dependencies. Home composition should use client-side authorized queries or an explicitly designed aggregation layer. New comms → LMS SDK reads would create a dependency issue and require review; minimal events/read projections may support eligible use cases without reversing the graph.
+
+## A13. Messaging and relationship discovery
+
+Messaging can consume more moderation effort than posts. Existing conversation tables do not justify unrestricted school chat.
+
+- **MSG-01 [P0]** No unrestricted alumni/guest/adult-to-minor direct messages, private calls or contact requests.
+- **MSG-02 [P0]** Existing staff-parent or school service communication stays in an approved, institution-governed workflow with appropriate record access and quiet hours.
+- **MSG-03 [P0]** School-wide user search, phone contact upload, friend suggestions and address-book harvesting are disabled for the pilot.
+- **MSG-04 [P0]** Display name/photo options minimize identifying information; student profiles do not expose personal email, phone, exact birth date, address or public social handles by default.
+- **MSG-05 [P1]** Student-to-student messaging, if validated, is a separate release decision with eligible ages, small verified spaces, reporting, retention, supervisory transparency and coercion controls.
+- **MSG-06 [P1]** Teacher office hours and structured request forms reduce expectations of constant availability; routing to a deputy is explicit.
+- **MSG-07 [P1]** Directory visibility is opt-in or purpose-authorized, field-level and scoped. Being searchable does not permit messaging or export.
+- **MSG-08 [P1]** Invitations to groups cannot expand a member’s school/age eligibility. Group owners cannot add arbitrary adults or minors.
+- **MSG-09 [P0]** No “disappearing” private child chat in the initial product. Do not promise end-to-end encryption while claiming server-side content moderation; make any future encryption/oversight tradeoff explicit.
+
+## A14. Alumni network requirements
+
+### A14.1 Start with a separate verified community
+
+- **ALUM-01 [P1]** Verify historical affiliation using school records and/or authorized school review; an email domain, name match or old roll number alone is insufficient.
+- **ALUM-02 [P1]** Record school, batch/year, verification source and current membership status. Support changed names and incomplete historic records through a private review path.
+- **ALUM-03 [P1]** Alumni activation is opt-in with fresh profile/directory choices and contact preferences; do not bulk publish historic student records.
+- **ALUM-04 [P1]** Separate adult and minor eligibility. Finishing Class 12 or leaving school is not proof of being 18.
+- **Initial minor-alumni policy:** verified minor alumni receive school-curated batch bulletins and approved event information only. Adult directory/contact requests, recruiting and mentorship are unavailable to them until a separate minor-program policy and release are approved. They retain age-appropriate reporting and privacy routes.
+- **ALUM-05 [P1]** Batch groups, reunions, school updates, memories and chapter/event subscriptions are bounded by verification and selected profile fields.
+- **ALUM-06 [P1]** Directory search uses eligible adult fields chosen by the member, with throttling and no bulk export/scraping.
+- **ALUM-07 [P1]** Adult contact requests require acceptance; do not reveal email/phone merely because a request was sent.
+- **ALUM-08 [P1]** Handle dormant accounts, re-verification, account recovery, report/ban/appeal and alumni admin succession.
+- **ALUM-09 [P1]** Former staff/parents have separate categories and rights; they are not automatically alumni or current staff.
+
+### A14.2 Opportunities and guarded bridges
+
+- **ALUM-10 [P1]** Approved career panels, college pathways, volunteering and school-history contributions can begin through school-hosted groups.
+- **ALUM-11 [P1]** Opportunity postings name the verified organization/sponsor, scope, eligibility and review owner; report scams and paid solicitations.
+- **ALUM-12 [P2]** Minor mentorship needs an explicitly sponsored, time-bounded program with eligible participants, trained supervision, consent/assent where applicable and a clear reporting route.
+- **ALUM-13 [P2]** A mentorship grant does not expose the minor directory, private course work, location, personal contact details or ambient direct messaging.
+- **ALUM-14 [P2]** School fundraising, scholarships and donations use an approved finance/payment process, receipts and country-specific review; social posts do not collect money directly at launch.
+- **ALUM-15 [P2]** Adult alumni jobs and referrals may link to careers capabilities after ownership and privacy review; commercial recruiting never targets current children through school memberships.
+
+Design the alumni transition now, but ship interactive alumni networking after the pilot. A verified batch bulletin/reunion feature can arrive before directories, mentorship or commercial opportunities.
+
+## A15. External sharing: four distinct products
+
+### A15.1 Private authenticated link
+
+A member shares a MySMS link in WhatsApp or elsewhere. The recipient still needs an authorized account and current membership. The link itself grants no access, and its preview must reveal no protected title, name, image or text. This can support legitimate school coordination with a generic preview such as “School update — sign in to view.” Private content remains protected even when the URL is public.
+
+### A15.2 Approved public derivative
+
+A school editor selects content and prepares a sanitized asset/caption that has permission to leave the network. This is a new publication record with a reviewed audience, destination, content version, assets and permission evidence. It may be downloaded by an authorized publisher, published on a school website or handed to an approved connector.
+
+### A15.3 User-confirmed sharing
+
+An allowed user chooses an approved public artifact and invokes a supported share mechanism. This is a handoff, not proof of a completed external post or its final audience. Users may alter text or redistribute outside the application after export. Administrators can control what MySMS releases, not guarantee what the receiving app or another device does with it.
+
+### A15.4 Official-account publication
+
+An authorized school publisher connects the school-owned destination and publishes an approved artifact with a durable job, provider response and audit history. This needs credentials, provider permissions, account eligibility and operational support. It is independent of user social accounts, private links and internal post approval.
+
+### A15.5 Platform-specific planning — researched limits
+
+- **WhatsApp:** the official help center supports a prefilled-text share link; the user still chooses a contact and sends. Automated business delivery is a separate product with consent/preferences and approved-template constraints described by Meta. Do not promise automatic posting into arbitrary parent groups, Status or Channels. Validate the chosen supported route at implementation. [WhatsApp click to chat](https://faq.whatsapp.com/5913398998672934), [Meta business chat controls](https://about.fb.com/news/2025/04/ways-to-manage-your-businesses-chats-on-whatsapp/).
+- **Instagram:** Meta’s published Instagram API collection describes professional-account publishing and account/login-specific restrictions. Do not promise silent publication to arbitrary personal accounts or require every user to connect Instagram. Use approved school-owned accounts where supported; validate current permissions, app review, formats and story eligibility. Direct Meta documentation returned access/rate-limit errors during this research, so exact current route/format support remains a release gate. [Meta’s Instagram API collection](https://www.postman.com/meta/instagram/documentation/6yqw8pt/instagram-api?entity=request-23987686-10bf8bf7-d9b7-4340-9c66-61d3ce683a87).
+- **X/Twitter:** current official documentation exposes create-post operations with OAuth authorization and write scopes. Confirm account access, commercial terms, media support and quotas before committing. A manually initiated sharing path can be investigated separately; the old developer web-intent URL redirected to general documentation during research and is not treated as verified current integration support. [X create-post documentation](https://docs.x.com/x-api/posts/create-post).
+
+No platform pricing, quota, guaranteed delivery time or deletion guarantee is assumed here. Recheck provider documentation near implementation and launch.
+
+### A15.6 Export policy and workflow requirements
+
+- **EXT-01 [P0]** External release is disabled by default; control destination, school, age band, content type, requester and authorized publisher separately.
+- **EXT-02 [P0]** Private links remain authenticated and generate generic previews. Never expose a private media URL in Open Graph tags or third-party link unfurling.
+- **EXT-03 [P1]** An external request selects the exact internal revision and a separate public derivative, not a reusable permission to export all future versions.
+- **EXT-04 [P1]** Review author rights, all identifiable/depicted subjects, required permissions, school branding, copyright, location, names in audio/text and background identifiers.
+- **EXT-05 [P1]** Unknown subjects or missing/withdrawn permission block release or require a reviewed redaction/crop; a school administrator cannot tick away the missing evidence.
+- **EXT-06 [P1]** Approval binds a content/asset hash, audience, caption, destinations, policy version, approver and expiry. Sensitive releases use an independent approver where policy requires it.
+- **EXT-07 [P1]** Recheck permissions and eligibility immediately before dispatch, including scheduled posts and queued manual downloads.
+- **EXT-08 [P1]** The destination preview explains what becomes public or leaves MySMS, what identifiers remain and that external copies may survive withdrawal.
+- **EXT-09 [P1]** Do not export comments, reaction lists, viewers, class rosters, private course links or unrelated student records with an approved image.
+- **EXT-10 [P1]** Record request, approve/reject, dispatch/handoff, actor, destination, known provider ID, unknown outcome and recall/removal attempts.
+- **EXT-11 [P2]** Official-account credentials are protected, scoped, rotated and revocable, with school approval and separate publisher powers. Offboarding removes connectors and pending jobs.
+- **EXT-12 [P2]** Provider timeouts enter an unknown/reconciliation state. Do not retry blindly and duplicate publication; use provider idempotency when available and local job identity throughout.
+- **EXT-13 [P1]** Withdrawing permission stops pending releases and triggers supported takedown/recall steps for completed releases; show partial/failed/unknown removal honestly.
+- **EXT-14 [P1]** Disable/kill switches apply server-side to downloads, jobs and connectors, while preserving release evidence and ordinary school access.
+- **EXT-15 [P0]** Disabling in-app export cannot prevent all screenshots, camera capture or unauthorized copying. Explain boundaries without making false control promises.
+- **EXT-16 [P1]** An external export does not automatically import platform comments, identities or follower graphs back into the school network.
+
+## A16. Consent, permissions and privacy requirements
+
+### A16.1 Existing foundation and proposed extension
+
+The `privacy` module ([design](../design/PRIVACY-AND-CONSENT-CENTRE.md)) records each consent decision with its giver and capacity, purpose, width (class < institution < inter_school < public), notice version, validity, channel, verification and evidence, keeps a hash-chained evidence ledger and the effective state, and serves the consent centre. Its purposes include photo/video publication, community naming and participation, public profile, marketing, third-party sharing and SMS/WhatsApp. [`people.public_profile`](../../database/migrations/people/V1_050_001__people_baseline.sql) is described as a public student/alumni profile. Neither is proof of a complete school social consent or alumni verification workflow.
+
+Reuse the authoritative consent owner where appropriate; add community-specific decision evidence rather than inventing a competing universal consent ledger. A broad current-purpose record may be necessary but insufficient for exact content, destination, depicted people and withdrawal propagation. Public profiles must never activate automatically merely because alumni/social features are enabled.
+
+- **PRIV-01 [P0]** Document data roles and purposes for school operation, optional community, alumni and external promotion, including what MySMS processes for its own purposes.
+- **PRIV-02 [P0]** Separate account participation, internal depiction, directory/public profile, external publication, optional marketing and channel delivery choices.
+- **PRIV-03 [P0]** Record the subject, authorized giver, verified relationship, notice/policy version, purpose, scope, timing, evidence source, withdrawal and applicable expiry/review.
+- **PRIV-04 [P0]** A guardian authorizes only their lawful scope; consent for one child does not cover siblings, classmates or all children in a photograph.
+- **PRIV-05 [P0]** Explain purposes and controls in plain regional-language and age-appropriate forms. Keep essential learning and required notices accessible when optional social consent is refused.
+- **PRIV-06 [P0]** Support permitted offline/paper evidence with authorized capture and verification; do not treat an imported unchecked spreadsheet as verified consent.
+- **PRIV-07 [P0]** Show an easy withdrawal/request route and a useful status of affected internal visibility, scheduled exports and known external copies.
+- **PRIV-08 [P0]** Resolve conflicting guardian instructions, objections by a child and lawful restrictions through a private documented process; do not publish dispute details.
+- **PRIV-09 [P0]** Data access/correction/erasure requests have an identity-verified workflow, an accountable owner and documented exceptions/holds. Export is subject to other people’s rights.
+- **PRIV-10 [P0]** Specify retention separately for drafts, active posts, expired stories, alumni profiles, consent evidence, reports, audit/security logs and backups; no “keep everything forever.”
+- **PRIV-11 [P0]** Legal/evidence holds are restricted, reasoned, reviewed and time-bounded where possible; they do not keep the held item visible in the normal feed.
+- **PRIV-12 [P0]** Limit vendor and analytics data, redact logs, prohibit student-content model training by default, and publish relevant subprocessor/data-location information.
+- **PRIV-13 [P0]** Minimize birth-date/identity-document handling. Prefer existing reliable school records or an approved verification method; do not add mandatory Aadhaar, face recognition or new identity-document collection by default.
+- **PRIV-14 [P0]** Make parental supervision visible and understandable to the child. Do not expose private help-seeking or a report automatically to a potentially implicated guardian/staff member.
+- **PRIV-15 [P1]** School/tenant exit provides agreed authorized export, deletion/retention evidence and revocation of connectors; alumni continuity requires an explicit continuing owner/arrangement.
+
+### A16.2 India: source-verified baseline and launch review
+
+The DPDP Act defines a child as under 18. Section 9 addresses verifiable parental consent, detrimental processing, tracking/behavioral monitoring and targeted advertising involving children, with specified exemptions. Treat older teenagers as minors for the India policy design; social participation and publicity need purpose-specific review. [DPDP Act, sections 2 and 9](https://www.meity.gov.in/static/uploads/2024/06/2bf1f0e9f04e6fb4f8fef35e82c42aa5.pdf).
+
+The 2025 Rules specify parental-consent mechanisms. Their Fourth Schedule limits the educational-institution tracking/monitoring exemption to educational activities or enrolled children’s safety. **Inference:** do not assume this covers promotional social publication, alumni networking or commercial engagement analysis. [DPDP Rules, rule 10 and Fourth Schedule](https://www.meity.gov.in/static/uploads/2025/11/53450e6e5dc0bfa85ebd78686cadad39.pdf).
+
+Commencement is phased: the notification defers many core duties, including section 9, by eighteen months from publication; the Rules similarly defer most operational provisions. The instruments bear 13 November 2025 dates, implying a May 2027 planning horizon. Confirm the exact legal effective date, corrigenda and later changes before launch; use **April 2027 as a proposed internal readiness target**, not a legal deadline. [Act commencement notification](https://www.meity.gov.in/static/uploads/2025/11/c56ceae6c383460ca69577428d36828b.pdf), [Rules commencement](https://www.meity.gov.in/static/uploads/2025/11/53450e6e5dc0bfa85ebd78686cadad39.pdf).
+
+**Required legal discovery, without assuming the answer:** applicability of intermediary/social-media rules and school safeguarding obligations; mandatory reporting and evidence-handling duties including POCSO-related issues; grievance mechanisms and statutory timelines; sector/board/state policies; copyright/music rights; accessibility; international transfers and vendor processing; retention exceptions; school/MySMS data roles; treatment of guardianship and adults needing lawful support. Keep the resulting legal obligations distinct from configurable school preferences. This product proposal is not a legal opinion.
+
+## A17. Safety, moderation and appeals
+
+### A17.1 Human operating model
+
+Each pilot institution appoints a community owner, editorial approvers, a trained safeguarding lead and deputies, a data/privacy owner and technical escalation contact. The chain names an owner for every shared space. Platform and school responsibilities must be explicit in contracts and runbooks. Software does not supply round-the-clock safeguarding coverage by itself.
+
+- **SAFE-01 [P0]** Publish understandable community rules covering bullying, discrimination, sexual content, grooming, violence/threats, impersonation, doxxing, scams, cheating/academic misuse, copyright and unauthorized imagery.
+- **SAFE-02 [P0]** Report controls exist on posts, replies, profiles, spaces and media, including a private route for concerns about staff or administrators.
+- **SAFE-03 [P0]** Triage routes distinguish routine editorial issues, conduct concerns, urgent safety concerns, privacy requests and statutory escalation. A post report is not automatically a disciplinary finding.
+- **SAFE-04 [P0]** The implicated author/moderator cannot be the sole reviewer. Reporter identities and case details are restricted to authorized need-to-know roles.
+- **SAFE-05 [P0]** Provide a practical urgent-help route and clearly state staffed hours/response expectations; do not label the social app an emergency service.
+- **SAFE-06 [P0]** Allow immediate restriction of visible content by authorized responders, with evidence preservation and audit independent of the final investigation.
+- **SAFE-07 [P0]** Reports survive ordinary story expiry or author deletion under the approved evidence policy; confidential evidence does not remain available to the class.
+- **SAFE-08 [P0]** Moderation queue shows owner, severity, age, escalation and deputy coverage; no pending item becomes public merely because an SLA expires.
+- **SAFE-09 [P0]** Inform authors/reporters appropriately about outcomes and appeals without revealing protected people, evidence or legal investigations.
+- **SAFE-10 [P0]** Offer correction, appeal and independent review. Retain reason codes and policy versions; prevent retaliatory removal of legitimate criticism.
+- **SAFE-11 [P0]** Support freeze-posting, lock-thread, slow-mode, pre-review and disable-export controls by institution/space. Reading required notices and reporting remain available.
+- **SAFE-12 [P0]** Rate-limit mass mentions, invitation abuse, repeated replies, scraping, bulk downloads and report brigading. A verified member can still act harmfully.
+- **SAFE-13 [P0]** Separate moderation, safeguarding and access-control audit permissions. A generic administrator role does not automatically reveal confidential case evidence.
+- **SAFE-14 [P1]** Use multilingual automated assistance for triage only after testing relevant Indian languages/code-mixed content. Human reviewers resolve context and contested decisions.
+- **SAFE-15 [P0]** No automated guilt, mental-health diagnosis, emotion profiling, student risk score or disciplinary punishment based on feed behavior.
+- **SAFE-16 [P0]** Define after-hours/holiday coverage and disable high-risk publishing modes when coverage is absent. Show expectations before users submit.
+- **SAFE-17 [P0]** Simulate a mistaken public child image, compromised staff account, bullying thread and report against an administrator before opening participation.
+
+### A17.2 Protect expression as well as safety
+
+Student representation should help draft rules and review whether they are understandable. Separate an unpopular opinion from harm. Schools can moderate behavior without turning the feed into a permanent conduct dossier. Avoid publishing who was sanctioned, ranking “good” students, automatic parent alerts for every rejected draft, or deleting all criticism of school management. Provide a confidential complaint route that remains usable when social posting is restricted.
+
+### A17.3 The moderation model end to end
+
+Moderation is layered so that no single person is a bottleneck and no implicated person decides alone.
+
+| Layer | Who | What they do | Design |
+|---|---|---|---|
+| 1. Prevention | the system | Review required by K07 (student and guardian posts, anything wider than one home, every post at institution width or wider whose audience includes guardians or students, every image needs a second person's subject confirmation); word filter holds (K41); rate limits (K40); slow mode (K38); comments held outside coverage (K21, K34); nothing auto-publishes when a queue is unstaffed | §4.2, §6.5, §6.6 |
+| 2. Home moderators | class page: its class teacher and designated co-teacher (derived); space: its owner and named moderators (K33) | Approve, return with reason, reject; hide comments; lock thread (K39); pin official items | §6.2, §6.5, COM-50 |
+| 3. School moderation team | community owner, moderators, coverage hours (K34), after-hours responders (K34a) | Queue SLA and escalation; review anything wider than a home; restrict members (mute, review-all, suspend) on an open case; emergency takedown | §6.6, §10.3, COM-50–COM-57 |
+| 4. Inter-school second approver | the inter-school moderation panel: one moderator from the originating school plus one from another participating school | Every inter-school post is approved by the origin school and a second school's panel member | §19.4 |
+| 5. Reports and cases | any member (`ReportContent`, `ReportConcern`) → triage by category (routine editorial, conduct, urgent safety, privacy, statutory) | Reports group into cases with owner, severity, SLA and restricted evidence; a report is never a disciplinary finding (SAFE-03) | §10.2, COM-36, COM-52, COM-53 |
+| 6. Safeguarding | safeguarding lead and deputy (K36, K36a); independent route (K36b) for cases implicating the lead, principal or owner | Separate inbox and permission; evidence held privately; staff-concern cases never reach ordinary moderators | §10.2, COM-54 |
+| 7. Appeals | the author; an independent reviewer who did not take the action | `AppealModerationAction` → `DecideAppeal`; reason codes and policy versions kept; retaliatory removal prevented (SAFE-10) | §6.1, §6.2 |
+| 8. Emergency | moderators (takedown), community owner (freeze home/institution, K37), platform operators (global switch) | Immediate restriction with evidence preservation; reading notices and reporting continue | §4.7, §21, COM-57, COM-64 |
+
+Each school moderates only itself; a chain owner sets ceilings, never reads another school's cases. Software does not
+supply round-the-clock safeguarding: coverage hours are configured and shown to members before they submit (SAFE-16).
+
+## A18. Administrator settings and governance catalog
+
+- **CFG-01 [P0]** Enable community by institution and role/age group; retain a platform safety floor that school settings cannot weaken.
+- **CFG-02 [P0]** Configure who may create spaces, join, invite, publish, approve, reply, react, download and request public release.
+- **CFG-03 [P0]** Set narrow default audiences, historic-content visibility and required review by content type/audience.
+- **CFG-04 [P0]** Choose comment modes, moderation owner/deputy, coverage hours, queue thresholds and escalation contacts.
+- **CFG-05 [P0]** Control media types, upload limits, storage allowances, retention, allowed attachment types and notification budgets.
+- **CFG-06 [P0]** Manage external sharing disabled/enabled separately for private links, approved asset download, user handoff and official connectors.
+- **CFG-07 [P0]** Preview effective settings for a specific role/context without impersonating a child or exposing their private data.
+- **CFG-08 [P0]** Log setting changes with before/after, actor, policy version and effective time; require appropriate approval for material widening.
+- **CFG-09 [P1]** Chain policy can set ceilings/defaults and delegate narrowing to schools. Show inherited versus local settings and conflicts.
+- **CFG-10 [P1]** Configure languages, home layout within constraints, approved categories, story duration and institution branding.
+- **CFG-11 [P1]** Alumni onboarding, directory fields, batches, verified sponsors and program-specific bridges have separate controls.
+- **CFG-12 [P0]** Emergency restrictions apply immediately to active sessions/queued work server-side. Re-enabling does not blindly publish the accumulated backlog.
+- **CFG-13 [P0]** School offboarding and staff changes reassign queues, remove publishing powers, revoke destination credentials and address orphaned spaces.
+- **CFG-14 [P1]** Offer restrictive preset policies: primary school, secondary guided participation, staff-only, chain publication and alumni adult network. Presets remain reviewable.
+
+## A19. Notifications, delivery, search and accessibility
+
+### A19.1 Notifications and authoritative communication
+
+- **NOTIF-01 [P0]** Separate required official notices from optional social reactions, comments, moments and marketing.
+- **NOTIF-02 [P0]** Default optional social delivery to digest/in-app with quiet hours, per-space mute and reasonable caps; no push on every appreciation.
+- **NOTIF-03 [P0]** Push/email/SMS/WhatsApp previews contain the minimum safe context. Do not include confidential child records, private body text or protected media URLs.
+- **NOTIF-04 [P0]** Recheck eligibility before delivery and when opened; expired/removed/revoked content is not restored by an old notification.
+- **NOTIF-05 [P0]** Prevent duplicate digest items and duplicate required notices across multiple child links without obscuring school/child context.
+- **NOTIF-06 [P1]** Digests show selected approved text/artifacts and authorized links; a private feed digest does not become a public email gallery.
+- **NOTIF-07 [P0]** Delivery failure, acknowledgment, view and reaction are separate states. Never claim a required notice was read because a push was sent.
+- **NOTIF-08 [P1]** Optional external channel delivery has separate consent/preferences and provider-supported mechanisms; it cannot replace internal audit or required delivery policy.
+
+### A19.2 Search and discovery
+
+- **SEARCH-01 [P0]** Search only currently entitled content and allowed member fields, applying authorization before results, snippets, counts and suggestions.
+- **SEARCH-02 [P0]** Remove restricted/expired/withdrawn content promptly from search exposure; index lag never grants access to stale snippets.
+- **SEARCH-03 [P1]** Filter by eligible space, content type, topic, date and verified publisher; support Indic scripts and sensible handling of transliteration.
+- **SEARCH-04 [P0]** No global minor discovery, public school roster, cross-tenant people search or bulk directory export.
+- **SEARCH-05 [P1]** School FAQ and event discovery support recurring questions without exposing the identity of those who asked privately.
+
+### A19.3 India-first usability and accessibility
+
+- **UX-01 [P0]** Design for low-cost Android devices, modest data plans, intermittent connectivity and shared family/classroom devices; validate these assumptions with pilot schools.
+- **UX-02 [P0]** Text-first rendering, small image variants, no autoplay, visible data-saving mode and graceful missing-media behavior.
+- **UX-03 [P0]** Keyboard/screen-reader navigation, adequate contrast, scalable text, large tap targets, captions/alt text, reduced motion and accessible report/consent flows.
+- **UX-04 [P0]** Begin with English and the languages needed by the chosen pilot. Externalize strings, support Unicode and measure code-mixed content comprehension.
+- **UX-05 [P1]** Translation retains the original, labels machine assistance and supports corrections. Human review is required where mistranslation could change safety/consent meaning.
+- **UX-06 [P0]** Clear timestamps/timezones, academic year and school context; no ambiguous “today” across institutions when planning global expansion.
+- **UX-07 [P0]** Shared-device sign-out clears local protected state; sensitive previews are hidden by default and device notifications disclose minimal detail.
+- **UX-08 [P0]** Offline reading is bounded by explicit policy; protected caches have short permitted lifetimes and purge on known revocation/sign-out. Do not promise recall of already viewed offline data.
+- **UX-09 [P0]** Offline drafts remain drafts. Reconnect revalidates role, audience, permissions and version before submission/publication.
+- **UX-10 [P1]** Consider assisted voice input and audio alternatives with explicit microphone action and transcripts; no ambient classroom recording.
+- **UX-11 [P0]** A family with no smartphone gets an agreed alternative for essential school communication; social participation is not a prerequisite for learning.
+
+## A20. International expansion strategy
+
+Keep India-specific legal rules in a versioned jurisdiction policy layer rather than hardcoding one age, identity method or retention period into every product concept. The launch unit is a school/institution with an agreed jurisdiction, contractual data roles, languages, approved vendors and operational owner.
+
+The US COPPA school-consent route is limited to educational contexts and cannot simply authorize unrelated commercial use; evaluate COPPA, student-record rules and state obligations before launch. The UK Children’s Code emphasizes high-privacy defaults and limits on unnecessary geolocation/profiling. These support a restrictive architecture but do not establish worldwide compliance. [FTC COPPA school FAQs](https://www.ftc.gov/business-guidance/resources/complying-coppa-frequently-asked-questions), [ICO Children’s Code standards](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/childrens-information/childrens-code-guidance-and-resources/age-appropriate-design-a-code-of-practice-for-online-services/code-standards/).
+
+- **GLOBAL-01 [P1 design / per-country release]** Specify applicable ages, age assurance, school/guardian authority, child rights, notices and acceptable verification methods.
+- **GLOBAL-02 [P1 design / per-country release]** Specify safeguarding/reporting, grievance/takedown deadlines and appeal procedures with local ownership.
+- **GLOBAL-03 [P1 design / per-country release]** Review residency, transfer, subprocessors, security, record-access/deletion and school contracts.
+- **GLOBAL-04 [P1 design / per-country release]** Review school calendars, grading/curriculum terminology, languages/RTL, timezone, accessible formats and local emergency pathways.
+- **GLOBAL-05 [P1 design / per-country release]** Review social media age/account rules, destination availability, publicity/image rights, copyright/music and marketing law.
+- **GLOBAL-06 [P1 design / per-country release]** Assess whether local social-media age restrictions cover this product or provide an education-related exception; never assume an LMS label settles classification.
+- **GLOBAL-07 [P2]** Federation between independently controlled schools/countries needs a separate product, legal agreement and security design; country expansion does not imply a global student graph.
+
+## A23. Sizing, costs and sustainable pricing
+
+### A23.1 Variables to measure
+
+Track eligible members versus active members; read sessions/pages; staff/student submissions; approved ratio; image/video sizes and variants; retention; media views/cache hit ratio; notification channels; review minutes; reports/escalations; support contacts; language/translation volume; search frequency and provider jobs. Keep usage reporting privacy-preserving and avoid exposing small child cohorts.
+
+### A23.2 Transparent planning example
+
+The following is an illustrative load case, not a forecast or vendor quote:
+
+- A chain of 10 schools with 1,000 students each has 10,000 students. Add an assumed 8,000 guardian accounts and 1,000 staff accounts: 19,000 eligible accounts. Guardians with siblings may reduce account counts.
+- Assume 50% daily activity: 9,500 active accounts/day. At 3 opens and 2 feed pages per open: **57,000 page reads/day**.
+- Assume 1,000 school/space updates per day across the chain and 2 images per update, each with a 0.5 MB original: **1 GB new originals/day**. At 1.5× total storage including variants: roughly **45 GB per 30-day month** and **540 GB per 360-day retention period**, before backups/evidence. Individual schools may post far less; student publishing could raise this substantially.
+- Assume each daily active account loads 20 compressed images of 0.12 MB: **22.8 GB client delivery/day**, roughly **684 GB per 30 days**. CDN cache hit reduces origin load, not necessarily all delivery charges.
+- Assume 30% of 1,000 submissions need 45 seconds of review: **225 staff minutes/day**, or **3.75 hours/day**, excluding incident handling. This may be distributed among schools, but must still be funded/staffed.
+- Adding 100 clips/day of 10 MB creates **1 GB/day of video originals before variants**; repeated viewing and processing can exceed image costs quickly. This is why video is a separate gate.
+
+Units use decimal MB/GB for this example. Arithmetic is intentionally simple; collect pilot telemetry before forecasting peak concurrency or annual spend.
+
+### A23.3 Cost model
+
+Monthly cost = baseline application/database operations + retained original/variant/backup storage + image/video processing + CDN/media delivery + notifications/provider API charges + optional translation/triage + staff moderation/escalation + onboarding/support/compliance operations.
+
+School price must cover both software and human responsibilities. No rupee price is asserted without current provider quotes and customer willingness-to-pay research. Offer bounded allowances, understandable overage alerts, soft caps and a predictable path to buying capacity. Never block report submission, essential notices or a privacy request because a school hit its social media quota.
+
+### A23.4 Pilot outcome metrics
+
+- **Usefulness:** eligible families who can find required information, notice comprehension, task completion and reported reduction in duplicate communication.
+- **Participation quality:** distinct voluntary contributors, representation across activity types, student/guardian usefulness ratings and quiet-user feedback.
+- **Trust:** audience-preview comprehension, mistaken disclosure, permission/withdrawal success, opt-outs and corrected identity relationships.
+- **Operations:** review minutes per 100 submissions, queue age, report response/resolution, staff after-hours burden and unresolved cases.
+- **Economics:** media bytes and delivery per active institution/member, support effort and gross contribution after relevant operating costs.
+- **Guardrails:** no decline in essential task completion, no unowned serious report, no unresolved authorization leak, no growth in compulsory/pressured posting.
+
+Do not optimize child screen time, streak completion, follower growth, controversial content or individual popularity. A rise in reports can indicate better access to reporting; interpret with investigation and surveys rather than treating low report counts as proof of safety.
+
+## A26. Alternatives, exclusions and avoidable traps
+
+- **An extra generic feed tab:** easy to demonstrate but weak daily value. Put useful relevant community on the existing home and preserve task navigation.
+- **All members can see all content:** simple to explain until a parent sees another class, a campus sees another campus or alumni see children. Use explicit relationships/spaces.
+- **Every student needs a public social identity:** unnecessary for younger children and incompatible with narrow participation. Allow mediated contributions.
+- **Mandatory posting or social attendance:** creates coercion and invalidates engagement metrics. Recognize voluntary contribution without grading participation.
+- **Every post requires the principal:** operational bottleneck. Delegate bounded authority and use stronger review for broader audiences and public release.
+- **Every teacher moderates constantly:** unsustainable. Give named coverage, bounded queues, quiet hours, deputies and pause controls.
+- **Reaction/follower leaderboards:** likely to amplify status competition and discourage quiet pupils. Exclude popularity mechanics.
+- **Private child content with public thumbnails:** fails the boundary despite protected detail APIs. Protect all derivatives/unfurls.
+- **A signed form means all future sharing:** confuses purposes and depicted people. Use current applicable evidence and exact-release decisions.
+- **Stories vanish everywhere:** impossible to promise for screenshots, exports and backups. Separate ordinary expiry from retention/evidence.
+- **Alumni means adult or permanently trusted:** false lifecycle assumption. Verify age/role and create separate access.
+- **Public social posting is a universal share API:** provider routes/account requirements differ and change. Offer reviewed derivatives and validate connectors separately.
+- **AI moderates the school:** misses local language, context and authority dynamics. Use assistance with accountable human escalation.
+- **Rebuild notices, chat, LMS and files inside social:** duplicates owners and weakens records. Compose existing capabilities through approved boundaries.
+- **Global launch by changing language:** misses law, school authority, safeguarding, data roles and operating coverage. Use country release gates.
+
+**Excluded from the initial product:** open public/student discovery, anonymous confession feeds, unrestricted adult-minor contact, live location maps, biometric age/face recognition, behavioral advertising, emotion/wellbeing scoring, public student popularity metrics, fee-defaulter shaming, automated disciplinary decisions, public livestreaming and cross-tenant student federation.
+
+## A27. Distinctive opportunities worth testing
+
+1. **School Pulse:** a finite weekly editorial selection across learning, arts, sport, service and staff life, with a coverage view for editors rather than a student ranking.
+2. **Class journal:** teacher creates one accessible weekly recap, reusing reviewed artifacts and generating an authorized family digest without duplicate entry.
+3. **Ask the School:** searchable verified general answers with routing to the right school owner, reducing repeat parent questions in unmanaged groups.
+4. **Contribution portfolio:** student chooses approved highlights and reflections to preserve; no inferred reputation score or compulsory publicity.
+5. **Permission-aware memories:** selected events/stories become an opt-in archive or yearbook only through a fresh retention/audience decision.
+6. **Chain exchange:** schools share selected teaching practices and student projects without exposing raw rosters or student social graphs.
+7. **Alumni return paths:** batch events → school-hosted career panels → adult opportunities → carefully supervised programs, each with a separate permission step.
+8. **Editorial publication desk:** approved public assets/captions for school communications teams, with destination previews and documented rights rather than repeated copying from private chats.
+
+Treat these as experiments. Research whether families value authentic everyday learning more than polished publicity, whether students trust school-operated expression, and whether teachers can contribute without another administrative burden.
+
+## A29. Market reference points and source notes
+
+School story feeds and learning portfolios already have established examples. ClassDojo describes class/school updates for connected families, Toddle describes communications and private/family portfolios. The opportunity is therefore not novelty of a school feed. **Inference:** MySMS differentiation should come from integrated workflow context, membership lifecycle, chain governance, India-first usability, alumni continuity and reliable publication permissions. Product pages describe advertised behavior, not independently verified outcomes or a complete competitive evaluation. [ClassDojo class/school stories](https://help.classdojo.com/hc/en-us/articles/211889103-What-is-Class-Story-and-School-Story), [Toddle communications](https://www.toddleapp.com/product/communications-hub/), [Toddle portfolios](https://www.toddleapp.com/product/student-portfolios/).
+
+Primary external sources consulted on 11 November 2026:
+
+- [India DPDP Act, 2023](https://www.meity.gov.in/static/uploads/2024/06/2bf1f0e9f04e6fb4f8fef35e82c42aa5.pdf): child definition and statutory framework.
+- [DPDP Rules, 2025 official Gazette PDF](https://www.meity.gov.in/static/uploads/2025/11/53450e6e5dc0bfa85ebd78686cadad39.pdf): commencement, verifiable parental consent and education-related limits. Exact current consolidated text/dates need prelaunch review.
+- [DPDP Act commencement notification](https://www.meity.gov.in/static/uploads/2025/11/c56ceae6c383460ca69577428d36828b.pdf): phased application.
+- [FTC COPPA FAQs, schools section](https://www.ftc.gov/business-guidance/resources/complying-coppa-frequently-asked-questions): US expansion discovery.
+- [ICO Children’s Code](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/childrens-information/childrens-code-guidance-and-resources/age-appropriate-design-a-code-of-practice-for-online-services/code-standards/): UK expansion discovery.
+- [WhatsApp official click-to-chat help](https://faq.whatsapp.com/5913398998672934) and [Meta business messaging controls](https://about.fb.com/news/2025/04/ways-to-manage-your-businesses-chats-on-whatsapp/): user handoff versus business messaging.
+- [Meta’s Instagram API collection](https://www.postman.com/meta/instagram/documentation/6yqw8pt/instagram-api?entity=request-23987686-10bf8bf7-d9b7-4340-9c66-61d3ce683a87): published account/login constraints; exact modern endpoint support remains unconfirmed where direct docs were unavailable.
+- [X create-post documentation](https://docs.x.com/x-api/posts/create-post): authenticated official publication surface.
+
+Architecture, priorities, example targets, cost assumptions and product recommendations are proposals grounded in the intended school ecosystem and repository findings. External legal/API sources inform constraints; they are not promises that MySMS currently implements them. Revalidate changing law, provider access and commercial terms before any release.
+
+## A30. Product decisions and validation
+
+The recommended direction balances student expression, school operations, technical boundaries and the changing rights of community members.
+
+### A30.1 Governing principles
+
+Use a closed verified community, a useful operational home, explicit audiences, narrow defaults, human-owned moderation, honest story expiry, separate alumni eligibility and controlled external release. Revenue and success metrics should support school usefulness and sustainable operation rather than children's attention or popularity.
+
+Existing tables and contracts are foundations. Release readiness depends on complete authorized workflows, effective withdrawal and a school team capable of operating them.
+
+### A30.2 Tradeoffs and chosen direction
+
+- **Student agency:** early expression gives the community value, while publishing without adequate authorization or coverage creates avoidable harm. **Decision:** staff publishing plus selected moderated student submissions in P0; broaden direct participation only where age policy and coverage support it.
+- **Stories at launch:** visual stories can encourage adoption, but require reliable media access, expiry and retention behavior. **Decision:** approved images after P0 media gates, story presentation in P1, text-only pilot permitted while dependencies are unfinished.
+- **Alumni timing:** lasting school connection is valuable, but former members require a different access lifecycle. **Decision:** define the transition before launch, ship a separate alumni pilot after current-school rights are reliable.
+- **Review strictness:** central approval is operationally simple but may suppress classroom conversation and overload leadership. **Decision:** delegated bounded authority, risk-based review and a stronger gate for wider/public audiences.
+- **Home composition:** household summaries can save time but must preserve child, school and role boundaries. **Decision:** summaries are allowed only with obvious source labels and separate authorization; publishing always requires an explicit context.
+- **Sharing:** a simple share button is attractive, but release permissions and provider capabilities vary. **Decision:** private authenticated links first; approved public derivatives and connectors are separate phased capabilities.
+- **Architecture:** a universal community graph could support more futures; adapting comms offers less duplication. **Decision:** keep the initial bounded community in comms, with explicit relationship/space semantics and preserved module rules; extract only with evidence.
+
+### A30.3 Concrete first product to validate
+
+A user logs in, sees school/role/child context, required actions and a small set of relevant school/class updates. A teacher can publish or submit a reviewed recap once. Selected students can submit work to an accountable reviewer. A guardian can understand why they see an item, choose their language/digest, manage permissions and report a concern. Transfers and withdrawal actually change access. Schools can operate the queue without creating a new full-time burden. Later, the same verified relationship system can support clubs, moments, chain collaboration and an alumni community with deliberately different rights.
+
+---
+
+# Part B — Backend
+
+How the product of Part A is built inside `comms`, with `privacy` for consent. Engineering sections keep their numbers (§1–§22).
+
+## 1. The build in one page
 
 A **school-run, closed social network**: think a controlled Instagram (photos, moments, albums) crossed with a
 controlled Twitter (short updates, replies, topic spaces), where **the school decides every switch**.
 
-- **Three different kinds of place, deliberately not one model** (owner decision of 18 Nov 2026):
+- **Three different kinds of place, deliberately not one model** (owner decision):
   - **Class page** — one per class section per academic year, the *sacred* space of the people enrolled in it (its
     students, its teachers, and its students' guardians where the school allows). It is never a general space and never
     gains members by following or by hand. Its teacher may choose to **surface selected class posts in the school
@@ -136,9 +866,7 @@ controlled Twitter (short updates, replies, topic spaces), where **the school de
 It lives inside the **`comms`** module, next to notices, events, galleries and the existing class pages and posts — the
 same module already owns most of the building blocks (section 2).
 
----
-
-## 2. What we reuse — checked against the code on 18 Nov 2026
+## 2. What we reuse from the codebase
 
 | Need | Already in the codebase | State today | What the community needs from it |
 |---|---|---|---|
@@ -151,11 +879,11 @@ same module already owns most of the building blocks (section 2).
 | In-app notifications, preferences | `in_app_notification` (stores `title`, `body`, `entity_type/id`; monthly partitions), `notification_*` tables | in-app reads 501 | Community rows store no rendered text (§11) |
 | Audience groups | `audience_group`, `audience_group_member` | served | Reusable named audiences for staff publishers; snapshot ∩ live (§9.1) |
 | Files | platform `file_object` (`storage_generation`, `status pending/available/quarantined/deleted`), signed upload/download | served; upload URLs single-use and size-bound, downloads pinned to the checked generation; **download URLs live 10 minutes (fixed)**; `DeleteFileObject` soft-deletes the row and deletes the *live* object only | Media pipeline (§8); platform needs a caller-chosen URL lifetime and a purge of all generations (§15) |
-| Consent | `people.consent_record`: purposes `data_processing, photo_video_publication, public_profile, marketing, third_party_sharing, sms_whatsapp_messages, biometric_data`; one live row per (person, purpose); **no scope, decision or expiry column** | **5 consent operations 501**; no consent events | Schema and operations changed and built first (§15); comms keeps a projection |
+| Consent | `privacy`: purposes incl. `photo_video_publication`, `community_naming`, `community_participation` (widths class < institution < inter_school < public), guardian capacity, verification, expiry, effective consent state, `privacy.consent_state.changed` events, `privacy-client` | served | comms keeps a projection of the effective state or checks through `privacy-client` at approval (§8.4) |
 | Identity, roles, settings | iam roles, `user_role` scoped grants (`tenant / institution / class_section / …`), `DataScope`, token `amr` (pwd/mfa), access tokens 15 min, refresh 30 days, impersonation | served | New community permissions (§10); MFA required for high-risk actions; impersonation refused for community writes and case reads |
 | Relationships | sis `student_guardian` (`status active/inactive`, `has_custody`, `is_legal_guardian`, `receives_communication`; "a link alone does not grant data access; access is granted by iam.user_role"); sis's own persona rule reads only `status = 'active'` links of a guardian record tied to the account; `student_enrollment` (`effective_from/to`, `change_reason`); academics `class_section` (per academic year), `teaching_assignment`, `grade_level` (no age); hr `staff.status active/inactive/exited`; org `academic_year`, `academic_term` | served | Projected into comms (§7). **Events today are `<schema>.<table>.created/updated/deleted` with the id only** (sis student and hr staff carry a member payload: user, person, institution, row version — no status); §15 lists the payload changes |
 | Guest access | `X-Tenant-Code` resolved through iam, guest projections (lms, careers) | served | Only for *approved public derivatives* later (P2); the community itself is never guest-readable |
-| Platform plumbing | `AppTransactionManager`, outbox/inbox events (`EventEnvelope.time` = source commit time; the inbox handler runs **inside** the consumer's transaction), idempotency, gRPC clients, REST/gRPC parity kit, conformance rules, `FieldCipher` (`_enc` columns), per-module `application.properties` | served | Used as is; **no general scheduled-jobs runner exists** (only partition maintenance) |
+| Platform plumbing | `AppTransactionManager`, core's per-tenant scheduled-job runtime (`com.mysms.core.jobs`), outbox/inbox events (`EventEnvelope.time` = source commit time; the inbox handler runs **inside** the consumer's transaction), idempotency, gRPC clients, REST/gRPC parity kit, conformance rules, `FieldCipher` (`_enc` columns), per-module `application.properties` | served | Used as is; the job runtime covers per-tenant scheduled jobs, not yet the queued/dead-letter work of PR-10 |
 | Moderation in lms | lms forum report categories, reports, moderation (hide/unhide/confirm abuse) | served | Same *shape* for community moderation; not shared code across modules (no cross-module dependency) |
 
 **Dependency graph today (ARCHITECTURE §2):** `comms` may call academics, iam, org, platform and sis. It may **not**
@@ -169,8 +897,6 @@ must carry the state (§15).
 status and grading fields came from the request body. Community is the riskiest place to repeat that. Rule for this
 feature: **members never write community rows through generic CRUD**; every member action is a domain command whose
 author, audience and state come from the token and the policy (section 6).
-
----
 
 ## 3. Architecture at a glance
 
@@ -203,13 +929,11 @@ author, audience and state come from the token and the policy (section 6).
 - Everything else is the normal MySMS stack: one service per aggregate on `AppTransactionManager`, typed errors, RLS +
   `tenant_id` in every statement, outbox events, REST/gRPC parity.
 
----
-
 ## 4. The administrator's knobs — the control model
 
 ### 4.1 Layers and precedence
 
-Settings resolve top-down; a lower layer may only **narrow** what the layer above allows (brainstorm §6.3):
+Settings resolve top-down; a lower layer may only **narrow** what the layer above allows (§A6.3):
 
 1. **Platform safety floor** — code constants released with the software (§4.8), plus tightening values a platform
    administrator may set (never loosening). Not editable by tenants or schools.
@@ -234,7 +958,7 @@ effective decision records the policy versions it used, so "why could this paren
 ### 4.2 The knob catalogue
 
 `F` = feature switch (on/off), `V` = value, `L` = list. "Lowest layer" = the most local layer allowed to store it.
-Defaults are the **restrictive pilot defaults** ("Product A + small student pilot" in the brainstorm). "Phase" = when
+Defaults are the **restrictive pilot defaults** ("Product A + small student pilot", §A4). "Phase" = when
 the knob enters the catalogue; a knob not yet in the catalogue cannot be stored (422 `POLICY_UNKNOWN_KNOB`) and its
 behaviour is fixed at the default.
 
@@ -299,7 +1023,7 @@ behaviour is fixed at the default.
 | K43 | Quiet hours | V | 20:00–07:00 | institution | S1 | No social delivery inside; members may narrow further |
 | **Sharing outside** ||||||
 | K44 | Private links | F | off | institution | P1 | Link needs sign-in; generic preview only (EXT-02) |
-| K45 | Public release | F (floor: off until P2) | off | institution | P2 | Approved public derivatives (brainstorm §15) |
+| K45 | Public release | F (floor: off until P2) | off | institution | P2 | Approved public derivatives (§A15) |
 | **Chain and alumni (P1)** ||||||
 | K46 | Inter-school spaces | F | off | tenant | P1 | The tenant may allow inter-school spaces; each school still opts in per space (section 19) |
 | K47 | Alumni network | F | off | institution | P1 | Separate verified network; never sees current students' spaces (ALUM-*) |
@@ -395,7 +1119,7 @@ announced to the tenant administrators.
   tenant layer by a second tenant administrator. **Two-person rule:** approver ≠ proposer by user id **and** by
   `person_id` (one person with two accounts or two roles is one person), neither session impersonated, both sessions
   MFA (`amr` contains `mfa`). A school with a single administrator gets approvals from the tenant administrator; a
-  tenant with a single administrator cannot widen a "2nd" knob — the proposal stays pending and COM-43 says why.
+  tenant with a single administrator cannot widen a "2nd" knob — the proposal stays pending and COM-63 says why.
 - **Bootstrap and one-administrator schools.** The **first** enablement of K01 for an institution is approved by
   platform onboarding (a platform operator acting as second approver for K01 only; no access to content), after a
   call with the school confirming the named people. Later "2nd" widenings follow the rule above; a single-administrator
@@ -406,7 +1130,7 @@ announced to the tenant administrators.
 - **Residual, stated:** the two-person rule rests on identity administration. An administrator who controls hr and iam
   could create a second person and account for himself. Out-of-band checks: platform onboarding approves the first
   enablement; every "2nd" approval and every change of K36/K36a/K34a is notified to the tenant administrators **and**
-  the platform contact on file; a new person created within 30 days before acting as approver is flagged on COM-43.
+  the platform contact on file; a new person created within 30 days before acting as approver is flagged on COM-63.
 - **Proposal lifecycle.** A proposal names the base version it was made against; one pending proposal per (layer,
   scope, knob) (a second → 409 `POLICY_PROPOSAL_PENDING`); the proposer may withdraw it; it expires after 7 days; on
   approval it is **re-validated** against the current parent, floor and preconditions (`POLICY_WIDER_THAN_PARENT` etc.)
@@ -429,7 +1153,7 @@ announced to the tenant administrators.
   - removing a moderator or the lead: refused while it would break the rules above (the school must name a successor
     first); an `hr` exit or iam deactivation that breaks them freezes student posting for that institution (K37 on
     automatically, CFG-13) and notifies the community owner and tenant administrators.
-- **What a school sees of the tenant ceiling** (CLAUDE.md: tenant settings are invisible to ordinary users): COM-40
+- **What a school sees of the tenant ceiling** (CLAUDE.md: tenant settings are invisible to ordinary users): COM-60
   offers only the values the school may choose and marks the rest "not available for your school"; it never shows the
   tenant's value, who set it, its history or its reason. Tenant ceiling rows are readable only with
   `comms.community.manage_tenant_policy` (tenant administrators). Open decision 12 asks the owner to confirm that this
@@ -480,13 +1204,13 @@ announced to the tenant administrators.
   `community_global_switch`/`community_floor_override`, set by platform operators with reason and audit; they can only
   be at or below the code constants.
 - **Floor change against existing policies:** stored school values are never rewritten; the effective value is the
-  safest of floor and stored value at read time, so a tightened floor applies at once; COM-40 shows "limited by the
+  safest of floor and stored value at read time, so a tightened floor applies at once; COM-60 shows "limited by the
   platform" on affected knobs.
 - **Age band without date of birth:** `comms.community_grade_band(institution_id, grade_level_id, band under_13 |
   13_to_17 | adult_programme, set_by, set_at)`, set by the community owner per grade level (academics' `grade_level`
   has no age). A grade with no row is `under_13` (most restrictive). Students' bands come from their enrolment's grade;
   a student with no current enrolment has no student membership at all. The adult *person* status that consent needs
-  comes from people's events (§8.4), not from the grade.
+  comes from privacy's subject status (§8.4), not from the grade.
 
 ### 4.9 What each switch state allows
 
@@ -509,8 +1233,6 @@ recorded legal order, MFA, audited).
 
 `KillSwitchComponentTest` walks this table.
 
----
-
 ## 5. Data model (comms baseline, edited in place — nothing is released yet)
 
 Names are proposals; every table has `tenant_id`, RLS `ENABLE + FORCE`, the tenant isolation policy, `row_version`,
@@ -520,7 +1242,7 @@ post, membership and switch names its home as `(home_kind, home_id)`.
 
 ### 5.1 Homes and membership
 
-**Class pages and spaces are separate models** (owner decision of 18 Nov 2026). A post belongs to exactly one home.
+**Class pages and spaces are separate models** (owner decision). A post belongs to exactly one home.
 
 **`comms.class_page`** (reshaped in the baseline) — **exactly one live page per class section**; academics'
 `class_section` is itself per academic year, so this is one per section per year:
@@ -770,7 +1492,7 @@ changed_at, version)`** (a switch set by a platform operator can be cleared only
 platform operators in a transaction that binds no tenant; readable by tenant transactions through its **own**
 read-all policy, PR-19 — the database README's standard global policies would hide it, §4.7).
 **`comms.community_grade_band`** (§4.8).
-**`comms.consent_projection`** (from people events, §8.4): `consent_record_id, person_id, given_by_person_id,
+**`comms.consent_projection`** (from privacy's `consent_state.changed`, §8.4): `consent_record_id, person_id, given_by_person_id,
 giver_capacity (self|guardian), purpose (photo_video_publication|community_naming|community_participation|
 public_profile), scope (class|institution|inter_school|public; null for participation), decision (granted|refused), valid_until, verification, withdrawn_at, source_version`, and
 **`comms.person_status(person_id, adult, source_version)`**; the precomputed `media_consent_state` and
@@ -852,7 +1574,7 @@ decision 10). Every deletion is recorded in the deletion ledger (§5.7).
   (freeze, community off, media off, legal block), and policy-version activations. **After any database restore**,
   community stays `closed` for the restored tenants until a replay job has re-applied every log entry newer than T in
   order (purges re-run; actions, denies, protected subjects, switches and policy versions re-written as they were);
-  people's consent replay and the sis/iam/academics reconciliation have run; stream positions are reset from fresh
+  privacy's consent-state replay and the sis/iam/academics reconciliation have run; stream positions are reset from fresh
   snapshots; and an operator has checked the replay report, including the `safety_log_outbox` rows that were
   **unshipped at the moment of failure** (the bounded loss — at most the shipping lag — listed so the operator can
   re-apply them from incident records). Then community reopens. The DR runbook (DEPLOYMENT) gets
@@ -880,9 +1602,7 @@ protection owner):
   or under hold, then deleted; cases and evidence about or involving the child → kept under the evidence rules, the
   exception recorded on the request ("kept for safeguarding obligations", no detail to the requester).
 - `ApplyErasure(requestRef, selections)` executes and writes the ledger; the request's exceptions are returned to
-  people's workflow as a list of record kinds and counts.
-
----
+  privacy's rights-request workflow as a list of record kinds and counts.
 
 ## 6. Operations (the API) — commands, not CRUD
 
@@ -905,7 +1625,7 @@ All operations are REST + gRPC with parity, in comms' contract interfaces, with 
 | `WithdrawPost` | Author takes a post down | 409 already removed |
 | `ListMySubmissions` | Author's own drafts, pending, returned with reasons (POST-05) | |
 | `RequestMediaUpload`, `CompleteMediaUpload`, `GetMediaStatus` | Through platform files; binds the media to the author's draft | 422 type/size/allowance |
-| `DeclareMediaSubjects` | Who is in each photo and whether anyone else is identifiable. Picker: on a class page, the section's **roster** from `community_relationship` student rows (students need not be members); in a school space, the rosters of the teacher's own sections plus an "another class" path searching the institution's current students (at least 3 characters, 30 searches per teacher per day, every search logged with who, when and the result count, counts shown in COM-45); names fetched from sis for display at picker time (comms stores none) | 404 person not a current student or staff of the institution |
+| `DeclareMediaSubjects` | Who is in each photo and whether anyone else is identifiable. Picker: on a class page, the section's **roster** from `community_relationship` student rows (students need not be members); in a school space, the rosters of the teacher's own sections plus an "another class" path searching the institution's current students (at least 3 characters, 30 searches per teacher per day, every search logged with who, when and the result count, counts shown in COM-65); names fetched from sis for display at picker time (comms stores none) | 404 person not a current student or staff of the institution |
 | `GET /v1/comms/media/{mediaId}/{variant}` | **Stable media path**: authenticated; runs admission and consent; answers 302 to a fresh signed URL (`no-store`); clients cache by this path | 404 |
 | `GetMediaUrls(mediaIds[])` | Batch of signed URLs for a feed page; counts as one call for rate limits | 404 items omitted |
 | `AddComment`, `EditComment`, `DeleteComment` | Comments within K21/K22 | 403 comments off; 429 slow mode; 409 locked |
@@ -913,7 +1633,7 @@ All operations are REST + gRPC with parity, in comms' contract interfaces, with 
 | `SavePost`, `UnsavePost` | Personal bookmarks | |
 | `MuteHome`, `UnmuteHome`, `SetCommunityPreferences` | Preferences only (digest, quiet hours, hide previews, hide community for myself) | |
 | `ReportContent` | Report a post, comment, image, member or space; includes "concern about staff" and "urgent help"; needs a target the reporter can still read — otherwise `ReportConcern` (§4.9) | 429 report flooding |
-| `ReportConcern` | **Targetless** report (urgent help, privacy, concern about staff, other) with free text and an optional child context; works in every switch state (§4.9), reachable from the home card, from the "Community is unavailable" and 404 screens and from COM-07; routes to the safeguarding lead and deputy (or the independent route) | 429 flooding |
+| `ReportConcern` | **Targetless** report (urgent help, privacy, concern about staff, other) with free text and an optional child context; works in every switch state (§4.9), reachable from the home card, from the "Community is unavailable" and 404 screens and from COM-36; routes to the safeguarding lead and deputy (or the independent route) | 429 flooding |
 | `GetMyReport` | Outcome as far as the reporter may know (SAFE-09) | |
 | `AppealModerationAction` | Author appeals | 409 appeal already open |
 | `ListInAppNotifications`, `GetInAppNotification`, `MarkNotificationsRead` (exist, 501) | Community and other in-app rows, rendered after an access check | |
@@ -1010,7 +1730,7 @@ Estimated contract (all slices to S4): **≈ 108 operations** (S1 ≈ 60, S2 ≈
   reviewer exists (the only other moderator is the subject's parent, or absent), the item stays `submitted`, the queue
   shows it as "needs a reviewer from outside". A **text-only** item is offered to the **tenant community moderators** (a
   tenant-scoped grant of `comms.community.review` the tenant administrator may give: MFA session, every grant and every
-  review audited and listed to each school's community owner in COM-46). **Items with images of students are never
+  review audited and listed to each school's community owner in COM-66). **Items with images of students are never
   offered outside the school**: consent at class or institution width does not cover staff of other schools; such an
   item waits for a school reviewer, and the author may remove the image to publish the text. If nobody eligible exists,
   the author sees "No reviewer is available at your school right now". Nothing publishes by default.
@@ -1048,8 +1768,6 @@ Estimated contract (all slices to S4): **≈ 108 operations** (S1 ≈ 60, S2 ≈
   `AUDIENCE_NOT_ALLOWED`, `NO_LONGER_ALLOWED_TO_POST`, `CHANGED_SINCE_APPROVAL`) that never says why an image is not
   shareable.
 
----
-
 ## 7. Relationships, events and revocation
 
 ### 7.1 Inbound events (owners publish, comms projects)
@@ -1066,10 +1784,10 @@ Event names follow the codebase (`<schema>.<table>.<step>`); payload changes the
 | `org.academic_year.closeAcademicYear`, `org.academic_term.*`, `org.institution.updated/deleted` | org | PR-7 payload with dates and institution `status` | archive class pages (§7.5); term calendar for K30; an institution whose `status` becomes inactive → K01 forced off for it (other institution edits change nothing) |
 | `hr.staff.created / updated / deleted` | hr | member payload today (user, person, institution, row version); §15 adds `status` | staff rows; `exited`/`inactive` end staff membership and moderator duties (CFG-13) |
 | `iam.user_account.deactivateUser`, `…activateUser`, `iam.user_role.*` | iam | id-only | deactivate → deny row and `community_account.status = deactivated` **in the handler** (no data needed); others → refresh via iam `GetUserAccount` / `ListUserRoles` |
-| `people.consent_record.recorded / withdrawn / superseded / expired / snapshot` (new) | people | §8.4 | consent projection |
-| `people.person.majority_reached`, `people.person.status_snapshot` (new) | people | `personId, adult, rowVersion` | `person_status` |
+| `privacy.consent_state.changed` (built), `privacy.consent_state.snapshot` (to build) | privacy | event-carried state per subject, purpose and width, `stateVersion` | consent projection |
+| `privacy.subject.majority_reached` (built), a status snapshot (to build) | privacy | `personId, majorityDate, stateVersion` | `person_status` |
 | `<module>.relay.heartbeat` (new, every 30 s) | sis, iam, people, hr, academics, org | `module, time, streams: {name: {tenantId: lastSeq}}` | `source_heartbeat`, `heartbeat_mark`; per-tenant state by the comparison job (§7.3) |
-| `people.consent.checkpoint`, `hr.staff.checkpoint` (new, daily per tenant) | people, hr | `tenantId, rows, maxRowVersion, digest` | drift detection (§7.3) |
+| `privacy.consent_state.checkpoint` (to build), `hr.staff.checkpoint` (new, daily per tenant) | privacy, hr | `tenantId, rows, maxRowVersion, digest` | drift detection (§7.3) |
 | `lms.showcase.proposed` (P1) | lms | | draft showcase post for the student's review |
 
 **Handling an event.** Handlers are idempotent (inbox), compare `source_version`, and never call another module (they
@@ -1091,7 +1809,7 @@ date the new pages become active. Membership rows reference section ids, so old 
 term-start burst (a whole school's enrolments and assignments in an hour) is part of the heavy-tier load test (§14).
 
 **Detecting a single lost event — per tenant, tolerant of reordering.** The streams that can revoke access are
-sequenced at the source (PR-9): `people.consent`, `people.person_status`, `sis.guardian_link`, `sis.enrollment`,
+sequenced at the source (PR-9): `privacy.consent_state`, `privacy.subject`, `sis.guardian_link`, `sis.enrollment`,
 `hr.staff`, `iam.account`. The source's outbox relay stamps each published event of such a stream with `tenantSeq`, a
 gapless counter per (module, stream, tenant) kept in `<schema>.event_stream(tenant_id, stream, last_seq)` and advanced
 in the relay's own transaction only when the publish succeeds (rollbacks leave no holes; a redelivery repeats the same
@@ -1188,7 +1906,7 @@ itself; iam says a role grants no child reach by itself; each is necessary, none
 
 | Member | Conditions (all required) |
 |---|---|
-| Student S | K01 on; K02 includes students and S's grade band is in K03 (S4); a `student` relationship active today for the page's section (`enrollment_status = enrolled`, `effective_from ≤ today < effective_to`); S's account active in iam with an active student role in the institution; **participation consent**: for a minor (people's `adult` flag false or unknown — the legal threshold, 18 in India) a live `community_participation` consent from a current legal guardian (PR-22); for an adult, their own acceptance in COM-11. The grade bands (`under_13` …) govern age-appropriate design only, never consent |
+| Student S | K01 on; K02 includes students and S's grade band is in K03 (S4); a `student` relationship active today for the page's section (`enrollment_status = enrolled`, `effective_from ≤ today < effective_to`); S's account active in iam with an active student role in the institution; **participation consent**: for a minor (people's `adult` flag false or unknown — the legal threshold, 18 in India) a live `community_participation` consent from a current legal guardian (PR-22); for an adult, their own acceptance in COM-40. The grade bands (`under_13` …) govern age-appropriate design only, never consent |
 | Guardian G of S | K01 on; K02 includes guardians; K04b on; S has an active enrolment in the page's section (S need not be a member: students are not members before S4); the link row active (`status = active`, not restricted, not deleted); `has_custody = true` (non-custodial guardians: open decision 8, default no membership); G's guardian record has an account (`guardianUserId` set); that account active; an active guardian role in the institution; no deny row |
 | Teacher T | K01 on; K02 includes staff; an active `teacher_of` (teaching assignment of a subject of the section) or class-teacher assignment; hr status `active`; account active with a staff role in the institution |
 
@@ -1293,7 +2011,7 @@ In comms, in the handler's transaction:
 - the guardian sees the child disappear and the school-wide spaces disappear with no message; comms has no other output.
 
 **Belt and braces without the screen step.** sis cannot call comms (ARCHITECTURE §2), and a UI step run by a registrar
-without comms permissions is not a control, so the earlier "Revoke community access now" step is removed. Instead,
+without comms permissions is not a control, so there is no "Revoke community access now" step in sis. Instead,
 comms (which may call sis) reads every restricted link of each institution with community on every 10 minutes through
 `sis.ListRestrictedGuardianLinks(institutionId)` (PR-4) and applies any it has not seen; with the per-tenant stream
 sequence (§7.1) this bounds a lost event to ≈ 2.5 minutes, and an unreachable sis to the 10-minute read.
@@ -1303,8 +2021,6 @@ until a person lifts them. `ProtectedSubjectComponentTest`: a guardian with A re
 asserts no school-space membership, no post involving A in B's class page, no surfaced copy or inter-school post
 involving A, no comment by A, no notification about A, media URLs refused, and B's class page otherwise unchanged.
 Already-delivered push notifications cannot be recalled; they contain no class or child (§11.1).
-
----
 
 ## 8. Media pipeline
 
@@ -1380,7 +2096,7 @@ verification failure.
 
 ### 8.4 Consent rule (K17)
 
-Consent comes from people's `consent_record` as changed in §15: purpose `photo_video_publication` with
+Consent comes from privacy (its effective state follows exactly the rule below, privacy design §4.2): purpose `photo_video_publication` with
 `scope ∈ class < institution < inter_school < public` (a consent at a width covers every narrower width), `decision
 granted | refused`, `giver_capacity self | guardian`, `valid_until`, `verification`. **Width of a post:** class page →
 `class`; school space, clubs, staff room and surfaced copies → `institution`; inter-school → `inter_school`; public
@@ -1395,7 +2111,7 @@ An image may be served for a post of width W only if, for **every** confirmed st
   `is_legal_guardian = true` (comms projection); and **no** live refused row at scope ≤ W, and no granted row with a
   narrower scope, from any other such legal guardian — the most restrictive legal guardian decides (PRIV-04, PRIV-08).
   A guardian who has said nothing does not block; a guardian who restricted or lost the link no longer counts either way.
-- **No projection row = no consent** (blocked). On a cold start the projection is empty until people's replay has run
+- **No projection row = no consent** (blocked). On a cold start the projection is empty until privacy's snapshot replay has run
   and the checkpoint matches; until then every image with student subjects is blocked.
 - Staff subjects need no consent row (`not_required_staff`) but staff may refuse being pictured through the same people
   record (a refused row blocks).
@@ -1428,16 +2144,16 @@ legal guardian who has recorded nothing does not block. A child with **no grante
 blocks every image showing them. Consequently photos publish only for children whose guardians have answered; the
 subject picker shows each child's state at the post's width to the posting teacher (school staff, a legitimate
 need), so teachers photograph consented children or take photos without identifiable faces. **Collecting consent
-before S3:** the school sends a consent request through notices (with acknowledgement) linking to COM-10; guardians
-answer per width; paper forms are recorded and verified (PRIV-06); COM-45 shows per-class coverage as a count
+before S3:** the school sends a consent request through notices (with acknowledgement) linking to COM-39; guardians
+answer per width; paper forms are recorded and verified (PRIV-06); COM-65 shows per-class coverage as a count
 ("24 of 31 children consented at class width") to the community owner and class teachers. No share of photos is
 promised: in a class at 80 % coverage most whole-class group photos will block and individual or small-group photos of
 consented children will publish.
 
-**Reaching majority** (`people.person.majority_reached`, open decision 9 — the recommendation below is the default until
+**Reaching majority** (`privacy.subject.majority_reached`, open decision 9 — the recommendation below is the default until
 the owner rules): (1) from that moment only the student's own consent counts for new publication, surfacing and sharing;
 (2) items already published under guardian consent stay at **class and institution** width (grandfathered: they were
-lawful when published) and the student is told in COM-10 "You can now decide about photos of you", where withdrawing
+lawful when published) and the student is told in COM-39 "You can now decide about photos of you", where withdrawing
 hides them at once; (3) items at **inter-school** width are hidden after 60 days unless the student has granted
 `inter_school` themself; (4) guardian membership of the class page continues (it is class content, not the student's
 private data). The job that applies (3) runs daily from `person_status` rows; `MajorityTransitionComponentTest` covers
@@ -1448,7 +2164,7 @@ Legacy and paper consents: a generic "photo publication" form that does not stat
 `unverified` until a second staff member verifies it (PRIV-06); unverified rows do not count.
 
 **Exposure after a withdrawal** (normal path): people commit → people relay → bus → comms inbox: p95 60 s; if the
-queue backs up, people's heartbeat ages past 2 min and the source goes `degraded`, after which *no* media URL is issued
+queue backs up, privacy's heartbeat ages past 2 min and the source goes `degraded`, after which *no* media URL is issued
 at all; a delivered event that keeps failing degrades it after 3 min. Add a URL issued just before (120 s) and the
 client's cache (≤ 120 s, after which it must revalidate, §8.1): worst case ≈ 3 + 2 + 2 = **7 minutes**. A single event lost while heartbeats keep flowing is
 detected by the tenant's stream sequence within ≈ 2.5 minutes and blocks all student images of that tenant (§7.1), so
@@ -1478,8 +2194,6 @@ the takedown. Notifications never contain images (§11.1).
 - **What cannot be detected:** a face the uploader did not declare and the confirmer did not notice; partial faces,
   reflections, name badges, uniforms, a school logo identifying the school. There is no face recognition (MEDIA-04);
   the controls are the declaration, the second person's look, consent per subject, and fast takedown.
-
----
 
 ## 9. The feed — query-based, no ranking
 
@@ -1680,8 +2394,6 @@ SELECT p.id, p.home_kind, p.home_id, p.published_at, p.post_kind, v.body, v.body
   per-post child chip; switching child is a visible context change (NET-05).
 - **Caught up:** the client shows "You're all caught up" and stops — no infinite scroll.
 
----
-
 ## 10. Permissions (iam), case routing and the safeguarding boundary
 
 ### 10.1 Permissions
@@ -1776,8 +2488,6 @@ acknowledges notices through the notices module, which does not consult communit
 no dependency on finance and no input from fee status; `CommunityAccessFeeIndependenceTest` asserts that the community
 decision path reads no finance data and that no restriction kind is derived from one.
 
----
-
 ## 11. Notifications
 
 ### 11.1 What is sent
@@ -1843,161 +2553,6 @@ contain nothing beyond "You have an update in MySMS".
 - **S1–S3:** in-app rows and the in-app digest card only; no push or email dependency at all. When providers arrive
   (§15), push/email are added per §11.1 without changing the rules.
 
----
-
-## 12. The user interface — every role, every device
-
-Screen ids `COM-xx` (to add to `ui/02-navigation-and-screens.md` §3). W = web, S = phone, B = tablet.
-
-### 12.1 Home integration (the first screen after sign-in)
-
-Order on every home (brainstorm §8.1): **context bar** (school / role / child) → **urgent official notices** →
-**today / needs action** → **community preview** (3–5 latest items from my homes + "Open community") → **upcoming
-events**. Community failing to load shows a small "Community is unavailable" card and never blocks the rest
-(HOME-07). Each role's home is a separate composition:
-
-| Role | Home cards (in order) | Community on home |
-|---|---|---|
-| **Student** | Timetable today, homework due, LMS "continue learning", notices | "From your class and clubs" preview; "My submissions" chip when one is returned |
-| **Teacher** | Today's classes, attendance to take, work to grade, **review queue count**, notices | Quick composer for "my class" (one tap: photo + caption → submit), latest from my homes |
-| **Guardian** | Child switcher, per-child: fees due, attendance alerts, homework, notices | Per-child "What's happening in Grade 7 B" preview; consent reminders when a photo is waiting on them |
-| **Staff (non-teaching)** | Job tasks (library, transport, office), notices | Staff room preview |
-| **Principal / community owner** | School KPIs (existing dashboards), **community health** card (queue age, open cases, posts this week), urgent cases | Official composer ("post as the school") |
-| **Tenant administrator** | Tenant dashboards; community ceiling and presets status; pending approvals; cases awaiting an independent handler (count only) | — |
-| **Alumni (P1)** | Alumni events, batch updates | Alumni network only |
-
-### 12.2 Community area — members
-
-| Id | Screen | W | S | B | What it holds |
-|---|---|---|---|---|---|
-| COM-01 | Community feed | ✓ | ✓ | ✓ | Merged feed, home filter chips, "caught up" end, pinned official items, child switcher for guardians ("all children" shows a child chip per post) |
-| COM-02 | Home page (class page or space) | ✓ | ✓ | ✓ | Header (rules in plain words, "who can see posts here"), its feed, members list per K32, mute |
-| COM-03 | Post detail | ✓ | ✓ | ✓ | Post, images (tap to full variant), reactions per K24, comments (depth ≤ K22), report |
-| COM-04 | Composer | ✓ | ✓ | ✓ | Text, up to K15 photos, alt text prompts, "who is in this photo" (subject picker + "anyone else identifiable?"), **audience chip with plain-language preview**, posting identity line, post type, schedule (staff), review notice |
-| COM-05 | My submissions | ✓ | ✓ | ✓ | Drafts, pending, returned with reason (edit & resubmit), published, withdrawn, hidden by a setting change |
-| COM-06 | Moments viewer (P1) | ✓ | ✓ | ✓ | Tap-through, pause, text alternative, no viewer counts for students |
-| COM-07 | Report flow | ✓ | ✓ | ✓ | `ReportContent` from an item, or `ReportConcern` without one (also from the home card and the "unavailable" screens); category (incl. "concern about a staff member", "I need help now"), optional detail, confirmation, "what happens next", staffed hours, urgent-help numbers (SAFE-05) |
-| COM-08 | My community settings | ✓ | ✓ | ✓ | Muted homes, digest, quiet hours, language, hide previews; link to consent centre (guardians, adult students) |
-| COM-09 | Saved posts | ✓ | ✓ | ✓ | |
-| COM-10 | Consent centre (guardians, students 18+) | ✓ | ✓ | ✓ | §12.7 — uses people's consent operations and comms' `GetMyChildMediaUse` |
-| COM-11 | Community rules and privacy (first use) | ✓ | ✓ | ✓ | MEM-04 rules, what is shared and with whom, what guardians can see (students), before optional participation; acceptance stored as a preference |
-
-### 12.3 Staff and moderators
-
-| Id | Screen | W | S | B | What it holds |
-|---|---|---|---|---|---|
-| COM-20 | Review queue | ✓ | ✓ | ✓ | Pending posts and held comments with age, author category, audience, media subjects and consent state; claim; approve / return with reason / reject; keyboard-first on web; §12.8 |
-| COM-21 | Home management | ✓ | — | ✓ | Spaces (types per K04), owners/moderators, rules within the institution's limits, archive; class pages: description, cover, surfacing |
-| COM-22 | Cases | ✓ | — | ✓ | Reports grouped into cases, severity, SLA, evidence (restricted), actions, escalation to safeguarding |
-| COM-23 | Case detail | ✓ | — | ✓ | Timeline of reports and actions, evidence record (hashes, ids, review trail; pixels only under a safeguarding hold), decision with reason code, outcome messages |
-| COM-24 | Safeguarding inbox | ✓ | — | ✓ | Safeguarding and staff-concern cases only; visible only with the safeguarding permission; every open logged |
-| COM-25 | Member restrictions | ✓ | — | ✓ | Who is muted / under review-all / suspended, until when, linked case |
-| COM-26 | Classroom quick post | — | ✓ | ✓ | Camera-first composer for teachers; shared classroom tablet rules in §12.9 |
-| COM-27 | Emergency takedown | ✓ | ✓ | ✓ | One item, reason, confirm; shows completion of purge |
-
-### 12.4 Administrators
-
-| Id | Screen | W | S | B | What it holds |
-|---|---|---|---|---|---|
-| COM-40 | Community settings | ✓ | — | ✓ | The knob catalogue grouped as in §4.2; each knob shows **inherited value, local value, "limited by your organisation / the platform"** and who set the school's value; widening shows a warning and becomes a proposal (§4.6) |
-| COM-41 | Presets | ✓ | — | — | Apply a preset with a diff preview |
-| COM-42 | Preview as role | ✓ | — | — | Effective policy and synthetic feed for a role/space |
-| COM-43 | Policy history and approvals | ✓ | — | — | Versions, before/after, approver, pending approvals and why they are blocked |
-| COM-44 | Emergency controls | ✓ | ✓ | ✓ | Freeze institution / home, lock posting, with reason; visible banner while active |
-| COM-45 | Community health | ✓ | — | ✓ | Aggregates only, in rounding bands (§9.3); consent coverage per class; picker-search counts; median review time; no leaderboards, no per-child engagement |
-| COM-46 | Moderation team | ✓ | — | — | Community owner, moderators, safeguarding lead and deputy, independent route, coverage hours, grade bands — **community cannot be enabled until §4.6 is met** |
-| COM-47 | Person content (erasure) | ✓ | — | — | Discovery and erasure (§5.8), exceptions list |
-| PC-COM-01 | Platform safety floor (platform console) | ✓ | — | — | Floor constants (read-only), tightening overrides, global switches, projection health; changes audited |
-
-**≈ 32 screens.** Phone screens are the member set plus review queue, takedown and emergency controls; heavy
-administration is web and tablet.
-
-### 12.5 UI rules that matter for privacy
-
-- The audience is **always visible** on the composer and on every post ("Shared with: Grade 7 B students and
-  guardians").
-- **Guardians are shown to other guardians as "a guardian"** by default (comments, member lists); staff see names. A
-  school may show guardian names inside a class page (K32), never with the child.
-- **Screens are protected where the platform allows:** Android `FLAG_SECURE` and a blurred app-switcher snapshot on iOS
-  for community screens; screenshots cannot be prevented on every device, and the consent text says so.
-- **Shared web computers:** images are never written to the browser's disk cache (`no-store`, §8.1); sign-out clears
-  memory caches; the web app offers "This is a shared computer" at sign-in, which shortens the session to 15 minutes idle.
-- Student authors (S4) show **first name + class** inside their own class page only with class-width naming consent
-  (§8.4), else "a student of Grade 7 B"; in the school space "a student of Grade 7 B" unless naming consent at
-  institution width exists; never contact details or full date of birth (MSG-04). To staff, guardians show as their own
-  display name and "guardian", never with the child's name or class.
-- Reaction counts follow K24; students see "Your classmates appreciated this" without numbers.
-- Switching child, role or school **clears the feed cache** and scroll state (HOME-10); sign-out clears local protected
-  state (UX-07, §12.9).
-- Images load as thumbnails first; a data-saver toggle keeps them tap-to-load (UX-02).
-- Every string in en and hi (and the pilot's languages); every action gated by `useCan`; every write sends its ETag;
-  409/412/422 explained in words.
-
-### 12.6 Student UI (S4)
-
-- **Who can see this post:** every post and the composer show the audience in words for the reading level ("Your class
-  and your class's parents can see this"; "Your teacher will check it first"); pending posts show "Only you and your
-  teacher can see this right now".
-- **What guardians can see** (PRIV-14): COM-11 and the class page header say "Your parents or guardians can see posts
-  in your class page" when K04b/K10 are on; "they cannot see your reports or messages to the safeguarding lead".
-- **Help routes:** COM-07 in the student's language, short sentences (written to a Grade 4 reading level for under-13
-  bands), an "I need help now" path showing who is on duty and staffed hours (SAFE-05); never labelled an emergency
-  service.
-- **Unknown grade band:** shown as the under-13 experience (no counts, guided composer); the student is not told a band.
-
-### 12.7 Consent centre (COM-10)
-
-- Lists only the children the guardian holds an active, unrestricted **legal-guardian** link to (students 18+ see only
-  themselves). Per child and per width (class / whole school / schools of our group): the guardian's **own** decision
-  (granted / refused / not answered, date, notice version, channel) and the **effective result** ("Photos of Aarav are
-  currently shared with: his class") **with no explanation of why it differs** — the effective result can be narrower
-  because of school settings, the student's own choice or another guardian, and the screen names none of them; "Ask
-  the school office if this is not what you expect". It never shows another guardian's decision, name or date, any
-  wording about other guardians, or anything about siblings' or classmates' consent (open decision 13).
-  `ConsentCentreDisclosureComponentTest`: two legal guardians, one grants school width, the other refuses; neither
-  response contains the other's decision, identity, date or a reason field.
-- **What is affected** (PRIV-07), from `GetMyChildMediaUse`: "Aarav appears in 4 posts in Grade 7 B, 1 in the school
-  space, 0 shared with other schools". On withdrawal: "New sharing stops at once. Photos already shared are hidden
-  within about 7 minutes and deleted from our storage; once deleted they cannot be recovered [after N days — shown
-  only when the community bucket keeps deleted files, §5.7]. Copies someone saved or photographed cannot be recalled."
-  If the school's safeguarding lead must keep an image as evidence of a serious incident, it is held privately under a
-  legal hold and every access is logged; the guardian is told "kept privately by the school's safeguarding lead as
-  evidence" without detail. The same wording, with the real number, is used in the erasure outcome.
-- **What is held about my child** (PRIV-09 access, S4): `GetMyChildCommunityData` lists the posts, credits, comments
-  and reactions involving the child that the guardian may see, with counts of items in other homes; cases and evidence
-  are excluded and counted only.
-- The consent text explains that a width covers the people in that audience as it changes over the year (a new
-  teacher, a new classmate's parent), and that screenshots cannot be prevented.
-- Withdrawal and changes call people's operations; comms never stores the decision itself.
-
-### 12.8 Review ergonomics (COM-20)
-
-- No bulk approve for any item with images or student authors; bulk actions exist only for returning items or for
-  text-only staff posts.
-- Approve is disabled until the reviewer has opened every image at full variant and ticked each image's subject check;
-  the subject list with each subject's consent state at the post's width is shown beside the image; on phones the image
-  opens full-screen first.
-- The approval records reviewer, claim time, time spent on each image and device class; COM-45 shows median review time
-  per institution (not per person) so rubber-stamping is visible.
-
-### 12.9 Shared classroom tablet and sign-out (React Native, Expo)
-
-- **Classroom device mode** (set by an administrator when enrolling the device): a teacher signs in per session; the
-  refresh token is **not** persisted (memory only); the access token lives in memory; idle 5 minutes → lock screen,
-  15 minutes or the end of the period → sign-out; the app never shows the previous teacher's content after lock.
-- **Personal devices:** refresh token in `expo-secure-store` (Keychain / Keystore), never in AsyncStorage.
-- **Camera:** COM-26 captures in-app into the app's cache directory; the app requests no media-library write
-  permission, so photos never reach the device gallery; the picked or captured image is re-encoded to JPEG on the device
-  (dropping EXIF and GPS) before upload and again on the server.
-- **Drafts:** in memory, or encrypted in secure storage on personal devices; dropped at lock in classroom mode.
-- **Sign-out (all devices):** clears the React Query cache, secure-store tokens, the app's image cache and cache
-  directory, any persisted drafts, and dismisses delivered notifications of the app.
-- **Tests:** client unit tests for the storage policies; a device test (Maestro or Detox, chosen by the client batch)
-  that signs in on a classroom device, captures a photo, locks, asserts the gallery has no new item and the cache
-  directory is empty after sign-out.
-
----
-
 ## 13. Privacy and security invariants (each one becomes a test)
 
 1. Author, actor, tenant and institution come from the token; **no community request field can set them**.
@@ -2026,163 +2581,6 @@ administration is web and tablet.
 16. Class-page membership comes only from relationships; no operation adds a member to a class page.
 17. Community access never depends on fee status.
 
----
-
-## 14. Testing strategy
-
-**Time and tiers — no fakes outside unit tests** (CLAUDE.md). All time-based logic reads the injected `java.time.Clock`
-bean the services already take; **unit tests** may give it a fixed or advancing clock. **Component tests** use the real
-clock, real PostgreSQL and a real bus, and shorten waits through **configuration**, not doubles: every threshold
-(reorder window, degrade, guardian close, closed, SLA, claim, expiry) is a property in comms' `application.properties`
-(`mysms.comms.community.*`), set to seconds in the component-test profile (e.g. reorder window 2 s, degrade 3 s, closed
-6 s). **Drop and reorder without a fake bus:** the test is a real producer — it publishes crafted events (with chosen
-`tenantSeq` values: 1, 3 and never 2 for a drop; 3 then 2 for a reorder) and crafted heartbeats through the production
-`EventBus` API, with the source module's own relay heartbeat disabled by configuration; the fast tier runs on the
-messaging library's **in-process adapter** (a production adapter used by the single-process deployment), the heavy tier
-on RabbitMQ and the Pub/Sub emulator. Two tiers:
-
-| Tier | Where | Runs |
-|---|---|---|
-| **Fast** — part of `mvn clean install` | the 2-core / 7 GB build machine, one PostgreSQL Testcontainer, the in-process bus adapter | all component tests of comms (HTTP, real PostgreSQL); matrix **≈ 600 pairwise cases** run against one migrated database, each case in a fresh tenant of its own (no cleanup,
-no rollback tricks — services commit through `AppTransactionManager`); property test **20 seeds × 20 viewers**; revocation, gap, kill-switch and after-hours tests with the configured short thresholds (seconds of wall time); write-surface, redaction, snapshot, protected-subject, membership, multi-institution, archive, majority, consent-centre tests. Budget: ≤ 6 minutes for comms' component tests |
-| **Heavy** — `-Pheavy`, nightly and before each pilot | a larger CI runner (8 vCPU / 32 GB) | full matrix ≈ 3,000 cases; property test 500 seeds × 50 viewers; RabbitMQ container pause and Pub/Sub emulator reordering variants of the gap and broker tests; term-start burst (a school's enrolments and assignments in one hour) |
-
-- **Matrix:** generated cases of member category (6) × grade band (4) × knob value (every value of every knob enforced
-  in the slice) × action, checked against an expected-answer table written from §4.2/§4.5, not from the code.
-- **Property:** `AudiencePropertyComponentTest` compares `GetFeed`/`GetPost` with `AudienceReference`, a plain-Java
-  evaluator written **from §9.1 only** by a different agent than the one writing `FeedRepository`, sharing no code
-  (set membership, never SQL); failing seeds are kept as regression cases in the fast tier.
-- **Named component tests:** `ClassPageMembershipComponentTest`, `CommunityWriteSurfaceTest` (§6.4),
-  `CommunityLogRedactionComponentTest` (sentinel body text and child name absent from logs, `outbox_event.data`, audit,
-  metric labels, error bodies), `ArchiveAccessComponentTest`, `MultiInstitutionIsolationComponentTest`,
-  `GuardianMultiChildComponentTest`, `KillSwitchComponentTest` (§4.9, §21), `FeedSnapshotComponentTest` (§9.2),
-  `StreamGapComponentTest` (one dropped and one reordered event per sequenced stream; per-tenant fail-closed only for the
-  affected tenant; automatic repair), `ProtectedSubjectComponentTest` (§7.7), `MajorityTransitionComponentTest`,
-  `ConsentCentreDisclosureComponentTest`, `AfterHoursWithholdComponentTest`, `CommunityNotificationHygieneComponentTest`,
-  `RevocationUnderBrokerFailureComponentTest`, terminated staff (§7.4), REST/gRPC parity (existing kit).
-- **Client tests:** composer audience preview, review queue gating, child switcher clearing state, report flow, sign-out
-  clearing, classroom device mode (§12.9), stable media path caching.
-- **Abuse drills** (SAFE-17), as gates in §16.2.
-- **Load test** `CommunityFeedLoadTest` (Java harness, `-Pload`) runs in a **named environment, `community-load`**: a
-  GCP project mirroring the cost plan's recommended configuration (Cloud SQL Enterprise 4 vCPU / 16 GiB, the API on
-  Cloud Run with 2 × 2 vCPU / 4 GiB instances, the media worker separately, the community bucket), the §9.2 dataset, and
-  the load generator on its own e2-standard-4 VM. Owner: operations (the owner names the person and approves the cost, §18 item 21); started
-  for the run and deleted afterwards. It never runs on the build machine.
-- **Release blockers for any pilot:** the fast and heavy tiers green; the load test passed in `community-load` within
-  the last 30 days; the drills for the slice recorded.
-
----
-
-## 15. Prerequisites outside comms (exact contracts)
-
-| # | Prerequisite | Module | Contract / schema change | Needed by |
-|---|---|---|---|---|
-| PR-1 | **Consent schema** | people | `consent_record` gains: `scope varchar(20)` (CHECK in `class, institution, inter_school, public`; required iff `purpose = 'photo_video_publication'`), `decision varchar(10) NOT NULL DEFAULT 'granted'` (CHECK `granted, refused`), `giver_capacity varchar(10) NOT NULL` (CHECK `self, guardian`), `valid_until date`, `verification varchar(12) NOT NULL` (CHECK `verified, unverified`), `verified_by_user_id uuid`, `superseded_by_id uuid`; CHECK `channel NOT IN ('paper_form','in_person') OR (evidence_file_id IS NOT NULL AND recorded_by_user_id IS NOT NULL)`; unique index replaced by `(tenant_id, person_id, purpose, given_by_person_id) WHERE withdrawn_at IS NULL AND deleted_at IS NULL AND superseded_by_id IS NULL`. The design's earlier `photo_publication` is `photo_video_publication` | S3 |
-| PR-2 | **Consent operations** (the 5 × 501) | people | `CreateConsentRecord` (purpose, scope, decision, channel, evidence; giver from the token for self-service; staff recording a paper form need `people.consent_record.record_on_behalf` and evidence; a new row at the same (person, purpose, giver) supersedes the old one), `WithdrawConsent`, `GetConsentRecord`, `ListConsentRecords` (a guardian sees only rows they gave and the effective status), `GetConsentStatus` (effective width per purpose, computed with the same most-restrictive rule as §8.4). Guardian authority: people keeps `people.guardian_authority` from `sis.student_guardian` events (an event-only reference against the dependency arrow, as ARCHITECTURE §2 allows) and refuses a guardian giver without an active legal-guardian link (403) | S3 |
-| PR-3 | **Consent events** | people | `people.consent_record.recorded / withdrawn / superseded / expired` (daily expiry job) and `.snapshot` (replay) with `{id, personId, givenByPersonId, giverCapacity, purpose, scope, decision, validUntil, verification, withdrawnAt, subjectAdult, rowVersion}`; `people.person.majority_reached {personId, adult: true, rowVersion}` from a daily job (age of majority from the tenant's jurisdiction, 18 in India) and `people.person.status_snapshot`; daily `people.consent.checkpoint {tenantId, rows, maxRowVersion, digest}`; **`people.ReplayConsentEvents(tenantId)`** (platform operator or tenant administrator) re-publishes `.snapshot` for every live row and `status_snapshot` for their subjects. Owner of replay: people | S3 |
-| PR-4 | **Restricted guardian link** | sis | `student_guardian.status` CHECK becomes `active, restricted, inactive`; new `sis.student_guardian_restriction(id, tenant_id, student_guardian_id, reason_code, legal_reference_enc, evidence_file_id, decided_by_user_id, valid_from, valid_to, lifted_at, lifted_by_user_id, …)` readable only with `sis.student_guardian.restrict`; operations `sis.RestrictGuardianLink`, `sis.LiftGuardianLinkRestriction`, `sis.ListGuardianLinkRestrictions` (that permission; MFA); internal gRPC `sis.ListRestrictedGuardianLinks(institutionId)` returning `{linkId, studentPersonId, guardianUserId, rowVersion}` only (no reason), for comms' 10-minute read (service token, §7.7); generic `UpdateStudentGuardian` can no longer set or clear `restricted` (422); events `sis.student_guardian.restricted / restriction_lifted` with the PR-5 payload and no reason. sis's own persona rule already reads `status = 'active'` only, so the restriction also applies to sis's guardian views | S2 |
-| PR-5 | **Relationship payloads** (hard for S2) | sis | `sis.student_guardian.*`: `{id, studentId, studentPersonId, guardianId, guardianUserId, guardianPersonId, institutionId, status, hasCustody, isLegalGuardian, receivesCommunication, rowVersion}`; `sis.student_enrollment.*`: `{id, studentId, studentUserId, studentPersonId, institutionId, academicYearId, classSectionId, enrollmentStatus, effectiveFrom, effectiveTo, changeReason, rowVersion}` | S2 |
-| PR-6 | **Staff status** | hr | `hr.staff.*` member payload adds `status`; `ChangeStaffStatus` to `exited` deactivates the iam account (hr may call iam; outside the transaction, retried); daily `hr.staff.checkpoint`; `hr.ReplayStaffEvents(tenantId)` | S1 |
-| PR-7 | **Academics / org payloads** (hard for S1) | academics, org | `academics.class_section.*` `{id, institutionId, academicYearId, gradeLevelId, sectionId, classTeacherStaffId, isActive, rowVersion}`; `academics.teaching_assignment.*` `{id, classSectionId, staffId, teacherRole, isActive, rowVersion}`; `org.academic_year.closeAcademicYear` and `org.academic_term.*` with dates; `org.institution.*` with `status`. Id-only events would mark whole classes stale on every edit (§7.1), so the fallback is not acceptable | S1 |
-| PR-8 | **iam confirmations** | iam | **Verified 18 Nov from the code:** `UserAccountService.deactivateUser` runs `UserAccountRules.afterDeactivate` → `signOut.everywhere` in the same transaction (refresh and API tokens revoked, sessions ended) and publishes `iam.user_account.deactivateUser`; `SignInService` refuses a refresh without an active account; `IamTokenGrantsComponentTest` asserts that a deactivated (and even re-activated) account's token no longer refreshes (401). Remaining: confirm that `activateUser` and `user_role` events are published on every path (import, sis/hr portal-account flows) — an iam test to add, `IamAccountEventsComponentTest` | S1 |
-| PR-9 | **Relay heartbeat and per-tenant stream sequence** | messaging (core) for the heartbeat of **every** module's relay (comms consumes those of sis, iam, people, hr, academics and org); sis, people, hr, iam for the sequences | each module's outbox relay publishes `<module>.relay.heartbeat {module, time, streams: {name: {tenantId: lastSeq}}}` every 30 s (no tenant; tenants that published on the stream in the last 30 min) on the same exchange as its events; for the designated streams (`people.consent`, `people.person_status`, `sis.guardian_link`, `sis.enrollment`, `hr.staff`, `iam.account`) the relay stamps `tenantSeq` from `<schema>.event_stream(tenant_id, stream, last_seq)` in its own transaction, advanced only on a successful publish; `ApplicationRoleGrants` grants the relay role `SELECT, INSERT, UPDATE` on `event_stream`; replay snapshots carry the current `tenantSeq`; consumers tolerate reordering (§7.1) | S2 (heartbeat alone for S1) |
-| PR-10 | **Scheduled-jobs runner** | core | leader-elected or row-claimed jobs with per-item transactions, retries with backoff, dead-letter table, metrics; runs projection refresh, reconciliation, dispatch, digest, SLA, retention, purge, media | S1 |
-| PR-11 | **Platform files** | platform + ops | file objects created for comms carry neutral names (`<mediaId>-<variant>.jpg`); `PurgeFileObject` also overwrites `file_name` and `original_name` of the purged row with the neutral name; a second storage disk `gcs-community` (`MYSMS_COMMUNITY_FILES_BUCKET`) for comms' media and evidence — bucket with versioning off, soft delete off, no lifecycle or backup copy (§5.7); `GetStoragePolicy(disk)` returning versioning and soft-delete retention read from the bucket at startup; `GetDownloadUrl` takes `ttlSeconds` (30–600; today fixed 10 min); `PurgeFileObject` (delete with generation precondition, list and delete any remaining versions, refund quota, write `deletion_log`, report misconfiguration); service-identity upload for derived files (`owner_entity_type = comms.community_media`); signed downloads carry `Cache-Control: no-store` (the `response-cache-control` parameter of the signed URL); the community bucket's CORS allows GET from the web app's origins | S3 |
-| PR-12 | **Database grants** | ops / database | **Verified 18 Nov from the code and docs:** migrations grant only `mysms_app` (DML) and the relay role (outbox/inbox) per schema (`core.db.ApplicationRoleGrants`); DEPLOYMENT.md gives `mysms_platform_admin` only `CONNECT`; no default privileges exist, and `BYPASSRLS` does not bypass table privileges — so it reads no comms table today. **Defect found:** `ModuleDatabaseSettings` javadoc and `TestDatabase` comment call the relay role `mysms_platform_admin`; if an operator followed them, that role would gain the outbox/inbox grants (ids only, no business table) — the comments must be corrected by core's owner. To add: a `smoke.sql` assertion `NOT has_table_privilege('mysms_platform_admin', 'comms.safeguarding_case', 'SELECT')` for every comms table | S1 |
-| PR-19 | **Global-row read policy** | database (comms baseline) + docs | for comms' tenantless tables without tenant data (`community_global_switch`, `source_heartbeat`): `FOR SELECT USING (true)` for tenant sessions, writes only from a transaction binding no tenant; `heartbeat_mark` keeps the standard global policies (invisible to tenant sessions); database README gains this third case; `smoke.sql` asserts a tenant session reads and cannot write the global switch | S1 |
-| PR-20 | **Bulk read RPCs and service identity** | sis, iam, academics (+ iam service tokens) | internal gRPC, paged, with `rowVersion`: `sis.ListGuardianLinksByInstitution`, `sis.ListEnrollmentsByInstitution`, `iam.ListAccountsByInstitution` (status + role grants), `academics.ListClassSectionsByInstitution`, `academics.ListTeachingAssignmentsByInstitution`; each takes `updatedSince`. Called by comms' refresh, reconciliation and gap repair with a **service token** (iam already issues them, 5-minute TTL, `service-token-ttl`; `GrpcAuthInterceptor` exists in auth-client — `backend/README.md` line 76 is stale) carrying the tenant and an internal audience; comms' service principal needs only these read permissions. PRINCIPAL-REVIEW P1-34 (batch reads) is thereby partly delivered for these resources | S1 (academics, iam), S2 (sis) |
-| PR-21 | **Off-lineage safety log** | platform + ops | an append-only bucket outside database backups with a **45-day retention lock** (backup window + margin) and expiry after it; objects encrypted per tenant; readers limited to comms' replay service identity and two named operators, reads logged; comms ships `safety_log_outbox` rows to it through platform (§5.7); DR runbook step "replay the log, list unshipped entries, replay consent, reconcile, operator check, then reopen" | S1 (text actions) |
-| PR-22 | **People purposes** | people | add `community_naming` (names, credits, directory names; same widths as photos) and `community_participation` (a guardian's consent to a minor's participation; a minor = people's `adult` false) to `consent_record.purpose`; both carried by the PR-3 events | S3 (naming), S4 (participation) |
-| PR-13 | **Delivery providers** (push/email) | comms + infra | not needed for S1–S3 (§11.4) | S4 (S3 soft) |
-| PR-14 | **Gateway rate limiting** | infra | per-account and per-IP limits on community writes and media URL issuance (SAFE-12 scraping/bulk download) in addition to K40 in the service | S4 (soft before) |
-| PR-15 | **Image library and media worker** | comms + ops | TwelveMonkeys ImageIO (`imageio-jpeg`, `imageio-webp`, `imageio-metadata`), version pinned; the `comms-media-worker` deployment (§8.3) | S3 |
-| PR-16 | **Scan adapter** | comms + provider | content/malware scan port with one adapter | S4 (student/guardian uploads) |
-| PR-17 | **Data-protection paperwork** | owner / legal | processor agreements and data-location statements for GCS, push and email providers (PRIV-12) | before the first pilot |
-| PR-18 | **Erasure request workflow** (PRIV-09) | people | identity-verified request, owner, exceptions; comms supplies §5.8 | S3 |
-
-### 15.1 Dependency matrix by slice
-
-"Hard" = the slice cannot open without it; "soft" = the stated fallback applies. A fallback that is "the slice is not
-enabled" is written as hard.
-
-| Item | S1 staff text | S2 guardians text | S3 photos | S4 students | Status today | Fallback when soft |
-|---|---|---|---|---|---|---|
-| PR-6 hr status + exit→iam deactivation | **hard** | hard | hard | hard | payload lacks status | — |
-| PR-7 academics/org payloads | **hard** | hard | hard | hard | id-only | — |
-| PR-8 iam confirmations | **hard** | hard | hard | hard | refresh refusal verified; event paths to confirm | — |
-| PR-9 heartbeat (all six sources) | **hard** (heartbeat only) | **hard** (+ sequences) | hard | hard | missing | — |
-| PR-10 jobs runner | **hard** | hard | hard | hard | missing | — |
-| PR-12 grants | **hard** | hard | hard | hard | verified; smoke assertion to add | — |
-| PR-17 paperwork | **hard** | hard | hard | hard | not started | — |
-| PR-19 global-row policy | **hard** | hard | hard | hard | missing | — |
-| PR-20 bulk reads | **hard** (academics, iam) | **hard** (sis) | hard | hard | missing | — |
-| PR-4 sis restricted link | — | **hard** | hard | hard | missing | — |
-| PR-5 sis payloads | — | **hard** | hard | hard | id-only | — |
-| PR-14 gateway limits | soft | soft | soft | **hard** | missing | service-side K40 |
-| PR-1–3 people consent | — | soft | **hard** | hard | 501, no events | no images |
-| PR-22 people purposes | — | — | **hard** (naming) | **hard** (participation) | missing | — |
-| PR-11 platform files | — | — | **hard** | hard | fixed 10-min URLs, live-object delete | no images |
-| PR-15 image library, media worker | — | — | **hard** | hard | — | no images |
-| PR-21 off-lineage safety log | **hard** | hard | hard | hard | missing | — |
-| PR-18 erasure workflow | soft | soft | **hard** | hard | missing | school's manual log + §5.8 tools |
-| PR-13 delivery providers | — | — | soft | soft | missing | in-app only; on-call phones K34a |
-| PR-16 scan adapter | — | — | — (staff uploads) | **hard** | missing | — |
-
-**S1 needs none of the guardian, consent or photo prerequisites.** Media posts stay disabled until S3's hard items are
-live and the tenant's consent checkpoint and stream positions are current.
-
----
-
-## 16. Delivery plan
-
-The earlier phases P0a-1 / P0a-2 / P0b are now four **slices**, each shippable to a pilot school on its own:
-
-| Slice | Scope | Members | Gate to open it (§16.2) |
-|---|---|---|---|
-| **S1 — Staff text** (was the staff part of P0a-1) | Staff room and class pages with **teachers only**; staff text posts; review for staff posts wider than a home; staff comments and reactions; reports, routine cases, staff-concern route and safeguarding inbox; policy engine for the S1 knobs; switches and kill switch; in-app notifications and digest card; teacher and principal home cards | staff | S1 gates |
-| **S2 — Guardians, text** (rest of P0a-1) | Guardians on class pages and the school space; guardian comments (held outside coverage); protected subjects; guardian home card; consent-free (no images) | + guardians | S2 gates |
-| **S3 — Photos** (was P0a-2) | Media pipeline and worker, subjects and confirmation, consent and naming projections, surfacing, takedown, consent centre, erasure | same | S3 gates |
-| **S4 — Students** (was P0b) | Student submissions, held comments, slow mode, mentions, invite spaces, scan adapter, push/e-mail | + students | S4 gates |
-| **P1, P2** | as before (clubs, moments, polls, inter-school, alumni; public release, video) | | |
-
-### 16.1 Batches
-
-| Batch | Content | Size |
-|---|---|---|
-| **B0a** (platform plumbing, for S1) | PR-9 heartbeat (messaging, for every module), PR-10 jobs runner (core), PR-19 global-row policy and README, PR-21 safety-log bucket and platform append path, PR-12 smoke assertion | medium |
-| **B0b** (owner modules, for S1) | PR-6 hr status and exit → iam deactivation, PR-7 academics/org payloads, PR-8 iam event-path test, PR-20 bulk reads (academics, iam) with service-token permissions | medium |
-| **B1 — S1 backend (first reviewable slice; ships to a pilot together with B2)** | comms baseline reshaped (§5) for the tables S1 uses; staff projections (hr, academics, iam, org) and refresh; `ClassMembershipDeriver` and `SpaceMembershipDeriver` for staff; staff room; policy engine with §4.5 validation, §4.6 approvals and bootstrap; `SwitchGate`, §4.9; `CommunityAccess`; the feed statement; drafts, submit, review, comments, reactions, saves; reports, cases, staff-concern and safeguarding; in-app notifications; retention and ledger for text; ≈ 60 ops; fast-tier tests | large |
-| **B2 — S1 UI** | the S1 screens on web, phone, tablet | medium |
-| **B3 — S2** | PR-4, PR-5, PR-9 sequences, PR-20 (sis) first; guardian projections, school space, protected subjects, guardian contexts, digests, guardian screens | large |
-| **B4 — S3 photos** | people (PR-1–3, PR-22 naming, PR-18), platform PR-11; §8 backend, media worker, consent state, screens | large |
-| **B5 — S4 students** | PR-22 participation, PR-16, PR-13, PR-14; student features | medium |
-
-**S1 knobs in the catalogue:** K01, K02 (staff only), K04 (staff room), K05, K06 (staff), K07, K08, K09, K11, K12,
-K13, K21 (off / staff only), K22, K23, K24, K30, K31, K31a, K32, K33, K34, K35, K36, K36a, K36b, K37, K39, K40, K41,
-K42, K43. **S2 adds** K02 guardians, K04b, K10, K21 members values. **S3 adds** K04a, K14, K15, K17 (floor), K18, K20,
-K34a. **Absent until S4/P1:** K03, K16, K19, K25–K29, K38, K44–K47.
-
-### 16.2 Gates per slice
-
-- **Any slice:** safeguarding lead and deputy named and trained; §4.6 invariants and bootstrap approval; PR-17
-  paperwork; fast and heavy tiers green; load test passed in `community-load` (for S1 on the staff dataset); the
-  incident runbook (§21) rehearsed with the school's lead.
-- **S1:** open decisions 4, 10, 12, 16 and 21 ruled; drills "compromised staff account" and "report against an administrator". Stated residual for S1 (heartbeats
-  only, no sequences): a single lost `hr.staff` event is caught by the daily hr checkpoint (≤ 24 h) and a lost
-  `iam.account` event by the nightly bulk reconciliation — bounded for deactivated accounts by iam's 15-minute token and
-  refused refresh (PR-8); the audience is staff only.
-- **S2** (guardians): open decisions 8, 13, 15, 17, 19, 22 and 23 ruled; + "bullying thread in guardian comments" and a **restricted-guardian drill** (a guardian with a
-  restricted child and an unrestricted sibling sees nothing of the protected child).
-- **S3** (photos): "mistaken wide child image" run inside and outside coverage hours; K34a set; consent checkpoint and
-  stream positions current; `GetStoragePolicy` reporting versioning off; open decisions 9, 11, 14 and 18 ruled.
-- **S4** (students): all drills repeated with student accounts; participation consent live; scan adapter live; coverage
-  staffed; open decision 20 (legal threshold) ruled.
-
-**Effort:** B0a and B0b medium each (they may run in parallel); B1 large (smaller than the earlier B1 + B2 because guardians, consent and photos are out);
-B2 medium; B3 large; B4 large; B5 medium.
-
----
-
 ## 17. Ideas that make it feel like *a school*, not a generic social app
 
 - **Class story of the week** — the teacher picks three moments; guardians get one calm weekly card instead of a
@@ -2203,94 +2601,6 @@ B2 medium; B3 large; B4 large; B5 medium.
 - **Student newsroom (P1)** — student editors draft, a teacher edits, the issue publishes as a space post series.
 - **Digital-citizenship nudges** — the composer gently asks "Is everyone in this photo okay with it being shared?" and
   shows who will see it — teaching good habits instead of only blocking.
-
----
-
-## 18. Open decisions for the owner
-
-1. ~~Generalise class pages into spaces?~~ **Decided 18 Nov 2026: no.** A class page is one per section per year, the
-   sacred space of its enrolled members; the school space is separate and common; a teacher may surface selected class
-   posts to the school space (section 5.2.1). Moderation is per school; inter-school has tighter controls (section 19).
-2. ~~Policy storage: comms or iam?~~ **Decided 18 Nov 2026: comms.** Community settings and policies are stored in
-   comms as versioned rows with proposals and approvals, read uncached from comms' own database — this design as
-   written (§4.5–§4.7, §5.5). B1 may start.
-3. **Pilot scope:** S1, then S2, then S3 (recommended — each a separate pilot step), or several slices together?
-4. **Moderation coverage and minimum staffing — question:** will pilot schools commit a safeguarding lead, a distinct
-   deputy, coverage hours and (for photos) an after-hours responder? **Recommendation:** state to every school that two
-   willing staff persons are the minimum (§4.6), and that a school without them cannot enable community. Consequence:
-   very small schools may not qualify; the alternative (a tenant-level lead covering several schools) needs the
-   independent-contact route of item 15 to exist first.
-5. **Scan provider** — narrowed: not needed for S1–S3 (staff uploads, originals purged, second-person confirmation,
-   §8.3); a provider must be chosen before student or guardian uploads (S4).
-6. **Languages for the pilot** beyond English and Hindi.
-7. **Alumni** — design now, build in P1 as a separate network (recommended), or postpone entirely?
-8. **Non-custodial guardians** (`has_custody = false`): no community membership by default; should a school be able to
-   grant them read access per link (some families and courts expect it)?
-9. **Students reaching majority — question:** when a student turns 18 (India), what happens to images already published
-   under guardian consent, and to guardians' class-page membership? **Recommendation (implemented as the default,
-   §8.4):** keep class- and school-width images (they were lawful when published) and tell the student they may now
-   decide; hide inter-school images after 60 days unless the student consents; keep guardian membership of the class
-   page. Consequence of the stricter alternative (hide everything until the student confirms; end guardian membership
-   unless the student agrees): more protective of the adult, but class histories lose photos and guardians lose the
-   class view abruptly. Legal to confirm either way.
-10. **Retention values** in §5.6 (archive 2 years, routine cases 3 years, safeguarding evidence reviewed yearly with a
-    7-year default) — owner and legal to confirm before the pilot.
-11. **Second-person image confirmation** is a floor for every image at every width, including class pages and images declared "no students"; after the pilot, may
-    a trusted teacher confirm alone at class width?
-12. **Tenant ceiling disclosure — question:** CLAUDE.md says tenant settings are set by tenant administrators only and
-    "ordinary users cannot … even see" them. May a school's community owner see which values the tenant ceiling lets the
-    school choose? **Recommendation: yes, only that** — COM-40 offers the allowed values and marks the rest "not available
-    for your school", never showing the tenant's value, setter, history or reason (§4.6). Consequence of yes: schools can
-    configure themselves without trial and error; the ceiling's position is inferable. Consequence of no: COM-40 must
-    offer every value and refuse on save with a reason-free error, which is confusing and still reveals the ceiling by
-    refusal — so a strict reading is not achievable in practice; the owner should state which reading of the rule applies
-    to institution administrators.
-13. **Guardian disagreement on photo consent — question:** the most restrictive legal guardian decides; what may each
-    guardian see? **Recommendation (designed, §12.7):** only their own choice and the effective result, with no wording
-    about other guardians and no reason for a difference. Consequence: no co-guardian choice is disclosed by the product;
-    a guardian puzzled by a narrower result is sent to the school office, which handles disputes privately (PRIV-08).
-    Legal to confirm that "most restrictive wins" is the right rule.
-14. **People in photos who are not members** (visiting children, parents at events): unidentified children always
-    block; unidentified adults block by default (K18). Acceptable for event recaps?
-15. **Independent safeguarding route:** will tenants name a tenant-level safeguarding contact? Without one, cases about
-    a school's lead, principal or community owner rely on the external contact text alone.
-16. **Processors and data location** (PR-17): which push/email providers, and GCS region, are acceptable to schools.
-17. **Deferring MEM-02 and MEM-03 — question:** may invitation-based spaces (MEM-02) wait for S4, and may assisted
-    onboarding and account recovery for users without a personal e-mail (MEM-03) stay with iam/sis rather than this
-    project? **Recommendation: yes to both.** Consequence: S1–S3 needs no invitation feature (class pages and the school
-    space are relationship-based; a QR code never proves membership), and families without e-mail are onboarded as today
-    (the administrator sets the first password); the cost is that guardians who share one phone number cannot each
-    recover their own account until iam builds a recovery design. Consequence of no: an invitation subsystem (S1–S3 + ≈ 6
-    operations) and an iam recovery design become pilot blockers. Needs the owner's recorded sign-off before the pilot.
-18. **Platform on-call — question:** will MySMS staff a 24×7 platform on-call able to stop media for one school
-    (`media_delivery_off`, §21)? **Recommendation: yes before photos (S3).** Consequence of no: outside coverage hours
-    the only protections are report-to-withhold and the school's own responders (K34a); an incident reported to the
-    school by phone at night waits for a school responder.
-19. **Automatic repair from people and hr — question:** may people and hr subscribe to comms' event
-    `comms.stream_repair.requested` and answer with a replay for that tenant (an event-only subscription against the
-    dependency arrow, like the event-only references ARCHITECTURE §2 already allows)? **Recommendation: yes.**
-    Consequence of yes: a lost consent or staff event repairs itself within minutes. Consequence of no: an on-call
-    operator must run the replay; until then that tenant's images (or staff decisions) stay blocked.
-20. **Legal threshold for minors — question:** this design treats everyone under 18 (people's `adult` flag) as a minor
-    for consent and requires a guardian's `community_participation` consent before a minor joins as a student member;
-    the under-13 bands are product design only. **Recommendation: confirm with legal (DPDP) before S4.** Consequence:
-    secondary students cannot participate without a guardian's recorded consent.
-21. **Load-test environment — question:** who owns `community-load` (§14) and its cost (a few days a month of a
-    recommended-size stack)? **Recommendation:** operations, run before each pilot and monthly while pilots run.
-    Consequence of not funding it: the p95 target stays unproven and the pilot gate cannot be met.
-22. **Text revocation bound when sis or iam is silent — question:** round 3 made `closed` per tenant and only after 60
-    minutes of silence (to avoid one tenant or a blip closing everyone), which let a guardian restricted during an sis
-    outage keep reading text for up to an hour. **Recommendation (designed as the default, §7.3):** close **guardian**
-    contexts after 15 minutes of sis or iam `degraded`, keep staff working, close everything at 60 minutes, suspend
-    during declared maintenance. Consequence: a 15-minute sis or iam outage takes community away from guardians (who
-    also lose sis's own portal during it); the alternative keeps them reading for up to 60 minutes.
-23. **Naming students before naming consent (S2) — question:** may a class-page post name students of that class by
-    first name before the `community_naming` consent exists? **Recommendation: yes, first names only, class page only;
-    no credits, mentions or surnames; school-space posts name no student.** Consequence of no: S2 posts cannot name
-    any child until S3, which makes class updates stilted; consequence of yes: class families learn first names they
-    usually already know from class life.
-
----
 
 ## 19. Inter-school community — tighter by design
 
@@ -2332,7 +2642,7 @@ than inside one school, because each school answers to its own families.
 | Student-to-student contact, mentions, profiles | per school policy | **never** |
 | Guardian discussions | per school policy | **never**; guardians at most read the chain bulletin |
 | Member lists, rosters, class names of individuals | per school policy | **never** |
-| Marks, attendance, fees, health, discipline, safeguarding, addresses, phone numbers, transport | never published | **never** (§11.4 of the brainstorm, and a field filter on inter-school posts) |
+| Marks, attendance, fees, health, discipline, safeguarding, addresses, phone numbers, transport | never published | **never** (§A11.4, and a field filter on inter-school posts) |
 | Moments (expiring stories) | per K27 | **off** |
 | Polls | per K26 | staff-only polls; results aggregated across schools, no per-school breakdown unless every school agrees |
 | Download of original media | per K19 | **off**; viewers get display variants only |
@@ -2395,12 +2705,12 @@ than inside one school, because each school answers to its own families.
 
 ### 19.6 Screens (in addition to section 12)
 
-- **COM-50 Inter-school spaces** (tenant administrator, W): create, ceiling, end date, invitations, panel.
-- **COM-51 Inter-school invitations** (school community owner, W/B): accept/leave, choose member categories, narrowing
+- **COM-71 Inter-school spaces** (tenant administrator, W): create, ceiling, end date, invitations, panel.
+- **COM-72 Inter-school invitations** (school community owner, W/B): accept/leave, choose member categories, narrowing
   overrides, re-accept a widened ceiling, see what of the school's content is shared.
-- **COM-52 Share to inter-school** (school community owner / staff publisher, W/B): pick a school-space post, see the
+- **COM-73 Share to inter-school** (school community owner / staff publisher, W/B): pick a school-space post, see the
   consent check for every depicted student at inter-school scope, submit to the origin review.
-- **COM-53 Inter-school panel queue** (panel moderators, W/B).
+- **COM-74 Inter-school panel queue** (panel moderators, W/B).
 
 ### 19.7 Phase
 
@@ -2418,58 +2728,6 @@ bulletin; curated student showcases only after a school has run S4 successfully.
 | Panel cases (content actions) | the panel | kept with their reason codes; no content copy beyond the evidence record |
 | Evidence records and legal holds | the case owner | unaffected by leaving; retention and hold rules of §5.6 apply |
 
----
-
-## 20. Brainstorm traceability (gate L4) and outbound data flows
-
-### 20.1 P0 items the gate asked about
-
-| Brainstorm id | Where | Test / status |
-|---|---|---|
-| MEM-02 invitations | class pages and the school space need none (relationship-based); invite-type spaces (`AddSpaceMembers`) are **deferred to S4**: invitations are per space, to an existing account of the institution, expire after 7 days, single-use, revocable, rate-limited (K40); a QR code never proves membership. Account invitations are iam's (iam sends none yet) | deferred — **open decision 17** (owner sign-off before the pilot) |
-| MEM-03 assisted onboarding, recovery, shared phones | iam and sis portal accounts (administrator sets the first password today); community addresses notifications to accounts, never phone numbers (§11.1) | account recovery deferred to iam — **open decision 17** |
-| MEM-04 rules before participation | COM-11 | client test; acceptance stored |
-| MEM-05 essential vs optional | K02 + COM-11; a member may hide community for themselves (`SetCommunityPreferences`); notices and learning never depend on it (§13.15) | `CommunityPolicyMatrixComponentTest` |
-| PRIV-02 separate consent classes | participation (`community_participation` for minors, COM-11 acceptance for adults), depiction (`photo_video_publication` per width), naming (`community_naming` per width), directory (K32), external (`public` scope, P2), marketing and channels (people's own purposes) | PR-1 tests in people |
-| PRIV-06 paper evidence | §8.4: evidence file, recorder, second-person verification; imported rows `unverified` | people PR-1/2 tests |
-| NET-16 fee independence | §10.3 | `CommunityAccessFeeIndependenceTest` |
-| NET-17 no global search / contact sync | §13.13; mention candidates only from the home (S4) | component test on mention search |
-| SAFE-05 urgent help | K35 "urgent help" category, COM-07 urgent path with staffed hours | client + routing test |
-| SAFE-12 scraping, bulk download | K40 limits on writes and on media (60 batch calls, 2,000 thumb/feed and 100 full-size variants per member per 10 min, §8.1), no bulk download operation, originals never served, PR-14 at the gateway | rate-limit component tests |
-| PRIV-12 vendors, logs, no model training | §13.12, §20.2; no student content is sent to any model or analytics provider; PR-17 | `CommunityLogRedactionComponentTest` |
-| SAFE-17 drills | §16.2 | recorded per phase |
-| MEM-06, MEM-07, MEM-12 | §7.7, §7.5, open decision 9 | revocation and archive tests |
-| PRIV-07, PRIV-09, PRIV-10, PRIV-11 | §12.7, §5.8, §5.6, §5.6/§10.2 | |
-| CFG-07, CFG-08, CFG-12, CFG-13 | §4.4, §4.6, §4.7, §7.4/§4.6 | matrix and kill-switch tests |
-
-### 20.2 Every outbound data flow
-
-| Flow | Data | Processor / location | Status |
-|---|---|---|---|
-| Object storage (GCS) | image variants (pixels only, no metadata); evidence pixels only under a safeguarding hold | Google Cloud, the deployment's bucket region | in use by platform; DPA under PR-17 |
-| Event bus (RabbitMQ / Pub/Sub) | ids, versions, codes; no text or names | MySMS infrastructure | in use |
-| Push (FCM/APNs), S4 | notification id and the fixed generic text | Google / Apple | not built; DPA under PR-17 |
-| Email, S4 | generic text, digest counts, link | provider to be chosen | not built; DPA under PR-17 |
-| Scan provider, S4 | image bytes for scanning, no names | to be chosen (open decision 5) | not chosen |
-| Logs and metrics | ids, codes, timings; never bodies or names (§13.12) | MySMS log store | redaction test |
-| Analytics | none; `GetCommunityHealth` aggregates are computed in the database and shown only in the product | — | — |
-| Client telemetry (crash reporting, RUM) | none today (no SDK in the web, mobile or tablet apps); if one is added it must drop URLs, query strings and screenshots from community screens, and it is listed here first | — | rule |
-| GCS and load-balancer access logs | signed URLs (path + signature) — never names or bodies; the stable media path carries only ids | ops log store | 30-day retention |
-| Search index | none exists; no external search | — | — |
-
-### 20.3 Review improvements not (yet) taken
-
-- **Face count to check declarations** (GAP-REVIEW 2.1 help): deferred — running a face detector on children's photos
-  needs its own privacy review and a library choice; the second-person look on every image is the control.
-- **Data-subject access export** (improvement 9): designed as `GetMyChildCommunityData` but scheduled for S4, not S3,
-  because people's request workflow (PR-18) must exist first.
-- All other improvements of the review were taken (stable media path and batch URLs, screen protection, idempotency
-  keys, archive reads, notification hygiene, guardian identity, health bands, separate view and review roles,
-  independent second reader, search rule, contradiction pass, decisions gating B1 at the top). Round 4: all eight
-  re-check improvements were taken (N-6, N-10, N-14, N-15, N-16, N-17, N-19, N-20).
-
----
-
 ## 21. Incident runbook and kill switches
 
 **Switches, narrowest first:** `EmergencyTakedown` (one item, purge) → `FreezeHome` → `FreezeInstitution` (K37) →
@@ -2481,7 +2739,7 @@ publishes nothing.
 
 **Who may act at any time.** `EmergencyTakedown`, `FreezeHome` and `FreezeInstitution` are permissions, not
 coverage-hour duties: the community owner, every moderator (K33), the safeguarding lead and deputy and the after-hours
-responders (K34a) may use them at any hour from a phone (COM-27, COM-44). Coverage hours (K34, open decision 4) govern
+responders (K34a) may use them at any hour from a phone (COM-57, COM-64). Coverage hours (K34, open decision 4) govern
 review SLAs, not the ability to take something down.
 
 **Outside coverage hours** (K34):
@@ -2520,4 +2778,1545 @@ review SLAs, not the ability to take something down.
 **Compromised staff account:** iam deactivate or force reset (comms denies on the event); any moderator or the community
 owner runs `OpenSecurityIncident` (one step) and, under that case, `RevokeMemberAccess` at once without waiting; `ListAuthorActivity` lists the account's posts, comments and reviews of
 the last 30 days for the moderator to restrict or remove; any approval the account gave in that window is re-reviewed;
-if it held `manage_policy`, pending and recent widenings are reverted from COM-43.
+if it held `manage_policy`, pending and recent widenings are reverted from COM-63.
+
+## 22. Later-phase capabilities (P1, P2) — designed now, built after the pilot
+
+Each capability reuses the decision path (`CommunityAccess`), the switch gate, the policy knobs, the media pipeline
+and the review workflow of §4–§11; none adds a shortcut around them. Each has a knob that keeps it off until its
+gate (§D24) passes.
+
+### 22.1 Moments (stories) — P1, K27–K29
+
+- **Model:** a post with `post_type = moment` and `expires_at = published_at + K28` (1–72 h, default 24 h); same
+  revision, audience, review and media rules as any post (STORY-02). `GetMomentStrip` lists the caller's admitted,
+  unexpired moments per home (one row per home, newest first).
+- **Expiry at read time:** every read predicate includes `(expires_at IS NULL OR expires_at > now())`, so a late
+  expiry job never extends visibility (STORY-03); the hourly `comms.moment_expiry` job (core job runtime) moves rows to
+  `expired`, removes them from search and purges variants after the retention of §5.6 unless a report or hold keeps
+  restricted evidence (STORY-06, SAFE-07).
+- **No viewer lists for minors** (K29 floor off for students, STORY-07); staff see an aggregate view count band only
+  where K29 allows it.
+- **Highlights:** `PromoteMomentToAlbum` creates a new album post revision with a fresh audience, retention and consent
+  check (STORY-08); it is reviewed like any post.
+- **Client:** COM-35 viewer with pause, manual next/previous, text alternative, reduced motion, no autoplay sound or
+  video (STORY-05); the moments strip on home is per institution and grade band switchable (HOME-13).
+- **Honest wording** shown before posting: expiry ends ordinary visibility; evidence, backups and screenshots follow
+  their own rules (STORY-04, STORY-09).
+- **Tests:** `MomentExpiryComponentTest` (read denied at `expires_at` with the job stopped), report-after-expiry
+  evidence test, viewer-list floor test.
+
+### 22.2 Polls, Q&A and "Ask the School" — P1, K26
+
+- **Polls:** `post_type = poll`, `comms.poll_option(post_id, position, label)` and `comms.poll_vote(post_id, user_id,
+  option_id, voted_at)` (one per member, changeable until close). The post states who can see individual responses
+  (staff only / nobody) and that the poll is advisory (INT-07); results show only when at least 5 members voted and in
+  rounding bands (§9.3). Official elections are not polls (USE-05). Operations: `VoteInPoll`, `GetPollResults`,
+  `ClosePoll`.
+- **Questions:** `post_type = question`; a staff member may mark one comment as the staff-confirmed answer
+  (`ConfirmAnswer`, INT-08). Questions about an individual case are redirected privately: the composer shows "for your
+  child's own matter, use Feedback threads" (`ui/02 COM-07`) and moderators can convert a question into a private
+  feedback thread (`MoveToPrivateThread`), removing it from the home (USE-17).
+- **Ask the School (§A27):** a school-space category of staff-authored question posts with confirmed answers, searchable
+  (§22.5) and linkable from the home card; members never see who asked a privately redirected question (SEARCH-05).
+- **Graded discussion stays in the LMS** (LMS-08): `RouteToLearningDiscussion` creates a link post that points to an
+  LMS discussion the viewer is separately entitled to; no participant history is copied.
+
+### 22.3 LMS showcase and portfolios — P1, K11 `showcase`
+
+- **Propose as showcase** (LMS-05): the client reads the learning artifact through lms with the student's own token,
+  the student selects content, the client strips marks and feedback, and `CreatePostDraft` receives a **copy** with
+  `post_type = showcase` and `source_ref = {module: lms, kind, id}`; comms never calls lms (dependency graph). Credits
+  list every co-author (POST-12, LMS-09); each credited minor's naming consent is checked at the post's width (§8.4).
+- **Link to the original** (LMS-06): rendered only for viewers whose lms access check (client-side, with their own
+  token) succeeds; otherwise a neutral "From a class project" card without course names or rosters.
+- **Portfolio** (LMS-11, §A27 contribution portfolio): `comms.portfolio_item(user_id, post_id, visibility
+  private|family|school)` — the student chooses highlights; changing a portfolio item's visibility never changes the
+  post's audience, and the reverse. Public export of a portfolio item goes only through §22.8.
+- **Course/cohort spaces** (LMS-07): a space of type `cohort` whose membership comes from an lms event projection
+  (`lms.cohort_member.*` with `{cohortId, userId, role, status, rowVersion}`, prerequisite PR-23) — lms publishes,
+  comms projects; an online course buyer with no school relationship never joins a school space (LMS-02, ACC-12).
+  Course withdrawal, cancellation or expiry ends membership at the event (LMS-10).
+- **Teacher professional spaces across campuses** (LMS-12): inter-school spaces of staff only (§19), never student
+  courses.
+
+### 22.4 Albums, memories and yearbooks — P1
+
+- **Albums** (MEDIA-09, USE-10): a post of `post_type = album` with up to K15 × 10 images in pages, linked to a
+  `comms.event` when it recaps one; attendees are never tagged automatically; the cover is reviewed like an image.
+- **Memories / yearbook** (MEDIA-10, STORY-08, §A27 permission-aware memories): `CreateMemoryBook` selects existing
+  album items into a new book revision; every image is re-checked for each subject's consent at the book's width,
+  bystanders must be confirmed or redacted, and the book has its own retention. A student's own archive export
+  (`ExportMyCommunityArchive`, S4 with privacy's access requests) contains only items they authored or are credited
+  in, with other people's faces in items they did not author left out unless consented.
+- **School history archive** (USE-16): contributions from former members go through the alumni verification of §22.7
+  and the subject checks above; historic minors are treated as minors.
+
+### 22.5 Search — P1
+
+- **Scope:** posts, comments, Ask-the-School answers and space names; members by name only inside the current home
+  and only where K32 lists names (SEARCH-01, SEARCH-04). No global, cross-home or cross-tenant people search; no
+  phone or contact upload (MSG-03, NET-17).
+- **Mechanism:** PostgreSQL full-text search in comms (`tsvector` on the published revision, `simple` configuration
+  plus a transliteration-tolerant trigram index if extension approval D7 is given, SEARCH-03); the search statement is
+  the feed statement of §9.2 with a text predicate, so admission runs **before** ranking, snippets and counts
+  (SEARCH-01). There is no external index (§20.2), so removal and expiry apply at query time (SEARCH-02).
+- **Filters:** home, post type, category/hashtag (school-approved, POST-14), date, verified publisher. No trending tags
+  across schools.
+
+### 22.6 Messaging boundary — P0 rules, P1 options
+
+- P0: community adds **no** direct messaging. Staff–guardian conversation stays in comms' existing conversations and
+  feedback threads with quiet hours (MSG-02, MSG-06); no alumni, guest or adult-to-minor messages, calls or contact
+  requests (MSG-01); no disappearing chats (MSG-09); no claim of end-to-end encryption while content is moderated.
+- Directory visibility is K32 and per home (MSG-07); invitations to invite spaces cannot widen school or age
+  eligibility, and owners cannot add arbitrary adults or minors (MSG-08, §20.1 MEM-02).
+- P1 student-to-student messaging (MSG-05) is a separate release decision (open decision 24 in §18): eligible bands,
+  small verified spaces, reporting, retention, supervisory transparency and coercion controls must be designed and
+  approved before any build.
+- Teacher office hours and request forms (MSG-06): a `comms.office_hours` setting on the teacher's profile shown on
+  the class page, with routing to a named deputy; requests go into feedback threads.
+
+### 22.7 Alumni network — P1 (minor bridges P2), K47
+
+- **Verification** (ALUM-01, ALUM-02): `comms.alumni_record(person_id, institution_id, batch_year, verification_source
+  (sis_record|school_review), verified_by, status candidate|active|dormant|suspended|revoked, adult boolean,
+  source_version)`. Graduation (`sis.student` leaving with status `graduated`, a PR-5 payload) creates a **candidate**
+  only; the person accepts an invitation and chooses fresh profile and directory fields (ALUM-03, MEM-11). Historic
+  alumni without records go through a private school review path (name changes, incomplete records).
+- **Separate network:** an alumni home per institution and per batch (`home_kind = alumni_batch`); alumni never see
+  current students' homes; an alumnus who is also a guardian sees child content only through the guardian link
+  (ALUM-09, ACC-24, ACC-25). Former staff and former parents are separate categories.
+- **Minor alumni** (ALUM-04): `adult = false` (privacy subject status) → school-curated batch bulletins and approved
+  events only; no directory, contact requests, recruiting or mentorship until a separate minor-program policy is
+  approved; reporting and privacy routes stay.
+- **Directory and contact** (ALUM-06, ALUM-07): adult-only, member-chosen fields, throttled search, no bulk export;
+  `RequestAlumniContact` reveals nothing until the recipient accepts.
+- **Lifecycle** (ALUM-08): dormancy after 24 months inactive, re-verification, recovery through iam, report/ban/appeal
+  through §10.2, alumni admin succession through K33 on the alumni home.
+- **Opportunities** (ALUM-10–ALUM-15): school-hosted career panels and volunteering first; opportunity posts name the
+  verified sponsor, scope, eligibility and review owner and have a "scam or paid solicitation" report category;
+  mentorship of minors (P2) only as an explicitly sponsored, time-bounded program with supervision and no ambient
+  messaging; fundraising only through finance with receipts (no money collected in posts); jobs only through careers
+  after review and never targeting current children.
+- **Client:** alumni home (HOME-05), alumni directory and contact requests (COM-41, COM-42), alumni administration
+  (COM-68).
+
+### 22.8 External sharing and public release — P1 (private links, manual export), P2 (connectors), K44–K45
+
+Four products, each with its own switch (CFG-06, EXT-01):
+
+1. **Private authenticated link** (K44): `GET /app/comms/posts/{postId}` deep link; the server's link preview (Open
+   Graph) is always the generic "School update — sign in to view" with no title, name, image or text (EXT-02); the
+   destination re-checks admission.
+2. **Approved public derivative** (K45, P1 manual): `comms.release_package(id, post_id, source_revision_id,
+   derivative_caption, derivative_media (redacted/cropped variants), destinations, policy_version, approved_by,
+   approved_hash, expires_at, status prepared|pending_approval|approved|queued|dispatched|confirmed|failed|unknown|
+   recall_requested|removed|partial|recall_failed)`. Preparation selects one exact revision (EXT-03); review checks
+   author rights, every identifiable subject's consent at `public` width, branding, copyright, location and names in
+   text (EXT-04); unknown subjects block or require a reviewed redaction (EXT-05); approval binds a hash, caption,
+   destinations, policy version, approver and expiry, with an independent second approver for minors (EXT-06);
+   permissions are re-checked immediately before dispatch or download (EXT-07); the preview states what leaves MySMS
+   and that copies survive withdrawal (EXT-08); comments, reactions, viewers and rosters are never included (EXT-09);
+   every step is audited (EXT-10).
+3. **User-confirmed handoff** (P1): an allowed user may hand an **approved** derivative to the device share sheet; the
+   record says "handed off", never "posted" (§A15.3).
+4. **Official-account connector** (P2): one destination first (chosen by demand and verified API access, §A15.5),
+   credentials encrypted with `FieldCipher`, scoped and revocable (EXT-11); dispatch jobs carry a local job id and the
+   provider's idempotency key where available; a timeout becomes `unknown` and is reconciled, never blindly retried
+   (EXT-12, ACC-29); withdrawal stops pending releases and requests recall where the provider supports it, showing
+   partial or unknown removal honestly (EXT-13, ACC-30); kill switches stop downloads, jobs and connectors server-side
+   (EXT-14, ACC-27); nothing is imported back from the platform (EXT-16).
+
+Not from inter-school spaces (§19.2). Release is never possible for a post whose subjects include a protected child
+(§7.7). Screens: COM-69 publication desk, COM-70 release detail.
+
+### 22.9 Translation, captions and voice — P1
+
+- Teacher-reviewed translation (POST-13, UX-05): `TranslatePostDraft` returns a suggestion the author edits; the post
+  stores `body_language` and an optional `translations` set, each labelled machine-assisted until a human confirms;
+  safety and consent text is never machine-translated without human review. Provider choice is an owner decision
+  (it sends text to a processor, §20.2); until then, no translation is offered.
+- Caption and alt-text assistance is a suggestion only; the author confirms. MEDIA-07: the review screen shows a warning
+  when a caption contains a name, phone number, location or a word list of health and grade terms.
+- Voice input and audio alternatives (UX-10): explicit microphone action, transcripts stored as text, no ambient
+  recording; P1 after a privacy review.
+
+### 22.10 Video and voice notes — P2, K16
+
+Video needs captions or transcripts, thumbnail review, modest resolution and duration ceilings (floor 720p, 60 s),
+processing status, bounded retry, separate storage and egress budgets and its own retention (POST-16, MEDIA-11); the
+transcoding worker is a separate deployment; no live streaming. K16 stays off at the floor until the video pipeline
+passes its own gate (§D24 Phase 5 rule: cost and operations).
+
+## B21. Proposed technical design within MySMS boundaries
+
+This section states the technical principles the product requires; the design that meets them is §3–§11, §13 and §22.
+
+### B21.1 Start inside comms
+
+Use `comms` for community spaces, publication workflows, member-facing feed projections, comments/reactions, routine moderation and external release orchestration. Keep internal components bounded so a later service extraction is possible if traffic, deployment or ownership requires it. Creating a new community service immediately would duplicate existing post/page/notice concepts and add consistency problems before scale has been measured.
+
+Identity remains IAM; institution structure remains org; person ownership remains people; consent remains privacy; student/guardian relationships remain SIS; employment remains HR; learning remains LMS; file infrastructure and central audit remain platform. A confidential safeguarding case may belong in a separately restricted capability; routine social moderation must not quietly become a general school case-management product.
+
+### B21.2 Conceptual domain objects
+
+The following concepts are requirements for design, not instructions to create a table for each noun:
+
+1. **School relationship:** source owner/record/version, person/account association, institution, relationship type, validity, verification and revocation state.
+2. **Community space:** purpose, owner, institution scope, membership policy, age policy, visibility/history policy, moderators and lifecycle.
+3. **Space membership:** eligibility evidence, explicit join/follow preferences, contribution privileges, effective dates and removal reason restricted to appropriate staff.
+4. **Publication:** stable identity, author/delegation, owning space, type and current ordinary-visibility state.
+5. **Publication revision:** immutable text/assets/credits, intended audience, review-relevant metadata and exact version/hash.
+6. **Audience policy/revision:** participating institutions and role/relationship rules, exclusions, history behavior and policy version. Snapshot intention for audit while checking current entitlement for every read.
+7. **Media asset/variant:** quarantined original, approved derivatives, processing state, subject declarations, metadata, expiry and delivery authorization.
+8. **Permission decision:** references to authoritative permission/consent evidence and the content, person, purpose and destination it covers; never a competing unverified consent authority.
+9. **Moderation report/case/action/appeal:** protected reporter, owner, severity, evidence, reasons, outcome and restricted review history.
+10. **External release package/job/result:** exact approved derivative and caption, destination, actor/approver, dispatch status, known external identity and recall status.
+11. **User preference/read state:** follows, mutes, language, digest choice, last-seen marker and personal saves, separated from eligibility and required notice acknowledgments.
+12. **Alumni verification/program grant:** historical affiliation, opt-in status, adult/minor policy and tightly bounded mentorship/volunteer grants.
+
+### B21.3 Commands and state machines
+
+Prefer domain commands such as submit, return for changes, approve exact revision, request broader audience, withdraw, report, restrict, appeal, expire and release approved derivative. Generic CRUD remains an administrative tool only where it enforces the same invariants. Setting `status=posted`, `authorUserId`, `isActive`, audience records or attachment IDs through another route must not bypass the intended workflow.
+
+**Publication:** draft → submitted → in review → published; review may return/reject; published may be superseded, withdrawn, restricted or expired. Scheduled is a dispatch condition on an approved revision, not proof of eligibility at dispatch. Reopening a moderation case does not automatically republish its content.
+
+**Moderation:** reported → triaged → restricted/investigating → resolved → appealed/reviewed where applicable. Preserve minimum required evidence independently of visible publication state.
+
+**External release:** prepared → pending approval → approved → queued → dispatched → confirmed/failed/unknown → recall requested → removed/partial/failed/unknown. A timeout may leave external publication successful but unconfirmed. Model uncertainty rather than reporting “failed” and issuing an unsafe duplicate.
+
+**Membership:** candidate/invited → verified/active → suspended/expired/revoked → eligible for a separately verified relationship. Graduation changes relationship eligibility, not the account’s universal trust level.
+
+### B21.4 Authorization decision path
+
+For each action, establish trusted account/tenant context, required capability, active source relationship and freshness, institution/space eligibility, age/safety restrictions, current publication state/expiry, exact audience rules and any applicable permission/consent. Then evaluate action-specific restrictions and produce a scoped response. Record privileged disclosure decisions without putting private content in ordinary logs.
+
+The same decision path protects feed/detail, nested replies, reaction APIs, upload binding, thumbnail/full-media delivery, notifications, search, exports, moderation and administrator record routes. Disallow access before producing a count, snippet or media URL. Owner checks for another module must honor its API’s authorization and the module dependency graph.
+
+### B21.5 Events, projections and revocation
+
+- **ARCH-01 [P0]** No cross-schema SQL, cross-module foreign keys or distributed transactions. Follow module-local JDBC, programmatic transaction, outbox/inbox, audit, idempotency and optimistic-concurrency conventions.
+- **ARCH-02 [P0]** Define event contracts for enrollment/class changes, guardian links, employment, account/role status, institution changes, permission withdrawal, publication state and asset state through approved owners.
+- **ARCH-03 [P0]** Each relationship projection stores source identity/version and effective time; duplicate/late events cannot resurrect revoked membership or withdrawn permission.
+- **ARCH-04 [P0]** Read projections and cached feed candidates are performance aids. They do not override current denies, expiry or takedown state.
+- **ARCH-05 [P0]** Establish an explicit revocation barrier/freshness contract before launch. A revocation must not be reported complete while live protected routes still grant access from a stale projection.
+- **ARCH-06 [P0]** High-risk actions—external release, audience widening, grants, sensitive report access—require current authoritative evidence or an equivalent verifiable current decision. Fail closed when freshness cannot be established.
+- **ARCH-07 [P0]** Ordinary online content access has a documented maximum relationship/deny freshness window and emergency invalidation mechanism. Measure source-change-to-enforcement, not just event delivery.
+- **ARCH-08 [P0]** Use reconciliation jobs, lag monitoring and operator repair to detect missing membership/permission updates. Do not assume outbox delivery makes all downstream effects instantaneous or magically exactly once.
+- **ARCH-09 [P0]** Event payloads contain minimum identifiers/version/context, not copies of confidential learning, health, fee or safeguarding records.
+- **ARCH-10 [P0]** Approval binds a specific revision and expected version; concurrent edits, moderator actions and retries cannot replace approved assets or publish twice.
+- **ARCH-11 [P0]** Evolve contracts, permissions, state documentation, generated clients and conformance rules together when implementation is authorized. Do not add broad wildcard social grants.
+- **ARCH-12 [P0]** Home composition handles partial module failure independently and does not introduce circular domain dependencies.
+
+The existing graph does not permit comms → people/HR/LMS SDK reads. Define approved owner events/projections and revocation signals first; if a direct authoritative API is necessary, review the graph deliberately. Neither a convenient cross-schema query nor a permanently stale local consent copy is acceptable.
+
+### B21.6 Feed, media and integration infrastructure
+
+Start with a query-based chronological feed over local publications, audience relationships and deny state, using stable seek/cursor pagination. Index by measured tenant/space/status/time access patterns. Filter eligibility before page boundaries and avoid leaking hidden totals. Consider hybrid fanout, partitioning or dedicated search only when measured traffic warrants it.
+
+Uploads use private sessions, quarantine, bounded processing, scanning, metadata stripping and explicit binding to eligible content. Media visibility follows the content’s state and rights. Review authenticated proxy delivery versus short-lived signed grants, including already issued URL revocation; a signed URL is a bearer grant and cannot be called instantly revocable without an actual enforcement mechanism.
+
+Use durable jobs for scanning, thumbnails/transcoding, expiry, notifications, search updates, export dispatch and deletion. Job state has bounded retries, dead-letter/repair visibility and idempotent handlers. A failed worker must not bypass read-time expiry or make quarantine assets public. External-provider failure must not block internal school tasks.
+
+## B22. Security, reliability and nonfunctional requirements
+
+- **NFR-01 [P0]** Reuse trusted authentication/session controls; require stronger authentication for high-impact publishing/moderation/admin functions according to the IAM policy.
+- **NFR-02 [P0]** Tenant RLS plus application predicates remain enforced for community data. Add object/relationship authorization within the tenant.
+- **NFR-03 [P0]** Validate and sanitize user content; prevent stored XSS, unsafe HTML/links, injection, CSRF where applicable, malicious file processing and cross-tenant object reference abuse.
+- **NFR-04 [P0]** Do not fetch arbitrary user-provided URLs from privileged networks. Any future preview fetcher needs SSRF defenses, safe egress and no credential forwarding.
+- **NFR-05 [P0]** Encrypt transport and sensitive stored data, protect tokens/keys, separate service identities and minimize privileged support access.
+- **NFR-06 [P0]** Prevent enumeration through IDs, member search, error differences, invitation/recovery forms, counts, cached assets and unpublished content.
+- **NFR-07 [P0]** Rate limits and quotas apply per actor/space/tenant and to expensive media/search/export actions, with fair retry guidance.
+- **NFR-08 [P0]** Audit privileged decisions, policy changes and sensitive report access without copying protected content into general telemetry.
+- **NFR-09 [P0]** Backup/restore, deletion, permission withdrawal, credential compromise and mistaken-publication runbooks are exercised before the pilot.
+- **NFR-10 [P0]** Feature flags and kill switches operate by institution/capability, with preservation of required school access, incident evidence and privacy requests.
+- **NFR-11 [P0]** Define and test request, upload, media-processing and notification limits. Backpressure never auto-publishes unchecked content.
+- **NFR-12 [P0]** Monitor availability, first-page latency, relationship freshness, removal propagation, media failures, queue age, notification failures, storage/egress and export uncertainty.
+- **NFR-13 [P0]** Accessibility and performance are validated on representative web/mobile/tablet devices and pilot languages, including report/consent flows.
+- **NFR-14 [P1]** Maintain compatibility across deployed mobile client versions; server enforcement does not depend on clients having updated UI settings.
+- **NFR-15 [P1]** Disaster recovery and tenant export meet contractual objectives measured through drills; define regional and vendor outage fallbacks.
+
+### B22.1 Initial measurable targets — proposed, not promises
+
+Validate with the pilot before contracting these numbers:
+
+- 99.9% monthly authorized feed-read availability, excluding clearly defined planned outages only if the contract allows them.
+- Warm first-page API p95 under 800 ms on the agreed load profile; full usable text home p95 under 2.5 seconds on the agreed representative low-end device/network test. Measure API and client experience separately.
+- Text submission acknowledgment p95 under 2 seconds excluding review; image processing has its own observed queue target and visible status.
+- Read-time expiry denial at the expiry instant in server policy; asynchronous purge completion has a separate measured objective.
+- Proposed online source-revocation-to-enforcement objective of 60 seconds or better, with stronger synchronous/current checks for high-risk actions. Finalize the barrier semantics in ARCH-05 before making any “immediate” claim.
+- Urgent content takedown objective agreed after an incident drill, including media variants and CDN behavior; never assert universal removal of offline copies.
+- Suggested pilot editorial service: ordinary submissions reviewed within one school working day during covered hours; serious safety reports use an explicitly staffed escalation route and target agreed with the safeguarding owner. This is a proposed operating arrangement, not a statement of statutory timelines.
+
+Keep security/correctness objectives separate from latency goals. A fast feed that leaks one class’s content into another class is a failed release.
+
+---
+
+# Part C — Frontend
+
+The client architecture of `ui/05-frontend-architecture.md` applies unchanged; this Part adds what the community needs.
+§12 lists the screens per role and device; §C1–§C14 say how they are built.
+
+## 12. Screens — every role, every device
+
+Screen ids `COM-30`–`COM-74` extend `ui/02-navigation-and-screens.md`'s `COM-01`–`COM-13` (the rows go into ui/02 §3 with the routes of §C2; the community replaces `ui/02 COM-08`). W = web, S = phone, B = tablet.
+
+### 12.1 Home integration (the first screen after sign-in)
+
+Order on every home (§A8.1): **context bar** (school / role / child) → **urgent official notices** →
+**today / needs action** → **community preview** (3–5 latest items from my homes + "Open community") → **upcoming
+events**. Community failing to load shows a small "Community is unavailable" card and never blocks the rest
+(HOME-07). Each role's home is a separate composition:
+
+| Role | Home cards (in order) | Community on home |
+|---|---|---|
+| **Student** | Timetable today, homework due, LMS "continue learning", notices | "From your class and clubs" preview; "My submissions" chip when one is returned |
+| **Teacher** | Today's classes, attendance to take, work to grade, **review queue count**, notices | Quick composer for "my class" (one tap: photo + caption → submit), latest from my homes |
+| **Guardian** | Child switcher, per-child: fees due, attendance alerts, homework, notices | Per-child "What's happening in Grade 7 B" preview; consent reminders when a photo is waiting on them |
+| **Staff (non-teaching)** | Job tasks (library, transport, office), notices | Staff room preview |
+| **Principal / community owner** | School KPIs (existing dashboards), **community health** card (queue age, open cases, posts this week), urgent cases | Official composer ("post as the school") |
+| **Tenant administrator** | Tenant dashboards; community ceiling and presets status; pending approvals; cases awaiting an independent handler (count only) | — |
+| **Alumni (P1)** | Alumni events, batch updates | Alumni network only |
+
+### 12.2 Community area — members
+
+| Id | Screen | W | S | B | What it holds |
+|---|---|---|---|---|---|
+| COM-30 | Community feed | ✓ | ✓ | ✓ | Merged feed, home filter chips, "caught up" end, pinned official items, child switcher for guardians ("all children" shows a child chip per post) |
+| COM-31 | Home page (class page or space) | ✓ | ✓ | ✓ | Header (rules in plain words, "who can see posts here"), its feed, members list per K32, mute |
+| COM-32 | Post detail | ✓ | ✓ | ✓ | Post, images (tap to full variant), reactions per K24, comments (depth ≤ K22), report |
+| COM-33 | Composer | ✓ | ✓ | ✓ | Text, up to K15 photos, alt text prompts, "who is in this photo" (subject picker + "anyone else identifiable?"), **audience chip with plain-language preview**, posting identity line, post type, schedule (staff), review notice |
+| COM-34 | My submissions | ✓ | ✓ | ✓ | Drafts, pending, returned with reason (edit & resubmit), published, withdrawn, hidden by a setting change |
+| COM-35 | Moments viewer (P1) | ✓ | ✓ | ✓ | Tap-through, pause, text alternative, no viewer counts for students |
+| COM-36 | Report flow | ✓ | ✓ | ✓ | `ReportContent` from an item, or `ReportConcern` without one (also from the home card and the "unavailable" screens); category (incl. "concern about a staff member", "I need help now"), optional detail, confirmation, "what happens next", staffed hours, urgent-help numbers (SAFE-05) |
+| COM-37 | My community settings | ✓ | ✓ | ✓ | Muted homes, digest, quiet hours, language, hide previews; link to consent centre (guardians, adult students) |
+| COM-38 | Saved posts | ✓ | ✓ | ✓ | |
+| COM-39 | Child media use (a panel of privacy's consent centre, `ui/02 ACC-13`; guardians, students 18+) | ✓ | ✓ | ✓ | §12.7 — privacy's consent operations and comms' `GetMyChildMediaUse` |
+| COM-40 | Community rules and privacy (first use) | ✓ | ✓ | ✓ | MEM-04 rules, what is shared and with whom, what guardians can see (students), before optional participation; acceptance stored as a preference |
+| COM-41 | Alumni home (P1) | ✓ | ✓ | — | Alumni events, batch bulletins, opted-in opportunities (§22.7, HOME-05) |
+| COM-42 | Alumni directory and contact requests (P1, adults) | ✓ | ✓ | — | Member-chosen fields, throttled search, requests revealed only on acceptance (§22.7) |
+
+### 12.3 Staff and moderators
+
+| Id | Screen | W | S | B | What it holds |
+|---|---|---|---|---|---|
+| COM-50 | Review queue | ✓ | ✓ | ✓ | Pending posts and held comments with age, author category, audience, media subjects and consent state; claim; approve / return with reason / reject; keyboard-first on web; §12.8 |
+| COM-51 | Home management | ✓ | — | ✓ | Spaces (types per K04), owners/moderators, rules within the institution's limits, archive; class pages: description, cover, surfacing |
+| COM-52 | Cases | ✓ | — | ✓ | Reports grouped into cases, severity, SLA, evidence (restricted), actions, escalation to safeguarding |
+| COM-53 | Case detail | ✓ | — | ✓ | Timeline of reports and actions, evidence record (hashes, ids, review trail; pixels only under a safeguarding hold), decision with reason code, outcome messages |
+| COM-54 | Safeguarding inbox | ✓ | — | ✓ | Safeguarding and staff-concern cases only; visible only with the safeguarding permission; every open logged |
+| COM-55 | Member restrictions | ✓ | — | ✓ | Who is muted / under review-all / suspended, until when, linked case |
+| COM-56 | Classroom quick post | — | ✓ | ✓ | Camera-first composer for teachers; shared classroom tablet rules in §12.9 |
+| COM-57 | Emergency takedown | ✓ | ✓ | ✓ | One item, reason, confirm; shows completion of purge |
+
+### 12.4 Administrators
+
+| Id | Screen | W | S | B | What it holds |
+|---|---|---|---|---|---|
+| COM-60 | Community settings | ✓ | — | ✓ | The knob catalogue grouped as in §4.2; each knob shows **inherited value, local value, "limited by your organisation / the platform"** and who set the school's value; widening shows a warning and becomes a proposal (§4.6) |
+| COM-61 | Presets | ✓ | — | — | Apply a preset with a diff preview |
+| COM-62 | Preview as role | ✓ | — | — | Effective policy and synthetic feed for a role/space |
+| COM-63 | Policy history and approvals | ✓ | — | — | Versions, before/after, approver, pending approvals and why they are blocked |
+| COM-64 | Emergency controls | ✓ | ✓ | ✓ | Freeze institution / home, lock posting, with reason; visible banner while active |
+| COM-65 | Community health | ✓ | — | ✓ | Aggregates only, in rounding bands (§9.3); consent coverage per class; picker-search counts; median review time; no leaderboards, no per-child engagement |
+| COM-66 | Moderation team | ✓ | — | — | Community owner, moderators, safeguarding lead and deputy, independent route, coverage hours, grade bands — **community cannot be enabled until §4.6 is met** |
+| COM-67 | Person content (erasure) | ✓ | — | — | Discovery and erasure (§5.8), exceptions list |
+| COM-68 | Alumni administration (P1) | ✓ | — | — | Candidates, verification queue, batches, sponsors, alumni moderators (§22.7, CFG-11) |
+| COM-69 | Publication desk (P1/P2) | ✓ | — | — | Release packages: prepare derivative, subject and rights checks, approvals, destinations (§22.8) |
+| COM-70 | Release detail (P1/P2) | ✓ | — | — | Status timeline incl. unknown and recall states, audit (§22.8) |
+| PC-COM-01 | Platform safety floor (platform console) | ✓ | — | — | Floor constants (read-only), tightening overrides, global switches, projection health; changes audited |
+
+**≈ 37 screens** (32 for S1–S4, 5 for P1). Phone screens are the member set plus review queue, takedown and emergency controls; heavy
+administration is web and tablet.
+
+### 12.5 UI rules that matter for privacy
+
+- The audience is **always visible** on the composer and on every post ("Shared with: Grade 7 B students and
+  guardians").
+- **Guardians are shown to other guardians as "a guardian"** by default (comments, member lists); staff see names. A
+  school may show guardian names inside a class page (K32), never with the child.
+- **Screens are protected where the platform allows:** Android `FLAG_SECURE` and a blurred app-switcher snapshot on iOS
+  for community screens; screenshots cannot be prevented on every device, and the consent text says so.
+- **Shared web computers:** images are never written to the browser's disk cache (`no-store`, §8.1); sign-out clears
+  memory caches; the web app offers "This is a shared computer" at sign-in, which shortens the session to 15 minutes idle.
+- Student authors (S4) show **first name + class** inside their own class page only with class-width naming consent
+  (§8.4), else "a student of Grade 7 B"; in the school space "a student of Grade 7 B" unless naming consent at
+  institution width exists; never contact details or full date of birth (MSG-04). To staff, guardians show as their own
+  display name and "guardian", never with the child's name or class.
+- Reaction counts follow K24; students see "Your classmates appreciated this" without numbers.
+- Switching child, role or school **clears the feed cache** and scroll state (HOME-10); sign-out clears local protected
+  state (UX-07, §12.9).
+- Images load as thumbnails first; a data-saver toggle keeps them tap-to-load (UX-02).
+- Every string in en and hi (and the pilot's languages); every action gated by `useCan`; every write sends its ETag;
+  409/412/422 explained in words.
+
+### 12.6 Student UI (S4)
+
+- **Who can see this post:** every post and the composer show the audience in words for the reading level ("Your class
+  and your class's parents can see this"; "Your teacher will check it first"); pending posts show "Only you and your
+  teacher can see this right now".
+- **What guardians can see** (PRIV-14): COM-40 and the class page header say "Your parents or guardians can see posts
+  in your class page" when K04b/K10 are on; "they cannot see your reports or messages to the safeguarding lead".
+- **Help routes:** COM-36 in the student's language, short sentences (written to a Grade 4 reading level for under-13
+  bands), an "I need help now" path showing who is on duty and staffed hours (SAFE-05); never labelled an emergency
+  service.
+- **Unknown grade band:** shown as the under-13 experience (no counts, guided composer); the student is not told a band.
+
+### 12.7 Consent centre (COM-39)
+
+- Lists only the children the guardian holds an active, unrestricted **legal-guardian** link to (students 18+ see only
+  themselves). Per child and per width (class / whole school / schools of our group): the guardian's **own** decision
+  (granted / refused / not answered, date, notice version, channel) and the **effective result** ("Photos of Aarav are
+  currently shared with: his class") **with no explanation of why it differs** — the effective result can be narrower
+  because of school settings, the student's own choice or another guardian, and the screen names none of them; "Ask
+  the school office if this is not what you expect". It never shows another guardian's decision, name or date, any
+  wording about other guardians, or anything about siblings' or classmates' consent (open decision 13).
+  `ConsentCentreDisclosureComponentTest`: two legal guardians, one grants school width, the other refuses; neither
+  response contains the other's decision, identity, date or a reason field.
+- **What is affected** (PRIV-07), from `GetMyChildMediaUse`: "Aarav appears in 4 posts in Grade 7 B, 1 in the school
+  space, 0 shared with other schools". On withdrawal: "New sharing stops at once. Photos already shared are hidden
+  within about 7 minutes and deleted from our storage; once deleted they cannot be recovered [after N days — shown
+  only when the community bucket keeps deleted files, §5.7]. Copies someone saved or photographed cannot be recalled."
+  If the school's safeguarding lead must keep an image as evidence of a serious incident, it is held privately under a
+  legal hold and every access is logged; the guardian is told "kept privately by the school's safeguarding lead as
+  evidence" without detail. The same wording, with the real number, is used in the erasure outcome.
+- **What is held about my child** (PRIV-09 access, S4): `GetMyChildCommunityData` lists the posts, credits, comments
+  and reactions involving the child that the guardian may see, with counts of items in other homes; cases and evidence
+  are excluded and counted only.
+- The consent text explains that a width covers the people in that audience as it changes over the year (a new
+  teacher, a new classmate's parent), and that screenshots cannot be prevented.
+- Withdrawal and changes call privacy's operations (`RecordMyConsent`, `WithdrawMyConsent`); comms never stores the decision itself.
+
+### 12.8 Review ergonomics (COM-50)
+
+- No bulk approve for any item with images or student authors; bulk actions exist only for returning items or for
+  text-only staff posts.
+- Approve is disabled until the reviewer has opened every image at full variant and ticked each image's subject check;
+  the subject list with each subject's consent state at the post's width is shown beside the image; on phones the image
+  opens full-screen first.
+- The approval records reviewer, claim time, time spent on each image and device class; COM-65 shows median review time
+  per institution (not per person) so rubber-stamping is visible.
+
+### 12.9 Shared classroom tablet and sign-out (React Native, Expo)
+
+- **Classroom device mode** (set by an administrator when enrolling the device): a teacher signs in per session; the
+  refresh token is **not** persisted (memory only); the access token lives in memory; idle 5 minutes → lock screen,
+  15 minutes or the end of the period → sign-out; the app never shows the previous teacher's content after lock.
+- **Personal devices:** refresh token in `expo-secure-store` (Keychain / Keystore), never in AsyncStorage.
+- **Camera:** COM-56 captures in-app into the app's cache directory; the app requests no media-library write
+  permission, so photos never reach the device gallery; the picked or captured image is re-encoded to JPEG on the device
+  (dropping EXIF and GPS) before upload and again on the server.
+- **Drafts:** in memory, or encrypted in secure storage on personal devices; dropped at lock in classroom mode.
+- **Sign-out (all devices):** clears the React Query cache, secure-store tokens, the app's image cache and cache
+  directory, any persisted drafts, and dismisses delivered notifications of the app.
+- **Tests:** client unit tests for the storage policies; a device test (Maestro or Detox, chosen by the client batch)
+  that signs in on a classroom device, captures a photo, locks, asserts the gallery has no new item and the cache
+  directory is empty after sign-out.
+
+## C1. Where the code goes
+
+| Package | What the community adds |
+|---|---|
+| `packages/core/src/hooks/community*.ts` | Hooks per operation group (§C3): `communityFeed.ts`, `communityPosts.ts`, `communityMedia.ts`, `communityModeration.ts`, `communityCases.ts`, `communityPolicy.ts`, `communityNotifications.ts`, `communityAlumni.ts` (P1), `communityRelease.ts` (P1/P2); each with a `*.test.tsx` against the fake backend |
+| `packages/core/src/community/` | Pure logic shared by web and native: audience sentence builder (§C6), composer state machine, upload pipeline state machine (§C7), cache-purge rules (§C8), problem-code → message map (§C6.4) |
+| `packages/web-kit/src/screens/community/` | Web screens (W) and tablet-web parity components; one file per screen id |
+| `packages/native-kit/src/community/` | Phone and tablet screens (S, P, T, B), camera capture, classroom device mode (§12.9) |
+| `packages/ui-web`, `packages/ui-native` | New shared components (§C5): `PostCard`, `AudienceChip`, `AudienceSentence`, `SubjectPicker`, `MediaGrid`, `ReviewImageViewer`, `ReportSheet`, `CaughtUp`, `HomeHeader`, `PolicyKnobRow`, `CaseTimeline` — same names and props on both |
+| `packages/i18n/src/catalogs/{en,hi}.ts` | Keys under `community.*` (§C12) |
+| `packages/fixtures/src/community.ts` | Fixture world and fake handlers (§C14) |
+| `ui/02-navigation-and-screens.md` | The screen rows of §12 with routes and operations; `packages/core/scripts/generate.mjs` turns them into the route table and permission list, so a screen exists in routing only once its row exists |
+| `apps/web/src/routes.ts`, native route tables | Built screens registered by id; unbuilt ones show their placeholder (web-kit `buildAppRoutes`) |
+
+Rules: components never call the SDK; hooks own every request; every action is wrapped in `PermissionGate` / the
+session's permission check with the operation's permission code (§10.1); no client-side decision ever widens what the
+server admits — the client only hides what the server would refuse.
+
+## C2. Routes and deep links
+
+Web routes mirror the REST paths without `/v1`, under `/app`; the same path on `mysms://` is the deep link and the
+notification target (ARCHITECTURE §4). REST paths of the new operations live under `/v1/comms/community/…` except the
+reshaped `/v1/comms/posts/{postId}` and the stable media path `/v1/comms/media/{mediaId}/{variant}`.
+
+| Screen | Route | Clients |
+|---|---|---|
+| COM-30 feed | `/comms/community` (`?home=`, `?child=`) | W S P T B |
+| COM-31 home page | `/comms/community/homes/{homeKind}/{homeId}` | W S P T B |
+| COM-32 post detail | `/comms/posts/{postId}` | W S P T B |
+| COM-33 composer | `/comms/community/compose` (`?home=`, `?draft=`) | W S P T B |
+| COM-34 my submissions | `/comms/community/my-submissions` | W S P T B |
+| COM-35 moments viewer (P1) | `/comms/community/moments/{homeKind}/{homeId}` | W S P B |
+| COM-36 report | `/comms/community/report` (`?target=`) | all |
+| COM-37 my community settings | `/comms/community/settings` | all |
+| COM-38 saved posts | `/comms/community/saved` | W S P T B |
+| COM-39 child media use (inside `ui/02 ACC-13`) | `/privacy/my/consents` panel | W P S |
+| COM-40 rules and privacy (first use) | `/comms/community/rules` | all |
+| COM-41 alumni home (P1) | `/comms/community/alumni` | W S |
+| COM-42 alumni directory and contact requests (P1) | `/comms/community/alumni/directory` | W S |
+| COM-50 review queue | `/comms/community/review` | W T B |
+| COM-51 home management | `/comms/community/homes` | W B |
+| COM-52 cases | `/comms/community/cases` | W B |
+| COM-53 case detail | `/comms/community/cases/{caseId}` | W B |
+| COM-54 safeguarding inbox | `/comms/community/safeguarding` | W B |
+| COM-55 member restrictions | `/comms/community/restrictions` | W B |
+| COM-56 classroom quick post | `/comms/community/quick-post` | T B |
+| COM-57 emergency takedown | `/comms/posts/{postId}/takedown` | W T B |
+| COM-60 community settings | `/comms/community/policy` | W B |
+| COM-61 presets | `/comms/community/policy/presets` | W |
+| COM-62 preview as role | `/comms/community/policy/preview` | W |
+| COM-63 policy history and approvals | `/comms/community/policy/history` | W |
+| COM-64 emergency controls | `/comms/community/emergency` | W T B |
+| COM-65 community health | `/comms/community/health` | W B |
+| COM-66 moderation team | `/comms/community/team` | W |
+| COM-67 person content (erasure) | `/comms/community/person-content` | W |
+| COM-68 alumni administration (P1) | `/comms/community/alumni/admin` | W |
+| COM-69 publication desk (P1) | `/comms/community/releases` | W |
+| COM-70 release detail (P1) | `/comms/community/releases/{releasePackageId}` | W |
+| COM-71 inter-school spaces (P1) | `/comms/community/inter-school` | W |
+| COM-72 inter-school invitations (P1) | `/comms/community/inter-school/invitations` | W B |
+| COM-73 share to inter-school (P1) | `/comms/community/inter-school/share` | W B |
+| COM-74 inter-school panel queue (P1) | `/comms/community/inter-school/review` | W B |
+| PC-COM-01 platform safety floor | `/comms/community/platform` (platform console) | C |
+
+Deep links in notifications carry only ids (`mysms://comms/posts/{postId}`); opening one always re-checks admission
+and shows "This post is no longer available" for a removed, expired or no-longer-admitted item without saying which
+(NOTIF-04, ACC-20). A link opened on a client that lacks the screen falls back to the web URL.
+
+## C3. Hooks per operation group
+
+React Query everywhere; query keys are `queryKey('comms', <resource>, params)` and **always include the context**
+`{tenantId, userId, institutionId, role, childId}` so a switch can never serve another context's data (SEC-7, HOME-10).
+
+| Hook | Operations | Stale time / refetch | Invalidated by |
+|---|---|---|---|
+| `useCommunityHome(context)` | `GetCommunityHome` | 30 s; refetch on focus | any post, report or preference mutation |
+| `useCommunityFeed(context, homeFilter)` | `GetFeed` (cursor pages, `useInfiniteQuery`) | 30 s web; **120 s revalidation on phones** (§C8) | submit, withdraw, react, moderator actions, context switch (cleared, not invalidated) |
+| `useHomeFeed(home)`, `useHome(home)` | `GetHomeFeed`, `GetClassPage` / `GetSpace` | 30 s | as above |
+| `usePost(postId)`, `useComments(postId)` | `GetPost`, `ListComments` | 0 (detail) | comment, react, hide, restrict |
+| `useMyHomes()` | `ListMyHomes` | 30 s | membership events are server-side; refetched on focus |
+| `useDraft()`, `useSubmitPost()`, `useWithdrawPost()` | `CreatePostDraft`, `UpdatePostDraft`, `DeletePostDraft`, `SubmitPost`, `WithdrawPost` | mutations; `Idempotency-Key` per attempt, kept across retries of the same attempt; `If-Match` from the draft's ETag | my submissions, feed |
+| `useMySubmissions()` | `ListMySubmissions` | 30 s | submit, withdraw, returned (refetch on focus) |
+| `useMediaUpload()` | `RequestMediaUpload`, PUT to the signed URL, `CompleteMediaUpload`, `GetMediaStatus` (poll 2 s → 10 s back-off, stop at `ready`/`rejected`) | — | draft |
+| `useDeclareSubjects()` | `DeclareMediaSubjects` (+ roster picker read) | — | draft |
+| `useMediaUrls(mediaIds)` | `GetMediaUrls` (one batch per feed page) | URLs never cached beyond their lifetime; images addressed by the stable media path for the platform image cache | — |
+| `useComment()`, `useReact()`, `useSave()` | `AddComment`, `EditComment`, `DeleteComment`, `React`, `RemoveReaction`, `SavePost`, `UnsavePost` | optimistic only for react/save (rolled back on error) | post |
+| `useCommunityPreferences()` | `MuteHome`, `UnmuteHome`, `SetCommunityPreferences` | 30 s | home, feed |
+| `useReport()` | `ReportContent`, `ReportConcern`, `GetMyReport` | — | — |
+| `useAppeal()` | `AppealModerationAction` | — | my submissions |
+| `useReviewQueue()`, `useReviewItem()` | `ListReviewQueue`, `ClaimReviewItem`, `ApprovePost`, `ConfirmMediaSubjects`, `ReturnPost`, `RejectPost` | 15 s; refetch on focus | every review action |
+| `useModeration()` | `PinPost`, `UnpinPost`, `HideComment`, `RestoreComment`, `LockThread`, `SetSlowMode`, `RestrictPost`, `RemovePost`, `RestorePost`, `EmergencyTakedown`, `SurfaceClassPost`, `WithdrawSurfacedPost`, `PublishOnBehalf` | — | post, feed, queue |
+| `useCases()`, `useCase(caseId)` | `ListCases`, `GetCase`, `AssignCase`, `ActOnCase`, `EscalateCase`, `DecideAppeal`, `OpenSecurityIncident`, `ListAuthorActivity`, `RestrictMember`, `LiftRestriction`, `RevokeMemberAccess`, `LiftAccessRevocation`, `RemoveMemberComments` | 15 s | case actions |
+| `useSafeguarding()` | `ListSafeguardingCases`, `GetSafeguardingCase`, `GetSafeguardingEvidence`, `RecordSafeguardingAction`, `ReviewLegalHold` | 0; never persisted, cleared on navigation away | — |
+| `useHomesAdmin()` | `CreateSpace`, `UpdateSpace`, `ArchiveSpace`, `AddSpaceMembers`, `RemoveSpaceMember`, `UpdateClassPage` | 30 s | homes |
+| `useCommunityPolicy()` | `GetCommunityPolicy`, `ProposePolicyChange`, `ApprovePolicyChange`, `RejectPolicyChange`, `ApplyPreset`, `PreviewAsRole`, `ListPolicyHistory`, `SetGradeBands` | 30 s | policy mutations |
+| `useEmergencyControls()` | `FreezeInstitution`, `UnfreezeInstitution`, `FreezeHome`, `UnfreezeHome` | 0 | everything community-wide (the client refetches the home) |
+| `useCommunityHealth()` | `GetCommunityHealth` | 5 min | — |
+| `usePersonContent()` | `DiscoverPersonContent`, `ApplyErasure`, `GetDeletionLedger`, `ExportCommunityAudit` | 0 | — |
+| `useChildMediaUse(childPersonId)` | `GetMyChildMediaUse` (+ privacy's `useMyConsents`) | 0 | privacy consent mutations |
+| `useCommunityNotifications()` | `ListInAppNotifications`, `GetInAppNotification`, `MarkNotificationsRead` | 30 s; refetch on focus | open, mark read |
+| `usePlatformCommunity()` (console) | `SetCommunityGlobalSwitch`, `SetFloorOverride`, `GetProjectionHealth` | 0 | — |
+| P1/P2 | `GetMomentStrip`, `VoteInPoll`, `GetPollResults`, `ConfirmAnswer`, `alumni*`, `releasePackage*` (§22) | as above | as above |
+
+## C4. Home integration
+
+The home order and per-role cards are §12.1. Implementation: each client's home is a list of independent card
+components, each with its own query and error boundary, so a failing community query renders the small "Community is
+unavailable" card and never blocks timetable, homework, attendance or fees (HOME-07, ARCH-12, ACC-19). The community
+preview card uses `useCommunityHome` and shows at most 5 items and an "Open community" link; for guardians a child
+chip per item and the child switcher in the header (HOME-03). Official urgent notices come from comms' notices
+(`ui/02 COM-01`) in their own card with issuer, validity and acknowledgment state, never mixed with community items
+(HOME-06). The "tasks first" preference (HOME-13) hides the preview and moments strip but keeps the "Open community"
+entry.
+
+## C5. Feed and post rendering
+
+- **Paging:** cursor pages of 20 from `GetFeed`; "Load more" button (no infinite autoplay of content on web; infinite
+  scroll on phones stops at a "You're caught up" card when the cursor ends, §A8.2); no totals.
+- **PostCard:** posting identity line ("Ms Rao · Teacher, Grade 7 B" / "Grade 7 B · a student" / "the school"),
+  official badge only from the server's `authorCapacity`, audience sentence (§C6.2), body (expand after 500
+  characters), media grid (thumbnails first, tap for the display variant), reactions per K24 (students see "Your
+  classmates appreciated this" without numbers), comment count only when K24 shows counts, report entry on every card.
+- **Pinned official items** at the top with "Pinned until …"; grouped system updates as one compact card.
+- **Child switcher** (guardians): "All children" shows a child chip per post; choosing a child filters. Switching
+  child, role, institution or account **removes** (not invalidates) every community query and image from memory, then
+  loads fresh (HOME-10, ACC-21).
+- **Five states** (ui/02 §1.4): skeleton cards; empty state with the next action ("Your class page has no posts yet")
+  never inviting strangers (HOME-09); error with retry and the problem code's message; offline chip with the last
+  page held in memory only (§C8); content.
+- **Virtualised lists** on phones (FlashList) and on web once a page passes 100 cards.
+
+## C6. Composer (COM-33, COM-56)
+
+### C6.1 State machine (`packages/core/src/community/composer.ts`)
+
+`empty → editing (draft id once saved) → uploading media → declaring subjects → ready → submitting → submitted |
+scheduled | published | rejected-by-server (stays editing with the field errors)`. Autosave of the draft every 10 s
+and on blur (`UpdatePostDraft` with `If-Match`); a 412 shows "This draft changed on another device" with reload.
+Leaving with unsaved changes asks first (POST-09). Submit sends the draft's ETag and an `Idempotency-Key` created when
+the user pressed Submit and reused by every retry of that press (POST-09).
+
+### C6.2 Audience chip and sentence
+
+The chip offers only the audiences the effective policy allows (K08 default, K09 ceiling, K10 guardians), narrowest
+first (NET-07). The sentence is built from the server's audience description, not from client logic: "Shared with:
+Grade 7 B students and their guardians · your teacher checks it first"; widening shows the extra review it triggers
+(§4.6). Student wording follows §12.6.
+
+### C6.3 Identity, type, schedule
+
+The posting identity line shows who the post will be published as (person + role + school, or the school on behalf,
+NET-18, POST-03); a member with several roles picks the context first. Post types are the K11 list. Scheduling (K12,
+staff) shows "Checked again when it goes out" (POST-07).
+
+### C6.4 Errors
+
+| Problem code | Message (en) |
+|---|---|
+| `AUDIENCE_EMPTY` | Nobody can see this audience yet. Choose another. |
+| `AUDIENCE_TOO_WIDE` | This audience is wider than your school allows. |
+| `IMAGE_NOT_SHAREABLE` | One photo can't be shared with this audience (a person in it has not agreed). Remove it or choose a narrower audience. |
+| `MEDIA_NOT_READY` | Photos are still being checked. |
+| `REVISION_CHANGED` | The post changed while it was being reviewed. |
+| `STORAGE_ALLOWANCE_USED` | Your school's photo storage is full. Ask the office. |
+| `POLICY_UNKNOWN_KNOB`, `INVALID_STATE_TRANSITION`, 412, 429 | generic messages of `packages/core` with the retry hint |
+
+The client never shows a subject's name in a consent error; it marks the image (MEDIA-07, §8.4).
+
+## C7. Media capture and upload (`packages/core/src/community/upload.ts`)
+
+1. **Pick or capture.** Phones: in-app camera (COM-56) into the app's cache directory, no media-library write
+   permission (§12.9); gallery pick allowed on personal devices. Web: file input accepting JPEG, PNG, WebP, HEIC.
+2. **Convert and shrink on the device.** HEIC/HEIF is converted to JPEG on the client (the server accepts no HEIC,
+   §8.3): `expo-image-manipulator` on phones (to verify: HEIC decode support per platform version; fallback asks the
+   user to pick a JPEG), a WASM HEIC decoder on web loaded on demand. Longest side ≤ 2048 px, JPEG quality 0.85; the
+   re-encode drops EXIF and GPS (the server strips again, MEDIA-02).
+3. **Request an upload slot.** `RequestMediaUpload` (type, size, sha256) → a single-use, size-bound signed URL
+   (platform files).
+4. **Upload.** PUT the bytes with progress; on network failure retry with back-off 3 times, asking for a fresh slot
+   after an expired URL ("resume by retry", ui/05 §9 — the platform offers no chunked resumable session; to verify
+   before adding one). Upload continues while the composer stays open; leaving keeps the draft and marks the image
+   "not uploaded".
+5. **Complete.** `CompleteMediaUpload` → the server quarantines, scans (S4), strips, makes variants; the client polls
+   `GetMediaStatus` until `ready` or `rejected` (with reason) and shows "Checking photo…".
+6. **Subjects.** `SubjectPicker` lists the home's roster (§6.1 `DeclareMediaSubjects`) plus "Someone else is
+   identifiable"; alt text is required before submit (UX-03); caption checks warn on names, numbers and places
+   (MEDIA-07).
+
+Limits shown before upload: K15 images per post, the size limit and the remaining allowance (K20).
+
+## C8. Caching, offline and shared devices
+
+- **No persistent cache of community content.** React Query state lives in memory; the persisted query cache used for
+  other screens (if any) excludes every `comms` community key. Images are fetched through the stable media path, whose
+  302 answer and signed URL carry `Cache-Control: no-store` (§8.1); on phones images use the memory cache only.
+- **Revalidation:** web refetches on focus and after 30 s; phones revalidate a visible feed every 120 s and on resume;
+  any 404 for a cached post removes it from every cached page at once (revocation learned, UX-08, ACC-22).
+- **Offline:** the last loaded page stays readable in memory with an "Offline" chip until the app is backgrounded for
+  more than 5 minutes; nothing is written to disk except drafts (encrypted in secure storage on personal devices,
+  memory-only in classroom mode). Offline drafts stay drafts; on reconnect the composer re-runs the policy read and
+  shows changes to audience or permission before Submit is enabled (UX-09).
+- **Sign-out and switches:** clear React Query, image memory cache, secure-store drafts and tokens, delivered
+  notifications (§12.9); old content never flashes after an account or child switch (ACC-21).
+- **Notification previews:** generic text only (§11); "hide previews" preference (COM-37) suppresses even the home
+  name on the lock screen (UX-07).
+- **Screen protection:** Android `FLAG_SECURE` and the iOS app-switcher blur on community screens (§12.5).
+
+## C9. Moderation screens
+
+- **Review queue (COM-50):** list with age, author category, audience, image count, consent state per image at the
+  post's width, SLA colour; `ClaimReviewItem` on open with a visible claim timer; keyboard shortcuts on web
+  (`j/k` move, `o` open, `a` approve, `r` return, `x` reject) — approve stays disabled until every image is opened at
+  full variant and its subject check ticked (§12.8); return and reject require a reason code and optional note;
+  bulk actions only for text-only staff posts and returns.
+- **Cases (COM-52, COM-53):** grouped reports, severity, owner, SLA; actions need a reason code; evidence shown as
+  hashes and ids, pixels only under a safeguarding hold; every open of evidence is logged (the screen says so).
+- **Safeguarding inbox (COM-54):** visible only with the safeguarding permission; no notification preview ever names
+  a child or a case.
+- **Member restrictions (COM-55):** lists restrictions with the linked case; lift with reason.
+- **Emergency (COM-57, COM-64):** one-step actions with reason and confirm; a persistent banner while a freeze is
+  active, on every client.
+
+## C10. Report flows (COM-36)
+
+Entry points: every post, comment, image and member chip; the home card; the "Community is unavailable" card; the
+404 / "no longer available" screen; COM-37 settings. Steps: category (K35, incl. "concern about a staff member" and
+"I need help now") → optional detail (and child context for guardians) → confirmation with "what happens next",
+staffed hours and the urgent-help numbers configured by the school (SAFE-05) → `GetMyReport` status later. A report
+never requires the target to still be visible (`ReportConcern`). Works for restricted and muted members (ACC-17).
+Student copy follows §12.6.
+
+## C11. Consent links
+
+- The consent centre is privacy's `ui/02 ACC-13`; the community adds **COM-39**, a panel per child showing
+  `GetMyChildMediaUse` counts by width and the withdrawal effect text of §12.7.
+- The composer and review screens show each image's consent state at the post's width as "Can be shared" / "Can't be
+  shared with this audience" — never which guardian decided.
+- A guardian whose child appears in a pending image gets, at most, a calm consent reminder card on the home linking to
+  ACC-13 (no image, no post content).
+
+## C12. Internationalisation
+
+- Keys under `community.*` (`community.feed.caughtUp`, `community.audience.classWithGuardians`,
+  `community.report.category.staffConcern`, …) in `en.ts` and `hi.ts`; every string through `t()`; plurals and
+  counts in rounding bands (§9.3) rendered by the i18n helpers; dates and times in the institution's time zone with the
+  academic year where relevant (UX-06).
+- Student strings at a Grade 4 reading level for under-13 bands (§12.6); safety and consent wording reviewed by a
+  fluent speaker before release (open item of privacy F-follow-ups applies here too).
+- Body text is stored and shown in the author's language with `lang` set on the element; Indic scripts and
+  code-mixed text render with system fonts (UX-04).
+
+## C13. Accessibility
+
+WCAG 2.2 AA (ui/04 §6): alt text required on every image; audience, report and consent controls reachable by
+keyboard and screen reader with explicit labels ("Audience: Grade 7 B students and guardians, button"); focus returns
+to the triggering card after dialogs; 44 px touch targets; no autoplay; reduced motion respected (moments advance only
+on tap when reduced motion is on); colour never the only state cue in the review queue; `axe-core` checks in every
+screen test (UX-03, NFR-13, ACC-31).
+
+## C14. Fixtures, fake backend and tests
+
+**Fixture world** (`packages/fixtures/src/community.ts`): one tenant, two institutions (Green Valley, Hill Side); Grade
+7 B and 7 C class pages; a teacher (Ms Rao) with a co-teacher; a student Asha (15) and her brother Kabir (9) with two
+legal guardians (one granted school width, one refused); a restricted guardian link to Kabir; a staff room; a school
+space; a pending student post with one image; a returned post; a case against a staff member; an inter-school space
+(P1). Handlers implement the operations of §6 with the server's semantics that matter to clients: cursor paging,
+ETags and 412, idempotency replay, 404 for unadmitted items, consent states per image, problem codes of §C6.4.
+
+**Tests per screen** (Vitest + Testing Library + axe; native screens through the native harness once BLD-7 lands):
+
+| Screen | Must prove |
+|---|---|
+| COM-30 / COM-31 | context switch clears content; caught-up end; unavailable card does not block home; child chips |
+| COM-32 | 404 renders "no longer available" and removes the post from cached pages; report entry present |
+| COM-33 / COM-56 | audience sentence from server data; idempotent submit retry; 412 draft conflict; image consent error marks the image without names; unsaved-changes guard; offline draft revalidation |
+| COM-34 | returned items show reason and edit-and-resubmit |
+| COM-36 | targetless report works when muted; urgent-help path shows staffed hours |
+| COM-37, COM-39 | preferences persist; media-use counts; no other guardian's data in any response rendered |
+| COM-50 | approve disabled until all images opened and ticked; claim expiry; shortcuts |
+| COM-52–COM-55 | reason codes required; evidence open logged message; safeguarding inbox hidden without permission |
+| COM-60–COM-67 | inherited / local / limited-by labels; widening becomes a proposal; preset diff; freeze banner everywhere |
+| Shared device (§12.9) | sign-out clears caches, drafts and notifications; classroom mode keeps no refresh token |
+
+End-to-end flows (Playwright on web, Maestro on phones, BLD-5) for: teacher posts to class page → guardian reads;
+student submits → teacher returns → resubmit → approve; guardian withdraws photo consent → image hidden; report against
+staff → independent handler; freeze institution → composer disabled, reading and reporting work.
+
+---
+
+# Part D — Delivery
+
+## 14. Testing strategy
+
+**Time and tiers — no fakes outside unit tests** (CLAUDE.md). All time-based logic reads the injected `java.time.Clock`
+bean the services already take; **unit tests** may give it a fixed or advancing clock. **Component tests** use the real
+clock, real PostgreSQL and a real bus, and shorten waits through **configuration**, not doubles: every threshold
+(reorder window, degrade, guardian close, closed, SLA, claim, expiry) is a property in comms' `application.properties`
+(`mysms.comms.community.*`), set to seconds in the component-test profile (e.g. reorder window 2 s, degrade 3 s, closed
+6 s). **Drop and reorder without a fake bus:** the test is a real producer — it publishes crafted events (with chosen
+`tenantSeq` values: 1, 3 and never 2 for a drop; 3 then 2 for a reorder) and crafted heartbeats through the production
+`EventBus` API, with the source module's own relay heartbeat disabled by configuration; the fast tier runs on the
+messaging library's **in-process adapter** (a production adapter used by the single-process deployment), the heavy tier
+on RabbitMQ and the Pub/Sub emulator. Two tiers:
+
+| Tier | Where | Runs |
+|---|---|---|
+| **Fast** — part of `mvn clean install` | the 2-core / 7 GB build machine, one PostgreSQL Testcontainer, the in-process bus adapter | all component tests of comms (HTTP, real PostgreSQL); matrix **≈ 600 pairwise cases** run against one migrated database, each case in a fresh tenant of its own (no cleanup,
+no rollback tricks — services commit through `AppTransactionManager`); property test **20 seeds × 20 viewers**; revocation, gap, kill-switch and after-hours tests with the configured short thresholds (seconds of wall time); write-surface, redaction, snapshot, protected-subject, membership, multi-institution, archive, majority, consent-centre tests. Budget: ≤ 6 minutes for comms' component tests |
+| **Heavy** — `-Pheavy`, nightly and before each pilot | a larger CI runner (8 vCPU / 32 GB) | full matrix ≈ 3,000 cases; property test 500 seeds × 50 viewers; RabbitMQ container pause and Pub/Sub emulator reordering variants of the gap and broker tests; term-start burst (a school's enrolments and assignments in one hour) |
+
+- **Matrix:** generated cases of member category (6) × grade band (4) × knob value (every value of every knob enforced
+  in the slice) × action, checked against an expected-answer table written from §4.2/§4.5, not from the code.
+- **Property:** `AudiencePropertyComponentTest` compares `GetFeed`/`GetPost` with `AudienceReference`, a plain-Java
+  evaluator written **from §9.1 only** by a different agent than the one writing `FeedRepository`, sharing no code
+  (set membership, never SQL); failing seeds are kept as regression cases in the fast tier.
+- **Named component tests:** `ClassPageMembershipComponentTest`, `CommunityWriteSurfaceTest` (§6.4),
+  `CommunityLogRedactionComponentTest` (sentinel body text and child name absent from logs, `outbox_event.data`, audit,
+  metric labels, error bodies), `ArchiveAccessComponentTest`, `MultiInstitutionIsolationComponentTest`,
+  `GuardianMultiChildComponentTest`, `KillSwitchComponentTest` (§4.9, §21), `FeedSnapshotComponentTest` (§9.2),
+  `StreamGapComponentTest` (one dropped and one reordered event per sequenced stream; per-tenant fail-closed only for the
+  affected tenant; automatic repair), `ProtectedSubjectComponentTest` (§7.7), `MajorityTransitionComponentTest`,
+  `ConsentCentreDisclosureComponentTest`, `AfterHoursWithholdComponentTest`, `CommunityNotificationHygieneComponentTest`,
+  `RevocationUnderBrokerFailureComponentTest`, terminated staff (§7.4), REST/gRPC parity (existing kit).
+- **Client tests:** composer audience preview, review queue gating, child switcher clearing state, report flow, sign-out
+  clearing, classroom device mode (§12.9), stable media path caching.
+- **Abuse drills** (SAFE-17), as gates in §16.2.
+- **Load test** `CommunityFeedLoadTest` (Java harness, `-Pload`) runs in a **named environment, `community-load`**: a
+  GCP project mirroring the cost plan's recommended configuration (Cloud SQL Enterprise 4 vCPU / 16 GiB, the API on
+  Cloud Run with 2 × 2 vCPU / 4 GiB instances, the media worker separately, the community bucket), the §9.2 dataset, and
+  the load generator on its own e2-standard-4 VM. Owner: operations (the owner names the person and approves the cost, §18 item 21); started
+  for the run and deleted afterwards. It never runs on the build machine.
+- **Release blockers for any pilot:** the fast and heavy tiers green; the load test passed in `community-load` within
+  the last 30 days; the drills for the slice recorded.
+
+## 15. Prerequisites outside comms (exact contracts)
+
+| # | Prerequisite | Module | Contract / schema change | Needed by |
+|---|---|---|---|---|
+| PR-1 | **Consent schema** — *delivered by privacy* (`privacy.consent_record`, design §5.4) | people → privacy | `consent_record` gains: `scope varchar(20)` (CHECK in `class, institution, inter_school, public`; required iff `purpose = 'photo_video_publication'`), `decision varchar(10) NOT NULL DEFAULT 'granted'` (CHECK `granted, refused`), `giver_capacity varchar(10) NOT NULL` (CHECK `self, guardian`), `valid_until date`, `verification varchar(12) NOT NULL` (CHECK `verified, unverified`), `verified_by_user_id uuid`, `superseded_by_id uuid`; CHECK `channel NOT IN ('paper_form','in_person') OR (evidence_file_id IS NOT NULL AND recorded_by_user_id IS NOT NULL)`; unique index replaced by `(tenant_id, person_id, purpose, given_by_person_id) WHERE withdrawn_at IS NULL AND deleted_at IS NULL AND superseded_by_id IS NULL`. The design's earlier `photo_publication` is `photo_video_publication` | S3 |
+| PR-2 | **Consent operations** — *delivered by privacy* (`RecordMyConsent`, `WithdrawMyConsent`, `RecordConsentOnBehalf`, `VerifyConsentRecord`, …) | people → privacy | `CreateConsentRecord` (purpose, scope, decision, channel, evidence; giver from the token for self-service; staff recording a paper form need `people.consent_record.record_on_behalf` and evidence; a new row at the same (person, purpose, giver) supersedes the old one), `WithdrawConsent`, `GetConsentRecord`, `ListConsentRecords` (a guardian sees only rows they gave and the effective status), `GetConsentStatus` (effective width per purpose, computed with the same most-restrictive rule as §8.4). Guardian authority: people keeps `people.guardian_authority` from `sis.student_guardian` events (an event-only reference against the dependency arrow, as ARCHITECTURE §2 allows) and refuses a guardian giver without an active legal-guardian link (403) | S3 |
+| PR-3 | **Consent events** — *delivered by privacy* except `.snapshot` replay and the daily checkpoint (`privacy.consent_record.*`, `privacy.consent_state.changed`, `privacy.subject.majority_reached`) | people → privacy | `people.consent_record.recorded / withdrawn / superseded / expired` (daily expiry job) and `.snapshot` (replay) with `{id, personId, givenByPersonId, giverCapacity, purpose, scope, decision, validUntil, verification, withdrawnAt, subjectAdult, rowVersion}`; `people.person.majority_reached {personId, adult: true, rowVersion}` from a daily job (age of majority from the tenant's jurisdiction, 18 in India) and `people.person.status_snapshot`; daily `people.consent.checkpoint {tenantId, rows, maxRowVersion, digest}`; **`people.ReplayConsentEvents(tenantId)`** (platform operator or tenant administrator) re-publishes `.snapshot` for every live row and `status_snapshot` for their subjects. Owner of replay: people | S3 |
+| PR-4 | **Restricted guardian link** | sis | `student_guardian.status` CHECK becomes `active, restricted, inactive`; new `sis.student_guardian_restriction(id, tenant_id, student_guardian_id, reason_code, legal_reference_enc, evidence_file_id, decided_by_user_id, valid_from, valid_to, lifted_at, lifted_by_user_id, …)` readable only with `sis.student_guardian.restrict`; operations `sis.RestrictGuardianLink`, `sis.LiftGuardianLinkRestriction`, `sis.ListGuardianLinkRestrictions` (that permission; MFA); internal gRPC `sis.ListRestrictedGuardianLinks(institutionId)` returning `{linkId, studentPersonId, guardianUserId, rowVersion}` only (no reason), for comms' 10-minute read (service token, §7.7); generic `UpdateStudentGuardian` can no longer set or clear `restricted` (422); events `sis.student_guardian.restricted / restriction_lifted` with the PR-5 payload and no reason. sis's own persona rule already reads `status = 'active'` only, so the restriction also applies to sis's guardian views | S2 |
+| PR-5 | **Relationship payloads** (hard for S2) | sis | `sis.student_guardian.*`: `{id, studentId, studentPersonId, guardianId, guardianUserId, guardianPersonId, institutionId, status, hasCustody, isLegalGuardian, receivesCommunication, rowVersion}`; `sis.student_enrollment.*`: `{id, studentId, studentUserId, studentPersonId, institutionId, academicYearId, classSectionId, enrollmentStatus, effectiveFrom, effectiveTo, changeReason, rowVersion}` | S2 |
+| PR-6 | **Staff status** | hr | `hr.staff.*` member payload adds `status`; `ChangeStaffStatus` to `exited` deactivates the iam account (hr may call iam; outside the transaction, retried); daily `hr.staff.checkpoint`; `hr.ReplayStaffEvents(tenantId)` | S1 |
+| PR-7 | **Academics / org payloads** (hard for S1) | academics, org | `academics.class_section.*` `{id, institutionId, academicYearId, gradeLevelId, sectionId, classTeacherStaffId, isActive, rowVersion}`; `academics.teaching_assignment.*` `{id, classSectionId, staffId, teacherRole, isActive, rowVersion}`; `org.academic_year.closeAcademicYear` and `org.academic_term.*` with dates; `org.institution.*` with `status`. Id-only events would mark whole classes stale on every edit (§7.1), so the fallback is not acceptable | S1 |
+| PR-8 | **iam confirmations** | iam | **Verified from the code:** `UserAccountService.deactivateUser` runs `UserAccountRules.afterDeactivate` → `signOut.everywhere` in the same transaction (refresh and API tokens revoked, sessions ended) and publishes `iam.user_account.deactivateUser`; `SignInService` refuses a refresh without an active account; `IamTokenGrantsComponentTest` asserts that a deactivated (and even re-activated) account's token no longer refreshes (401). Remaining: confirm that `activateUser` and `user_role` events are published on every path (import, sis/hr portal-account flows) — an iam test to add, `IamAccountEventsComponentTest` | S1 |
+| PR-9 | **Relay heartbeat and per-tenant stream sequence** | messaging (core) for the heartbeat of **every** module's relay (comms consumes those of sis, iam, privacy, hr, academics and org); sis, privacy, hr, iam for the sequences | each module's outbox relay publishes `<module>.relay.heartbeat {module, time, streams: {name: {tenantId: lastSeq}}}` every 30 s (no tenant; tenants that published on the stream in the last 30 min) on the same exchange as its events; for the designated streams (`privacy.consent_state`, `privacy.subject`, `sis.guardian_link`, `sis.enrollment`, `hr.staff`, `iam.account`) the relay stamps `tenantSeq` from `<schema>.event_stream(tenant_id, stream, last_seq)` in its own transaction, advanced only on a successful publish; `ApplicationRoleGrants` grants the relay role `SELECT, INSERT, UPDATE` on `event_stream`; replay snapshots carry the current `tenantSeq`; consumers tolerate reordering (§7.1) | S2 (heartbeat alone for S1) |
+| PR-10 | **Scheduled-jobs runner** — per-tenant scheduled jobs built (`com.mysms.core.jobs`); queued work with dead letters still to build (ROADMAP ARC-4) | core | leader-elected or row-claimed jobs with per-item transactions, retries with backoff, dead-letter table, metrics; runs projection refresh, reconciliation, dispatch, digest, SLA, retention, purge, media | S1 |
+| PR-11 | **Platform files** | platform + ops | file objects created for comms carry neutral names (`<mediaId>-<variant>.jpg`); `PurgeFileObject` also overwrites `file_name` and `original_name` of the purged row with the neutral name; a second storage disk `gcs-community` (`MYSMS_COMMUNITY_FILES_BUCKET`) for comms' media and evidence — bucket with versioning off, soft delete off, no lifecycle or backup copy (§5.7); `GetStoragePolicy(disk)` returning versioning and soft-delete retention read from the bucket at startup; `GetDownloadUrl` takes `ttlSeconds` (30–600; today fixed 10 min); `PurgeFileObject` (delete with generation precondition, list and delete any remaining versions, refund quota, write `deletion_log`, report misconfiguration); service-identity upload for derived files (`owner_entity_type = comms.community_media`); signed downloads carry `Cache-Control: no-store` (the `response-cache-control` parameter of the signed URL); the community bucket's CORS allows GET from the web app's origins | S3 |
+| PR-12 | **Database grants** | ops / database | **Verified from the code and docs:** migrations grant only `mysms_app` (DML) and the relay role (outbox/inbox) per schema (`core.db.ApplicationRoleGrants`); DEPLOYMENT.md gives `mysms_platform_admin` only `CONNECT`; no default privileges exist, and `BYPASSRLS` does not bypass table privileges — so it reads no comms table today. **Defect found:** `ModuleDatabaseSettings` javadoc and `TestDatabase` comment call the relay role `mysms_platform_admin`; if an operator followed them, that role would gain the outbox/inbox grants (ids only, no business table) — the comments must be corrected by core's owner. To add: a `smoke.sql` assertion `NOT has_table_privilege('mysms_platform_admin', 'comms.safeguarding_case', 'SELECT')` for every comms table | S1 |
+| PR-19 | **Global-row read policy** | database (comms baseline) + docs | for comms' tenantless tables without tenant data (`community_global_switch`, `source_heartbeat`): `FOR SELECT USING (true)` for tenant sessions, writes only from a transaction binding no tenant; `heartbeat_mark` keeps the standard global policies (invisible to tenant sessions); database README gains this third case; `smoke.sql` asserts a tenant session reads and cannot write the global switch | S1 |
+| PR-20 | **Bulk read RPCs and service identity** | sis, iam, academics (+ iam service tokens) | internal gRPC, paged, with `rowVersion`: `sis.ListGuardianLinksByInstitution`, `sis.ListEnrollmentsByInstitution`, `iam.ListAccountsByInstitution` (status + role grants), `academics.ListClassSectionsByInstitution`, `academics.ListTeachingAssignmentsByInstitution`; each takes `updatedSince`. Called by comms' refresh, reconciliation and gap repair with a **service token** (iam issues them, 5-minute TTL, `service-token-ttl`; `GrpcAuthInterceptor` in auth-client) carrying the tenant and an internal audience; comms' service principal needs only these read permissions. ROADMAP P1-34 (batch reads) is thereby partly delivered for these resources | S1 (academics, iam), S2 (sis) |
+| PR-21 | **Off-lineage safety log** | platform + ops | an append-only bucket outside database backups with a **45-day retention lock** (backup window + margin) and expiry after it; objects encrypted per tenant; readers limited to comms' replay service identity and two named operators, reads logged; comms ships `safety_log_outbox` rows to it through platform (§5.7); DR runbook step "replay the log, list unshipped entries, replay consent, reconcile, operator check, then reopen" | S1 (text actions) |
+| PR-22 | **People purposes** — *delivered by privacy's catalogue* | people → privacy | add `community_naming` (names, credits, directory names; same widths as photos) and `community_participation` (a guardian's consent to a minor's participation; a minor = people's `adult` false) to `consent_record.purpose`; both carried by the PR-3 events | S3 (naming), S4 (participation) |
+| PR-23 | **LMS cohort membership events** (P1, §22.3) | lms | `lms.cohort_member.created / updated / deleted` with `{id, cohortId, userId, role, status, rowVersion}`; comms projects them for cohort spaces (comms may not call lms) | P1 |
+| PR-13 | **Delivery providers** (push/email) | comms + infra | not needed for S1–S3 (§11.4) | S4 (S3 soft) |
+| PR-14 | **Gateway rate limiting** | infra | per-account and per-IP limits on community writes and media URL issuance (SAFE-12 scraping/bulk download) in addition to K40 in the service | S4 (soft before) |
+| PR-15 | **Image library and media worker** | comms + ops | TwelveMonkeys ImageIO (`imageio-jpeg`, `imageio-webp`, `imageio-metadata`), version pinned; the `comms-media-worker` deployment (§8.3) | S3 |
+| PR-16 | **Scan adapter** | comms + provider | content/malware scan port with one adapter | S4 (student/guardian uploads) |
+| PR-17 | **Data-protection paperwork** | owner / legal | processor agreements and data-location statements for GCS, push and email providers (PRIV-12) | before the first pilot |
+| PR-18 | **Erasure request workflow** (PRIV-09) — *privacy's rights requests and erasure saga* (privacy design §9) | privacy | identity-verified request, owner, exceptions; comms supplies §5.8 | S3 |
+
+### 15.1 Dependency matrix by slice
+
+"Hard" = the slice cannot open without it; "soft" = the stated fallback applies. A fallback that is "the slice is not
+enabled" is written as hard.
+
+| Item | S1 staff text | S2 guardians text | S3 photos | S4 students | Status today | Fallback when soft |
+|---|---|---|---|---|---|---|
+| PR-6 hr status + exit→iam deactivation | **hard** | hard | hard | hard | payload lacks status | — |
+| PR-7 academics/org payloads | **hard** | hard | hard | hard | id-only | — |
+| PR-8 iam confirmations | **hard** | hard | hard | hard | refresh refusal verified; event paths to confirm | — |
+| PR-9 heartbeat (all six sources) | **hard** (heartbeat only) | **hard** (+ sequences) | hard | hard | missing | — |
+| PR-10 jobs runner | **hard** | hard | hard | hard | missing | — |
+| PR-12 grants | **hard** | hard | hard | hard | verified; smoke assertion to add | — |
+| PR-17 paperwork | **hard** | hard | hard | hard | not started | — |
+| PR-19 global-row policy | **hard** | hard | hard | hard | missing | — |
+| PR-20 bulk reads | **hard** (academics, iam) | **hard** (sis) | hard | hard | missing | — |
+| PR-4 sis restricted link | — | **hard** | hard | hard | missing | — |
+| PR-5 sis payloads | — | **hard** | hard | hard | id-only | — |
+| PR-14 gateway limits | soft | soft | soft | **hard** | missing | service-side K40 |
+| PR-1–3 people consent | — | soft | **hard** | hard | 501, no events | no images |
+| PR-22 people purposes | — | — | **hard** (naming) | **hard** (participation) | missing | — |
+| PR-11 platform files | — | — | **hard** | hard | fixed 10-min URLs, live-object delete | no images |
+| PR-15 image library, media worker | — | — | **hard** | hard | — | no images |
+| PR-21 off-lineage safety log | **hard** | hard | hard | hard | missing | — |
+| PR-18 erasure workflow | soft | soft | **hard** | hard | missing | school's manual log + §5.8 tools |
+| PR-13 delivery providers | — | — | soft | soft | missing | in-app only; on-call phones K34a |
+| PR-16 scan adapter | — | — | — (staff uploads) | **hard** | missing | — |
+
+**S1 needs none of the guardian, consent or photo prerequisites.** Media posts stay disabled until S3's hard items are
+live and the tenant's consent checkpoint and stream positions are current.
+
+## 16. Delivery plan
+
+Delivery is in four **slices**, each shippable to a pilot school on its own (phase names P0a-1 = S1 + S2, P0a-2 = S3, P0b = S4):
+
+| Slice | Scope | Members | Gate to open it (§16.2) |
+|---|---|---|---|
+| **S1 — Staff text** | Staff room and class pages with **teachers only**; staff text posts; review for staff posts wider than a home; staff comments and reactions; reports, routine cases, staff-concern route and safeguarding inbox; policy engine for the S1 knobs; switches and kill switch; in-app notifications and digest card; teacher and principal home cards | staff | S1 gates |
+| **S2 — Guardians, text** | Guardians on class pages and the school space; guardian comments (held outside coverage); protected subjects; guardian home card; consent-free (no images) | + guardians | S2 gates |
+| **S3 — Photos** | Media pipeline and worker, subjects and confirmation, consent and naming projections, surfacing, takedown, consent centre, erasure | same | S3 gates |
+| **S4 — Students** | Student submissions, held comments, slow mode, mentions, invite spaces, scan adapter, push/e-mail | + students | S4 gates |
+| **P1, P2** | as before (clubs, moments, polls, inter-school, alumni; public release, video) | | |
+
+### 16.1 Batches
+
+| Batch | Content | Size |
+|---|---|---|
+| **B0a** (platform plumbing, for S1) | PR-9 heartbeat (messaging, for every module), PR-10 jobs runner (core), PR-19 global-row policy and README, PR-21 safety-log bucket and platform append path, PR-12 smoke assertion | medium |
+| **B0b** (owner modules, for S1) | PR-6 hr status and exit → iam deactivation, PR-7 academics/org payloads, PR-8 iam event-path test, PR-20 bulk reads (academics, iam) with service-token permissions | medium |
+| **B1 — S1 backend (first reviewable slice; ships to a pilot together with B2)** | comms baseline reshaped (§5) for the tables S1 uses; staff projections (hr, academics, iam, org) and refresh; `ClassMembershipDeriver` and `SpaceMembershipDeriver` for staff; staff room; policy engine with §4.5 validation, §4.6 approvals and bootstrap; `SwitchGate`, §4.9; `CommunityAccess`; the feed statement; drafts, submit, review, comments, reactions, saves; reports, cases, staff-concern and safeguarding; in-app notifications; retention and ledger for text; ≈ 60 ops; fast-tier tests | large |
+| **B2 — S1 UI** | the S1 screens on web, phone, tablet | medium |
+| **B3 — S2** | PR-4, PR-5, PR-9 sequences, PR-20 (sis) first; guardian projections, school space, protected subjects, guardian contexts, digests, guardian screens | large |
+| **B4 — S3 photos** | privacy (PR-3 snapshot replay and checkpoint, PR-18 erasure saga), platform PR-11; §8 backend, media worker, consent state, screens | large |
+| **B5 — S4 students** | PR-22 participation, PR-16, PR-13, PR-14; student features | medium |
+
+**S1 knobs in the catalogue:** K01, K02 (staff only), K04 (staff room), K05, K06 (staff), K07, K08, K09, K11, K12,
+K13, K21 (off / staff only), K22, K23, K24, K30, K31, K31a, K32, K33, K34, K35, K36, K36a, K36b, K37, K39, K40, K41,
+K42, K43. **S2 adds** K02 guardians, K04b, K10, K21 members values. **S3 adds** K04a, K14, K15, K17 (floor), K18, K20,
+K34a. **Absent until S4/P1:** K03, K16, K19, K25–K29, K38, K44–K47.
+
+### 16.2 Gates per slice
+
+- **Any slice:** safeguarding lead and deputy named and trained; §4.6 invariants and bootstrap approval; PR-17
+  paperwork; fast and heavy tiers green; load test passed in `community-load` (for S1 on the staff dataset); the
+  incident runbook (§21) rehearsed with the school's lead.
+- **S1:** open decisions 4, 10, 12, 16 and 21 ruled; drills "compromised staff account" and "report against an administrator". Stated residual for S1 (heartbeats
+  only, no sequences): a single lost `hr.staff` event is caught by the daily hr checkpoint (≤ 24 h) and a lost
+  `iam.account` event by the nightly bulk reconciliation — bounded for deactivated accounts by iam's 15-minute token and
+  refused refresh (PR-8); the audience is staff only.
+- **S2** (guardians): open decisions 8, 13, 15, 17, 19, 22 and 23 ruled; + "bullying thread in guardian comments" and a **restricted-guardian drill** (a guardian with a
+  restricted child and an unrestricted sibling sees nothing of the protected child).
+- **S3** (photos): "mistaken wide child image" run inside and outside coverage hours; K34a set; consent checkpoint and
+  stream positions current; `GetStoragePolicy` reporting versioning off; open decisions 9, 11, 14 and 18 ruled.
+- **S4** (students): all drills repeated with student accounts; participation consent live; scan adapter live; coverage
+  staffed; open decision 20 (legal threshold) ruled.
+
+**Effort:** B0a and B0b medium each (they may run in parallel); B1 large (guardians, consent and photos are out of it);
+B2 medium; B3 large; B4 large; B5 medium.
+
+## 18. Open decisions for the owner
+
+1. ~~Generalise class pages into spaces?~~ **Decided: no.** A class page is one per section per year, the
+   sacred space of its enrolled members; the school space is separate and common; a teacher may surface selected class
+   posts to the school space (section 5.2.1). Moderation is per school; inter-school has tighter controls (section 19).
+2. ~~Policy storage: comms or iam?~~ **Decided: comms.** Community settings and policies are stored in
+   comms as versioned rows with proposals and approvals, read uncached from comms' own database — this design as
+   written (§4.5–§4.7, §5.5). B1 may start.
+3. **Pilot scope:** S1, then S2, then S3 (recommended — each a separate pilot step), or several slices together?
+4. **Moderation coverage and minimum staffing — question:** will pilot schools commit a safeguarding lead, a distinct
+   deputy, coverage hours and (for photos) an after-hours responder? **Recommendation:** state to every school that two
+   willing staff persons are the minimum (§4.6), and that a school without them cannot enable community. Consequence:
+   very small schools may not qualify; the alternative (a tenant-level lead covering several schools) needs the
+   independent-contact route of item 15 to exist first.
+5. **Scan provider** — narrowed: not needed for S1–S3 (staff uploads, originals purged, second-person confirmation,
+   §8.3); a provider must be chosen before student or guardian uploads (S4).
+6. **Languages for the pilot** beyond English and Hindi.
+7. **Alumni** — design now, build in P1 as a separate network (recommended), or postpone entirely?
+8. **Non-custodial guardians** (`has_custody = false`): no community membership by default; should a school be able to
+   grant them read access per link (some families and courts expect it)?
+9. **Students reaching majority — question:** when a student turns 18 (India), what happens to images already published
+   under guardian consent, and to guardians' class-page membership? **Recommendation (implemented as the default,
+   §8.4):** keep class- and school-width images (they were lawful when published) and tell the student they may now
+   decide; hide inter-school images after 60 days unless the student consents; keep guardian membership of the class
+   page. Consequence of the stricter alternative (hide everything until the student confirms; end guardian membership
+   unless the student agrees): more protective of the adult, but class histories lose photos and guardians lose the
+   class view abruptly. Legal to confirm either way.
+10. **Retention values** in §5.6 (archive 2 years, routine cases 3 years, safeguarding evidence reviewed yearly with a
+    7-year default) — owner and legal to confirm before the pilot.
+11. **Second-person image confirmation** is a floor for every image at every width, including class pages and images declared "no students"; after the pilot, may
+    a trusted teacher confirm alone at class width?
+12. **Tenant ceiling disclosure — question:** CLAUDE.md says tenant settings are set by tenant administrators only and
+    "ordinary users cannot … even see" them. May a school's community owner see which values the tenant ceiling lets the
+    school choose? **Recommendation: yes, only that** — COM-60 offers the allowed values and marks the rest "not available
+    for your school", never showing the tenant's value, setter, history or reason (§4.6). Consequence of yes: schools can
+    configure themselves without trial and error; the ceiling's position is inferable. Consequence of no: COM-60 must
+    offer every value and refuse on save with a reason-free error, which is confusing and still reveals the ceiling by
+    refusal — so a strict reading is not achievable in practice; the owner should state which reading of the rule applies
+    to institution administrators.
+13. **Guardian disagreement on photo consent — question:** the most restrictive legal guardian decides; what may each
+    guardian see? **Recommendation (designed, §12.7):** only their own choice and the effective result, with no wording
+    about other guardians and no reason for a difference. Consequence: no co-guardian choice is disclosed by the product;
+    a guardian puzzled by a narrower result is sent to the school office, which handles disputes privately (PRIV-08).
+    Legal to confirm that "most restrictive wins" is the right rule.
+14. **People in photos who are not members** (visiting children, parents at events): unidentified children always
+    block; unidentified adults block by default (K18). Acceptable for event recaps?
+15. **Independent safeguarding route:** will tenants name a tenant-level safeguarding contact? Without one, cases about
+    a school's lead, principal or community owner rely on the external contact text alone.
+16. **Processors and data location** (PR-17): which push/email providers, and GCS region, are acceptable to schools.
+17. **Deferring MEM-02 and MEM-03 — question:** may invitation-based spaces (MEM-02) wait for S4, and may assisted
+    onboarding and account recovery for users without a personal e-mail (MEM-03) stay with iam/sis rather than this
+    project? **Recommendation: yes to both.** Consequence: S1–S3 needs no invitation feature (class pages and the school
+    space are relationship-based; a QR code never proves membership), and families without e-mail are onboarded as today
+    (the administrator sets the first password); the cost is that guardians who share one phone number cannot each
+    recover their own account until iam builds a recovery design. Consequence of no: an invitation subsystem (S1–S3 + ≈ 6
+    operations) and an iam recovery design become pilot blockers. Needs the owner's recorded sign-off before the pilot.
+18. **Platform on-call — question:** will MySMS staff a 24×7 platform on-call able to stop media for one school
+    (`media_delivery_off`, §21)? **Recommendation: yes before photos (S3).** Consequence of no: outside coverage hours
+    the only protections are report-to-withhold and the school's own responders (K34a); an incident reported to the
+    school by phone at night waits for a school responder.
+19. **Automatic repair from people and hr — question:** may people and hr subscribe to comms' event
+    `comms.stream_repair.requested` and answer with a replay for that tenant (an event-only subscription against the
+    dependency arrow, like the event-only references ARCHITECTURE §2 already allows)? **Recommendation: yes.**
+    Consequence of yes: a lost consent or staff event repairs itself within minutes. Consequence of no: an on-call
+    operator must run the replay; until then that tenant's images (or staff decisions) stay blocked.
+20. **Legal threshold for minors — question:** this design treats everyone under 18 (privacy's subject status) as a minor
+    for consent and requires a guardian's `community_participation` consent before a minor joins as a student member;
+    the under-13 bands are product design only. **Recommendation: confirm with legal (DPDP) before S4.** Consequence:
+    secondary students cannot participate without a guardian's recorded consent.
+21. **Load-test environment — question:** who owns `community-load` (§14) and its cost (a few days a month of a
+    recommended-size stack)? **Recommendation:** operations, run before each pilot and monthly while pilots run.
+    Consequence of not funding it: the p95 target stays unproven and the pilot gate cannot be met.
+22. **Text revocation bound when sis or iam is silent — question:** `closed` is per tenant and only after 60
+    minutes of silence (so one tenant or a blip cannot close everyone), which lets a guardian restricted during an sis
+    outage keep reading text for up to an hour. **Recommendation (designed as the default, §7.3):** close **guardian**
+    contexts after 15 minutes of sis or iam `degraded`, keep staff working, close everything at 60 minutes, suspend
+    during declared maintenance. Consequence: a 15-minute sis or iam outage takes community away from guardians (who
+    also lose sis's own portal during it); the alternative keeps them reading for up to 60 minutes.
+23. **Naming students before naming consent (S2) — question:** may a class-page post name students of that class by
+    first name before the `community_naming` consent exists? **Recommendation: yes, first names only, class page only;
+    no credits, mentions or surnames; school-space posts name no student.** Consequence of no: S2 posts cannot name
+    any child until S3, which makes class updates stilted; consequence of yes: class families learn first names they
+    usually already know from class life.
+24. **Student-to-student messaging (MSG-05) — question:** keep it out entirely, or design it as a separate P1 release
+    with eligible bands, small verified spaces, reporting, retention and supervisory transparency (§22.6)?
+    Recommendation: out until P1 evidence shows a need.
+25. **Translation and caption assistance (POST-13, §22.9) — question:** which provider (it receives post text as a
+    processor, §20.2), or none? Until decided, no translation is offered.
+26. **Search extension (§22.5) — question:** approve `pg_trgm` (ROADMAP D7) for transliteration-tolerant search, or
+    keep PostgreSQL full-text search only?
+27. **Alumni verification owner (ALUM-01, §22.7) — question:** who in a school verifies historic alumni without sis
+    records, and who owns the alumni network after a school changes tenant (§A28.2 item 14)?
+
+## 20. Traceability gate (L4) and outbound data flows
+
+### 20.1 P0 items checked at the design gate
+
+| Requirement id | Where | Test / status |
+|---|---|---|
+| MEM-02 invitations | class pages and the school space need none (relationship-based); invite-type spaces (`AddSpaceMembers`) are **deferred to S4**: invitations are per space, to an existing account of the institution, expire after 7 days, single-use, revocable, rate-limited (K40); a QR code never proves membership. Account invitations are iam's (iam sends none yet) | deferred — **open decision 17** (owner sign-off before the pilot) |
+| MEM-03 assisted onboarding, recovery, shared phones | iam and sis portal accounts (administrator sets the first password today); community addresses notifications to accounts, never phone numbers (§11.1) | account recovery deferred to iam — **open decision 17** |
+| MEM-04 rules before participation | COM-40 | client test; acceptance stored |
+| MEM-05 essential vs optional | K02 + COM-40; a member may hide community for themselves (`SetCommunityPreferences`); notices and learning never depend on it (§13.15) | `CommunityPolicyMatrixComponentTest` |
+| PRIV-02 separate consent classes | participation (`community_participation` for minors, COM-40 acceptance for adults), depiction (`photo_video_publication` per width), naming (`community_naming` per width), directory (K32), external (`public` scope, P2), marketing and channels (privacy's purposes) | privacy consent tests (`ConsentRecordComponentTest`) |
+| PRIV-06 paper evidence | §8.4: evidence file, recorder, second-person verification; imported rows `unverified` | privacy `ConsentRecordComponentTest` (paper four-eyes) |
+| NET-16 fee independence | §10.3 | `CommunityAccessFeeIndependenceTest` |
+| NET-17 no global search / contact sync | §13.13; mention candidates only from the home (S4) | component test on mention search |
+| SAFE-05 urgent help | K35 "urgent help" category, COM-36 urgent path with staffed hours | client + routing test |
+| SAFE-12 scraping, bulk download | K40 limits on writes and on media (60 batch calls, 2,000 thumb/feed and 100 full-size variants per member per 10 min, §8.1), no bulk download operation, originals never served, PR-14 at the gateway | rate-limit component tests |
+| PRIV-12 vendors, logs, no model training | §13.12, §20.2; no student content is sent to any model or analytics provider; PR-17 | `CommunityLogRedactionComponentTest` |
+| SAFE-17 drills | §16.2 | recorded per phase |
+| MEM-06, MEM-07, MEM-12 | §7.7, §7.5, open decision 9 | revocation and archive tests |
+| PRIV-07, PRIV-09, PRIV-10, PRIV-11 | §12.7, §5.8, §5.6, §5.6/§10.2 | |
+| CFG-07, CFG-08, CFG-12, CFG-13 | §4.4, §4.6, §4.7, §7.4/§4.6 | matrix and kill-switch tests |
+
+### 20.2 Every outbound data flow
+
+| Flow | Data | Processor / location | Status |
+|---|---|---|---|
+| Object storage (GCS) | image variants (pixels only, no metadata); evidence pixels only under a safeguarding hold | Google Cloud, the deployment's bucket region | in use by platform; DPA under PR-17 |
+| Event bus (RabbitMQ / Pub/Sub) | ids, versions, codes; no text or names | MySMS infrastructure | in use |
+| Push (FCM/APNs), S4 | notification id and the fixed generic text | Google / Apple | not built; DPA under PR-17 |
+| Email, S4 | generic text, digest counts, link | provider to be chosen | not built; DPA under PR-17 |
+| Scan provider, S4 | image bytes for scanning, no names | to be chosen (open decision 5) | not chosen |
+| Logs and metrics | ids, codes, timings; never bodies or names (§13.12) | MySMS log store | redaction test |
+| Analytics | none; `GetCommunityHealth` aggregates are computed in the database and shown only in the product | — | — |
+| Client telemetry (crash reporting, RUM) | none today (no SDK in the web, mobile or tablet apps); if one is added it must drop URLs, query strings and screenshots from community screens, and it is listed here first | — | rule |
+| GCS and load-balancer access logs | signed URLs (path + signature) — never names or bodies; the stable media path carries only ids | ops log store | 30-day retention |
+| Search index | none exists; no external search | — | — |
+
+### 20.3 Review improvements not taken
+
+- **Face count to check declarations** (design-gate gap review, item 2.1): deferred — running a face detector on children's photos
+  needs its own privacy review and a library choice; the second-person look on every image is the control.
+- **Data-subject access export** (improvement 9): designed as `GetMyChildCommunityData` but scheduled for S4, not S3,
+  because privacy's rights-request workflow (PR-18) must exist first.
+- All other improvements of the review were taken (stable media path and batch URLs, screen protection, idempotency
+  keys, archive reads, notification hygiene, guardian identity, health bands, separate view and review roles,
+  independent second reader, search rule, contradiction pass, decisions gating B1 at the top).
+
+## D24. Delivery sequence and release gates
+
+### Phase 0 — discovery and operating design
+
+Interview leadership, communications staff, teachers, students across ages, guardians, support staff and alumni. Include low-connectivity users and families who do not post. Map current WhatsApp/notice/LMS workflows and baseline staff time. Validate the institution/chain structure against real customer deployment. Agree data roles, rules, moderation coverage, audience matrix, history, consent semantics, retention and the source of revocation.
+
+**Exit gate:** named accountable school owners, understood privacy/safety policies, tested audience prototype, a scoped technical design for missing feed/media/consent workflows and no unresolved critical dependency decision. Research can proceed without collecting real children’s content.
+
+### Phase 1 — P0 school/class community vertical slice
+
+Ship useful role home, verified school/class access, text and approved images after their dependencies are complete, staff publishing, bounded student submissions in selected groups, chronological feed, narrow comments/reactions, report/triage/withdrawal, audit, consent flows, quiet notifications and emergency restrictions. Start with comments off except in covered pilot spaces. No stories or external public publication is required for this phase.
+
+**Exit gate:** complete submit → approve → eligible read → report → restrict/withdraw; direct-route and generic CRUD negative tests; media denial; consent withdrawal; transfer/guardian/staff revocation; accessibility and low-bandwidth usability; trained reviewers and demonstrated incident drill. Text-only subpilot is viable while image gates remain closed.
+
+### Phase 2 — P1 moments and meaningful participation
+
+Add accessible story presentation/expiry, structured Q&A/polls, more student/club participation, event galleries, reviewed portfolio showcases and selected memory artifacts. Expand participation only where the review queue and appeals process work.
+
+**Exit gate:** expiry and evidence behavior are understandable and tested; teacher workload stays within agreed capacity; students can correctly identify audiences; quiet users retain essential access.
+
+### Phase 3 — selected same-tenant chain spaces and alumni
+
+Introduce explicit cross-campus projects/newsrooms and a separate verified alumni pilot. These are separate feature flags and can ship independently. Alumni begins with opt-in batches/events and restricted adult contact discovery. Minor alumni initially receive curated bulletins/event information only, with no adult directory/contact or recruiting access; minor bridges remain closed until separately approved.
+
+**Exit gate:** no unintended widening through hierarchy/history, current-minor isolation, verified lifecycle/age transitions and named chain/alumni owners.
+
+### Phase 4 — approved external publication
+
+Introduce a school editorial desk, reviewed public derivatives and controlled manual handoff. Add one official-account connector only after current API/account/permission verification and a tested withdrawal/unknown-outcome workflow. Choose the first destination based on real school demand and feasible supported APIs, not a universal promise to support every format on all three platforms.
+
+**Exit gate:** exact-version approvals, identifiable-subject permissions, destination rendering, revoked-permission dispatch blocks, credential offboarding, duplicate/unknown-result handling, kill switch and honest recall status.
+
+### Phase 5 — country expansion and optional advanced programs
+
+Apply local policy packs, language/device tests, school contracts and operational coverage. Evaluate supervised mentorship, richer adult alumni opportunities and selected advanced media. Cross-tenant federation, live streaming and open social graphs are not automatic later phases.
+
+### D24.1 Timing and stopping rules
+
+A reasonable **planning hypothesis** is 2–4 weeks of discovery followed by an 8–12 week limited-school observation period once the P0 slice is ready. These are validation windows, not implementation estimates. Delivery effort cannot be credibly fixed until missing authorization, media, consent and client workflows are scoped with the team.
+
+Stop expansion for an authorization/data disclosure, inability to process a serious report, repeated unexplained permission failure, an unowned queue, unsustainable staff load or material interference with required school tasks. Narrow or disable the affected capability, preserve necessary evidence, investigate, repair and rehearse before reopening.
+
+## D25. Acceptance and verification scenarios
+
+Every scenario is an acceptance test of the build; the table after the list names where each is proved. Here `ACC-nn` are scenarios, not `ui/02` screens.
+
+1. **ACC-01 — cross-tenant denial [P0]:** a tenant A member cannot list/get/search/preview/download tenant B content using guessed IDs, copied URLs, comment/reaction routes or a stale notification.
+2. **ACC-02 — class separation [P0]:** a Class 8A guardian cannot read Class 8B content unless independently entitled; an institution-wide read grant intended for administration is not accidentally issued to guardians.
+3. **ACC-03 — multiple children [P0]:** a guardian switches school/child and sees labeled appropriate content, with no exposure of another guardian’s relationship, contact or restriction.
+4. **ACC-04 — staff/parent dual role [P0]:** authoring context is visible; parent mode does not publish as staff or expose unrelated staff-room posts.
+5. **ACC-05 — invitation leakage [P0]:** a photographed public QR/invitation cannot grant an unverified stranger class access; used/revoked/expired invitations fail safely.
+6. **ACC-06 — author spoofing [P0]:** client-supplied author, official badge, moderation status and attachment references cannot impersonate another person or bypass review through generic CRUD.
+7. **ACC-07 — pending privacy [P0]:** an unapproved student draft/submission is visible only to the author and authorized reviewers; ordinary search/counts/previews do not reveal it.
+8. **ACC-08 — versioned approval [P0]:** approving one image/caption/audience revision does not approve a concurrently edited replacement; optimistic-concurrency conflicts are handled without silent overwrites.
+9. **ACC-09 — revocation [P0]:** guardian link removal, transfer, staff exit and account suspension stop protected routes under the defined revocation barrier/freshness objective; late events do not restore rights.
+10. **ACC-10 — history/rollover [P0]:** a new class roster does not inherit old class media accidentally; existing users do not gain another campus’s history when the chain changes.
+11. **ACC-11 — confidential data boundary [P0]:** authorized home result/fee/health/discipline cards never enter a shared social response, preview, digest or search result.
+12. **ACC-12 — independent LMS learner [P0]:** a course buyer with no school relationship cannot discover/join schoolchildren’s class/club spaces.
+13. **ACC-13 — media quarantine [P0]:** unscanned or invalid files produce no ordinary-viewable URL/thumbnail; private attachments cannot be rebound by guessing an asset ID.
+14. **ACC-14 — withdrawal [P0]:** removing the applicable permission restricts affected media and blocks pending publication; derivatives/caches/jobs have observable cleanup states.
+15. **ACC-15 — bystanders [P0/P1 export]:** one child’s permission does not clear a group photo; unknown/minimally redacted subjects do not receive an automatic “safe for public” decision.
+16. **ACC-16 — report against staff [P0]:** a pupil can report an adult-authored post to a restricted independent reviewer without exposing their identity to the accused or ordinary class moderators.
+17. **ACC-17 — reporting under restriction [P0]:** a suspended/muted user retains the approved safety/complaint route; block/mute does not erase official notices or report evidence.
+18. **ACC-18 — queue outage [P0]:** an unstaffed queue does not publish pending content automatically; deputies/escalation and pause controls work.
+19. **ACC-19 — provider/community outage [P0]:** failed community queries or social connectors do not block timetable, homework, attendance or essential school actions.
+20. **ACC-20 — notification privacy [P0]:** a lock-screen preview reveals no private child text/media; opening a stale link rechecks eligibility and removed/expired state.
+21. **ACC-21 — shared-device recovery [P0]:** sign-out clears protected state, old child/tenant views do not flash on account switch, and a recycled phone cannot recover someone else’s school identity.
+22. **ACC-22 — offline reconnect [P0]:** a draft created while offline is revalidated after transfer/permission withdrawal; old caches are purged when revocation is learned, with residual offline limits accurately disclosed.
+23. **ACC-23 — stories [P1]:** expiry blocks detail and media reads even with a delayed worker; a prior report remains restricted evidence and does not keep the story generally visible.
+24. **ACC-24 — alumni transition [P1]:** a graduate receives new opt-in eligibility, loses current class access and remains under minor policy if under 18; adult alumnus status alone cannot message current students.
+25. **ACC-25 — context-specific alumni [P1]:** an alumnus who is also a current guardian sees child content through that verified child link only; the alumnus directory cannot discover classmates of the child.
+26. **ACC-26 — chain release [P1]:** an approved single-campus item remains single-campus until an explicit reviewed widening; a newly added campus does not automatically see old restricted content.
+27. **ACC-27 — external disable [P1/P2]:** server-side policy blocks handoff/download/connector work even from old clients or queued jobs after export is disabled.
+28. **ACC-28 — export revision/consent [P1/P2]:** changed caption/media, revoked permission or changed destination stops dispatch until the required approval is renewed.
+29. **ACC-29 — external uncertainty [P2]:** a timeout after provider acceptance creates a reconciled/unknown outcome rather than duplicate publication; webhook replay does not duplicate results.
+30. **ACC-30 — recall [P1/P2]:** external removal is attempted where supported; partial/unconfirmed removal and prior manual downloads are visible to authorized staff without claiming full recall.
+31. **ACC-31 — accessibility/language [P0]:** student/guardian can understand audience, report and consent controls using the pilot languages, screen reader and low-data device; essential tasks remain usable without media.
+32. **ACC-32 — abusive input [P0]:** stored scripts, malicious files, unsafe link previews, mass mentions, scraping and credential abuse are blocked or contained with useful nonleaking errors.
+33. **ACC-33 — deletion/restore [P0]:** normal deletion, evidence hold, backup restore and tenant exit do not resurrect withdrawn public visibility or lose the required restricted audit trail.
+34. **ACC-34 — no forced participation [P0]:** a child/guardian opting out of optional social publishing still receives required learning/notices and can use safety/privacy workflows.
+35. **ACC-35 — staff capacity [P0/P1]:** pilot review and reporting loads fit named coverage, or the system narrows participation without penalizing students for unreviewed submissions.
+
+Implementation validation should combine policy/state-machine unit checks, real PostgreSQL/RLS integration checks, adversarial authorization tests over every route, media delivery/withdrawal checks, complete client journeys, representative load/failure tests and supervised usability sessions. Avoid a large suite that merely repeats table CRUD while missing these workflows.
+
+**Where each scenario is proved** (§14 tiers; client tests §C14; drills §16.2):
+
+| Scenario | Test |
+|---|---|
+| ACC-01, ACC-02, ACC-03, ACC-04 | `MultiInstitutionIsolationComponentTest`, `GuardianMultiChildComponentTest`, matrix and property tests (`AudiencePropertyComponentTest`), cross-tenant negatives of §13 |
+| ACC-05 | invite-space tests (S4, `AddSpaceMembers`); QR never proves membership (§20.1 MEM-02) |
+| ACC-06, ACC-07 | `CommunityWriteSurfaceTest` (§6.4), pending-visibility rows of the matrix |
+| ACC-08 | approve-versus-edit concurrency test (§5.2) |
+| ACC-09, ACC-10 | `ClassPageMembershipComponentTest`, `StreamGapComponentTest`, `RevocationUnderBrokerFailureComponentTest`, `ArchiveAccessComponentTest`, terminated staff (§7.4) |
+| ACC-11 | field filter on inter-school posts (§19.2), `CommunityLogRedactionComponentTest`, home-card composition client test (§C4) |
+| ACC-12 | cohort-space membership test (§22.3) |
+| ACC-13, ACC-14, ACC-15 | media pipeline tests (§8), consent withdrawal and subject tests (§8.4, §8.5) |
+| ACC-16, ACC-17, ACC-18 | case-routing tests (§10.2), report-under-restriction matrix rows, `AfterHoursWithholdComponentTest` |
+| ACC-19 | `KillSwitchComponentTest` plus the home error-boundary client test |
+| ACC-20 | `CommunityNotificationHygieneComponentTest` and the deep-link client test (§C2) |
+| ACC-21, ACC-22 | shared-device and offline client tests (§C8, §12.9) |
+| ACC-23 | `MomentExpiryComponentTest` (§22.1) |
+| ACC-24, ACC-25 | alumni lifecycle tests (§22.7) |
+| ACC-26 | inter-school widening tests (§19) |
+| ACC-27–ACC-30 | release-package tests (§22.8) |
+| ACC-31 | axe checks and supervised usability sessions (§C13) |
+| ACC-32 | input-validation, XSS and rate-limit component tests (§13, K40) |
+| ACC-33 | erasure, ledger and restore tests (§5.7, §5.8) |
+| ACC-34 | `CommunityPolicyMatrixComponentTest` rows for opted-out members (§20.1 MEM-05) |
+| ACC-35 | pilot operations review (§D24 stopping rules, COM-65 health) |
+
+## D28. Open decisions and customer discovery backlog
+
+### D28.1 Decisions needed before P0
+
+1. What exactly constitutes the first customer’s tenant/chain/institution structure, and does any chain currently span tenants?
+2. Which student ages/grades and school types enter the first participation pilot? Who verifies age when grade and age differ?
+3. Which relationships authorize reading and posting, and who owns their timely revocation?
+4. What can guardians see of student-authored content, rejected drafts and private reporting? What restricted exceptions apply?
+5. Do new members see history, and what happens after rollover, transfer, withdrawal and staff exit?
+6. What permissions are necessary for internal child media, and what is the practical process for bystanders, objections and conflicting guardian instructions?
+7. Who moderates, handles appeals and provides safeguarding coverage during evenings/holidays? What capacity does the school actually have?
+8. Which essential notices require acknowledgment or alternate delivery, and how does community coexist without obscuring them?
+9. Which languages, devices, shared-phone arrangements and accessibility needs are required by the pilot schools?
+10. What retention/deletion/evidence/exit policy can the school explain and operate?
+11. What event/projection or reviewed API design meets consent/employment freshness without breaking the module graph?
+12. Which existing generic routes/permissions must be narrowed before end users gain community access?
+
+### D28.2 Decisions before later features
+
+13. Is an alumni directory desired, or do reunions/batch updates solve the initial need with less disclosure?
+14. Who verifies historic alumni and owns the network after school/tenant ownership changes?
+15. Which same-tenant chain spaces are useful enough to justify cross-campus student disclosure?
+16. Which external destination and format does the school actually need first, and can its official account use a supported integration?
+17. Who approves public release, and what happens when permission is withdrawn after a manual handoff?
+18. Can media cost and review workload be supported by the school subscription? Which allowance/pricing model is understandable?
+19. Are mentorship, fundraising, jobs or public publishing separate paid/operated products rather than small feed features?
+20. Which next country has enough validated demand to fund a local policy/operations launch?
+
+These are discovery inputs and future release decisions. Resolve the relevant questions before implementing or opening each capability.
+
+## D29. Rollout, flags and risks
+
+### D29.1 Rollout
+
+- **Per institution, per slice:** K01 off by default; a school is enabled only after the slice's gate (§16.2) and the
+  platform's onboarding approval of the first enablement (§4.6). Each slice's members arrive by K02.
+- **Order inside a pilot:** staff only for two weeks (S1) → guardians read and comment (S2) → photos (S3) → selected
+  student grade bands (S4); expand only when the §A23.4 guardrails hold.
+- **Flags and kill switches:** the knobs of §4.2 are the feature flags; the platform global switch and the per-tenant
+  and per-institution freezes are the kill switches (§4.7, §21, NFR-10); every switch is read uncached on every request
+  and job item.
+- **Mobile client versions:** the server enforces every rule; an older app cannot bypass a new setting (NFR-14);
+  minimum app versions come with P1-35.
+- **Monitoring before opening:** the measures of NFR-12 (feed availability, first-page latency, relationship
+  freshness, removal propagation, media failures, queue age, notification failures, storage and egress) on the
+  operations dashboard (OPS-1).
+
+### D29.2 Risks
+
+| Risk | Mitigation | Owner |
+|---|---|---|
+| A class's content leaks to another class or school | One decision path (§3), SQL-embedded feed rules (§9), matrix + property tests, release blockers (§14) | engineering |
+| Revocation arrives late (lost or reordered events) | Sequenced streams, heartbeats, fail-closed per tenant, reconciliation (§7.3), measured source-to-enforcement (NFR-12) | engineering |
+| Moderation capacity runs out | Coverage hours, never auto-publish, minimum staffing before enablement, narrowing participation, health dashboard (§4.6, §6.6, COM-65) | school, product |
+| Mistaken publication of a child image | Second-person subject confirmation, consent at width, takedown and purge with ledger, drills (§8, §21) | school, engineering |
+| Consent coverage is low, so few photos are shareable | Consent centre and reminders, coverage counts (§12.7, COM-65), narrow widths first | school |
+| Safeguarding failure (case against staff seen by the accused) | Separate permission and inbox, independent route, implicated people never decide (§10.2) | school |
+| Media cost and egress grow faster than revenue | Allowances (K20), variants, video gated (§22.10), cost model §A23 | product |
+| Legal interpretation changes (DPDP, POCSO, intermediary rules) | Jurisdiction policy layer, privacy module as the single consent owner, legal brief questions | owner, counsel |
+| Provider and platform changes (push, e-mail, social APIs) | Provider ports with one adapter each; connectors only after verification (§22.8) | engineering |
+| Teacher workload grows | Quick post, templates, no content quotas, bulk actions only where safe (§A5.2, §12.8) | product |
+| Children pressured into participation | No popularity mechanics, opt-out without losing essentials (MEM-15, ACC-34) | product |
+
+The stopping rules of §D24.1 apply to every risk: narrow or disable the affected capability, preserve evidence,
+investigate, repair and rehearse before reopening.
+
+# Appendix T — Requirements traceability
+
+Every requirement id of Parts A, B and D: its priority, the section that defines it, and the sections that meet it
+(explicit mentions first, then the design sections for its family). Un-numbered ideas are traced in §T.2.
+
+## T.1 Requirement ids
+
+| Id | Priority | Defined in | Met by |
+|---|---|---|---|
+| ACC-01 | P0 | §D25 | §D25 test table |
+| ACC-02 | P0 | §D25 | §D25 test table |
+| ACC-03 | P0 | §D25 | §D25 test table |
+| ACC-04 | P0 | §D25 | §D25 test table |
+| ACC-05 | P0 | §D25 | §D25 test table |
+| ACC-06 | P0 | §D25 | §D25 test table |
+| ACC-07 | P0 | §D25 | §D25 test table |
+| ACC-08 | P0 | §D25 | §D25 test table |
+| ACC-09 | P0 | §D25 | §D25 test table |
+| ACC-10 | P0 | §D25 | §D25 test table |
+| ACC-11 | P0 | §D25 | §D25 test table |
+| ACC-12 | P0 | §D25 | §22.3 · §D25 test table |
+| ACC-13 | P0 | §D25 | §A3.1, §12.2, §C2, §C11 · §D25 test table |
+| ACC-14 | P0 | §D25 | §D25 test table |
+| ACC-15 | P0/P1 export | §D25 | §D25 test table |
+| ACC-16 | P0 | §D25 | §D25 test table |
+| ACC-17 | P0 | §D25 | §C10 · §D25 test table |
+| ACC-18 | P0 | §D25 | §D25 test table |
+| ACC-19 | P0 | §D25 | §C4 · §D25 test table |
+| ACC-20 | P0 | §D25 | §C2 · §D25 test table |
+| ACC-21 | P0 | §D25 | §C5, §C8 · §D25 test table |
+| ACC-22 | P0 | §D25 | §C8 · §D25 test table |
+| ACC-23 | P1 | §D25 | §D25 test table |
+| ACC-24 | P1 | §D25 | §22.7 · §D25 test table |
+| ACC-25 | P1 | §D25 | §22.7 · §D25 test table |
+| ACC-26 | P1 | §D25 | §D25 test table |
+| ACC-27 | P1/P2 | §D25 | §22.8 · §D25 test table |
+| ACC-28 | P1/P2 | §D25 | §D25 test table |
+| ACC-29 | P2 | §D25 | §22.8 · §D25 test table |
+| ACC-30 | P1/P2 | §D25 | §22.8 · §D25 test table |
+| ACC-31 | P0 | §D25 | §C13 · §D25 test table |
+| ACC-32 | P0 | §D25 | §D25 test table |
+| ACC-33 | P0 | §D25 | §D25 test table |
+| ACC-34 | P0 | §D25 | §D29.2 · §D25 test table |
+| ACC-35 | P0/P1 | §D25 | §D25 test table |
+| ALUM-01 | P1 | §A14.1 | §22.7, §18 · §22.7 |
+| ALUM-02 | P1 | §A14.1 | §22.7 · §22.7 |
+| ALUM-03 | P1 | §A14.1 | §22.7 · §22.7 |
+| ALUM-04 | P1 | §A14.1 | §22.7 · §22.7 |
+| ALUM-05 | P1 | §A14.1 | §22.7 |
+| ALUM-06 | P1 | §A14.1 | §22.7 · §22.7 |
+| ALUM-07 | P1 | §A14.1 | §22.7 · §22.7 |
+| ALUM-08 | P1 | §A14.1 | §22.7 · §22.7 |
+| ALUM-09 | P1 | §A14.1 | §22.7 · §22.7 |
+| ALUM-10 | P1 | §A14.2 | §22.7 · §22.7 |
+| ALUM-11 | P1 | §A14.2 | §22.7 |
+| ALUM-12 | P2 | §A14.2 | §22.7 |
+| ALUM-13 | P2 | §A14.2 | §22.7 |
+| ALUM-14 | P2 | §A14.2 | §22.7 |
+| ALUM-15 | P2 | §A14.2 | §22.7 · §22.7 |
+| ARCH-01 | P0 | §B21.5 | §3, §5, §14 |
+| ARCH-02 | P0 | §B21.5 | §7.1, §7.2, §15 |
+| ARCH-03 | P0 | §B21.5 | §5.1 · §3, §7, §B21 |
+| ARCH-04 | P0 | §B21.5 | §9.2 · §3, §7, §B21 |
+| ARCH-05 | P0 | §B21.5 | §A6.2, §7.3, §B22.1 · §3, §7, §B21 |
+| ARCH-06 | P0 | §B21.5 | §6.6 · §3, §7, §B21 |
+| ARCH-07 | P0 | §B21.5 | §7.3 |
+| ARCH-08 | P0 | §B21.5 | §7.1, §7.3 |
+| ARCH-09 | P0 | §B21.5 | §7.2 · §3, §7, §B21 |
+| ARCH-10 | P0 | §B21.5 | §5.2 · §3, §7, §B21 |
+| ARCH-11 | P0 | §B21.5 | §10.1, §15, §C1 |
+| ARCH-12 | P0 | §B21.5 | §C4 · §3, §7, §B21 |
+| CFG-01 | P0 | §A18 | §4.2 (K01–K03), §4.8 |
+| CFG-02 | P0 | §A18 | §4.2 (K05, K06, K19, K21, K23, K44), §10.1 |
+| CFG-03 | P0 | §A18 | §4.2 (K07–K10, K30) |
+| CFG-04 | P0 | §A18 | §4.2 (K21, K33–K36b) |
+| CFG-05 | P0 | §A18 | §4.2 (K14–K20, K42) |
+| CFG-06 | P0 | §A18 | §22.8 · §4 |
+| CFG-07 | P0 | §A18 | §4.4, §20.1 · §4 |
+| CFG-08 | P0 | §A18 | §4.1, §20.1 · §4 |
+| CFG-09 | P1 | §A18 | §4 |
+| CFG-10 | P1 | §A18 | §4 |
+| CFG-11 | P1 | §A18 | §12.4 · §4 |
+| CFG-12 | P0 | §A18 | §4.2, §4.7, §20.1 · §4 |
+| CFG-13 | P0 | §A18 | §4.6, §7.1, §7.4, §20.1 · §4 |
+| CFG-14 | P1 | §A18 | §4.2 · §4 |
+| EXT-01 | P0 | §A15.6 | §22.8 · §22.8 |
+| EXT-02 | P0 | §A15.6 | §4.2, §22.8 · §22.8 |
+| EXT-03 | P1 | §A15.6 | §22.8 · §22.8 |
+| EXT-04 | P1 | §A15.6 | §22.8 · §22.8 |
+| EXT-05 | P1 | §A15.6 | §22.8 · §22.8 |
+| EXT-06 | P1 | §A15.6 | §22.8 · §22.8 |
+| EXT-07 | P1 | §A15.6 | §22.8 · §22.8 |
+| EXT-08 | P1 | §A15.6 | §22.8 · §22.8 |
+| EXT-09 | P1 | §A15.6 | §22.8 · §22.8 |
+| EXT-10 | P1 | §A15.6 | §22.8 · §22.8 |
+| EXT-11 | P2 | §A15.6 | §22.8 · §22.8 |
+| EXT-12 | P2 | §A15.6 | §22.8 · §22.8 |
+| EXT-13 | P1 | §A15.6 | §22.8 · §22.8 |
+| EXT-14 | P1 | §A15.6 | §22.8 · §22.8 |
+| EXT-15 | P0 | §A15.6 | §22.8, §12.5 |
+| EXT-16 | P1 | §A15.6 | §22.8 · §22.8 |
+| GLOBAL-01 | P1 design / per-country release | §A20 | §A20, §4.8 |
+| GLOBAL-02 | P1 design / per-country release | §A20 | §A20, §4.8 |
+| GLOBAL-03 | P1 design / per-country release | §A20 | §A20, §4.8 |
+| GLOBAL-04 | P1 design / per-country release | §A20 | §A20, §4.8 |
+| GLOBAL-05 | P1 design / per-country release | §A20 | §A20, §4.8 |
+| GLOBAL-06 | P1 design / per-country release | §A20 | §A20, §4.8 |
+| GLOBAL-07 | P2 | §A20 | §A20, §4.8 |
+| HOME-01 | P0 | §A8.1 | §12.1, §C4 |
+| HOME-02 | P0 | §A8.1 | §12.1, §C4 |
+| HOME-03 | P0 | §A8.1 | §C4 · §12.1, §C4 |
+| HOME-04 | P0 | §A8.1 | §12.1, §C4 |
+| HOME-05 | P1 | §A8.1 | §22.7, §12.2 · §12.1, §C4 |
+| HOME-06 | P0 | §A8.1 | §2, §C4 · §12.1, §C4 |
+| HOME-07 | P0 | §A8.1 | §4.2, §7.3, §12.1, §C4 · §12.1, §C4 |
+| HOME-08 | P0 | §A8.1 | §12.2, §C5, §C10 |
+| HOME-09 | P0 | §A8.1 | §C5 · §12.1, §C4 |
+| HOME-10 | P0 | §A8.1 | §12.5, §C3, §C5 · §12.1, §C4 |
+| HOME-11 | P0 | §A8.1 | §12.9, §C8 |
+| HOME-12 | P0 | §A8.1 | §C2, §C4 |
+| HOME-13 | P1 | §A8.1 | §22.1, §C4 · §12.1, §C4 |
+| INT-01 | P0 | §A9.2 | §4.2 · §5.2, §6.1, §4.2 (K21–K26) |
+| INT-02 | P0 | §A9.2 | §5.2, §9.1 |
+| INT-03 | P0 | §A9.2 | §4.2 · §5.2, §6.1, §4.2 (K21–K26) |
+| INT-04 | P0 | §A9.2 | §4.2 · §5.2, §6.1, §4.2 (K21–K26) |
+| INT-05 | P0 | §A9.2 | §4.2 (K38, K39), §6.2 |
+| INT-06 | P0 | §A9.2 | §4.2 · §5.2, §6.1, §4.2 (K21–K26) |
+| INT-07 | P1 | §A9.2 | §4.2, §22.2 · §5.2, §6.1, §4.2 (K21–K26) |
+| INT-08 | P1 | §A9.2 | §22.2 · §5.2, §6.1, §4.2 (K21–K26) |
+| INT-09 | P1 | §A9.2 | §5.2, §6.1, §4.2 (K21–K26) |
+| INT-10 | P0 | §A9.2 | §10.2, §6.1 (GetMyReport) |
+| LMS-01 | P0 | §A12 | §A11.4, §22.3 |
+| LMS-02 | P0 | §A12 | §22.3 · §22.3 |
+| LMS-03 | P0 | §A12 | §C4, §11 |
+| LMS-04 | P0 | §A12 | §13, §22.3 |
+| LMS-05 | P1 | §A12 | §22.3 · §22.3 |
+| LMS-06 | P1 | §A12 | §22.3 · §22.3 |
+| LMS-07 | P1 | §A12 | §22.3 · §22.3 |
+| LMS-08 | P1 | §A12 | §22.2 · §22.3 |
+| LMS-09 | P1 | §A12 | §22.3 · §22.3 |
+| LMS-10 | P1 | §A12 | §22.3 · §22.3 |
+| LMS-11 | P1 | §A12 | §22.3 · §22.3 |
+| LMS-12 | P2 | §A12 | §22.3 · §22.3 |
+| MEDIA-01 | P0 | §A10.2 | §8.1, §8.2 |
+| MEDIA-02 | P0 | §A10.2 | §8.3, §C7 · §8, §C7 |
+| MEDIA-03 | P0 | §A10.2 | §8.1 (stable media path), §6.1 |
+| MEDIA-04 | P0 | §A10.2 | §8.5 · §8, §C7 |
+| MEDIA-05 | P0 | §A10.2 | §8.5 · §8, §C7 |
+| MEDIA-06 | P0 | §A10.2 | §8.1, §6.1 |
+| MEDIA-07 | P0 | §A10.2 | §22.9, §C6.4, §C7 · §8, §C7 |
+| MEDIA-08 | P0 | §A10.2 | §5.7, §8.2 |
+| MEDIA-09 | P1 | §A10.2 | §22.4 · §8, §C7 |
+| MEDIA-10 | P1 | §A10.2 | §22.4 · §8, §C7 |
+| MEDIA-11 | P2 | §A10.2 | §22.10 · §8, §C7 |
+| MEM-01 | P0 | §A7 | §7.1, §7.4 |
+| MEM-02 | P0 | §A7 | §22.6, §18, §20.1, §D25 · §7.4, §7.5, §7.7 |
+| MEM-03 | P0 | §A7 | §11.1, §18, §20.1 · §7.4, §7.5, §7.7 |
+| MEM-04 | P0 | §A7 | §12.2, §20.1 · §7.4, §7.5, §7.7 |
+| MEM-05 | P0 | §A7 | §20.1, §D25 · §7.4, §7.5, §7.7 |
+| MEM-06 | P0 | §A7 | §7.7, §20.1 · §7.4, §7.5, §7.7 |
+| MEM-07 | P0 | §A7 | §4.2, §7.5, §20.1 · §7.4, §7.5, §7.7 |
+| MEM-08 | P0 | §A7 | §7.4 |
+| MEM-09 | P0 | §A7 | §5.6, §5.7 |
+| MEM-10 | P0 | §A7 | §7.4, §12.9 |
+| MEM-11 | P1 | §A7 | §22.7 · §7.4, §7.5, §7.7 |
+| MEM-12 | P0 | §A7 | §20.1 · §7.4, §7.5, §7.7 |
+| MEM-13 | P1 | §A7 | §7.4, §7.5, §7.7 |
+| MEM-14 | P1 | §A7 | §7.4, §7.5, §7.7 |
+| MEM-15 | P0 | §A7 | §D29.2 · §7.4, §7.5, §7.7 |
+| MSG-01 | P0 | §A13 | §22.6 · §22.6 |
+| MSG-02 | P0 | §A13 | §22.6 · §22.6 |
+| MSG-03 | P0 | §A13 | §22.5 · §22.6 |
+| MSG-04 | P0 | §A13 | §4.2, §12.5 · §22.6 |
+| MSG-05 | P1 | §A13 | §22.6, §18 · §22.6 |
+| MSG-06 | P1 | §A13 | §22.6 · §22.6 |
+| MSG-07 | P1 | §A13 | §22.6 · §22.6 |
+| MSG-08 | P1 | §A13 | §22.6 · §22.6 |
+| MSG-09 | P0 | §A13 | §22.6 · §22.6 |
+| NET-01 | P0 | §A6.2 | §6, §13 |
+| NET-02 | P0 | §A6.2 | §7.4, §10.1 |
+| NET-03 | P0 | §A6.2 | §10.1, §4.9 |
+| NET-04 | P0 | §A6.2 | §7.4, §9.1 |
+| NET-05 | P0 | §A6.2 | §9.3 · §9.1, §10, §7.4 |
+| NET-06 | P0 | §A6.2 | §5.2 · §9.1, §10, §7.4 |
+| NET-07 | P0 | §A6.2 | §4.2, §C6.2 · §9.1, §10, §7.4 |
+| NET-08 | P0 | §A6.2 | §7.3, §9.1 |
+| NET-09 | P0 | §A6.2 | §10.1, §10.3 · §9.1, §10, §7.4 |
+| NET-10 | P0 | §A6.2 | §9.3, §13 · §9.1, §10, §7.4 |
+| NET-11 | P0 | §A6.2 | §10.3 · §9.1, §10, §7.4 |
+| NET-12 | P0 | §A6.2 | §4.1, §4.8 |
+| NET-13 | P1 | §A6.2 | §9.1, §10, §7.4 |
+| NET-14 | P1 | §A6.2 | §9.1, §10, §7.4 |
+| NET-15 | P2 | §A6.2 | §19 · §9.1, §10, §7.4 |
+| NET-16 | P0 | §A6.2 | §10.3, §20.1 · §9.1, §10, §7.4 |
+| NET-17 | P0 | §A6.2 | §22.5, §20.1 · §9.1, §10, §7.4 |
+| NET-18 | P0 | §A6.2 | §7.6, §C6.3 · §9.1, §10, §7.4 |
+| NFR-01 | P0 | §B22 | §10.1, §6.3 |
+| NFR-02 | P0 | §B22 | §5, §13 |
+| NFR-03 | P0 | §B22 | §13 |
+| NFR-04 | P0 | §B22 | §13, §20.2 |
+| NFR-05 | P0 | §B22 | §13, §8.1 |
+| NFR-06 | P0 | §B22 | §13, §9.3 |
+| NFR-07 | P0 | §B22 | §4.2 (K40) |
+| NFR-08 | P0 | §B22 | §10.2, §13 |
+| NFR-09 | P0 | §B22 | §21, §16.2 |
+| NFR-10 | P0 | §B22 | §D29.1 · §13, §14, §D29 |
+| NFR-11 | P0 | §B22 | §8.3, §11.4 |
+| NFR-12 | P0 | §B22 | §D29.1, §D29.2 · §13, §14, §D29 |
+| NFR-13 | P0 | §B22 | §C13 · §13, §14, §D29 |
+| NFR-14 | P1 | §B22 | §D29.1 · §13, §14, §D29 |
+| NFR-15 | P1 | §B22 | §13, §14, §D29 |
+| NOTIF-01 | P0 | §A19.1 | §11.1 |
+| NOTIF-02 | P0 | §A19.1 | §4.2 · §11 |
+| NOTIF-03 | P0 | §A19.1 | §11.1, §11.2 |
+| NOTIF-04 | P0 | §A19.1 | §11.2, §C2 · §11 |
+| NOTIF-05 | P0 | §A19.1 | §9.3 · §11 |
+| NOTIF-06 | P1 | §A19.1 | §11 |
+| NOTIF-07 | P0 | §A19.1 | §11 |
+| NOTIF-08 | P1 | §A19.1 | §11 |
+| POST-01 | P0 | §A9.1 | §5.2, §C6 |
+| POST-02 | P0 | §A9.1 | §5.3, §4.2 (K15), §C7 |
+| POST-03 | P0 | §A9.1 | §C6.3 · §5.2, §6.1, §6.6, §C6 |
+| POST-04 | P0 | §A9.1 | §5.2, §6.1, §6.2 |
+| POST-05 | P0 | §A9.1 | §6.1, §13 · §5.2, §6.1, §6.6, §C6 |
+| POST-06 | P0 | §A9.1 | §4.2 · §5.2, §6.1, §6.6, §C6 |
+| POST-07 | P0 | §A9.1 | §4.2, §C6.3 · §5.2, §6.1, §6.6, §C6 |
+| POST-08 | P0 | §A9.1 | §5.2, §6.1, §6.4 |
+| POST-09 | P0 | §A9.1 | §C6.1 · §5.2, §6.1, §6.6, §C6 |
+| POST-10 | P0 | §A9.1 | §4.2 (K21, K39) |
+| POST-11 | P1 | §A9.1 | §5.2, §6.1, §6.6, §C6 |
+| POST-12 | P1 | §A9.1 | §22.3 · §5.2, §6.1, §6.6, §C6 |
+| POST-13 | P1 | §A9.1 | §22.9, §18 · §5.2, §6.1, §6.6, §C6 |
+| POST-14 | P1 | §A9.1 | §22.5 · §5.2, §6.1, §6.6, §C6 |
+| POST-15 | P1 | §A9.1 | §5.2, §6.1, §6.6, §C6 |
+| POST-16 | P2 | §A9.1 | §22.10 · §5.2, §6.1, §6.6, §C6 |
+| PRIV-01 | P0 | §A16.1 | §20.2, privacy design §8 |
+| PRIV-02 | P0 | §A16.1 | §20.1 · §8.4, §5.6–§5.8, §12.7, privacy design |
+| PRIV-03 | P0 | §A16.1 | privacy design §5.4 |
+| PRIV-04 | P0 | §A16.1 | §8.4 · §8.4, §5.6–§5.8, §12.7, privacy design |
+| PRIV-05 | P0 | §A16.1 | §12.6, §12.7, §C12 |
+| PRIV-06 | P0 | §A16.1 | §8.4, §20.1 · §8.4, §5.6–§5.8, §12.7, privacy design |
+| PRIV-07 | P0 | §A16.1 | §12.7, §20.1 · §8.4, §5.6–§5.8, §12.7, privacy design |
+| PRIV-08 | P0 | §A16.1 | §7.7, §8.4, §18 · §8.4, §5.6–§5.8, §12.7, privacy design |
+| PRIV-09 | P0 | §A16.1 | §5.8, §12.7, §15, §20.1 · §8.4, §5.6–§5.8, §12.7, privacy design |
+| PRIV-10 | P0 | §A16.1 | §20.1 · §8.4, §5.6–§5.8, §12.7, privacy design |
+| PRIV-11 | P0 | §A16.1 | §20.1 · §8.4, §5.6–§5.8, §12.7, privacy design |
+| PRIV-12 | P0 | §A16.1 | §15, §20.1 · §8.4, §5.6–§5.8, §12.7, privacy design |
+| PRIV-13 | P0 | §A16.1 | §A16.1, §8.5 |
+| PRIV-14 | P0 | §A16.1 | §12.6 · §8.4, §5.6–§5.8, §12.7, privacy design |
+| PRIV-15 | P1 | §A16.1 | §8.4, §5.6–§5.8, §12.7, privacy design |
+| SAFE-01 | P0 | §A17.1 | §12.2 (COM-40) |
+| SAFE-02 | P0 | §A17.1 | §6.1, §C10 |
+| SAFE-03 | P0 | §A17.1 | §A17.3 · §10.2, §6.2, §6.6, §21, §A17.3 |
+| SAFE-04 | P0 | §A17.1 | §13 · §10.2, §6.2, §6.6, §21, §A17.3 |
+| SAFE-05 | P0 | §A17.1 | §12.2, §12.6, §C10, §20.1 · §10.2, §6.2, §6.6, §21, §A17.3 |
+| SAFE-06 | P0 | §A17.1 | §6.2, §21 |
+| SAFE-07 | P0 | §A17.1 | §22.1 · §10.2, §6.2, §6.6, §21, §A17.3 |
+| SAFE-08 | P0 | §A17.1 | §4.2, §6.6 · §10.2, §6.2, §6.6, §21, §A17.3 |
+| SAFE-09 | P0 | §A17.1 | §6.1 · §10.2, §6.2, §6.6, §21, §A17.3 |
+| SAFE-10 | P0 | §A17.1 | §A17.3 · §10.2, §6.2, §6.6, §21, §A17.3 |
+| SAFE-11 | P0 | §A17.1 | §4.2 · §10.2, §6.2, §6.6, §21, §A17.3 |
+| SAFE-12 | P0 | §A17.1 | §4.2, §15, §20.1 · §10.2, §6.2, §6.6, §21, §A17.3 |
+| SAFE-13 | P0 | §A17.1 | §4.2, §10.1 · §10.2, §6.2, §6.6, §21, §A17.3 |
+| SAFE-14 | P1 | §A17.1 | §10.2, §6.2, §6.6, §21, §A17.3 |
+| SAFE-15 | P0 | §A17.1 | §13 |
+| SAFE-16 | P0 | §A17.1 | §A17.3, §4.2 · §10.2, §6.2, §6.6, §21, §A17.3 |
+| SAFE-17 | P0 | §A17.1 | §14, §20.1 · §10.2, §6.2, §6.6, §21, §A17.3 |
+| SEARCH-01 | P0 | §A19.2 | §22.5 · §22.5, §9.3 |
+| SEARCH-02 | P0 | §A19.2 | §22.5 · §22.5, §9.3 |
+| SEARCH-03 | P1 | §A19.2 | §22.5 · §22.5, §9.3 |
+| SEARCH-04 | P0 | §A19.2 | §22.5 · §22.5, §9.3 |
+| SEARCH-05 | P1 | §A19.2 | §22.2 · §22.5, §9.3 |
+| STORY-01 | P1 | §A10.1 | §22.1 |
+| STORY-02 | P1 | §A10.1 | §22.1 · §22.1 |
+| STORY-03 | P1 | §A10.1 | §22.1 · §22.1 |
+| STORY-04 | P1 | §A10.1 | §22.1 · §22.1 |
+| STORY-05 | P1 | §A10.1 | §22.1 · §22.1 |
+| STORY-06 | P1 | §A10.1 | §22.1 · §22.1 |
+| STORY-07 | P1 | §A10.1 | §4.2, §22.1 · §22.1 |
+| STORY-08 | P1 | §A10.1 | §22.1, §22.4 · §22.1 |
+| STORY-09 | P0 | §A10.1 | §22.1 · §22.1 |
+| USE-01 | P0 | §A11.1 | §17, §4.2 (K11) |
+| USE-02 | P0 | §A11.1 | §22.3, §8.5 |
+| USE-03 | P1 | §A11.1 | §17, §22, §4.2 (K11) |
+| USE-04 | P1 | §A11.1 | §17, §22, §4.2 (K11) |
+| USE-05 | P1 | §A11.1 | §22.2 · §17, §22, §4.2 (K11) |
+| USE-06 | P1 | §A11.1 | §17, §22, §4.2 (K11) |
+| USE-07 | P1 | §A11.1 | §17, §22, §4.2 (K11) |
+| USE-08 | P1 | §A11.1 | §17 · §17, §22, §4.2 (K11) |
+| USE-09 | P2 | §A11.1 | §17, §22, §4.2 (K11) |
+| USE-10 | P0 | §A11.2 | §22.4 · §17, §22, §4.2 (K11) |
+| USE-11 | P1 | §A11.2 | §17, §22, §4.2 (K11) |
+| USE-12 | P1 | §A11.2 | §17, §22, §4.2 (K11) |
+| USE-13 | P1 | §A11.2 | §17, §22, §4.2 (K11) |
+| USE-14 | P1 | §A11.2 | §17, §22, §4.2 (K11) |
+| USE-15 | P1 | §A11.2 | §17, §22, §4.2 (K11) |
+| USE-16 | P1 | §A11.2 | §22.4 · §17, §22, §4.2 (K11) |
+| USE-17 | P1 | §A11.2 | §22.2 · §17, §22, §4.2 (K11) |
+| USE-18 | P1 | §A11.3 | §17, §22, §4.2 (K11) |
+| USE-19 | P1 | §A11.3 | §17, §22, §4.2 (K11) |
+| USE-20 | P1 | §A11.3 | §17, §22, §4.2 (K11) |
+| USE-21 | P1 | §A11.3 | §17, §22, §4.2 (K11) |
+| USE-22 | P1 | §A11.3 | §17, §22, §4.2 (K11) |
+| USE-23 | P2 | §A11.3 | §17, §22, §4.2 (K11) |
+| UX-01 | P0 | §A19.3 | §C5, §C7, §A23 |
+| UX-02 | P0 | §A19.3 | §12.5 · §12.5, §C8, §C12, §C13 |
+| UX-03 | P0 | §A19.3 | §C7, §C13 · §12.5, §C8, §C12, §C13 |
+| UX-04 | P0 | §A19.3 | §C12 · §12.5, §C8, §C12, §C13 |
+| UX-05 | P1 | §A19.3 | §22.9 · §12.5, §C8, §C12, §C13 |
+| UX-06 | P0 | §A19.3 | §C12 · §12.5, §C8, §C12, §C13 |
+| UX-07 | P0 | §A19.3 | §12.5, §C8 · §12.5, §C8, §C12, §C13 |
+| UX-08 | P0 | §A19.3 | §C8 · §12.5, §C8, §C12, §C13 |
+| UX-09 | P0 | §A19.3 | §C8 · §12.5, §C8, §C12, §C13 |
+| UX-10 | P1 | §A19.3 | §22.9 · §12.5, §C8, §C12, §C13 |
+| UX-11 | P0 | §A19.3 | §A7, §11 |
+
+## T.2 Un-numbered ideas
+
+| Idea (where stated) | Met by |
+|---|---|
+| Product options A–G (§A4.1–§A4.7) | §A4.9 scope per slice; G excluded |
+| Commercial models, excluded revenue (§A4.8) | §A4.9, §A23.3; no advertising or data sale anywhere in Part B |
+| Personas and jobs (§A5.1–§A5.7) | §A5.8, §12.1, §10.1 |
+| Vocabulary: tenant, institution, relationship, space, audience, follow, public derivative (§A6.1) | §5.1, §9.1, §22.8 |
+| Policy precedence and history (§A6.3) | §4.1, §4.2 (K30), §7.5 |
+| Home information order (§A8.1) | §12.1, §C4 |
+| Feed principles: chronological, finite, caught-up, no autoplay or popularity, eligibility before paging (§A8.2) | §9, §9.2, §C5 |
+| Sensitive-data boundary, never auto-publish (§A11.4) | §19.2, §13, §C4 |
+| Home composition without comms → lms reads (§A12 closing note) | §22.3, §C4 |
+| Four external-sharing products and platform limits (§A15.1–§A15.5) | §22.8 |
+| Consent foundation and India review (§A16.1, §A16.2) | privacy design; `docs/design/PRIVACY-LEGAL-REVIEW-BRIEF.md`; §8.4 |
+| Human operating model; expression protection (§A17.1, §A17.2) | §4.6, §A17.3, §6.2 (appeals), §10.2 |
+| International policy layer, COPPA, UK Children's Code (§A20) | §4.8 (floor and age bands as data); per-country gates §D24 Phase 5 |
+| Conceptual domain objects (§B21.2) | §5.1–§5.8, §22 |
+| Commands and state machines: publication, moderation, external release, membership (§B21.3) | §5.2, §6, §10.2, §22.8, §7.4 |
+| Authorization decision path (§B21.4) | §3 (`CommunityAccess`), §9 |
+| Feed, media and job infrastructure (§B21.6) | §8, §9, core job runtime (`com.mysms.core.jobs`) |
+| Measurable targets (§B22.1) | §14 load test, §D29.1 monitoring |
+| Sizing variables, load example, cost model (§A23.1–§A23.3) | §A23 (kept as the planning basis), §4.2 (K20), §22.10 |
+| Pilot outcome metrics (§A23.4) | COM-65 health, §D29.1 |
+| Phases 0–5 and gates (§D24) | §16 slices and gates |
+| Timing and stopping rules (§D24.1) | §D29.2 |
+| Validation approach (§D25 closing paragraph) | §14 |
+| Alternatives and traps; excluded features (§A26) | §1 rules, §12.5, floors K16, K29, K45; Excluded rows of §A4.9 |
+| Distinctive ideas (§A27): School Pulse, class journal, Ask the School, contribution portfolio, permission-aware memories, chain exchange, alumni return paths, editorial desk | §17 (class story, kudos), §22.2, §22.3, §22.4, §19, §22.7, §22.8 |
+| Discovery backlog (§D28) | §18 (open decisions, items 1–27); discovery items stay with the pilot schools |
+| Market references and sources (§A29) | — (context) |
+| Product decisions and first product (§A30) | §A4.9, §16 |
+| School-specific ideas (§17): class story, kudos wall, achievement cards, exam quiet mode, ask the school, event live board, gratitude notes, yearbook, lost and found, newsroom, digital-citizenship nudges | §4.2 (K11 post types; exam quiet mode = a scheduled K37 freeze of student posting plus K43 quiet hours, P1), §22.2, §22.4, §C6 composer prompts |

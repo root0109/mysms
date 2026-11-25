@@ -26,6 +26,11 @@
       <groupId>com.mysms</groupId>
       <artifactId>auth-client</artifactId>
     </dependency>
+    <!-- privacy's rights-request tasks and retention runs (PrivacyTaskHandler, design PRIVACY-AND-CONSENT-CENTRE §9.1) -->
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>privacy-client</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.mapstruct</groupId>
       <artifactId>mapstruct</artifactId>
@@ -64,6 +69,12 @@
     <dependency>
       <groupId>com.mysms</groupId>
       <artifactId>auth-client</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>privacy-client</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

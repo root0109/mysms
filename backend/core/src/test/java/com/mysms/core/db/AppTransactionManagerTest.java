@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
@@ -19,6 +20,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.SimpleTransactionStatus;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /** The transaction base class against stand-ins: which definition is used, when the tenant is bound, how work ends. */
 class AppTransactionManagerTest {
@@ -216,5 +218,72 @@ class AppTransactionManagerTest {
         IllegalStateException refused = new IllegalStateException("serialization failure");
         doThrow(refused).when(transactions).commit(status);
         assertThatThrownBy(() -> work.write(() -> "lost")).isSameAs(refused);
+    }
+
+    @Test
+    void aRollbackThatFailsBeforeCompletingIsNeverFollowedByACommit() {
+        given();
+        IllegalStateException failure = new IllegalStateException("no");
+        IllegalStateException broken = new IllegalStateException("connection lost");
+        // the transaction stays open: a commit attempted now would replace the cause with its own exception
+        doThrow(broken).when(transactions).rollback(status);
+
+        assertThatThrownBy(() -> work.write(() -> {
+            throw failure;
+        })).isSameAs(failure);
+        assertThat(failure.getSuppressed()).containsExactly(broken);
+        verify(transactions).rollback(status);
+        verify(transactions, never()).commit(any());
+        assertThat(TransactionSynchronizationManager.getResource(transactions)).isNull();
+    }
+
+    @Test
+    void anErrorThrownByTheRollbackIsSuppressedUnderTheCause() {
+        given();
+        IllegalStateException failure = new IllegalStateException("no");
+        OutOfMemoryError broken = new OutOfMemoryError("rollback");
+        doThrow(broken).when(transactions).rollback(status);
+
+        assertThatThrownBy(() -> work.write(() -> {
+            throw failure;
+        })).isSameAs(failure);
+        assertThat(failure.getSuppressed()).containsExactly(broken);
+        verify(transactions, never()).commit(any());
+    }
+
+    @Test
+    void aCheckedExceptionThrownSneakilyRollsBackAndIsRethrownAsItIs() {
+        given();
+        IOException failure = new IOException("disk full");
+
+        assertThatThrownBy(() -> work.write(() -> {
+            throw AppTransactionManagerTest.<RuntimeException>sneaky(failure);
+        })).isSameAs(failure);
+        verify(transactions).rollback(status);
+        verify(transactions, never()).commit(any());
+        assertThat(TransactionSynchronizationManager.getResource(transactions)).isNull();
+    }
+
+    @Test
+    void aThrowableThatIsNeitherAnExceptionNorAnErrorStillRollsBackAndNeverCommits() {
+        given();
+        Throwable odd = new Throwable("neither");
+
+        assertThatThrownBy(() -> work.write(() -> {
+            throw AppTransactionManagerTest.<RuntimeException>sneaky(odd);
+        })).isSameAs(odd);
+        verify(transactions).rollback(status);
+        verify(transactions, never()).commit(any());
+        assertThat(TransactionSynchronizationManager.getResource(transactions)).isNull();
+
+        // the thread is clean: the next work commits as usual
+        when(transactions.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
+        assertThat(work.write(() -> "next")).isEqualTo("next");
+    }
+
+    /** Throws any throwable from code that declares none, as a library compiled elsewhere can. */
+    @SuppressWarnings("unchecked")
+    private static <T extends Throwable> RuntimeException sneaky(Throwable throwable) throws T {
+        throw (T) throwable;
     }
 }

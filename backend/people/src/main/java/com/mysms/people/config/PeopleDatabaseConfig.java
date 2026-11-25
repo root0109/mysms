@@ -2,6 +2,7 @@ package com.mysms.people.config;
 
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.db.ModuleDatabaseHealthIndicator;
+import com.mysms.core.jobs.JobSchedule;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +22,9 @@ public class PeopleDatabaseConfig {
     /** Bean name of the module's transaction manager; every service injects it by this qualifier. */
     public static final String TRANSACTIONS = "peopleTransactions";
 
+    /** Bean name of the module's job schedule; the module's scheduled jobs inject it by this qualifier. */
+    public static final String JOBS = "peopleJobSchedule";
+
     @Bean(name = DATABASE, destroyMethod = "close")
     public ModuleDatabase peopleDatabase(Environment environment) {
         return ModuleDatabase.open("people", environment, true);
@@ -32,6 +36,12 @@ public class PeopleDatabaseConfig {
     @Bean(name = TRANSACTIONS)
     public PlatformTransactionManager peopleTransactions(@Qualifier(DATABASE) ModuleDatabase database) {
         return database.transactionManager();
+    }
+
+    /** people.job_schedule: the tenants enrolled in the module's scheduled jobs (core JobRuntime runs them). */
+    @Bean(name = JOBS)
+    public JobSchedule peopleJobSchedule(@Qualifier(DATABASE) ModuleDatabase database) {
+        return new JobSchedule(database);
     }
 
     @Bean

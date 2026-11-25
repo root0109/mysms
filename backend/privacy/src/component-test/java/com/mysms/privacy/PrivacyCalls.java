@@ -41,9 +41,34 @@ final class PrivacyCalls {
         return token(tenant, List.of(permissions), List.of("*"), permissions);
     }
 
+    /**
+     * A tenant administrator's token whose account is linked to a person (the pid claim): a staff member who is also
+     * a data principal of the tenant.
+     */
+    String administratorAs(UUID tenant, UUID person, String... permissions) {
+        Map<String, Object> claims = claims(tenant, List.of(permissions), List.of("*"), permissions);
+        claims.put("pid", person.toString());
+        return tokens.custom(claims, Instant.now().plusSeconds(900));
+    }
+
+    /**
+     * A tenant administrator's token for a given login account, with no person linked (no pid claim): the staff
+     * member is known to privacy only through that account.
+     */
+    String administratorAccount(UUID tenant, UUID account, String... permissions) {
+        Map<String, Object> claims = claims(tenant, List.of(permissions), List.of("*"), permissions);
+        claims.put("sub", account.toString());
+        return tokens.custom(claims, Instant.now().plusSeconds(900));
+    }
+
     /** A school administrator's token: the permissions granted for one school only, none tenant-wide. */
     String schoolAdministrator(UUID tenant, String... permissions) {
         return token(tenant, List.of(), List.of(UUID.randomUUID().toString()), permissions);
+    }
+
+    /** A school administrator's token: the permissions granted for the given school only, none tenant-wide. */
+    String schoolAdministratorOf(UUID tenant, UUID institution, String... permissions) {
+        return token(tenant, List.of(), List.of(institution.toString()), permissions);
     }
 
     /**
@@ -61,6 +86,16 @@ final class PrivacyCalls {
         Map<String, Object> claims = claims(tenant, List.of(), List.of(UUID.randomUUID().toString()), permissions);
         claims.put("pid", person.toString());
         claims.put("act", Map.of("sub", administrator.toString()));
+        return tokens.custom(claims, Instant.now().plusSeconds(900));
+    }
+
+    /**
+     * A tenant administrator's token while another administrator acts as them (the act claim names the one acting):
+     * the permissions granted tenant-wide, as {@link #administrator}.
+     */
+    String impersonatedAdministrator(UUID tenant, UUID acting, String... permissions) {
+        Map<String, Object> claims = claims(tenant, List.of(permissions), List.of("*"), permissions);
+        claims.put("act", Map.of("sub", acting.toString()));
         return tokens.custom(claims, Instant.now().plusSeconds(900));
     }
 
@@ -84,6 +119,11 @@ final class PrivacyCalls {
         return send("GET", path, token, null, null);
     }
 
+    /** A call as another module's service (an internal operation), in the tenant named by X-Tenant-Id. */
+    Reply asService(String method, String path, String serviceToken, UUID tenant, Object body) throws Exception {
+        return send(method, path, serviceToken, null, body, tenant);
+    }
+
     Reply post(String path, String token, Object body) throws Exception {
         return send("POST", path, token, null, body);
     }
@@ -97,6 +137,11 @@ final class PrivacyCalls {
     }
 
     private Reply send(String method, String path, String token, String ifMatch, Object body) throws Exception {
+        return send(method, path, token, ifMatch, body, null);
+    }
+
+    private Reply send(String method, String path, String token, String ifMatch, Object body, UUID tenant)
+            throws Exception {
         HttpRequest.Builder request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
                 .header("Authorization", "Bearer " + token)
                 .method(method, body == null ? HttpRequest.BodyPublishers.noBody()
@@ -106,6 +151,9 @@ final class PrivacyCalls {
         }
         if (ifMatch != null) {
             request.header("If-Match", ifMatch);
+        }
+        if (tenant != null) {
+            request.header("X-Tenant-Id", tenant.toString());
         }
         HttpResponse<String> response = HTTP.send(request.build(), HttpResponse.BodyHandlers.ofString());
         return new Reply(response.statusCode(),

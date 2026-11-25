@@ -61,6 +61,14 @@ public class PurposeRepository {
     private static final String FIND_BY_ID = SELECT + " WHERE p.id = :id";
     private static final String FIND_BY_CODE = SELECT + " WHERE p.code = :code";
     private static final String ENABLED = SELECT + " WHERE COALESCE(t.enabled, false) ORDER BY p.code";
+    private static final String LOCK_SETTING = """
+            SELECT t.row_version
+              FROM privacy.tenant_purpose t
+              JOIN privacy.purpose p ON p.id = t.purpose_id
+             WHERE t.tenant_id = :tenantId
+               AND p.code = :code
+               FOR SHARE OF t
+            """;
 
     private final JdbcClient jdbc;
 
@@ -75,6 +83,15 @@ public class PurposeRepository {
     /** The catalogue purpose with the code, with the tenant's setting of it. */
     public Optional<PurposeView> findByCode(String code) {
         return jdbc.sql(FIND_BY_CODE).param("code", code).query(PurposeRepository::map).optional();
+    }
+
+    /**
+     * Share-locks the tenant's setting of the purpose (when it has one) until the transaction ends: a decision taken
+     * under it waits for a change of the setting or its notice to commit, and such a change waits for the decision, so
+     * the change's recompute of every subject with answers never misses a subject's first answer.
+     */
+    public void lockSetting(String code) {
+        jdbc.sql(LOCK_SETTING).param("code", code).query(Integer.class).optional();
     }
 
     /** The purposes the tenant has switched on, by code. */

@@ -15,8 +15,9 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Keeps payroll.staff_member (the login account of each hr.staff record) in step with hr's events, so a staff member
- * who is not a payroll officer reads only their own payslips; payroll never reads hr's schema. An entry changes only to
+ * Keeps payroll.staff_member (the login account and person of each hr.staff record) in step with hr's events, so a
+ * staff member who is not a payroll officer reads only their own payslips and privacy's tasks find a person's records
+ * (PayrollPrivacyTaskHandler); payroll never reads hr's schema. An entry changes only to
  * a newer row version and never after the deletion, so out-of-order and repeated deliveries are harmless. The deletion
  * arrives through {@link PayrollReferenceCleanup}, the module's one handler of {@code hr.staff.deleted}.
  */
@@ -61,13 +62,19 @@ public class StaffMemberSync implements EventSubscriptions {
             throw new RejectedEventException("staff event " + event.id() + " has no row version");
         }
         UUID userId;
+        UUID personId;
         try {
-            JsonNode user = data.path("userId");
-            userId = user.isString() && !user.asString().isEmpty() ? UUID.fromString(user.asString()) : null;
+            userId = uuid(data, "userId");
+            personId = uuid(data, "personId");
         } catch (IllegalArgumentException malformed) {
-            throw new RejectedEventException("staff event " + event.id() + " carries a malformed account id");
+            throw new RejectedEventException("staff event " + event.id() + " carries a malformed id");
         }
-        return members.apply(event.aggregateId(), userId, event.type().equals(DELETED), version,
+        return members.apply(event.aggregateId(), userId, personId, event.type().equals(DELETED), version,
                 OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC));
+    }
+
+    private static UUID uuid(JsonNode data, String field) {
+        JsonNode value = data.path(field);
+        return value.isString() && !value.asString().isEmpty() ? UUID.fromString(value.asString()) : null;
     }
 }

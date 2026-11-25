@@ -29,15 +29,15 @@ import java.util.regex.Pattern;
  * server for every module's service;</li>
  * <li>a key two module files set to different values is set in {@code app}'s file, so the order in which the monolith
  * combines the module files never decides a value;</li>
- * <li>the libraries (core, auth-client, messaging, conformance) ship no {@code application.properties}, which would
- * shadow or join a service's;</li>
+ * <li>the libraries (core, auth-client, privacy-client, messaging, conformance) ship no
+ * {@code application.properties}, which would shadow or join a service's;</li>
  * <li>the test kit's list of services ({@code TestDatabase.SERVICES}) is the domain modules.</li>
  * </ul>
  */
 public final class ConfigurationRule implements ConformanceRule {
 
     private static final String FILE = "src/main/resources/application.properties";
-    private static final Set<String> LIBRARIES = Set.of("core", "auth-client", "messaging", "conformance");
+    private static final Set<String> LIBRARIES = Set.of("core", "auth-client", "privacy-client", "messaging", "conformance");
     private static final Pattern SERVICE_KEY = Pattern.compile("SERVICE_KEY = \"([a-z]+)-service\"");
     private static final Pattern SERVICES = Pattern.compile("SERVICES = List\\.of\\(([^;]*)\\);");
     private static final Pattern NAME = Pattern.compile("\"([a-z]+)\"");

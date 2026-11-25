@@ -145,6 +145,32 @@ class ServiceTokenProviderTest {
         assertThat(failed.get().getCode()).isEqualTo(Status.Code.UNAVAILABLE);
     }
 
+    @Test
+    void theTenantIsTheCallersEvenWhenGrpcAppliesTheCredentialsOnAnotherThread() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        CallContextHolder.set(CallContext.anonymous("4bf92f3577b34da6a3ce929d0e0e4736").withIdentity(tenant, null));
+        CallCredentials credentials = provider(tokenUri, SECRET).callCredentials("finance");
+        CallContextHolder.clear();
+        AtomicReference<Metadata> applied = new AtomicReference<>();
+        CallCredentials.MetadataApplier applier = new CallCredentials.MetadataApplier() {
+            @Override
+            public void apply(Metadata headers) {
+                applied.set(headers);
+            }
+
+            @Override
+            public void fail(Status status) {
+                throw new AssertionError(status);
+            }
+        };
+        // a thread without the caller's call context, as gRPC's channel executor is
+        Thread channelThread = new Thread(() -> credentials.applyRequestMetadata(null, Runnable::run, applier));
+        channelThread.start();
+        channelThread.join();
+        assertThat(applied.get()).as("the credentials were applied").isNotNull();
+        assertThat(applied.get().get(GrpcAuthInterceptor.TENANT)).isEqualTo(tenant.toString());
+    }
+
     /** A clock the test moves forward. */
     private static final class MutableClock extends Clock {
 

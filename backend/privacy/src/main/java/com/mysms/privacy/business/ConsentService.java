@@ -45,6 +45,7 @@ import com.mysms.privacy.repository.ConsentStateRepository.Allowed;
 import com.mysms.privacy.repository.GuardianLinkRepository;
 import com.mysms.privacy.repository.NoticeTranslationRepository;
 import com.mysms.privacy.repository.NoticeVersionRepository;
+import com.mysms.privacy.repository.NoticeVersionRepository.ActiveNotice;
 import com.mysms.privacy.repository.PurposeRepository;
 import com.mysms.privacy.repository.PurposeView;
 import com.mysms.privacy.repository.SubjectRepository;
@@ -54,10 +55,10 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -76,7 +77,8 @@ import org.springframework.transaction.PlatformTransactionManager;
  * The caller decides for themself only as an adult, and for a subject only as the active legal guardian of a minor
  * (identified by persons, not accounts); anything else is 404 NOT_FOUND (design §6.1's CONSENT_NOT_GUARDIAN case), so
  * the answer never confirms that a child exists. The centre shows the caller's own decision and the combined
- * effect, never another giver's decision.
+ * effect, never another giver's decision. A minor sees their own rows read only: the combined effect and the day
+ * they come of age, nothing of who decided what.
  *
  * <p>Staff: a signed paper form is recorded on its giver's behalf as unverified — it counts only once a second staff
  * member verifies it (four eyes). Consent data is tenant-level: reading needs the permission, writing a tenant-wide
@@ -107,6 +109,7 @@ public class ConsentService extends AppTransactionManager {
     private static final String RECORDED = "recorded";
     private static final String SUPERSEDED = "superseded";
     private static final String WITHDRAWN = "withdrawn";
+    private static final String SYSTEM = "system";
     /** What a 404 names when the giver may not decide for the subject: a person, never confirmed to exist. */
     private static final String SUBJECT = "person";
     private static final String NOTICE_NOT_ACTIVE = "must name a notice whose active version lists this purpose";
@@ -125,6 +128,14 @@ public class ConsentService extends AppTransactionManager {
     private record Checked(PurposeView purpose, String noticeContentSha256) {
     }
 
+    /**
+     * What every consent-centre row of one purpose shares: the purpose with the tenant's setting, the notice a decision
+     * is recorded under (none while unpublished), and since when the notice asks everyone again.
+     */
+    private record PurposeRow(PurposeView purpose, Optional<ActiveNotice> notice,
+                              Optional<OffsetDateTime> reconsentSince) {
+    }
+
     private final ConsentRecordRepository records;
     private final ConsentRecordMapper mapper;
     private final SubjectRepository subjects;
@@ -139,6 +150,7 @@ public class ConsentService extends AppTransactionManager {
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
+    private final ConsentExpiryJob expiryJob;
 
     public ConsentService(ConsentRecordRepository records,
             ConsentRecordMapper mapper,
@@ -150,6 +162,7 @@ public class ConsentService extends AppTransactionManager {
             ConsentStateRepository states,
             ConsentStateWriter stateWriter,
             ConsentEvidenceLedger ledger,
+            ConsentExpiryJob expiryJob,
             @Qualifier(PrivacyDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(PrivacyDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(PrivacyEventsConfig.OUTBOX) OutboxWriter outbox,
@@ -167,6 +180,7 @@ public class ConsentService extends AppTransactionManager {
         this.states = states;
         this.stateWriter = stateWriter;
         this.ledger = ledger;
+        this.expiryJob = expiryJob;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -176,40 +190,39 @@ public class ConsentService extends AppTransactionManager {
     // ---- the consent centre (self-service) ----
 
     /**
-     * privacy.ListMyConsents: one row per subject the caller may decide for — themself when an adult, then each minor
-     * they are the active legal guardian of — and purpose the tenant has switched on (a purpose forbidden for minors
-     * is left out for a minor: nobody can consent to it). Read on the primary: who may decide is a security decision.
+     * privacy.ListMyConsents: one row per subject the caller sees — themself (deciding as an adult, read only as a
+     * minor), then each minor they are the active legal guardian of — and purpose the tenant has switched on (a purpose
+     * forbidden for minors is left out for a minor: nobody can consent to it). A person whose age is unknown sees no
+     * row of their own: who decides for them cannot be told. Read on the primary: who may decide is a security
+     * decision.
      */
     public Page<MyConsent> listMyConsents() {
         UUID caller = callerPerson(AuthContext.require());
         return doInPrimaryReadTransaction(() -> {
-            Set<UUID> subjectIds = new LinkedHashSet<>();
-            boolean adult = subjects.status(caller).filter(Majority.ADULT::equals).isPresent();
-            if (adult) {
-                subjectIds.add(caller);
+            Optional<Majority> majority = subjects.majority(caller);
+            Map<UUID, MyConsent.CapacityEnum> subjectIds = new LinkedHashMap<>();
+            majority.flatMap(ConsentService::ownCapacity).ifPresent(capacity -> subjectIds.put(caller, capacity));
+            for (UUID ward : links.minorWards(caller)) {
+                subjectIds.putIfAbsent(ward, MyConsent.CapacityEnum.GUARDIAN);
             }
-            subjectIds.addAll(links.minorWards(caller));
             Map<String, GivenConsent> mine = records.givenBy(caller).stream()
                     .collect(Collectors.toMap(g -> key(g.subjectPersonId(), g.purposeCode()), g -> g));
-            Map<String, ConsentScope> widest = widest(states.allowed(List.copyOf(subjectIds)));
-            List<PurposeView> enabled = purposes.enabled();
-            Map<String, Optional<OffsetDateTime>> reconsent = new HashMap<>();
-            for (PurposeView purpose : enabled) {
-                reconsent.put(purpose.code(), reconsentSince(purpose));
-            }
+            Map<String, ConsentScope> widest = widest(states.allowed(List.copyOf(subjectIds.keySet())));
+            List<PurposeRow> enabled = purposeRows(purposes.enabled());
             LocalDate today = now().toLocalDate();
             List<MyConsent> rows = new ArrayList<>();
-            for (UUID subject : subjectIds) {
-                boolean self = subject.equals(caller);
-                for (PurposeView purpose : enabled) {
-                    if (!self && purpose.forbiddenForMinors()) {
+            subjectIds.forEach((subject, capacity) -> {
+                for (PurposeRow purpose : enabled) {
+                    if (capacity != MyConsent.CapacityEnum.SELF && purpose.purpose().forbiddenForMinors()) {
                         continue;
                     }
-                    String key = key(subject, purpose.code());
-                    rows.add(myConsent(subject, purpose.code(), Optional.ofNullable(mine.get(key)),
-                            Optional.ofNullable(widest.get(key)), reconsent.get(purpose.code()), today));
+                    String key = key(subject, purpose.purpose().code());
+                    MyConsent row = row(subject, capacity, purpose, Optional.ofNullable(widest.get(key)));
+                    rows.add(capacity == MyConsent.CapacityEnum.MINOR_SELF
+                            ? row.decidesFrom(majority.map(Majority::majorityDate).orElse(null))
+                            : decided(row, Optional.ofNullable(mine.get(key)), purpose.reconsentSince(), today));
                 }
-            }
+            });
             return new Page<>(rows, 1, Math.max(rows.size(), 1), "");
         });
     }
@@ -259,6 +272,36 @@ public class ConsentService extends AppTransactionManager {
             outbox.publish(AGGREGATE + PrivacyEvents.WITHDRAWN, AGGREGATE, id, PrivacyEvents.consentRecord(record));
             stateWriter.recompute(record.getSubjectPersonId(), record.getPurposeCode());
             return myConsentOf(giver, record.getSubjectPersonId(), record.getPurposeCode());
+        });
+    }
+
+    /**
+     * Withdraws, for a rights request, every live decision about the subject that one of the givers gave (every
+     * giver's when {@code givers} is empty: an erasure), in the caller's transaction and under the subject's row lock,
+     * which the caller takes first: per decision a {@code withdrawn} evidence entry (channel system, with the staff
+     * member who fulfilled the request when there is one), the audit record and privacy.consent_record.withdrawn; then
+     * the subject's answer to each purpose concerned is recomputed.
+     */
+    public void withdrawForRightsRequest(UUID subjectPersonId, Set<UUID> givers, UUID actorUserId) {
+        runInWriteTransaction(() -> {
+            OffsetDateTime now = now();
+            subjects.lockStatus(subjectPersonId, now);
+            List<ConsentRecordEntity> withdrawn = records.lockLiveAbout(subjectPersonId).stream()
+                    .filter(r -> givers.isEmpty() || givers.contains(r.getGiverPersonId())).toList();
+            for (ConsentRecordEntity record : withdrawn) {
+                if (records.withdraw(record.getId(), record.getRowVersion(), now, actorUserId) == 0) {
+                    throw stale();
+                }
+                record.setWithdrawnAt(now);
+                stepped(record, now, actorUserId);
+                ledger.append(new ConsentEvidenceLedger.Step(record.getTenantId(), record.getId(), WITHDRAWN,
+                        actorUserId, null, record.getGiverCapacity(), SYSTEM, null, null, null, null));
+                audit.recordTransition(AGGREGATE, record.getId(), "withdraw", List.of("withdrawnAt"), null);
+                outbox.publish(AGGREGATE + PrivacyEvents.WITHDRAWN, AGGREGATE, record.getId(),
+                        PrivacyEvents.consentRecord(record));
+            }
+            withdrawn.stream().map(ConsentRecordEntity::getPurposeCode).distinct()
+                    .forEach(purpose -> stateWriter.recompute(subjectPersonId, purpose));
         });
     }
 
@@ -339,6 +382,7 @@ public class ConsentService extends AppTransactionManager {
      */
     private ConsentRecordEntity record(Decision d, RequestOrigin origin, AuthContext caller) {
         OffsetDateTime now = now();
+        purposes.lockSetting(d.purposeCode()); // before the subject's lock: ConsentStateWriter#recomputePurpose
         boolean adult = Majority.ADULT.equals(subjects.lockStatus(d.subjectPersonId(), now));
         boolean entitled = SELF.equals(d.giverCapacity())
                 ? adult && d.giverPersonId().equals(d.subjectPersonId())
@@ -369,6 +413,9 @@ public class ConsentService extends AppTransactionManager {
         entity.setVerifiedAt(VERIFIED.equals(d.verificationStatus()) ? decidedAt : null);
         entity.setValidUntil(Optional.ofNullable(checked.purpose().defaultValidMonths())
                 .map(months -> decidedAt.toLocalDate().plusMonths(months)).orElse(null));
+        if (entity.getValidUntil() != null) {
+            expiryJob.enrol(decidedAt); // before the evidence chain's lock, which a concurrent first enrolment awaits
+        }
         Optional<ConsentRecordEntity> live = records.lockLive(d.subjectPersonId(), d.purposeCode(), d.giverPersonId());
         if (live.isPresent()) {
             supersede(live.get(), entity, origin, caller);
@@ -445,21 +492,63 @@ public class ConsentService extends AppTransactionManager {
 
     // ---- the consent centre's rows ----
 
-    /** The caller's row for one subject and purpose, after a change of the caller's decision. */
+    /**
+     * The caller's row for one subject and purpose, after a change of the caller's decision. The combined effect is
+     * shown only to someone who still decides for the subject: a guardian whose link has ended, or a giver whose
+     * subject is no longer theirs to decide for, may withdraw their own record but learns nothing of the child's
+     * current state.
+     */
     private MyConsent myConsentOf(UUID giver, UUID subject, String purposeCode) {
         Optional<GivenConsent> mine = records.givenBy(giver).stream()
                 .filter(g -> g.subjectPersonId().equals(subject) && g.purposeCode().equals(purposeCode)).findFirst();
-        Optional<ConsentScope> widest = Optional.ofNullable(widest(states.allowed(List.of(subject)))
-                .get(key(subject, purposeCode)));
-        Optional<OffsetDateTime> reconsent = purposes.findByCode(purposeCode).flatMap(this::reconsentSince);
-        return myConsent(subject, purposeCode, mine, widest, reconsent, now().toLocalDate());
+        Optional<ConsentScope> widest = decidesFor(giver, subject)
+                ? Optional.ofNullable(widest(states.allowed(List.of(subject))).get(key(subject, purposeCode)))
+                : Optional.empty();
+        PurposeRow purpose = purposeRows(List.of(purposes.findByCode(purposeCode).orElseThrow())).get(0);
+        MyConsent.CapacityEnum capacity = giver.equals(subject)
+                ? MyConsent.CapacityEnum.SELF : MyConsent.CapacityEnum.GUARDIAN;
+        return decided(row(subject, capacity, purpose, widest), mine, purpose.reconsentSince(), now().toLocalDate());
     }
 
-    private static MyConsent myConsent(UUID subject, String purposeCode, Optional<GivenConsent> mine,
-            Optional<ConsentScope> widest, Optional<OffsetDateTime> reconsentSince, LocalDate today) {
-        MyConsent row = new MyConsent().subjectPersonId(subject).purposeCode(purposeCode)
+    /** Whether the giver decides for the subject today: themself as an adult, or a minor as an active legal guardian. */
+    private boolean decidesFor(UUID giver, UUID subject) {
+        boolean adult = subjects.majority(subject).filter(m -> Majority.ADULT.equals(m.status())).isPresent();
+        return giver.equals(subject) ? adult : !adult && links.isLegalGuardian(giver, subject);
+    }
+
+    /** How the caller sees their own row: deciding as an adult, read only as a minor; none while their age is unknown. */
+    private static Optional<MyConsent.CapacityEnum> ownCapacity(Majority majority) {
+        if (Majority.ADULT.equals(majority.status())) {
+            return Optional.of(MyConsent.CapacityEnum.SELF);
+        }
+        boolean minor = Majority.MINOR.equals(majority.status()) && majority.majorityDate() != null;
+        return minor ? Optional.of(MyConsent.CapacityEnum.MINOR_SELF) : Optional.empty();
+    }
+
+    /** The shared part of each purpose's rows, the active notices read in one statement. */
+    private List<PurposeRow> purposeRows(List<PurposeView> enabled) {
+        Map<UUID, ActiveNotice> notices = noticeVersions.activeNotices(
+                enabled.stream().map(PurposeView::noticeId).filter(Objects::nonNull).toList());
+        return enabled.stream().map(p -> new PurposeRow(p, Optional.ofNullable(p.noticeId()).map(notices::get),
+                reconsentSince(p))).toList();
+    }
+
+    /** A row before the caller's decision: subject, purpose, what may be decided under which notice, the effect. */
+    private static MyConsent row(UUID subject, MyConsent.CapacityEnum capacity, PurposeRow purpose,
+            Optional<ConsentScope> widest) {
+        PurposeView view = purpose.purpose();
+        return new MyConsent().subjectPersonId(subject).purposeCode(view.code()).capacity(capacity)
+                .noticeCode(purpose.notice().map(ActiveNotice::code).orElse(null))
+                .noticeVersionId(purpose.notice().map(ActiveNotice::versionId).orElse(null))
+                .allowedScopes(ConsentScope.forKind(view.scopeKind()).stream().filter(s -> allows(view, s))
+                        .map(s -> MyConsent.AllowedScopesEnum.fromValue(s.value())).toList())
                 .effectiveWidestScope(widest.map(s -> MyConsent.EffectiveWidestScopeEnum.fromValue(s.value()))
                         .orElse(null));
+    }
+
+    /** The row with the caller's own decision on it (not_answered without one). */
+    private static MyConsent decided(MyConsent row, Optional<GivenConsent> mine,
+            Optional<OffsetDateTime> reconsentSince, LocalDate today) {
         if (mine.isEmpty()) {
             return row.myStatus(MyConsent.MyStatusEnum.NOT_ANSWERED);
         }

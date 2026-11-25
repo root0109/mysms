@@ -96,6 +96,18 @@ public class NoticeRepository {
     private static final String REFERENCED_BY_TENANT_PURPOSE = """
             SELECT EXISTS (SELECT 1 FROM privacy.tenant_purpose WHERE tenant_id = :tenantId AND notice_id = :id)
             """;
+    /** Locks the tenant's settings only (in the sub-select), never the catalogue rows every tenant shares. */
+    private static final String PURPOSES_NAMING = """
+            SELECT p.code
+              FROM privacy.purpose p
+             WHERE p.id IN (SELECT t.purpose_id
+                              FROM privacy.tenant_purpose t
+                             WHERE t.tenant_id = :tenantId
+                               AND t.notice_id = :id
+                             ORDER BY t.purpose_id
+                               FOR UPDATE)
+             ORDER BY p.code
+            """;
     private static final String HAS_ACTIVE_VERSION = """
             SELECT EXISTS (SELECT 1 FROM privacy.notice_version WHERE tenant_id = :tenantId
                 AND notice_id = :id AND status = 'active')
@@ -170,6 +182,14 @@ public class NoticeRepository {
     public boolean referencedByTenantPurpose(UUID id) {
         return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_TENANT_PURPOSE).param("id", id).query(Boolean.class)
                 .single());
+    }
+
+    /**
+     * The codes of the purposes whose tenant setting names the notice, those settings locked until the transaction ends
+     * (in purpose id order): see {@link PurposeRepository#lockSetting}.
+     */
+    public List<String> purposesNaming(UUID id) {
+        return jdbc.sql(PURPOSES_NAMING).param("id", id).query(String.class).list();
     }
 
     /** Whether a version of the notice is active (published and shown). */

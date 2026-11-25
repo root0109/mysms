@@ -14,7 +14,7 @@ import org.springframework.context.SmartLifecycle;
 
 /**
  * Runs {@link PartitionMaintenance} over every module database of this process: at startup and then every
- * {@code mysms.partitions.interval} (default 24 hours), on one background thread. A failed run is logged and retried
+ * {@code mysms.partitions.interval}, on one background thread. A failed run is logged and retried
  * at the next interval; it never stops the service.
  */
 public final class PartitionMaintenanceJob implements SmartLifecycle {

@@ -622,6 +622,26 @@ A subscription becomes active only on proof of payment, once, whichever proof ar
 comes from the order notes the signature covers. Gateway calls are never made inside a database transaction. Events:
 `platform.tenant_subscription.created`, `.activate`, `.cancel`.
 
+## privacy.Breach (`privacy.breach`) — hand-written
+
+`privacy.ReportBreach` creates the row with `status` = "reported" and `board_report_due_at` = `became_aware_at` + 72 h.
+Every step needs a tenant-wide grant, is refused while impersonating (403), compares the body etag (412) and is one
+update guarded by `row_version` and the status it leaves. `privacy.UpdateBreach` is no step: it changes what is known
+of an open breach (`closed_at` is null, 409 otherwise) under If-Match. Notices are recorded, not sent (comms delivery
+is not built). Overdue and the hours remaining are derived at read time. Events: `privacy.breach.reported`,
+`.updated`, `.triaged`, `.contained`, `.notification_recorded`, `.closed`, `.not_a_breach`.
+
+| Operation | Allowed from | Sets | Reason kept |
+|---|---|---|---|
+| `privacy.TriageBreach` | `status` ∈ {"reported"} | `status` = "triaged" | no |
+| `privacy.ContainBreach` | `status` ∈ {"triaged"} | `status` = "contained" | no |
+| `privacy.RecordBreachNotification` (`audience` = "board", `kind` = "initial") | `status` ∈ {"contained"}, `$param:sentAt` between `became_aware_at` and `$now` (422) | a `privacy.breach_notification` row; `status` = "board_initial_sent" | no |
+| `privacy.RecordBreachNotification` (`audience` = "board", `kind` = "detailed") | `status` ∈ {"board_initial_sent", "principals_notified"} and `board_report_sent_at` is null | the notice; `board_report_sent_at` = `$param:sentAt`; `status` = "board_report_sent" from "board_initial_sent" | no |
+| `privacy.RecordBreachNotification` (`audience` = "principals") | `status` ∈ {"board_initial_sent", "board_report_sent", "principals_notified"} | the notice; `status` = "principals_notified" | no |
+| `privacy.RecordBreachNotification` (a Board update; `audience` = "processor" or "tenant") | `closed_at` is null (a Board update: `status` ∈ {"board_initial_sent", "board_report_sent", "principals_notified"}) | the notice; the status stays | no |
+| `privacy.CloseBreach` | `status` ∈ {"principals_notified"} and `board_report_sent_at` is set | `status` = "closed", `closed_at` = `$now` | no |
+| `privacy.MarkBreachNotABreach` | `status` ∈ {"triaged"} | `status` = "not_a_breach", `not_a_breach_reason` = `$param:reason`, `closed_at` = `$now` | yes (`reason`) |
+
 ## privacy.NoticeVersion (`privacy.notice_version`) — hand-written
 
 A version is edited while `draft`; once published it never changes, and its translations change only while it is a
@@ -630,6 +650,67 @@ draft (409 otherwise). One version per notice is `active`.
 | Operation | Allowed from | Sets | Reason kept |
 |---|---|---|---|
 | `privacy.PublishNoticeVersion` | `status` ∈ {"draft"} and at least one live translation | `status` = "active", `published_at` = `$now`; the notice's previously active version: `status` = "retired", `superseded_by_id` = this version (its own `retire` audit record and `privacy.notice_version.retired` event) | no |
+
+## privacy.RightsRequest (`privacy.rights_request`) — hand-written
+
+A request submitted while signed in is `verified` at once (`identity_check` = "signed_in_session"), except a nominee's
+(`requester_capacity` = "nominee"), which stays `submitted` until staff verify it. Every step needs a tenant-wide grant,
+is refused while impersonating (403) and to a staff member who is the request's subject or requester (409
+`RIGHTS_REQUEST_CONFLICT_OF_INTEREST`).
+An extension is not a state: it moves `due_at`. An erasure or export request is fulfilled by one task per module
+(`privacy.RightsRequestTask` below); its saga moves the request without a staff step (no actor): to "action_required"
+once no started task waits (for an answer or its next attempt) and one failed for the fifth time, and to "closed" once every task answered. Events:
+`privacy.rights_request.submitted`, `.verified`, `.assigned`, `.extended`, `.rejected`, `.closed`,
+`.fulfilment_started`, `.task_retried`, `.action_required`; an erasure's close also `privacy.erasure.completed`.
+
+| Operation | Allowed from | Sets | Reason kept |
+|---|---|---|---|
+| `privacy.VerifyRightsRequestIdentity` | `status` ∈ {"submitted"} | `status` = "verified", `identity_check` = `$param:identityCheck` | no |
+| `privacy.AssignRightsRequest` | `status` ∈ {"verified", "in_progress"}, and `$param:assigneeUserId` is no account privacy knows for the subject or requester (409) | `status` = "in_progress", `assignee_user_id` = `$param:assigneeUserId` | no |
+| `privacy.ExtendRightsRequest` | `closed_at` is null, and `$param:dueAt` later than `due_at` (422 otherwise) | `due_at` = `$param:dueAt`, `extended_reason` = `$param:reason` | yes (`reason`) |
+| `privacy.RejectRightsRequest` | `status` ∈ {"submitted", "verified"} | `status` = "rejected", `outcome_code` = `$param:reasonCode`, `closed_at` = `$now` | yes (the reason code) |
+| `privacy.CloseRightsRequest` | `status` ∈ {"in_progress"}, and not `type` ∈ {"access", "erasure", "export", "withdraw_all"} with `$param:outcomeCode` ∈ {"fulfilled", "partially_fulfilled"} (each is fulfilled by its own step; 409), not an erasure or export whose fulfilment started (409), not `type` = "nomination" with "partially_fulfilled" (409), and `$param:response` given for a grievance or a declined correction (422) | `status` = "closed", `outcome_code` = `$param:outcomeCode`, `outcome_note` = `$param:note`, `outcome_response` = `$param:response`, `closed_at` = `$now`; a nomination closed as "fulfilled" also sets the requester's `privacy.nominee` row `activated_at` = `$now`, `activated_by_request_id` = this request (event `privacy.nominee.activated`) | no |
+| `privacy.FulfilAccessRequest` | `type` = "access" and `status` ∈ {"in_progress"} | `status` = "closed", `outcome_code` = "fulfilled", `access_summary` = the subject's access summary generated at `$now`, `closed_at` = `$now` (event `.closed`) | no |
+| `privacy.StartRightsRequestFulfilment` | `type` ∈ {"erasure", "export"}, `status` ∈ {"in_progress"}, no task yet (409); body etag required | one `privacy.rights_request_task` per module of `mysms.privacy.erasure.modules`, wave 1 dispatched; `status` stays "in_progress" | no |
+| `privacy.RetryRightsRequestTask` | `type` ∈ {"erasure", "export"}, `status` ∈ {"in_progress", "action_required"}; the task (of this request, 404) "failed" or "dispatched" (409) | the task dispatched again; `status` = "in_progress" | no (the task id is kept as the step's reason) |
+| `privacy.FulfilWithdrawAllRequest` | `type` = "withdraw_all" and `status` ∈ {"in_progress"}; body etag required | every live consent record the requester gave about the subject (the subject's own too for a nominee) withdrawn; `status` = "closed", `outcome_code` = "fulfilled", `closed_at` = `$now` (event `.closed`) | no |
+| (saga) a task answered | `status` ∈ {"in_progress", "action_required"} and no started task still dispatched or waiting for its next attempt | a failed task → `status` = "action_required"; else pending tasks dispatched; else `status` = "closed", `outcome_code` = "partially_fulfilled" (a task partial) or "fulfilled", `closed_at` = `$now` | no |
+
+## privacy.RightsRequestTask (`privacy.rights_request_task`) — hand-written
+
+A record of the rights request: created "pending" by `privacy.StartRightsRequestFulfilment` (wave 1 dispatched at once),
+answered by its module's `<module>.privacy_task.completed` (the request's row locked first). Each dispatch increments
+`attempts`, clears `next_attempt_at` and publishes `privacy.rights_request.task_assigned`; an answer to a task not
+"dispatched" changes nothing. A failed answer before the fifth attempt waits a back-off before the sweep dispatches it
+again: `mysms.privacy.erasure.retry-delay` doubled per attempt after the first, at most
+`mysms.privacy.erasure.redispatch-after`.
+
+| Transition | Allowed from | Sets |
+|---|---|---|
+| dispatch (start, the next wave, a retry, the sweep after `mysms.privacy.erasure.redispatch-after` unanswered or once a failed task's `next_attempt_at` has come) | "pending", "dispatched" (sweep, retry), "failed" (retry; sweep when `next_attempt_at` ≤ `$now`) | `status` = "dispatched", `attempts` + 1, `dispatched_at` = `$now`, `next_attempt_at` = null, the answer cleared |
+| the module's answer | "dispatched" | `status` = the answer's ("done", "partial", "failed", "not_applicable"), `completed_at` = `$now`, `result`; "failed" also `last_error_code`, and before the fifth attempt `next_attempt_at` = `$now` + the back-off |
+
+## privacy.LegalHold (`privacy.legal_hold`) — hand-written
+
+`privacy.PlaceLegalHold` creates the row active (`released_at` null) with `review_by` today or later (422). Every
+change needs a tenant-wide grant and is refused while impersonating (403); a released hold changes no more (409).
+Due for review = active and `review_by` ≤ today (derived). Events: `privacy.legal_hold.placed`, `.updated`,
+`.released`.
+
+| Operation | Allowed from | Sets | Reason kept |
+|---|---|---|---|
+| `privacy.UpdateLegalHold` | `released_at` is null; If-Match (412); `review_by` today or later (422) | `review_by` | no |
+| `privacy.ReleaseLegalHold` | `released_at` is null; body etag when given (412) | `released_at` = `$now`, `released_by_user_id` = the caller | no |
+
+## privacy.Nominee (`privacy.nominee`) — hand-written
+
+Self-service of an adult principal; refused while impersonating (403). Events: `privacy.nominee.created`, `.revoked`,
+`.activated`.
+
+| Operation | Allowed from | Sets | Reason kept |
+|---|---|---|---|
+| `privacy.SetMyNominee` | the caller is an adult (403 otherwise); the active row's etag when given (412) | the active row: `status` = "revoked", `revoked_at` = `$now`; a new row `status` = "active" with the encrypted name and contact | no |
+| `privacy.RevokeMyNominee` | an active row (404 otherwise), its etag (412) | `status` = "revoked", `revoked_at` = `$now` | no |
 
 ## sis.Promotion (`sis.promotion`)
 

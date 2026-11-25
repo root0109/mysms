@@ -1,6 +1,10 @@
 # MySMS data dictionary
 
-Every table, column and relationship in the MySMS database — 466 tables across 21 module schemas. Generated from the Flyway migrations in `migrations/` (same folder), so the two always agree.
+> **Stale.** Covers 466 tables of 21 schemas; the baselines now have 514 tables in 22 schemas (privacy and later
+> additions are missing). The generator is not in the repository; regenerate once a Java generator exists in the
+> build (ROADMAP DOC-1). The baselines are the source of truth.
+
+Every table, column and relationship in the MySMS database — 466 tables across 21 module schemas. Generated from the Flyway migrations in `migrations/` (same folder).
 
 Column legend: **PK** primary key · **FK** foreign key inside the module (`→ target`, on-delete rule; *tenant-composite* = the FK also carries `tenant_id`, so the link can never cross tenants) · **logical** reference into another module — no foreign key; validated through the owner's API and listed in `logical-references.md` · **UQ** unique · **NN** not null. Partial unique indexes (business keys that ignore soft-deleted rows) and checks are listed under each table. Standard columns (`id`, `tenant_id`, audit set, `row_version`) are described once under *Conventions* in the README and listed in every table.
 

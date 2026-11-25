@@ -10,6 +10,7 @@ import com.mysms.core.testkit.TestTransactions;
 import com.mysms.people.config.PeopleDatabaseConfig;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.TestFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,11 @@ class PeopleCrudComponentTest {
     @Autowired
     @Qualifier(PeopleDatabaseConfig.DATABASE)
     private ModuleDatabase database;
+
+    @BeforeAll
+    static void consents() {
+        PublicProfileConsents.allowSpecPerson();
+    }
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

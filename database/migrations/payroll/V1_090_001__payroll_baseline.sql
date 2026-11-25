@@ -475,21 +475,25 @@ CREATE TABLE payroll.staff_member (
     tenant_id uuid NOT NULL,
     staff_id uuid NOT NULL,
     user_id uuid,
+    person_id uuid,
     is_deleted boolean NOT NULL DEFAULT false,
     source_version integer NOT NULL,
     synced_at timestamptz NOT NULL,
     CONSTRAINT pk_payroll_staff_member PRIMARY KEY (tenant_id, staff_id),
     CONSTRAINT ck_staff_member_source_version CHECK (source_version >= 1)
 );
-COMMENT ON TABLE payroll.staff_member IS 'Login account of each staff record, kept from hr.staff created/updated/deleted events (payroll never reads hr''s schema), so a staff member who is not a payroll officer reads only the payslips of their own staff records.';
+COMMENT ON TABLE payroll.staff_member IS 'Login account and person of each staff record, kept from hr.staff created/updated/deleted events (payroll never reads hr''s schema), so a staff member who is not a payroll officer reads only the payslips of their own staff records, and privacy''s tasks find a person''s payroll records.';
 COMMENT ON COLUMN payroll.staff_member.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
 COMMENT ON COLUMN payroll.staff_member.staff_id IS 'hr.staff.id (logical, maintained from its events).';
 COMMENT ON COLUMN payroll.staff_member.user_id IS 'Login account of the staff record (iam.user_account.id); NULL when it has none.';
+COMMENT ON COLUMN payroll.staff_member.person_id IS 'Person of the staff record (people.person.id), the data principal privacy''s tasks name; NULL until an event carrying it arrives.';
 COMMENT ON COLUMN payroll.staff_member.is_deleted IS 'The staff record was deleted in hr; kept so a late event cannot restore it.';
 COMMENT ON COLUMN payroll.staff_member.source_version IS 'Row version of the hr.staff row this entry reflects; an event with an older or equal version is ignored.';
 COMMENT ON COLUMN payroll.staff_member.synced_at IS 'When the row was last changed by an event.';
 CREATE INDEX ix_staff_member_user ON payroll.staff_member (tenant_id, user_id) WHERE NOT is_deleted AND user_id IS NOT NULL;
 COMMENT ON INDEX payroll.ix_staff_member_user IS 'Owner-only payslip reads: the staff records of the signed-in account.';
+CREATE INDEX ix_staff_member_person ON payroll.staff_member (tenant_id, person_id) WHERE person_id IS NOT NULL;
+COMMENT ON INDEX payroll.ix_staff_member_person IS 'Privacy tasks: the staff records of the data principal.';
 ALTER TABLE payroll.staff_member ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payroll.staff_member FORCE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation ON payroll.staff_member USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
@@ -723,6 +727,61 @@ ALTER TABLE payroll.number_sequence ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payroll.number_sequence FORCE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation ON payroll.number_sequence USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
 CREATE INDEX ix_number_sequence_institution_id ON payroll.number_sequence (institution_id);
+
+-- === Privacy tasks (design PRIVACY-AND-CONSENT-CENTRE §9.1, §10) and the module's scheduled jobs (core JobSchedule) ===
+CREATE TABLE payroll.privacy_task_receipt (
+    task_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    kind varchar(10) NOT NULL,
+    payload jsonb NOT NULL,
+    status varchar(15) NOT NULL DEFAULT 'received',
+    result jsonb,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    completed_at timestamptz,
+    CONSTRAINT pk_payroll_privacy_task_receipt PRIMARY KEY (task_id),
+    CONSTRAINT ck_payroll_privacy_task_receipt_kind CHECK (kind IN ('task', 'retention')),
+    CONSTRAINT ck_payroll_privacy_task_receipt_status CHECK (status IN ('received', 'done', 'partial', 'failed',
+        'not_applicable')),
+    CONSTRAINT ck_payroll_privacy_task_receipt_completed CHECK ((status = 'received') = (completed_at IS NULL))
+);
+COMMENT ON TABLE payroll.privacy_task_receipt IS 'The privacy tasks and retention runs privacy sent this module (privacy.rights_request.task_assigned, privacy.retention.due), one row per task or run id: a task dispatched again runs once, is retried after a failure and is answered again from the stored answer (privacy-client PrivacyTaskHandler). Ids, codes and counts only.';
+COMMENT ON COLUMN payroll.privacy_task_receipt.task_id IS 'The rights-request task id or the retention run id privacy sent; the id the module answers with.';
+COMMENT ON COLUMN payroll.privacy_task_receipt.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
+COMMENT ON COLUMN payroll.privacy_task_receipt.kind IS 'task (a rights-request task) or retention (a retention run).';
+COMMENT ON COLUMN payroll.privacy_task_receipt.payload IS 'The event''s data as privacy sent it: ids, codes and dates only.';
+COMMENT ON COLUMN payroll.privacy_task_receipt.status IS 'received (waiting for the module''s job), done, partial, failed or not_applicable.';
+COMMENT ON COLUMN payroll.privacy_task_receipt.result IS 'The answer published (<module>.privacy_task.completed or <module>.privacy_retention.completed): counts and codes; null while received.';
+COMMENT ON COLUMN payroll.privacy_task_receipt.created_at IS 'When the task or run first arrived.';
+COMMENT ON COLUMN payroll.privacy_task_receipt.completed_at IS 'When the module answered; null while received.';
+CREATE INDEX ix_payroll_privacy_task_receipt_received ON payroll.privacy_task_receipt (tenant_id, created_at) WHERE status = 'received';
+COMMENT ON INDEX payroll.ix_payroll_privacy_task_receipt_received IS 'The tasks and runs waiting for the module''s job, the oldest first.';
+ALTER TABLE payroll.privacy_task_receipt ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payroll.privacy_task_receipt FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON payroll.privacy_task_receipt USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+CREATE TABLE payroll.job_schedule (
+    job_code varchar(60) NOT NULL,
+    tenant_id uuid NOT NULL,
+    next_run_at timestamptz NOT NULL,
+    lease_owner uuid,
+    lease_until timestamptz,
+    last_run_at timestamptz,
+    failures integer NOT NULL DEFAULT 0,
+    last_error varchar(500),
+    CONSTRAINT pk_job_schedule PRIMARY KEY (job_code, tenant_id),
+    CONSTRAINT ck_job_schedule_lease CHECK ((lease_owner IS NULL) = (lease_until IS NULL)),
+    CONSTRAINT ck_job_schedule_failures CHECK (failures >= 0)
+);
+COMMENT ON TABLE payroll.job_schedule IS 'When each tenant is next due for each scheduled job of the module (core JobSchedule, ROADMAP ARC-4). A tenant is enrolled the first time it has work for the job. Job codes, tenant ids and times only, no personal data, and no row-level security: the job runner claims due rows across tenants, then runs each in its tenant''s own context.';
+COMMENT ON COLUMN payroll.job_schedule.job_code IS 'The job (<module>.<name>): payroll.privacy_tasks (runs the privacy tasks and retention runs of payroll.privacy_task_receipt).';
+COMMENT ON COLUMN payroll.job_schedule.tenant_id IS 'The tenant the job runs for.';
+COMMENT ON COLUMN payroll.job_schedule.next_run_at IS 'When the tenant is next due.';
+COMMENT ON COLUMN payroll.job_schedule.lease_owner IS 'The runner (a random id per process) holding the tenant''s run; null while no run is held.';
+COMMENT ON COLUMN payroll.job_schedule.lease_until IS 'Until when the lease holds; after it another runner may take the run over.';
+COMMENT ON COLUMN payroll.job_schedule.last_run_at IS 'When the last run ended, finished or failed.';
+COMMENT ON COLUMN payroll.job_schedule.failures IS 'Failed runs in a row; the retry delay doubles with each.';
+COMMENT ON COLUMN payroll.job_schedule.last_error IS 'Why the last run failed (exception class and message, first 500 characters); null after a finished run.';
+CREATE INDEX ix_job_schedule_due ON payroll.job_schedule (next_run_at);
+COMMENT ON INDEX payroll.ix_job_schedule_due IS 'The due runs, the longest overdue first.';
 
 -- === Indexes on logical (cross-module) reference columns ===
 CREATE INDEX ix_pay_component_tenant_id ON payroll.pay_component (tenant_id);

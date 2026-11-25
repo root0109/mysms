@@ -1,52 +1,9 @@
-# Build output and generated caches
-**/target/
-**/node_modules/
-**/dist/
-**/coverage/
-**/.turbo/
-**/.cache/
-**/.pytest_cache/
-**/__pycache__/
-*.tsbuildinfo
-
-# Local IDE state (each developer's IDE generates these from the Maven and pnpm projects)
-**/.metadata/
-**/.classpath
-**/.project
-**/.factorypath
-**/.settings/
-**/.apt_generated/
-**/.apt_generated_tests/
-**/.springBeans
-**/.sts4-cache/
-**/bin/
-**/.idea/
-**/.vscode/
-*.iml
-*.iws
-*.ipr
-**/.expo/
-
-# Operating system files
+# Repository-wide ignores; backend/ and clients/ keep their own.
+# Session working files: the hand-over note between sessions and the agent tooling's local registry are never committed.
+/NEXT-SESSION-HANDOFF.md
+/.atl/
+# macOS Finder metadata. Ignoring it keeps it out of commits only: conformance M0 still fails on one under backend/
 .DS_Store
-Thumbs.db
-desktop.ini
-
-# Local configuration and credentials
-.env
-.env.*
-!.env.example
-!.env.template
-*.pem
-*.key
-*.p12
-*.pfx
-*.jks
-*.local.yml
-*.local.yaml
-
-# Local logs and databases
-*.log
-*.db
-*.sqlite
-*.sqlite3
+# Source snapshots made at session end
+/MySMS-source-*.zip
+/_to_delete/

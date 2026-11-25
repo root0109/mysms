@@ -232,6 +232,7 @@ public class PersonService extends AppTransactionManager implements Initializing
     private final PublicProfileMapper publicProfileMapper;
     private final WorkExperienceRepository workExperienceRepository;
     private final WorkExperienceMapper workExperienceMapper;
+    private final PublicProfileConsentChecker publicProfileConsent;
 
     public PersonService(PersonRepository repository,
             PersonMapper mapper,
@@ -259,7 +260,8 @@ public class PersonService extends AppTransactionManager implements Initializing
             PublicProfileRepository publicProfileRepository,
             PublicProfileMapper publicProfileMapper,
             WorkExperienceRepository workExperienceRepository,
-            WorkExperienceMapper workExperienceMapper) {
+            WorkExperienceMapper workExperienceMapper,
+            PublicProfileConsentChecker publicProfileConsent) {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
@@ -286,6 +288,7 @@ public class PersonService extends AppTransactionManager implements Initializing
         this.publicProfileMapper = publicProfileMapper;
         this.workExperienceRepository = workExperienceRepository;
         this.workExperienceMapper = workExperienceMapper;
+        this.publicProfileConsent = publicProfileConsent;
     }
 
     /** Refuses to start without a master key: this resource stores secret columns. */
@@ -1683,14 +1686,20 @@ public class PersonService extends AppTransactionManager implements Initializing
 
     // ---- PublicProfile: a record of the Person aggregate ----
 
+    /**
+     * The profile, shown to anyone but its own person only with the person's consent (else 404). The consent is checked
+     * first, on the path's person, so a caller without it gets the same answer whether or not a profile exists.
+     */
     public PublicProfile getPublicProfile(UUID personId, UUID id) {
-        return doInReadTransaction(() -> {
-            return publicProfileMapper.toDto(loadVisiblePublicProfile(DataScope.current(PUBLIC_PROFILE_PERMISSION_GET),
-                    personId, id));
-        });
+        publicProfileConsent.requireToShow(personId, id);
+        return doInReadTransaction(() -> publicProfileMapper.toDto(
+                loadVisiblePublicProfile(DataScope.current(PUBLIC_PROFILE_PERMISSION_GET), personId, id)));
     }
 
-    /** Creates the row; with validateOnly every check runs and nothing is written. */
+    /**
+     * Creates the row for a person who consented to a public profile (422 CONSENT_REQUIRED otherwise); with
+     * validateOnly every check runs and nothing is written.
+     */
     public PublicProfile createPublicProfile(UUID personId, PublicProfile request, boolean validateOnly) {
         validator.validate(request);
         PublicProfileEntity entity = publicProfileMapper.toEntity(request);
@@ -1698,6 +1707,12 @@ public class PersonService extends AppTransactionManager implements Initializing
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
         DataScope scope = DataScope.current(PUBLIC_PROFILE_PERMISSION_CREATE);
+        // who may write, and whether the person exists, come before the consent: a refusal tells only them about it
+        scope.requireWritable(institutionOfPublicProfile(entity));
+        if (!doInReadTransaction(() -> publicProfileRepository.existsPersonId(personId))) {
+            throw new ResourceNotFoundException("people.person", personId);
+        }
+        publicProfileConsent.requireToPublish(personId);
         return doInWriteTransaction(() -> {
             if (!publicProfileRepository.existsPersonId(entity.getPersonId())) {
                 throw new ResourceNotFoundException("people.person", entity.getPersonId());
@@ -1722,6 +1737,8 @@ public class PersonService extends AppTransactionManager implements Initializing
      */
     public PublicProfile updatePublicProfile(UUID personId, UUID id, String ifMatch, PublicProfileUpdate changes,
             String updateMask, boolean validateOnly) {
+        // an update answers the whole profile: like a read, only its person or with the person's consent
+        publicProfileConsent.requireToShow(personId, id);
         int expected = Etags.expectedVersion(ifMatch);
         List<String> fields = UpdateMask.fields(updateMask, changes, PUBLIC_PROFILE_WRITABLE);
         return doInWriteTransaction(() -> {

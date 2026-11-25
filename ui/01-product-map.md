@@ -78,7 +78,7 @@ What each domain offers per client. "Capture" = create/edit; "view" = read + dri
 Every signed-in screen runs inside three nested contexts, surfaced in the app shell (02 §1.2):
 
 1. **Tenant** — fixed by the host / sign-in; never user-switchable inside a client.
-2. **Institution** — from `iam.GetMe → institutions`. Users with more than one get an institution switcher; the choice scopes every institution-bound list and create. Contract wiring is pending (PRINCIPAL-REVIEW Decision D2): until settled, clients pass the record's `institutionId` field and keep the switcher purely client-side.
+2. **Institution** — from `iam.GetMe → institutions`. Users with more than one get an institution switcher; the choice scopes every institution-bound list and create. Contract wiring is pending (ROADMAP D2 (review)): until settled, clients pass the record's `institutionId` field and keep the switcher purely client-side.
 3. **Persona (active role)** — from `Me.roles`; `iam.SwitchRole` returns fresh tokens and the new permission set. The shell re-renders navigation from the new `Me`. (Whether authority is the union of grants or the active role is Decision 1; the shell works identically either way — it renders from `Me.permissions`.)
 
 A parent's **child context** is a fourth, P-app-only switcher fed by `sis.ListMyChildren`; every P screen is scoped to the selected child.
@@ -88,7 +88,7 @@ A parent's **child context** is a fourth, P-app-only switcher fed by `sis.ListMy
 | Mechanism | Rule | Source |
 |---|---|---|
 | One account | Same credentials and tokens in every client; `iam.Login` → `TokenPair` + `Me` everywhere | api/README §Auth |
-| One API + one SDK | All clients use the generated TypeScript SDK from the same OpenAPI; no client-specific endpoints (BFF exception: PRINCIPAL-REVIEW P1-37) | 05 §4 |
+| One API + one SDK | All clients use the generated TypeScript SDK from the same OpenAPI; no client-specific endpoints (BFF exception: ROADMAP P1-37) | 05 §4 |
 | One link space | `mysms://<module>/<path>` ↔ `https://<tenant host>/app/<path>`; every client registers the scheme + universal/app links and routes by the same table (02 §1.3). A client that cannot show a path opens the web URL | ARCHITECTURE §4 |
 | One notification fabric | `comms.in_app_notification.actionUrl` carries the deep link; push (FCM/APNs) and the in-app inbox render the same item; read state syncs through `comms.MarkNotificationRead` | 03 F12 |
 | One theme | Tenant theme tokens fetched once (`platform.GetBranding`, theme resource) and mapped to the shared token set; all clients restyle identically | 04 §2 |

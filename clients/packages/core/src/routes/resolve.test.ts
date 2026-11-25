@@ -12,7 +12,7 @@ import {
 
 describe('route table', () => {
   it('is generated from the full ui/02 inventory', () => {
-    expect(SCREENS).toHaveLength(186);
+    expect(SCREENS).toHaveLength(193);
     expect(screenById('ACC-01')?.routes).toContain('/auth/login');
     expect(screenById('PLT-07')?.clients).toEqual(['C']);
     expect(screenById('ACC-06')?.placement).toBe('sheet');

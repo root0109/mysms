@@ -1,0 +1,2525 @@
+// MySMS gRPC contract of the privacy module (Privacy and Consent Centre).
+syntax = "proto3";
+
+package mysms.privacy.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "PrivacyProto";
+option java_package = "com.mysms.privacy.v1";
+
+// PurposeService: the purpose catalogue with the calling tenant's setting of each purpose.
+service PurposeService {
+  // List Purposes.
+  rpc ListPurposes(ListPurposesRequest) returns (ListPurposesResponse);
+  // Get Purpose.
+  rpc GetPurpose(GetPurposeRequest) returns (GetPurposeResponse);
+  // Update the tenant's setting of a purpose.
+  rpc UpdatePurpose(UpdatePurposeRequest) returns (UpdatePurposeResponse);
+}
+
+// ConsentDecisionService: whether a subject's data may be processed for a processing activity at a width.
+service ConsentDecisionService {
+  // Check Consent.
+  rpc CheckConsent(CheckConsentRequest) returns (CheckConsentResponse);
+  // Batch Check Consent (up to 1000 subjects).
+  rpc BatchCheckConsent(BatchCheckConsentRequest) returns (BatchCheckConsentResponse);
+  // Get Purpose Status.
+  rpc GetPurposeStatus(GetPurposeStatusRequest) returns (GetPurposeStatusResponse);
+  // List Subjects With Consent.
+  rpc ListSubjectsWithConsent(ListSubjectsWithConsentRequest) returns (ListSubjectsWithConsentResponse);
+}
+
+// ProcessingActivityService: the processing register (RoPA-lite), the platform's catalogue of processing activities.
+service ProcessingActivityService {
+  // List Processing Activities.
+  rpc ListProcessingActivities(ListProcessingActivitiesRequest) returns (ListProcessingActivitiesResponse);
+  // The whole register (RoPA) as CSV.
+  rpc GetProcessingRegisterExport(GetProcessingRegisterExportRequest) returns (GetProcessingRegisterExportResponse);
+}
+
+// NoticeService: the tenant's privacy notices, their versions and the versions' translations.
+service NoticeService {
+  // List Notices.
+  rpc ListNotices(ListNoticesRequest) returns (ListNoticesResponse);
+  // Get Notice.
+  rpc GetNotice(GetNoticeRequest) returns (GetNoticeResponse);
+  // Create Notice.
+  rpc CreateNotice(CreateNoticeRequest) returns (CreateNoticeResponse);
+  // Update Notice.
+  rpc UpdateNotice(UpdateNoticeRequest) returns (UpdateNoticeResponse);
+  // Soft-delete Notice.
+  rpc DeleteNotice(DeleteNoticeRequest) returns (DeleteNoticeResponse);
+  // List NoticeVersions.
+  rpc ListNoticeVersions(ListNoticeVersionsRequest) returns (ListNoticeVersionsResponse);
+  // Get NoticeVersion.
+  rpc GetNoticeVersion(GetNoticeVersionRequest) returns (GetNoticeVersionResponse);
+  // Create NoticeVersion (a draft).
+  rpc CreateNoticeVersion(CreateNoticeVersionRequest) returns (CreateNoticeVersionResponse);
+  // Update a draft NoticeVersion.
+  rpc UpdateNoticeVersion(UpdateNoticeVersionRequest) returns (UpdateNoticeVersionResponse);
+  // Publish a draft NoticeVersion; the previously active version is retired.
+  rpc PublishNoticeVersion(PublishNoticeVersionRequest) returns (PublishNoticeVersionResponse);
+  // List NoticeTranslations.
+  rpc ListNoticeTranslations(ListNoticeTranslationsRequest) returns (ListNoticeTranslationsResponse);
+  // Get NoticeTranslation.
+  rpc GetNoticeTranslation(GetNoticeTranslationRequest) returns (GetNoticeTranslationResponse);
+  // Create NoticeTranslation.
+  rpc CreateNoticeTranslation(CreateNoticeTranslationRequest) returns (CreateNoticeTranslationResponse);
+  // Update NoticeTranslation.
+  rpc UpdateNoticeTranslation(UpdateNoticeTranslationRequest) returns (UpdateNoticeTranslationResponse);
+  // Soft-delete NoticeTranslation.
+  rpc DeleteNoticeTranslation(DeleteNoticeTranslationRequest) returns (DeleteNoticeTranslationResponse);
+}
+
+// ConsentService: the signed-in person's consent centre, and the staff's consent records of the tenant.
+service ConsentService {
+  // List the caller's consents: per subject they may decide for and purpose the tenant has switched on.
+  rpc ListMyConsents(ListMyConsentsRequest) returns (ListMyConsentsResponse);
+  // Record the caller's decision for themself (an adult) or a minor they are the legal guardian of.
+  rpc RecordMyConsent(RecordMyConsentRequest) returns (RecordMyConsentResponse);
+  // Withdraw one of the caller's own live decisions.
+  rpc WithdrawMyConsent(WithdrawMyConsentRequest) returns (WithdrawMyConsentResponse);
+  // The active version of a notice of the tenant, in a language (English when it has no such translation).
+  rpc GetMyNotice(GetMyNoticeRequest) returns (GetMyNoticeResponse);
+  // List ConsentRecords.
+  rpc ListConsentRecords(ListConsentRecordsRequest) returns (ListConsentRecordsResponse);
+  // Get ConsentRecord.
+  rpc GetConsentRecord(GetConsentRecordRequest) returns (GetConsentRecordResponse);
+  // Record a signed paper form on its giver's behalf (unverified until another staff member verifies it).
+  rpc RecordConsentOnBehalf(RecordConsentOnBehalfRequest) returns (RecordConsentOnBehalfResponse);
+  // Verify an unverified paper consent recorded by another staff member.
+  rpc VerifyConsentRecord(VerifyConsentRecordRequest) returns (VerifyConsentRecordResponse);
+}
+
+// RightsRequestService: the signed-in person's own rights requests, and the staff's rights requests of the tenant.
+service RightsRequestService {
+  // Submit a rights request for oneself (an adult) or a minor one is the legal guardian of.
+  rpc SubmitMyRequest(SubmitMyRequestRequest) returns (SubmitMyRequestResponse);
+  // List the caller's own rights requests, newest first.
+  rpc ListMyRequests(ListMyRequestsRequest) returns (ListMyRequestsResponse);
+  // Get one of the caller's own rights requests.
+  rpc GetMyRequest(GetMyRequestRequest) returns (GetMyRequestResponse);
+  // The access summary the school sent in answer to one of the caller's own access requests, once fulfilled.
+  rpc GetMyAccessSummary(GetMyAccessSummaryRequest) returns (GetMyAccessSummaryResponse);
+  // List RightsRequests.
+  rpc ListRightsRequests(ListRightsRequestsRequest) returns (ListRightsRequestsResponse);
+  // Get RightsRequest.
+  rpc GetRightsRequest(GetRightsRequestRequest) returns (GetRightsRequestResponse);
+  // The access summary of an access request: the one kept on it once fulfilled, until then a preview.
+  rpc GetAccessSummary(GetAccessSummaryRequest) returns (GetAccessSummaryResponse);
+  // Record that the requester of a submitted request was verified in person or by document.
+  rpc VerifyRightsRequestIdentity(VerifyRightsRequestIdentityRequest) returns (VerifyRightsRequestIdentityResponse);
+  // Assign a verified request, or reassign one in progress, to a staff member.
+  rpc AssignRightsRequest(AssignRightsRequestRequest) returns (AssignRightsRequestResponse);
+  // Move an open request's response deadline later, with the reason.
+  rpc ExtendRightsRequest(ExtendRightsRequestRequest) returns (ExtendRightsRequestResponse);
+  // Reject a submitted or verified request with a reason code.
+  rpc RejectRightsRequest(RejectRightsRequestRequest) returns (RejectRightsRequestResponse);
+  // Close a request in progress with its outcome.
+  rpc CloseRightsRequest(CloseRightsRequestRequest) returns (CloseRightsRequestResponse);
+  // Answer an access request in progress with the subject's access summary and close it as fulfilled.
+  rpc FulfilAccessRequest(FulfilAccessRequestRequest) returns (FulfilAccessRequestResponse);
+  // Start fulfilling an erasure or export request in progress: one task per module holding personal data.
+  rpc StartRightsRequestFulfilment(StartRightsRequestFulfilmentRequest) returns (StartRightsRequestFulfilmentResponse);
+  // Answer a withdraw-all request in progress by withdrawing every live consent the requester gave about the subject.
+  rpc FulfilWithdrawAllRequest(FulfilWithdrawAllRequestRequest) returns (FulfilWithdrawAllRequestResponse);
+  // Dispatch a failed or unanswered task of an erasure or export request to its module again.
+  rpc RetryRightsRequestTask(RetryRightsRequestTaskRequest) returns (RetryRightsRequestTaskResponse);
+}
+
+// NomineeService: the signed-in adult's nominee, who may exercise their rights on their death or incapacity.
+service NomineeService {
+  // Get the caller's active nominee.
+  rpc GetMyNominee(GetMyNomineeRequest) returns (GetMyNomineeResponse);
+  // Name the caller's nominee, replacing the active one.
+  rpc SetMyNominee(SetMyNomineeRequest) returns (SetMyNomineeResponse);
+  // Revoke the caller's active nominee.
+  rpc RevokeMyNominee(RevokeMyNomineeRequest) returns (RevokeMyNomineeResponse);
+}
+
+// BreachService: the tenant's breach register, kept by the data protection officer.
+service BreachService {
+  // List Breaches.
+  rpc ListBreaches(ListBreachesRequest) returns (ListBreachesResponse);
+  // Get Breach.
+  rpc GetBreach(GetBreachRequest) returns (GetBreachResponse);
+  // Report a breach into the register; its Board report is due 72 hours after the school became aware.
+  rpc ReportBreach(ReportBreachRequest) returns (ReportBreachResponse);
+  // Update what is known of an open breach.
+  rpc UpdateBreach(UpdateBreachRequest) returns (UpdateBreachResponse);
+  // Record that a reported breach was triaged.
+  rpc TriageBreach(TriageBreachRequest) returns (TriageBreachResponse);
+  // Record that a triaged breach is contained.
+  rpc ContainBreach(ContainBreachRequest) returns (ContainBreachResponse);
+  // Record a notice about the breach sent outside MySMS.
+  rpc RecordBreachNotification(RecordBreachNotificationRequest) returns (RecordBreachNotificationResponse);
+  // Close a breach once the Board's detailed report and the principals' notice are recorded.
+  rpc CloseBreach(CloseBreachRequest) returns (CloseBreachResponse);
+  // Record that triage found a triaged breach not to be a personal data breach.
+  rpc MarkBreachNotABreach(MarkBreachNotABreachRequest) returns (MarkBreachNotABreachResponse);
+}
+
+// ConsentCoverageService: how far a purpose is covered by consent, in counts only.
+service ConsentCoverageService {
+  // Per width, how many data principals are allowed, denied by reason and not answered.
+  rpc GetConsentCoverage(GetConsentCoverageRequest) returns (GetConsentCoverageResponse);
+}
+
+// LegalHoldService: what erasure and retention must keep, and the modules' check of the holds that apply.
+service LegalHoldService {
+  // List LegalHolds.
+  rpc ListLegalHolds(ListLegalHoldsRequest) returns (ListLegalHoldsResponse);
+  // Get LegalHold.
+  rpc GetLegalHold(GetLegalHoldRequest) returns (GetLegalHoldResponse);
+  // Place a legal hold on a subject's data, a data category or a set of records.
+  rpc PlaceLegalHold(PlaceLegalHoldRequest) returns (PlaceLegalHoldResponse);
+  // Move an active hold's review date.
+  rpc UpdateLegalHold(UpdateLegalHoldRequest) returns (UpdateLegalHoldResponse);
+  // Release an active legal hold.
+  rpc ReleaseLegalHold(ReleaseLegalHoldRequest) returns (ReleaseLegalHoldResponse);
+  // The active holds that may cover a subject's data (internal: called with a service token).
+  rpc ListActiveHolds(ListActiveHoldsRequest) returns (ListActiveHoldsResponse);
+}
+
+// RetentionService: the retention policies with the tenant's setting of each, and the daily retention runs.
+service RetentionService {
+  // List RetentionPolicies.
+  rpc ListRetentionPolicies(ListRetentionPoliciesRequest) returns (ListRetentionPoliciesResponse);
+  // Get RetentionPolicy.
+  rpc GetRetentionPolicy(GetRetentionPolicyRequest) returns (GetRetentionPolicyResponse);
+  // Set the tenant's own period and action of a retention policy, never below its legal floor.
+  rpc UpdateRetentionPolicy(UpdateRetentionPolicyRequest) returns (UpdateRetentionPolicyResponse);
+  // List RetentionRuns.
+  rpc ListRetentionRuns(ListRetentionRunsRequest) returns (ListRetentionRunsResponse);
+}
+
+message ListPurposesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+}
+message ListPurposesResponse {
+  repeated Purpose items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+}
+
+message ListProcessingActivitiesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+}
+message ListProcessingActivitiesResponse {
+  repeated ProcessingActivity items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+}
+
+message GetPurposeRequest {
+  // Purpose id (UUID).
+  string id = 1;
+}
+message GetPurposeResponse {
+  Purpose purpose = 1;
+}
+
+message UpdatePurposeRequest {
+  // Purpose with id and etag set ("0" while the tenant has never set it).
+  Purpose purpose = 1;
+  // Fields to update (enabled, max_scope, notice_id); empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdatePurposeResponse {
+  Purpose purpose = 1;
+}
+
+message ListNoticesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+}
+message ListNoticesResponse {
+  repeated Notice items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+}
+
+message GetNoticeRequest {
+  // Notice id (UUID).
+  string id = 1;
+}
+message GetNoticeResponse {
+  Notice notice = 1;
+}
+
+message CreateNoticeRequest {
+  Notice notice = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateNoticeResponse {
+  Notice notice = 1;
+}
+
+message UpdateNoticeRequest {
+  // Resource with id and etag set.
+  Notice notice = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateNoticeResponse {
+  Notice notice = 1;
+}
+
+message DeleteNoticeRequest {
+  // Notice id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteNoticeResponse {
+}
+
+message ListNoticeVersionsRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+}
+message ListNoticeVersionsResponse {
+  repeated NoticeVersion items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+}
+
+message GetNoticeVersionRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // NoticeVersion id (UUID).
+  string id = 2;
+}
+message GetNoticeVersionResponse {
+  NoticeVersion notice_version = 1;
+}
+
+message CreateNoticeVersionRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  NoticeVersion notice_version = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateNoticeVersionResponse {
+  NoticeVersion notice_version = 1;
+}
+
+message UpdateNoticeVersionRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // Resource with id and etag set.
+  NoticeVersion notice_version = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateNoticeVersionResponse {
+  NoticeVersion notice_version = 1;
+}
+
+message PublishNoticeVersionRequest {
+  // Path parameter noticeId.
+  string notice_id = 1;
+  // Path parameter noticeVersionId.
+  string notice_version_id = 2;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message PublishNoticeVersionResponse {
+  NoticeVersion notice_version = 1;
+}
+
+message ListNoticeTranslationsRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // NoticeVersion id (UUID).
+  string notice_version_id = 2;
+  // Filter expression (AIP-160 subset).
+  string filter = 5;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 7;
+}
+message ListNoticeTranslationsResponse {
+  repeated NoticeTranslation items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+}
+
+message GetNoticeTranslationRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // NoticeVersion id (UUID).
+  string notice_version_id = 2;
+  // NoticeTranslation id (UUID).
+  string id = 3;
+}
+message GetNoticeTranslationResponse {
+  NoticeTranslation notice_translation = 1;
+}
+
+message CreateNoticeTranslationRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // NoticeVersion id (UUID).
+  string notice_version_id = 2;
+  NoticeTranslation notice_translation = 3;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 4;
+  // Validate without persisting.
+  bool validate_only = 5;
+}
+message CreateNoticeTranslationResponse {
+  NoticeTranslation notice_translation = 1;
+}
+
+message UpdateNoticeTranslationRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // NoticeVersion id (UUID).
+  string notice_version_id = 2;
+  // Resource with id and etag set.
+  NoticeTranslation notice_translation = 3;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 4;
+  // Validate without persisting.
+  bool validate_only = 5;
+}
+message UpdateNoticeTranslationResponse {
+  NoticeTranslation notice_translation = 1;
+}
+
+message DeleteNoticeTranslationRequest {
+  // Notice id (UUID).
+  string notice_id = 1;
+  // NoticeVersion id (UUID).
+  string notice_version_id = 2;
+  // NoticeTranslation id (UUID).
+  string id = 3;
+  // ETag from the last read.
+  string etag = 4;
+}
+message DeleteNoticeTranslationResponse {
+}
+
+// Why personal data is processed: a catalogue purpose and the calling tenant's setting of it.
+message Purpose {
+  // Stable id of the catalogue purpose, the same in every environment. [UUID] Output only.
+  string id = 1;
+  // Purpose code, e.g. photo_video_publication. Output only.
+  string code = 2;
+  // Whether a consent names a width (class to public) or covers the whole tenant. Output only.
+  ScopeKind scope_kind = 3;
+  // Who decides the processing: the school or MySMS on its own account. Output only.
+  Fiduciary fiduciary = 4;
+  // Never allowed for a minor, not even with a guardian's consent. Output only.
+  bool forbidden_for_minors = 5;
+  // What a guardian's consent still covers once the student turns 18. Output only.
+  MajorityGrace majority_grace = 6;
+  // How long a consent lasts unless the notice says otherwise; absent = until withdrawn. Output only.
+  optional int32 default_valid_months = 7;
+  // Lifecycle of the catalogue purpose. Output only.
+  Status status = 8;
+  // Version of the catalogue purpose; incremented on a material change. Output only.
+  int32 version = 9;
+  // Whether the tenant processes data for the purpose.
+  bool enabled = 10;
+  // The widest width the tenant allows for a width purpose; absent = no ceiling.
+  MaxScope max_scope = 11;
+  // The notice shown when asking for consent to the purpose. [UUID]
+  optional string notice_id = 12;
+  // When the tenant last changed its setting; absent while it never has. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // Entity tag (version of the tenant's setting). Output only on reads; send back on update.
+  string etag = 14;
+  // Allowed values of scope_kind; REST/JSON uses the lowercase value shown in each comment.
+  enum ScopeKind {
+    SCOPE_KIND_UNSPECIFIED = 0;
+    // "tenant"
+    SCOPE_KIND_TENANT = 1;
+    // "width"
+    SCOPE_KIND_WIDTH = 2;
+  }
+  // Allowed values of fiduciary; REST/JSON uses the lowercase value shown in each comment.
+  enum Fiduciary {
+    FIDUCIARY_UNSPECIFIED = 0;
+    // "platform"
+    FIDUCIARY_PLATFORM = 1;
+    // "tenant"
+    FIDUCIARY_TENANT = 2;
+  }
+  // Allowed values of majority_grace; REST/JSON uses the lowercase value shown in each comment.
+  enum MajorityGrace {
+    MAJORITY_GRACE_UNSPECIFIED = 0;
+    // "keep_narrow_widths"
+    MAJORITY_GRACE_KEEP_NARROW_WIDTHS = 1;
+    // "keep_published"
+    MAJORITY_GRACE_KEEP_PUBLISHED = 2;
+    // "none"
+    MAJORITY_GRACE_NONE = 3;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "deprecated"
+    STATUS_DEPRECATED = 2;
+    // "retired"
+    STATUS_RETIRED = 3;
+  }
+  // Allowed values of max_scope; REST/JSON uses the lowercase value shown in each comment.
+  enum MaxScope {
+    MAX_SCOPE_UNSPECIFIED = 0;
+    // "class"
+    MAX_SCOPE_CLASS = 1;
+    // "institution"
+    MAX_SCOPE_INSTITUTION = 2;
+    // "inter_school"
+    MAX_SCOPE_INTER_SCHOOL = 3;
+    // "public"
+    MAX_SCOPE_PUBLIC = 4;
+  }
+}
+
+// One entry of the processing register: what a module does with personal data, for which purpose and on which legal
+// basis, whether it reaches minors, and which data categories it touches. Platform catalogue, read-only.
+message ProcessingActivity {
+  // Stable id of the activity, the same in every environment. [UUID] Output only.
+  string id = 1;
+  // The module that processes the data. Output only.
+  string module = 2;
+  // Activity code <module>.<activity>, e.g. comms.marketing_broadcast. Output only.
+  string code = 3;
+  // Code of the catalogue purpose the activity serves. Output only.
+  string purpose_code = 4;
+  // The legal basis of the processing. Output only.
+  LegalBasis legal_basis = 5;
+  // The Fourth Schedule clause relied on when the basis is education_exemption. Output only.
+  optional string education_exemption_clause = 6;
+  // Whether the activity processes data of minors. Output only.
+  bool targets_minors = 7;
+  // Whether the data leaves India. Output only.
+  bool cross_border = 8;
+  // The retention policy that applies; absent while none is set. Output only.
+  optional string retention_policy_code = 9;
+  // Version of the activity; incremented on a material change. Output only.
+  int32 version = 10;
+  // Codes of the data categories the activity touches. Output only.
+  repeated string categories = 11;
+  // Allowed values of legal_basis; REST/JSON uses the lowercase value shown in each comment.
+  enum LegalBasis {
+    LEGAL_BASIS_UNSPECIFIED = 0;
+    // "consent"
+    LEGAL_BASIS_CONSENT = 1;
+    // "contract"
+    LEGAL_BASIS_CONTRACT = 2;
+    // "education_exemption"
+    LEGAL_BASIS_EDUCATION_EXEMPTION = 3;
+    // "employment"
+    LEGAL_BASIS_EMPLOYMENT = 4;
+    // "legal_obligation"
+    LEGAL_BASIS_LEGAL_OBLIGATION = 5;
+    // "legitimate_use"
+    LEGAL_BASIS_LEGITIMATE_USE = 6;
+    // "legitimate_use_voluntary"
+    LEGAL_BASIS_LEGITIMATE_USE_VOLUNTARY = 7;
+    // "medical_emergency"
+    LEGAL_BASIS_MEDICAL_EMERGENCY = 8;
+  }
+}
+
+// A privacy notice of the tenant: the text shown when consent is asked for one purpose or a bundle of purposes.
+message Notice {
+  // Surrogate primary key (UUIDv7 generated by the application). [UUID] Output only.
+  string id = 1;
+  // Code of the notice within the tenant, e.g. community_photos; set at creation, never changed.
+  string code = 2;
+  // Title shown to tenant administrators.
+  string title = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// The school's grievance officer a notice version names.
+message GrievanceContact {
+  // Name of the officer.
+  string name = 1;
+  // Role of the officer, e.g. Data Protection Officer.
+  optional string role = 2;
+  // E-mail address complaints are sent to.
+  string email = 3;
+  // Telephone number.
+  optional string phone = 4;
+}
+
+// One version of a notice: edited while a draft, frozen with its translations once published.
+message NoticeVersion {
+  // Surrogate primary key (UUIDv7 generated by the application). [UUID] Output only.
+  string id = 1;
+  // The notice this is a version of. [UUID] Set from the parent path on create.
+  string notice_id = 2;
+  // Version number within the notice (1, 2, 3 in creation order). Output only.
+  int32 version = 3;
+  // draft, active (published, one per notice) or retired. Output only.
+  Status status = 4;
+  // Whether consents given under earlier versions must be asked for again once this version is published.
+  bool requires_reconsent = 5;
+  // Codes of the active catalogue purposes the version asks consent for.
+  repeated string purpose_codes = 6;
+  // The school's grievance officer the version names.
+  GrievanceContact grievance_contact = 7;
+  // Optional signed PDF of the version (a platform file). [UUID]
+  optional string document_file_id = 8;
+  // When the version was published; absent while a draft. Output only.
+  google.protobuf.Timestamp published_at = 9;
+  // The version that retired this one. [UUID] Output only.
+  optional string superseded_by_id = 10;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 11;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 12;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 14;
+  // Entity tag (row version). Output only on reads; send back on update and publish.
+  string etag = 15;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "draft"
+    STATUS_DRAFT = 2;
+    // "retired"
+    STATUS_RETIRED = 3;
+  }
+}
+
+// The wording of a notice version in one language; changes only while its version is a draft.
+message NoticeTranslation {
+  // Surrogate primary key (UUIDv7 generated by the application). [UUID] Output only.
+  string id = 1;
+  // The version this is a translation of. [UUID] Set from the parent path on create.
+  string notice_version_id = 2;
+  // BCP 47 language code: en, hi, ta, mr-IN ...; one per version.
+  string language = 3;
+  // The notice in Markdown: the data processed, the purposes, how to withdraw and how to complain.
+  string body_markdown = 4;
+  // Short plain version shown to a minor alongside the notice.
+  optional string summary_for_children = 5;
+  // Lowercase hex SHA-256 of the body, a blank line and the summary. Output only.
+  string content_sha256 = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+}
+
+message ListMyConsentsRequest {
+}
+message ListMyConsentsResponse {
+  repeated MyConsent items = 1;
+  // The whole centre is one page (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 2;
+}
+
+message RecordMyConsentRequest {
+  // The caller, or a minor the caller is the active legal guardian of. [UUID]
+  string subject_person_id = 1;
+  // The catalogue purpose decided on.
+  string purpose_code = 2;
+  // The width decided at; tenant for a tenant-scoped purpose.
+  Scope scope = 3;
+  // granted or refused.
+  Decision decision = 4;
+  // The active notice version shown. [UUID]
+  string notice_version_id = 5;
+  // The language of the translation shown (BCP 47).
+  string notice_language = 6;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 7;
+  // Allowed values of scope; REST/JSON uses the lowercase value shown in each comment.
+  enum Scope {
+    SCOPE_UNSPECIFIED = 0;
+    // "class"
+    SCOPE_CLASS = 1;
+    // "institution"
+    SCOPE_INSTITUTION = 2;
+    // "inter_school"
+    SCOPE_INTER_SCHOOL = 3;
+    // "public"
+    SCOPE_PUBLIC = 4;
+    // "tenant"
+    SCOPE_TENANT = 5;
+  }
+  // Allowed values of decision; REST/JSON uses the lowercase value shown in each comment.
+  enum Decision {
+    DECISION_UNSPECIFIED = 0;
+    // "granted"
+    DECISION_GRANTED = 1;
+    // "refused"
+    DECISION_REFUSED = 2;
+  }
+}
+message RecordMyConsentResponse {
+  MyConsent my_consent = 1;
+}
+
+message WithdrawMyConsentRequest {
+  // Path parameter consentRecordId.
+  string consent_record_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message WithdrawMyConsentResponse {
+  MyConsent my_consent = 1;
+}
+
+message GetMyNoticeRequest {
+  // Code of the notice within the tenant.
+  string notice_code = 1;
+  // BCP 47 language of the wording wanted, e.g. hi.
+  string language = 2;
+}
+message GetMyNoticeResponse {
+  MyNotice my_notice = 1;
+}
+
+message ListConsentRecordsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 1;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 2;
+}
+message ListConsentRecordsResponse {
+  repeated ConsentRecord items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 2;
+}
+
+message GetConsentRecordRequest {
+  // ConsentRecord id (UUID).
+  string id = 1;
+}
+message GetConsentRecordResponse {
+  ConsentRecord consent_record = 1;
+}
+
+message RecordConsentOnBehalfRequest {
+  // The person the decision is about. [UUID]
+  string subject_person_id = 1;
+  // The person who signed the form: the subject (an adult) or an active legal guardian of the minor. [UUID]
+  string giver_person_id = 2;
+  // self (an adult subject) or guardian (a legal guardian of a minor).
+  GiverCapacity giver_capacity = 3;
+  // The catalogue purpose decided on.
+  string purpose_code = 4;
+  // The width decided at; tenant for a tenant-scoped purpose.
+  Scope scope = 5;
+  // granted or refused.
+  Decision decision = 6;
+  // The active notice version printed on the form. [UUID]
+  string notice_version_id = 7;
+  // The language of the translation printed on the form (BCP 47).
+  string notice_language = 8;
+  // The scanned signed form (a platform file). [UUID]
+  string evidence_file_id = 9;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 10;
+  // Allowed values of giver_capacity; REST/JSON uses the lowercase value shown in each comment.
+  enum GiverCapacity {
+    GIVER_CAPACITY_UNSPECIFIED = 0;
+    // "guardian"
+    GIVER_CAPACITY_GUARDIAN = 1;
+    // "self"
+    GIVER_CAPACITY_SELF = 2;
+  }
+  // Allowed values of scope; REST/JSON uses the lowercase value shown in each comment.
+  enum Scope {
+    SCOPE_UNSPECIFIED = 0;
+    // "class"
+    SCOPE_CLASS = 1;
+    // "institution"
+    SCOPE_INSTITUTION = 2;
+    // "inter_school"
+    SCOPE_INTER_SCHOOL = 3;
+    // "public"
+    SCOPE_PUBLIC = 4;
+    // "tenant"
+    SCOPE_TENANT = 5;
+  }
+  // Allowed values of decision; REST/JSON uses the lowercase value shown in each comment.
+  enum Decision {
+    DECISION_UNSPECIFIED = 0;
+    // "granted"
+    DECISION_GRANTED = 1;
+    // "refused"
+    DECISION_REFUSED = 2;
+  }
+}
+message RecordConsentOnBehalfResponse {
+  ConsentRecord consent_record = 1;
+}
+
+message VerifyConsentRecordRequest {
+  // Path parameter consentRecordId.
+  string consent_record_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message VerifyConsentRecordResponse {
+  ConsentRecord consent_record = 1;
+}
+
+// One row of the consent centre: the caller's own decision about one subject and one purpose, and the effective
+// result; never another giver's decision.
+message MyConsent {
+  // The caller's live consent record; absent while the caller has not decided. [UUID] Output only.
+  optional string id = 1;
+  // The person the decision is about: the caller, or a child the caller is the legal guardian of. [UUID]
+  string subject_person_id = 2;
+  // The catalogue purpose.
+  string purpose_code = 3;
+  // The width the caller decided at; absent while undecided.
+  Scope scope = 4;
+  // The caller's own decision; absent on a minor_self row (the caller does not decide).
+  MyStatus my_status = 5;
+  // The widest width processing is currently allowed at, every legal guardian's decision taken together.
+  Scope effective_widest_scope = 6;
+  // When the caller decided; absent while undecided.
+  google.protobuf.Timestamp decided_at = 7;
+  // Number of the notice version the caller decided under; absent while undecided.
+  optional int32 notice_version = 8;
+  // How the caller's decision was given (web, paper_form ...); absent while undecided.
+  optional string channel = 9;
+  // Entity tag of the caller's consent record; send back on withdraw.
+  optional string etag = 10;
+  // How the caller stands to the subject: self (an adult deciding for themself), guardian (for a minor they are the
+  // active legal guardian of) or minor_self (a minor's own row: read only, their legal guardians decide).
+  Capacity capacity = 11;
+  // Code of the school's notice for the purpose, to read with GetMyNotice; absent while the notice has no published
+  // version (nothing can be decided then).
+  optional string notice_code = 12;
+  // The notice's active version, the one a decision is recorded under; absent with notice_code. [UUID]
+  optional string notice_version_id = 13;
+  // The widths the purpose can be decided at within the school's ceiling, narrowest first (tenant alone for a
+  // tenant-scoped purpose).
+  repeated Scope allowed_scopes = 14;
+  // On a minor_self row only: the day the caller comes of age and decides for themself. [ISO-8601 date (YYYY-MM-DD)]
+  optional string decides_from = 15;
+  // Allowed values of capacity; REST/JSON uses the lowercase value shown in each comment.
+  enum Capacity {
+    CAPACITY_UNSPECIFIED = 0;
+    // "guardian"
+    CAPACITY_GUARDIAN = 1;
+    // "minor_self"
+    CAPACITY_MINOR_SELF = 2;
+    // "self"
+    CAPACITY_SELF = 3;
+  }
+  // Allowed values of scope; REST/JSON uses the lowercase value shown in each comment.
+  enum Scope {
+    SCOPE_UNSPECIFIED = 0;
+    // "class"
+    SCOPE_CLASS = 1;
+    // "institution"
+    SCOPE_INSTITUTION = 2;
+    // "inter_school"
+    SCOPE_INTER_SCHOOL = 3;
+    // "public"
+    SCOPE_PUBLIC = 4;
+    // "tenant"
+    SCOPE_TENANT = 5;
+  }
+  // Allowed values of my_status; REST/JSON uses the lowercase value shown in each comment.
+  enum MyStatus {
+    MY_STATUS_UNSPECIFIED = 0;
+    // "expired"
+    MY_STATUS_EXPIRED = 1;
+    // "granted"
+    MY_STATUS_GRANTED = 2;
+    // "not_answered"
+    MY_STATUS_NOT_ANSWERED = 3;
+    // "reconsent_required"
+    MY_STATUS_RECONSENT_REQUIRED = 4;
+    // "refused"
+    MY_STATUS_REFUSED = 5;
+  }
+}
+
+// A privacy notice as the consent centre shows it: the active version in the language asked for.
+message MyNotice {
+  // The active version shown; send it back when deciding. [UUID]
+  string notice_version_id = 1;
+  // Code of the notice within the tenant.
+  string notice_code = 2;
+  // Number of the version.
+  int32 version = 3;
+  // The language of the wording returned (BCP 47); send it back when deciding.
+  string language = 4;
+  // The purposes the notice asks consent for.
+  repeated string purpose_codes = 5;
+  // Whether consents given under earlier versions must be given again.
+  bool requires_reconsent = 6;
+  // The school's grievance officer.
+  GrievanceContact grievance_contact = 7;
+  // The notice in Markdown.
+  string body_markdown = 8;
+  // Short plain version shown to a minor alongside the notice.
+  optional string summary_for_children = 9;
+  // Lowercase hex SHA-256 of the body, a blank line and the summary.
+  string content_sha256 = 10;
+  // When the version was published.
+  google.protobuf.Timestamp published_at = 11;
+}
+
+// One consent decision as staff see it: how it was given and whether it was verified.
+message ConsentRecord {
+  // Surrogate primary key (UUIDv7 generated by the application). [UUID] Output only.
+  string id = 1;
+  // The person the decision is about. [UUID]
+  string subject_person_id = 2;
+  // The person who decided. [UUID]
+  string giver_person_id = 3;
+  // self, guardian or nominee.
+  GiverCapacity giver_capacity = 4;
+  // The catalogue purpose.
+  string purpose_code = 5;
+  // The width decided at; tenant for a tenant-scoped purpose.
+  Scope scope = 6;
+  // granted or refused.
+  Decision decision = 7;
+  // The notice version shown. [UUID]
+  string notice_version_id = 8;
+  // The language of the translation shown.
+  string notice_language = 9;
+  // When the decision was recorded.
+  google.protobuf.Timestamp valid_from = 10;
+  // Last day the decision counts; absent = until withdrawn. [ISO-8601 date (YYYY-MM-DD)]
+  optional string valid_until = 11;
+  // When the giver withdrew it; absent = not withdrawn.
+  google.protobuf.Timestamp withdrawn_at = 12;
+  // The giver's newer decision that replaced it. [UUID]
+  optional string superseded_by_id = 13;
+  // How the decision was given.
+  Channel channel = 14;
+  // verified (counts), unverified (awaiting a second staff member) or rejected.
+  VerificationStatus verification_status = 15;
+  // How the giver was established (existing_record, paper_form_countersigned ...).
+  optional string verification_method = 16;
+  // The staff member who verified a paper form. [UUID]
+  optional string verified_by_user_id = 17;
+  // When the record became verified.
+  google.protobuf.Timestamp verified_at = 18;
+  // The staff member who recorded a paper form. [UUID]
+  optional string recorded_by_user_id = 19;
+  // The scanned signed form (a platform file). [UUID]
+  optional string evidence_file_id = 20;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 21;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 22;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 23;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 24;
+  // Entity tag (row version); send back on verify.
+  string etag = 25;
+  // Allowed values of giver_capacity; REST/JSON uses the lowercase value shown in each comment.
+  enum GiverCapacity {
+    GIVER_CAPACITY_UNSPECIFIED = 0;
+    // "guardian"
+    GIVER_CAPACITY_GUARDIAN = 1;
+    // "nominee"
+    GIVER_CAPACITY_NOMINEE = 2;
+    // "self"
+    GIVER_CAPACITY_SELF = 3;
+  }
+  // Allowed values of scope; REST/JSON uses the lowercase value shown in each comment.
+  enum Scope {
+    SCOPE_UNSPECIFIED = 0;
+    // "class"
+    SCOPE_CLASS = 1;
+    // "institution"
+    SCOPE_INSTITUTION = 2;
+    // "inter_school"
+    SCOPE_INTER_SCHOOL = 3;
+    // "public"
+    SCOPE_PUBLIC = 4;
+    // "tenant"
+    SCOPE_TENANT = 5;
+  }
+  // Allowed values of decision; REST/JSON uses the lowercase value shown in each comment.
+  enum Decision {
+    DECISION_UNSPECIFIED = 0;
+    // "granted"
+    DECISION_GRANTED = 1;
+    // "refused"
+    DECISION_REFUSED = 2;
+  }
+  // Allowed values of channel; REST/JSON uses the lowercase value shown in each comment.
+  enum Channel {
+    CHANNEL_UNSPECIFIED = 0;
+    // "consent_manager"
+    CHANNEL_CONSENT_MANAGER = 1;
+    // "email"
+    CHANNEL_EMAIL = 2;
+    // "import"
+    CHANNEL_IMPORT = 3;
+    // "in_person"
+    CHANNEL_IN_PERSON = 4;
+    // "mobile_app"
+    CHANNEL_MOBILE_APP = 5;
+    // "paper_form"
+    CHANNEL_PAPER_FORM = 6;
+    // "web"
+    CHANNEL_WEB = 7;
+  }
+  // Allowed values of verification_status; REST/JSON uses the lowercase value shown in each comment.
+  enum VerificationStatus {
+    VERIFICATION_STATUS_UNSPECIFIED = 0;
+    // "rejected"
+    VERIFICATION_STATUS_REJECTED = 1;
+    // "unverified"
+    VERIFICATION_STATUS_UNVERIFIED = 2;
+    // "verified"
+    VERIFICATION_STATUS_VERIFIED = 3;
+  }
+}
+
+// ---- ConsentDecisionService (internal: called with a service token, design §6.2) ----
+
+message CheckConsentRequest {
+  // The processing activity, e.g. comms.marketing_broadcast.
+  string activity_code = 1;
+  // The person the decision is about. [UUID]
+  string subject_person_id = 2;
+  // The width the processing reaches: class, institution, inter_school, public or tenant.
+  string scope = 3;
+}
+message CheckConsentResponse {
+  ConsentDecision decision = 1;
+}
+
+message BatchCheckConsentRequest {
+  // The processing activity, e.g. comms.marketing_broadcast.
+  string activity_code = 1;
+  // The persons to decide for (1-1000). [UUID]
+  repeated string subject_person_ids = 2;
+  // The width the processing reaches.
+  Scope scope = 3;
+  // Allowed values of scope; REST/JSON uses the lowercase value shown in each comment.
+  enum Scope {
+    SCOPE_UNSPECIFIED = 0;
+    // "class"
+    SCOPE_CLASS = 1;
+    // "institution"
+    SCOPE_INSTITUTION = 2;
+    // "inter_school"
+    SCOPE_INTER_SCHOOL = 3;
+    // "public"
+    SCOPE_PUBLIC = 4;
+    // "tenant"
+    SCOPE_TENANT = 5;
+  }
+}
+message BatchCheckConsentResponse {
+  // The decisions, in the order of the request's subjects.
+  repeated ConsentDecision decisions = 1;
+}
+
+message GetPurposeStatusRequest {
+  // The processing activity.
+  string activity_code = 1;
+}
+message GetPurposeStatusResponse {
+  PurposeStatus purpose_status = 1;
+}
+
+message ListSubjectsWithConsentRequest {
+  // The processing activity; it must rest on consent.
+  string activity_code = 1;
+  // The width the processing reaches.
+  string scope = 2;
+  // Only subjects of these institutions; none sent = every institution. [UUID]
+  repeated string institution_ids = 3;
+  // The page to read: number, size and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+}
+message ListSubjectsWithConsentResponse {
+  repeated ConsentedSubject items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+}
+
+// Whether one subject's data may be processed for an activity at a width. Output only.
+message ConsentDecision {
+  // The person the decision is about. [UUID]
+  string subject_person_id = 1;
+  // Whether the processing may go ahead.
+  bool allowed = 2;
+  // Why the decision allows or denies.
+  Reason reason = 3;
+  // The activity's legal basis; absent for an unknown activity.
+  optional string legal_basis = 4;
+  // The subject's consent state version; a cached decision older than an event's state version is stale.
+  int64 state_version = 5;
+  // Allowed values of reason; REST/JSON uses the lowercase value shown in each comment.
+  enum Reason {
+    REASON_UNSPECIFIED = 0;
+    // "consent"
+    REASON_CONSENT = 1;
+    // "expired"
+    REASON_EXPIRED = 2;
+    // "forbidden_for_minor"
+    REASON_FORBIDDEN_FOR_MINOR = 3;
+    // "narrower_grant"
+    REASON_NARROWER_GRANT = 4;
+    // "non_consent_basis"
+    REASON_NON_CONSENT_BASIS = 5;
+    // "not_answered"
+    REASON_NOT_ANSWERED = 6;
+    // "purpose_disabled"
+    REASON_PURPOSE_DISABLED = 7;
+    // "reconsent_required"
+    REASON_RECONSENT_REQUIRED = 8;
+    // "refused"
+    REASON_REFUSED = 9;
+    // "unknown_activity"
+    REASON_UNKNOWN_ACTIVITY = 10;
+  }
+}
+
+// How the calling tenant stands on an activity's purpose. Output only.
+message PurposeStatus {
+  // The processing activity.
+  string activity_code = 1;
+  // The purpose the activity serves.
+  string purpose_code = 2;
+  // The activity's legal basis.
+  string legal_basis = 3;
+  // Whether the tenant has switched the purpose on.
+  bool enabled = 4;
+  // The widest width the tenant allows for a width purpose; absent = no ceiling.
+  optional string max_scope = 5;
+  // The active version of the notice the tenant asks consent under; absent while none is active. [UUID]
+  optional string active_notice_version_id = 6;
+}
+
+// A person whose data may be processed for an activity at a width. Output only.
+message ConsentedSubject {
+  // The person. [UUID]
+  string subject_person_id = 1;
+}
+
+// ---- RightsRequestService ----
+
+message SubmitMyRequestRequest {
+  // The right exercised: access, correction, grievance, nomination, erasure, export or withdraw_all.
+  Type type = 1;
+  // The caller, or a minor the caller is the active legal guardian of. [UUID]
+  string subject_person_id = 2;
+  // What the requester asks, in their own words.
+  string description = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+  // For a correction (required): the record and the fields to correct. Not allowed for another type.
+  RightsRequestCorrection correction = 5;
+  // For a grievance (required): what it is about. Not allowed for another type.
+  GrievanceCategory grievance_category = 6;
+  // Allowed values of type; REST/JSON uses the lowercase value shown in each comment.
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    // "access"
+    TYPE_ACCESS = 1;
+    // "correction"
+    TYPE_CORRECTION = 2;
+    // "grievance"
+    TYPE_GRIEVANCE = 3;
+    // "nomination"
+    TYPE_NOMINATION = 4;
+    // "erasure"
+    TYPE_ERASURE = 5;
+    // "export"
+    TYPE_EXPORT = 6;
+    // "withdraw_all"
+    TYPE_WITHDRAW_ALL = 7;
+  }
+  // Allowed values of grievance_category; REST/JSON uses the lowercase value shown in each comment.
+  enum GrievanceCategory {
+    GRIEVANCE_CATEGORY_UNSPECIFIED = 0;
+    // "access"
+    GRIEVANCE_CATEGORY_ACCESS = 1;
+    // "communication"
+    GRIEVANCE_CATEGORY_COMMUNICATION = 2;
+    // "consent"
+    GRIEVANCE_CATEGORY_CONSENT = 3;
+    // "correction"
+    GRIEVANCE_CATEGORY_CORRECTION = 4;
+    // "data_security"
+    GRIEVANCE_CATEGORY_DATA_SECURITY = 5;
+    // "other"
+    GRIEVANCE_CATEGORY_OTHER = 6;
+  }
+}
+message SubmitMyRequestResponse {
+  MyRightsRequest my_rights_request = 1;
+}
+
+message ListMyRequestsRequest {
+  // The page to read: number, size and the cursor of a next page (api/README "Pagination"); the order is fixed.
+  mysms.common.v1.PageableRequest pageable = 1;
+}
+message ListMyRequestsResponse {
+  repeated MyRightsRequest items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 2;
+}
+
+message GetMyRequestRequest {
+  // RightsRequest id (UUID).
+  string id = 1;
+}
+message GetMyRequestResponse {
+  MyRightsRequest my_rights_request = 1;
+}
+
+message GetMyAccessSummaryRequest {
+  // Path parameter rightsRequestId.
+  string rights_request_id = 1;
+}
+message GetMyAccessSummaryResponse {
+  AccessSummary access_summary = 1;
+}
+
+message ListRightsRequestsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 1;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 2;
+}
+message ListRightsRequestsResponse {
+  repeated RightsRequest items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 2;
+}
+
+message GetRightsRequestRequest {
+  // RightsRequest id (UUID).
+  string id = 1;
+}
+message GetRightsRequestResponse {
+  RightsRequest rights_request = 1;
+}
+
+message GetAccessSummaryRequest {
+  // Path parameter rightsRequestId.
+  string rights_request_id = 1;
+}
+message GetAccessSummaryResponse {
+  AccessSummary access_summary = 1;
+}
+
+message VerifyRightsRequestIdentityRequest {
+  // Path parameter rightsRequestId.
+  string rights_request_id = 1;
+  // in_person (seen by a staff member) or document (an identity document checked).
+  IdentityCheck identity_check = 2;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+  // Allowed values of identity_check; REST/JSON uses the lowercase value shown in each comment.
+  enum IdentityCheck {
+    IDENTITY_CHECK_UNSPECIFIED = 0;
+    // "document"
+    IDENTITY_CHECK_DOCUMENT = 1;
+    // "in_person"
+    IDENTITY_CHECK_IN_PERSON = 2;
+  }
+}
+message VerifyRightsRequestIdentityResponse {
+  RightsRequest rights_request = 1;
+}
+
+message AssignRightsRequestRequest {
+  // Path parameter rightsRequestId.
+  string rights_request_id = 1;
+  // The staff member's user account. [UUID]
+  string assignee_user_id = 2;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message AssignRightsRequestResponse {
+  RightsRequest rights_request = 1;
+}
+
+message ExtendRightsRequestRequest {
+  // Path parameter rightsRequestId.
+  string rights_request_id = 1;
+  // The new response deadline; later than the current one.
+  google.protobuf.Timestamp due_at = 2;
+  // Why the deadline is extended; kept on the request and in the audit trail.
+  string reason = 3;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 4;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 5;
+}
+message ExtendRightsRequestResponse {
+  RightsRequest rights_request = 1;
+}
+
+message RejectRightsRequestRequest {
+  // Path parameter rightsRequestId.
+  string rights_request_id = 1;
+  // identity_not_verified, not_entitled, duplicate or other.
+  ReasonCode reason_code = 2;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+  // Allowed values of reason_code; REST/JSON uses the lowercase value shown in each comment.
+  enum ReasonCode {
+    REASON_CODE_UNSPECIFIED = 0;
+    // "duplicate"
+    REASON_CODE_DUPLICATE = 1;
+    // "identity_not_verified"
+    REASON_CODE_IDENTITY_NOT_VERIFIED = 2;
+    // "not_entitled"
+    REASON_CODE_NOT_ENTITLED = 3;
+    // "other"
+    REASON_CODE_OTHER = 4;
+  }
+}
+message RejectRightsRequestResponse {
+  RightsRequest rights_request = 1;
+}
+
+message CloseRightsRequestRequest {
+  // Path parameter rightsRequestId.
+  string rights_request_id = 1;
+  // fulfilled, partially_fulfilled or declined.
+  OutcomeCode outcome_code = 2;
+  // The staff's note on the outcome; not shown to the requester.
+  optional string note = 3;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 4;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 5;
+  // The school's answer the requester sees: required to close a grievance and to decline a correction.
+  optional string response = 6;
+  // Allowed values of outcome_code; REST/JSON uses the lowercase value shown in each comment.
+  enum OutcomeCode {
+    OUTCOME_CODE_UNSPECIFIED = 0;
+    // "declined"
+    OUTCOME_CODE_DECLINED = 1;
+    // "fulfilled"
+    OUTCOME_CODE_FULFILLED = 2;
+    // "partially_fulfilled"
+    OUTCOME_CODE_PARTIALLY_FULFILLED = 3;
+  }
+}
+message CloseRightsRequestResponse {
+  RightsRequest rights_request = 1;
+}
+
+message FulfilAccessRequestRequest {
+  // Path parameter rightsRequestId.
+  string rights_request_id = 1;
+  // Concurrency token from the last read (required: the request fulfilled is the version the staff reviewed).
+  string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message FulfilAccessRequestResponse {
+  RightsRequest rights_request = 1;
+}
+
+// One of the caller's own rights requests as the caller sees it: what was asked, where it stands, by when it is due
+// and how it ended; never who handles it, how identity was checked or the staff's notes.
+message MyRightsRequest {
+  // The request's id. [UUID] Output only.
+  string id = 1;
+  // The request's number, PRV-<year>-<six digits>, quoted in every letter about it.
+  string number = 2;
+  // The right exercised.
+  Type type = 3;
+  // The person the request is about: the caller, or a child the caller is the legal guardian of. [UUID]
+  string subject_person_id = 4;
+  // self (for oneself as an adult) or guardian (for a minor).
+  RequesterCapacity requester_capacity = 5;
+  // submitted, verified, in_progress, action_required (a module's task failed), rejected or closed.
+  Status status = 6;
+  // What the caller asked.
+  string description = 7;
+  // When the request was submitted.
+  google.protobuf.Timestamp submitted_at = 8;
+  // By when the school must respond.
+  google.protobuf.Timestamp due_at = 9;
+  // Still open past due_at.
+  bool overdue = 10;
+  // When the request was closed or rejected; absent while open.
+  google.protobuf.Timestamp closed_at = 11;
+  // How it ended (closed: fulfilled, partially_fulfilled, declined; rejected: identity_not_verified, not_entitled,
+  // duplicate, other — a rejection may be appealed as a grievance); absent while open.
+  OutcomeCode outcome_code = 12;
+  // For a correction: the record and the fields to correct.
+  RightsRequestCorrection correction = 13;
+  // For a grievance: what it is about.
+  GrievanceCategory grievance_category = 14;
+  // The school's answer to the request, given when it was closed; absent while open and when none was given.
+  optional string response = 15;
+  // Allowed values of type; REST/JSON uses the lowercase value shown in each comment.
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    // "access"
+    TYPE_ACCESS = 1;
+    // "correction"
+    TYPE_CORRECTION = 2;
+    // "grievance"
+    TYPE_GRIEVANCE = 3;
+    // "nomination"
+    TYPE_NOMINATION = 4;
+    // "erasure"
+    TYPE_ERASURE = 5;
+    // "export"
+    TYPE_EXPORT = 6;
+    // "withdraw_all"
+    TYPE_WITHDRAW_ALL = 7;
+  }
+  // Allowed values of requester_capacity; REST/JSON uses the lowercase value shown in each comment.
+  enum RequesterCapacity {
+    REQUESTER_CAPACITY_UNSPECIFIED = 0;
+    // "guardian"
+    REQUESTER_CAPACITY_GUARDIAN = 1;
+    // "self"
+    REQUESTER_CAPACITY_SELF = 2;
+    // "nominee"
+    REQUESTER_CAPACITY_NOMINEE = 3;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "closed"
+    STATUS_CLOSED = 1;
+    // "in_progress"
+    STATUS_IN_PROGRESS = 2;
+    // "rejected"
+    STATUS_REJECTED = 3;
+    // "submitted"
+    STATUS_SUBMITTED = 4;
+    // "verified"
+    STATUS_VERIFIED = 5;
+    // "action_required"
+    STATUS_ACTION_REQUIRED = 6;
+  }
+  // Allowed values of outcome_code; REST/JSON uses the lowercase value shown in each comment.
+  enum OutcomeCode {
+    OUTCOME_CODE_UNSPECIFIED = 0;
+    // "declined"
+    OUTCOME_CODE_DECLINED = 1;
+    // "duplicate"
+    OUTCOME_CODE_DUPLICATE = 2;
+    // "fulfilled"
+    OUTCOME_CODE_FULFILLED = 3;
+    // "identity_not_verified"
+    OUTCOME_CODE_IDENTITY_NOT_VERIFIED = 4;
+    // "not_entitled"
+    OUTCOME_CODE_NOT_ENTITLED = 5;
+    // "other"
+    OUTCOME_CODE_OTHER = 6;
+    // "partially_fulfilled"
+    OUTCOME_CODE_PARTIALLY_FULFILLED = 7;
+  }
+  // Allowed values of grievance_category; REST/JSON uses the lowercase value shown in each comment.
+  enum GrievanceCategory {
+    GRIEVANCE_CATEGORY_UNSPECIFIED = 0;
+    // "access"
+    GRIEVANCE_CATEGORY_ACCESS = 1;
+    // "communication"
+    GRIEVANCE_CATEGORY_COMMUNICATION = 2;
+    // "consent"
+    GRIEVANCE_CATEGORY_CONSENT = 3;
+    // "correction"
+    GRIEVANCE_CATEGORY_CORRECTION = 4;
+    // "data_security"
+    GRIEVANCE_CATEGORY_DATA_SECURITY = 5;
+    // "other"
+    GRIEVANCE_CATEGORY_OTHER = 6;
+  }
+}
+
+// A rights request as the school's privacy staff see it: who asked what for whom, how identity was checked, who
+// handles it, the deadline and the outcome.
+message RightsRequest {
+  // Surrogate primary key (UUIDv7 generated by the application). [UUID] Output only.
+  string id = 1;
+  // The request's number, PRV-<year>-<six digits>.
+  string number = 2;
+  // The right exercised.
+  Type type = 3;
+  // The data principal the request is about. [UUID]
+  string subject_person_id = 4;
+  // The person who submitted it. [UUID]
+  string requester_person_id = 5;
+  // self (an adult for themself) or guardian (the active legal guardian of a minor).
+  RequesterCapacity requester_capacity = 6;
+  // submitted, verified, in_progress, action_required (a module's task failed), rejected or closed.
+  Status status = 7;
+  // How the requester's identity was established; absent while submitted.
+  IdentityCheck identity_check = 8;
+  // What the requester asked, in their own words.
+  string description = 9;
+  // The staff member handling the request; absent until assigned. [UUID]
+  optional string assignee_user_id = 10;
+  // When the request was submitted.
+  google.protobuf.Timestamp submitted_at = 11;
+  // The response deadline.
+  google.protobuf.Timestamp due_at = 12;
+  // Still open past due_at.
+  bool overdue = 13;
+  // Why the deadline was last extended; absent when never extended.
+  optional string extended_reason = 14;
+  // When the request was closed or rejected; absent while open.
+  google.protobuf.Timestamp closed_at = 15;
+  // How it ended (closed: fulfilled, partially_fulfilled, declined; rejected: identity_not_verified, not_entitled,
+  // duplicate, other); absent while open.
+  OutcomeCode outcome_code = 16;
+  // The staff's note on closing; absent when none.
+  optional string outcome_note = 17;
+  // Entity tag (row version); send back on each step.
+  string etag = 18;
+  // For a correction: the record and the fields to correct.
+  RightsRequestCorrection correction = 19;
+  // For a grievance: what it is about.
+  GrievanceCategory grievance_category = 20;
+  // The school's answer the requester sees, given when the request was closed.
+  optional string response = 21;
+  // The modules' tasks of an erasure or export request once its fulfilment started; empty otherwise. Output only.
+  repeated RightsRequestTask tasks = 22;
+  // Allowed values of type; REST/JSON uses the lowercase value shown in each comment.
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    // "access"
+    TYPE_ACCESS = 1;
+    // "correction"
+    TYPE_CORRECTION = 2;
+    // "grievance"
+    TYPE_GRIEVANCE = 3;
+    // "nomination"
+    TYPE_NOMINATION = 4;
+    // "erasure"
+    TYPE_ERASURE = 5;
+    // "export"
+    TYPE_EXPORT = 6;
+    // "withdraw_all"
+    TYPE_WITHDRAW_ALL = 7;
+  }
+  // Allowed values of requester_capacity; REST/JSON uses the lowercase value shown in each comment.
+  enum RequesterCapacity {
+    REQUESTER_CAPACITY_UNSPECIFIED = 0;
+    // "guardian"
+    REQUESTER_CAPACITY_GUARDIAN = 1;
+    // "self"
+    REQUESTER_CAPACITY_SELF = 2;
+    // "nominee"
+    REQUESTER_CAPACITY_NOMINEE = 3;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "closed"
+    STATUS_CLOSED = 1;
+    // "in_progress"
+    STATUS_IN_PROGRESS = 2;
+    // "rejected"
+    STATUS_REJECTED = 3;
+    // "submitted"
+    STATUS_SUBMITTED = 4;
+    // "verified"
+    STATUS_VERIFIED = 5;
+    // "action_required"
+    STATUS_ACTION_REQUIRED = 6;
+  }
+  // Allowed values of identity_check; REST/JSON uses the lowercase value shown in each comment.
+  enum IdentityCheck {
+    IDENTITY_CHECK_UNSPECIFIED = 0;
+    // "document"
+    IDENTITY_CHECK_DOCUMENT = 1;
+    // "in_person"
+    IDENTITY_CHECK_IN_PERSON = 2;
+    // "signed_in_session"
+    IDENTITY_CHECK_SIGNED_IN_SESSION = 3;
+  }
+  // Allowed values of outcome_code; REST/JSON uses the lowercase value shown in each comment.
+  enum OutcomeCode {
+    OUTCOME_CODE_UNSPECIFIED = 0;
+    // "declined"
+    OUTCOME_CODE_DECLINED = 1;
+    // "duplicate"
+    OUTCOME_CODE_DUPLICATE = 2;
+    // "fulfilled"
+    OUTCOME_CODE_FULFILLED = 3;
+    // "identity_not_verified"
+    OUTCOME_CODE_IDENTITY_NOT_VERIFIED = 4;
+    // "not_entitled"
+    OUTCOME_CODE_NOT_ENTITLED = 5;
+    // "other"
+    OUTCOME_CODE_OTHER = 6;
+    // "partially_fulfilled"
+    OUTCOME_CODE_PARTIALLY_FULFILLED = 7;
+  }
+  // Allowed values of grievance_category; REST/JSON uses the lowercase value shown in each comment.
+  enum GrievanceCategory {
+    GRIEVANCE_CATEGORY_UNSPECIFIED = 0;
+    // "access"
+    GRIEVANCE_CATEGORY_ACCESS = 1;
+    // "communication"
+    GRIEVANCE_CATEGORY_COMMUNICATION = 2;
+    // "consent"
+    GRIEVANCE_CATEGORY_CONSENT = 3;
+    // "correction"
+    GRIEVANCE_CATEGORY_CORRECTION = 4;
+    // "data_security"
+    GRIEVANCE_CATEGORY_DATA_SECURITY = 5;
+    // "other"
+    GRIEVANCE_CATEGORY_OTHER = 6;
+  }
+}
+// What a correction request is about: the record, in the module that holds it, and the fields to correct.
+message RightsRequestCorrection {
+  // The module that holds the record (people, sis, hr, admission …).
+  string module = 1;
+  // The kind of record (person, student, guardian, staff …).
+  string record_type = 2;
+  // The record's id when the requester knows it. [UUID]
+  optional string record_id = 3;
+  // The fields to correct (1 to 20).
+  repeated RightsRequestCorrectionField fields = 4;
+}
+// One field a correction request asks to change, with the value asked for.
+message RightsRequestCorrectionField {
+  // The field as the requester names it.
+  string field = 1;
+  // The value the requester asks for.
+  string requested_value = 2;
+}
+
+// What the school's processing register says it does with one data principal's personal data, the answer to an access
+// request (DPDP Act s.11). Generated by privacy from its own data only: no other module's records or counts.
+message AccessSummary {
+  // The data principal the summary is about. [UUID]
+  string subject_person_id = 1;
+  // minor, adult or unknown (no birth date known; treated as a minor) when the summary was generated.
+  SubjectStatus subject_status = 2;
+  // When the summary was generated.
+  google.protobuf.Timestamp generated_at = 3;
+  // The tenant's register activities that may concern the subject, by activity code.
+  repeated AccessSummaryActivity activities = 4;
+  // The subject's roles at the school that the summary was filtered by (student, guardian, staff); empty when privacy
+  // knew no role, and then every activity that may concern them is listed.
+  repeated string subject_roles = 5;
+  // Allowed values of subject_status; REST/JSON uses the lowercase value shown in each comment.
+  enum SubjectStatus {
+    SUBJECT_STATUS_UNSPECIFIED = 0;
+    // "adult"
+    SUBJECT_STATUS_ADULT = 1;
+    // "minor"
+    SUBJECT_STATUS_MINOR = 2;
+    // "unknown"
+    SUBJECT_STATUS_UNKNOWN = 3;
+  }
+}
+
+// One activity of the tenant's register that may concern the data principal of an access summary.
+message AccessSummaryActivity {
+  // Activity code <module>.<activity>, e.g. comms.operational_notice.
+  string activity_code = 1;
+  // The module that processes the data.
+  string module = 2;
+  // Code of the catalogue purpose the activity serves.
+  string purpose_code = 3;
+  // The legal basis of the processing.
+  LegalBasis legal_basis = 4;
+  // Codes of the data categories the activity touches, sorted.
+  repeated string data_categories = 5;
+  // Who receives the data, as the register names them; empty while none is named.
+  repeated AccessSummaryRecipient recipients = 6;
+  // Whether the data leaves India.
+  bool cross_border = 7;
+  // The retention policy that applies; absent while none is set.
+  optional string retention_policy_code = 8;
+  // For an activity on the consent basis, the widths the subject's effective consent allows when the summary was
+  // generated, narrowest first (class, institution, inter_school, public, or tenant); empty = not allowed. Empty for
+  // any other legal basis (REST omits it).
+  repeated string consent_allowed_scopes = 9;
+  // Allowed values of legal_basis; REST/JSON uses the lowercase value shown in each comment.
+  enum LegalBasis {
+    LEGAL_BASIS_UNSPECIFIED = 0;
+    // "consent"
+    LEGAL_BASIS_CONSENT = 1;
+    // "contract"
+    LEGAL_BASIS_CONTRACT = 2;
+    // "education_exemption"
+    LEGAL_BASIS_EDUCATION_EXEMPTION = 3;
+    // "employment"
+    LEGAL_BASIS_EMPLOYMENT = 4;
+    // "legal_obligation"
+    LEGAL_BASIS_LEGAL_OBLIGATION = 5;
+    // "legitimate_use"
+    LEGAL_BASIS_LEGITIMATE_USE = 6;
+    // "legitimate_use_voluntary"
+    LEGAL_BASIS_LEGITIMATE_USE_VOLUNTARY = 7;
+    // "medical_emergency"
+    LEGAL_BASIS_MEDICAL_EMERGENCY = 8;
+  }
+}
+
+// A recipient of a processing activity's data, as the processing register names it.
+message AccessSummaryRecipient {
+  // processor (processes the data on the school's behalf) or fiduciary (decides on its own account).
+  string kind = 1;
+  // The recipient's name.
+  string name = 2;
+  // Where the recipient processes the data; absent when the register does not say.
+  optional string country = 3;
+}
+
+// ---- NomineeService ----
+
+message GetMyNomineeRequest {
+}
+message GetMyNomineeResponse {
+  MyNominee my_nominee = 1;
+}
+message SetMyNomineeRequest {
+  // The nominee's full name. Input only: stored encrypted, never returned in clear.
+  string nominee_name = 1;
+  // The nominee's phone number or e-mail address. Input only: stored encrypted, never returned in clear.
+  string nominee_contact = 2;
+  // The nominee's person, when they are known to the school and will sign in to act for the caller. [UUID]
+  optional string nominee_person_id = 3;
+  // The active nominee's etag when one is being replaced (optional but recommended).
+  optional string etag = 4;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 5;
+}
+message SetMyNomineeResponse {
+  MyNominee my_nominee = 1;
+}
+message RevokeMyNomineeRequest {
+  // The active nominee's etag from the last read.
+  string etag = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message RevokeMyNomineeResponse {
+}
+// The caller's active nominee (DPDP Act s.14): name and contact masked, never in clear.
+message MyNominee {
+  // The nomination's id. [UUID] Output only.
+  string id = 1;
+  // The nominee's person when they are known to the school and sign in. [UUID]
+  optional string nominee_person_id = 2;
+  // The nominee's name, masked.
+  string nominee_name_masked = 3;
+  // The nominee's phone number or e-mail address, masked.
+  string nominee_contact_masked = 4;
+  // When the nominee became able to act for the caller; absent until then.
+  google.protobuf.Timestamp activated_at = 5;
+  // When the nominee was named.
+  google.protobuf.Timestamp created_at = 6;
+  // Concurrency token; send it back to replace or revoke the nominee.
+  string etag = 7;
+}
+
+message GetProcessingRegisterExportRequest {
+}
+message GetProcessingRegisterExportResponse {
+  ProcessingRegisterExport processing_register_export = 1;
+}
+
+// The processing register (RoPA) as CSV, one row per activity. Output only.
+message ProcessingRegisterExport {
+  // A file name for the CSV, processing-register-<date>.csv.
+  string file_name = 1;
+  // When the export was generated.
+  google.protobuf.Timestamp generated_at = 2;
+  // How many activities (data rows) the CSV holds.
+  int32 activities = 3;
+  // The register as RFC 4180 CSV (CRLF rows, a header row; a formula-opening cell is prefixed with an apostrophe).
+  string csv = 4;
+}
+
+message ListBreachesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 1;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 2;
+}
+message ListBreachesResponse {
+  repeated Breach items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 2;
+}
+
+message GetBreachRequest {
+  // Breach id (UUID).
+  string id = 1;
+}
+message GetBreachResponse {
+  Breach breach = 1;
+}
+
+message ReportBreachRequest {
+  Breach breach = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+}
+message ReportBreachResponse {
+  Breach breach = 1;
+}
+
+message UpdateBreachRequest {
+  // Breach with id and etag set.
+  Breach breach = 1;
+  // Fields to update (description, categories, modules, estimated_principals, likely_consequences, mitigation,
+  // owner_user_id); empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+}
+message UpdateBreachResponse {
+  Breach breach = 1;
+}
+
+message TriageBreachRequest {
+  // Path parameter breachId.
+  string breach_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message TriageBreachResponse {
+  Breach breach = 1;
+}
+
+message ContainBreachRequest {
+  // Path parameter breachId.
+  string breach_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ContainBreachResponse {
+  Breach breach = 1;
+}
+
+message CloseBreachRequest {
+  // Path parameter breachId.
+  string breach_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CloseBreachResponse {
+  Breach breach = 1;
+}
+
+message MarkBreachNotABreachRequest {
+  // Path parameter breachId.
+  string breach_id = 1;
+  // Why it is not a personal data breach; kept on the breach and in the audit trail.
+  string reason = 2;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message MarkBreachNotABreachResponse {
+  Breach breach = 1;
+}
+
+message RecordBreachNotificationRequest {
+  // Path parameter breachId.
+  string breach_id = 1;
+  // board (the Data Protection Board), principals (the affected data principals), processor or tenant.
+  Audience audience = 2;
+  // initial (intimation without delay), detailed (the Board's report, the principals' full notice) or update.
+  Kind kind = 3;
+  // When the notice was sent; not in the future, not before the school became aware.
+  google.protobuf.Timestamp sent_at = 4;
+  // The notice as sent (a platform file). [UUID]
+  optional string document_file_id = 5;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 6;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 7;
+  // Allowed values of audience; REST/JSON uses the lowercase value shown in each comment.
+  enum Audience {
+    AUDIENCE_UNSPECIFIED = 0;
+    // "board"
+    AUDIENCE_BOARD = 1;
+    // "principals"
+    AUDIENCE_PRINCIPALS = 2;
+    // "processor"
+    AUDIENCE_PROCESSOR = 3;
+    // "tenant"
+    AUDIENCE_TENANT = 4;
+  }
+  // Allowed values of kind; REST/JSON uses the lowercase value shown in each comment.
+  enum Kind {
+    KIND_UNSPECIFIED = 0;
+    // "detailed"
+    KIND_DETAILED = 1;
+    // "initial"
+    KIND_INITIAL = 2;
+    // "update"
+    KIND_UPDATE = 3;
+  }
+}
+message RecordBreachNotificationResponse {
+  Breach breach = 1;
+}
+
+// A personal data breach in the tenant's register: when it was detected and the school became aware, the Board's
+// 72-hour clock, what was affected in ids and counts, where it stands and every notice recorded.
+message Breach {
+  // Surrogate primary key (UUIDv7 generated by the application). [UUID] Output only.
+  string id = 1;
+  // The breach's number, PRB-<year>-<six digits>. Output only.
+  string number = 2;
+  // reported, triaged, contained, board_initial_sent, board_report_sent, principals_notified, closed or not_a_breach.
+  // Output only.
+  Status status = 3;
+  // When the breach was detected (or, when known, happened); fixed once reported.
+  google.protobuf.Timestamp detected_at = 4;
+  // When the school became aware, the start of the Board's 72-hour clock; fixed once reported.
+  google.protobuf.Timestamp became_aware_at = 5;
+  // became_aware_at plus 72 hours. Output only.
+  google.protobuf.Timestamp board_report_due_at = 6;
+  // The Board's detailed report is not sent and board_report_due_at has passed. Output only.
+  bool overdue = 7;
+  // Whole hours left until board_report_due_at, negative once past; absent once the report is sent. Output only.
+  optional int32 hours_remaining = 8;
+  // What happened, in ids and counts only, never a name or contact.
+  string description = 9;
+  // Codes of the data categories affected.
+  repeated string categories = 10;
+  // The MySMS modules whose data is affected.
+  repeated string modules = 11;
+  // How many data principals are estimated to be affected; absent while unknown.
+  optional int32 estimated_principals = 12;
+  // The likely consequences for the principals, in ids and counts only.
+  optional string likely_consequences = 13;
+  // What was done or is planned to contain the breach, in ids and counts only.
+  optional string mitigation = 14;
+  // The staff member handling the breach. [UUID]
+  optional string owner_user_id = 15;
+  // When the detailed report to the Board was sent; absent until then. Output only.
+  google.protobuf.Timestamp board_report_sent_at = 16;
+  // Why triage found it was not a personal data breach. Output only.
+  optional string not_a_breach_reason = 17;
+  // When the breach was closed or found not to be one; absent while open. Output only.
+  google.protobuf.Timestamp closed_at = 18;
+  // The notices recorded about the breach, in the order they were sent. Output only.
+  repeated BreachNotification notifications = 19;
+  // Entity tag (row version). Output only on reads; send back on update and in a step.
+  string etag = 20;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "board_initial_sent"
+    STATUS_BOARD_INITIAL_SENT = 1;
+    // "board_report_sent"
+    STATUS_BOARD_REPORT_SENT = 2;
+    // "closed"
+    STATUS_CLOSED = 3;
+    // "contained"
+    STATUS_CONTAINED = 4;
+    // "not_a_breach"
+    STATUS_NOT_A_BREACH = 5;
+    // "principals_notified"
+    STATUS_PRINCIPALS_NOTIFIED = 6;
+    // "reported"
+    STATUS_REPORTED = 7;
+    // "triaged"
+    STATUS_TRIAGED = 8;
+  }
+}
+
+// A notice about a breach the school sent and recorded. Output only.
+message BreachNotification {
+  // Surrogate primary key. [UUID]
+  string id = 1;
+  // board, principals, processor or tenant.
+  Audience audience = 2;
+  // initial, detailed or update.
+  Kind kind = 3;
+  // When the notice was sent.
+  google.protobuf.Timestamp sent_at = 4;
+  // The notice as sent (a platform file); absent when not attached. [UUID]
+  optional string document_file_id = 5;
+  // Allowed values of audience; REST/JSON uses the lowercase value shown in each comment.
+  enum Audience {
+    AUDIENCE_UNSPECIFIED = 0;
+    // "board"
+    AUDIENCE_BOARD = 1;
+    // "principals"
+    AUDIENCE_PRINCIPALS = 2;
+    // "processor"
+    AUDIENCE_PROCESSOR = 3;
+    // "tenant"
+    AUDIENCE_TENANT = 4;
+  }
+  // Allowed values of kind; REST/JSON uses the lowercase value shown in each comment.
+  enum Kind {
+    KIND_UNSPECIFIED = 0;
+    // "detailed"
+    KIND_DETAILED = 1;
+    // "initial"
+    KIND_INITIAL = 2;
+    // "update"
+    KIND_UPDATE = 3;
+  }
+}
+
+message GetConsentCoverageRequest {
+  // The catalogue purpose, e.g. photo_video_publication.
+  string purpose_code = 1;
+  // Only this width: class, institution, inter_school, public or tenant; absent = every width the purpose takes.
+  optional string scope = 2;
+  // Only the students of this institution; absent = every data principal of the tenant. [UUID]
+  optional string institution_id = 3;
+}
+message GetConsentCoverageResponse {
+  ConsentCoverage consent_coverage = 1;
+}
+
+// How far a purpose is covered by consent, in the tenant or one institution: counts per width, never person ids.
+message ConsentCoverage {
+  // The catalogue purpose.
+  string purpose_code = 1;
+  // The institution the counts are narrowed to; absent = every data principal of the tenant. [UUID]
+  optional string institution_id = 2;
+  // How many data principals are counted.
+  int32 subjects = 3;
+  // The counts per width, narrowest first.
+  repeated ConsentCoverageScope scopes = 4;
+}
+
+// The coverage of a purpose at one width.
+message ConsentCoverageScope {
+  // The width.
+  Scope scope = 1;
+  // Subjects whose effective consent allows the purpose at the width.
+  int32 allowed = 2;
+  // Subjects with no decision that counts.
+  int32 not_answered = 3;
+  // Subjects denied for another reason, one entry per reason (zero included).
+  repeated ConsentCoverageDenial denied = 4;
+  // Allowed values of scope; REST/JSON uses the lowercase value shown in each comment.
+  enum Scope {
+    SCOPE_UNSPECIFIED = 0;
+    // "class"
+    SCOPE_CLASS = 1;
+    // "institution"
+    SCOPE_INSTITUTION = 2;
+    // "inter_school"
+    SCOPE_INTER_SCHOOL = 3;
+    // "public"
+    SCOPE_PUBLIC = 4;
+    // "tenant"
+    SCOPE_TENANT = 5;
+  }
+}
+
+// How many subjects are denied a purpose at a width for one reason.
+message ConsentCoverageDenial {
+  // The reason.
+  Reason reason = 1;
+  // How many subjects.
+  int32 subjects = 2;
+  // Allowed values of reason; REST/JSON uses the lowercase value shown in each comment.
+  enum Reason {
+    REASON_UNSPECIFIED = 0;
+    // "expired"
+    REASON_EXPIRED = 1;
+    // "forbidden_for_minor"
+    REASON_FORBIDDEN_FOR_MINOR = 2;
+    // "narrower_grant"
+    REASON_NARROWER_GRANT = 3;
+    // "purpose_disabled"
+    REASON_PURPOSE_DISABLED = 4;
+    // "reconsent_required"
+    REASON_RECONSENT_REQUIRED = 5;
+    // "refused"
+    REASON_REFUSED = 6;
+  }
+}
+
+// ---- RightsRequestService: the fulfilment of erasure, export and withdraw-all requests ----
+
+message StartRightsRequestFulfilmentRequest {
+  // Path parameter rightsRequestId.
+  string rights_request_id = 1;
+  // Concurrency token from the last read (required: the request fulfilled is the version the staff reviewed).
+  string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message StartRightsRequestFulfilmentResponse {
+  RightsRequest rights_request = 1;
+}
+
+message FulfilWithdrawAllRequestRequest {
+  // Path parameter rightsRequestId.
+  string rights_request_id = 1;
+  // Concurrency token from the last read (required: the request fulfilled is the version the staff reviewed).
+  string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message FulfilWithdrawAllRequestResponse {
+  RightsRequest rights_request = 1;
+}
+
+message RetryRightsRequestTaskRequest {
+  // Path parameter rightsRequestId.
+  string rights_request_id = 1;
+  // Path parameter taskId.
+  string task_id = 2;
+  // Concurrency token from the last read of the request (optional but recommended).
+  optional string etag = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message RetryRightsRequestTaskResponse {
+  RightsRequest rights_request = 1;
+}
+
+// One module's part of fulfilling an erasure or export request, in counts only. Output only.
+message RightsRequestTask {
+  // Surrogate primary key. [UUID]
+  string id = 1;
+  // The request the task fulfils. [UUID]
+  string rights_request_id = 2;
+  // The module that carries the task out.
+  string module = 3;
+  // erase or export.
+  Action action = 4;
+  // 1 (comms and iam first for an erasure; every export task) or 2.
+  int32 wave = 5;
+  // pending, dispatched, done, partial, failed or not_applicable.
+  Status status = 6;
+  // How many times the task was dispatched.
+  int32 attempts = 7;
+  // When the task was last dispatched.
+  google.protobuf.Timestamp dispatched_at = 8;
+  // When the module answered; absent while it has not.
+  google.protobuf.Timestamp completed_at = 9;
+  // Rows erased or exported over all the module's tables; absent until answered.
+  optional int32 affected_rows = 10;
+  // Rows kept under a legal hold or a legal-retention policy; absent until answered.
+  optional int32 held_items = 11;
+  // The retention policies that kept rows.
+  repeated string policy_codes = 12;
+  // The module's export part (a platform file). [UUID]
+  optional string file_id = 13;
+  // Why the module's last attempt failed.
+  optional string last_error_code = 14;
+  // Entity tag (row version).
+  string etag = 15;
+  // When privacy dispatches the failed task again; absent unless it waits for its next attempt. Output only.
+  google.protobuf.Timestamp next_attempt_at = 16;
+  // Allowed values of action; REST/JSON uses the lowercase value shown in each comment.
+  enum Action {
+    ACTION_UNSPECIFIED = 0;
+    // "erase"
+    ACTION_ERASE = 1;
+    // "export"
+    ACTION_EXPORT = 2;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "dispatched"
+    STATUS_DISPATCHED = 1;
+    // "done"
+    STATUS_DONE = 2;
+    // "failed"
+    STATUS_FAILED = 3;
+    // "not_applicable"
+    STATUS_NOT_APPLICABLE = 4;
+    // "partial"
+    STATUS_PARTIAL = 5;
+    // "pending"
+    STATUS_PENDING = 6;
+  }
+}
+
+// ---- LegalHoldService ----
+
+message ListLegalHoldsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 1;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 2;
+}
+message ListLegalHoldsResponse {
+  repeated LegalHold items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 2;
+}
+
+message GetLegalHoldRequest {
+  // Legal hold id (UUID).
+  string id = 1;
+}
+message GetLegalHoldResponse {
+  LegalHold legal_hold = 1;
+}
+
+message PlaceLegalHoldRequest {
+  LegalHold legal_hold = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+}
+message PlaceLegalHoldResponse {
+  LegalHold legal_hold = 1;
+}
+
+message UpdateLegalHoldRequest {
+  // Legal hold with id and etag set.
+  LegalHold legal_hold = 1;
+  // Fields to update (review_by); empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+}
+message UpdateLegalHoldResponse {
+  LegalHold legal_hold = 1;
+}
+
+message ReleaseLegalHoldRequest {
+  // Path parameter legalHoldId.
+  string legal_hold_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message ReleaseLegalHoldResponse {
+  LegalHold legal_hold = 1;
+}
+
+message ListActiveHoldsRequest {
+  // The data principal whose data the module is about to remove. [UUID]
+  string subject_person_id = 1;
+  // Only record-set holds of this module; absent = every module's.
+  optional string module = 2;
+}
+message ListActiveHoldsResponse {
+  // The holds, oldest first.
+  repeated ActiveLegalHold holds = 1;
+}
+
+// A legal hold: what no erasure or retention may remove until it is released, reviewed by a set date.
+message LegalHold {
+  // Surrogate primary key (UUIDv7 generated by the application). [UUID] Output only.
+  string id = 1;
+  // safeguarding, litigation, regulator or audit.
+  ReasonCode reason_code = 2;
+  // subject, category or records; fixed once placed.
+  Scope scope = 3;
+  // The data principal held: required for subject, optional for category and records. [UUID]
+  optional string subject_person_id = 4;
+  // The data category held (scope category).
+  optional string category_code = 5;
+  // The module holding the records (scope records).
+  optional string module = 6;
+  // The kind of record held (scope records).
+  optional string entity_type = 7;
+  // The records held, 1-1000 (scope records). [UUID]
+  repeated string entity_ids = 8;
+  // When the hold must be reviewed: today or later. [ISO-8601 date (YYYY-MM-DD)]
+  string review_by = 9;
+  // Active and its review date has come. Output only.
+  bool review_due = 10;
+  // active or released. Output only.
+  Status status = 11;
+  // Who placed the hold. [UUID] Output only.
+  string placed_by_user_id = 12;
+  // When the hold was placed. Output only.
+  google.protobuf.Timestamp placed_at = 13;
+  // When the hold was released; absent while active. Output only.
+  google.protobuf.Timestamp released_at = 14;
+  // Who released the hold. [UUID] Output only.
+  optional string released_by_user_id = 15;
+  // Entity tag (row version). Output only on reads; send back on update and in a release.
+  string etag = 16;
+  // Allowed values of reason_code; REST/JSON uses the lowercase value shown in each comment.
+  enum ReasonCode {
+    REASON_CODE_UNSPECIFIED = 0;
+    // "audit"
+    REASON_CODE_AUDIT = 1;
+    // "litigation"
+    REASON_CODE_LITIGATION = 2;
+    // "regulator"
+    REASON_CODE_REGULATOR = 3;
+    // "safeguarding"
+    REASON_CODE_SAFEGUARDING = 4;
+  }
+  // Allowed values of scope; REST/JSON uses the lowercase value shown in each comment.
+  enum Scope {
+    SCOPE_UNSPECIFIED = 0;
+    // "category"
+    SCOPE_CATEGORY = 1;
+    // "records"
+    SCOPE_RECORDS = 2;
+    // "subject"
+    SCOPE_SUBJECT = 3;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "released"
+    STATUS_RELEASED = 2;
+  }
+}
+
+// What one active legal hold covers, for a module erasing or sweeping a subject's data.
+message ActiveLegalHold {
+  // The hold. [UUID]
+  string id = 1;
+  // safeguarding, litigation, regulator or audit.
+  ReasonCode reason_code = 2;
+  // subject, category or records.
+  Scope scope = 3;
+  // The data principal held; absent = everyone's. [UUID]
+  optional string subject_person_id = 4;
+  // The data category held (scope category).
+  optional string category_code = 5;
+  // The module holding the records (scope records).
+  optional string module = 6;
+  // The kind of record held (scope records).
+  optional string entity_type = 7;
+  // The records held (scope records). [UUID]
+  repeated string entity_ids = 8;
+  // Allowed values of reason_code; REST/JSON uses the lowercase value shown in each comment.
+  enum ReasonCode {
+    REASON_CODE_UNSPECIFIED = 0;
+    // "audit"
+    REASON_CODE_AUDIT = 1;
+    // "litigation"
+    REASON_CODE_LITIGATION = 2;
+    // "regulator"
+    REASON_CODE_REGULATOR = 3;
+    // "safeguarding"
+    REASON_CODE_SAFEGUARDING = 4;
+  }
+  // Allowed values of scope; REST/JSON uses the lowercase value shown in each comment.
+  enum Scope {
+    SCOPE_UNSPECIFIED = 0;
+    // "category"
+    SCOPE_CATEGORY = 1;
+    // "records"
+    SCOPE_RECORDS = 2;
+    // "subject"
+    SCOPE_SUBJECT = 3;
+  }
+}
+
+// ---- RetentionService ----
+
+message ListRetentionPoliciesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 1;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 2;
+}
+message ListRetentionPoliciesResponse {
+  repeated RetentionPolicy items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 2;
+}
+
+message GetRetentionPolicyRequest {
+  // Retention policy id (UUID).
+  string id = 1;
+}
+message GetRetentionPolicyResponse {
+  RetentionPolicy retention_policy = 1;
+}
+
+message UpdateRetentionPolicyRequest {
+  // Retention policy with id and etag set ("0" while the tenant has never set it).
+  RetentionPolicy retention_policy = 1;
+  // Fields to update (period_days, action); empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+}
+message UpdateRetentionPolicyResponse {
+  RetentionPolicy retention_policy = 1;
+}
+
+message ListRetentionRunsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 1;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 2;
+}
+message ListRetentionRunsResponse {
+  repeated RetentionRun items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 2;
+}
+
+// A retention policy of the catalogue with the tenant's own period and action, never below the legal floor.
+message RetentionPolicy {
+  // The catalogue policy. [UUID] Output only.
+  string id = 1;
+  // Policy code, e.g. attendance.after_leaving. Output only.
+  string code = 2;
+  // The data category kept. Output only.
+  string category_code = 3;
+  // The module holding the data. Output only.
+  string module = 4;
+  // When the period starts. Output only.
+  Trigger trigger = 5;
+  // Days the data is kept after the trigger: the tenant's own when set, the catalogue's otherwise.
+  int32 period_days = 6;
+  // The legal floor in days. Output only.
+  int32 minimum_period_days = 7;
+  // delete, anonymise or archive.
+  Action action = 8;
+  // Days before the sweep the person is told; absent = not told. Output only.
+  optional int32 notify_before_days = 9;
+  // The law or rule the floor comes from (to verify). Output only.
+  string legal_reference = 10;
+  // The tenant set its own period or action. Output only.
+  bool overridden = 11;
+  // Entity tag (the tenant setting's row version, 0 while never set).
+  string etag = 12;
+  // Allowed values of trigger; REST/JSON uses the lowercase value shown in each comment.
+  enum Trigger {
+    TRIGGER_UNSPECIFIED = 0;
+    // "after_inactivity"
+    TRIGGER_AFTER_INACTIVITY = 1;
+    // "after_leaving"
+    TRIGGER_AFTER_LEAVING = 2;
+    // "after_purpose_end"
+    TRIGGER_AFTER_PURPOSE_END = 3;
+    // "after_record_date"
+    TRIGGER_AFTER_RECORD_DATE = 4;
+  }
+  // Allowed values of action; REST/JSON uses the lowercase value shown in each comment.
+  enum Action {
+    ACTION_UNSPECIFIED = 0;
+    // "anonymise"
+    ACTION_ANONYMISE = 1;
+    // "archive"
+    ACTION_ARCHIVE = 2;
+    // "delete"
+    ACTION_DELETE = 3;
+  }
+}
+
+// One daily run of a retention policy, in counts only. Output only.
+message RetentionRun {
+  // Surrogate primary key. [UUID]
+  string id = 1;
+  // The policy run.
+  string policy_code = 2;
+  // The data category swept.
+  string category_code = 3;
+  // The module asked to sweep.
+  string module = 4;
+  // delete, anonymise or archive.
+  Action action = 5;
+  // Data whose trigger lies before this instant is past its period.
+  google.protobuf.Timestamp cutoff = 6;
+  // dispatched, done, partial or failed.
+  Status status = 7;
+  // Rows the module removed; absent until it reports.
+  optional int32 affected = 8;
+  // Rows kept under a legal hold; absent until it reports.
+  optional int32 held = 9;
+  // When the run was dispatched.
+  google.protobuf.Timestamp started_at = 10;
+  // When the module reported; absent until then.
+  google.protobuf.Timestamp completed_at = 11;
+  // Allowed values of action; REST/JSON uses the lowercase value shown in each comment.
+  enum Action {
+    ACTION_UNSPECIFIED = 0;
+    // "anonymise"
+    ACTION_ANONYMISE = 1;
+    // "archive"
+    ACTION_ARCHIVE = 2;
+    // "delete"
+    ACTION_DELETE = 3;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "dispatched"
+    STATUS_DISPATCHED = 1;
+    // "done"
+    STATUS_DONE = 2;
+    // "failed"
+    STATUS_FAILED = 3;
+    // "partial"
+    STATUS_PARTIAL = 4;
+  }
+}

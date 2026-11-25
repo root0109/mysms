@@ -3,6 +3,7 @@ export { NativeApp, type NativeAppProps, type Page } from './NativeApp';
 export { ProfileScreen } from './ProfileScreen';
 export { SettingsScreen } from './SettingsScreen';
 export { NotificationPreferencesScreen } from './NotificationPreferencesScreen';
+export { ConsentCentreScreen } from './ConsentCentreScreen';
 export { SignInScreen } from './SignInScreen';
 export { useDeepLinks } from './useDeepLinks';
 export { secureStoreVault } from './vault';

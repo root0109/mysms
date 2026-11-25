@@ -31,7 +31,7 @@ import tools.jackson.databind.JsonNode;
 class PurposeComponentTest {
 
     /** The purposes privacy's baseline seeds. */
-    private static final int CATALOGUE = 17;
+    private static final int CATALOGUE = 20;
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
     private static final TestTokens TOKENS = new TestTokens();
     private static final String TRACE = "4bf92f3577b34da6a3ce929d0e0e4736";

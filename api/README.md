@@ -4,23 +4,23 @@ MySMS exposes every capability through two equivalent interfaces: a **REST/JSON 
 
 ## At a glance
 
-| Modules | Resource services | Operations (REST = gRPC) | Standard CRUD | Workflow / query / integration operations | Protobuf messages |
-|---:|---:|---:|---:|---:|---:|
-| 21 | 226 | 2055 | 1702 | 353 | see each module's proto |
+22 domain modules, one contract each; every operation is served over both REST and gRPC. Counts per module, and
+which operations are served or answer 501: [operations-status.md](operations-status.md) (generated; do not copy its
+numbers into other docs).
 
 ## Files
 
 | Path | Contents |
 |---|---|
 | `README.md` | This design guide. |
-| `operations.md` | Index of every operation: REST method and path, gRPC service and method, permission code. |
+| `operations.md` | Reference, kept by hand: every operation's REST method and path, gRPC service and method, permission code, public flag and description (ROADMAP DOC-2: generate it). |
 | `../backend/<module>/target/openapi/api-docs.yml` | REST contract of one module (OpenAPI 3.1), written by the module's build from its code (springdoc, `<Module>OpenApiComponentTest`); not kept in git. |
 | `../backend/<module>/src/main/resources/proto/mysms/<module>/v1/<module>.proto` | gRPC contract of one module (`package mysms.<module>.v1`), owned by the module; a module that calls another carries a byte-identical copy of the callee's proto. |
 | `../backend/core/src/main/resources/proto/mysms/common/v1/` | Shared gRPC messages (Operation, upload/download targets, search hits..., the `ErrorMessage` of refused calls). |
 | `../backend/conformance/src/main/resources/field-numbers.lock.json` | Assigned proto field numbers (keeps the wire format stable; checked by the conformance build, G2). |
 | `standard-resources.json` | Owned data, checked by the build (`OperationStatusReportTest`): the resources whose standard operations and state transitions the backend serves (read by the clients' record screens). |
 | `operations-status.md` | Generated: whether this build serves each operation, and why not when it answers 501. |
-| `state-machines.md` | Generated: the state transitions the backend serves, with the states each is allowed from and what it sets. |
+| `state-machines.md` | Reference, kept by hand in step with each service: the state transitions the backend serves, with the states each is allowed from and what it sets. |
 
 Everything about the API lives in this one folder; paths are relative to it.
 
@@ -58,7 +58,7 @@ Everything about the API lives in this one folder; paths are relative to it.
 | Update | `PATCH /…/{id}` | `Update<Resource>` | Partial update with `updateMask`; `If-Match` (REST) / `etag` field (gRPC) is mandatory → 412 on a stale version. |
 | Delete | `DELETE /…/{id}` → 204 | `Delete<Resource>` | Soft delete (sets `deleted_at`); `If-Match` required. |
 
-Output-only fields (`id`, `createTime`, `updateTime`, `createdBy`, `updatedBy`, `etag`, the parent id of a nested child, and workflow-controlled fields) are marked `readOnly` in OpenAPI and "Output only" in proto comments; values sent for them are ignored. `tenantId`, `deletedAt` and `rowVersion` are never exposed: tenant comes from the access token and the row version travels as the ETag.
+Output-only fields (`id`, `createTime`, `updateTime`, `createdBy`, `updatedBy`, `etag`, the parent id of a nested child, and workflow-controlled fields) are marked `readOnly` in OpenAPI and "Output only" in proto comments; values sent for them are ignored (ROADMAP DEC-9 decides whether to reject them instead). `tenantId`, `deletedAt` and `rowVersion` are never exposed: tenant comes from the access token and the row version travels as the ETag.
 
 ### Field behaviour (who may write what)
 
@@ -66,7 +66,7 @@ Every schema separates four field classes, and the generated SDKs enforce them a
 
 - **Client-settable** fields appear in the resource schema and in its `<Resource>Update` schema.
 - **Create-only** fields (identity of a row: parents, person links) appear in the resource schema but not in `<Resource>Update`.
-- **Output-only** fields are `readOnly: true` (REST) / `Output only.` (proto): audit columns, computed totals, counters, statuses owned by workflows (gradebook points, payment status, exam marks, enrollment history columns). Writing them is rejected with 400 `FIELD_NOT_WRITABLE`.
+- **Output-only** fields are `readOnly: true` (REST) / `Output only.` (proto): audit columns, computed totals, counters, statuses owned by workflows (gradebook points, payment status, exam marks, enrollment history columns). Values sent for them are ignored (DEC-9).
 - **Workflow-owned rows** have no generic write operations at all: gradebook entries (`GradeEntry`, `BatchGradeEntries`, `PublishItemGrades`), invoice lines and dues (`CreateInvoiceFromDues`, `GenerateFeeDues`), payments (`StartCheckout`, `RecordPayment`, `RefundPayment`), payslips and their lines (`GeneratePayslips`, `MarkPayslipPaid`, `CancelPayslip`), certificates (issue flows), badge awards (`AwardBadge`), exam results and marksheet lines (`PopulateExamResults`, `RecordExamMarks`, `GenerateResults`), attendance records (`RecordAttendance`, `TakeAttendanceForSession`), quiz submissions (`StartQuizAttempt`, `SaveQuizAnswers`, `SubmitQuiz`) and LMS/cohort enrollments (`EnrollIn*` / `BatchEnrollIn*`). Documents (posted invoices, paid payslips, issued certificates, published marksheets) are immutable; corrections are new documents or logged workflow changes.
 
 ### Sensitive fields
@@ -175,10 +175,10 @@ REST errors use RFC 9457 `application/problem+json` with a stable `code`, a `tra
 
 ## Rate limits, versioning and deprecation
 
-- Limits are applied per token and per tenant; every operation declares a `429` response, and `429`s carry `Retry-After` plus `RateLimit-Limit`, `RateLimit-Remaining` and `RateLimit-Reset`.
-- The major version is in the path (`/v1`) and in the proto package (`.v1`). Additive changes (new fields, operations or enum values) do not change the version, so clients must ignore unknown fields and tolerate unknown enum values (every enum is marked `x-extensible-enum: true`; render unknown values neutrally). Breaking changes ship as `/v2` / `.v2`, with both versions served for at least 12 months. `buf breaking` and the OpenAPI diff run in CI to block accidental breaks.
-- Deprecated operations are marked `deprecated: true` and `option deprecated = true`, and responses include a `Sunset` header.
-- **Wire stability:** `backend/conformance/src/main/resources/field-numbers.lock.json` records the field numbers of **every** message (4,546, map fields included), so any regeneration preserves the wire format.
+- Every operation declares a `429` response. *Planned* (no limiter is built yet): limits per token and per tenant, `429`s carrying `Retry-After` plus `RateLimit-Limit`, `RateLimit-Remaining` and `RateLimit-Reset`.
+- The major version is in the path (`/v1`) and in the proto package (`.v1`). Additive changes (new fields, operations or enum values) do not change the version, so clients must ignore unknown fields and tolerate unknown enum values (every enum is marked `x-extensible-enum: true`; render unknown values neutrally). Breaking changes ship as `/v2` / `.v2`, with both versions served for at least 12 months. Today conformance G2 (field-number lock) blocks wire breaks; `buf breaking` and an OpenAPI diff in CI are planned (BLD-1).
+- Deprecated operations are marked `deprecated: true` and `option deprecated = true`; responses will carry a `Sunset` header (not built; no operation is deprecated yet).
+- **Wire stability:** `backend/conformance/src/main/resources/field-numbers.lock.json` records the field numbers of **every** message (map fields included), so any regeneration preserves the wire format.
 
 ## Deep links
 
@@ -188,9 +188,17 @@ REST errors use RFC 9457 `application/problem+json` with a stable `code`, a `tra
 
 ## Consent-gated operations
 
-- Data about a person is published or shared only while a matching consent is in force (`people.consent_record`, latest row per person and purpose with `withdrawnAt` empty). For a minor (date of birth less than 18 years ago) the consent must be given by a linked guardian.
-- Operations that publish photos or videos of a person (event gallery items, posts and class pages, magazine media) require `photo_video_publication`; publishing a public profile requires `public_profile`; marketing messages require `marketing`; SMS / WhatsApp messages require `sms_whatsapp_messages`; exports to third parties require `third_party_sharing`. Without it the operation fails with `FAILED_PRECONDITION` (HTTP 412 with reason `CONSENT_REQUIRED` and the missing purpose).
-- `people.WithdrawConsent` takes effect immediately; already published media for that purpose is unpublished by a background job.
+Consent lives in the `privacy` module; modules ask it through `privacy-client` (design:
+[PRIVACY-AND-CONSENT-CENTRE.md](../docs/design/PRIVACY-AND-CONSENT-CENTRE.md) §7–§8). Consent is checked per
+processing activity (`<module>.<activity>`), not per operation; for a minor only an active legal guardian's decision
+counts, and some purposes are forbidden for minors whatever a guardian says.
+
+- Enforced today: `people.CreatePublicProfile` needs the person's consent to `public_profile` (422 `CONSENT_REQUIRED`);
+  `people.GetPublicProfile` and `UpdatePublicProfile` show another person's profile only with it (404 otherwise);
+  privacy unreachable → 503 (fail closed).
+- Each other consent-based activity of design §8 (photo and video publication, naming in posts, marketing, optional
+  SMS/WhatsApp, learning analytics, external AI, proctoring, biometrics, sharing with employers) adds its check when
+  its processing is built.
 
 ## Partitioned resources
 
@@ -198,29 +206,32 @@ REST errors use RFC 9457 `application/problem+json` with a stable `code`, a `tra
 
 ## Modules
 
-| Module | REST base | gRPC package | Resources | Operations | Custom operations | gRPC services |
-|---|---|---|---:|---:|---:|---:|
-| Master Data | `/v1/master/` | `mysms.master.v1` | 4 | 20 | 0 | 4 |
-| Platform & Tenancy | `/v1/platform/` | `mysms.platform.v1` | 18 | 84 | 13 | 17 |
-| Identity & Access | `/v1/iam/` | `mysms.iam.v1` | 15 | 90 | 30 | 6 |
-| Organisation & Calendar | `/v1/org/` | `mysms.org.v1` | 9 | 50 | 5 | 6 |
-| People & Profiles | `/v1/people/` | `mysms.people.v1` | 14 | 73 | 4 | 4 |
-| Academic Structure | `/v1/academics/` | `mysms.academics.v1` | 14 | 75 | 5 | 11 |
-| Student Information | `/v1/sis/` | `mysms.sis.v1` | 18 | 108 | 20 | 14 |
-| Workforce / HR | `/v1/hr/` | `mysms.hr.v1` | 7 | 40 | 6 | 5 |
-| Payroll | `/v1/payroll/` | `mysms.payroll.v1` | 13 | 58 | 4 | 10 |
-| Admissions | `/v1/admission/` | `mysms.admission.v1` | 6 | 43 | 16 | 3 |
-| Attendance | `/v1/attendance/` | `mysms.attendance.v1` | 6 | 33 | 7 | 5 |
-| Rooms & Facilities | `/v1/facility/` | `mysms.facility.v1` | 5 | 25 | 0 | 3 |
-| Timetable | `/v1/timetable/` | `mysms.timetable.v1` | 4 | 25 | 8 | 3 |
-| Assessment & Results | `/v1/assessment/` | `mysms.assessment.v1` | 21 | 135 | 37 | 15 |
-| Learning Management | `/v1/lms/` | `mysms.lms.v1` | 128 | 711 | 130 | 65 |
-| Fees & Payments | `/v1/finance/` | `mysms.finance.v1` | 16 | 79 | 13 | 13 |
-| Library | `/v1/library/` | `mysms.library.v1` | 17 | 95 | 10 | 10 |
-| Transport | `/v1/transport/` | `mysms.transport.v1` | 3 | 15 | 0 | 2 |
-| Communication & Community | `/v1/comms/` | `mysms.comms.v1` | 43 | 235 | 35 | 22 |
-| Front Office | `/v1/frontoffice/` | `mysms.frontoffice.v1` | 4 | 21 | 1 | 4 |
-| Careers | `/v1/careers/` | `mysms.careers.v1` | 7 | 40 | 5 | 4 |
+Counts per module: [operations-status.md](operations-status.md).
+
+| Module | REST base | gRPC package |
+|---|---|---|
+| Master Data | `/v1/master/` | `mysms.master.v1` |
+| Platform & Tenancy | `/v1/platform/` | `mysms.platform.v1` |
+| Identity & Access | `/v1/iam/` | `mysms.iam.v1` |
+| Organisation & Calendar | `/v1/org/` | `mysms.org.v1` |
+| People & Profiles | `/v1/people/` | `mysms.people.v1` |
+| Academic Structure | `/v1/academics/` | `mysms.academics.v1` |
+| Student Information | `/v1/sis/` | `mysms.sis.v1` |
+| Workforce / HR | `/v1/hr/` | `mysms.hr.v1` |
+| Payroll | `/v1/payroll/` | `mysms.payroll.v1` |
+| Admissions | `/v1/admission/` | `mysms.admission.v1` |
+| Attendance | `/v1/attendance/` | `mysms.attendance.v1` |
+| Rooms & Facilities | `/v1/facility/` | `mysms.facility.v1` |
+| Timetable | `/v1/timetable/` | `mysms.timetable.v1` |
+| Assessment & Results | `/v1/assessment/` | `mysms.assessment.v1` |
+| Learning Management | `/v1/lms/` | `mysms.lms.v1` |
+| Fees & Payments | `/v1/finance/` | `mysms.finance.v1` |
+| Library | `/v1/library/` | `mysms.library.v1` |
+| Transport | `/v1/transport/` | `mysms.transport.v1` |
+| Communication & Community | `/v1/comms/` | `mysms.comms.v1` |
+| Front Office | `/v1/frontoffice/` | `mysms.frontoffice.v1` |
+| Careers | `/v1/careers/` | `mysms.careers.v1` |
+| Privacy and Consent | `/v1/privacy/` | `mysms.privacy.v1` |
 
 ## Key workflows
 
@@ -234,8 +245,12 @@ The custom operations, grouped by business process. Each runs in one transaction
 - **`platform.tenant_subscription`**: `StartSubscriptionCheckout`, `ConfirmSubscriptionCheckout`, `ReceiveSubscriptionWebhook`, `CancelSubscription`
 - **`platform.sales_enquiry`**: `MarkEnquiryContacted` (platform staff)
 - **`org.academic_year`**: `ActivateAcademicYear`, `CloseAcademicYear`, `GenerateTerms`
-- **`people.person`**: `ListBirthdays`, `SendGreetings`, `GetConsentStatus`, `GetMyPerson`, `UpdateMyPerson` (the caller's own record; contact and self-description fields only)
+- **`people.person`**: `ListBirthdays`, `SendGreetings`, `GetMyPerson`, `UpdateMyPerson` (the caller's own record; contact and self-description fields only)
 - **`privacy.notice_version`**: `PublishNoticeVersion`
+- **`privacy.consent_record`**: `ListMyConsents`, `RecordMyConsent`, `WithdrawMyConsent`, `GetMyNotice`, `RecordConsentOnBehalf`, `VerifyConsentRecord`
+- **`privacy.consent_decision`** (internal, service principals): `CheckConsent`, `BatchCheckConsent`, `GetPurposeStatus`, `ListSubjectsWithConsent`
+- **`privacy.rights_request`**: `SubmitMyRequest`, `ListMyRequests`, `GetMyRequest`, `GetMyAccessSummary`, `GetAccessSummary`, `VerifyRightsRequestIdentity`, `AssignRightsRequest`, `ExtendRightsRequest`, `RejectRightsRequest`, `CloseRightsRequest`, `FulfilAccessRequest`, `StartRightsRequestFulfilment`, `FulfilWithdrawAllRequest`, `RetryRightsRequestTask`
+- **`privacy.legal_hold`**: `ReleaseLegalHold`; `ListActiveHolds` (internal, service principals)
 - **`sis.student`**: `ChangeStudentStatus`, `GetStudentSummary`, `IssueBonafideCertificate`, `CreateStudentPortalAccount`
 - **`sis.guardian`**: `CreatePortalAccount`, `ListMyChildren`
 - **`sis.promotion`**: `ProposePromotions`, `ApprovePromotion`, `RejectPromotion`, `ApplyPromotions`
@@ -321,7 +336,6 @@ The custom operations, grouped by business process. Each runs in one transaction
 - **`lms.drive_item`**: `ShareDriveItem`
 - **`platform.storage_quota`**: `GetMyStorageUsage`
 - **`comms.notification_channel`**: `SendTestMessage`
-- **`people.consent_record`**: `WithdrawConsent`
 
 ## The Java contracts, and what is generated
 

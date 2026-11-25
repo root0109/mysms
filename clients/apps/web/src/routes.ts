@@ -70,7 +70,21 @@ export const routes = buildAppRoutes({
       () => import('@mysms/web-kit/screens/NotificationPreferencesScreen'),
       'NotificationPreferencesScreen',
     ),
+    'ACC-13': onDemand(
+      () => import('@mysms/web-kit/screens/privacy/ConsentCentreScreen'),
+      'ConsentCentreScreen',
+    ),
     'ACC-14': onDemand(() => import('@mysms/web-kit/screens/SettingsScreen'), 'SettingsScreen'),
+    'ACC-15': onDemand(() => import('@mysms/web-kit/screens/privacy/MyRequestsScreen'), 'MyRequestsScreen'),
+    'ADM-17': onDemand(() => import('@mysms/web-kit/screens/privacy/PurposesScreen'), 'PurposesScreen'),
+    'ADM-18': onDemand(() => import('@mysms/web-kit/screens/privacy/NoticesScreen'), 'NoticesScreen'),
+    'ADM-19': onDemand(
+      () => import('@mysms/web-kit/screens/privacy/RightsRequestsScreen'),
+      'RightsRequestsScreen',
+    ),
+    'ADM-20': onDemand(() => import('@mysms/web-kit/screens/privacy/BreachesScreen'), 'BreachesScreen'),
+    'ADM-21': onDemand(() => import('@mysms/web-kit/screens/privacy/LegalHoldsScreen'), 'LegalHoldsScreen'),
+    'ADM-22': onDemand(() => import('@mysms/web-kit/screens/privacy/RetentionScreen'), 'RetentionScreen'),
     'LMS-15': onDemand(() => import('@mysms/web-kit/screens/lms/CertificatesScreen'), 'CertificatesScreen'),
     'LMS-16': onDemand(
       () => import('@mysms/web-kit/screens/lms/EvaluationBookingScreen'),

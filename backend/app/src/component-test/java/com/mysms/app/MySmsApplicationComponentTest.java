@@ -67,7 +67,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The monolith assembles all 22 modules, each on its own database with its own migrations, all 682 tables present,
+ * The monolith assembles all 22 modules, each on its own database with its own migrations, all 733 tables present,
  * every operation routed at the edge — and a real cross-module flow: sign-in at iam, GetMe reading the person from
  * people over in-process gRPC with the caller's token, a profile update at people.
  */
@@ -358,13 +358,13 @@ class MySmsApplicationComponentTest {
                 "SELECT count(*) FROM information_schema.tables WHERE table_name <> 'flyway_schema_history'"
                         + " AND table_schema = ANY(:schemas)")
                 .param("schemas", MODULES).query(Integer.class).single();
-        assertThat(tables).as("every CREATE TABLE of database/migrations").isEqualTo(682);
+        assertThat(tables).as("every CREATE TABLE of database/migrations").isEqualTo(733);
         Integer histories = any.jdbc().sql(
                 // the catalog, not information_schema: the application role has no privilege on the Flyway history
                 "SELECT count(*) FROM pg_catalog.pg_class WHERE relname = 'flyway_schema_history' AND relkind = 'r'")
                 .query(Integer.class).single();
         assertThat(histories).isEqualTo(22);
-        assertThat(operations.size()).isEqualTo(2077);
+        assertThat(operations.size()).isEqualTo(2122);
     }
 
     @Test

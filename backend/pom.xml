@@ -28,6 +28,7 @@
     <module>core</module>
     <module>auth-client</module>
     <module>messaging</module>
+    <module>privacy-client</module>
     <module>master</module>
     <module>platform</module>
     <module>iam</module>
@@ -182,6 +183,17 @@
       <dependency>
         <groupId>com.mysms</groupId>
         <artifactId>auth-client</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+      </dependency>
+      <dependency>
+        <groupId>com.mysms</groupId>
+        <artifactId>privacy-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.mysms</groupId>
+        <artifactId>privacy-client</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
       </dependency>

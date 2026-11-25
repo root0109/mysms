@@ -26,6 +26,12 @@
       <groupId>com.mysms</groupId>
       <artifactId>auth-client</artifactId>
     </dependency>
+    <!-- privacy's rights-request tasks and retention runs (PrivacyTaskHandler, design PRIVACY-AND-CONSENT-CENTRE §9.1);
+         brings messaging (the relay, and the event API the handler's base class implements) -->
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>privacy-client</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.mapstruct</groupId>
       <artifactId>mapstruct</artifactId>
@@ -34,12 +40,6 @@
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <scope>provided</scope>
-    </dependency>
-    <!-- messaging runtime relay; event consumers compile against its narrow API -->
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>messaging</artifactId>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>com.mysms</groupId>
@@ -50,6 +50,12 @@
     <dependency>
       <groupId>com.mysms</groupId>
       <artifactId>auth-client</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>privacy-client</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

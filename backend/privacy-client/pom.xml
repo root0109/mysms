@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  privacy-client: the consent checker every module uses (ROADMAP SEC-11 slice 6c, design
+  docs/design/PRIVACY-AND-CONSENT-CENTRE.md §7), an approved exception to the module rules like auth-client
+  (CLAUDE.md §2): the answer must be the same and fail closed in every module. Public API: ConsentChecker,
+  ActivityCode, ConsentScope, ConsentDecision, ConsentReason. It owns a verbatim copy of privacy's privacy.proto, the
+  gRPC client of privacy's ConsentDecisionService (called as the asking module's service principal) and a
+  per-process Caffeine cache with a short TTL (no invalidation event: the replicas of a module share one queue).
+  Its test-jar provides TestConsents: privacy's answers for a module's component tests.
+  It also carries a module's part in rights requests and retention (design §9.1, §10): PrivacyTaskHandler, the
+  Template Method a module extends to answer privacy.rights_request.task_assigned and privacy.retention.due, and the
+  LegalHolds port (privacy's ListActiveHolds over gRPC, fail closed); its test-jar's TestLegalHolds stands in for
+  privacy's holds in component tests.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.mysms</groupId>
+    <artifactId>mysms</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>privacy-client</artifactId>
+  <name>MySMS privacy client</name>
+
+  <properties>
+    <!-- no layer packages here: SpotBugs analyses the module's own root package -->
+    <mysms.spotbugs.onlyAnalyze>com.mysms.privacyclient.-</mysms.spotbugs.onlyAnalyze>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>core</artifactId>
+    </dependency>
+    <!-- the service identity a consent check is made with (ServiceTokenProvider) -->
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>auth-client</artifactId>
+    </dependency>
+    <!-- a module's privacy tasks arrive as events and answer through its outbox (the narrow event API) -->
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>messaging</artifactId>
+    </dependency>
+    <!-- the per-process consent cache (approved: CLAUDE.md §2) -->
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-inprocess</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- PrivacyTaskHandlerComponentTest: a real PostgreSQL schema through core's test kit -->
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- a verbatim copy of privacy's privacy.proto: the client of its ConsentDecisionService -->
+      <plugin>
+        <groupId>org.xolstice.maven.plugins</groupId>
+        <artifactId>protobuf-maven-plugin</artifactId>
+      </plugin>
+      <!-- the test jar: TestConsents in place of privacy for the component tests of a module that checks consent -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>test-consents</id>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+            <configuration>
+              <includes>
+                <include>com/mysms/privacyclient/testing/**</include>
+                <include>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

@@ -93,6 +93,7 @@ public class NoticeService extends AppTransactionManager {
     private static final String FALLBACK_LANGUAGE = "en";
 
     private final NoticeRepository repository;
+    private final ConsentStateWriter stateWriter;
     private final NoticeMapper mapper;
     private final NoticeVersionRepository noticeVersionRepository;
     private final NoticeVersionMapper noticeVersionMapper;
@@ -104,6 +105,7 @@ public class NoticeService extends AppTransactionManager {
     private final Clock clock;
 
     public NoticeService(NoticeRepository repository,
+            ConsentStateWriter stateWriter,
             NoticeMapper mapper,
             NoticeVersionRepository noticeVersionRepository,
             NoticeVersionMapper noticeVersionMapper,
@@ -117,6 +119,7 @@ public class NoticeService extends AppTransactionManager {
             Clock clock) {
         super(database, transactions);
         this.repository = repository;
+        this.stateWriter = stateWriter;
         this.mapper = mapper;
         this.noticeVersionRepository = noticeVersionRepository;
         this.noticeVersionMapper = noticeVersionMapper;
@@ -339,6 +342,8 @@ public class NoticeService extends AppTransactionManager {
     /**
      * privacy.PublishNoticeVersion: a draft with at least one translation becomes the notice's active version and the
      * previously active one is retired, superseded by it, in the same transaction. Compares the body etag when sent.
+     * A version that asks everyone again has the consent answers of every purpose naming the notice recomputed in
+     * that transaction: grants recorded before it no longer count.
      */
     public NoticeVersion publishNoticeVersion(UUID noticeId, UUID id, PublishNoticeVersionRequest request) {
         requireTenantWide(NOTICE_VERSION_PERMISSION_PUBLISH);
@@ -369,6 +374,9 @@ public class NoticeService extends AppTransactionManager {
             outbox.publish(NOTICE_VERSION_AGGREGATE + PrivacyEvents.PUBLISHED, NOTICE_VERSION_AGGREGATE, id,
                     PrivacyEvents.noticeVersionPublished(id, noticeId, draft.getVersion(), draft.getPurposeCodes(),
                             Boolean.TRUE.equals(draft.getRequiresReconsent())));
+            if (Boolean.TRUE.equals(draft.getRequiresReconsent())) {
+                repository.purposesNaming(noticeId).forEach(stateWriter::recomputePurpose);
+            }
             return noticeVersionMapper.toDto(loadNoticeVersion(noticeId, id));
         });
     }

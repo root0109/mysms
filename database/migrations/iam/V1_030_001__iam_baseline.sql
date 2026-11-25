@@ -927,6 +927,61 @@ ALTER TABLE iam.operation ENABLE ROW LEVEL SECURITY;
 ALTER TABLE iam.operation FORCE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation ON iam.operation USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
 
+-- === Privacy tasks (design PRIVACY-AND-CONSENT-CENTRE §9.1, §10) and the module's scheduled jobs (core JobSchedule) ===
+CREATE TABLE iam.privacy_task_receipt (
+    task_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    kind varchar(10) NOT NULL,
+    payload jsonb NOT NULL,
+    status varchar(15) NOT NULL DEFAULT 'received',
+    result jsonb,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    completed_at timestamptz,
+    CONSTRAINT pk_iam_privacy_task_receipt PRIMARY KEY (task_id),
+    CONSTRAINT ck_iam_privacy_task_receipt_kind CHECK (kind IN ('task', 'retention')),
+    CONSTRAINT ck_iam_privacy_task_receipt_status CHECK (status IN ('received', 'done', 'partial', 'failed',
+        'not_applicable')),
+    CONSTRAINT ck_iam_privacy_task_receipt_completed CHECK ((status = 'received') = (completed_at IS NULL))
+);
+COMMENT ON TABLE iam.privacy_task_receipt IS 'The privacy tasks and retention runs privacy sent this module (privacy.rights_request.task_assigned, privacy.retention.due), one row per task or run id: a task dispatched again runs once, is retried after a failure and is answered again from the stored answer (privacy-client PrivacyTaskHandler). Ids, codes and counts only.';
+COMMENT ON COLUMN iam.privacy_task_receipt.task_id IS 'The rights-request task id or the retention run id privacy sent; the id the module answers with.';
+COMMENT ON COLUMN iam.privacy_task_receipt.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
+COMMENT ON COLUMN iam.privacy_task_receipt.kind IS 'task (a rights-request task) or retention (a retention run).';
+COMMENT ON COLUMN iam.privacy_task_receipt.payload IS 'The event''s data as privacy sent it: ids, codes and dates only.';
+COMMENT ON COLUMN iam.privacy_task_receipt.status IS 'received (waiting for the module''s job), done, partial, failed or not_applicable.';
+COMMENT ON COLUMN iam.privacy_task_receipt.result IS 'The answer published (<module>.privacy_task.completed or <module>.privacy_retention.completed): counts and codes; null while received.';
+COMMENT ON COLUMN iam.privacy_task_receipt.created_at IS 'When the task or run first arrived.';
+COMMENT ON COLUMN iam.privacy_task_receipt.completed_at IS 'When the module answered; null while received.';
+CREATE INDEX ix_iam_privacy_task_receipt_received ON iam.privacy_task_receipt (tenant_id, created_at) WHERE status = 'received';
+COMMENT ON INDEX iam.ix_iam_privacy_task_receipt_received IS 'The tasks and runs waiting for the module''s job, the oldest first.';
+ALTER TABLE iam.privacy_task_receipt ENABLE ROW LEVEL SECURITY;
+ALTER TABLE iam.privacy_task_receipt FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON iam.privacy_task_receipt USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+CREATE TABLE iam.job_schedule (
+    job_code varchar(60) NOT NULL,
+    tenant_id uuid NOT NULL,
+    next_run_at timestamptz NOT NULL,
+    lease_owner uuid,
+    lease_until timestamptz,
+    last_run_at timestamptz,
+    failures integer NOT NULL DEFAULT 0,
+    last_error varchar(500),
+    CONSTRAINT pk_job_schedule PRIMARY KEY (job_code, tenant_id),
+    CONSTRAINT ck_job_schedule_lease CHECK ((lease_owner IS NULL) = (lease_until IS NULL)),
+    CONSTRAINT ck_job_schedule_failures CHECK (failures >= 0)
+);
+COMMENT ON TABLE iam.job_schedule IS 'When each tenant is next due for each scheduled job of the module (core JobSchedule, ROADMAP ARC-4). A tenant is enrolled the first time it has work for the job. Job codes, tenant ids and times only, no personal data, and no row-level security: the job runner claims due rows across tenants, then runs each in its tenant''s own context.';
+COMMENT ON COLUMN iam.job_schedule.job_code IS 'The job (<module>.<name>): iam.privacy_tasks (runs the privacy tasks and retention runs of iam.privacy_task_receipt).';
+COMMENT ON COLUMN iam.job_schedule.tenant_id IS 'The tenant the job runs for.';
+COMMENT ON COLUMN iam.job_schedule.next_run_at IS 'When the tenant is next due.';
+COMMENT ON COLUMN iam.job_schedule.lease_owner IS 'The runner (a random id per process) holding the tenant''s run; null while no run is held.';
+COMMENT ON COLUMN iam.job_schedule.lease_until IS 'Until when the lease holds; after it another runner may take the run over.';
+COMMENT ON COLUMN iam.job_schedule.last_run_at IS 'When the last run ended, finished or failed.';
+COMMENT ON COLUMN iam.job_schedule.failures IS 'Failed runs in a row; the retry delay doubles with each.';
+COMMENT ON COLUMN iam.job_schedule.last_error IS 'Why the last run failed (exception class and message, first 500 characters); null after a finished run.';
+CREATE INDEX ix_job_schedule_due ON iam.job_schedule (next_run_at);
+COMMENT ON INDEX iam.ix_job_schedule_due IS 'The due runs, the longest overdue first.';
+
 -- === Indexes on logical (cross-module) reference columns ===
 CREATE INDEX ix_user_account_tenant_id ON iam.user_account (tenant_id);
 CREATE INDEX ix_user_account_person_id ON iam.user_account (person_id);
@@ -2496,12 +2551,30 @@ VALUES
     (md5('mysms.permission:' || 'platform.upload_policy.delete')::uuid, 'platform.upload_policy.delete', 'Delete UploadPolicy', 'platform', false, true),
     (md5('mysms.permission:' || 'platform.upload_policy.read')::uuid, 'platform.upload_policy.read', 'List UploadPolicies', 'platform', false, true),
     (md5('mysms.permission:' || 'platform.upload_policy.update')::uuid, 'platform.upload_policy.update', 'Update UploadPolicy', 'platform', false, true),
+    (md5('mysms.permission:' || 'privacy.breach.close')::uuid, 'privacy.breach.close', 'Close a personal data breach once its notices are recorded', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.breach.contain')::uuid, 'privacy.breach.contain', 'Record that a personal data breach is contained', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.breach.mark_not_a_breach')::uuid, 'privacy.breach.mark_not_a_breach', 'Record that a reported breach is not a personal data breach', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.breach.read')::uuid, 'privacy.breach.read', 'List Breaches', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.breach.record_notification')::uuid, 'privacy.breach.record_notification', 'Record a notice sent about a personal data breach', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.breach.report')::uuid, 'privacy.breach.report', 'Report a personal data breach into the register', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.breach.triage')::uuid, 'privacy.breach.triage', 'Record that a personal data breach was triaged', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.breach.update')::uuid, 'privacy.breach.update', 'Update Breach', 'privacy', false, true),
     (md5('mysms.permission:' || 'privacy.consent_record.read')::uuid, 'privacy.consent_record.read', 'List ConsentRecords', 'privacy', false, true),
     (md5('mysms.permission:' || 'privacy.consent_record.record_on_behalf')::uuid, 'privacy.consent_record.record_on_behalf', 'Record a consent from a signed paper form on its giver''s behalf', 'privacy', false, true),
     (md5('mysms.permission:' || 'privacy.consent_record.verify')::uuid, 'privacy.consent_record.verify', 'Verify a consent recorded by another staff member', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.coverage.read')::uuid, 'privacy.coverage.read', 'Consent coverage of a purpose per width, in counts only', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.legal_hold.place')::uuid, 'privacy.legal_hold.place', 'Place a legal hold on a subject''s data, a data category or a set of records', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.legal_hold.read')::uuid, 'privacy.legal_hold.read', 'List LegalHolds', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.legal_hold.release')::uuid, 'privacy.legal_hold.release', 'Release a legal hold', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.legal_hold.update')::uuid, 'privacy.legal_hold.update', 'Move a legal hold''s review date', 'privacy', false, true),
     (md5('mysms.permission:' || 'privacy.my_consent.create')::uuid, 'privacy.my_consent.create', 'Record the caller''s own consent decision, or one for a child they are the legal guardian of', 'privacy', true, false),
     (md5('mysms.permission:' || 'privacy.my_consent.read')::uuid, 'privacy.my_consent.read', 'The caller''s consent centre and the privacy notices it shows', 'privacy', true, false),
     (md5('mysms.permission:' || 'privacy.my_consent.withdraw')::uuid, 'privacy.my_consent.withdraw', 'Withdraw one of the caller''s own consent decisions', 'privacy', true, false),
+    (md5('mysms.permission:' || 'privacy.my_nominee.read')::uuid, 'privacy.my_nominee.read', 'The caller''s own nominee, who may exercise their privacy rights on their death or incapacity', 'privacy', true, false),
+    (md5('mysms.permission:' || 'privacy.my_nominee.revoke')::uuid, 'privacy.my_nominee.revoke', 'Revoke the caller''s own nominee', 'privacy', true, false),
+    (md5('mysms.permission:' || 'privacy.my_nominee.set')::uuid, 'privacy.my_nominee.set', 'Name the caller''s own nominee (adults)', 'privacy', true, false),
+    (md5('mysms.permission:' || 'privacy.my_request.create')::uuid, 'privacy.my_request.create', 'Submit a privacy rights request for oneself, or for a child one is the legal guardian of', 'privacy', true, false),
+    (md5('mysms.permission:' || 'privacy.my_request.read')::uuid, 'privacy.my_request.read', 'The caller''s own privacy rights requests', 'privacy', true, false),
     (md5('mysms.permission:' || 'privacy.notice.create')::uuid, 'privacy.notice.create', 'Create Notice', 'privacy', false, true),
     (md5('mysms.permission:' || 'privacy.notice.delete')::uuid, 'privacy.notice.delete', 'Delete Notice', 'privacy', false, true),
     (md5('mysms.permission:' || 'privacy.notice.read')::uuid, 'privacy.notice.read', 'List Notices', 'privacy', false, true),
@@ -2514,6 +2587,18 @@ VALUES
     (md5('mysms.permission:' || 'privacy.notice_version.publish')::uuid, 'privacy.notice_version.publish', 'Publish NoticeVersion', 'privacy', false, true),
     (md5('mysms.permission:' || 'privacy.notice_version.read')::uuid, 'privacy.notice_version.read', 'List NoticeVersions', 'privacy', false, true),
     (md5('mysms.permission:' || 'privacy.notice_version.update')::uuid, 'privacy.notice_version.update', 'Update NoticeVersion', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.processing_activity.read')::uuid, 'privacy.processing_activity.read', 'List ProcessingActivities', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.retention_policy.read')::uuid, 'privacy.retention_policy.read', 'List RetentionPolicies', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.retention_policy.update')::uuid, 'privacy.retention_policy.update', 'Set the tenant''s own retention period and action, never below the legal floor', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.retention_run.read')::uuid, 'privacy.retention_run.read', 'List RetentionRuns', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.rights_request.assign')::uuid, 'privacy.rights_request.assign', 'Assign a privacy rights request to a staff member', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.rights_request.close')::uuid, 'privacy.rights_request.close', 'Close a privacy rights request with its outcome', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.rights_request.extend')::uuid, 'privacy.rights_request.extend', 'Extend the response deadline of a privacy rights request', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.rights_request.fulfil')::uuid, 'privacy.rights_request.fulfil', 'Answer a privacy access request with the subject''s access summary and close it', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.rights_request.read')::uuid, 'privacy.rights_request.read', 'List RightsRequests', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.rights_request.reject')::uuid, 'privacy.rights_request.reject', 'Reject a privacy rights request', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.rights_request.retry_task')::uuid, 'privacy.rights_request.retry_task', 'Dispatch a failed or unanswered erasure or export task to its module again', 'privacy', false, true),
+    (md5('mysms.permission:' || 'privacy.rights_request.verify_identity')::uuid, 'privacy.rights_request.verify_identity', 'Verify a privacy rights request''s requester in person or by document', 'privacy', false, true),
     (md5('mysms.permission:' || 'privacy.tenant_purpose.read')::uuid, 'privacy.tenant_purpose.read', 'List Purposes', 'privacy', false, true),
     (md5('mysms.permission:' || 'privacy.tenant_purpose.update')::uuid, 'privacy.tenant_purpose.update', 'Update Purpose', 'privacy', false, true),
     (md5('mysms.permission:' || 'sis.activity_type.create')::uuid, 'sis.activity_type.create', 'Create ActivityType', 'sis', false, true),

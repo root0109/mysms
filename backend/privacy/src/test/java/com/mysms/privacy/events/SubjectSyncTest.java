@@ -14,6 +14,9 @@ import static org.mockito.Mockito.when;
 
 import com.mysms.messaging.events.EventEnvelope;
 import com.mysms.messaging.events.RejectedEventException;
+import com.mysms.privacy.business.ConsentStateWriter;
+import com.mysms.privacy.business.MajorityJob;
+import com.mysms.privacy.business.RetentionJob;
 import com.mysms.privacy.model.Majority;
 import com.mysms.privacy.model.StudentRecord;
 import com.mysms.privacy.model.StudentRecords;
@@ -31,8 +34,9 @@ import org.mockito.ArgumentCaptor;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The subject sync's reading of person and student events: the majority on the clock's day, a deletion that clears
- * the person, a student record moved between persons, a late student event, and what it refuses.
+ * The subject sync's reading of person and student events: the majority on the clock's day and the consent answers
+ * recomputed after it, a deletion that clears the person, a student record moved between persons, a late student
+ * event, and what it refuses.
  */
 class SubjectSyncTest {
 
@@ -40,7 +44,11 @@ class SubjectSyncTest {
     private static final UUID TENANT = UUID.randomUUID();
 
     private final SubjectRepository subjects = mock(SubjectRepository.class);
-    private final SubjectSync sync = new SubjectSync(subjects, JsonMapper.builder().build(), CLOCK, 18);
+    private final ConsentStateWriter stateWriter = mock(ConsentStateWriter.class);
+    private final MajorityJob majorityJob = mock(MajorityJob.class);
+    private final RetentionJob retentionJob = mock(RetentionJob.class);
+    private final SubjectSync sync = new SubjectSync(subjects, stateWriter, majorityJob, retentionJob,
+            JsonMapper.builder().build(), CLOCK, 18);
 
     private static EventEnvelope event(String type, UUID id, String data) {
         String aggregate = type.substring(0, type.lastIndexOf('.'));
@@ -56,6 +64,18 @@ class SubjectSyncTest {
                 "{\"id\":\"" + person + "\",\"dateOfBirth\":\"2008-11-22\",\"rowVersion\":4}"))).isTrue();
         verify(subjects).applyPerson(eq(person), eq(Majority.MINOR), eq(LocalDate.of(2008, 11, 22)),
                 eq(LocalDate.of(2026, 11, 22)), eq(4), any());
+        verify(stateWriter).recomputeSubject(person);
+        verify(majorityJob).enrol(any());
+        verify(retentionJob).enrol(any());
+    }
+
+    @Test
+    void anOlderPersonEventRecomputesNothing() {
+        UUID person = UUID.randomUUID();
+        when(subjects.applyPerson(any(), any(), any(), any(), anyInt(), any())).thenReturn(false);
+        assertThat(sync.apply(event("people.person.updated", person,
+                "{\"id\":\"" + person + "\",\"dateOfBirth\":\"2008-11-22\",\"rowVersion\":2}"))).isFalse();
+        verifyNoInteractions(stateWriter);
     }
 
     @Test
@@ -87,6 +107,7 @@ class SubjectSyncTest {
         verify(subjects).writeStudentRecords(eq(after), joined.capture(), any());
         assertThat(joined.getValue().studentIds()).containsExactly(student);
         assertThat(joined.getValue().institutionIds()).containsExactly(institution);
+        verifyNoInteractions(stateWriter);
     }
 
     @Test
@@ -131,7 +152,8 @@ class SubjectSyncTest {
 
     @Test
     void refusesAnAgeOfMajorityBelowOneYear() {
-        assertThatThrownBy(() -> new SubjectSync(subjects, JsonMapper.builder().build(), CLOCK, 0))
+        assertThatThrownBy(() -> new SubjectSync(subjects, stateWriter, majorityJob, retentionJob,
+                JsonMapper.builder().build(), CLOCK, 0))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

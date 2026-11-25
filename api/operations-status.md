@@ -25,11 +25,11 @@ misleading 404.
 | payroll | 58 | 58 | 0 |
 | people | 68 | 66 | 2 |
 | platform | 86 | 86 | 0 |
-| privacy | 26 | 26 | 0 |
+| privacy | 71 | 71 | 0 |
 | sis | 108 | 108 | 0 |
 | timetable | 25 | 23 | 2 |
 | transport | 15 | 15 | 0 |
-| **all** | **2077** | **2031** | **46** |
+| **all** | **2122** | **2076** | **46** |
 
 ## academics
 
@@ -2028,31 +2028,76 @@ misleading 404.
 
 | Operation | Method | Path | Permission | Status | Why not served |
 |---|---|---|---|---|---|
+| `privacy.AssignRightsRequest` | POST | `/v1/privacy/rights-requests/{rightsRequestId}:assign` | `privacy.rights_request.assign` | served |  |
+| `privacy.BatchCheckConsent` | POST | `/v1/privacy/consent-decisions:batchCheck` | `privacy.consent_decision.batch_check` | served |  |
+| `privacy.CheckConsent` | GET | `/v1/privacy/consent-decisions:check` | `privacy.consent_decision.check` | served |  |
+| `privacy.CloseBreach` | POST | `/v1/privacy/breaches/{breachId}:close` | `privacy.breach.close` | served |  |
+| `privacy.CloseRightsRequest` | POST | `/v1/privacy/rights-requests/{rightsRequestId}:close` | `privacy.rights_request.close` | served |  |
+| `privacy.ContainBreach` | POST | `/v1/privacy/breaches/{breachId}:contain` | `privacy.breach.contain` | served |  |
 | `privacy.CreateNotice` | POST | `/v1/privacy/notices` | `privacy.notice.create` | served |  |
 | `privacy.CreateNoticeTranslation` | POST | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations` | `privacy.notice_translation.create` | served |  |
 | `privacy.CreateNoticeVersion` | POST | `/v1/privacy/notices/{noticeId}/versions` | `privacy.notice_version.create` | served |  |
 | `privacy.DeleteNotice` | DELETE | `/v1/privacy/notices/{noticeId}` | `privacy.notice.delete` | served |  |
 | `privacy.DeleteNoticeTranslation` | DELETE | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}` | `privacy.notice_translation.delete` | served |  |
+| `privacy.ExtendRightsRequest` | POST | `/v1/privacy/rights-requests/{rightsRequestId}:extend` | `privacy.rights_request.extend` | served |  |
+| `privacy.FulfilAccessRequest` | POST | `/v1/privacy/rights-requests/{rightsRequestId}:fulfilAccess` | `privacy.rights_request.fulfil` | served |  |
+| `privacy.FulfilWithdrawAllRequest` | POST | `/v1/privacy/rights-requests/{rightsRequestId}:fulfilWithdrawAll` | `privacy.rights_request.fulfil` | served |  |
+| `privacy.GetAccessSummary` | GET | `/v1/privacy/rights-requests/{rightsRequestId}/access-summary` | `privacy.rights_request.read` | served |  |
+| `privacy.GetBreach` | GET | `/v1/privacy/breaches/{breachId}` | `privacy.breach.read` | served |  |
+| `privacy.GetConsentCoverage` | GET | `/v1/privacy/coverage` | `privacy.coverage.read` | served |  |
 | `privacy.GetConsentRecord` | GET | `/v1/privacy/consent-records/{consentRecordId}` | `privacy.consent_record.read` | served |  |
+| `privacy.GetLegalHold` | GET | `/v1/privacy/legal-holds/{legalHoldId}` | `privacy.legal_hold.read` | served |  |
+| `privacy.GetMyAccessSummary` | GET | `/v1/privacy/my/requests/{rightsRequestId}/access-summary` | `privacy.my_request.read` | served |  |
+| `privacy.GetMyNominee` | GET | `/v1/privacy/my/nominee` | `privacy.my_nominee.read` | served |  |
 | `privacy.GetMyNotice` | GET | `/v1/privacy/my/notices/{noticeCode}` | `privacy.my_consent.read` | served |  |
+| `privacy.GetMyRequest` | GET | `/v1/privacy/my/requests/{rightsRequestId}` | `privacy.my_request.read` | served |  |
 | `privacy.GetNotice` | GET | `/v1/privacy/notices/{noticeId}` | `privacy.notice.read` | served |  |
 | `privacy.GetNoticeTranslation` | GET | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}` | `privacy.notice_translation.read` | served |  |
 | `privacy.GetNoticeVersion` | GET | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}` | `privacy.notice_version.read` | served |  |
+| `privacy.GetProcessingRegisterExport` | GET | `/v1/privacy/processing-activities:export` | `privacy.processing_activity.read` | served |  |
 | `privacy.GetPurpose` | GET | `/v1/privacy/purposes/{purposeId}` | `privacy.tenant_purpose.read` | served |  |
+| `privacy.GetPurposeStatus` | GET | `/v1/privacy/consent-decisions:purposeStatus` | `privacy.consent_decision.get_purpose_status` | served |  |
+| `privacy.GetRetentionPolicy` | GET | `/v1/privacy/retention-policies/{retentionPolicyId}` | `privacy.retention_policy.read` | served |  |
+| `privacy.GetRightsRequest` | GET | `/v1/privacy/rights-requests/{rightsRequestId}` | `privacy.rights_request.read` | served |  |
+| `privacy.ListActiveHolds` | GET | `/v1/privacy/legal-holds:active` | `privacy.legal_hold.check` | served |  |
+| `privacy.ListBreaches` | GET | `/v1/privacy/breaches` | `privacy.breach.read` | served |  |
 | `privacy.ListConsentRecords` | GET | `/v1/privacy/consent-records` | `privacy.consent_record.read` | served |  |
+| `privacy.ListLegalHolds` | GET | `/v1/privacy/legal-holds` | `privacy.legal_hold.read` | served |  |
 | `privacy.ListMyConsents` | GET | `/v1/privacy/my/consents` | `privacy.my_consent.read` | served |  |
+| `privacy.ListMyRequests` | GET | `/v1/privacy/my/requests` | `privacy.my_request.read` | served |  |
 | `privacy.ListNoticeTranslations` | GET | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations` | `privacy.notice_translation.read` | served |  |
 | `privacy.ListNoticeVersions` | GET | `/v1/privacy/notices/{noticeId}/versions` | `privacy.notice_version.read` | served |  |
 | `privacy.ListNotices` | GET | `/v1/privacy/notices` | `privacy.notice.read` | served |  |
+| `privacy.ListProcessingActivities` | GET | `/v1/privacy/processing-activities` | `privacy.processing_activity.read` | served |  |
 | `privacy.ListPurposes` | GET | `/v1/privacy/purposes` | `privacy.tenant_purpose.read` | served |  |
+| `privacy.ListRetentionPolicies` | GET | `/v1/privacy/retention-policies` | `privacy.retention_policy.read` | served |  |
+| `privacy.ListRetentionRuns` | GET | `/v1/privacy/retention-runs` | `privacy.retention_run.read` | served |  |
+| `privacy.ListRightsRequests` | GET | `/v1/privacy/rights-requests` | `privacy.rights_request.read` | served |  |
+| `privacy.ListSubjectsWithConsent` | GET | `/v1/privacy/consent-decisions:subjects` | `privacy.consent_decision.list_subjects` | served |  |
+| `privacy.MarkBreachNotABreach` | POST | `/v1/privacy/breaches/{breachId}:markNotABreach` | `privacy.breach.mark_not_a_breach` | served |  |
+| `privacy.PlaceLegalHold` | POST | `/v1/privacy/legal-holds` | `privacy.legal_hold.place` | served |  |
 | `privacy.PublishNoticeVersion` | POST | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}:publish` | `privacy.notice_version.publish` | served |  |
+| `privacy.RecordBreachNotification` | POST | `/v1/privacy/breaches/{breachId}:recordNotification` | `privacy.breach.record_notification` | served |  |
 | `privacy.RecordConsentOnBehalf` | POST | `/v1/privacy/consent-records` | `privacy.consent_record.record_on_behalf` | served |  |
 | `privacy.RecordMyConsent` | POST | `/v1/privacy/my/consents` | `privacy.my_consent.create` | served |  |
+| `privacy.RejectRightsRequest` | POST | `/v1/privacy/rights-requests/{rightsRequestId}:reject` | `privacy.rights_request.reject` | served |  |
+| `privacy.ReleaseLegalHold` | POST | `/v1/privacy/legal-holds/{legalHoldId}:release` | `privacy.legal_hold.release` | served |  |
+| `privacy.ReportBreach` | POST | `/v1/privacy/breaches` | `privacy.breach.report` | served |  |
+| `privacy.RetryRightsRequestTask` | POST | `/v1/privacy/rights-requests/{rightsRequestId}/tasks/{taskId}:retry` | `privacy.rights_request.retry_task` | served |  |
+| `privacy.RevokeMyNominee` | POST | `/v1/privacy/my/nominee:revoke` | `privacy.my_nominee.revoke` | served |  |
+| `privacy.SetMyNominee` | POST | `/v1/privacy/my/nominee:set` | `privacy.my_nominee.set` | served |  |
+| `privacy.StartRightsRequestFulfilment` | POST | `/v1/privacy/rights-requests/{rightsRequestId}:startFulfilment` | `privacy.rights_request.fulfil` | served |  |
+| `privacy.SubmitMyRequest` | POST | `/v1/privacy/my/requests` | `privacy.my_request.create` | served |  |
+| `privacy.TriageBreach` | POST | `/v1/privacy/breaches/{breachId}:triage` | `privacy.breach.triage` | served |  |
+| `privacy.UpdateBreach` | PATCH | `/v1/privacy/breaches/{breachId}` | `privacy.breach.update` | served |  |
+| `privacy.UpdateLegalHold` | PATCH | `/v1/privacy/legal-holds/{legalHoldId}` | `privacy.legal_hold.update` | served |  |
 | `privacy.UpdateNotice` | PATCH | `/v1/privacy/notices/{noticeId}` | `privacy.notice.update` | served |  |
 | `privacy.UpdateNoticeTranslation` | PATCH | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}` | `privacy.notice_translation.update` | served |  |
 | `privacy.UpdateNoticeVersion` | PATCH | `/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}` | `privacy.notice_version.update` | served |  |
 | `privacy.UpdatePurpose` | PATCH | `/v1/privacy/purposes/{purposeId}` | `privacy.tenant_purpose.update` | served |  |
+| `privacy.UpdateRetentionPolicy` | PATCH | `/v1/privacy/retention-policies/{retentionPolicyId}` | `privacy.retention_policy.update` | served |  |
 | `privacy.VerifyConsentRecord` | POST | `/v1/privacy/consent-records/{consentRecordId}:verify` | `privacy.consent_record.verify` | served |  |
+| `privacy.VerifyRightsRequestIdentity` | POST | `/v1/privacy/rights-requests/{rightsRequestId}:verifyIdentity` | `privacy.rights_request.verify_identity` | served |  |
 | `privacy.WithdrawMyConsent` | POST | `/v1/privacy/my/consents/{consentRecordId}:withdraw` | `privacy.my_consent.withdraw` | served |  |
 
 ## sis

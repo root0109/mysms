@@ -56,6 +56,7 @@ public class PurposeService extends AppTransactionManager {
     private static final String PLATFORM = "platform";
 
     private final PurposeRepository repository;
+    private final ConsentStateWriter stateWriter;
     private final PurposeMapper mapper;
     private final TenantPurposeRepository tenantPurposeRepository;
     private final OutboxWriter outbox;
@@ -63,6 +64,7 @@ public class PurposeService extends AppTransactionManager {
     private final Clock clock;
 
     public PurposeService(PurposeRepository repository,
+            ConsentStateWriter stateWriter,
             PurposeMapper mapper,
             TenantPurposeRepository tenantPurposeRepository,
             @Qualifier(PrivacyDatabaseConfig.DATABASE) ModuleDatabase database,
@@ -72,6 +74,7 @@ public class PurposeService extends AppTransactionManager {
             Clock clock) {
         super(database, transactions);
         this.repository = repository;
+        this.stateWriter = stateWriter;
         this.mapper = mapper;
         this.tenantPurposeRepository = tenantPurposeRepository;
         this.outbox = outbox;
@@ -101,7 +104,8 @@ public class PurposeService extends AppTransactionManager {
     /**
      * Partial update of the tenant's setting under If-Match ("0" while the tenant has never set the purpose: the first
      * write inserts the row). Switching a purpose on needs an active tenant-decided purpose and a notice whose active
-     * version lists it; a width ceiling applies to width purposes only.
+     * version lists it; a width ceiling applies to width purposes only. A written setting has the purpose's consent
+     * answers recomputed for every subject in the same transaction ({@link ConsentStateWriter#recomputePurpose}).
      */
     public Purpose updatePurpose(UUID id, String ifMatch, PurposeUpdate changes, String updateMask,
             boolean validateOnly) {
@@ -127,6 +131,7 @@ public class PurposeService extends AppTransactionManager {
                 return mapper.toDto(withSetting(purpose, setting));
             }
             writeTenantPurpose(setting, stored.isPresent(), expected, fields);
+            stateWriter.recomputePurpose(purpose.code());
             return mapper.toDto(withSetting(purpose, setting));
         });
     }

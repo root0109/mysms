@@ -4,6 +4,7 @@ import com.mysms.core.db.ModuleDatabase;
 import com.mysms.privacy.config.PrivacyDatabaseConfig;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,6 +36,14 @@ public class GuardianLinkRepository {
                    has_custody = EXCLUDED.has_custody, status = EXCLUDED.status,
                    source_row_version = EXCLUDED.source_row_version, updated_at = EXCLUDED.updated_at
              WHERE privacy.guardian_link.source_row_version < EXCLUDED.source_row_version
+            """;
+
+    private static final String LOCK_STUDENT = """
+            SELECT g.student_person_id
+              FROM privacy.guardian_link g
+             WHERE g.tenant_id = :tenantId
+               AND g.link_id = :linkId
+               FOR UPDATE
             """;
 
     private static final String LEGAL_GUARDIANS = """
@@ -80,6 +89,11 @@ public class GuardianLinkRepository {
     /** The students the person is the active legal guardian of who are not known to be adults. */
     public List<UUID> minorWards(UUID guardianPersonId) {
         return jdbc.sql(MINOR_WARDS).param("guardianPersonId", guardianPersonId).query(UUID.class).list();
+    }
+
+    /** The student the stored link joins, its row locked until the transaction ends; empty for a link not yet kept. */
+    public Optional<UUID> lockStudentOf(UUID linkId) {
+        return jdbc.sql(LOCK_STUDENT).param("linkId", linkId).query(UUID.class).optional();
     }
 
     /** Applies one event of a link; whether the stored row changed (false for an older or repeated version). */

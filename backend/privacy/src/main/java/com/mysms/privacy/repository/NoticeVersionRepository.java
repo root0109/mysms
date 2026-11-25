@@ -15,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -76,6 +77,14 @@ public class NoticeVersionRepository {
                AND r.notice_id = :noticeId AND r.requires_reconsent AND r.status <> 'draft'
              ORDER BY r.published_at DESC
              LIMIT 1
+            """;
+    /** The live notices among those named that have an active version, with that version. */
+    private static final String ACTIVE_NOTICES = """
+            SELECT n.id AS notice_id, n.code, r.id
+              FROM privacy.notice_version r
+              JOIN privacy.notice n ON n.tenant_id = :tenantId AND n.id = r.notice_id
+             WHERE r.tenant_id = :tenantId
+               AND r.notice_id = ANY(CAST(:noticeIds AS uuid[])) AND r.status = 'active' AND n.deleted_at IS NULL
             """;
     private static final String NEXT_VERSION = """
             SELECT COALESCE(MAX(version), 0) + 1 FROM privacy.notice_version
@@ -153,6 +162,17 @@ public class NoticeVersionRepository {
     public Optional<OffsetDateTime> reconsentSince(UUID noticeId) {
         return jdbc.sql(RECONSENT_SINCE).param("noticeId", noticeId)
                 .query((rs, row) -> rs.getObject("published_at", OffsetDateTime.class)).optional();
+    }
+
+    /**
+     * The notices among {@code noticeIds} a decision can be recorded under — live, with an active version — by notice
+     * id: what the consent centre needs to open a purpose's notice.
+     */
+    public Map<UUID, ActiveNotice> activeNotices(Collection<UUID> noticeIds) {
+        return jdbc.sql(ACTIVE_NOTICES).param("noticeIds", noticeIds.toArray(UUID[]::new))
+                .query((rs, row) -> new ActiveNotice(rs.getObject("notice_id", UUID.class), rs.getString("code"),
+                        rs.getObject("id", UUID.class)))
+                .list().stream().collect(Collectors.toMap(ActiveNotice::noticeId, Function.identity()));
     }
 
     public Page<NoticeVersionEntity> list(PageRequest page, SqlFragment filter) {
@@ -269,5 +289,15 @@ public class NoticeVersionRepository {
 
     private static Map<String, FieldSpec> fields(FieldSpec... specs) {
         return Arrays.stream(specs).collect(Collectors.toUnmodifiableMap(FieldSpec::name, s -> s));
+    }
+
+    /**
+     * A notice a decision can be recorded under.
+     *
+     * @param noticeId   the notice
+     * @param code       its code within the tenant (what GetMyNotice takes)
+     * @param versionId  its active version
+     */
+    public record ActiveNotice(UUID noticeId, String code, UUID versionId) {
     }
 }

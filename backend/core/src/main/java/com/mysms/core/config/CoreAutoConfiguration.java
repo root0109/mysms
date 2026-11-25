@@ -9,6 +9,9 @@ import com.mysms.core.error.ConstraintMapper;
 import com.mysms.core.error.GlobalExceptionHandler;
 import com.mysms.core.error.MessageUtil;
 import com.mysms.core.error.ProblemResponseWriter;
+import com.mysms.core.jobs.JobRuntime;
+import com.mysms.core.jobs.JobSchedule;
+import com.mysms.core.jobs.ScheduledJob;
 import com.mysms.core.json.JsonMappers;
 import com.mysms.core.trace.TraceFilter;
 import com.mysms.core.validation.DtoValidator;
@@ -103,15 +106,32 @@ public class CoreAutoConfiguration {
 
     /**
      * Monthly partitions of every module database, {@code mysms.partitions.months-ahead} months ahead; months older
-     * than {@code mysms.partitions.retention-months} are dropped only when that is set (default 0: never).
+     * than {@code mysms.partitions.retention-months} are dropped only when that is above 0. The keys come from the
+     * modules' application.properties (CLAUDE.md §5); without {@code mysms.partitions.enabled} there is no job.
      */
     @Bean
-    @ConditionalOnProperty(name = "mysms.partitions.enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(name = "mysms.partitions.enabled", havingValue = "true")
     public PartitionMaintenanceJob partitionMaintenanceJob(ObjectProvider<ModuleDatabase> databases,
                                                            Environment environment, Clock clock) {
         return new PartitionMaintenanceJob(databases.orderedStream().toList(), clock,
-                environment.getProperty("mysms.partitions.interval", Duration.class, Duration.ofHours(24)),
-                environment.getProperty("mysms.partitions.months-ahead", Integer.class, 3),
-                environment.getProperty("mysms.partitions.retention-months", Integer.class, 0));
+                environment.getRequiredProperty("mysms.partitions.interval", Duration.class),
+                environment.getRequiredProperty("mysms.partitions.months-ahead", Integer.class),
+                environment.getRequiredProperty("mysms.partitions.retention-months", Integer.class));
+    }
+
+    /**
+     * The scheduled jobs of this process's modules ({@link ScheduledJob}, each module's {@link JobSchedule} bean):
+     * polled every {@code mysms.jobs.poll-interval}, each due tenant leased for {@code mysms.jobs.lease}, at most
+     * {@code mysms.jobs.batch-size} runs per module and pass. The keys come from the modules' application.properties
+     * (CLAUDE.md §5); without {@code mysms.jobs.enabled} there is no runtime.
+     */
+    @Bean
+    @ConditionalOnProperty(name = "mysms.jobs.enabled", havingValue = "true")
+    public JobRuntime jobRuntime(ObjectProvider<JobSchedule> schedules, ObjectProvider<ScheduledJob> jobs,
+                                 Environment environment, Clock clock) {
+        return new JobRuntime(schedules.orderedStream().toList(), jobs.orderedStream().toList(), clock,
+                environment.getRequiredProperty("mysms.jobs.poll-interval", Duration.class),
+                environment.getRequiredProperty("mysms.jobs.lease", Duration.class),
+                environment.getRequiredProperty("mysms.jobs.batch-size", Integer.class));
     }
 }

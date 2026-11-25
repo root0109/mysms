@@ -12,10 +12,10 @@ How an AI agent (or a new developer) picks up and completes UI work in this repo
 
 ## 2. Hard rules (agent must self-enforce)
 
-- **Never invent an operation, field or enum value.** Everything server-side comes from the generated SDK; if a needed operation is missing, stop and file it against 07 — do not fake it client-side.
+- **Never invent an operation, field or enum value.** Everything server-side comes from the generated SDK; if a needed operation is missing, stop and add it to [ROADMAP](../ROADMAP.md) — do not fake it client-side.
 - **No new colours, spacings or font sizes** — tokens only (04 §2). No literal user-facing strings — i18n keys only (04 §7).
-- **Components before screens**: if a needed component exists in 04 §5, use it; if it needs a new prop, extend it with a story; create new components only when 04 lists none.
-- **Every screen ships the five states** (02 §1.4) and a Storybook story per state.
+- **Components before screens**: if a needed component exists in 04 §5, use it; if it needs a new prop, extend it with a test; create new components only when 04 lists none.
+- **Every screen ships the five states** (02 §1.4), each covered by a test (a Storybook story per state once Storybook exists).
 - **Permission-gate every action** with the code from operations.md via `PermissionGate`/`can()`.
 - **Writes**: ETag on update/delete, Idempotency-Key via `core` (never hand-rolled), conflict dialog on 409/412 (05 §6).
 - **Routes** come from the inventory (02) and are added to `core/routes.ts` with their permission — never ad-hoc `navigate('/string')`.
@@ -35,15 +35,15 @@ How an AI agent (or a new developer) picks up and completes UI work in this repo
 ## 4. Definition of done (checklist)
 
 - [ ] Matches the inventory row: route, clients, personas, operations — no extra server calls.
-- [ ] Five states implemented and storied; skeleton mirrors final layout.
+- [ ] Five states implemented and tested; skeleton mirrors final layout.
 - [ ] All interactive elements permission-gated; nothing disabled-but-visible for missing permissions (hidden instead).
 - [ ] ETag/Idempotency handled through `core`; conflict path demonstrated in a test.
 - [ ] Zero axe criticals; keyboard path on W; touch targets ≥ 44 px on RN.
 - [ ] Zero literal strings/colours/sizes (lint rules enforce; must pass).
 - [ ] i18n keys added; pseudo-locale render not clipped.
-- [ ] Bundle budget not exceeded (CI check).
+- [ ] Bundle budget not exceeded (`pnpm verify`).
 - [ ] Deep link opens the screen cold (test via `resolveLink`).
-- [ ] If the screen depends on a 07 item: feature flag named, interim behaviour implemented, TODO references the 07 ID.
+- [ ] If the screen depends on a ROADMAP item: feature flag named, interim behaviour implemented, TODO references the ROADMAP ID.
 
 ## 5. Fakes in tests, the real backend in development
 

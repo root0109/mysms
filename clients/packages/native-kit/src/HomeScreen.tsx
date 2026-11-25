@@ -30,6 +30,8 @@ export function HomeScreen({
   const mayApproveLeave = useCan('hr.leave_application.approve_leave');
   const mayLeaveBalance = useCan('hr.staff.get_leave_balance');
   const mayPayslips = useCan('payroll.payslip.read');
+  const mayConsents = useCan('privacy.my_consent.read');
+  const mayRequests = useCan('privacy.my_request.read');
   const mayChildren = useCan('sis.guardian.list_my_children');
   const mayIncidents = useCan('sis.discipline_incident.read');
   const mayRegistrations = useCan('sis.subject_registration.read');
@@ -181,6 +183,16 @@ export function HomeScreen({
       <Button variant="secondary" onPress={() => onOpen('notifications')}>
         {t('acc.notifications.title')}
       </Button>
+      {mayConsents ? (
+        <Button variant="secondary" onPress={() => onOpen('consents')}>
+          {t('privacy.consentCentre.title')}
+        </Button>
+      ) : null}
+      {mayRequests ? (
+        <Button variant="secondary" onPress={() => onOpen('privacyRequests')}>
+          {t('privacy.myRequests.title')}
+        </Button>
+      ) : null}
       <Button variant="secondary" loading={signOut.isPending} onPress={() => signOut.mutate()}>
         {t('shell.user.signOut')}
       </Button>

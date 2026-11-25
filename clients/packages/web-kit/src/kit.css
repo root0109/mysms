@@ -583,3 +583,22 @@
   justify-content: space-between;
   gap: var(--sms-space-3);
 }
+
+/* ---- ACC-13 consent centre: a card's lines and actions; a notice keeps the school's line breaks */
+.consent-card {
+  display: grid;
+  gap: var(--sms-space-3);
+}
+.consent-card p {
+  margin: 0;
+}
+.consent-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sms-space-3);
+}
+.consent-notice {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

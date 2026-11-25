@@ -10,7 +10,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * payroll.staff_member: the login account of each staff record, kept from hr's staff events. A row changes only to a
+ * payroll.staff_member: the login account and person of each staff record, kept from hr's staff events. A row changes only to a
  * newer source row version, so a late or repeated event changes nothing, and a deleted record stays as a tombstone a
  * late event cannot bring back.
  */
@@ -18,10 +18,13 @@ import org.springframework.stereotype.Repository;
 public class StaffMemberRepository {
 
     private static final String APPLY = """
-            INSERT INTO payroll.staff_member (tenant_id, staff_id, user_id, is_deleted, source_version, synced_at)
-            VALUES (:tenantId, :staffId, :userId, :deleted, :version, :now)
+            INSERT INTO payroll.staff_member (tenant_id, staff_id, user_id, person_id, is_deleted, source_version,
+                                              synced_at)
+            VALUES (:tenantId, :staffId, :userId, :personId, :deleted, :version, :now)
             ON CONFLICT (tenant_id, staff_id) DO UPDATE
-               SET user_id = EXCLUDED.user_id, is_deleted = EXCLUDED.is_deleted,
+               SET user_id = EXCLUDED.user_id,
+                   person_id = COALESCE(EXCLUDED.person_id, payroll.staff_member.person_id),
+                   is_deleted = EXCLUDED.is_deleted,
                    source_version = EXCLUDED.source_version, synced_at = EXCLUDED.synced_at
              WHERE payroll.staff_member.source_version < EXCLUDED.source_version
                AND NOT payroll.staff_member.is_deleted
@@ -45,9 +48,10 @@ public class StaffMemberRepository {
      * Applies one event of a staff record; whether the stored entry changed (false for an older or repeated version,
      * and for anything after the record's deletion).
      */
-    public boolean apply(UUID staffId, UUID userId, boolean deleted, int version, OffsetDateTime now) {
-        return jdbc.sql(APPLY).param("staffId", staffId).param("userId", userId).param("deleted", deleted)
-                .param("version", version).param("now", now).update() == 1;
+    public boolean apply(UUID staffId, UUID userId, UUID personId, boolean deleted, int version,
+            OffsetDateTime now) {
+        return jdbc.sql(APPLY).param("staffId", staffId).param("userId", userId).param("personId", personId)
+                .param("deleted", deleted).param("version", version).param("now", now).update() == 1;
     }
 
     /** The live staff records of the login account. */

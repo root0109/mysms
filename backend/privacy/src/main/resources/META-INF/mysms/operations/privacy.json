@@ -1,4 +1,56 @@
 [ {
+  "operationId" : "privacy.AssignRightsRequest",
+  "method" : "POST",
+  "path" : "/v1/privacy/rights-requests/{rightsRequestId}:assign",
+  "permission" : "privacy.rights_request.assign",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.BatchCheckConsent",
+  "method" : "POST",
+  "path" : "/v1/privacy/consent-decisions:batchCheck",
+  "permission" : "privacy.consent_decision.batch_check",
+  "schemes" : [ ],
+  "anonymous" : false,
+  "audience" : "internal"
+}, {
+  "operationId" : "privacy.CheckConsent",
+  "method" : "GET",
+  "path" : "/v1/privacy/consent-decisions:check",
+  "permission" : "privacy.consent_decision.check",
+  "schemes" : [ ],
+  "anonymous" : false,
+  "audience" : "internal"
+}, {
+  "operationId" : "privacy.CloseBreach",
+  "method" : "POST",
+  "path" : "/v1/privacy/breaches/{breachId}:close",
+  "permission" : "privacy.breach.close",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.CloseRightsRequest",
+  "method" : "POST",
+  "path" : "/v1/privacy/rights-requests/{rightsRequestId}:close",
+  "permission" : "privacy.rights_request.close",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ContainBreach",
+  "method" : "POST",
+  "path" : "/v1/privacy/breaches/{breachId}:contain",
+  "permission" : "privacy.breach.contain",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
   "operationId" : "privacy.CreateNotice",
   "method" : "POST",
   "path" : "/v1/privacy/notices",
@@ -42,6 +94,57 @@
   "anonymous" : false,
   "audience" : "public"
 }, {
+  "operationId" : "privacy.ExtendRightsRequest",
+  "method" : "POST",
+  "path" : "/v1/privacy/rights-requests/{rightsRequestId}:extend",
+  "permission" : "privacy.rights_request.extend",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.FulfilAccessRequest",
+  "method" : "POST",
+  "path" : "/v1/privacy/rights-requests/{rightsRequestId}:fulfilAccess",
+  "permission" : "privacy.rights_request.fulfil",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.FulfilWithdrawAllRequest",
+  "method" : "POST",
+  "path" : "/v1/privacy/rights-requests/{rightsRequestId}:fulfilWithdrawAll",
+  "permission" : "privacy.rights_request.fulfil",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetAccessSummary",
+  "method" : "GET",
+  "path" : "/v1/privacy/rights-requests/{rightsRequestId}/access-summary",
+  "permission" : "privacy.rights_request.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetBreach",
+  "method" : "GET",
+  "path" : "/v1/privacy/breaches/{breachId}",
+  "permission" : "privacy.breach.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetConsentCoverage",
+  "method" : "GET",
+  "path" : "/v1/privacy/coverage",
+  "permission" : "privacy.coverage.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
   "operationId" : "privacy.GetConsentRecord",
   "method" : "GET",
   "path" : "/v1/privacy/consent-records/{consentRecordId}",
@@ -50,10 +153,42 @@
   "anonymous" : false,
   "audience" : "public"
 }, {
+  "operationId" : "privacy.GetLegalHold",
+  "method" : "GET",
+  "path" : "/v1/privacy/legal-holds/{legalHoldId}",
+  "permission" : "privacy.legal_hold.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetMyAccessSummary",
+  "method" : "GET",
+  "path" : "/v1/privacy/my/requests/{rightsRequestId}/access-summary",
+  "permission" : "privacy.my_request.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetMyNominee",
+  "method" : "GET",
+  "path" : "/v1/privacy/my/nominee",
+  "permission" : "privacy.my_nominee.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
   "operationId" : "privacy.GetMyNotice",
   "method" : "GET",
   "path" : "/v1/privacy/my/notices/{noticeCode}",
   "permission" : "privacy.my_consent.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetMyRequest",
+  "method" : "GET",
+  "path" : "/v1/privacy/my/requests/{rightsRequestId}",
+  "permission" : "privacy.my_request.read",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "audience" : "public"
@@ -82,10 +217,58 @@
   "anonymous" : false,
   "audience" : "public"
 }, {
+  "operationId" : "privacy.GetProcessingRegisterExport",
+  "method" : "GET",
+  "path" : "/v1/privacy/processing-activities:export",
+  "permission" : "privacy.processing_activity.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
   "operationId" : "privacy.GetPurpose",
   "method" : "GET",
   "path" : "/v1/privacy/purposes/{purposeId}",
   "permission" : "privacy.tenant_purpose.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetPurposeStatus",
+  "method" : "GET",
+  "path" : "/v1/privacy/consent-decisions:purposeStatus",
+  "permission" : "privacy.consent_decision.get_purpose_status",
+  "schemes" : [ ],
+  "anonymous" : false,
+  "audience" : "internal"
+}, {
+  "operationId" : "privacy.GetRetentionPolicy",
+  "method" : "GET",
+  "path" : "/v1/privacy/retention-policies/{retentionPolicyId}",
+  "permission" : "privacy.retention_policy.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.GetRightsRequest",
+  "method" : "GET",
+  "path" : "/v1/privacy/rights-requests/{rightsRequestId}",
+  "permission" : "privacy.rights_request.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ListActiveHolds",
+  "method" : "GET",
+  "path" : "/v1/privacy/legal-holds:active",
+  "permission" : "privacy.legal_hold.check",
+  "schemes" : [ ],
+  "anonymous" : false,
+  "audience" : "internal"
+}, {
+  "operationId" : "privacy.ListBreaches",
+  "method" : "GET",
+  "path" : "/v1/privacy/breaches",
+  "permission" : "privacy.breach.read",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "audience" : "public"
@@ -98,10 +281,26 @@
   "anonymous" : false,
   "audience" : "public"
 }, {
+  "operationId" : "privacy.ListLegalHolds",
+  "method" : "GET",
+  "path" : "/v1/privacy/legal-holds",
+  "permission" : "privacy.legal_hold.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
   "operationId" : "privacy.ListMyConsents",
   "method" : "GET",
   "path" : "/v1/privacy/my/consents",
   "permission" : "privacy.my_consent.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ListMyRequests",
+  "method" : "GET",
+  "path" : "/v1/privacy/my/requests",
+  "permission" : "privacy.my_request.read",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "audience" : "public"
@@ -130,6 +329,14 @@
   "anonymous" : false,
   "audience" : "public"
 }, {
+  "operationId" : "privacy.ListProcessingActivities",
+  "method" : "GET",
+  "path" : "/v1/privacy/processing-activities",
+  "permission" : "privacy.processing_activity.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
   "operationId" : "privacy.ListPurposes",
   "method" : "GET",
   "path" : "/v1/privacy/purposes",
@@ -138,10 +345,69 @@
   "anonymous" : false,
   "audience" : "public"
 }, {
+  "operationId" : "privacy.ListRetentionPolicies",
+  "method" : "GET",
+  "path" : "/v1/privacy/retention-policies",
+  "permission" : "privacy.retention_policy.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ListRetentionRuns",
+  "method" : "GET",
+  "path" : "/v1/privacy/retention-runs",
+  "permission" : "privacy.retention_run.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ListRightsRequests",
+  "method" : "GET",
+  "path" : "/v1/privacy/rights-requests",
+  "permission" : "privacy.rights_request.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ListSubjectsWithConsent",
+  "method" : "GET",
+  "path" : "/v1/privacy/consent-decisions:subjects",
+  "permission" : "privacy.consent_decision.list_subjects",
+  "schemes" : [ ],
+  "anonymous" : false,
+  "audience" : "internal"
+}, {
+  "operationId" : "privacy.MarkBreachNotABreach",
+  "method" : "POST",
+  "path" : "/v1/privacy/breaches/{breachId}:markNotABreach",
+  "permission" : "privacy.breach.mark_not_a_breach",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.PlaceLegalHold",
+  "method" : "POST",
+  "path" : "/v1/privacy/legal-holds",
+  "permission" : "privacy.legal_hold.place",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
   "operationId" : "privacy.PublishNoticeVersion",
   "method" : "POST",
   "path" : "/v1/privacy/notices/{noticeId}/versions/{noticeVersionId}:publish",
   "permission" : "privacy.notice_version.publish",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.RecordBreachNotification",
+  "method" : "POST",
+  "path" : "/v1/privacy/breaches/{breachId}:recordNotification",
+  "permission" : "privacy.breach.record_notification",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "idempotency" : "optional",
@@ -163,6 +429,103 @@
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.RejectRightsRequest",
+  "method" : "POST",
+  "path" : "/v1/privacy/rights-requests/{rightsRequestId}:reject",
+  "permission" : "privacy.rights_request.reject",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ReleaseLegalHold",
+  "method" : "POST",
+  "path" : "/v1/privacy/legal-holds/{legalHoldId}:release",
+  "permission" : "privacy.legal_hold.release",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.ReportBreach",
+  "method" : "POST",
+  "path" : "/v1/privacy/breaches",
+  "permission" : "privacy.breach.report",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.RetryRightsRequestTask",
+  "method" : "POST",
+  "path" : "/v1/privacy/rights-requests/{rightsRequestId}/tasks/{taskId}:retry",
+  "permission" : "privacy.rights_request.retry_task",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.RevokeMyNominee",
+  "method" : "POST",
+  "path" : "/v1/privacy/my/nominee:revoke",
+  "permission" : "privacy.my_nominee.revoke",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.SetMyNominee",
+  "method" : "POST",
+  "path" : "/v1/privacy/my/nominee:set",
+  "permission" : "privacy.my_nominee.set",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.StartRightsRequestFulfilment",
+  "method" : "POST",
+  "path" : "/v1/privacy/rights-requests/{rightsRequestId}:startFulfilment",
+  "permission" : "privacy.rights_request.fulfil",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.SubmitMyRequest",
+  "method" : "POST",
+  "path" : "/v1/privacy/my/requests",
+  "permission" : "privacy.my_request.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.TriageBreach",
+  "method" : "POST",
+  "path" : "/v1/privacy/breaches/{breachId}:triage",
+  "permission" : "privacy.breach.triage",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.UpdateBreach",
+  "method" : "PATCH",
+  "path" : "/v1/privacy/breaches/{breachId}",
+  "permission" : "privacy.breach.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.UpdateLegalHold",
+  "method" : "PATCH",
+  "path" : "/v1/privacy/legal-holds/{legalHoldId}",
+  "permission" : "privacy.legal_hold.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
   "audience" : "public"
 }, {
   "operationId" : "privacy.UpdateNotice",
@@ -197,10 +560,27 @@
   "anonymous" : false,
   "audience" : "public"
 }, {
+  "operationId" : "privacy.UpdateRetentionPolicy",
+  "method" : "PATCH",
+  "path" : "/v1/privacy/retention-policies/{retentionPolicyId}",
+  "permission" : "privacy.retention_policy.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
   "operationId" : "privacy.VerifyConsentRecord",
   "method" : "POST",
   "path" : "/v1/privacy/consent-records/{consentRecordId}:verify",
   "permission" : "privacy.consent_record.verify",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "privacy.VerifyRightsRequestIdentity",
+  "method" : "POST",
+  "path" : "/v1/privacy/rights-requests/{rightsRequestId}:verifyIdentity",
+  "permission" : "privacy.rights_request.verify_identity",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "idempotency" : "optional",

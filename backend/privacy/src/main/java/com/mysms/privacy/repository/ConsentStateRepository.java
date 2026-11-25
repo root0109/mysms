@@ -37,6 +37,20 @@ public class ConsentStateRepository {
              WHERE s.tenant_id = :tenantId
                AND s.subject_person_id = ANY(CAST(:subjectPersonIds AS uuid[])) AND s.result = 'allowed'
             """;
+    private static final String PURPOSES_OF = """
+            SELECT DISTINCT s.purpose_code
+              FROM privacy.consent_state s
+             WHERE s.tenant_id = :tenantId
+               AND s.subject_person_id = :subjectPersonId
+             ORDER BY s.purpose_code
+            """;
+    private static final String SUBJECTS_OF = """
+            SELECT DISTINCT s.subject_person_id
+              FROM privacy.consent_state s
+             WHERE s.tenant_id = :tenantId
+               AND s.purpose_code = :purposeCode
+             ORDER BY s.subject_person_id
+            """;
     private static final String WRITE = """
             INSERT INTO privacy.consent_state (tenant_id, subject_person_id, purpose_code, scope, result, reason,
                                                state_version, computed_at)
@@ -65,6 +79,17 @@ public class ConsentStateRepository {
         return jdbc.sql(ALLOWED).param("subjectPersonIds", subjectPersonIds.toArray(UUID[]::new))
                 .query((rs, row) -> new Allowed(rs.getObject("subject_person_id", UUID.class),
                         rs.getString("purpose_code"), ConsentScope.of(rs.getString("scope")))).list();
+    }
+
+    /** The purposes the subject has answers for, by code. */
+    public List<String> purposesOf(UUID subjectPersonId) {
+        return jdbc.sql(PURPOSES_OF).param("subjectPersonId", subjectPersonId).query(String.class).list();
+    }
+
+    /** The subjects with answers for the purpose, in person order (the order their rows are locked in). */
+    public List<UUID> subjectsOf(String purposeCode) {
+        return jdbc.sql(SUBJECTS_OF).param("purposeCode", purposeCode)
+                .query((rs, row) -> rs.getObject("subject_person_id", UUID.class)).list();
     }
 
     /** Writes the subject's purpose's answers, every one with the subject's new state version. */

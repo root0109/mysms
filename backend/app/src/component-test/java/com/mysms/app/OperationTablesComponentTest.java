@@ -24,7 +24,7 @@ class OperationTablesComponentTest {
     @Test
     void everyOperationMatchesItsOwnRule() throws Exception {
         OperationTable table = OperationTable.load(MODULES);
-        assertThat(table.size()).isEqualTo(2077);
+        assertThat(table.size()).isEqualTo(2122);
         JsonMapper json = JsonMapper.builder().build();
         int checked = 0;
         for (String module : MODULES) {
@@ -40,7 +40,7 @@ class OperationTablesComponentTest {
                 }
             }
         }
-        assertThat(checked).isEqualTo(2077);
+        assertThat(checked).isEqualTo(2122);
     }
 
     /**
@@ -65,6 +65,6 @@ class OperationTablesComponentTest {
                 }
             }
         }
-        assertThat(checked).isEqualTo(2077);
+        assertThat(checked).isEqualTo(2122);
     }
 }

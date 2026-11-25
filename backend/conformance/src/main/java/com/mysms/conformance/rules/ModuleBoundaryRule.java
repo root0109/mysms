@@ -15,9 +15,9 @@ import java.util.regex.Pattern;
 /**
  * The boundaries of the domain modules:
  * <ul>
- * <li>A1 — a domain module depends only on core, auth-client and messaging. Messaging is runtime-only, except for a
- * module that uses its event API (EventEnvelope, EventHandler, EventSubscriptions, RejectedEventException); no module
- * imports RabbitMQ, Google Cloud Pub/Sub or messaging adapter/runtime types.</li>
+ * <li>A1 — a domain module depends only on core, auth-client, privacy-client and messaging. Messaging is
+ * runtime-only, except for a module that uses its event API (EventEnvelope, EventHandler, EventSubscriptions,
+ * RejectedEventException); no module imports RabbitMQ, Google Cloud Pub/Sub or messaging adapter/runtime types.</li>
  * <li>§3 — a module's packages are the layer roles only, and SpotBugs analyses every one of them (the parent POM's
  * {@code mysms.spotbugs.onlyAnalyze} names each layer; a domain module does not narrow it).</li>
  * <li>§14 — a module's migrations live in database/migrations/&lt;module&gt; and touch only its own schema.</li>
@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  */
 public final class ModuleBoundaryRule implements ConformanceRule {
 
-    private static final Set<String> ALLOWED_DEPENDENCIES = Set.of("core", "auth-client", "mysms");
+    private static final Set<String> ALLOWED_DEPENDENCIES = Set.of("core", "auth-client", "privacy-client", "mysms");
     private static final Set<String> LAYERS = Set.of("api", "controller", "grpc", "integration", "business",
             "repository", "domain", "model", "mapper", "validation", "errors", "events", "config", "constants");
     private static final String EVENT_API = "(EventEnvelope|EventHandler|EventSubscriptions|RejectedEventException)";

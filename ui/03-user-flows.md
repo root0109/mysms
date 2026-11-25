@@ -127,9 +127,9 @@ Actors: teacher, students · Clients: W, B, S
 
 ## F15 · Guardian consent (minors)
 
-1. On actions that need consent (publishing photos COM-04, public profile ACC-12), the UI checks `people.GetConsentStatus`; missing → consent prompt.
-2. Guardian (ACC-13, per child): `people.CreateConsentRecord` (purpose, policy version shown in full) / `people.WithdrawConsent`. Withdrawal immediately hides dependent UI affordances; server unpublishes async.
-3. Blocked server calls return 412 `CONSENT_REQUIRED` + purpose — the UI maps it to the consent prompt, never a raw error.
+1. Actions that need consent (publishing photos COM-04, a public profile ACC-12) are checked by the module that owns them, on the server, through `privacy-client` (design PRIVACY-AND-CONSENT-CENTRE §7; ROADMAP SEC-11 slice 6c, not built yet). The UI never decides consent itself.
+2. Guardian (ACC-13, per child, web or parent app): `privacy.ListMyConsents` shows each purpose the school asks about with its notice (`privacy.GetMyNotice`, in the user's language); `privacy.RecordMyConsent` grants or refuses at a width, `privacy.WithdrawMyConsent` withdraws. A student under 18 sees the same cards read-only (student app, tablet, web); from the 18th birthday the guardians' decisions stop counting and the student decides. Withdrawal immediately hides dependent UI affordances; consumers follow `privacy.consent_state.changed`.
+3. How a module answers a call that consent blocks (status, code, the purpose named) is fixed with `privacy-client` and the first consuming module — *to verify* then; the UI maps it to a link into ACC-13, never a raw error.
 
 ---
 

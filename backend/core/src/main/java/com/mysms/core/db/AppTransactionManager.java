@@ -9,7 +9,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 /**
  * Base of every service: a Template Method that runs each {@link CallBack} in a programmatic transaction of the
  * module's {@link PlatformTransactionManager}, with the caller's tenant bound first so row-level security applies to
- * every statement. Any {@link RuntimeException} or {@link Error} rolls back and is rethrown unchanged.
+ * every statement. Any failure (a {@link RuntimeException}, an {@link Error}, or a checked exception thrown sneakily)
+ * rolls back and is rethrown unchanged; only work that completes normally commits.
  *
  * <p>Read-only transactions use the replica when the module has one and may lag the primary; a read that must see the
  * latest state (a security decision, a read after a write of the same call) uses a {@code …PrimaryRead…} variant.
@@ -98,31 +99,46 @@ public abstract class AppTransactionManager {
         TransactionStatus transaction = DatabaseRoleHolder.callWith(role,
                 () -> platformTransactionManager.getTransaction(definition));
         boolean outermost = transaction.isNewTransaction();
+        K value;
+        boolean settled = false;
         try {
-            if (outermost) {
-                TransactionSynchronizationManager.bindResource(platformTransactionManager,
-                        new Running(definition.isReadOnly(), bindTenant));
-                if (bindTenant) {
+            try {
+                if (outermost) {
+                    TransactionSynchronizationManager.bindResource(platformTransactionManager,
+                            new Running(definition.isReadOnly(), bindTenant));
+                    if (bindTenant) {
+                        moduleDatabase.bindTenant();
+                    }
+                } else if (!fitsTheRunningWork(definition.isReadOnly(), bindTenant) && bindTenant) {
                     moduleDatabase.bindTenant();
                 }
-            } else if (!fitsTheRunningWork(definition.isReadOnly(), bindTenant) && bindTenant) {
-                moduleDatabase.bindTenant();
+                value = callBack.execute();
+            } finally {
+                if (outermost) {
+                    TransactionSynchronizationManager.unbindResourceIfPossible(platformTransactionManager);
+                }
             }
-            return callBack.execute();
-        } catch (RuntimeException | Error failure) {
+            settled = true;
+        } catch (Exception | Error failure) {
+            // every failure rolls back, a checked exception thrown sneakily included, and nothing commits after it;
+            // the precise rethrow keeps it unchanged (the work declares no checked exception, so none is added)
+            settled = true;
             rollback(transaction, failure);
             throw failure;
         } finally {
-            if (outermost) {
-                TransactionSynchronizationManager.unbindResourceIfPossible(platformTransactionManager);
+            if (!settled) {
+                // a throwable that is neither an exception nor an error: still rolled back, never committed
+                abandon(transaction);
             }
-            commit(transaction);
         }
+        commit(transaction);
+        return value;
     }
 
     /**
-     * Commits on the way out of the work unless a rollback already completed the transaction (a failure rolls back
-     * first, so the {@code finally} commits nothing); a failing commit propagates instead of the value.
+     * Commits work that completed normally, unless it completed the transaction itself; a failing commit propagates
+     * instead of the value. Never called after a failure, so a commit can neither follow a failed rollback nor hide
+     * the failure that caused it.
      */
     private void commit(TransactionStatus transaction) {
         if (!transaction.isCompleted()) {
@@ -130,15 +146,28 @@ public abstract class AppTransactionManager {
         }
     }
 
-    /** Rolls back after {@code failure}; a failing rollback is attached to it as suppressed, so it stays the cause. */
+    /**
+     * Rolls back after {@code failure}; a failing rollback (an exception or an error) is attached to it as suppressed,
+     * so it stays the cause, and the transaction is never committed afterwards.
+     */
     private void rollback(TransactionStatus transaction, Throwable failure) {
         if (transaction.isCompleted()) {
             return;
         }
         try {
             platformTransactionManager.rollback(transaction);
-        } catch (RuntimeException rollbackFailure) {
+        } catch (RuntimeException | Error rollbackFailure) {
             failure.addSuppressed(rollbackFailure);
+        }
+    }
+
+    /**
+     * Rolls back after a throwable that is neither an exception nor an error (only a sneaky throw makes one); a
+     * failing rollback propagates in its place.
+     */
+    private void abandon(TransactionStatus transaction) {
+        if (!transaction.isCompleted()) {
+            platformTransactionManager.rollback(transaction);
         }
     }
 

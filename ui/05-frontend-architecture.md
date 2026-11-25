@@ -113,19 +113,21 @@ Attendance capture only: roster cached for the day's sessions; marks queue throu
 - **Phones**: cold start ≤ 2.5 s mid-tier Android; Hermes; screen JS bundles lazy by tab; list rendering via FlashList.
 - **B**: offline open-lesson ≤ 1 s from SQLite; sync batched ≤ 50 ops/request group.
 - Images: responsive sizes, lazy, blur placeholder; icons as a single sprite/font.
-- Budgets enforced in CI (bundle-size check per app; Lighthouse CI for W).
+- Enforced today: the initial web route's bundle budget in `pnpm verify`. *Planned:* a budget per lazy chunk and for React Native (UI-3), Lighthouse CI for W (BLD-1).
 
-## 11. Observability
+## 11. Observability (*planned*, OPS-1)
 
 - Crash + error reporting (Sentry) on all apps with `traceId` attachment; API latency and failure-rate metrics from the client wrapper; sync-queue depth metric on B/T.
 - Product analytics: screen views + the 15 flows' funnel events, named `flow.step` (e.g. `F4.quote`, `F4.paid`); no PII in event payloads; analytics respects tenant-level opt-out.
 
 ## 12. Testing strategy
 
+Built today: Vitest unit and component tests with the fake backend (`packages/fixtures`) and `axe-core` checks, the SDK compile, all run by `pnpm verify`. The other rows are targets (BLD-5, BLD-7).
+
 | Layer | Tool | Gate |
 |---|---|---|
-| Components | Storybook + interaction tests + axe | zero critical a11y violations |
-| Hooks/logic | Vitest unit | core 90 % lines (enforced as a coverage threshold) |
+| Components | Vitest + Testing Library + axe (*planned:* Storybook interaction tests) | zero critical a11y violations |
+| Hooks/logic | Vitest unit | *planned:* core 90 % lines as a coverage threshold (v8 coverage is reported, not gated) |
 | Contract | generated SDK compile; the fake backend in tests follows the contract's semantics | build fails on drift |
 | Flows | Playwright (W) / Detox or Maestro (RN) against a real backend (the monolith on PostgreSQL) | the 15 flows green |
 | Offline | deterministic sync tests: scripted connectivity + conflict fixtures | outbox invariants hold |
@@ -145,7 +147,7 @@ in development the web dev servers proxy `/v1` to a real backend (the monolith o
 contract, tested with the fake in its tests, and checked in a real browser against the real backend. The same rule
 holds in the backend: mocks only in unit tests (JAVA-CODING-RULES §1).
 
-## 14. CI/CD
+## 14. CI/CD (*planned*, BLD-1; no pipeline exists yet)
 
 - PR: typecheck, lint, unit, SDK-drift check, bundle budgets, Storybook a11y, affected-app Playwright smoke.
 - Main: full flow suites against the monolith on PostgreSQL; web preview deploy per PR; Expo EAS builds (dev/staging) with OTA updates for JS-only changes; store releases follow the app-config min-version gate (D-21; pending P1-35) — until then a static config file served beside the web app.

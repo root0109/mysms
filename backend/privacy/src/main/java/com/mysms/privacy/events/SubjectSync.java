@@ -4,6 +4,9 @@ import com.mysms.messaging.events.EventEnvelope;
 import com.mysms.messaging.events.EventHandler;
 import com.mysms.messaging.events.EventSubscriptions;
 import com.mysms.messaging.events.RejectedEventException;
+import com.mysms.privacy.business.ConsentStateWriter;
+import com.mysms.privacy.business.MajorityJob;
+import com.mysms.privacy.business.RetentionJob;
 import com.mysms.privacy.model.Majority;
 import com.mysms.privacy.model.StudentRecord;
 import com.mysms.privacy.model.StudentRecords;
@@ -26,12 +29,15 @@ import tools.jackson.databind.json.JsonMapper;
  * reads another schema). One handler for both sources because both write the same row, keyed by the person.
  *
  * <p>A person event sets the birth date, the majority date (birth date plus {@code mysms.privacy.age-of-majority}
- * years) and the status on today's date; it applies only over an older person row version, and a deletion clears
- * them. A student event sets the record's entry in its person's student records, and the arrays derived from them,
- * only over an older version of that record — here or at any other person the record belonged to, whose entry
- * becomes a tombstone — so out-of-order and repeated deliveries are harmless. A student event may come before its
- * person's: the subject is then created with status unknown. Runs inside the event's tenant (messaging's
- * InboxProcessor: exactly once per event).
+ * years) and the status on today's date; it applies only over an older person row version, and a deletion clears them;
+ * a changed person row has the subject's consent answers recomputed ({@link ConsentStateWriter}) in the same
+ * transaction, since the status decides whose decisions count; a minor enrols the tenant in {@link MajorityJob}, which
+ * makes them an adult on their majority date; any changed person enrols the tenant in {@link RetentionJob}, which sends
+ * the retention policies' cutoffs to the modules every day. A student event sets the record's entry in its person's
+ * student records, and the arrays derived from them, only over an older version of that record — here or at any other
+ * person the record belonged to, whose entry becomes a tombstone — so out-of-order and repeated deliveries are
+ * harmless; student records decide no consent answer. A student event may come before its person's: the subject is then
+ * created with status unknown. Runs inside the event's tenant (messaging's InboxProcessor: exactly once per event).
  *
  * <p>An event without the row's state — the reference cleanup of a module announces only the id of a row it changed
  * — changes nothing: the cleanups that touch these rows clear a person's photo, which is not kept here, or a student
@@ -45,16 +51,23 @@ public final class SubjectSync implements EventSubscriptions {
     static final String STUDENT = "sis.student";
 
     private final SubjectRepository subjects;
+    private final ConsentStateWriter stateWriter;
+    private final MajorityJob majorityJob;
+    private final RetentionJob retentionJob;
     private final JsonMapper json;
     private final Clock clock;
     private final int ageOfMajority;
 
-    public SubjectSync(SubjectRepository subjects, JsonMapper json, Clock clock,
+    public SubjectSync(SubjectRepository subjects, ConsentStateWriter stateWriter, MajorityJob majorityJob,
+            RetentionJob retentionJob, JsonMapper json, Clock clock,
             @Value("${mysms.privacy.age-of-majority}") int ageOfMajority) {
         if (ageOfMajority < 1) {
             throw new IllegalArgumentException("mysms.privacy.age-of-majority must be a positive number of years");
         }
         this.subjects = subjects;
+        this.stateWriter = stateWriter;
+        this.majorityJob = majorityJob;
+        this.retentionJob = retentionJob;
         this.json = json;
         this.clock = clock;
         this.ageOfMajority = ageOfMajority;
@@ -93,7 +106,15 @@ public final class SubjectSync implements EventSubscriptions {
         int version = person.rowVersion();
         LocalDate birthDate = person.deleted() ? null : person.optionalDate("dateOfBirth");
         Majority majority = Majority.of(birthDate, ageOfMajority, now.toLocalDate());
-        return subjects.applyPerson(person.id(), majority.status(), birthDate, majority.majorityDate(), version, now);
+        if (!subjects.applyPerson(person.id(), majority.status(), birthDate, majority.majorityDate(), version, now)) {
+            return false;
+        }
+        stateWriter.recomputeSubject(person.id());
+        if (Majority.MINOR.equals(majority.status())) {
+            majorityJob.enrol(now);
+        }
+        retentionJob.enrol(now);
+        return true;
     }
 
     private boolean applyStudent(SourceEvent student, OffsetDateTime now) {

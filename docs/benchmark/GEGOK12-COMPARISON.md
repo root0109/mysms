@@ -1,6 +1,6 @@
 # GegoK12 benchmark: feature-by-feature comparison with MySMS
 
-Status: analysis only, written 2026-11-19. Nothing in MySMS was changed. GegoK12 is the owner's benchmark: MySMS must
+Status: analysis only; nothing in MySMS was changed by it. GegoK12 is the owner's benchmark: MySMS must
 have everything GegoK12 has. Items marked **to verify** could not be confirmed from the sources that were readable.
 
 **Evidence legend.**
@@ -86,8 +86,8 @@ Pro = paid add-on.
 
 | # | GegoK12 feature | GegoK12 evidence | MySMS status | MySMS evidence |
 |---|---|---|---|---|
-| G029 | 13 user groups (incl. Librarian, Receptionist, Accountant, Stock Keeper, Non Teaching, OldStudent) each with its own portal | GK:UsergroupTableSeeder.php, RouteServiceProvider.php | Partial | `iam.role`, `permission`, `role_permission`, `user_role`, ADM-10; persona switcher ACC-06. Permission filtering in every module is **SEC-0 (P0)**; ready-made role templates per persona **to verify** |
-| G031 | Privilege conditions (per-feature privileges for school sub-admins) | GK:RouteServiceProvider.php `privilegeconditions` | Planned (SEC-0) | `iam.user_permission`, `user_department_access` exist; enforcement in every module is SEC-0 |
+| G029 | 13 user groups (incl. Librarian, Receptionist, Accountant, Stock Keeper, Non Teaching, OldStudent) each with its own portal | GK:UsergroupTableSeeder.php, RouteServiceProvider.php | Partial | `iam.role`, `permission`, `role_permission`, `user_role`, ADM-10; persona switcher ACC-06. Permission filtering in every module is built (auth-client, JAVA-CODING-RULES §16.2); ready-made role templates per persona **to verify** |
+| G031 | Privilege conditions (per-feature privileges for school sub-admins) | GK:RouteServiceProvider.php `privilegeconditions` | Partly built: role-based permissions from iam (JAVA-CODING-RULES §16.2); sub-admin role templates planned (ROADMAP GK-21) | `iam.user_permission`, `user_department_access` exist; enforced in every module by auth-client |
 
 ### 3.3 Dashboards and reports
 
@@ -262,7 +262,7 @@ Pro = paid add-on.
 | Has | 100 | served by the API (screen may still be a placeholder) |
 | Partial | 47 | core served; a sub-feature GegoK12 ships is missing, 501 or to verify |
 | Contract | 13 | operation exists but answers 501 |
-| Planned | 20 | covered by a ROADMAP item (NM-4/5/6/9/11, CP-1/2/6, ARC-2, SEC-0, TT-02, docs/product) |
+| Planned | 20 | covered by a ROADMAP item (NM-4/5/6/9/11, CP-1/2/6, ARC-2, TT-02, docs/product; G031 now partly built) |
 | Missing | 11 | not built and not planned |
 
 Contract-only items: G033, G039, G045, G083, G095, G127, G128, G129, G141, G145, G149, G152, G176.
@@ -277,7 +277,7 @@ a common Pro module, needed for a sales demo; **P2** = Pro or website-only claim
 
 | Rank | Gap | GegoK12 rows | Today in MySMS | Recommendation |
 |---:|---|---|---|---|
-| 1 | **Message delivery: SMS, e-mail, push** (MSG91/Twilio-class SMS, SMTP, FCM/APNs) and the 33 comms 501s | G140, G141, G045, G083, G095, G152, G110, G120, G129, G151 | ARC-2 planned; tables exist; `SendMessage` 501 | **P0.** Build ARC-2 next after SEC-0. Ship at least one Indian SMS provider (MSG91 or similar, DLT templates), SMTP and FCM. It unblocks absence alerts, fee reminders, password-reset links, homework and notice pushes. |
+| 1 | **Message delivery: SMS, e-mail, push** (MSG91/Twilio-class SMS, SMTP, FCM/APNs) and the 33 comms 501s | G140, G141, G045, G083, G095, G152, G110, G120, G129, G151 | ARC-2 planned; tables exist; `SendMessage` 501 | **P0.** Build ARC-2 next. Ship at least one Indian SMS provider (MSG91 or similar, DLT templates), SMTP and FCM. It unblocks absence alerts, fee reminders, password-reset links, homework and notice pushes. |
 | 2 | **In-app notifications inbox** (list, mark read, mark all read) | G149, G176 | 501 | **P0.** Part of ARC-2 but can ship first: the bell icon is on every GegoK12 screen. |
 | 3 | **Library return** (and fines, return reminders, lost) | G127, G128, G129 | `ReturnLoan`, `InvoiceLoanFine`, `RequestLoanReturn`, `MarkLoanLost` 501 | **P0.** A library that cannot take a book back fails a demo. Small job. |
 | 4 | **Calendar view** (events + holidays + exams per user) | G145 | `GetMyCalendar`, `ExportCalendar` 501 | **P0.** Every GegoK12 portal and app has `/events`. |
@@ -295,9 +295,9 @@ a common Pro module, needed for a sales demo; **P2** = Pro or website-only claim
 | 16 | Question paper generator (printable paper from the LMS question bank) | G096 | Partial | P2: a "print paper" builder over `lms.question_pool`. |
 | 17 | Gate pass, appointments, host alert at visitor check-in | G137, G138, G139 | NM-6, NM-11 | P2: add general appointments to NM-11. |
 | 18 | Alumni module | G169, G058 | docs/product only | P2: give it a ROADMAP id. |
-| 19 | Facility maintenance work orders, incidents | G167 | Missing | P3: add to `campus` (Plan A) or NM-4. |
+| 19 | Facility maintenance work orders, incidents | G167 | Missing | P3: add to `campus` (ARCHITECTURE §6) or NM-4. |
 | 20 | Add-on catalogue / per-module entitlement on plans | G006 | Missing (to verify) | P2: needed for any core/Pro packaging (§6.3). |
-| 21 | Role templates for GegoK12's 13 personas and 7 functional roles; SEC-0 | G029-G031 | SEC-0 P0 | P0 (already next). |
+| 21 | Role templates for GegoK12's 13 personas and 7 functional roles | G029-G031 | ROADMAP GK-21 (the permission model they rest on is built) | P0. |
 | 22 | reCAPTCHA (or equivalent) on public admission form and sign-in | G017 | Missing | P2. |
 | 23 | Teacher/parent app connect by QR code | G190 | Missing | P2: QR encodes tenant code + invite token. |
 | 24 | Phone screens for parent/teacher flows GegoK12's Android apps already have (attendance taking, homework submit, leave apply, notices, calendar, lesson plans, teacher list, approvals) | G171-G189 | many "to verify" | P1: audit `clients/apps/mobile` against the G170-G191 list. |
@@ -330,13 +330,13 @@ a common Pro module, needed for a sales demo; **P2** = Pro or website-only claim
 
 | # | Idea | Rationale from GegoK12 | Relation to ARCHITECTURE.md §6 |
 |---|---|---|---|
-| C1 | **Adopt Plan A (9 modules).** GegoK12's own grouping (Students and admissions / Classroom, exams, attendance, timetable / Staff, leave, payroll / Fees and accounts / Communication / Library, reception, transport, inventory / Platform) maps almost one-to-one onto Plan A's students, academics, workforce, finance, comms, campus, platform (+ identity, learning) | a buyer reads the product in these nine-ish groups | Confirms Plan A over Plan B; no tenth module needed for anything GegoK12 has |
+| C1 | **Group modules by business area** (decided: ARCHITECTURE §6, kernel and products). GegoK12's own grouping (Students and admissions / Classroom, exams, attendance, timetable / Staff, leave, payroll / Fees and accounts / Communication / Library, reception, transport, inventory / Platform) maps almost one-to-one onto Plan A's students, academics, workforce, finance, comms, campus, platform (+ identity, learning) | a buyer reads the product in these nine-ish groups | Confirms Plan A over Plan B; no tenth module needed for anything GegoK12 has |
 | C2 | Put NM-4 inventory/stock, facility maintenance (G167), gate pass (NM-6) and transport fleet (NM-5) all in **campus** | GegoK12 sells "Library, reception, transport, inventory" as one group run by the admin office | Plan A "campus" = library + transport + frontoffice + facility; extend, do not add modules |
 | C3 | Put the **expense cash book** (gap 5) inside **finance**, not a new accounting module | GegoK12 "Fees and accounts" is one group | Plan A keeps finance alone |
-| C4 | **One navigation per Plan A module** in the web client (9 top-level menu groups instead of 21 module names) | GegoK12's menu is task-shaped | UI follows the merged modules even before the backend merge |
+| C4 | **One navigation group per product feature area** in the web client (instead of 21 module names) | GegoK12's menu is task-shaped | UI follows the merged modules even before the backend merge |
 | C5 | **School setup hub**: one Settings area with tabs School profile (ADM-03), Academic years and terms (ADM-05), Holidays (ADM-06), Classes and sections (ACA-04/05), Subjects (ACA-07), Grading (ASM-13), Leave types (HR-03), Fee setup (FIN-01), Admission cycle (ADMN-01), Notification setup (COM-13), Branding (ADM-07) | GegoK12 DOC:core-modules/settings puts all of these in one place | screen-level only |
 | C6 | **One Approvals inbox** for principal/HOD/leave checker: lesson plans, homework, assignments, staff leave, student leave, posts, promotions, admissions | GegoK12's functional roles approve across modules | read model in comms or CP-7 `insights` |
-| C7 | **Persona role templates** seeded per tenant: School admin, Sub-admin, Principal, Teacher, Class teacher, Accountant, Librarian, Receptionist, Transport coordinator, Driver, Stock keeper, Non-teaching staff, Student, Parent, Alumni | GegoK12 has exactly these groups; schools never edit permissions | part of SEC-0 |
+| C7 | **Persona role templates** seeded per tenant: School admin, Sub-admin, Principal, Teacher, Class teacher, Accountant, Librarian, Receptionist, Transport coordinator, Driver, Stock keeper, Non-teaching staff, Student, Parent, Alumni | GegoK12 has exactly these groups; schools never edit permissions | ROADMAP GK-21 |
 | C8 | Resolve **duplicate concepts** that GegoK12 keeps single: `assessment.assignment` vs `lms.assignment`; `timetable.session` vs `lms.timetable_entry`/`timetable_template`; `lms.certificate` vs NM-9 certificates; `facility.asset_item` vs NM-4 inventory; `library.media` vs `platform.file_object` vs `lms.drive_item` for the media library | GegoK12 has one homework, one assignment, one timetable, one certificate concept | decide one owner per concept; the other becomes a view or link |
 | C9 | **Default settings and seed values per tenant**: leave types (Earned, Casual, Sick, Maternity, Quarantine, Study), grade bands (CBSE scholastic and co-scholastic), absence reasons, attendance types (present, absent, late, half day), fee heads, pay categories and payroll items, feedback categories, page categories, notice backgrounds, SMS/e-mail templates | GegoK12 seeds all of these (GK:database/seeders) | platform import of a "school starter pack" |
 
@@ -401,4 +401,4 @@ lang files and the Pro module repositories (private) were not read within the ca
 language list in `lang/`, and the Pro modules' real behaviour are therefore **to verify**.
 
 MySMS evidence: database/migrations/*/V*.sql, api/operations-status.md, ui/02-navigation-and-screens.md, ROADMAP.md
-(§1, §3, §3.10-3.12, ARC-2, BE-1, SEC-0, SEC-11, D5), ARCHITECTURE.md §6, backend/finance (Razorpay), docs/product.
+(§1, §3, §3.10-3.12, ARC-2, BE-1, SEC-11, D5), ARCHITECTURE.md §6, backend/finance (Razorpay), docs/product.

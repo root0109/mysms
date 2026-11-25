@@ -40,3 +40,26 @@ export {
   lmsFixture,
   type FakeLmsOptions,
 } from './lms';
+export {
+  CONSENT_SELF_SERVICE,
+  consentMinorStudent,
+  consentParent,
+  fakePrivacy,
+  fakePrivacyAdmin,
+  PRIVACY_ADMIN,
+  privacyFixture,
+} from './privacy';
+export {
+  fakeRightsRequests,
+  RIGHTS_SELF_SERVICE,
+  RIGHTS_STAFF,
+  rightsFixture,
+  rightsOfficer,
+  rightsRequester,
+} from './privacyRights';
+export {
+  fakePrivacyGovernance,
+  governanceFixture,
+  PRIVACY_GOVERNANCE,
+  privacyOfficer,
+} from './privacyGovernance';

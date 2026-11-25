@@ -88,6 +88,32 @@ public class ConsentRecordRepository {
             """;
     private static final String CURRENT = SELECT + LIVE + " ORDER BY r.valid_from, r.id";
     private static final String LOCK_LIVE = SELECT + LIVE + " AND r.giver_person_id = :giverPersonId FOR UPDATE";
+    /** Every giver's live decision about the subject, locked in id order (a rights request withdraws them). */
+    private static final String LOCK_LIVE_ABOUT = SELECT + """
+               AND r.subject_person_id = :subjectPersonId AND r.withdrawn_at IS NULL AND r.superseded_by_id IS NULL
+             ORDER BY r.id
+               FOR UPDATE
+            """;
+    private static final String ON_BEHALF = SELECT + """
+               AND r.subject_person_id = :subjectPersonId AND r.giver_capacity <> 'self'
+               AND r.withdrawn_at IS NULL AND r.superseded_by_id IS NULL
+             ORDER BY r.valid_from, r.id
+            """;
+    /**
+     * Live, past its last day, and not yet marked expired: an expired entry lies between valid_until and the end of
+     * today (the partition-key range of consent_evidence).
+     */
+    private static final String LAPSED = """
+               AND r.withdrawn_at IS NULL AND r.superseded_by_id IS NULL AND r.valid_until < :today
+               AND NOT EXISTS (SELECT 1
+                                 FROM privacy.consent_evidence e
+                                WHERE e.tenant_id = :tenantId
+                                  AND e.consent_record_id = r.id AND e.event = 'expired'
+                                  AND e.occurred_at >= CAST(r.valid_until AS timestamp) AT TIME ZONE 'UTC'
+                                  AND e.occurred_at < CAST(:today AS timestamp) AT TIME ZONE 'UTC' + INTERVAL '1 day')
+            """;
+    private static final String EXPIRING = SELECT + LAPSED + " ORDER BY r.valid_until, r.id LIMIT :limit";
+    private static final String LOCK_EXPIRING = SELECT + " AND r.id = :id" + LAPSED + " FOR UPDATE";
     private static final String GIVEN_BY = """
             SELECT r.id, r.subject_person_id, r.purpose_code, r.scope, r.decision, r.valid_from, r.valid_until,
                    r.channel, r.row_version, v.version AS notice_version
@@ -168,6 +194,29 @@ public class ConsentRecordRepository {
     public Optional<ConsentRecordEntity> lockLive(UUID subjectPersonId, String purposeCode, UUID giverPersonId) {
         return jdbc.sql(LOCK_LIVE).param("subjectPersonId", subjectPersonId).param("purposeCode", purposeCode)
                 .param("giverPersonId", giverPersonId).query(ConsentRecordRepository::map).optional();
+    }
+
+    /** Every giver's live decision about the subject, the rows locked until the transaction ends. */
+    public List<ConsentRecordEntity> lockLiveAbout(UUID subjectPersonId) {
+        return jdbc.sql(LOCK_LIVE_ABOUT).param("subjectPersonId", subjectPersonId).query(ConsentRecordRepository::map)
+                .list();
+    }
+
+    /** The live decisions others (guardians, nominees) gave about the subject, oldest first. */
+    public List<ConsentRecordEntity> onBehalfOf(UUID subjectPersonId) {
+        return jdbc.sql(ON_BEHALF).param("subjectPersonId", subjectPersonId).query(ConsentRecordRepository::map).list();
+    }
+
+    /** Up to {@code limit} live decisions past their last day before {@code today} not yet marked expired. */
+    public List<UUID> expiring(LocalDate today, int limit) {
+        return jdbc.sql(EXPIRING).param("today", today).param("limit", limit)
+                .query((rs, row) -> rs.getObject("id", UUID.class)).list();
+    }
+
+    /** The decision, its row locked, when it is still live, past its last day and not yet marked expired. */
+    public Optional<ConsentRecordEntity> lockExpiring(UUID id, LocalDate today) {
+        return jdbc.sql(LOCK_EXPIRING).param("id", id).param("today", today).query(ConsentRecordRepository::map)
+                .optional();
     }
 
     /** Every live decision the person gave, about anyone, with its notice version number. */

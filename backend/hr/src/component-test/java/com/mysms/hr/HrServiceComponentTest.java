@@ -32,7 +32,7 @@ import tools.jackson.databind.json.JsonMapper;
 class HrServiceComponentTest {
 
     /** CREATE TABLE statements in database/migrations/hr (partitions included). */
-    private static final int TABLES = 12;
+    private static final int TABLES = 14;
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
     private static final TestTokens TOKENS = new TestTokens();
     private static final HttpClient HTTP = HttpClient.newHttpClient();

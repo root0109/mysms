@@ -1,5 +1,9 @@
 # MySMS relationship register
 
+> **Stale.** Lists 458 of the baselines' 490 foreign keys (privacy's and later additions are missing) and its counts
+> below are out of date. The generator that wrote it is not in the repository; regenerate it with the data dictionary
+> and the ERDs once a Java generator exists in the build (ROADMAP DOC-1). The baselines are the source of truth.
+
 All 469 foreign-key relationships — every one inside a single module schema; there are no cross-module foreign keys (references into another module are logical references, registered in `logical-references.md`). `tenant_id` columns carry no foreign key outside the platform schema; the 11 platform-internal `tenant_id` FKs are summarised rather than listed individually. Where both sides are tenant-owned, the FK is **tenant-composite** — `(column, tenant_id)` referencing `(id, tenant_id)` — so a reference can never point into another tenant. Cardinality is read child → parent: **N:1** many child rows per parent, **1:1** when the FK column is also unique. *Mandatory* means the FK column is NOT NULL.
 
 - Foreign keys: **469**, all intra-module and always enforced, on one shared instance or one instance per module.

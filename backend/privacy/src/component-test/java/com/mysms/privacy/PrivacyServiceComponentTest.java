@@ -32,7 +32,7 @@ import tools.jackson.databind.json.JsonMapper;
 class PrivacyServiceComponentTest {
 
     /** CREATE TABLE statements in database/migrations/privacy (partitions included). */
-    private static final int TABLES = 40;
+    private static final int TABLES = 54;
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
     private static final TestTokens TOKENS = new TestTokens();
     private static final HttpClient HTTP = HttpClient.newHttpClient();

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
@@ -75,6 +76,11 @@ class PeopleGrpcParityComponentTest {
     @Autowired
     @Qualifier(PeopleDatabaseConfig.DATABASE)
     private ModuleDatabase database;
+
+    @BeforeAll
+    static void consents() {
+        PublicProfileConsents.allowSpecPerson();
+    }
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

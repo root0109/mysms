@@ -1,6 +1,8 @@
 package com.mysms.privacy;
 
+import static com.mysms.privacy.ConsentFixtures.BEHAVIOURAL;
 import static com.mysms.privacy.ConsentFixtures.MY_CONSENTS;
+import static com.mysms.privacy.ConsentFixtures.NOTICE;
 import static com.mysms.privacy.ConsentFixtures.PHOTOS;
 import static com.mysms.privacy.ConsentFixtures.SELF_SERVICE;
 import static com.mysms.privacy.ConsentFixtures.decision;
@@ -12,6 +14,8 @@ import com.mysms.core.testkit.TestDatabase;
 import com.mysms.privacy.config.PrivacyDatabaseConfig;
 import com.mysms.privacy.events.GuardianLinkSync;
 import com.mysms.privacy.events.SubjectSync;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -29,6 +33,7 @@ import tools.jackson.databind.JsonNode;
  * Design §13 "a guardian never learns another guardian's decision", against real PostgreSQL through the real edge:
  * two legal guardians of one child decide differently, the most restrictive decision wins in the effective state,
  * and each guardian's consent centre shows their own decision only — never the other's record, its id or its answer.
+ * The child sees the effect read only (design §12 "Students"), with nothing of who decided what.
  */
 @SpringBootTest(classes = PrivacyApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ConsentCentreDisclosureComponentTest {
@@ -76,6 +81,15 @@ class ConsentCentreDisclosureComponentTest {
         throw new AssertionError("no row of " + purposeCode + " in " + centre.body());
     }
 
+    /** The text values of a JSON array, in order. */
+    private static List<String> strings(JsonNode array) {
+        List<String> values = new ArrayList<>();
+        for (JsonNode value : array) {
+            values.add(value.asString());
+        }
+        return values;
+    }
+
     private List<String> state(UUID tenant, UUID subject) {
         return fixtures.read(tenant, () -> database.jdbc().sql("""
                 SELECT s.scope || ':' || s.result || ':' || s.reason
@@ -118,6 +132,12 @@ class ConsentCentreDisclosureComponentTest {
         PrivacyCalls.Reply motherCentre = calls.get(MY_CONSENTS, motherToken);
         assertThat(motherCentre.status()).isEqualTo(200);
         JsonNode motherRow = row(motherCentre, child, PHOTOS);
+        assertThat(motherRow.path("capacity").asString()).isEqualTo("guardian");
+        assertThat(motherRow.path("noticeCode").asString()).isEqualTo(NOTICE);
+        assertThat(motherRow.path("noticeVersionId").asString()).isEqualTo(version);
+        assertThat(strings(motherRow.path("allowedScopes")))
+                .containsExactly("class", "institution", "inter_school", "public");
+        assertThat(motherRow.has("decidesFrom")).isFalse();
         assertThat(motherRow.path("id").asString()).isEqualTo(granted.text("id"));
         assertThat(motherRow.path("myStatus").asString()).isEqualTo("granted");
         assertThat(motherRow.path("scope").asString()).isEqualTo("class");
@@ -153,5 +173,97 @@ class ConsentCentreDisclosureComponentTest {
         assertThat(fatherRow.path("myStatus").asString()).isEqualTo("not_answered");
         assertThat(fatherRow.has("id")).isFalse();
         assertThat(fatherRow.path("effectiveWidestScope").asString()).isEqualTo("institution");
+    }
+
+    @Test
+    void aMinorSeesTheEffectReadOnlyAndNothingOfWhoDecided() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        UUID child = UUID.randomUUID();
+        UUID mother = UUID.randomUUID();
+        fixtures.minor(tenant, child);
+        fixtures.adult(tenant, mother);
+        fixtures.guardian(tenant, mother, child);
+        String version = fixtures.enable(tenant, PHOTOS, BEHAVIOURAL);
+        ceiling(tenant, PHOTOS, "institution");
+        PrivacyCalls.Reply granted = calls.post(MY_CONSENTS, calls.person(tenant, mother, SELF_SERVICE),
+                decision(child, PHOTOS, "institution", "granted", version, "en"));
+        assertThat(granted.status()).as(granted.body().toString()).isEqualTo(201);
+        assertThat(strings(granted.body().path("allowedScopes")))
+                .as("the school's ceiling narrows the widths").containsExactly("class", "institution");
+
+        String childToken = calls.person(tenant, child, SELF_SERVICE);
+        PrivacyCalls.Reply centre = calls.get(MY_CONSENTS, childToken);
+        assertThat(centre.status()).isEqualTo(200);
+        assertThat(centre.body().path("data").size()).as("a purpose forbidden for minors has no row").isEqualTo(1);
+        JsonNode own = row(centre, child, PHOTOS);
+        assertThat(own.path("capacity").asString()).isEqualTo("minor_self");
+        assertThat(own.path("effectiveWidestScope").asString()).isEqualTo("institution");
+        assertThat(own.path("decidesFrom").asString()).isEqualTo(majorityDate(tenant, child).toString());
+        assertThat(own.path("noticeCode").asString()).isEqualTo(NOTICE);
+        assertThat(own.has("myStatus")).isFalse();
+        assertThat(own.has("id")).isFalse();
+        assertThat(own.has("scope")).isFalse();
+        assertThat(own.has("etag")).isFalse();
+        assertThat(centre.body().toString()).doesNotContain(granted.text("id")).doesNotContain(mother.toString())
+                .doesNotContain("granted");
+
+        assertThat(calls.post(MY_CONSENTS, childToken, decision(child, PHOTOS, "class", "refused", version, "en"))
+                .status()).as("a minor does not decide for themself").isEqualTo(404);
+    }
+
+    @Test
+    void aGuardianWhoseLinkEndedWithdrawsWithoutLearningTheChildsState() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        UUID child = UUID.randomUUID();
+        UUID mother = UUID.randomUUID();
+        UUID father = UUID.randomUUID();
+        fixtures.minor(tenant, child);
+        UUID motherLink = fixtures.guardian(tenant, mother, child);
+        fixtures.guardian(tenant, father, child);
+        String version = fixtures.enable(tenant, PHOTOS);
+        String motherToken = calls.person(tenant, mother, SELF_SERVICE);
+        PrivacyCalls.Reply granted = calls.post(MY_CONSENTS, motherToken,
+                decision(child, PHOTOS, "institution", "granted", version, "en"));
+        assertThat(granted.status()).as(granted.body().toString()).isEqualTo(201);
+        assertThat(calls.post(MY_CONSENTS, calls.person(tenant, father, SELF_SERVICE),
+                decision(child, PHOTOS, "institution", "granted", version, "en")).status()).isEqualTo(201);
+
+        fixtures.unlink(tenant, motherLink, mother, child);
+        assertThat(calls.get(MY_CONSENTS, motherToken).body().path("data").size())
+                .as("the child is no longer in her centre").isZero();
+        PrivacyCalls.Reply withdrawn = calls.post(MY_CONSENTS + "/" + granted.text("id") + ":withdraw", motherToken,
+                Map.of("etag", granted.text("etag")));
+        assertThat(withdrawn.status()).as(withdrawn.body().toString()).isEqualTo(200);
+        assertThat(withdrawn.body().has("effectiveWidestScope"))
+                .as("the father's grant still shares the photos; she is not told").isFalse();
+    }
+
+    @Test
+    void aPersonOfUnknownAgeSeesNoRowOfTheirOwn() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        UUID person = UUID.randomUUID();
+        fixtures.ageUnknown(tenant, person);
+        fixtures.enable(tenant, PHOTOS);
+        PrivacyCalls.Reply centre = calls.get(MY_CONSENTS, calls.person(tenant, person, SELF_SERVICE));
+        assertThat(centre.status()).isEqualTo(200);
+        assertThat(centre.body().path("data").size()).isZero();
+    }
+
+    /** Sets the tenant's width ceiling of the purpose, as a tenant administrator. */
+    private void ceiling(UUID tenant, String purposeCode, String maxScope) throws Exception {
+        String admin = calls.administrator(tenant, "privacy.tenant_purpose.read", "privacy.tenant_purpose.update");
+        for (JsonNode purpose : calls.get("/v1/privacy/purposes?size=500", admin).body().path("data")) {
+            if (purposeCode.equals(purpose.path("code").asString())) {
+                PrivacyCalls.Reply set = calls.patch("/v1/privacy/purposes/" + purpose.path("id").asString(), admin,
+                        purpose.path("etag").asString(), Map.of("maxScope", maxScope));
+                assertThat(set.status()).as(set.body().toString()).isEqualTo(200);
+            }
+        }
+    }
+
+    private LocalDate majorityDate(UUID tenant, UUID person) {
+        return fixtures.read(tenant, () -> database.jdbc().sql("""
+                SELECT s.majority_date FROM privacy.subject s WHERE s.tenant_id = :tenantId AND s.person_id = :person
+                """).param("person", person).query(LocalDate.class).single());
     }
 }

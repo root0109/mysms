@@ -3,8 +3,11 @@ package com.mysms.core.testkit;
 import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
@@ -35,6 +38,12 @@ public final class TestDatabase implements AutoCloseable {
     private static final String TEST_SECRET_KEY = randomKey();
 
     private static final String IMAGE = "postgres:16-alpine";
+    /**
+     * How long the drop at JVM exit waits for the test's own sessions to end: Spring's shutdown hook closes the cached
+     * application contexts at the same time (stopping the outbox relay, then closing the pools).
+     */
+    private static final Duration SESSIONS_END_WITHIN = Duration.ofSeconds(15);
+    private static final long SESSIONS_POLL_MILLIS = 100;
     private static final SecureRandom RANDOM = new SecureRandom();
     private static Server server;
 
@@ -79,7 +88,8 @@ public final class TestDatabase implements AutoCloseable {
 
     /**
      * Creates a database that is dropped when the test JVM exits — for Spring tests, whose cached application context
-     * keeps connections open until then.
+     * keeps connections open until then. The drop first waits for those connections to close, as the contexts shut
+     * down gracefully alongside it; only sessions still open after {@link #SESSIONS_END_WITHIN} are terminated.
      */
     public static TestDatabase createDropOnExit() {
         TestDatabase database = create();
@@ -89,10 +99,40 @@ public final class TestDatabase implements AutoCloseable {
 
     private void closeQuietly() {
         try {
+            awaitSessionsEnd();
             close();
         } catch (IllegalStateException e) {
             // the server may already be gone (container stopped first); nothing is left to clean up then
             return;
+        }
+    }
+
+    /**
+     * Waits until no session is connected to this database, or {@link #SESSIONS_END_WITHIN} passes. Forcing the drop
+     * while the relay of a still-open context polls would fail its pass (SQLSTATE 57P01) and log it as an outage.
+     */
+    private void awaitSessionsEnd() {
+        Server admin = server();
+        long deadline = System.nanoTime() + SESSIONS_END_WITHIN.toNanos();
+        try (Connection connection = DriverManager.getConnection(admin.adminUrl(), admin.user(), admin.password());
+             PreparedStatement sessions = connection.prepareStatement(
+                     "SELECT count(*) FROM pg_stat_activity WHERE datname = ?")) {
+            sessions.setString(1, name);
+            while (openSessions(sessions) > 0 && System.nanoTime() < deadline) {
+                Thread.sleep(SESSIONS_POLL_MILLIS);
+            }
+        } catch (SQLException e) {
+            // the server may already be gone; close() reports what is left to clean up
+            return;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private static long openSessions(PreparedStatement sessions) throws SQLException {
+        try (ResultSet count = sessions.executeQuery()) {
+            count.next();
+            return count.getLong(1);
         }
     }
 
@@ -181,6 +221,7 @@ public final class TestDatabase implements AutoCloseable {
         Server admin = server();
         try (Connection connection = DriverManager.getConnection(admin.adminUrl(), admin.user(), admin.password());
              Statement statement = connection.createStatement()) {
+            // FORCE ends what is still connected: nothing at JVM exit once the contexts closed, or a leak to clear
             statement.execute("DROP DATABASE IF EXISTS " + name + " WITH (FORCE)");
             statement.execute("DROP ROLE IF EXISTS " + appRole);
             statement.execute("DROP ROLE IF EXISTS " + name + "_relay");
