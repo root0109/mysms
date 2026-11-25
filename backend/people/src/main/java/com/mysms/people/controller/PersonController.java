@@ -27,8 +27,8 @@ import com.mysms.people.api.model.SendGreetingsRequest;
 import com.mysms.people.api.model.SendResult;
 import com.mysms.people.api.model.WorkExperience;
 import com.mysms.people.api.model.WorkExperienceUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
+import com.mysms.people.business.GreetingService;
 import com.mysms.people.business.MyPersonService;
 import com.mysms.people.business.PersonService;
 import java.net.URI;
@@ -41,17 +41,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the Person operations; authentication and the permission check already happened in the auth-client
- * filter; operations not served yet answer 501 NOT_IMPLEMENTED. getMyPerson and updateMyPerson carry their own rules.
+ * filter. getMyPerson and updateMyPerson, the birthdays and greetings carry their own rules.
  */
 @RestController
 public class PersonController implements PersonApi {
 
     private final MyPersonService myPerson;
     private final PersonService personService;
+    private final GreetingService greetingService;
 
-    public PersonController(MyPersonService myPerson, PersonService personService) {
+    public PersonController(MyPersonService myPerson, PersonService personService,
+            GreetingService greetingService) {
         this.myPerson = myPerson;
         this.personService = personService;
+        this.greetingService = greetingService;
     }
 
     @Override
@@ -321,7 +324,8 @@ public class PersonController implements PersonApi {
     @Override
     public ResponseEntity<PagingInfo<BirthdayEntry>> listBirthdays(UUID institutionId, LocalDate fromDate,
             LocalDate toDate, List<String> kinds, List<String> roles, Integer page, Integer size, String cursor) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(PagingUtil.pagingInfo(greetingService.listBirthdays(institutionId, fromDate, toDate,
+                kinds, roles, page, size, cursor)));
     }
 
     @Override
@@ -407,7 +411,7 @@ public class PersonController implements PersonApi {
     @Override
     public ResponseEntity<SendResult> sendGreetings(SendGreetingsRequest sendGreetingsRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(greetingService.sendGreetings(sendGreetingsRequest));
     }
 
     @Override

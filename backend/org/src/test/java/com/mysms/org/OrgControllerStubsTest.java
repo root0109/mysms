@@ -19,11 +19,11 @@ class OrgControllerStubsTest {
 
     @Test
     void unservedOperationsAnswerNotImplemented() {
-        assertThat(ControllerStubs.count(AcademicYearController.class)).as("AcademicYear").isEqualTo(2);
+        assertThat(ControllerStubs.count(AcademicYearController.class)).as("AcademicYear").isEqualTo(0);
         assertThat(ControllerStubs.count(AttributeDefinitionController.class)).as("AttributeDefinition").isEqualTo(0);
         assertThat(ControllerStubs.count(DepartmentController.class)).as("Department").isEqualTo(0);
         assertThat(ControllerStubs.count(HolidayController.class)).as("Holiday").isEqualTo(0);
-        assertThat(ControllerStubs.count(InstitutionController.class)).as("Institution").isEqualTo(1);
+        assertThat(ControllerStubs.count(InstitutionController.class)).as("Institution").isEqualTo(0);
         assertThat(ControllerStubs.count(InstitutionTypeController.class)).as("InstitutionType").isEqualTo(0);
     }
 }

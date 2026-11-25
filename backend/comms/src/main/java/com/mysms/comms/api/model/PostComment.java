@@ -33,7 +33,7 @@ public class PostComment {
   private @Nullable UUID parentCommentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID authorUserId;
+  private @Nullable UUID authorUserId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String body;
@@ -63,13 +63,6 @@ public class PostComment {
 
   public PostComment() {
     super();
-  }
-
-  /**
-   * Constructor with only required parameters
-   */
-  public PostComment(UUID authorUserId) {
-    this.authorUserId = authorUserId;
   }
 
   public PostComment id(@Nullable UUID id) {
@@ -132,23 +125,23 @@ public class PostComment {
     this.parentCommentId = parentCommentId;
   }
 
-  public PostComment authorUserId(UUID authorUserId) {
+  public PostComment authorUserId(@Nullable UUID authorUserId) {
     this.authorUserId = authorUserId;
     return this;
   }
 
   /**
-   * Author.
+   * Author. Output only: the caller, from the token.
    * @return authorUserId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("authorUserId")
-  public UUID getAuthorUserId() {
+  public @Nullable UUID getAuthorUserId() {
     return authorUserId;
   }
 
   @JsonProperty("authorUserId")
-  public void setAuthorUserId(UUID authorUserId) {
+  public void setAuthorUserId(@Nullable UUID authorUserId) {
     this.authorUserId = authorUserId;
   }
 

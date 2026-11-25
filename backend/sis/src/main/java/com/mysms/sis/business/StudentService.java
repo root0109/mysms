@@ -448,9 +448,10 @@ public class StudentService extends AppTransactionManager {
     private Map<String, Object> eventPayloadStudentGuardian(StudentGuardianEntity link) {
         StudentGuardianRepository.Parties parties =
                 studentGuardianRepository.partiesOf(link.getStudentId(), link.getGuardianId());
-        return SisEvents.guardianLink(link.getId(), parties.studentPersonId(), parties.guardianPersonId(),
-                parties.guardianUserId(), Boolean.TRUE.equals(link.getIsLegalGuardian()),
-                Boolean.TRUE.equals(link.getHasCustody()), link.getStatus(), link.getRowVersion());
+        return SisEvents.guardianLink(link.getId(), link.getStudentId(), parties.studentPersonId(),
+                link.getGuardianId(), parties.guardianPersonId(), parties.guardianUserId(),
+                Boolean.TRUE.equals(link.getIsLegalGuardian()), Boolean.TRUE.equals(link.getHasCustody()),
+                link.getStatus(), link.getRowVersion());
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */

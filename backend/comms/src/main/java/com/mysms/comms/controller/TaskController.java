@@ -13,7 +13,6 @@ import com.mysms.comms.api.model.TaskAssignee;
 import com.mysms.comms.api.model.TaskAssigneeList;
 import com.mysms.comms.api.model.TaskAssigneeUpdate;
 import com.mysms.comms.api.model.TaskUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the Task operations; authentication and the permission check already ran in the auth-client filter.
- * Operations not served yet answer 501.
  */
 @RestController
 public class TaskController implements TaskApi {
@@ -35,7 +33,7 @@ public class TaskController implements TaskApi {
 
     @Override
     public ResponseEntity<TaskAssigneeList> claimTask(UUID taskId, Object body, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(taskService.claimTask(taskId));
     }
 
     @Override

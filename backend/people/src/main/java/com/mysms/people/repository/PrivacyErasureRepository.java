@@ -106,6 +106,16 @@ public final class PrivacyErasureRepository {
              WHERE tenant_id = :tenantId AND id = :id
             """;
 
+    public static final String GREETING_ROWS = """
+            SELECT id FROM people.greeting WHERE tenant_id = :tenantId AND person_id = :subjectId ORDER BY id
+            """;
+    /** A greeting holds nothing but whom, when and how; erasing it is its soft delete. */
+    public static final String ERASE_GREETING = """
+            UPDATE people.greeting
+               SET deleted_at = COALESCE(deleted_at, :now), updated_at = :now, row_version = row_version + 1
+             WHERE tenant_id = :tenantId AND id = :id
+            """;
+
     public static final String PERSON_ROWS = """
             SELECT id FROM people.person WHERE tenant_id = :tenantId AND id = :subjectId
             """;

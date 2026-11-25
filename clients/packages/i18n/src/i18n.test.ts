@@ -1,8 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { en } from './catalogs/en';
 import { hi } from './catalogs/hi';
 import { createFormatters } from './format';
-import { createTranslator, enumLabel, resolveLocale } from './translate';
+import {
+  catalogVersion,
+  createTranslator,
+  enumLabel,
+  loadCatalog,
+  onCatalogLoaded,
+  resolveLocale,
+} from './translate';
 
 describe('catalogues', () => {
   it('use module.screen.element keys and only keys that exist in en', () => {
@@ -29,7 +36,21 @@ describe('translation', () => {
     expect(t('master.countries.saved', { name: 'India' })).toBe('India saved.');
   });
 
-  it('falls back to en for missing translations and unknown locales', () => {
+  it('loads a catalogue on first use, in English until then, and tells its listeners', async () => {
+    const heard = vi.fn();
+    const stop = onCatalogLoaded(heard);
+    const before = catalogVersion();
+    expect(createTranslator('hi')('acc.signIn.title')).toBe('Sign in');
+    await loadCatalog('hi');
+    await loadCatalog('hi');
+    await loadCatalog('xx');
+    expect(heard).toHaveBeenCalledTimes(1);
+    expect(catalogVersion()).toBe(before + 1);
+    stop();
+  });
+
+  it('falls back to en for missing translations and unknown locales', async () => {
+    await loadCatalog('hi');
     const t = createTranslator('hi');
     expect(t('acc.signIn.title')).toBe('साइन इन करें');
     expect(t('acc.signIn.tenant')).toBe('School code');
@@ -75,6 +96,9 @@ describe('formatting', () => {
     expect(f.time('2026-11-06T04:30:00Z')).toBe('10:00 am');
     // a calendar day keeps its weekday whatever the viewer's zone
     expect(f.weekday('2026-03-02')).toBe('Monday');
+    // a month is that calendar month everywhere, from a day or a month value
+    expect(createFormatters('en-US', 'America/Los_Angeles').month('2026-03-01')).toBe('March 2026');
+    expect(f.month('2026-03')).toBe('March 2026');
     expect(createFormatters('en-US').date('2026-01-15T12:00:00Z')).toBe('Jan 15, 2026');
   });
 });

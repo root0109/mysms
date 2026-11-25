@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { useForm, type Path, type UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
 import { fieldMessage } from './fieldMessage';
+import { CreatePublicProfile } from './people/PublicProfileScreen';
 
 const MAX = 'common.validation.maxLength';
 /** The contract's lengths (people MyPersonUpdate); about-me is limited by the service. */
@@ -159,6 +160,7 @@ export function ProfileScreen() {
             )}
           </Card>
         ) : null}
+        <CreatePublicProfile />
       </div>
       {!user?.personId ? (
         <Banner intent="info">{t('acc.profile.noPerson')}</Banner>

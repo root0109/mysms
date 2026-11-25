@@ -1,7 +1,6 @@
 import {
   actionAllowed,
   allOf,
-  isApiError,
   MAX_RANGE_DAYS,
   rangeFilter,
   RESOURCES,
@@ -33,9 +32,8 @@ import {
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { isoDay } from './dates';
+import { display, problemText } from './recordText';
 import { UUID } from './ids';
-
-type Translate = ReturnType<typeof useI18n>['t'];
 
 const SEARCH_FIELDS = ['name', 'title', 'code', 'displayName', 'subject'];
 
@@ -65,32 +63,6 @@ function hasPermission(granted: readonly string[], code: string): boolean {
   }
   return false;
 }
-
-type Format = ReturnType<typeof useI18n>['format'];
-
-function display(t: Translate, field: FieldDef, value: unknown, format?: Format): string {
-  if (value === undefined || value === null || value === '') return '—';
-  if (format && field.kind === 'date' && /^\d{4}-\d{2}-\d{2}/.test(String(value)))
-    return format.day(String(value));
-  if (format && field.kind === 'datetime' && !Number.isNaN(Date.parse(String(value))))
-    return format.dateTime(String(value));
-  if (field.kind === 'boolean') return value === true ? t('adm.records.yes') : t('adm.records.no');
-  if (field.kind === 'enum' && field.values) {
-    const index = field.values.indexOf(String(value));
-    return index >= 0 ? (field.valueLabels?.[index] ?? String(value)) : t('enum.common.unknown');
-  }
-  return String(value);
-}
-
-const problemText = (t: Translate, error: unknown): string | undefined => {
-  if (!error) return undefined;
-  if (isApiError(error) && error.status === 422)
-    return error.errors.map((e) => `${e.field}: ${e.message}`).join(' ') || t('common.validation.pattern');
-  if (isApiError(error) && error.status === 403) return t('adm.records.forbidden');
-  if (isApiError(error) && error.status === 412) return t('common.conflict.body');
-  if (isApiError(error) && error.status === 409) return error.detail ?? t('common.error.generic');
-  return t('common.error.generic');
-};
 
 /**
  * ADM-20 Records: every resource whose standard operations the server serves, browsed and edited generically from
@@ -156,8 +128,16 @@ interface RecordsOfProps {
   rowLink?: ((row: RecordRow) => string) | undefined;
   /** Something a row can start besides its editor (e.g. taking attendance for a session); its own column. */
   rowTool?: ((row: RecordRow) => ReactNode) | undefined;
+  /** Names of the ids a column holds, by field (a subject's name for `subjectId`), read by the page. */
+  names?: Readonly<Record<string, ReadonlyMap<string, string>>> | undefined;
   parentId: string;
   setParentId: (v: string) => void;
+  /** The parent is the page's own record (a tab of a detail page): it is not asked for. */
+  fixedParent?: boolean;
+  /** A condition every listed row meets, beside the reader's own (a title's copies, a class's sessions). */
+  scope?: string | undefined;
+  /** Values a new row starts with and keeps (the record the page is about); not editable in the dialog. */
+  presets?: Readonly<Record<string, unknown>> | undefined;
   search: string;
   setSearch: (v: string) => void;
   notice: string | null;
@@ -207,7 +187,7 @@ export function RecordsOf(p: RecordsOfProps) {
   const span = (Date.parse(to) - Date.parse(from)) / 86_400_000;
   const rangeOk = !def.partition || (span >= 0 && span <= MAX_RANGE_DAYS);
   const chosen = filterDef && filterValue ? `${filterDef.name} = "${filterValue}"` : undefined;
-  const filter = allOf(search, chosen, rangeOk ? rangeFilter(def, from, to) : undefined);
+  const filter = allOf(p.scope, search, chosen, rangeOk ? rangeFilter(def, from, to) : undefined);
   const rows = useInfiniteRecords(def, {
     size: 50,
     parentId: parentOk && def.parent ? p.parentId.trim() : undefined,
@@ -226,7 +206,7 @@ export function RecordsOf(p: RecordsOfProps) {
       field.kind === 'enum' ? (
         <StatusChip intent="neutral" label={display(t, field, row[field.name])} />
       ) : (
-        display(t, field, row[field.name], format)
+        (p.names?.[field.name]?.get(String(row[field.name])) ?? display(t, field, row[field.name], format))
       ),
   }));
   const { rowLink } = p;
@@ -302,7 +282,7 @@ export function RecordsOf(p: RecordsOfProps) {
             ]}
           />
         ) : null}
-        {def.parent ? (
+        {def.parent && !p.fixedParent ? (
           <TextInput
             label={t('adm.records.parent')}
             hint={t('adm.records.parentHint')}
@@ -372,6 +352,7 @@ export function RecordsOf(p: RecordsOfProps) {
         <RecordDialog
           def={def}
           parentId={p.parentId.trim()}
+          presets={p.presets}
           onClose={() => p.setCreating(false)}
           onDone={done}
         />
@@ -392,17 +373,23 @@ export function RecordsOf(p: RecordsOfProps) {
   );
 }
 
-function initialValues(def: ResourceDef, row: RecordRow | undefined): Record<string, unknown> {
+function initialValues(
+  def: ResourceDef,
+  row: RecordRow | undefined,
+  presets: Readonly<Record<string, unknown>> = {},
+): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const f of def.fields)
-    out[f.name] = row?.[f.name] ?? (f.kind === 'boolean' ? (f.defaultValue ?? false) : '');
+    out[f.name] = row?.[f.name] ?? presets[f.name] ?? (f.kind === 'boolean' ? (f.defaultValue ?? false) : '');
   return out;
 }
 
-function RecordDialog({
+/** The editor of one record: its fields, its state steps the role may use and the row allows, and delete. */
+export function RecordDialog({
   def,
   parentId,
   row,
+  presets,
   canUpdate = false,
   canDelete = false,
   actions = [],
@@ -412,18 +399,20 @@ function RecordDialog({
   def: ResourceDef;
   parentId: string;
   row?: RecordRow;
+  presets?: Readonly<Record<string, unknown>> | undefined;
   canUpdate?: boolean;
   canDelete?: boolean;
   /** The state transitions the caller holds the permission for; offered only where the row's state allows. */
   actions?: readonly ActionDef[];
   onClose: () => void;
-  onDone: (message: string) => void;
+  /** After a save, a step or delete (`deleted`: the record is gone). */
+  onDone: (message: string, deleted?: boolean) => void;
 }) {
   const { t } = useI18n();
   const fresh = useRecord(def, row ? row.id : null, parentId || undefined);
   const current = fresh.data?.data ?? row;
   const etag = fresh.data?.etag ?? (row?.etag as string | undefined) ?? null;
-  const [values, setValues] = useState<Record<string, unknown>>(() => initialValues(def, row));
+  const [values, setValues] = useState<Record<string, unknown>>(() => initialValues(def, row, presets));
   const [missing, setMissing] = useState<string[]>([]);
   const create = useCreateRecord(def);
   const update = useUpdateRecord(def);
@@ -449,7 +438,9 @@ function RecordDialog({
   };
   const editable = (f: FieldDef) =>
     !f.readOnly &&
-    (isNew ? f.name !== def.parent : canUpdate && f.writable === true && f.name !== def.parent);
+    (isNew
+      ? f.name !== def.parent && !(presets && f.name in presets)
+      : canUpdate && f.writable === true && f.name !== def.parent);
   const pending = create.isPending || update.isPending || remove.isPending || act.isPending;
   const error = create.error ?? update.error ?? remove.error ?? act.error;
   const submit = () => {
@@ -488,7 +479,7 @@ function RecordDialog({
                 onClick={() =>
                   remove.mutate(
                     { id: current.id, etag, parentId: parentId || undefined },
-                    { onSuccess: () => onDone(t('adm.records.deleted')) },
+                    { onSuccess: () => onDone(t('adm.records.deleted'), true) },
                   )
                 }
               >

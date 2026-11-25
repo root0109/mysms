@@ -40,6 +40,16 @@
       <artifactId>lombok</artifactId>
       <scope>provided</scope>
     </dependency>
+    <!-- outgoing e-mail over SMTP: JavaMailSender -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-mail</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.icegreen</groupId>
+      <artifactId>greenmail</artifactId>
+      <scope>test</scope>
+    </dependency>
     <!-- messaging runtime relay; event consumers compile against its narrow API -->
     <dependency>
       <groupId>com.mysms</groupId>

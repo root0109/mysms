@@ -22,33 +22,10 @@ import java.util.*;
 public class ConversationMessageUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID senderUserId;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String body;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Boolean deletedBySender;
-
-  public ConversationMessageUpdate senderUserId(@Nullable UUID senderUserId) {
-    this.senderUserId = senderUserId;
-    return this;
-  }
-
-  /**
-   * Sender.
-   * @return senderUserId
-   */
-  @Valid 
-  @JsonProperty("senderUserId")
-  public @Nullable UUID getSenderUserId() {
-    return senderUserId;
-  }
-
-  @JsonProperty("senderUserId")
-  public void setSenderUserId(@Nullable UUID senderUserId) {
-    this.senderUserId = senderUserId;
-  }
 
   public ConversationMessageUpdate body(@Nullable String body) {
     this.body = body;
@@ -99,21 +76,19 @@ public class ConversationMessageUpdate {
       return false;
     }
     ConversationMessageUpdate conversationMessageUpdate = (ConversationMessageUpdate) o;
-    return Objects.equals(this.senderUserId, conversationMessageUpdate.senderUserId) &&
-        Objects.equals(this.body, conversationMessageUpdate.body) &&
+    return Objects.equals(this.body, conversationMessageUpdate.body) &&
         Objects.equals(this.deletedBySender, conversationMessageUpdate.deletedBySender);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(senderUserId, body, deletedBySender);
+    return Objects.hash(body, deletedBySender);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ConversationMessageUpdate {\n");
-    sb.append("    senderUserId: ").append(toIndentedString(senderUserId)).append("\n");
     sb.append("    body: ").append(toIndentedString(body)).append("\n");
     sb.append("    deletedBySender: ").append(toIndentedString(deletedBySender)).append("\n");
     sb.append("}");

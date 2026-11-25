@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the NotificationPreferenceSet operations; authentication and the permission check already ran in the
- * auth-client filter. Operations not served yet answer 501.
+ * auth-client filter.
  */
 @RestController
 public class NotificationPreferenceSetController implements NotificationPreferenceSetApi {

@@ -183,6 +183,22 @@ public class InstitutionRepository {
     /** Institutions whose status is active. */
     public static final SqlFragment ACTIVE = new SqlFragment("r.status = 'active'", Map.of());
 
+    /**
+     * Writes the institution's public face (name, code, place, whether it is found) into the global directory the
+     * school finder searches; run with every write of the row, in its transaction.
+     */
+    private static final String SYNC_DIRECTORY = """
+            INSERT INTO org.institution_directory (institution_id, tenant_id, code, name, city_id, country_id,
+                                                   is_listed, synced_at)
+            SELECT r.id, r.tenant_id, r.code, r.name, r.city_id, r.country_id,
+                   r.status = 'active' AND r.deleted_at IS NULL, now()
+              FROM org.institution r
+             WHERE r.tenant_id = :tenantId
+               AND r.id = :id
+            ON CONFLICT (institution_id) DO UPDATE
+               SET code = EXCLUDED.code, name = EXCLUDED.name, city_id = EXCLUDED.city_id,
+                   country_id = EXCLUDED.country_id, is_listed = EXCLUDED.is_listed, synced_at = EXCLUDED.synced_at
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.id = ANY(:scopeIds))
             """;
@@ -207,7 +223,7 @@ public class InstitutionRepository {
 
     /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
     public InstitutionEntity insert(InstitutionEntity e) {
-        return jdbc.sql(INSERT)
+        InstitutionEntity stored = jdbc.sql(INSERT)
                 .param("id", e.getId())
                 .param("tenantId", e.getTenantId())
                 .param("parentInstitutionId", e.getParentInstitutionId())
@@ -238,11 +254,13 @@ public class InstitutionRepository {
                 .param("updatedBy", e.getUpdatedBy())
                 .param("rowVersion", e.getRowVersion())
                 .query(InstitutionRepository::map).single();
+        syncDirectory(stored.getId());
+        return stored;
     }
 
     /** Updates under the ETag guard; 0 rows means the row changed (or vanished) since it was read. */
     public int update(InstitutionEntity e, int expectedVersion) {
-        return jdbc.sql(UPDATE)
+        int changed = jdbc.sql(UPDATE)
                 .param("id", e.getId())
                 .param("parentInstitutionId", e.getParentInstitutionId())
                 .param("code", e.getCode())
@@ -270,19 +288,27 @@ public class InstitutionRepository {
                 .param("updatedBy", e.getUpdatedBy())
                 .param("expected", expectedVersion)
                 .update();
+        syncDirectory(e.getId());
+        return changed;
     }
 
     public int softDelete(InstitutionEntity e, int expectedVersion) {
-        return jdbc.sql(SOFT_DELETE)
+        int changed = jdbc.sql(SOFT_DELETE)
                 .param("id", e.getId())
                 .param("deletedAt", e.getDeletedAt())
                 .param("updatedAt", e.getUpdatedAt())
                 .param("updatedBy", e.getUpdatedBy())
                 .param("expected", expectedVersion)
                 .update();
+        syncDirectory(e.getId());
+        return changed;
     }
 
     /** uq_institution_1: code where (deleted_at IS NULL). */
+    private void syncDirectory(UUID id) {
+        jdbc.sql(SYNC_DIRECTORY).param("id", id).update();
+    }
+
     public boolean takenCode1(InstitutionEntity e) {
         return Boolean.TRUE.equals(jdbc.sql(UQ_INSTITUTION_1_TAKEN).param("code", e.getCode()).param("id", e.getId())
                 .query(Boolean.class).single());

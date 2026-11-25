@@ -1,6 +1,5 @@
 package com.mysms.library.grpc;
 
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.library.api.model.Reservation;
@@ -100,10 +99,14 @@ public class ReservationResolver extends ReservationServiceGrpc.ReservationServi
         ProtoBridge.send(out, bridge.reply(RejectReservationResponse.newBuilder(), "reservation", changed).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void requestReservationAgain(RequestReservationAgainRequest request,
             StreamObserver<RequestReservationAgainResponse> out) {
-        throw new NotImplementedException();
+        Reservation changed = service.requestReservationAgain(
+                bridge.id(request.getReservationId(), "reservationId"),
+                bridge.body(request, com.mysms.library.api.model.RequestReservationAgainRequest.class,
+                        "reservation_id", "request_id"));
+        ProtoBridge.send(out,
+                bridge.reply(RequestReservationAgainResponse.newBuilder(), "reservation", changed).build());
     }
 }

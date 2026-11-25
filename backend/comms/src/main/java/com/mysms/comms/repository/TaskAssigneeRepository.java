@@ -106,6 +106,24 @@ public class TaskAssigneeRepository {
     private static final String INSTITUTION_OF = """
             SELECT p0.institution_id FROM comms.task p0 WHERE p0.tenant_id = :tenantId AND p0.id = :ref
             """;
+    /** The task's assignees that name this user, directly or through a group the user is a live member of. */
+    private static final String COVERING = SELECT_LIVE + """
+             AND r.task_id = :taskId
+             AND (r.user_id = :userId
+                  OR r.group_id IN (SELECT m.group_id FROM comms.audience_group_member m
+                                     WHERE m.tenant_id = :tenantId
+                                       AND m.user_id = :userId AND m.deleted_at IS NULL))
+             ORDER BY r.created_at, r.id
+            """;
+    private static final String CLAIM = """
+            UPDATE comms.task_assignee
+               SET claimed_by_user_id = :userId,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND claimed_by_user_id IS NULL AND deleted_at IS NULL
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.task_id IN (SELECT p0.id FROM comms.task p0 WHERE p0.tenant_id = :tenantId
                  AND (p0.institution_id = ANY(:scopeIds))))
@@ -193,6 +211,18 @@ public class TaskAssigneeRepository {
         return jdbc.sql(INSTITUTION_OF).param("ref", ref)
                 .query((rs, row) -> Optional.ofNullable(rs.getObject(1, UUID.class)))
                 .optional().flatMap(found -> found);
+    }
+
+    /** The task's assignees that name the user, directly or through one of the user's groups. */
+    public List<TaskAssigneeEntity> covering(UUID taskId, UUID userId) {
+        return jdbc.sql(COVERING).param("taskId", taskId).param("userId", userId)
+                .query(TaskAssigneeRepository::map).list();
+    }
+
+    /** Claims an unclaimed assignee row for the user; 0 when it changed or was claimed meanwhile. */
+    public int claim(UUID id, int expected, UUID userId, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(CLAIM).param("id", id).param("expected", expected).param("userId", userId).param("now", now)
+                .param("actor", actor).update();
     }
 
     /** Rows of the caller's institutions only. */

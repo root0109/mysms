@@ -22,9 +22,6 @@ import java.util.*;
 
 public class FeedbackMessageUpdate {
 
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID senderUserId;
-
   /**
    * Category.
    */
@@ -120,26 +117,6 @@ public class FeedbackMessageUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Boolean deletedByReceiver;
-
-  public FeedbackMessageUpdate senderUserId(@Nullable UUID senderUserId) {
-    this.senderUserId = senderUserId;
-    return this;
-  }
-
-  /**
-   * Sender.
-   * @return senderUserId
-   */
-  @Valid 
-  @JsonProperty("senderUserId")
-  public @Nullable UUID getSenderUserId() {
-    return senderUserId;
-  }
-
-  @JsonProperty("senderUserId")
-  public void setSenderUserId(@Nullable UUID senderUserId) {
-    this.senderUserId = senderUserId;
-  }
 
   public FeedbackMessageUpdate category(@Nullable CategoryEnum category) {
     this.category = category;
@@ -270,8 +247,7 @@ public class FeedbackMessageUpdate {
       return false;
     }
     FeedbackMessageUpdate feedbackMessageUpdate = (FeedbackMessageUpdate) o;
-    return Objects.equals(this.senderUserId, feedbackMessageUpdate.senderUserId) &&
-        Objects.equals(this.category, feedbackMessageUpdate.category) &&
+    return Objects.equals(this.category, feedbackMessageUpdate.category) &&
         Objects.equals(this.message, feedbackMessageUpdate.message) &&
         Objects.equals(this.attachmentFileId, feedbackMessageUpdate.attachmentFileId) &&
         Objects.equals(this.reviewStatus, feedbackMessageUpdate.reviewStatus) &&
@@ -281,14 +257,13 @@ public class FeedbackMessageUpdate {
 
   @Override
   public int hashCode() {
-    return Objects.hash(senderUserId, category, message, attachmentFileId, reviewStatus, deletedBySender, deletedByReceiver);
+    return Objects.hash(category, message, attachmentFileId, reviewStatus, deletedBySender, deletedByReceiver);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class FeedbackMessageUpdate {\n");
-    sb.append("    senderUserId: ").append(toIndentedString(senderUserId)).append("\n");
     sb.append("    category: ").append(toIndentedString(category)).append("\n");
     sb.append("    message: ").append(toIndentedString(message)).append("\n");
     sb.append("    attachmentFileId: ").append(toIndentedString(attachmentFileId)).append("\n");

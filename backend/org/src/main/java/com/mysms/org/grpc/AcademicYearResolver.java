@@ -1,9 +1,9 @@
 package com.mysms.org.grpc;
 
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.org.api.model.AcademicTerm;
+import com.mysms.org.api.model.AcademicTermList;
 import com.mysms.org.api.model.AcademicTermUpdate;
 import com.mysms.org.api.model.AcademicYear;
 import com.mysms.org.api.model.AcademicYearUpdate;
@@ -139,11 +139,15 @@ public class AcademicYearResolver extends AcademicYearServiceGrpc.AcademicYearSe
         ProtoBridge.send(out, DeleteAcademicTermResponse.getDefaultInstance());
     }
 
-    /** Not served by this release (REST answers 501 too): UNIMPLEMENTED. */
     @Override
     public void activateAcademicYear(ActivateAcademicYearRequest request,
                                      StreamObserver<ActivateAcademicYearResponse> out) {
-        throw new NotImplementedException();
+        AcademicYear activated = service.activateAcademicYear(
+                bridge.id(request.getAcademicYearId(), "academicYearId"),
+                bridge.body(request, com.mysms.org.api.model.ActivateAcademicYearRequest.class, "academic_year_id",
+                        "request_id"));
+        ProtoBridge.send(out,
+                bridge.reply(ActivateAcademicYearResponse.newBuilder(), "academic_year", activated).build());
     }
 
     /** The request's etag (optional) is the REST body's; the path id and the idempotency key travel apart. */
@@ -155,9 +159,9 @@ public class AcademicYearResolver extends AcademicYearServiceGrpc.AcademicYearSe
         ProtoBridge.send(out, bridge.reply(CloseAcademicYearResponse.newBuilder(), "academic_year", closed).build());
     }
 
-    /** Not served by this release (REST answers 501 too): UNIMPLEMENTED. */
     @Override
     public void generateTerms(GenerateTermsRequest request, StreamObserver<GenerateTermsResponse> out) {
-        throw new NotImplementedException();
+        AcademicTermList generated = service.generateTerms(bridge.id(request.getAcademicYearId(), "academicYearId"));
+        ProtoBridge.send(out, bridge.reply(GenerateTermsResponse.newBuilder(), "items", generated.getItems()).build());
     }
 }

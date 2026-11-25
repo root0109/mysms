@@ -11,7 +11,6 @@ import com.mysms.comms.api.model.ConversationMessageUpdate;
 import com.mysms.comms.api.model.ConversationParticipant;
 import com.mysms.comms.api.model.ConversationParticipantUpdate;
 import com.mysms.comms.api.model.ConversationUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -20,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the Conversation operations; authentication and the permission check already ran in the auth-client
- * filter. Operations not served yet answer 501.
+ * filter.
  */
 @RestController
 public class ConversationController implements ConversationApi {
@@ -117,7 +116,8 @@ public class ConversationController implements ConversationApi {
 
     @Override
     public ResponseEntity<Void> hideMessageForMe(UUID messageId, Object body, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        conversationService.hideMessageForMe(messageId);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
@@ -152,7 +152,8 @@ public class ConversationController implements ConversationApi {
     @Override
     public ResponseEntity<Void> markConversationRead(UUID conversationId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        conversationService.markConversationRead(conversationId);
+        return ResponseEntity.noContent().build();
     }
 
     @Override

@@ -28,7 +28,6 @@ import com.mysms.comms.v1.UpdateNotificationChannelPropertyRequest;
 import com.mysms.comms.v1.UpdateNotificationChannelPropertyResponse;
 import com.mysms.comms.v1.UpdateNotificationChannelRequest;
 import com.mysms.comms.v1.UpdateNotificationChannelResponse;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import io.grpc.stub.StreamObserver;
@@ -148,9 +147,11 @@ public class NotificationChannelResolver extends NotificationChannelServiceGrpc.
         ProtoBridge.send(out, DeleteNotificationChannelPropertyResponse.getDefaultInstance());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void sendTestMessage(SendTestMessageRequest request, StreamObserver<SendTestMessageResponse> out) {
-        throw new NotImplementedException();
+        service.sendTestMessage(bridge.id(request.getNotificationChannelId(), "notificationChannelId"),
+                bridge.body(request, com.mysms.comms.api.model.SendTestMessageRequest.class, "notification_channel_id",
+                        "request_id"));
+        ProtoBridge.send(out, SendTestMessageResponse.getDefaultInstance());
     }
 }

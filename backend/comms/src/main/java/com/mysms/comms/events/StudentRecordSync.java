@@ -15,12 +15,12 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Keeps comms.student_record — the person and login account of each student record — in step with sis.student from
- * its created and updated events (comms never reads sis's schema), so privacy's tasks find a data principal's
- * messages, notifications, memberships and posts ({@link CommsPrivacyTaskHandler}). An entry changes only to a newer
- * row version, so out-of-order and repeated deliveries are harmless; a deleted student keeps its entry, since what
- * comms holds of it stays the person's. Runs inside the event's tenant (messaging's InboxProcessor: exactly once per
- * event).
+ * Keeps comms.student_record — the person, login account and institution of each student record — in step with
+ * sis.student from its created and updated events (comms never reads sis's schema), so privacy's tasks find a data
+ * principal's messages, notifications, memberships and posts ({@link CommsPrivacyTaskHandler}) and mail and
+ * conversations reach only accounts of the sender's school. An entry changes only to a newer row version, so
+ * out-of-order and repeated deliveries are harmless; a deleted student keeps its entry, since what comms holds of it
+ * stays the person's. Runs inside the event's tenant (messaging's InboxProcessor: exactly once per event).
  */
 @Component
 public class StudentRecordSync implements EventSubscriptions {
@@ -63,14 +63,21 @@ public class StudentRecordSync implements EventSubscriptions {
         }
         UUID personId;
         UUID userId;
+        UUID institutionId;
         try {
             personId = UUID.fromString(data.path("personId").asString(""));
-            JsonNode user = data.path("userId");
-            userId = user.isString() && !user.asString().isEmpty() ? UUID.fromString(user.asString()) : null;
+            userId = optionalUuid(data, "userId");
+            institutionId = optionalUuid(data, "institutionId");
         } catch (IllegalArgumentException malformed) {
-            throw new RejectedEventException("student event " + event.id() + " names no person or a malformed account");
+            throw new RejectedEventException("student event " + event.id() + " names no person or a malformed id");
         }
-        return records.apply(event.aggregateId(), personId, userId, version,
+        return records.apply(event.aggregateId(), personId, userId, institutionId, version,
                 OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC));
+    }
+
+    /** The field's id, or none when it is absent, null or empty. */
+    static UUID optionalUuid(JsonNode data, String field) {
+        JsonNode value = data.path(field);
+        return value.isString() && !value.asString().isEmpty() ? UUID.fromString(value.asString()) : null;
     }
 }

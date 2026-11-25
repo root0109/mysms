@@ -1,4 +1,4 @@
-import { createTranslator } from '@mysms/i18n';
+import { createTranslator, loadCatalog } from '@mysms/i18n';
 import { describe, expect, it } from 'vitest';
 import {
   settingCategoryLabel,
@@ -28,7 +28,8 @@ describe('setting labels', () => {
     expect(settingScopeLabel(t, 'moon')).toBe('moon');
   });
 
-  it('uses the language of the translator', () => {
+  it('uses the language of the translator', async () => {
+    await loadCatalog('hi');
     expect(settingLabel(createTranslator('hi'), 'ui.theme')).toBe('थीम');
     expect(settingLabel(createTranslator('hi'), 'ui.density')).toBe('Density');
   });

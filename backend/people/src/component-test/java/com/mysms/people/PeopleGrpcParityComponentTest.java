@@ -24,6 +24,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,8 +48,8 @@ import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Every RPC of people's four gRPC services against the same operation over REST, on real PostgreSQL: the same resource
- * and the same refusals over both transports, the caller's own person record, a blood group's irregular value, and 501
- * for the operations this release does not serve. Three resources are driven here directly, because the parity contract
+ * and the same refusals over both transports, the caller's own person record, a blood group's irregular value, and an
+ * institution's birthdays and greetings. Three resources are driven here directly, because the parity contract
  * derives a List RPC name they do not have.
  */
 @SpringBootTest(classes = PeopleApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -236,19 +238,47 @@ class PeopleGrpcParityComponentTest {
                 .isEqualTo("BLOOD_GROUP_O_POSITIVE");
     }
 
+    /** The birthdays and greetings answer and refuse alike over both transports. */
     @Test
-    void theOperationsThisReleaseDoesNotServeAre501OnBoth() throws Exception {
+    void birthdaysAndGreetingsAnswerLikeRest() throws Exception {
         String person = UUID.randomUUID().toString();
+        String institution = "0196f000-0000-7000-8000-00000000b001";
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        fixtures(TENANT, List.of(
+                "INSERT INTO people.person (id, tenant_id, display_name, date_of_birth, row_version) VALUES ('"
+                        + person + "', :tenant, 'Parity pupil', '" + today.minusYears(12) + "', 1)",
+                "INSERT INTO people.member_link (tenant_id, record_id, record_type, person_id, institution_id,"
+                        + " source_version, synced_at) VALUES (:tenant, '" + UUID.randomUUID() + "', 'student', '"
+                        + person + "', '" + institution + "', 1, now())"));
+        String absent = UUID.randomUUID().toString();
+
+        String window = "fromDate=" + today.minusDays(1) + "&toDate=" + today.plusDays(1);
+        Answer birthdays = rest("GET", "/v1/people/persons:birthdays?institutionId=" + institution + "&" + window,
+                ADMIN, null);
+        Answer birthdaysGrpc = grpc("ListBirthdays", ADMIN, "{\"institutionId\":\"" + institution + "\",\"fromDate\":\""
+                + today.minusDays(1) + "\",\"toDate\":\"" + today.plusDays(1) + "\"}");
+        assertThat(birthdays.status()).as(birthdays.body().toString()).isEqualTo(200);
+        assertThat(birthdaysGrpc.body().path("items").findValuesAsString("displayName"))
+                .isEqualTo(birthdays.body().path("data").findValuesAsString("displayName")).containsExactly("Parity pupil");
+        GrpcParityContract.assertSameAnswer(rest("GET", "/v1/people/persons:birthdays?institutionId=" + institution
+                        + "&fromDate=" + today + "&toDate=" + today.minusDays(1), ADMIN, null),
+                grpc("ListBirthdays", ADMIN, "{\"institutionId\":\"" + institution + "\",\"fromDate\":\"" + today
+                        + "\",\"toDate\":\"" + today.minusDays(1) + "\"}"));
+
         String template = UUID.randomUUID().toString();
-        GrpcParityContract.assertSameAnswer(rest("GET", "/v1/people/persons:birthdays?institutionId=" + person
-                + "&fromDate=2027-01-01&toDate=2027-01-31", ADMIN, null), grpc("ListBirthdays", ADMIN, "{}"));
+        fixtures(TENANT, List.of("INSERT INTO people.greeting_template (tenant_id, template_id, is_active,"
+                + " source_version, synced_at) VALUES (:tenant, '" + template + "', true, 1, now())"));
+        Answer sent = rest("POST", "/v1/people/persons:sendGreetings", ADMIN, "{\"personIds\":[\"" + person
+                + "\"],\"templateId\":\"" + template + "\",\"channel\":\"sms\"}");
+        Answer sentGrpc = grpc("SendGreetings", ADMIN, "{\"personIds\":[\"" + person + "\"],\"templateId\":\"" + template
+                + "\",\"channel\":\"CHANNEL_EMAIL\"}");
+        assertThat(sent.status()).as(sent.body().toString()).isEqualTo(200);
+        assertThat(sent.body().path("queued").asInt()).isEqualTo(1);
+        assertThat(sentGrpc.body().path("result").path("queued").asInt()).isEqualTo(1);
         GrpcParityContract.assertSameAnswer(rest("POST", "/v1/people/persons:sendGreetings", ADMIN, "{\"personIds\":[\""
-                + person + "\"],\"templateId\":\"" + template + "\",\"channel\":\"sms\"}"),
-                grpc("SendGreetings", ADMIN, "{}"));
-        for (String rpc : List.of("ListBirthdays", "SendGreetings")) {
-            assertThat(grpc(rpc, ADMIN, "{}").status()).as("%s is not served: 501, never a default answer", rpc)
-                    .isEqualTo(501);
-        }
+                        + absent + "\"],\"templateId\":\"" + template + "\",\"channel\":\"sms\"}"),
+                grpc("SendGreetings", ADMIN, "{\"personIds\":[\"" + absent + "\"],\"templateId\":\"" + template
+                        + "\",\"channel\":\"CHANNEL_SMS\"}"));
         assertThat(grpc("SendGreetings", null, "{}").status()).as("authentication first, as on REST").isEqualTo(401);
     }
 }

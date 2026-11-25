@@ -17,17 +17,21 @@ import java.util.regex.Pattern;
  * The SQL rules over every module's main sources:
  * <ul>
  * <li>R1 — every SELECT / UPDATE / DELETE over a tenant table filters each tenant table it reads or changes with
- * {@code tenant_id = :tenantId} at the statement's own level ({@link TenantPredicates}). The tenant directory, read
- * before a tenant is known, is exempt; fragments assembled in Java are listed in {@link #FRAGMENTS} and covered by
- * their class's component tests.</li>
+ * {@code tenant_id = :tenantId} at the statement's own level ({@link TenantPredicates}). The tenant and school
+ * directories, read before a tenant is known, are exempt; fragments assembled in Java are listed in {@link #FRAGMENTS}
+ * and covered by their class's component tests.</li>
  * <li>R2 — SQL lives in repositories, as constants (no SQL text in controllers, services or mappers).</li>
  * <li>§6 — no hard DELETE (soft delete only), except pruning module-local infrastructure tables.</li>
  * </ul>
  */
 public final class SqlRule implements ConformanceRule {
 
-    /** Read before a tenant is known (sign-in); holds codes and status only and has no row-level security. */
-    private static final Set<String> EXEMPT_TABLES = Set.of("iam.tenant_directory");
+    /**
+     * Read before a tenant is known (sign-in, the public school finder); they hold codes, status, schools' public
+     * names and opt-in flags only and have no row-level security.
+     */
+    private static final Set<String> EXEMPT_TABLES = Set.of("iam.tenant_directory", "org.tenant_directory",
+            "org.institution_directory", "org.finder_listing");
     /**
      * Files whose SQL texts are fragments joined in Java, so a single text holds no complete statement:
      * GrantRepository's permission sub-selects are assembled from COUNTED_GRANT / NOT_DENIED.

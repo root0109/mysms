@@ -98,6 +98,18 @@ public class AudienceGroupMemberRepository {
     private static final String INSTITUTION_OF = """
             SELECT p0.institution_id FROM comms.audience_group p0 WHERE p0.tenant_id = :tenantId AND p0.id = :ref
             """;
+    private static final String MEMBERS_AMONG = SELECT_LIVE + " AND r.group_id = :groupId AND r.user_id = ANY(:userIds)";
+    private static final String REACHABLE_GROUPS = """
+            SELECT g.id FROM comms.audience_group g
+             WHERE g.tenant_id = :tenantId
+               AND g.id = ANY(:groupIds) AND g.is_active AND g.deleted_at IS NULL
+               AND (g.institution_id IS NULL OR :scopeAll OR g.institution_id = ANY(:scopeIds))
+            """;
+    private static final String MEMBER_USERS = """
+            SELECT DISTINCT m.user_id FROM comms.audience_group_member m
+             WHERE m.tenant_id = :tenantId
+               AND m.group_id = ANY(:groupIds) AND m.deleted_at IS NULL
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.group_id IN (SELECT p0.id FROM comms.audience_group p0 WHERE p0.tenant_id = :tenantId
                  AND (p0.institution_id =
@@ -182,6 +194,23 @@ public class AudienceGroupMemberRepository {
         return jdbc.sql(INSTITUTION_OF).param("ref", ref)
                 .query((rs, row) -> Optional.ofNullable(rs.getObject(1, UUID.class)))
                 .optional().flatMap(found -> found);
+    }
+
+    /** The group's live members among these users. */
+    public List<AudienceGroupMemberEntity> membersAmong(UUID groupId, List<UUID> userIds) {
+        return jdbc.sql(MEMBERS_AMONG).param("groupId", groupId).param("userIds", userIds.toArray(UUID[]::new))
+                .query(AudienceGroupMemberRepository::map).list();
+    }
+
+    /** Those of the groups that are live, active and tenant-wide or of the caller's institutions. */
+    public List<UUID> reachableGroups(List<UUID> groupIds, DataScope scope) {
+        return jdbc.sql(REACHABLE_GROUPS).param("groupIds", groupIds.toArray(UUID[]::new))
+                .param("scopeAll", scope.all()).param("scopeIds", scope.institutionArray()).query(UUID.class).list();
+    }
+
+    /** The users who are live members of any of the groups. */
+    public List<UUID> memberUsers(List<UUID> groupIds) {
+        return jdbc.sql(MEMBER_USERS).param("groupIds", groupIds.toArray(UUID[]::new)).query(UUID.class).list();
     }
 
     /** Rows of the caller's institutions only. */

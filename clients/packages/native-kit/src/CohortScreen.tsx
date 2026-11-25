@@ -1,3 +1,4 @@
+import { NoticeList } from './CommsScreens';
 import {
   lmsFailureText,
   useBadgeAwards,
@@ -34,7 +35,7 @@ import type { CohortScreenId, LmsRoute } from './lmsRoutes';
  * The LMS on phones (S) and the tablet (B), the LMS's main device: the member's cohorts (LMS-20/21), the roster
  * (LMS-23, tablet), schedule (LMS-25, tablet), forums with replies and likes (LMS-26), live classes with
  * provider-agnostic join (LMS-27), the outline (LMS-22, tablet) and the member's certificates and badges (LMS-15).
- * Announcements to the cohort (LMS-28) are sent from the cohort page.
+ * Announcements to the cohort (LMS-28) are sent from the cohort page and read as the cohort's notices.
  */
 export function CohortScreen({
   route,
@@ -70,6 +71,7 @@ export function CohortScreen({
       {route.screenId === 'LMS-27' ? <LiveClasses cohortId={cohortId || undefined} /> : null}
       {route.screenId === 'LMS-22' ? <Outline cohortId={cohortId} /> : null}
       {route.screenId === 'LMS-15' ? <Certificates /> : null}
+      {route.screenId === 'LMS-28' ? <NoticeList cohortId={cohortId} tablet={tablet} /> : null}
     </Screen>
   );
 }
@@ -157,6 +159,7 @@ function CohortHome({
       <View style={{ gap: theme.space[3] }}>
         <Button onPress={open('LMS-26')}>{t('screen.LMS26.title')}</Button>
         <Button onPress={open('LMS-27')}>{t('screen.LMS27.title')}</Button>
+        <Button onPress={open('LMS-28')}>{t('screen.LMS28.title')}</Button>
         {tablet ? <Button onPress={open('LMS-23')}>{t('screen.LMS23.title')}</Button> : null}
         {tablet ? <Button onPress={open('LMS-25')}>{t('screen.LMS25.title')}</Button> : null}
         {tablet ? <Button onPress={open('LMS-22')}>{t('screen.LMS22.title')}</Button> : null}

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.DynamicMessage;
+import com.google.protobuf.util.JsonFormat;
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
@@ -49,8 +50,9 @@ import tools.jackson.databind.node.ObjectNode;
  * crud-spec.json the create, get, list, update and delete give the same resource over both transports, and both refuse
  * alike — 403 without the permission, 404 for an absent row and another tenant's row, 409 for a duplicate, 412 for a
  * stale etag, 428 without one, 422 for an invalid body; every state transition of crud-spec.json (a reservation's
- * accept and reject, a purchase request's submit, accept and reject) with its refusals, the five operations this
- * release does not serve (501), and a keyed create replayed by its {@code request_id}, the same way.
+ * accept and reject, a purchase request's submit, accept and reject) with its refusals, the loan and reservation
+ * steps, invoicing a fine (refused alike; finance and people do not run here), and a keyed create replayed by its
+ * {@code request_id}, the same way.
  */
 @SpringBootTest(classes = LibraryApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = GrpcParity.IN_PROCESS_SERVER + "=LibraryGrpcParityComponentTest")
@@ -137,7 +139,7 @@ class LibraryGrpcParityComponentTest {
     }
 
     private MethodDescriptor rpc(String name) {
-        return contract().rpc(name);
+        return contract(ADMIN).rpc(name);
     }
 
     private static DynamicMessage.Builder request(MethodDescriptor rpc) {
@@ -168,9 +170,9 @@ class LibraryGrpcParityComponentTest {
 
     // ---- the standard operations, resource by resource
 
-    private GrpcParityContract contract() {
+    private GrpcParityContract contract(String admin) {
         return new GrpcParityContract(LibraryProto.getDescriptor(), this::rest, this::channel, bridge,
-                new GrpcParityContract.Callers(ADMIN, NOBODY, STRANGER));
+                new GrpcParityContract.Callers(admin, NOBODY, STRANGER));
     }
 
     @TestFactory
@@ -180,7 +182,8 @@ class LibraryGrpcParityComponentTest {
             tests.add(DynamicTest.dynamicTest(resource.name(), () -> {
                 fixtures(TENANT, resource.fixtures());
                 fixtures(OTHER_TENANT, resource.fixtures());
-                contract().verify(resource);
+                // an administrator of their own: a reservation is its requester's, one open request per title
+                contract(token(TENANT, List.of("library.*"))).verify(resource);
             }));
         }
         return tests;
@@ -216,7 +219,9 @@ class LibraryGrpcParityComponentTest {
         ObjectNode body = (ObjectNode) transition.path("body");
         String[] ids = new String[2];
         for (int i = 0; i < 2; i++) {
-            Answer created = rest("POST", collection, ADMIN, resource.path("create").toString());
+            // each row by a requester of its own: one open reservation per requester and title
+            Answer created = rest("POST", collection, token(TENANT, List.of("library.*")),
+                    resource.path("create").toString());
             assertThat(created.status()).as(created.body().toString()).isEqualTo(201);
             ids[i] = created.body().path("id").asString();
         }
@@ -277,26 +282,225 @@ class LibraryGrpcParityComponentTest {
 
     // ---- the operations not served, and a replay
 
-    @Test
-    void theOperationsThisReleaseDoesNotServeAre501OnBoth() throws Exception {
+    /** A copy of a fresh title out on a student's card since ten days ago (due four days ago); answers the loan. */
+    private String outOnLoan() {
+        String media = UUID.randomUUID().toString();
+        String type = UUID.randomUUID().toString();
+        String card = UUID.randomUUID().toString();
+        String unit = UUID.randomUUID().toString();
         String loan = UUID.randomUUID().toString();
-        Map<String, String> loanOperations = Map.of("RequestLoanReturn", ":requestReturn", "ReturnLoan", ":return",
-                "MarkLoanLost", ":markLost", "InvoiceLoanFine", ":invoiceFine");
-        for (Map.Entry<String, String> operation : loanOperations.entrySet()) {
-            MethodDescriptor rpc = rpc(operation.getKey());
-            String body = "ReturnLoan".equals(operation.getKey()) ? "{\"returnedOn\":\"2026-01-10\"}" : "{}";
-            Answer overRest = rest("POST", "/v1/library/loans/" + loan + operation.getValue(), ADMIN, body);
-            assertThat(overRest.status()).as(operation.getKey()).isEqualTo(501);
-            GrpcParityContract.assertSameAnswer(overRest, grpc(rpc, set(request(rpc), "loan_id", loan).build(), ADMIN));
+        java.time.LocalDate issued = java.time.LocalDate.now(java.time.ZoneOffset.UTC).minusDays(10);
+        fixtures(TENANT, List.of(
+                "INSERT INTO library.media (id, tenant_id, institution_id, title, row_version) VALUES ('" + media
+                        + "', :tenant, '0196f000-0000-7000-8000-00000000a001', 'Parity title', 1)",
+                "INSERT INTO library.library_card_type (id, tenant_id, name, max_items, loan_days, fine_per_day, code,"
+                        + " row_version) VALUES ('" + type + "', :tenant, 'Parity " + type + "', 2, 6, 1.25, 'P"
+                        + type.substring(0, 8) + "', 1)",
+                "INSERT INTO library.library_card (id, tenant_id, institution_id, card_number, card_type_id,"
+                        + " holder_type, person_id, student_id, issue_date, row_version) VALUES ('" + card
+                        + "', :tenant, '0196f000-0000-7000-8000-00000000a001', 'PC-" + card + "', '" + type
+                        + "', 'student', '" + UUID.randomUUID() + "', '" + UUID.randomUUID() + "', '2026-01-10', 1)",
+                "INSERT INTO library.media_unit (id, tenant_id, media_id, accession_number, status, row_version) VALUES"
+                        + " ('" + unit + "', :tenant, '" + media + "', 'PA-" + unit + "', 'issued', 1)",
+                "INSERT INTO library.loan (id, tenant_id, media_unit_id, media_id, library_card_id, issued_on, due_on,"
+                        + " status, row_version) VALUES ('" + loan + "', :tenant, '" + unit + "', '" + media + "', '"
+                        + card + "', '" + issued + "', '" + issued.plusDays(6) + "', 'issued', 1)"));
+        return loan;
+    }
+
+    @Test
+    void theLoanAndReservationStepsAnswerAndRefuseLikeRest() throws Exception {
+        String today = java.time.LocalDate.now(java.time.ZoneOffset.UTC).toString();
+        Map<String, String> loanSteps = Map.of("RequestLoanReturn", ":requestReturn", "ReturnLoan", ":return",
+                "MarkLoanLost", ":markLost");
+        for (Map.Entry<String, String> step : loanSteps.entrySet()) {
+            MethodDescriptor rpc = rpc(step.getKey());
+            boolean returning = "ReturnLoan".equals(step.getKey());
+            String body = returning ? "{\"returnedOn\":\"" + today + "\"}" : "{}";
+            String overRestLoan = outOnLoan();
+            String overGrpcLoan = outOnLoan();
+            DynamicMessage.Builder request = set(request(rpc), "loan_id", overGrpcLoan);
+            if (returning) {
+                set(request, "returned_on", today);
+            }
+            Answer byRest = rest("POST", "/v1/library/loans/" + overRestLoan + step.getValue(), ADMIN, body);
+            Answer byGrpc = grpc(rpc, request.build(), ADMIN);
+            assertThat(byRest.status()).as(step.getKey() + " " + byRest.body()).isEqualTo(200);
+            assertThat(byGrpc.status()).as(step.getKey() + " " + byGrpc.code()).isEqualTo(200);
+            assertThat(byGrpc.body().path("loan").path("fineAmount").asString()).as(step.getKey())
+                    .isEqualTo(byRest.body().path("fineAmount").asString());
+            GrpcParity.assertSameResource(rest("GET", "/v1/library/loans/" + overGrpcLoan, ADMIN, null).body(),
+                    byGrpc.body().path("loan"));
+            if (!returning) {
+                GrpcParityContract.assertSameAnswer(rest("POST", "/v1/library/loans/" + overRestLoan
+                        + step.getValue(), ADMIN, body), grpc(rpc, request.build(), ADMIN));
+            }
+            String absent = UUID.randomUUID().toString();
+            DynamicMessage.Builder unknown = set(request(rpc), "loan_id", absent);
+            if (returning) {
+                set(unknown, "returned_on", today);
+            }
+            GrpcParityContract.assertSameAnswer(rest("POST", "/v1/library/loans/" + absent + step.getValue(), ADMIN,
+                    body), grpc(rpc, unknown.build(), ADMIN));
+            GrpcParityContract.assertSameAnswer(rest("POST", "/v1/library/loans/" + overRestLoan + step.getValue(),
+                    NOBODY, body), grpc(rpc, request.build(), NOBODY));
         }
+
         MethodDescriptor again = rpc("RequestReservationAgain");
-        Answer overRest = rest("POST", "/v1/library/reservations/" + loan + ":requestAgain", ADMIN, "{}");
-        assertThat(overRest.status()).isEqualTo(501);
-        GrpcParityContract.assertSameAnswer(overRest, grpc(again, set(request(again), "reservation_id", loan).build(), ADMIN));
-        assertThat(grpc(again, set(request(again), "reservation_id", loan).build(), null).status())
+        String[] reservations = new String[2];
+        String title = UUID.randomUUID().toString();
+        fixtures(TENANT, List.of("INSERT INTO library.media (id, tenant_id, institution_id, title, row_version) VALUES"
+                + " ('" + title + "', :tenant, '0196f000-0000-7000-8000-00000000a001', 'Reserved title', 1)"));
+        for (int i = 0; i < 2; i++) {
+            reservations[i] = UUID.randomUUID().toString();
+            fixtures(TENANT, List.of("INSERT INTO library.reservation (id, tenant_id, media_id, requested_by_user_id,"
+                    + " date_from, date_to, status, row_version) VALUES ('" + reservations[i] + "', :tenant, '"
+                    + title + "', '" + UUID.randomUUID() + "', '" + today + "', '" + today
+                    + "', 'rejected', 1)"));
+        }
+        Answer againByRest = rest("POST", "/v1/library/reservations/" + reservations[0] + ":requestAgain", ADMIN,
+                "{}");
+        Answer againByGrpc = grpc(again, set(request(again), "reservation_id", reservations[1]).build(), ADMIN);
+        assertThat(againByRest.status()).as(againByRest.body().toString()).isEqualTo(200);
+        assertThat(againByGrpc.status()).isEqualTo(200);
+        GrpcParity.assertSameResource(rest("GET", "/v1/library/reservations/" + reservations[1], ADMIN, null).body(),
+                againByGrpc.body().path("reservation"));
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/library/reservations/" + reservations[0]
+                + ":requestAgain", ADMIN, "{}"), grpc(again, set(request(again), "reservation_id", reservations[1])
+                .build(), ADMIN));
+        assertThat(grpc(again, set(request(again), "reservation_id", reservations[0]).build(), null).status())
                 .as("authentication first, as on REST").isEqualTo(401);
-        assertThat(grpc(again, set(request(again), "reservation_id", loan).build(), NOBODY).status())
-                .as("then the permission, as on REST").isEqualTo(403);
+    }
+
+    /** A school-level member holding a reservation's standard operations but none of the staff steps. */
+    private static String member(UUID user) {
+        List<String> permissions = List.of("library.reservation.read", "library.reservation.create",
+                "library.reservation.update", "library.reservation.delete");
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("sub", user.toString());
+        claims.put("tid", TENANT.toString());
+        claims.put("aud", "mysms");
+        claims.put("perms", permissions);
+        claims.put("tperms", List.of());
+        claims.put("ins", List.of(SCHOOL));
+        return TOKENS.custom(claims, Instant.now().plusSeconds(900));
+    }
+
+    private static final String SCHOOL = "0196f000-0000-7000-8000-00000000a001";
+
+    /**
+     * The requester of a reservation is the caller over gRPC as over REST, whatever the request names, and another
+     * member's reservation is refused alike.
+     */
+    @Test
+    void aReservationsRequesterComesFromTheTokenLikeRest() throws Exception {
+        UUID me = UUID.randomUUID();
+        String mine = member(me);
+        String theirs = member(UUID.randomUUID());
+        String title = UUID.randomUUID().toString();
+        String today = java.time.LocalDate.now(java.time.ZoneOffset.UTC).toString();
+        fixtures(TENANT, List.of("INSERT INTO library.media (id, tenant_id, institution_id, title, row_version) VALUES"
+                + " ('" + title + "', :tenant, '" + SCHOOL + "', 'Wanted title', 1)"));
+
+        MethodDescriptor create = rpc("CreateReservation");
+        DynamicMessage.Builder creating = request(create);
+        JsonFormat.parser().merge("{\"requestId\":\"" + UUID.randomUUID() + "\",\"reservation\":{\"mediaId\":\""
+                + title + "\",\"requestedByUserId\":\"" + UUID.randomUUID() + "\",\"dateFrom\":\"" + today
+                + "\",\"dateTo\":\"" + today + "\"}}", creating);
+        Answer created = grpc(create, creating.build(), mine);
+        assertThat(created.status()).as(created.code()).isEqualTo(200);
+        JsonNode reservation = created.body().path("reservation");
+        assertThat(reservation.path("requestedByUserId").asString()).as("the requester comes from the token")
+                .isEqualTo(me.toString());
+        String item = "/v1/library/reservations/" + reservation.path("id").asString();
+        GrpcParity.assertSameResource(rest("GET", item, mine, null).body(), reservation);
+
+        MethodDescriptor get = rpc("GetReservation");
+        GrpcParityContract.assertSameAnswer(rest("GET", item, theirs, null),
+                grpc(get, set(request(get), "id", reservation.path("id").asString()).build(), theirs));
+        MethodDescriptor update = rpc("UpdateReservation");
+        DynamicMessage.Builder editing = request(update);
+        JsonFormat.parser().merge("{\"updateMask\":\"reference\",\"reservation\":{\"id\":\""
+                + reservation.path("id").asString() + "\",\"reference\":\"Mine\",\"etag\":\"\\\"1\\\"\"}}", editing);
+        Answer refused = rest("PATCH", item, theirs, "{\"reference\":\"Mine\"}", "If-Match", "\"1\"");
+        assertThat(refused.status()).as("another member's reservation").isEqualTo(404);
+        GrpcParityContract.assertSameAnswer(refused, grpc(update, editing.build(), theirs));
+    }
+
+    /** Another member's loan and card are refused over gRPC as over REST; the borrower's own are answered alike. */
+    @Test
+    void aMembersLoansAndCardsAreTheirOwnLikeRest() throws Exception {
+        UUID borrower = UUID.randomUUID();
+        UUID holder = UUID.randomUUID();
+        String card = UUID.randomUUID().toString();
+        String loan = UUID.randomUUID().toString();
+        String title = UUID.randomUUID().toString();
+        String unit = UUID.randomUUID().toString();
+        String type = UUID.randomUUID().toString();
+        fixtures(TENANT, List.of("INSERT INTO library.media (id, tenant_id, institution_id, title, row_version) VALUES"
+                + " ('" + title + "', :tenant, '" + SCHOOL + "', 'Lent title', 1)",
+                "INSERT INTO library.media_unit (id, tenant_id, media_id, accession_number, status, row_version) VALUES"
+                        + " ('" + unit + "', :tenant, '" + title + "', 'P-" + unit + "', 'issued', 1)",
+                "INSERT INTO library.library_card_type (id, tenant_id, name, max_items, loan_days, code, row_version)"
+                        + " VALUES ('" + type + "', :tenant, 'Parity', 2, 14, 'P" + type.substring(0, 6) + "', 1)",
+                "INSERT INTO library.library_card (id, tenant_id, institution_id, card_number, card_type_id,"
+                        + " holder_type, person_id, staff_id, issue_date, row_version) VALUES ('" + card + "', :tenant, '"
+                        + SCHOOL + "', 'P-" + card.substring(0, 8) + "', '" + type + "', 'staff', '" + holder + "', '"
+                        + UUID.randomUUID() + "', '2026-01-10', 1)",
+                "INSERT INTO library.loan (id, tenant_id, media_unit_id, media_id, library_card_id, borrower_user_id,"
+                        + " issued_on, status, row_version) VALUES ('" + loan + "', :tenant, '" + unit + "', '" + title
+                        + "', '" + card + "', '" + borrower + "', '2026-01-10', 'issued', 1)"));
+        String mine = reader(borrower, holder);
+        String theirs = reader(UUID.randomUUID(), UUID.randomUUID());
+
+        MethodDescriptor getLoan = rpc("GetLoan");
+        Answer refused = rest("GET", "/v1/library/loans/" + loan, theirs, null);
+        assertThat(refused.status()).as("another member's loan").isEqualTo(404);
+        GrpcParityContract.assertSameAnswer(refused, grpc(getLoan, set(request(getLoan), "id", loan).build(), theirs));
+        Answer own = rest("GET", "/v1/library/loans/" + loan, mine, null);
+        assertThat(own.status()).isEqualTo(200);
+        GrpcParityContract.assertSameAnswer(own, grpc(getLoan, set(request(getLoan), "id", loan).build(), mine));
+        MethodDescriptor getCard = rpc("GetLibraryCard");
+        Answer otherCard = rest("GET", "/v1/library/library-cards/" + card, theirs, null);
+        assertThat(otherCard.status()).as("another person's card").isEqualTo(404);
+        GrpcParityContract.assertSameAnswer(otherCard, grpc(getCard, set(request(getCard), "id", card).build(),
+                theirs));
+        GrpcParityContract.assertSameAnswer(rest("GET", "/v1/library/library-cards/" + card, mine, null),
+                grpc(getCard, set(request(getCard), "id", card).build(), mine));
+    }
+
+    /** A school-level member who may read loans and cards but holds none of the staff permissions. */
+    private static String reader(UUID user, UUID person) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("sub", user.toString());
+        claims.put("pid", person.toString());
+        claims.put("tid", TENANT.toString());
+        claims.put("aud", "mysms");
+        claims.put("perms", List.of("library.loan.read", "library.library_card.read"));
+        claims.put("tperms", List.of());
+        claims.put("ins", List.of(SCHOOL));
+        return TOKENS.custom(claims, Instant.now().plusSeconds(900));
+    }
+
+    /** Invoicing a fine needs finance and people, which do not run here: the refusals before the call, and the 503. */
+    @Test
+    void invoicingAFineIsRefusedAlikeOverBoth() throws Exception {
+        MethodDescriptor invoice = rpc("InvoiceLoanFine");
+        String out = outOnLoan();
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/library/loans/" + out + ":invoiceFine", ADMIN, "{}"),
+                grpc(invoice, set(request(invoice), "loan_id", out).build(), ADMIN));
+        String today = java.time.LocalDate.now(java.time.ZoneOffset.UTC).toString();
+        assertThat(rest("POST", "/v1/library/loans/" + out + ":return", ADMIN, "{\"returnedOn\":\"" + today + "\"}")
+                .body().path("fineAmount").asString()).isEqualTo("5.00");
+        Answer unavailable = rest("POST", "/v1/library/loans/" + out + ":invoiceFine", ADMIN, "{}");
+        assertThat(unavailable.status()).as(unavailable.body().toString()).isEqualTo(503);
+        GrpcParityContract.assertSameAnswer(unavailable, grpc(invoice, set(request(invoice), "loan_id", out).build(),
+                ADMIN));
+        String absent = UUID.randomUUID().toString();
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/library/loans/" + absent + ":invoiceFine", ADMIN,
+                "{}"), grpc(invoice, set(request(invoice), "loan_id", absent).build(), ADMIN));
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/library/loans/" + out + ":invoiceFine", NOBODY, "{}"),
+                grpc(invoice, set(request(invoice), "loan_id", out).build(), NOBODY));
     }
 
     @Test

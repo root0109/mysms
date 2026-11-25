@@ -1,8 +1,8 @@
 package com.mysms.library.grpc;
 
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
+import com.mysms.library.api.model.Invoice;
 import com.mysms.library.api.model.Loan;
 import com.mysms.library.api.model.LoanUpdate;
 import com.mysms.library.business.LoanService;
@@ -82,27 +82,30 @@ public class LoanResolver extends LoanServiceGrpc.LoanServiceImplBase {
         ProtoBridge.send(out, DeleteLoanResponse.getDefaultInstance());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void requestLoanReturn(RequestLoanReturnRequest request, StreamObserver<RequestLoanReturnResponse> out) {
-        throw new NotImplementedException();
+        Loan changed = service.requestLoanReturn(bridge.id(request.getLoanId(), "loanId"),
+                bridge.body(request, com.mysms.library.api.model.RequestLoanReturnRequest.class, "loan_id", "request_id"));
+        ProtoBridge.send(out, bridge.reply(RequestLoanReturnResponse.newBuilder(), "loan", changed).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void returnLoan(ReturnLoanRequest request, StreamObserver<ReturnLoanResponse> out) {
-        throw new NotImplementedException();
+        Loan changed = service.returnLoan(bridge.id(request.getLoanId(), "loanId"),
+                bridge.body(request, com.mysms.library.api.model.ReturnLoanRequest.class, "loan_id", "request_id"));
+        ProtoBridge.send(out, bridge.reply(ReturnLoanResponse.newBuilder(), "loan", changed).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void markLoanLost(MarkLoanLostRequest request, StreamObserver<MarkLoanLostResponse> out) {
-        throw new NotImplementedException();
+        Loan changed = service.markLoanLost(bridge.id(request.getLoanId(), "loanId"),
+                bridge.body(request, com.mysms.library.api.model.MarkLoanLostRequest.class, "loan_id", "request_id"));
+        ProtoBridge.send(out, bridge.reply(MarkLoanLostResponse.newBuilder(), "loan", changed).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void invoiceLoanFine(InvoiceLoanFineRequest request, StreamObserver<InvoiceLoanFineResponse> out) {
-        throw new NotImplementedException();
+        Invoice invoice = service.invoiceLoanFine(bridge.id(request.getLoanId(), "loanId"));
+        ProtoBridge.send(out, bridge.reply(InvoiceLoanFineResponse.newBuilder(), "result", invoice).build());
     }
 }

@@ -9,9 +9,9 @@ import com.mysms.org.api.model.Institution;
 import com.mysms.org.api.model.InstitutionAttribute;
 import com.mysms.org.api.model.InstitutionAttributeUpdate;
 import com.mysms.org.api.model.InstitutionUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.org.business.InstitutionService;
+import com.mysms.org.business.SchoolFinder;
 import java.net.URI;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -19,15 +19,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the Institution operations; authentication and the permission check already happened in the auth-client
- * filter; operations not served yet answer 501 NOT_IMPLEMENTED.
+ * filter. The public school finder needs no token.
  */
 @RestController
 public class InstitutionController implements InstitutionApi {
 
     private final InstitutionService institutionService;
+    private final SchoolFinder schoolFinder;
 
-    public InstitutionController(InstitutionService institutionService) {
+    public InstitutionController(InstitutionService institutionService, SchoolFinder schoolFinder) {
         this.institutionService = institutionService;
+        this.schoolFinder = schoolFinder;
     }
 
     @Override
@@ -72,7 +74,8 @@ public class InstitutionController implements InstitutionApi {
     @Override
     public ResponseEntity<PagingInfo<InstitutionCard>> findInstitutions(String query, String countryCode, Integer page,
             Integer size, String cursor) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(PagingUtil.pagingInfo(schoolFinder.findInstitutions(query, countryCode, page, size,
+                cursor)));
     }
 
     @Override

@@ -1,13 +1,14 @@
 package com.mysms.org.grpc;
 
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.org.api.model.Institution;
+import com.mysms.org.api.model.InstitutionCard;
 import com.mysms.org.api.model.InstitutionAttribute;
 import com.mysms.org.api.model.InstitutionAttributeUpdate;
 import com.mysms.org.api.model.InstitutionUpdate;
 import com.mysms.org.business.InstitutionService;
+import com.mysms.org.business.SchoolFinder;
 import com.mysms.org.v1.CreateInstitutionAttributeRequest;
 import com.mysms.org.v1.CreateInstitutionAttributeResponse;
 import com.mysms.org.v1.CreateInstitutionRequest;
@@ -44,10 +45,12 @@ import net.devh.boot.grpc.server.service.GrpcService;
 public class InstitutionResolver extends InstitutionServiceGrpc.InstitutionServiceImplBase {
 
     private final InstitutionService service;
+    private final SchoolFinder schoolFinder;
     private final ProtoBridge bridge;
 
-    public InstitutionResolver(InstitutionService service, ProtoBridge bridge) {
+    public InstitutionResolver(InstitutionService service, SchoolFinder schoolFinder, ProtoBridge bridge) {
         this.service = service;
+        this.schoolFinder = schoolFinder;
         this.bridge = bridge;
     }
 
@@ -154,9 +157,11 @@ public class InstitutionResolver extends InstitutionServiceGrpc.InstitutionServi
         ProtoBridge.send(out, DeleteInstitutionAttributeResponse.getDefaultInstance());
     }
 
-    /** Not served by this release (REST answers 501 too): UNIMPLEMENTED. */
     @Override
     public void findInstitutions(FindInstitutionsRequest request, StreamObserver<FindInstitutionsResponse> out) {
-        throw new NotImplementedException();
+        ProtoBridge.ListArguments page = bridge.list(request.getPageable());
+        Page<InstitutionCard> found = schoolFinder.findInstitutions(request.getQuery(),
+                request.hasCountryCode() ? request.getCountryCode() : null, page.page(), page.size(), page.cursor());
+        ProtoBridge.send(out, bridge.page(FindInstitutionsResponse.newBuilder(), found).build());
     }
 }

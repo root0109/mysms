@@ -23,15 +23,20 @@ import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
 import com.mysms.core.web.UpdateMask;
+import com.mysms.timetable.api.model.BatchConfirmSessionsRequest;
 import com.mysms.timetable.api.model.CancelSessionRequest;
 import com.mysms.timetable.api.model.CompleteSessionRequest;
 import com.mysms.timetable.api.model.ConfirmSessionRequest;
+import com.mysms.timetable.api.model.GenerateSessionsRequest;
+import com.mysms.timetable.api.model.Operation;
 import com.mysms.timetable.api.model.ResetSessionRequest;
 import com.mysms.timetable.api.model.Session;
+import com.mysms.timetable.api.model.SessionList;
 import com.mysms.timetable.api.model.SessionStudent;
 import com.mysms.timetable.api.model.SessionStudentUpdate;
 import com.mysms.timetable.api.model.SessionUpdate;
 import com.mysms.timetable.api.model.TimetableView;
+import com.mysms.timetable.api.model.WeeklySlot;
 import com.mysms.timetable.config.TimetableDatabaseConfig;
 import com.mysms.timetable.config.TimetableEventsConfig;
 import com.mysms.timetable.domain.SessionEntity;
@@ -39,15 +44,26 @@ import com.mysms.timetable.domain.SessionStudentEntity;
 import com.mysms.timetable.events.TimetableEvents;
 import com.mysms.timetable.mapper.SessionMapper;
 import com.mysms.timetable.mapper.SessionStudentMapper;
+import com.mysms.timetable.repository.InstitutionZoneRepository;
+import com.mysms.timetable.repository.PeriodRow;
 import com.mysms.timetable.repository.SessionRepository;
 import com.mysms.timetable.repository.SessionStudentRepository;
+import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.DateTimeException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -77,6 +93,22 @@ public class SessionService extends AppTransactionManager {
     static final String PERMISSION_COMPLETE_SESSION = "timetable.session.complete_session";
     static final String PERMISSION_CANCEL_SESSION = "timetable.session.cancel_session";
     static final String PERMISSION_RESET_SESSION = "timetable.session.reset_session";
+    static final String PERMISSION_GENERATE_SESSIONS = "timetable.session.generate_sessions";
+    static final String PERMISSION_BATCH_CONFIRM = "timetable.session.batch_confirm_sessions";
+    /** The operation kind a generation run is recorded under. */
+    static final String KIND_GENERATE = "timetable.GenerateSessions";
+    /** Generation limits (422 beyond): a school year at a time, a week of slots, and the meetings they make. */
+    static final int MAX_GENERATE_DAYS = 366;
+    static final int MAX_SLOTS = 100;
+    static final int MAX_OCCURRENCES = 5000;
+    /** The clashes a run reports one by one; the count covers the rest. */
+    static final int MAX_REPORTED_CLASHES = 200;
+    static final int MAX_BATCH_CONFIRM = 500;
+    /**
+     * How far apart a generated meeting and a live session of the same class, period and weekday may start and still
+     * be the same meeting: well under the week between two meetings of a slot, well over any gap between time zones.
+     */
+    static final Duration SAME_MEETING_WINDOW = Duration.ofDays(3);
     /** The contract's SessionUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("institutionId", "periodId", "startAt", "endAt", "weekday", "classSectionId", "courseId", "batchId",
@@ -99,6 +131,8 @@ public class SessionService extends AppTransactionManager {
     private final Clock clock;
     private final SessionStudentRepository sessionStudentRepository;
     private final SessionStudentMapper sessionStudentMapper;
+    private final OperationService operations;
+    private final InstitutionZoneRepository zones;
 
     public SessionService(SessionRepository repository,
             SessionMapper mapper,
@@ -109,7 +143,9 @@ public class SessionService extends AppTransactionManager {
             DtoValidator validator,
             Clock clock,
             SessionStudentRepository sessionStudentRepository,
-            SessionStudentMapper sessionStudentMapper) {
+            SessionStudentMapper sessionStudentMapper,
+            OperationService operations,
+            InstitutionZoneRepository zones) {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
@@ -119,6 +155,8 @@ public class SessionService extends AppTransactionManager {
         this.clock = clock;
         this.sessionStudentRepository = sessionStudentRepository;
         this.sessionStudentMapper = sessionStudentMapper;
+        this.operations = operations;
+        this.zones = zones;
     }
 
     public Session getSession(UUID id) {
@@ -427,6 +465,336 @@ public class SessionService extends AppTransactionManager {
     }
 
     /** The institution that owns the row. */
+    /**
+     * timetable.GenerateSessions: writes the draft sessions a weekly pattern means between two dates, each slot at its
+     * period's local start time in the school's own time zone (from org); the request names the zone only for a school
+     * without one, and naming another zone than the school's is 422. Idempotent per class, period and day: a meeting
+     * that already exists is kept, a draft of it at another time (a run in another zone) is moved, never duplicated, so
+     * a re-run writes nothing new. A meeting that would overlap another live session of the institution with the same
+     * teacher, room or class is not written but reported (the operation's {@code result}: created, kept, replaced,
+     * clashes). Runs as a long-running operation recorded in timetable.operation, answered finished.
+     */
+    public Operation generateSessions(GenerateSessionsRequest request) {
+        validator.validate(request);
+        checkGeneration(request);
+        UUID institution = request.getInstitutionId();
+        DataScope scope = DataScope.current(PERMISSION_GENERATE_SESSIONS);
+        scope.requireWritable(Optional.of(institution));
+        List<UUID> periodIds = request.getSlots().stream().map(WeeklySlot::getPeriodId).distinct().toList();
+        ZoneId zone = doInReadTransaction(() -> {
+            slotsOf(request, periodRows(repository.periods(periodIds), institution));
+            return zoneOf(institution, request.getTimeZone());
+        });
+        UUID operation = operations.start(KIND_GENERATE, "org.institution", institution);
+        try {
+            Map<String, Object> outcome = doInWriteTransaction(() -> {
+                Map<UUID, PeriodRow> periods = periodRows(repository.lockPeriods(periodIds), institution);
+                List<WeeklyPattern.Occurrence> meetings = WeeklyPattern.expand(slotsOf(request, periods),
+                        request.getStartDate(), request.getEndDate(), zone);
+                return writeMeetings(request, meetings);
+            });
+            return operations.succeed(operation, outcome);
+        } catch (RuntimeException e) {
+            operations.fail(operation, "INTERNAL", "The sessions could not be generated; nothing was written. Check "
+                    + "the pattern and run it again.");
+            throw e;
+        }
+    }
+
+    /**
+     * timetable.BatchConfirmSessions: confirms up to 500 sessions at once, all or nothing. Each must be a live session
+     * the caller may write (422 {@code sessionIds[i]} for one they cannot see); a confirmed one stays as it is, and a
+     * done or cancelled one refuses the whole batch (409). Answers the sessions in the order asked.
+     */
+    public SessionList batchConfirmSessions(BatchConfirmSessionsRequest request) {
+        validator.validate(request);
+        List<UUID> ids = request.getSessionIds();
+        List<FieldError> shape = new ArrayList<>();
+        if (ids.isEmpty() || ids.size() > MAX_BATCH_CONFIRM) {
+            shape.add(new FieldError("sessionIds", "name between 1 and " + MAX_BATCH_CONFIRM + " sessions", "Size"));
+        } else if (ids.stream().distinct().count() != ids.size()) {
+            shape.add(new FieldError("sessionIds", "names a session more than once", "Unique"));
+        }
+        if (!shape.isEmpty()) {
+            throw new ValidationFailedException(shape);
+        }
+        DataScope scope = DataScope.current(PERMISSION_BATCH_CONFIRM);
+        return doInWriteTransaction(() -> {
+            Map<UUID, SessionEntity> found = new HashMap<>();
+            repository.lockByIds(ids).forEach(session -> found.put(session.getId(), session));
+            List<FieldError> missing = new ArrayList<>();
+            for (int i = 0; i < ids.size(); i++) {
+                SessionEntity session = found.get(ids.get(i));
+                if (session == null || !scope.canRead(institutionOf(session))) {
+                    missing.add(new FieldError("sessionIds[" + i + "]", "session does not exist", "NOT_FOUND"));
+                }
+            }
+            if (!missing.isEmpty()) {
+                throw new ValidationFailedException(missing);
+            }
+            List<UUID> drafts = new ArrayList<>();
+            for (UUID id : ids) {
+                SessionEntity session = found.get(id);
+                scope.requireWritable(institutionOf(session));
+                if ("draft".equals(session.getStatus())) {
+                    drafts.add(id);
+                } else if (!"confirmed".equals(session.getStatus())) {
+                    throw new InvalidStateException("A session that is done or cancelled cannot be confirmed; "
+                            + "leave it out of the batch.");
+                }
+            }
+            if (!drafts.isEmpty()) {
+                OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                        .truncatedTo(ChronoUnit.MICROS);
+                if (repository.confirmDrafts(drafts, now, Actor.current().orElse(null)) != drafts.size()) {
+                    throw new PreconditionFailedException("A session changed while it was confirmed; try again.");
+                }
+                for (UUID id : drafts) {
+                    audit.recordTransition(AGGREGATE, id, "confirm", List.of("status"), null);
+                    outbox.publish(AGGREGATE + ".confirm", AGGREGATE, id, TimetableEvents.payload(id));
+                }
+            }
+            Map<UUID, SessionEntity> confirmed = new HashMap<>();
+            repository.lockByIds(ids).forEach(session -> confirmed.put(session.getId(), session));
+            SessionList list = new SessionList();
+            ids.forEach(id -> list.addItemsItem(mapper.toDto(confirmed.get(id))));
+            return list;
+        });
+    }
+
+    /** The request's shape beyond the contract's: dates, limits, the class, the slots, a named time zone. */
+    private static void checkGeneration(GenerateSessionsRequest request) {
+        List<FieldError> errors = new ArrayList<>();
+        if (request.getTimeZone() != null) {
+            try {
+                ZoneId.of(request.getTimeZone());
+            } catch (DateTimeException e) {
+                errors.add(new FieldError("timeZone", "is not a known time zone", "TIME_ZONE"));
+            }
+        }
+        if (request.getEndDate().isBefore(request.getStartDate())) {
+            errors.add(new FieldError("endDate", "must not be before startDate", "DATE_RANGE"));
+        } else if (ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) >= MAX_GENERATE_DAYS) {
+            errors.add(new FieldError("endDate", "at most " + MAX_GENERATE_DAYS + " days at a time", "DATE_RANGE"));
+        }
+        if (request.getClassSectionId() == null && (request.getCourseId() == null || request.getBatchId() == null)) {
+            errors.add(new FieldError("classSectionId", "name a class section, or a course and a batch", "REQUIRED"));
+        }
+        List<WeeklySlot> slots = request.getSlots();
+        if (slots.isEmpty() || slots.size() > MAX_SLOTS) {
+            errors.add(new FieldError("slots", "name between 1 and " + MAX_SLOTS + " slots", "Size"));
+        }
+        for (int i = 0; i < slots.size(); i++) {
+            Integer weekday = slots.get(i).getWeekday();
+            if (weekday < 1 || weekday > 7) {
+                errors.add(new FieldError("slots[" + i + "].weekday", "must be an ISO weekday from 1 to 7", "Range"));
+            }
+        }
+        if (errors.isEmpty() && WeeklyPattern.count(slots.stream().map(WeeklySlot::getWeekday).toList(),
+                request.getStartDate(), request.getEndDate()) > MAX_OCCURRENCES) {
+            errors.add(new FieldError("slots", "the pattern makes more than " + MAX_OCCURRENCES
+                    + " sessions; generate a shorter stretch", "Size"));
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
+        }
+    }
+
+    /**
+     * The zone the school's periods are in: its own from org; the requested one only while org gave it none (422 when
+     * neither names one, or when the request names another zone than the school's).
+     */
+    private ZoneId zoneOf(UUID institution, String requested) {
+        Optional<ZoneId> asked = Optional.ofNullable(requested).map(ZoneId::of);
+        Optional<ZoneId> own = zones.zoneOf(institution).map(ZoneId::of);
+        if (own.isPresent()) {
+            if (asked.isPresent() && !asked.get().getRules().equals(own.get().getRules())) {
+                throw new ValidationFailedException(List.of(new FieldError("timeZone",
+                        "differs from the school's time zone " + own.get().getId() + "; leave it out", "TIME_ZONE")));
+            }
+            return own.get();
+        }
+        return asked.orElseThrow(() -> new ValidationFailedException(List.of(new FieldError("timeZone",
+                "the school has no time zone of its own; name the one its periods are in", "REQUIRED"))));
+    }
+
+    private static Map<UUID, PeriodRow> periodRows(List<PeriodRow> rows, UUID institution) {
+        Map<UUID, PeriodRow> periods = new HashMap<>();
+        rows.stream().filter(row -> institution.equals(row.institutionId())).forEach(row -> periods.put(row.id(), row));
+        return periods;
+    }
+
+    /** The request's slots with their periods; 422 for a period that is not the institution's or has no length. */
+    private static List<WeeklyPattern.Slot> slotsOf(GenerateSessionsRequest request, Map<UUID, PeriodRow> periods) {
+        List<FieldError> errors = new ArrayList<>();
+        List<WeeklyPattern.Slot> slots = new ArrayList<>();
+        for (int i = 0; i < request.getSlots().size(); i++) {
+            WeeklySlot slot = request.getSlots().get(i);
+            PeriodRow period = periods.get(slot.getPeriodId());
+            if (period == null) {
+                errors.add(new FieldError("slots[" + i + "].periodId", "period does not exist", "NOT_FOUND"));
+            } else if (period.durationMinutes() == null) {
+                errors.add(new FieldError("slots[" + i + "].periodId", "the period has no duration", "REQUIRED"));
+            } else {
+                long seconds = period.durationMinutes().multiply(BigDecimal.valueOf(60)).longValue();
+                slots.add(new WeeklyPattern.Slot(slot.getWeekday(), period.id(), period.startTime(),
+                        Duration.ofSeconds(seconds), slot.getSubjectId(), slot.getStaffId(), slot.getRoomId()));
+            }
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
+        }
+        return slots;
+    }
+
+    /** Writes the meetings that are neither there already nor clashing; answers the run's outcome. */
+    private Map<String, Object> writeMeetings(GenerateSessionsRequest request,
+            List<WeeklyPattern.Occurrence> meetings) {
+        List<SessionEntity> live = meetings.isEmpty() ? new ArrayList<>()
+                : new ArrayList<>(repository.liveOverlapping(request.getInstitutionId(),
+                        meetings.get(0).startAt().minus(SAME_MEETING_WINDOW),
+                        meetings.get(meetings.size() - 1).endAt().plus(SAME_MEETING_WINDOW)));
+        int created = 0;
+        int kept = 0;
+        int replaced = 0;
+        int clashCount = 0;
+        List<Map<String, Object>> clashes = new ArrayList<>();
+        Set<UUID> matched = new HashSet<>();
+        UUID tenant = CallContextHolder.require().tenantId().orElseThrow();
+        for (WeeklyPattern.Occurrence meeting : meetings) {
+            SessionEntity candidate = sessionOf(request, meeting, tenant);
+            Optional<SessionEntity> prior = live.stream()
+                    .filter(other -> !matched.contains(other.getId()) && sameSlot(other, candidate)).findFirst();
+            prior.ifPresent(found -> matched.add(found.getId()));
+            if (prior.isPresent() && sameMeeting(prior.get(), candidate)) {
+                kept++;
+                continue;
+            }
+            List<SessionEntity> others = prior.isEmpty() ? live
+                    : live.stream().filter(other -> !other.getId().equals(prior.get().getId())).toList();
+            Optional<Map<String, Object>> clash = prior.isPresent() && !"draft".equals(prior.get().getStatus())
+                    ? Optional.of(clash(meeting, "class", prior.get()))
+                    : clashOf(candidate, meeting, others);
+            if (clash.isPresent()) {
+                clashCount++;
+                if (clashes.size() < MAX_REPORTED_CLASHES) {
+                    clashes.add(clash.get());
+                }
+                continue;
+            }
+            if (prior.isPresent()) {
+                live.set(live.indexOf(prior.get()), moved(prior.get(), candidate));
+                replaced++;
+                continue;
+            }
+            candidate.onCreatingData(Actor.current(), clock);
+            SessionEntity stored = repository.insert(candidate);
+            live.add(stored);
+            audit.recordCreate(AGGREGATE, stored.getId());
+            outbox.publish(AGGREGATE + TimetableEvents.CREATED, AGGREGATE, stored.getId(),
+                    TimetableEvents.payload(stored.getId()));
+            created++;
+        }
+        Map<String, Object> outcome = new LinkedHashMap<>();
+        outcome.put("created", created);
+        outcome.put("kept", kept);
+        outcome.put("replaced", replaced);
+        outcome.put("clashCount", clashCount);
+        outcome.put("clashes", clashes);
+        return outcome;
+    }
+
+    private static SessionEntity sessionOf(GenerateSessionsRequest request, WeeklyPattern.Occurrence meeting,
+            UUID tenant) {
+        SessionEntity session = new SessionEntity();
+        session.setTenantId(tenant);
+        session.setInstitutionId(request.getInstitutionId());
+        session.setPeriodId(meeting.slot().periodId());
+        session.setStartAt(meeting.startAt());
+        session.setEndAt(meeting.endAt());
+        session.setWeekday(meeting.slot().weekday());
+        session.setClassSectionId(request.getClassSectionId());
+        session.setCourseId(request.getCourseId());
+        session.setBatchId(request.getBatchId());
+        session.setSubjectId(meeting.slot().subjectId());
+        session.setStaffId(meeting.slot().staffId());
+        session.setRoomId(meeting.slot().roomId());
+        return session;
+    }
+
+    /** A draft session takes the generated meeting's time (412 when it changed meanwhile). */
+    private SessionEntity moved(SessionEntity draft, SessionEntity meeting) {
+        int expected = draft.getRowVersion();
+        draft.setStartAt(meeting.getStartAt());
+        draft.setEndAt(meeting.getEndAt());
+        draft.onUpdatingData(Actor.current(), clock);
+        if (repository.update(draft, expected) == 0) {
+            throw new PreconditionFailedException("A session changed while the pattern was generated; run it again.");
+        }
+        draft.setRowVersion(expected + 1);
+        audit.recordUpdate(AGGREGATE, draft.getId(), List.of("startAt", "endAt"));
+        outbox.publish(AGGREGATE + TimetableEvents.UPDATED, AGGREGATE, draft.getId(),
+                TimetableEvents.payload(draft.getId()));
+        return draft;
+    }
+
+    /**
+     * The class's meeting of the same subject, teacher and room in the same period on the same weekday of the same
+     * week, whatever time zone placed it.
+     */
+    private static boolean sameSlot(SessionEntity live, SessionEntity meeting) {
+        return sameClass(meeting, live) && Objects.equals(live.getPeriodId(), meeting.getPeriodId())
+                && Objects.equals(live.getWeekday(), meeting.getWeekday())
+                && Objects.equals(live.getSubjectId(), meeting.getSubjectId())
+                && Objects.equals(live.getStaffId(), meeting.getStaffId())
+                && Objects.equals(live.getRoomId(), meeting.getRoomId())
+                && Duration.between(live.getStartAt(), meeting.getStartAt()).abs().compareTo(SAME_MEETING_WINDOW) < 0;
+    }
+
+    /** The same class meeting the same subject with the same teacher in the same room at the same time. */
+    private static boolean sameMeeting(SessionEntity a, SessionEntity b) {
+        return a.getStartAt().isEqual(b.getStartAt()) && a.getEndAt().isEqual(b.getEndAt())
+                && Objects.equals(a.getClassSectionId(), b.getClassSectionId())
+                && Objects.equals(a.getCourseId(), b.getCourseId()) && Objects.equals(a.getBatchId(), b.getBatchId())
+                && Objects.equals(a.getSubjectId(), b.getSubjectId()) && Objects.equals(a.getStaffId(), b.getStaffId())
+                && Objects.equals(a.getRoomId(), b.getRoomId());
+    }
+
+    /** The first live session the meeting would overlap with its teacher, room or class, as reported. */
+    private static Optional<Map<String, Object>> clashOf(SessionEntity candidate, WeeklyPattern.Occurrence meeting,
+            List<SessionEntity> live) {
+        for (SessionEntity other : live) {
+            boolean overlaps = other.getStartAt().isBefore(candidate.getEndAt())
+                    && other.getEndAt().isAfter(candidate.getStartAt());
+            if (!overlaps) {
+                continue;
+            }
+            String on = candidate.getStaffId() != null && candidate.getStaffId().equals(other.getStaffId()) ? "staff"
+                    : candidate.getRoomId() != null && candidate.getRoomId().equals(other.getRoomId()) ? "room"
+                    : sameClass(other, candidate) ? "class" : null;
+            if (on != null) {
+                return Optional.of(clash(meeting, on, other));
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static Map<String, Object> clash(WeeklyPattern.Occurrence meeting, String on, SessionEntity other) {
+        Map<String, Object> clash = new LinkedHashMap<>();
+        clash.put("date", meeting.date().toString());
+        clash.put("weekday", meeting.slot().weekday());
+        clash.put("periodId", meeting.slot().periodId().toString());
+        clash.put("on", on);
+        clash.put("sessionId", other.getId().toString());
+        return clash;
+    }
+
+    private static boolean sameClass(SessionEntity a, SessionEntity b) {
+        return a.getClassSectionId() != null ? a.getClassSectionId().equals(b.getClassSectionId())
+                : a.getCourseId() != null && a.getCourseId().equals(b.getCourseId())
+                        && Objects.equals(a.getBatchId(), b.getBatchId());
+    }
+
     private Optional<UUID> institutionOf(SessionEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
     }

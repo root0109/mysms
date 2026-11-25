@@ -124,6 +124,15 @@ public class VisitorLogRepository {
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
+    private static final String CHECK_OUT = """
+            UPDATE frontoffice.visitor_log
+               SET exit_time = :exitTime,
+                   updated_at = :updatedAt,
+                   updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL AND exit_time IS NULL
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
             """;
@@ -199,6 +208,17 @@ public class VisitorLogRepository {
                 .param("entryTime", e.getEntryTime())
                 .param("exitTime", e.getExitTime())
                 .param("remarks", e.getRemarks())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("expected", expectedVersion)
+                .update();
+    }
+
+    /** Sets the exit time of a visitor still inside, under the version guard; 0 rows means it changed meanwhile. */
+    public int checkOut(VisitorLogEntity e, int expectedVersion) {
+        return jdbc.sql(CHECK_OUT)
+                .param("id", e.getId())
+                .param("exitTime", e.getExitTime())
                 .param("updatedAt", e.getUpdatedAt())
                 .param("updatedBy", e.getUpdatedBy())
                 .param("expected", expectedVersion)

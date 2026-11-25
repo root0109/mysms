@@ -26,6 +26,7 @@ import com.mysms.core.web.Etags;
 import com.mysms.core.web.UpdateMask;
 import com.mysms.finance.api.model.CancelInvoiceRequest;
 import com.mysms.finance.api.model.CreateInvoiceFromDuesRequest;
+import com.mysms.finance.api.model.RaiseChargeInvoiceRequest;
 import com.mysms.finance.api.model.FeeStatement;
 import com.mysms.finance.api.model.Invoice;
 import com.mysms.finance.api.model.InvoiceLine;
@@ -52,6 +53,7 @@ import com.mysms.finance.repository.NumberSequenceRepository;
 import com.mysms.finance.repository.PaymentRepository;
 import com.mysms.finance.repository.StudentFeeDueRepository;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -125,6 +127,8 @@ public class InvoiceService extends AppTransactionManager {
     private final NumberSequenceRepository numbers;
     private final StudentOwnershipLookup ownership;
     private final CurrencyLookup currencies;
+    private final InstitutionCurrencyLookup institutionCurrencies;
+    private final ChargeTargets chargeTargets;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
@@ -136,6 +140,7 @@ public class InvoiceService extends AppTransactionManager {
             InvoiceLineMapper invoiceLineMapper, StudentFeeDueRepository dues, StudentFeeDueMapper dueMapper,
             PaymentRepository payments, PaymentViewFactory paymentViews, LedgerRepository ledger,
             NumberSequenceRepository numbers, StudentOwnershipLookup ownership, CurrencyLookup currencies,
+            InstitutionCurrencyLookup institutionCurrencies, ChargeTargets chargeTargets,
             @Qualifier(FinanceEventsConfig.OUTBOX) OutboxWriter outbox,
             @Qualifier(FinanceEventsConfig.AUDIT) AuditWriter audit, DtoValidator validator, Clock clock) {
         super(database, transactions);
@@ -151,6 +156,8 @@ public class InvoiceService extends AppTransactionManager {
         this.numbers = numbers;
         this.ownership = ownership;
         this.currencies = currencies;
+        this.institutionCurrencies = institutionCurrencies;
+        this.chargeTargets = chargeTargets;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -303,6 +310,101 @@ public class InvoiceService extends AppTransactionManager {
                     FinanceEvents.payload(invoice.getId()));
             return mapper.toDto(repository.findById(invoice.getId()).orElseThrow());
         });
+    }
+
+    /**
+     * finance.RaiseChargeInvoice: a draft invoice with one line for a charge another module computed (a library fine),
+     * in the institution's currency unless one is named. The billed student must be the institution's, and a billed
+     * account that of one of its students or staff (422). One invoice per source: its id is derived from the tenant and
+     * the source, so raising the same source again answers the invoice already made while it is live and bills the
+     * same institution, party and amount — anything else is 409, never a silently kept or cancelled invoice — and two
+     * raises at once end with one invoice, answered to both. Created under the invoice's create permission, inside the
+     * caller's institutions.
+     */
+    public Invoice raiseChargeInvoice(RaiseChargeInvoiceRequest request) {
+        validator.validate(request);
+        List<FieldError> errors = new ArrayList<>();
+        WireValues.checkDecimal("amount", request.getAmount(), 14, 2, errors);
+        BigDecimal amount = WireValues.decimal(request.getAmount());
+        if (amount.signum() <= 0) {
+            errors.add(new FieldError("amount", "must be more than zero", "Min"));
+        }
+        if (request.getStudentId() == null && request.getBillToUserId() == null) {
+            errors.add(new FieldError("studentId", "name the student or the user account billed", "REQUIRED"));
+        }
+        if (!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
+        }
+        UUID institution = request.getInstitutionId();
+        DataScope scope = DataScope.current(PERMISSION_CREATE);
+        scope.requireWritable(Optional.of(institution));
+        UUID tenant = CallContextHolder.require().tenantId().orElseThrow();
+        UUID id = chargeInvoiceId(tenant, request.getSourceType(), request.getSourceId());
+        Optional<Invoice> raised = doInPrimaryReadTransaction(() -> {
+            chargeTargets.require(institution, request.getStudentId(), request.getBillToUserId());
+            return repository.findAnyById(id).map(found -> sameCharge(found, request, amount));
+        });
+        if (raised.isPresent()) {
+            return raised.get();
+        }
+        UUID currency = request.getCurrencyId() != null ? request.getCurrencyId()
+                : institutionCurrencies.currencyOf(institution);
+        return doInWriteTransaction(() -> {
+            chargeTargets.require(institution, request.getStudentId(), request.getBillToUserId());
+            InvoiceEntity invoice = InvoiceEntity.builder()
+                    .tenantId(tenant)
+                    .institutionId(institution)
+                    .studentId(request.getStudentId())
+                    .billToUserId(request.getBillToUserId())
+                    .billToName(request.getBillToName().trim())
+                    .invoiceDate(LocalDate.now(clock))
+                    .dueDate(request.getDueDate())
+                    .currencyId(currency)
+                    .subtotal(amount)
+                    .discountTotal(BigDecimal.ZERO)
+                    .taxTotal(BigDecimal.ZERO)
+                    .total(amount)
+                    .amountPaid(BigDecimal.ZERO)
+                    .status("draft")
+                    .invoiceType("invoice")
+                    .build();
+            invoice.onCreatingData(Actor.current(), clock);
+            invoice.setId(id);
+            invoice.setInvoiceNumber(draftNumber(id));
+            if (!repository.insertIfAbsent(invoice)) {
+                return sameCharge(repository.findAnyById(id).orElseThrow(), request, amount);
+            }
+            repository.insertLines(id, List.of(new DueLine(UuidV7.next(clock), null, request.getDescription().trim(),
+                    amount, BigDecimal.ZERO, amount)), now(), Actor.current().orElse(null));
+            audit.recordCreate(AGGREGATE, id);
+            outbox.publish(AGGREGATE + FinanceEvents.CREATED, AGGREGATE, id, FinanceEvents.payload(id));
+            return mapper.toDto(repository.findById(id).orElseThrow());
+        });
+    }
+
+    /**
+     * The invoice a source raised before, while it is live and bills the same institution, student, account and amount;
+     * 409 otherwise (a deleted or cancelled one included: the source cannot be billed under it again).
+     */
+    private Invoice sameCharge(InvoiceEntity raised, RaiseChargeInvoiceRequest request, BigDecimal amount) {
+        if (raised.getDeletedAt() != null || "cancelled".equals(raised.getStatus())) {
+            throw new ConflictException("DUPLICATE", "The source's invoice was cancelled or deleted; it is not raised "
+                    + "again.");
+        }
+        if (!request.getInstitutionId().equals(raised.getInstitutionId())
+                || !Objects.equals(request.getStudentId(), raised.getStudentId())
+                || !Objects.equals(request.getBillToUserId(), raised.getBillToUserId())
+                || raised.getTotal().compareTo(amount) != 0) {
+            throw new ConflictException("DUPLICATE", "The source was already invoiced with another institution, party "
+                    + "or amount.");
+        }
+        return mapper.toDto(raised);
+    }
+
+    /** The id of the one invoice a source may raise in a tenant (name-based, so every raise of it finds the same). */
+    static UUID chargeInvoiceId(UUID tenant, String sourceType, UUID sourceId) {
+        return UUID.nameUUIDFromBytes(("finance.charge:" + tenant + ":" + sourceType + ":" + sourceId)
+                .getBytes(StandardCharsets.UTF_8));
     }
 
     /**

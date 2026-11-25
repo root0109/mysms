@@ -513,6 +513,15 @@
   "idempotency" : "optional",
   "audience" : "public"
 }, {
+  "operationId" : "finance.RaiseChargeInvoice",
+  "method" : "POST",
+  "path" : "/v1/finance/invoices:raiseCharge",
+  "permission" : "finance.invoice.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
   "operationId" : "finance.ReceiveGatewayWebhook",
   "method" : "POST",
   "path" : "/v1/finance/payment-gateways/{gateway}:webhook",

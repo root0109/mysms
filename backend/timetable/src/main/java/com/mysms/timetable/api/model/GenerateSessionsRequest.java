@@ -50,6 +50,9 @@ public class GenerateSessionsRequest {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private List<@Valid WeeklySlot> slots = new ArrayList<>();
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String timeZone;
+
   public GenerateSessionsRequest() {
     super();
   }
@@ -212,6 +215,26 @@ public class GenerateSessionsRequest {
     this.slots = slots;
   }
 
+  public GenerateSessionsRequest timeZone(@Nullable String timeZone) {
+    this.timeZone = timeZone;
+    return this;
+  }
+
+  /**
+   * IANA time zone the periods' start times are in, only for a school without a time zone of its own in org (e.g. Asia/Kolkata); a school's own zone always applies, and naming another one is 422.
+   * @return timeZone
+   */
+  @Size(min = 1, max = 64) 
+  @JsonProperty("timeZone")
+  public @Nullable String getTimeZone() {
+    return timeZone;
+  }
+
+  @JsonProperty("timeZone")
+  public void setTimeZone(@Nullable String timeZone) {
+    this.timeZone = timeZone;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -227,12 +250,13 @@ public class GenerateSessionsRequest {
         Objects.equals(this.batchId, generateSessionsRequest.batchId) &&
         Objects.equals(this.startDate, generateSessionsRequest.startDate) &&
         Objects.equals(this.endDate, generateSessionsRequest.endDate) &&
-        Objects.equals(this.slots, generateSessionsRequest.slots);
+        Objects.equals(this.slots, generateSessionsRequest.slots) &&
+        Objects.equals(this.timeZone, generateSessionsRequest.timeZone);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(institutionId, classSectionId, courseId, batchId, startDate, endDate, slots);
+    return Objects.hash(institutionId, classSectionId, courseId, batchId, startDate, endDate, slots, timeZone);
   }
 
   @Override
@@ -246,6 +270,7 @@ public class GenerateSessionsRequest {
     sb.append("    startDate: ").append(toIndentedString(startDate)).append("\n");
     sb.append("    endDate: ").append(toIndentedString(endDate)).append("\n");
     sb.append("    slots: ").append(toIndentedString(slots)).append("\n");
+    sb.append("    timeZone: ").append(toIndentedString(timeZone)).append("\n");
     sb.append("}");
     return sb.toString();
   }

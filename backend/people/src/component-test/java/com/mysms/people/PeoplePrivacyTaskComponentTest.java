@@ -56,7 +56,7 @@ class PeoplePrivacyTaskComponentTest {
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
     }
 
-    /** A person with an address and a social link, written directly. */
+    /** A person with an address, a social link and a greeting, written directly. */
     private UUID person(UUID tenant) {
         UUID person = UUID.randomUUID();
         write(tenant, () -> {
@@ -68,6 +68,9 @@ class PeoplePrivacyTaskComponentTest {
                     .param("id", UUID.randomUUID()).param("person", person).update();
             database.jdbc().sql("INSERT INTO people.person_social_link (id, tenant_id, person_id, network, handle,"
                     + " row_version) VALUES (:id, :tenantId, :person, 'github', 'asha-rao', 1)")
+                    .param("id", UUID.randomUUID()).param("person", person).update();
+            database.jdbc().sql("INSERT INTO people.greeting (id, tenant_id, person_id, greeted_on, channel,"
+                    + " row_version) VALUES (:id, :tenantId, :person, '2026-11-20', 'sms', 1)")
                     .param("id", UUID.randomUUID()).param("person", person).update();
             return null;
         });
@@ -125,6 +128,7 @@ class PeoplePrivacyTaskComponentTest {
         assertThat(personColumn(tenant, person, "national_id_enc")).as("the envelope is cleared").isNull();
         assertThat(liveRows(tenant, person, "people.person_address")).isZero();
         assertThat(liveRows(tenant, person, "people.person_social_link")).isZero();
+        assertThat(liveRows(tenant, person, "people.greeting")).isZero();
         assertThat(read(tenant, () -> database.jdbc().sql("SELECT count(*) FROM people.person_address WHERE"
                 + " tenant_id = :tenantId AND person_id = :person AND line1 IS NOT NULL").param("person", person)
                 .query(Integer.class).single())).as("soft delete is not erasure: the values are gone").isZero();
@@ -160,7 +164,7 @@ class PeoplePrivacyTaskComponentTest {
         assertThat(liveRows(tenant, person, "people.person_address")).isEqualTo(1);
         JsonNode answer = answers(tenant, taskId).get(0);
         assertThat(answer.path("status").asString()).isEqualTo("partial");
-        assertThat(answer.path("heldItems").asInt()).as("person, address and social link").isEqualTo(3);
+        assertThat(answer.path("heldItems").asInt()).as("person, address, social link and greeting").isEqualTo(4);
         assertThat(answer.path("counts").isEmpty()).isTrue();
     }
 

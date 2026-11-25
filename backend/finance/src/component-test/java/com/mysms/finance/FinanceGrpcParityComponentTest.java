@@ -977,4 +977,53 @@ class FinanceGrpcParityComponentTest {
                 grpc(publish, call(publish, "fee_structure_id", id, null), office.admin()));
         assertThat(office.count("finance.student_fee_due")).as("nothing charged").isZero();
     }
+
+    /** A charge raised over either transport makes the same one-line draft, once per source, and is refused alike. */
+    @Test
+    void aChargeInvoiceIsRaisedAndRefusedLikeRest() throws Exception {
+        MethodDescriptor raise = rpc("RaiseChargeInvoice");
+        String institution = "0196f000-0000-7000-8000-00000000a001";
+        String currency = UUID.randomUUID().toString();
+        String byRestSource = UUID.randomUUID().toString();
+        String byGrpcSource = UUID.randomUUID().toString();
+        String borrower = UUID.randomUUID().toString();
+        fixtures(TENANT, List.of("INSERT INTO finance.staff_record (tenant_id, staff_id, user_id, institution_id,"
+                + " source_version, synced_at) VALUES (:tenant, '" + UUID.randomUUID() + "', '" + borrower + "', '"
+                + institution + "', 1, now())"));
+        java.util.function.Function<String, String> charge = source -> "{\"institutionId\":\"" + institution
+                + "\",\"billToUserId\":\"" + borrower + "\",\"billToName\":\"Parity borrower\","
+                + "\"description\":\"Library fine\",\"amount\":\"12.50\",\"currencyId\":\"" + currency
+                + "\",\"sourceType\":\"library.loan\",\"sourceId\":\"" + source + "\"}";
+        Answer byRest = rest("POST", "/v1/finance/invoices:raiseCharge", ADMIN, charge.apply(byRestSource));
+        DynamicMessage.Builder request = request(raise);
+        com.google.protobuf.util.JsonFormat.parser().merge(charge.apply(byGrpcSource), request);
+        Answer byGrpc = grpc(raise, request.build(), ADMIN);
+        assertThat(byRest.status()).as(byRest.body().toString()).isEqualTo(200);
+        assertThat(byGrpc.status()).as("RaiseChargeInvoice: " + byGrpc.code()).isEqualTo(200);
+        assertThat(byGrpc.body().path("invoice").path("total").asString()).isEqualTo(byRest.body().path("total")
+                .asString()).isEqualTo("12.50");
+        GrpcParity.assertSameResource(rest("GET", "/v1/finance/invoices/" + byGrpc.body().path("invoice").path("id")
+                .asString(), ADMIN, null).body(), byGrpc.body().path("invoice"));
+        assertThat(grpc(raise, request.build(), ADMIN).body().path("invoice").path("id").asString())
+                .as("one invoice per source").isEqualTo(byGrpc.body().path("invoice").path("id").asString());
+
+        DynamicMessage.Builder free = request(raise);
+        com.google.protobuf.util.JsonFormat.parser().merge(charge.apply(byGrpcSource).replace("12.50", "0"), free);
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/finance/invoices:raiseCharge", ADMIN,
+                charge.apply(byRestSource).replace("12.50", "0")), grpc(raise, free.build(), ADMIN));
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/finance/invoices:raiseCharge", NOBODY,
+                charge.apply(byRestSource)), grpc(raise, request.build(), NOBODY));
+        assertThat(grpc(raise, request.build(), null).status()).as("authentication first, as on REST").isEqualTo(401);
+        DynamicMessage.Builder stranger = request(raise);
+        com.google.protobuf.util.JsonFormat.parser().merge(charge.apply(UUID.randomUUID().toString())
+                .replace(borrower, UUID.randomUUID().toString()), stranger);
+        Answer refused = rest("POST", "/v1/finance/invoices:raiseCharge", ADMIN, charge.apply(byRestSource)
+                .replace(borrower, UUID.randomUUID().toString()));
+        assertThat(refused.status()).as("an account that is not the school's").isEqualTo(422);
+        GrpcParityContract.assertSameAnswer(refused, grpc(raise, stranger.build(), ADMIN));
+        DynamicMessage.Builder more = request(raise);
+        com.google.protobuf.util.JsonFormat.parser().merge(charge.apply(byGrpcSource).replace("12.50", "13.00"), more);
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/finance/invoices:raiseCharge", ADMIN,
+                charge.apply(byRestSource).replace("12.50", "13.00")), grpc(raise, more.build(), ADMIN));
+    }
 }

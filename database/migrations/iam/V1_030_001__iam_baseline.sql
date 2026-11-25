@@ -1027,7 +1027,9 @@ VALUES ('ui.theme', 'appearance', 'choice', ARRAY['system', 'light', 'dark', 'hi
        ('security.selfSignUp', 'security', 'boolean', NULL, NULL, NULL, 'false',
         ARRAY['tenant'], false, 'Anyone may open a student account with iam.SignUp (LMS self-serve sign-up).', 20),
        ('security.selfSignUpRole', 'security', 'string', NULL, NULL, NULL, '',
-        ARRAY['tenant'], false, 'Code of the role granted to a self-registered account at the school it signed up at (never tenant-wide); empty = no role (an administrator grants one).', 30);
+        ARRAY['tenant'], false, 'Code of the role granted to a self-registered account at the school it signed up at (never tenant-wide); empty = no role (an administrator grants one).', 30),
+       ('directory.listedInSchoolFinder', 'directory', 'boolean', NULL, NULL, NULL, 'false',
+        ARRAY['institution'], false, 'The school is found by the public school finder of the apps (org.FindInstitutions); set only by its administrators, off until they opt in.', 10);
 
 -- The permission catalogue: every permission code a tenant user can be granted (the x-permission of each operation
 -- callable with a tenant user's token; conformance rule P1 checks it against the contracts). Ids are derived from the

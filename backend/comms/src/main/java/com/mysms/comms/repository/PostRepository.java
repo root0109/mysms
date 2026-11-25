@@ -49,12 +49,18 @@ public class PostRepository {
             field("createTime", "r.created_at", ValueType.TIMESTAMP),
             field("updateTime", "r.updated_at", ValueType.TIMESTAMP));
 
+    /** The feed's order: newest publication first (a post published without a time counts from its creation). */
+    public static final Map<String, FieldSpec> FEED_SORT_FIELDS = fields(
+            field("postedAt", "COALESCE(r.posted_at, r.created_at)", ValueType.TIMESTAMP));
+    public static final String FEED_ORDER = "postedAt,desc";
+
     public static final String DEFAULT_ORDER = "createTime";
     public static final String ID_COLUMN = "r.id";
 
     private static final Map<String, Function<PostEntity, Object>> SORT_VALUES = Map.ofEntries(
             Map.entry("createTime", PostEntity::getCreatedAt),
-            Map.entry("updateTime", PostEntity::getUpdatedAt));
+            Map.entry("updateTime", PostEntity::getUpdatedAt),
+            Map.entry("postedAt", e -> e.getPostedAt() != null ? e.getPostedAt() : e.getCreatedAt()));
 
     private static final String SELECT_LIVE = """
             SELECT r.id, r.tenant_id, r.institution_id, r.academic_year_id, r.class_page_id, r.author_user_id, r.body,
@@ -139,8 +145,62 @@ public class PostRepository {
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
+    /**
+     * The posts a member may read: published, and either their own, or on an active class page they are an active
+     * member of (a class page's posts never leave it), or addressed to the whole school of one of their institutions
+     * and on no class page. Posts for selected classes are admitted only to their author until comms knows who is in
+     * which class.
+     */
+    private static final String READABLE = """
+             (r.status = 'posted'
+              AND (r.author_user_id = :reader
+                   OR (r.class_page_id IS NOT NULL
+                       AND EXISTS (SELECT 1 FROM comms.class_page_member m
+                                    WHERE m.tenant_id = :tenantId
+                                      AND m.class_page_id = r.class_page_id AND m.user_id = :reader
+                                      AND m.is_active AND m.deleted_at IS NULL)
+                       AND EXISTS (SELECT 1 FROM comms.class_page p
+                                    WHERE p.tenant_id = :tenantId
+                                      AND p.id = r.class_page_id AND p.is_active AND p.deleted_at IS NULL))
+                   OR (r.class_page_id IS NULL AND r.visibility = 'all_classes'
+                       AND (:readerAll OR r.institution_id = ANY(:readerInstitutions)))))
+            """;
+    private static final String SAVED_BY_READER = """
+             EXISTS (SELECT 1 FROM comms.reaction s
+                      WHERE s.tenant_id = :tenantId
+                        AND s.post_id = r.id AND s.user_id = :saver AND s.is_saved AND s.deleted_at IS NULL)
+            """;
+    private static final String FOR_CLASS_SECTION = """
+             EXISTS (SELECT 1 FROM comms.post_audience_class a
+                      WHERE a.tenant_id = :tenantId
+                        AND a.post_id = r.id AND a.class_section_id = :classSectionId AND a.deleted_at IS NULL)
+            """;
+    /** comms.SubmitPost: allowed while status is draft. */
+    private static final String TRANSITION_SUBMIT_POST = """
+            UPDATE comms.post
+               SET status = 'pending',
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String IS_PAGE_MEMBER = """
+            SELECT EXISTS (SELECT 1 FROM comms.class_page_member m
+                            WHERE m.tenant_id = :tenantId
+                              AND m.class_page_id = :classPageId AND m.user_id = :userId AND m.is_active
+                              AND m.deleted_at IS NULL)
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
+            """;
+    /** A post on a class page stays on it: only its author and the page's active members read it. */
+    private static final String PAGE_ACCESS = """
+             (r.class_page_id IS NULL OR r.author_user_id = :pageReader
+              OR EXISTS (SELECT 1 FROM comms.class_page_member m
+                          WHERE m.tenant_id = :tenantId
+                            AND m.class_page_id = r.class_page_id AND m.user_id = :pageReader AND m.is_active
+                            AND m.deleted_at IS NULL))
             """;
 
     private final JdbcClient jdbc;
@@ -249,9 +309,65 @@ public class PostRepository {
                 .param("actor", actor).update();
     }
 
+    /** comms.SubmitPost; 0 rows means the row changed (or vanished) since it was read. */
+    public int submitPost(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_SUBMIT_POST)
+                .param("id", id)
+                .param("expected", expected)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Whether the user is an active member of the class page. */
+    public boolean isPageMember(UUID classPageId, UUID userId) {
+        return Boolean.TRUE.equals(jdbc.sql(IS_PAGE_MEMBER).param("classPageId", classPageId).param("userId", userId)
+                .query(Boolean.class).single());
+    }
+
+    /** The post, if this reader may read it (see {@link #readableBy}). */
+    public Optional<PostEntity> findReadable(UUID id, SqlFragment readable) {
+        String sql = FIND_BY_ID + " AND " + readable.sql();
+        return jdbc.sql(sql).param("id", id).params(readable.params()).query(PostRepository::map).optional();
+    }
+
+    /**
+     * The posts this reader may read, among the institutions they reach for the feed (school-wide posts) — the rule
+     * the feed, reactions and every member read share.
+     */
+    public static SqlFragment readableBy(UUID reader, DataScope scope) {
+        return new SqlFragment(READABLE, Map.of("reader", reader, "readerAll", scope.all(),
+                "readerInstitutions", scope.institutionArray()));
+    }
+
+    /** Posts the reader bookmarked. */
+    public static SqlFragment savedBy(UUID reader) {
+        return new SqlFragment(SAVED_BY_READER, Map.of("saver", reader));
+    }
+
+    /** Posts addressed to this class section. */
+    public static SqlFragment forClassSection(UUID classSectionId) {
+        return new SqlFragment(FOR_CLASS_SECTION, Map.of("classSectionId", classSectionId));
+    }
+
+    /** Posts on this class page. */
+    public static SqlFragment onClassPage(UUID classPageId) {
+        return new SqlFragment("r.class_page_id = :classPageId", Map.of("classPageId", classPageId));
+    }
+
     /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    /** Posts the reader may see by the class-page rule: on no page, their own, or on a page they are a member of. */
+    public static SqlFragment pageAccess(UUID reader) {
+        return new SqlFragment(PAGE_ACCESS, Map.of("pageReader", reader));
+    }
+
+    /** Whether the reader may see this post by the class-page rule of {@link #pageAccess}. */
+    public boolean pageAdmits(PostEntity post, UUID reader) {
+        return post.getClassPageId() == null || reader.equals(post.getAuthorUserId())
+                || isPageMember(post.getClassPageId(), reader);
     }
 
     private static List<Object> sortValues(SortSpec sort, PostEntity e) {

@@ -1,6 +1,7 @@
 package com.mysms.comms.business;
 
 import com.mysms.authclient.DataScope;
+import com.mysms.comms.api.model.CloseNoticeRepliesRequest;
 import com.mysms.comms.api.model.DeactivateNoticeRequest;
 import com.mysms.comms.api.model.Notice;
 import com.mysms.comms.api.model.NoticeAudience;
@@ -71,6 +72,7 @@ public class NoticeService extends AppTransactionManager {
     static final String PERMISSION_PUBLISH_NOTICE = "comms.notice.publish_notice";
     static final String PERMISSION_UNPUBLISH_NOTICE = "comms.notice.unpublish_notice";
     static final String PERMISSION_DEACTIVATE_NOTICE = "comms.notice.deactivate_notice";
+    static final String PERMISSION_CLOSE_NOTICE_REPLIES = "comms.notice.close_notice_replies";
     static final String PERMISSION_REACTIVATE_NOTICE = "comms.notice.reactivate_notice";
     /** The contract's NoticeUpdate fields, in apply order. */
     static final List<String> WRITABLE =
@@ -320,6 +322,38 @@ public class NoticeService extends AppTransactionManager {
             audit.recordTransition(AGGREGATE, id, "deactivate", List.of("isClosed"), request == null ? null
                     : request.getReason());
             outbox.publish(AGGREGATE + ".deactivate", AGGREGATE, id, CommsEvents.payload(id));
+            return mapper.toDto(repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    /**
+     * comms.CloseNoticeReplies: Stop accepting replies. Allowed while allow_replies is true, on a row the caller may
+     * see and write; otherwise 409 and nothing changes.
+     */
+    public Notice closeNoticeReplies(UUID id, CloseNoticeRepliesRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_CLOSE_NOTICE_REPLIES);
+        return doInWriteTransaction(() -> {
+            NoticeEntity entity = repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            if (!scope.canRead(institutionOf(entity))) {
+                throw new ResourceNotFoundException(AGGREGATE, id);
+            }
+            scope.requireWritable(institutionOf(entity));
+            OptionalInt expected = Etags.bodyVersion(request == null ? null : request.getEtag());
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!Boolean.TRUE.equals(entity.getAllowReplies())) {
+                throw new InvalidStateException("The notice does not accept replies.");
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            if (repository.closeNoticeReplies(id, entity.getRowVersion(), now, Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, "close_replies", List.of("allowReplies"), null);
+            outbox.publish(AGGREGATE + ".close_replies", AGGREGATE, id, CommsEvents.payload(id));
             return mapper.toDto(repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
         });

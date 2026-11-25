@@ -602,3 +602,52 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/* dashboards (ADM-01): one count per card */
+.stat-tiles {
+  display: grid;
+  gap: var(--sms-space-6);
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+}
+.stat-tile__value {
+  margin: 0 0 var(--sms-space-4);
+  font: var(--sms-font-h1);
+}
+
+/* role permission editor (ADM-10) and trees (ADM-02) */
+.permission-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  gap: var(--sms-space-3) var(--sms-space-6);
+  margin: var(--sms-space-5) 0 0;
+  border: 1px solid var(--sms-color-border);
+  border-radius: var(--sms-radius-md);
+  padding: var(--sms-space-5);
+}
+.permission-group legend {
+  font-weight: 600;
+}
+.permission-group__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sms-space-3);
+  min-block-size: 44px;
+}
+.tree {
+  margin: 0;
+  padding-inline-start: var(--sms-space-6);
+}
+.tree li {
+  padding-block: var(--sms-space-2);
+}
+
+/* ACC-09 inbox: an unread notification is bolder (its "Unread" label says so too, not the weight alone) */
+.feed__unread > span:first-child {
+  font-weight: 600;
+}
+
+/* COM-05 conversations: the caller's own messages sit on the other side, marked by the primary colour and by "You" */
+.thread__post--mine {
+  margin-left: var(--sms-space-6);
+  border-left-color: var(--sms-color-primary);
+}

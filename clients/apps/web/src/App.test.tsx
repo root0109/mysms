@@ -110,7 +110,7 @@ describe('inventory routing in the web app', () => {
     const { router } = renderApp('/app/auth/login');
     await fillAndSubmit();
     await router.navigate('/app/timetable/sessions?view=room');
-    expect(await screen.findByRole('heading', { name: 'TT-04 · Room/staff view' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Room/staff view' })).toBeInTheDocument();
     await router.navigate('/app/timetable/sessions');
     // the plain route is TT-02, built as its list manager
     expect(await screen.findByRole('heading', { name: 'Timetable builder' })).toBeInTheDocument();

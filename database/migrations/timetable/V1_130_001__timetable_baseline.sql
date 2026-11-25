@@ -137,6 +137,27 @@ CREATE INDEX ix_session_tenant_updated_at ON timetable.session (tenant_id, updat
 
 -- === P1-13: transactional outbox / inbox ===
 
+CREATE TABLE timetable.institution_zone (
+    tenant_id uuid NOT NULL,
+    institution_id uuid NOT NULL,
+    time_zone varchar(64),
+    is_deleted boolean NOT NULL DEFAULT false,
+    source_version integer NOT NULL,
+    synced_at timestamptz NOT NULL,
+    CONSTRAINT pk_timetable_institution_zone PRIMARY KEY (tenant_id, institution_id),
+    CONSTRAINT ck_institution_zone_source_version CHECK (source_version >= 1)
+);
+COMMENT ON TABLE timetable.institution_zone IS 'Each school''s own time zone, kept from org.institution created/updated/deleted events (timetable never calls org), so GenerateSessions places periods in the school''s zone instead of one the request names.';
+COMMENT ON COLUMN timetable.institution_zone.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
+COMMENT ON COLUMN timetable.institution_zone.institution_id IS 'org.institution.id (logical, maintained from its events).';
+COMMENT ON COLUMN timetable.institution_zone.time_zone IS 'IANA time zone of the school; NULL while it keeps the tenant''s (then the request names it).';
+COMMENT ON COLUMN timetable.institution_zone.is_deleted IS 'The school was deleted in org; kept so a late event cannot restore it.';
+COMMENT ON COLUMN timetable.institution_zone.source_version IS 'Row version of the org.institution row this entry reflects; an event with an older or equal version is ignored.';
+COMMENT ON COLUMN timetable.institution_zone.synced_at IS 'When the row was last changed by an event.';
+ALTER TABLE timetable.institution_zone ENABLE ROW LEVEL SECURITY;
+ALTER TABLE timetable.institution_zone FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON timetable.institution_zone USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+
 CREATE TABLE timetable.outbox_event (
     id bigint GENERATED ALWAYS AS IDENTITY,
     tenant_id uuid NOT NULL,
@@ -259,6 +280,7 @@ CREATE TABLE timetable.operation (
     started_by_user_id uuid,
     started_at timestamptz NOT NULL DEFAULT now(),
     finished_at timestamptz,
+    result text,
     created_at timestamptz NOT NULL DEFAULT now(),
     created_by uuid,
     updated_at timestamptz NOT NULL DEFAULT now(),
@@ -283,6 +305,7 @@ COMMENT ON COLUMN timetable.operation.result_entity_id IS 'Id of the produced re
 COMMENT ON COLUMN timetable.operation.started_by_user_id IS 'User who started it.';
 COMMENT ON COLUMN timetable.operation.started_at IS 'Start time.';
 COMMENT ON COLUMN timetable.operation.finished_at IS 'End time.';
+COMMENT ON COLUMN timetable.operation.result IS 'Outcome of a finished operation as a JSON object (counts, clashes); NULL while it runs and when it has none.';
 COMMENT ON COLUMN timetable.operation.created_at IS 'Row creation time.';
 COMMENT ON COLUMN timetable.operation.created_by IS 'User account that created the row (audit reference to iam.user_account; not FK-constrained).';
 COMMENT ON COLUMN timetable.operation.updated_at IS 'Last modification time (set by the application on every update).';

@@ -11,7 +11,6 @@ import com.mysms.comms.api.model.AudienceGroupMember;
 import com.mysms.comms.api.model.AudienceGroupMemberList;
 import com.mysms.comms.api.model.AudienceGroupMemberUpdate;
 import com.mysms.comms.api.model.AudienceGroupUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -20,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the AudienceGroup operations; authentication and the permission check already ran in the auth-client
- * filter. Operations not served yet answer 501.
+ * filter.
  */
 @RestController
 public class AudienceGroupController implements AudienceGroupApi {
@@ -34,7 +33,7 @@ public class AudienceGroupController implements AudienceGroupApi {
     @Override
     public ResponseEntity<AudienceGroupMemberList> addGroupMembers(UUID audienceGroupId,
             AddGroupMembersRequest addGroupMembersRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(audienceGroupService.addGroupMembers(audienceGroupId, addGroupMembersRequest));
     }
 
     @Override

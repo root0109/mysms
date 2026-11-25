@@ -1,5 +1,8 @@
 package com.mysms.comms.business;
 
+import com.mysms.core.error.PermissionDeniedException;
+import com.mysms.comms.api.model.MarkFeedbackMessageRequest;
+import com.mysms.authclient.AuthContext;
 import com.mysms.authclient.DataScope;
 import com.mysms.comms.api.model.CloseFeedbackThreadRequest;
 import com.mysms.comms.api.model.FeedbackMessage;
@@ -16,6 +19,7 @@ import com.mysms.comms.mapper.FeedbackMessageMapper;
 import com.mysms.comms.mapper.FeedbackThreadMapper;
 import com.mysms.comms.repository.FeedbackMessageRepository;
 import com.mysms.comms.repository.FeedbackThreadRepository;
+import com.mysms.comms.repository.MemberDirectory;
 import com.mysms.core.context.Actor;
 import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.AppTransactionManager;
@@ -52,7 +56,10 @@ import org.springframework.transaction.PlatformTransactionManager;
 /**
  * Business service of comms.feedback_thread and of the records that exist only as part of a FeedbackThread
  * (FeedbackMessage): audit and domain event commit in the same transaction as every change. Rows outside the caller's
- * institutions are invisible; tenant-level rows change only through a tenant-wide grant.
+ * institutions are invisible; tenant-level rows change only through a tenant-wide grant. A thread is reached — read,
+ * written to, changed — only by its guardian (the caller's account or person is the thread's guardian record), the
+ * staff member handling it, and the school side of its institution (those who mark feedback there); to anyone else it
+ * and its messages are 404. Only the school side opens a thread for someone else; a guardian opens it as themself.
  */
 @Service
 public class FeedbackThreadService extends AppTransactionManager {
@@ -74,10 +81,16 @@ public class FeedbackThreadService extends AppTransactionManager {
     static final String FEEDBACK_MESSAGE_PERMISSION_CREATE = "comms.feedback_message.create";
     static final String FEEDBACK_MESSAGE_PERMISSION_UPDATE = "comms.feedback_message.update";
     static final String FEEDBACK_MESSAGE_PERMISSION_DELETE = "comms.feedback_message.delete";
-    /** The contract's FeedbackMessageUpdate fields, in apply order. */
+    static final String PERMISSION_MARK_FEEDBACK_MESSAGE = "comms.feedback_message.mark_feedback_message";
+    /** The permission only the school side holds: whoever marks feedback in an institution reaches its threads. */
+    static final String PERMISSION_SCHOOL_SIDE = PERMISSION_MARK_FEEDBACK_MESSAGE;
+    /** The handling states in order: a message's state only moves forward. */
+    static final List<String> REVIEW_ORDER = List.of("new", "seen", "action_taken");
+    /** The contract's FeedbackMessageUpdate fields, in apply order; the sender is the caller, from the token. */
     static final List<String> FEEDBACK_MESSAGE_WRITABLE =
-            List.of("senderUserId", "category", "message", "attachmentFileId", "reviewStatus", "deletedBySender",
-            "deletedByReceiver");
+            List.of("category", "message", "attachmentFileId", "reviewStatus", "deletedBySender", "deletedByReceiver");
+    /** The fields only the school side (anyone but the sender) changes; the rest are the sender's own. */
+    static final Set<String> FEEDBACK_MESSAGE_RECEIVER_FIELDS = Set.of("reviewStatus", "deletedByReceiver");
 
     private final FeedbackThreadRepository repository;
     private final FeedbackThreadMapper mapper;
@@ -87,6 +100,7 @@ public class FeedbackThreadService extends AppTransactionManager {
     private final Clock clock;
     private final FeedbackMessageRepository feedbackMessageRepository;
     private final FeedbackMessageMapper feedbackMessageMapper;
+    private final MemberDirectory members;
 
     public FeedbackThreadService(FeedbackThreadRepository repository,
             FeedbackThreadMapper mapper,
@@ -97,7 +111,8 @@ public class FeedbackThreadService extends AppTransactionManager {
             DtoValidator validator,
             Clock clock,
             FeedbackMessageRepository feedbackMessageRepository,
-            FeedbackMessageMapper feedbackMessageMapper) {
+            FeedbackMessageMapper feedbackMessageMapper,
+            MemberDirectory members) {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
@@ -107,6 +122,7 @@ public class FeedbackThreadService extends AppTransactionManager {
         this.clock = clock;
         this.feedbackMessageRepository = feedbackMessageRepository;
         this.feedbackMessageMapper = feedbackMessageMapper;
+        this.members = members;
     }
 
     public FeedbackThread getFeedbackThread(UUID id) {
@@ -120,9 +136,11 @@ public class FeedbackThreadService extends AppTransactionManager {
         SortSpec sort =
                 SortSpec.parse(sortBy, FeedbackThreadRepository.SORT_FIELDS, FeedbackThreadRepository.DEFAULT_ORDER,
                 FeedbackThreadRepository.ID_COLUMN);
+        AuthContext caller = AuthContext.require();
         SqlFragment where = FilterParser.parse(filter, FeedbackThreadRepository.FILTER_FIELDS)
-                .and(FeedbackThreadRepository.scope(DataScope.current(PERMISSION_LIST)));
-        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+                .and(FeedbackThreadRepository.scope(DataScope.current(PERMISSION_LIST)))
+                .and(FeedbackThreadRepository.reachableBy(caller.userId(), caller.personId(), schoolSide()));
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + caller.userId(), clock);
         return doInReadTransaction(() -> {
             Page<FeedbackThreadEntity> rows = repository.list(page, where);
             return rows.map(mapper::toDto);
@@ -139,6 +157,7 @@ public class FeedbackThreadService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             assertValid(entity, true);
             scope.requireWritable(institutionOf(entity));
+            requireOpenedAsGuardianUnlessSchoolSide(entity);
             assertUnique(entity);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -170,6 +189,7 @@ public class FeedbackThreadService extends AppTransactionManager {
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
+            requireOpenedAsGuardianUnlessSchoolSide(entity);
             assertUnique(entity);
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
@@ -217,7 +237,7 @@ public class FeedbackThreadService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             FeedbackThreadEntity entity = repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
-            if (!scope.canRead(institutionOf(entity))) {
+            if (!scope.canRead(institutionOf(entity)) || !reaches(entity)) {
                 throw new ResourceNotFoundException(AGGREGATE, id);
             }
             scope.requireWritable(institutionOf(entity));
@@ -249,7 +269,7 @@ public class FeedbackThreadService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             FeedbackThreadEntity entity = repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
-            if (!scope.canRead(institutionOf(entity))) {
+            if (!scope.canRead(institutionOf(entity)) || !reaches(entity)) {
                 throw new ResourceNotFoundException(AGGREGATE, id);
             }
             scope.requireWritable(institutionOf(entity));
@@ -272,14 +292,49 @@ public class FeedbackThreadService extends AppTransactionManager {
         });
     }
 
-    /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
+    /** The live thread, if the caller may see it and reaches it; 404 otherwise. */
     private FeedbackThreadEntity loadVisible(DataScope scope, UUID id) {
         FeedbackThreadEntity entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
-        if (!scope.canRead(institutionOf(entity))) {
+        if (!scope.canRead(institutionOf(entity)) || !reaches(entity)) {
             throw new ResourceNotFoundException(AGGREGATE, id);
         }
         return entity;
+    }
+
+    /** Whether the caller is the thread's guardian, handles it, or works on the school side of its institution. */
+    private boolean reaches(FeedbackThreadEntity thread) {
+        AuthContext caller = AuthContext.require();
+        return caller.userId().equals(thread.getAssignedToUserId())
+                || thread.getInstitutionId() != null && schoolSide().canRead(institutionOf(thread))
+                || thread.getGuardianId() != null && members.isGuardian(thread.getGuardianId(), caller.userId(),
+                        caller.personId().orElse(null));
+    }
+
+    /** The institutions where the caller works on the school side; none without the permission. */
+    private static DataScope schoolSide() {
+        AuthContext caller = AuthContext.require();
+        return caller.hasPermission(PERMISSION_SCHOOL_SIDE) ? DataScope.of(caller, PERMISSION_SCHOOL_SIDE)
+                : new DataScope(false, Set.of(), false);
+    }
+
+    /** Anyone but the school side opens or keeps a thread only as the named student's guardian (403 otherwise). */
+    private void requireOpenedAsGuardianUnlessSchoolSide(FeedbackThreadEntity thread) {
+        if (thread.getInstitutionId() != null && schoolSide().canRead(institutionOf(thread))) {
+            return;
+        }
+        AuthContext caller = AuthContext.require();
+        if (!members.isGuardianOf(thread.getGuardianId(), thread.getStudentId(), caller.userId(),
+                caller.personId().orElse(null))) {
+            throw new PermissionDeniedException("A feedback thread is opened by the student's own guardian or by the "
+                    + "school.");
+        }
+    }
+
+    /** The thread the message belongs to, when the caller reaches it; 404 (as the thread) otherwise. */
+    private FeedbackThreadEntity reachableThread(UUID threadId) {
+        return repository.findById(threadId).filter(this::reaches)
+                .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, threadId));
     }
 
     /** The institution that owns the row. */
@@ -343,16 +398,18 @@ public class FeedbackThreadService extends AppTransactionManager {
                         .and(FeedbackMessageRepository.scope(DataScope.current(FEEDBACK_MESSAGE_PERMISSION_LIST)));
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + threadId, clock);
         return doInReadTransaction(() -> {
+            reachableThread(threadId);
             Page<FeedbackMessageEntity> rows = feedbackMessageRepository.list(page, where);
             return rows.map(feedbackMessageMapper::toDto);
         });
     }
 
-    /** Creates the row; with validateOnly every check runs and nothing is written. */
+    /** Creates the caller's message in the thread; with validateOnly every check runs and nothing is written. */
     public FeedbackMessage createFeedbackMessage(UUID threadId, FeedbackMessage request, boolean validateOnly) {
         validator.validate(request);
         FeedbackMessageEntity entity = feedbackMessageMapper.toEntity(request);
         entity.setThreadId(threadId);
+        entity.setSenderUserId(OwnRows.caller());
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
         DataScope scope = DataScope.current(FEEDBACK_MESSAGE_PERMISSION_CREATE);
@@ -363,6 +420,7 @@ public class FeedbackThreadService extends AppTransactionManager {
             if (!scope.canRead(institutionOfFeedbackMessage(entity))) {
                 throw new ResourceNotFoundException("comms.feedback_thread", entity.getThreadId());
             }
+            reachableThread(entity.getThreadId());
             assertValidFeedbackMessage(entity, true);
             scope.requireWritable(institutionOfFeedbackMessage(entity));
             assertUniqueFeedbackMessage(entity);
@@ -379,7 +437,9 @@ public class FeedbackThreadService extends AppTransactionManager {
 
     /**
      * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * non-null fields apply; the merged row must validate and stay in the caller's scope. The message's own fields
+     * change only by its sender (404 to anyone else); the handling state and the receiver's hiding only by the school
+     * side (403 for the sender), the state never moving back (409).
      */
     public FeedbackMessage updateFeedbackMessage(UUID threadId, UUID id, String ifMatch, FeedbackMessageUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -388,13 +448,18 @@ public class FeedbackThreadService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(FEEDBACK_MESSAGE_PERMISSION_UPDATE);
             FeedbackMessageEntity entity = loadVisibleFeedbackMessage(scope, threadId, id);
+            requireFieldsOwnedFeedbackMessage(entity, fields);
             scope.requireWritable(institutionOfFeedbackMessage(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
+            String reviewed = entity.getReviewStatus();
             applyFeedbackMessage(entity, changes, fields);
             validator.validate(feedbackMessageMapper.toDto(entity));
             assertValidFeedbackMessage(entity, false);
+            if (REVIEW_ORDER.indexOf(entity.getReviewStatus()) < REVIEW_ORDER.indexOf(reviewed)) {
+                throw new InvalidStateException("The message's handling state only moves forward.");
+            }
             scope.requireWritable(institutionOfFeedbackMessage(entity));
             assertUniqueFeedbackMessage(entity);
             entity.onUpdatingData(Actor.current(), clock);
@@ -412,12 +477,16 @@ public class FeedbackThreadService extends AppTransactionManager {
         });
     }
 
-    /** Soft delete under If-Match; refused while live rows of this module still reference the row. */
+    /**
+     * Soft delete of the caller's own message under If-Match (anyone else's is 404; the school side hides it with
+     * deletedByReceiver).
+     */
     public void deleteFeedbackMessage(UUID threadId, UUID id, String ifMatch) {
         int expected = Etags.expectedVersion(ifMatch);
         runInWriteTransaction(() -> {
             DataScope scope = DataScope.current(FEEDBACK_MESSAGE_PERMISSION_DELETE);
             FeedbackMessageEntity entity = loadVisibleFeedbackMessage(scope, threadId, id);
+            OwnRows.require(entity.getSenderUserId(), FEEDBACK_MESSAGE_AGGREGATE, id);
             scope.requireWritable(institutionOfFeedbackMessage(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -432,14 +501,68 @@ public class FeedbackThreadService extends AppTransactionManager {
         });
     }
 
+    /**
+     * comms.MarkFeedbackMessage: the school side records that a message was seen or acted on. The state only moves
+     * forward (new → seen → action taken; 409 otherwise), and nobody marks a message they sent themself (403).
+     */
+    public FeedbackMessage markFeedbackMessage(UUID id, MarkFeedbackMessageRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_MARK_FEEDBACK_MESSAGE);
+        String status = request.getReviewStatus().getValue();
+        UUID caller = OwnRows.caller();
+        return doInWriteTransaction(() -> {
+            FeedbackMessageEntity entity = feedbackMessageRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(FEEDBACK_MESSAGE_AGGREGATE, id));
+            if (!scope.canRead(institutionOfFeedbackMessage(entity))
+                    || repository.findById(entity.getThreadId()).filter(this::reaches).isEmpty()) {
+                throw new ResourceNotFoundException(FEEDBACK_MESSAGE_AGGREGATE, id);
+            }
+            scope.requireWritable(institutionOfFeedbackMessage(entity));
+            if (caller.equals(entity.getSenderUserId())) {
+                throw new PermissionDeniedException("The sender of a message does not mark it.");
+            }
+            if (REVIEW_ORDER.indexOf(status) <= REVIEW_ORDER.indexOf(entity.getReviewStatus())) {
+                throw new InvalidStateException("The message's handling state only moves forward.");
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            if (feedbackMessageRepository.markReviewStatus(id, entity.getRowVersion(), status, now,
+                    Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(FEEDBACK_MESSAGE_AGGREGATE, id, "mark_" + status, List.of("reviewStatus"), null);
+            outbox.publish(FEEDBACK_MESSAGE_AGGREGATE + ".mark_" + status, FEEDBACK_MESSAGE_AGGREGATE, id,
+                    CommsEvents.payload(id));
+            return feedbackMessageMapper.toDto(feedbackMessageRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(FEEDBACK_MESSAGE_AGGREGATE, id)));
+        });
+    }
+
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
     private FeedbackMessageEntity loadVisibleFeedbackMessage(DataScope scope, UUID threadId, UUID id) {
         FeedbackMessageEntity entity = feedbackMessageRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(FEEDBACK_MESSAGE_AGGREGATE, id));
-        if (!scope.canRead(institutionOfFeedbackMessage(entity)) || !threadId.equals(entity.getThreadId())) {
+        if (!scope.canRead(institutionOfFeedbackMessage(entity)) || !threadId.equals(entity.getThreadId())
+                || repository.findById(threadId).filter(this::reaches).isEmpty()) {
             throw new ResourceNotFoundException(FEEDBACK_MESSAGE_AGGREGATE, id);
         }
         return entity;
+    }
+
+    /**
+     * The sender changes the message's own fields and never the school side's (403); anyone else changes only the
+     * school side's, and the sender's message is not theirs to edit (404).
+     */
+    private static void requireFieldsOwnedFeedbackMessage(FeedbackMessageEntity entity, List<String> fields) {
+        boolean sender = OwnRows.caller().equals(entity.getSenderUserId());
+        for (String field : fields) {
+            boolean receiverField = FEEDBACK_MESSAGE_RECEIVER_FIELDS.contains(field);
+            if (sender && receiverField) {
+                throw new PermissionDeniedException("The sender of a message does not mark or hide it for the school.");
+            }
+            if (!sender && !receiverField) {
+                throw new ResourceNotFoundException(FEEDBACK_MESSAGE_AGGREGATE, entity.getId());
+            }
+        }
     }
 
     /** The institution of the comms.feedback_thread the row belongs to. */
@@ -451,7 +574,6 @@ public class FeedbackThreadService extends AppTransactionManager {
     private static void applyFeedbackMessage(FeedbackMessageEntity entity, FeedbackMessageUpdate changes, List<String> fields) {
         for (String field : fields) {
             switch (field) {
-                case "senderUserId" -> entity.setSenderUserId(changes.getSenderUserId());
                 case "category" -> entity.setCategory(Optional.ofNullable(changes.getCategory()).map(v -> v.getValue())
                         .orElse(null));
                 case "message" -> entity.setMessage(changes.getMessage());
@@ -470,9 +592,6 @@ public class FeedbackThreadService extends AppTransactionManager {
         List<FieldError> errors = new ArrayList<>();
         if (entity.getThreadId() == null) {
             errors.add(new FieldError("threadId", "must not be null", "NotNull"));
-        }
-        if (entity.getSenderUserId() == null) {
-            errors.add(new FieldError("senderUserId", "must not be null", "NotNull"));
         }
         if (entity.getCategory() == null) {
             errors.add(new FieldError("category", "must not be null", "NotNull"));

@@ -1934,7 +1934,7 @@ message Reservation {
   optional string reference = 3;
   // Requester. [UUID]
   optional string requested_by_person_id = 4;
-  // Requester account. [UUID]
+  // Requester account. [UUID] Output only: the caller, from the token.
   optional string requested_by_user_id = 5;
   // Wanted from. [ISO-8601 date (YYYY-MM-DD)]
   string date_from = 6;

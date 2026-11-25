@@ -12,7 +12,6 @@ import com.mysms.comms.api.model.ClassPageMember;
 import com.mysms.comms.api.model.ClassPageMemberUpdate;
 import com.mysms.comms.api.model.ClassPageUpdate;
 import com.mysms.comms.api.model.FollowClassPageRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the ClassPage operations; authentication and the permission check already ran in the auth-client filter.
- * Operations not served yet answer 501.
  */
 @RestController
 public class ClassPageController implements ClassPageApi {
@@ -94,7 +92,7 @@ public class ClassPageController implements ClassPageApi {
     @Override
     public ResponseEntity<ClassPageMember> followClassPage(UUID classPageId,
             FollowClassPageRequest followClassPageRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(classPageService.followClassPage(classPageId, followClassPageRequest));
     }
 
     @Override

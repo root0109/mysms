@@ -26,12 +26,12 @@ class LibraryControllerStubsTest {
         assertThat(ControllerStubs.count(AuthorController.class)).as("Author").isEqualTo(0);
         assertThat(ControllerStubs.count(LibraryCardController.class)).as("LibraryCard").isEqualTo(0);
         assertThat(ControllerStubs.count(LibraryCardTypeController.class)).as("LibraryCardType").isEqualTo(0);
-        assertThat(ControllerStubs.count(LoanController.class)).as("Loan").isEqualTo(4);
+        assertThat(ControllerStubs.count(LoanController.class)).as("Loan").isEqualTo(0);
         assertThat(ControllerStubs.count(MediaController.class)).as("Media").isEqualTo(0);
         assertThat(ControllerStubs.count(MediaCategoryController.class)).as("MediaCategory").isEqualTo(0);
         assertThat(ControllerStubs.count(MediaTypeController.class)).as("MediaType").isEqualTo(0);
         assertThat(ControllerStubs.count(PublisherController.class)).as("Publisher").isEqualTo(0);
         assertThat(ControllerStubs.count(PurchaseRequestController.class)).as("PurchaseRequest").isEqualTo(0);
-        assertThat(ControllerStubs.count(ReservationController.class)).as("Reservation").isEqualTo(1);
+        assertThat(ControllerStubs.count(ReservationController.class)).as("Reservation").isEqualTo(0);
     }
 }

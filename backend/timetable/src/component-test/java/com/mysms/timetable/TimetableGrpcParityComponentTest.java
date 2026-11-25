@@ -49,8 +49,8 @@ import tools.jackson.databind.node.ObjectNode;
  * refuse alike — 403 without the permission, 404 for an absent row and another tenant's row, 409 for a duplicate, 412
  * for a stale etag, 428 without one, 422 for an invalid body; a session's four steps change it the same way and are
  * refused alike; the timetable view answers the same sessions page by page; the module's operations are read, listed
- * and cancelled alike; the two operations this release does not serve are 501 on both; a step retried with its
- * request_id answers the first result.
+ * and cancelled alike; generating sessions from a weekly pattern and confirming them in a batch answer and refuse
+ * alike; a step retried with its request_id answers the first result.
  */
 @SpringBootTest(classes = TimetableApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = GrpcParity.IN_PROCESS_SERVER + "=TimetableGrpcParityComponentTest")
@@ -487,28 +487,78 @@ class TimetableGrpcParityComponentTest {
                 grpc(cancel, set(request(cancel), "operation_id", absent).build(), ADMIN));
     }
 
-    // ---- the operations this release does not serve
+    // ---- generating sessions from a weekly pattern, and confirming them in a batch
 
+    private String pattern(String classSection, String period, String staff) {
+        return "{\"institutionId\":\"" + INSTITUTION + "\",\"classSectionId\":\"" + classSection
+                + "\",\"startDate\":\"2026-03-02\",\"endDate\":\"2026-03-15\",\"timeZone\":\"Asia/Kolkata\","
+                + "\"slots\":[{\"weekday\":1,\"periodId\":\"" + period + "\",\"subjectId\":\"" + UUID.randomUUID()
+                + "\",\"staffId\":\"" + staff + "\"},{\"weekday\":3,\"periodId\":\"" + period + "\",\"subjectId\":\""
+                + UUID.randomUUID() + "\",\"staffId\":\"" + staff + "\"}]}";
+    }
+
+    private static DynamicMessage json(MethodDescriptor rpc, String body) throws Exception {
+        DynamicMessage.Builder builder = request(rpc);
+        com.google.protobuf.util.JsonFormat.parser().merge(body, builder);
+        return builder.build();
+    }
+
+    /** In a tenant of its own, so the runs it records do not reach the operation listing above. */
     @Test
-    void theOperationsThisReleaseDoesNotServeAre501OnBoth() throws Exception {
-        String session = UUID.randomUUID().toString();
-        MethodDescriptor confirm = rpc("BatchConfirmSessions");
-        Answer confirmed = rest("POST", "/v1/timetable/sessions:batchConfirm", ADMIN, "{\"sessionIds\":[\"" + session
-                + "\"]}");
-        assertThat(confirmed.status()).as(confirmed.body().toString()).isEqualTo(501);
-        GrpcParityContract.assertSameAnswer(confirmed, grpc(confirm, request(confirm)
-                .addRepeatedField(confirm.getInputType().findFieldByName("session_ids"), session).build(), ADMIN));
+    void generatingAndBatchConfirmingSessionsAnswerLikeRest() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        String admin = token(tenant, List.of("timetable.*"));
+        String nobody = token(tenant, List.of());
+        String period = UUID.randomUUID().toString();
+        fixtures(tenant, List.of("INSERT INTO timetable.period (id, tenant_id, institution_id, name, start_time,"
+                + " duration_minutes, row_version) VALUES ('" + period + "', :tenant, '" + INSTITUTION
+                + "', 'Parity period', '09:00', 45, 1)"));
         MethodDescriptor generate = rpc("GenerateSessions");
-        Answer generated = rest("POST", "/v1/timetable/sessions:generate", ADMIN, "{\"institutionId\":\"" + INSTITUTION
-                + "\",\"classSectionId\":\"" + session + "\",\"startDate\":\"2026-03-02\",\"endDate\":\"2026-03-06\","
-                + "\"slots\":[{\"weekday\":1,\"periodId\":\"" + session + "\",\"subjectId\":\"" + session
-                + "\",\"staffId\":\"" + session + "\"}]}");
-        assertThat(generated.status()).as(generated.body().toString()).isEqualTo(501);
-        GrpcParityContract.assertSameAnswer(generated, grpc(generate, set(set(set(request(generate), "institution_id",
-                INSTITUTION), "start_date", "2026-03-02"), "end_date", "2026-03-06").build(), ADMIN));
-        assertThat(grpc(generate, request(generate).build(), null).status()).as("authentication first, as on REST")
+        String overRest = pattern(UUID.randomUUID().toString(), period, UUID.randomUUID().toString());
+        String overGrpc = pattern(UUID.randomUUID().toString(), period, UUID.randomUUID().toString());
+        Answer byRest = rest("POST", "/v1/timetable/sessions:generate", admin, overRest);
+        Answer byGrpc = grpc(generate, json(generate, overGrpc), admin);
+        assertThat(byRest.status()).as(byRest.body().toString()).isEqualTo(202);
+        assertThat(byGrpc.status()).as("GenerateSessions: " + byGrpc.code()).isEqualTo(200);
+        JsonNode restRun = byRest.body();
+        JsonNode grpcRun = byGrpc.body().path("result");
+        assertThat(grpcRun.path("status").asString()).isEqualTo(restRun.path("status").asString())
+                .isEqualTo("succeeded");
+        for (String count : List.of("created", "kept", "clashCount")) {
+            assertThat(grpcRun.path("result").path(count).asInt()).as(count)
+                    .isEqualTo(restRun.path("result").path(count).asInt());
+        }
+        assertThat(restRun.path("result").path("created").asInt()).isEqualTo(4);
+        Answer again = grpc(generate, json(generate, overGrpc), admin);
+        assertThat(again.body().path("result").path("result").path("kept").asInt()).as("a re-run keeps them")
+                .isEqualTo(4);
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/timetable/sessions:generate", admin,
+                        overRest.replace("Asia/Kolkata", "Mars/Olympus")),
+                grpc(generate, json(generate, overGrpc.replace("Asia/Kolkata", "Mars/Olympus")), admin));
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/timetable/sessions:generate", nobody, overRest),
+                grpc(generate, json(generate, overGrpc), nobody));
+        assertThat(grpc(generate, json(generate, overGrpc), null).status()).as("authentication first, as on REST")
                 .isEqualTo(401);
-        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/timetable/sessions:batchConfirm", NOBODY, "{\"sessionIds\":[\""
-                + session + "\"]}"), grpc(confirm, request(confirm).build(), NOBODY));
+
+        MethodDescriptor confirm = rpc("BatchConfirmSessions");
+        List<String> drafts = ids(rest("GET", "/v1/timetable/sessions?filter=periodId%20%3D%20%22" + period
+                + "%22&size=10", admin, null).body().path("data"), "id");
+        assertThat(drafts).hasSize(8);
+        Answer confirmedByRest = rest("POST", "/v1/timetable/sessions:batchConfirm", admin, "{\"sessionIds\":[\""
+                + drafts.get(0) + "\",\"" + drafts.get(1) + "\"]}");
+        Answer confirmedByGrpc = grpc(confirm, json(confirm, "{\"sessionIds\":[\"" + drafts.get(2) + "\",\""
+                + drafts.get(3) + "\"]}"), admin);
+        assertThat(confirmedByRest.status()).as(confirmedByRest.body().toString()).isEqualTo(200);
+        assertThat(confirmedByGrpc.status()).as("BatchConfirmSessions: " + confirmedByGrpc.code()).isEqualTo(200);
+        assertThat(confirmedByRest.body().path("items").get(0).path("status").asString()).isEqualTo("confirmed");
+        GrpcParity.assertSameResource(rest("GET", "/v1/timetable/sessions/" + drafts.get(2), admin, null).body(),
+                confirmedByGrpc.body().path("items").get(0));
+        String unknown = UUID.randomUUID().toString();
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/timetable/sessions:batchConfirm", admin,
+                        "{\"sessionIds\":[\"" + unknown + "\"]}"),
+                grpc(confirm, json(confirm, "{\"sessionIds\":[\"" + unknown + "\"]}"), admin));
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/timetable/sessions:batchConfirm", nobody,
+                        "{\"sessionIds\":[\"" + drafts.get(4) + "\"]}"),
+                grpc(confirm, json(confirm, "{\"sessionIds\":[\"" + drafts.get(4) + "\"]}"), nobody));
     }
 }

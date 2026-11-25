@@ -15,7 +15,7 @@ import {
   type ConsentSubject,
   type MyConsent,
 } from '@mysms/core';
-import { CATALOGS, enumLabel, type MessageKey } from '@mysms/i18n';
+import { enumLabel, LOCALES, type MessageKey } from '@mysms/i18n';
 import {
   Banner,
   Button,
@@ -38,7 +38,6 @@ const STATUS_INTENT: Readonly<Record<NonNullable<MyConsent['myStatus']>, StatusC
 };
 
 /** The languages a notice can be asked for: those the app has a catalogue for (the server falls back to English). */
-const NOTICE_LANGUAGES = Object.keys(CATALOGS);
 
 /**
  * ACC-13 Consent centre (ui/02; design PRIVACY-AND-CONSENT-CENTRE §12): one card per purpose the school asks about,
@@ -245,7 +244,7 @@ function DecisionDialog({
   onSaved: () => void;
 }) {
   const { t, format, locale } = useI18n();
-  const [language, setLanguage] = useState(NOTICE_LANGUAGES.includes(locale) ? locale : 'en');
+  const [language, setLanguage] = useState(LOCALES.includes(locale) ? locale : 'en');
   const notice = useMyNotice(row.noticeCode ?? null, language);
   const record = useRecordMyConsent();
   const widths = row.allowedScopes.length > 1;
@@ -300,7 +299,7 @@ function DecisionDialog({
         <h3>{t('privacy.consentCentre.notice.title')}</h3>
         <SelectField
           label={t('privacy.consentCentre.notice.language')}
-          options={NOTICE_LANGUAGES.map((code) => ({
+          options={LOCALES.map((code) => ({
             value: code,
             label: t(`setting.value.${code}` as MessageKey),
           }))}

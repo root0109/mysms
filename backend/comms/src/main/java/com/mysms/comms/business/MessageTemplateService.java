@@ -114,8 +114,9 @@ public class MessageTemplateService extends AppTransactionManager {
             }
             MessageTemplateEntity stored = repository.insert(entity);
             audit.recordCreate(AGGREGATE, stored.getId());
-            outbox.publish(AGGREGATE + CommsEvents.CREATED, AGGREGATE, stored.getId(),
-                    CommsEvents.payload(stored.getId()));
+            outbox.publish(AGGREGATE + CommsEvents.CREATED, AGGREGATE, stored.getId(), CommsEvents.template(
+                    stored.getId(), stored.getInstitutionId(), Boolean.TRUE.equals(stored.getIsActive()),
+                    stored.getRowVersion()));
             return mapper.toDto(stored);
         });
     }
@@ -149,7 +150,8 @@ public class MessageTemplateService extends AppTransactionManager {
             }
             entity.setRowVersion(expected + 1);
             audit.recordUpdate(AGGREGATE, id, fields);
-            outbox.publish(AGGREGATE + CommsEvents.UPDATED, AGGREGATE, id, CommsEvents.payload(id));
+            outbox.publish(AGGREGATE + CommsEvents.UPDATED, AGGREGATE, id, CommsEvents.template(id,
+                    entity.getInstitutionId(), Boolean.TRUE.equals(entity.getIsActive()), entity.getRowVersion()));
             return mapper.toDto(entity);
         });
     }
@@ -173,7 +175,8 @@ public class MessageTemplateService extends AppTransactionManager {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
             audit.recordDelete(AGGREGATE, id);
-            outbox.publish(AGGREGATE + CommsEvents.DELETED, AGGREGATE, id, CommsEvents.payload(id));
+            outbox.publish(AGGREGATE + CommsEvents.DELETED, AGGREGATE, id, CommsEvents.template(id,
+                    entity.getInstitutionId(), false, expected + 1));
         });
     }
 

@@ -9,6 +9,8 @@ export interface FakeRecordType {
   item: string;
   /** Required body fields (422 when absent). */
   required: string[];
+  /** Fields the server sets from the token on create, whatever the body says (field → the caller's id). */
+  fromToken?: Record<string, string>;
   rows?: Record<string, unknown>[];
 }
 
@@ -37,22 +39,39 @@ export function fakeRecords(type: FakeRecordType): Record<string, Handler> {
     return null;
   };
   return {
-    [`GET ${type.collection}`]: (req) => {
+    [`GET ${type.collection}`]: (req, p) => {
       const url = new URL(req.url);
       const filter = url.searchParams.get('filter') ?? '';
-      const match = /^(\w+) : "(.*)"$/.exec(filter);
-      let all = [...rows.keys()].map((id) => out(id) as Record<string, unknown>);
-      if (match) {
-        const [, field, text] = match as unknown as [string, string, string];
-        all = all.filter((r) =>
-          String(r[field] ?? '')
-            .toLowerCase()
-            .includes(text.toLowerCase()),
-        );
+      let all = [...rows.keys()]
+        .map((id) => out(id) as Record<string, unknown>)
+        // a nested record type lists the rows of the parent named in its path
+        .filter((r) => Object.entries(p).every(([name, value]) => r[name] === value));
+      // terms joined by AND, each one comparison or several joined by OR: `a : "x"` contains, `a = "x"` equals,
+      // `a >= "x"` (and >, <, <=) compares as text — ISO dates and times order that way; `a = true`, `a = false` and
+      // `a = null` compare a switch or an absent value
+      for (const term of filter ? filter.split(' AND ') : []) {
+        const alternatives = term
+          .replace(/^\(|\)$/g, '')
+          .split(' OR ')
+          .map((one) => /^\(?(\w+) (:|=|>=|<=|>|<) (?:"(.*?)"|(true|false|null))\)?$/.exec(one.trim()));
+        if (alternatives.some((one) => one === null)) continue;
+        const holds = (r: Record<string, unknown>, [, field, op, quoted, bare]: RegExpExecArray) => {
+          if (bare === 'null') return r[field as string] === undefined || r[field as string] === null;
+          // a seed row that leaves a switch out is not narrowed by it (the fixtures predate switch filters)
+          if (bare && r[field as string] === undefined) return true;
+          const value = String(r[field as string] ?? '');
+          const wanted = (quoted ?? bare) as string;
+          if (op === ':') return value.toLowerCase().includes(wanted.toLowerCase());
+          if (op === '=') return value === wanted;
+          if (op === '>=') return value >= wanted;
+          if (op === '<=') return value <= wanted;
+          return op === '>' ? value > wanted : value < wanted;
+        };
+        all = all.filter((r) => alternatives.some((one) => holds(r, one as RegExpExecArray)));
       }
       return pageOf(req, all);
     },
-    [`POST ${type.collection}`]: async (req) => {
+    [`POST ${type.collection}`]: async (req, p) => {
       const body = (await req.json()) as Record<string, unknown>;
       const missing = type.required.filter((f) => body[f] === undefined || body[f] === '');
       if (missing.length > 0)
@@ -60,7 +79,7 @@ export function fakeRecords(type: FakeRecordType): Record<string, Handler> {
           errors: missing.map((field) => ({ field, message: 'must not be null', code: 'NotNull' })),
         });
       const id = newId();
-      rows.set(id, { row: { ...body, id }, version: 1 });
+      rows.set(id, { row: { ...body, ...type.fromToken, ...p, id }, version: 1 });
       return json(out(id), { status: 201, headers: { ETag: '"1"' } });
     },
     [`GET ${type.item}`]: (_req, p) => {

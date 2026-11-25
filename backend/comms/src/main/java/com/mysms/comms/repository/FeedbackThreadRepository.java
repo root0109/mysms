@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -119,6 +120,25 @@ public class FeedbackThreadRepository {
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
             """;
+    /**
+     * The threads the caller reaches: those handled by them, every thread of the institutions where they work on the
+     * school side, and those opened as a guardian record that is the caller's account.
+     */
+    private static final String REACHABLE = """
+             (r.assigned_to_user_id = :reachUser
+              OR (:schoolSide AND (:schoolAll OR r.institution_id = ANY(:schoolIds)))
+              OR r.guardian_id IN (SELECT g.guardian_id FROM comms.guardian_link g
+                                    WHERE g.tenant_id = :tenantId AND NOT g.is_deleted AND g.status = 'active'
+                                      AND g.guardian_user_id = :reachUser))
+            """;
+    /** {@link #REACHABLE}, and the threads opened as a guardian record that is the caller's person. */
+    private static final String REACHABLE_WITH_PERSON = """
+             (r.assigned_to_user_id = :reachUser
+              OR (:schoolSide AND (:schoolAll OR r.institution_id = ANY(:schoolIds)))
+              OR r.guardian_id IN (SELECT g.guardian_id FROM comms.guardian_link g
+                                    WHERE g.tenant_id = :tenantId AND NOT g.is_deleted AND g.status = 'active'
+                                      AND (g.guardian_user_id = :reachUser OR g.guardian_person_id = :reachPerson)))
+            """;
 
     private final JdbcClient jdbc;
 
@@ -201,6 +221,15 @@ public class FeedbackThreadRepository {
                 .param("expected", expected)
                 .param("now", now)
                 .param("actor", actor).update();
+    }
+
+    /** The threads the account and person reach, the school side's institutions given as a scope. */
+    public static SqlFragment reachableBy(UUID user, Optional<UUID> person, DataScope schoolSide) {
+        Map<String, Object> params = new HashMap<>(Map.of("reachUser", user, "schoolSide",
+                schoolSide.all() || !schoolSide.institutions().isEmpty(), "schoolAll", schoolSide.all(), "schoolIds",
+                schoolSide.institutionArray()));
+        person.ifPresent(p -> params.put("reachPerson", p));
+        return new SqlFragment(person.isPresent() ? REACHABLE_WITH_PERSON : REACHABLE, params);
     }
 
     /** Rows of the caller's institutions only. */

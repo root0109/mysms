@@ -4293,7 +4293,7 @@ message ConversationMessage {
   string id = 1;
   // Conversation. [UUID] Set from the parent path on create.
   string conversation_id = 2;
-  // Sender. [UUID]
+  // Sender. [UUID] Output only: the caller, from the token.
   string sender_user_id = 3;
   // Message.
   string body = 4;
@@ -4351,7 +4351,7 @@ message FeedbackMessage {
   string id = 1;
   // Thread. [UUID] Set from the parent path on create.
   string thread_id = 2;
-  // Sender. [UUID]
+  // Sender. [UUID] Output only: the caller, from the token.
   string sender_user_id = 3;
   // Category.
   Category category = 4;
@@ -4771,7 +4771,7 @@ message Post {
   string academic_year_id = 3;
   // Page posted on. [UUID]
   optional string class_page_id = 4;
-  // Author. [UUID]
+  // Author. [UUID] Output only: the caller, from the token.
   string author_user_id = 5;
   // Post text.
   string body = 6;
@@ -4843,7 +4843,7 @@ message PostReaction {
   string id = 1;
   // Post. [UUID] Set from the parent path on create.
   string post_id = 2;
-  // User. [UUID]
+  // User. [UUID] Output only: the caller, from the token.
   string user_id = 3;
   // Reaction.
   optional Reaction reaction = 4;
@@ -4879,7 +4879,7 @@ message PostComment {
   string post_id = 2;
   // Comment replied to. [UUID]
   optional string parent_comment_id = 3;
-  // Author. [UUID]
+  // Author. [UUID] Output only: the caller, from the token.
   string author_user_id = 4;
   // Comment text.
   optional string body = 5;
@@ -4905,7 +4905,7 @@ message CommentReaction {
   string id = 1;
   // Comment. [UUID]
   string comment_id = 2;
-  // User. [UUID]
+  // User. [UUID] Output only: the caller, from the token.
   string user_id = 3;
   // Reaction.
   optional Reaction reaction = 4;

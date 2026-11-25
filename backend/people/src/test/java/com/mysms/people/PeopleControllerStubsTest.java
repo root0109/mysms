@@ -18,7 +18,7 @@ class PeopleControllerStubsTest {
     @Test
     void unservedOperationsAnswerNotImplemented() {
         assertThat(ControllerStubs.count(HonorificController.class)).as("Honorific").isEqualTo(0);
-        assertThat(ControllerStubs.count(PersonController.class)).as("Person").isEqualTo(2);
+        assertThat(ControllerStubs.count(PersonController.class)).as("Person").isEqualTo(0);
         assertThat(ControllerStubs.count(QualificationController.class)).as("Qualification").isEqualTo(0);
         assertThat(ControllerStubs.count(SkillController.class)).as("Skill").isEqualTo(0);
     }

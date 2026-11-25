@@ -32,4 +32,5 @@ public class OperationEntity extends BaseEntity {
     private UUID startedByUserId;
     private OffsetDateTime startedAt;
     private OffsetDateTime finishedAt;
+    private String result;
 }

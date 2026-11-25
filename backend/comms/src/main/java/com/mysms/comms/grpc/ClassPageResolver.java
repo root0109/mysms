@@ -40,7 +40,6 @@ import com.mysms.comms.v1.UpdateClassPageMemberRequest;
 import com.mysms.comms.v1.UpdateClassPageMemberResponse;
 import com.mysms.comms.v1.UpdateClassPageRequest;
 import com.mysms.comms.v1.UpdateClassPageResponse;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import io.grpc.stub.StreamObserver;
@@ -188,9 +187,11 @@ public class ClassPageResolver extends ClassPageServiceGrpc.ClassPageServiceImpl
         ProtoBridge.send(out, DeleteClassPageMemberResponse.getDefaultInstance());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void followClassPage(FollowClassPageRequest request, StreamObserver<FollowClassPageResponse> out) {
-        throw new NotImplementedException();
+        ClassPageMember member = service.followClassPage(bridge.id(request.getClassPageId(), "classPageId"),
+                bridge.body(request, com.mysms.comms.api.model.FollowClassPageRequest.class, "class_page_id",
+                        "request_id"));
+        ProtoBridge.send(out, bridge.reply(FollowClassPageResponse.newBuilder(), "result", member).build());
     }
 }

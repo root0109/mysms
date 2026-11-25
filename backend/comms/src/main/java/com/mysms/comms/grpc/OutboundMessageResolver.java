@@ -1,5 +1,6 @@
 package com.mysms.comms.grpc;
 
+import com.mysms.comms.api.model.SendResult;
 import com.mysms.comms.api.model.OutboundMessage;
 import com.mysms.comms.business.OutboundMessageService;
 import com.mysms.comms.v1.CancelOutboundMessageRequest;
@@ -13,7 +14,6 @@ import com.mysms.comms.v1.RetryOutboundMessageRequest;
 import com.mysms.comms.v1.RetryOutboundMessageResponse;
 import com.mysms.comms.v1.SendMessageRequest;
 import com.mysms.comms.v1.SendMessageResponse;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import io.grpc.stub.StreamObserver;
@@ -48,21 +48,32 @@ public class OutboundMessageResolver extends OutboundMessageServiceGrpc.Outbound
         ProtoBridge.send(out, bridge.reply(GetOutboundMessageResponse.newBuilder(), "outbound_message", found).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void sendMessage(SendMessageRequest request, StreamObserver<SendMessageResponse> out) {
-        throw new NotImplementedException();
+        SendResult sent = service.sendMessage(bridge.body(request, com.mysms.comms.api.model.SendMessageRequest.class,
+                "request_id"));
+        ProtoBridge.send(out, bridge.reply(SendMessageResponse.newBuilder(), "result", sent).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
+    /** The REST body (the workflow etag) is the request without its path id and idempotency key. */
     @Override
     public void cancelOutboundMessage(CancelOutboundMessageRequest request, StreamObserver<CancelOutboundMessageResponse> out) {
-        throw new NotImplementedException();
+        OutboundMessage changed = service.cancelOutboundMessage(
+                bridge.id(request.getOutboundMessageId(), "outboundMessageId"),
+                bridge.body(request, com.mysms.comms.api.model.CancelOutboundMessageRequest.class,
+                        "outbound_message_id", "request_id"));
+        ProtoBridge.send(out, bridge.reply(CancelOutboundMessageResponse.newBuilder(), "outbound_message", changed)
+                .build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
+    /** The REST body (the workflow etag) is the request without its path id and idempotency key. */
     @Override
     public void retryOutboundMessage(RetryOutboundMessageRequest request, StreamObserver<RetryOutboundMessageResponse> out) {
-        throw new NotImplementedException();
+        OutboundMessage changed = service.retryOutboundMessage(
+                bridge.id(request.getOutboundMessageId(), "outboundMessageId"),
+                bridge.body(request, com.mysms.comms.api.model.RetryOutboundMessageRequest.class,
+                        "outbound_message_id", "request_id"));
+        ProtoBridge.send(out, bridge.reply(RetryOutboundMessageResponse.newBuilder(), "outbound_message", changed)
+                .build());
     }
 }

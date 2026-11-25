@@ -514,3 +514,90 @@ Suites, gates and commands: [`BUILD-AND-RUN.md`](BUILD-AND-RUN.md) §3.
 | 409 `REQUEST_IN_PROGRESS` | The first request with that key is still running; a lock older than two minutes is taken over by the retry. |
 | 500 with `unreadable secret envelope` or `does not open for this tenant` in the log | The key that wrote the value is no longer in `MYSMS_SECRETS_KEYS`; put it back. |
 | `mfaRequired: true` and no tokens | Expected for accounts with an authenticator app: `POST /v1/iam/mfa:complete` with the `mfaToken` within five minutes. |
+
+## 12. Pilot demo data
+
+The `demo-seed` module (`backend/demo-seed`) fills one **temporary demo tenant** with a coherent, invented Indian school
+for pilots and demonstrations, and removes it again. It is a plain Java program that drives the **public REST API** of a
+running MySMS (monolith or services), so every row passes validation, permissions, row-level security, events and audit
+like any user's; it never writes SQL. It is not part of the monolith or of any service.
+
+**What it makes** (in this order: org → academics → hr → sis → iam → teaching → timetable → attendance):
+
+- *Sunrise Valley Public School* (`SVPS`), the current academic year (1 April – 31 March) with two terms, five departments;
+- grades 1–10 with sections A and B (20 class sections), eight subjects and each class's subjects;
+- the principal, 22 teachers (20 of them class teachers), a school administrator, an office assistant, an accountant and a
+  librarian, with designations and people records;
+- 15 students per class (300; `-Dmysms.demo.studentsPerClass`), each with a guardian of the same family, enrolled with a
+  roll number;
+- the demo roles and the eight personas below;
+- teaching assignments for every class subject; six periods a day and the confirmed sessions of every class, Monday to
+  Saturday, for this week and the past three weeks (`-Dmysms.demo.pastWeeks`);
+- a register per class and the first-period roll call of every past school day, with a few students absent or late.
+
+Every name is drawn at random (fixed seed `-Dmysms.demo.seed`, default `20261118`) from common given and family names, so
+no real person is described, and every mail address is on the reserved domain `sunrisevalley.example`. The same seed and
+day give the same school. Not yet seeded: assessment, finance, library, transport, admission, front office, facility,
+payroll, comms, LMS and careers (ROADMAP.md).
+
+**1. Make the tenant.** In this release only iam's installation bootstrap (§5.3) creates a tenant together with its first
+administrator, and iam issues no platform-staff tokens, so `platform.CreateTenant` cannot be used for it. Start MySMS once
+with
+
+```bash
+export MYSMS_IAM_BOOTSTRAP_TENANT_CODE=demo-20261118          # must start with demo-
+export MYSMS_IAM_BOOTSTRAP_ADMIN_USERNAME=admin
+export MYSMS_IAM_BOOTSTRAP_ADMIN_PASSWORD='<at least 12 characters>'
+```
+
+A tenant that already exists keeps its data; another installation's tenants are not touched.
+
+**2. Seed it.** Credentials come only from environment variables (never the command line, never logged):
+
+```bash
+cd backend
+export MYSMS_DEMO_ADMIN_USERNAME=admin MYSMS_DEMO_ADMIN_PASSWORD='<the bootstrap password>'
+export MYSMS_DEMO_PERSONA_PASSWORD='<at least 12 characters, for every demo sign-in>'
+mvn -pl demo-seed exec:java -Dmysms.demo.baseUrl=https://sms.example.org -Dmysms.demo.action=seed \
+    -Dmysms.demo.tenantCode=demo-20261118
+```
+
+`baseUrl` is the origin that serves `/v1` (the API is called at `<baseUrl>/v1/…`). The tenant code defaults to
+`demo-<today>`. The run writes its manifest to `demo-manifests/<tenant code>.json` (`-Dmysms.demo.manifestDir`): the
+tenant id, the rows per module, any operation skipped because this release answers it 501, and the persona usernames —
+never a password. **Running it again is safe**: every row is found by its natural key (codes, admission and employee
+numbers, mail addresses, dates) and only what is missing is created; demo roles are brought back to exactly their
+permission set.
+
+**3. Sign in as a persona** — tenant code as above, password `MYSMS_DEMO_PERSONA_PASSWORD`:
+
+| Persona | Username | Holds |
+|---|---|---|
+| School administrator | `schooladmin` | iam's `administrator` role at the school only |
+| Principal | `principal` | `demo_principal`: runs academics, students, attendance, assessment, timetable, admission, communication, front office, staff, LMS and facilities; reads finance, library, transport and payroll |
+| Teacher | `teacher` | `demo_teacher` (a secondary subject teacher without a class) |
+| Class teacher | `classteacher` | `demo_teacher` and `demo_class_teacher` for class 10-A |
+| Accountant | `accountant` | `demo_accountant`: finance and payroll |
+| Librarian | `librarian` | `demo_librarian`: the library |
+| Student | `student` | `student`, the first student of 10-A (also the role sis grants every student portal account) |
+| Guardian | `parent` | `guardian`, that student's guardian |
+
+The staff, student and guardian records are linked to these accounts through their own portal-account operations, so
+"my timetable", "my children" and the student summary show the persona's own data.
+
+**4. Remove it** with a platform operator's access token (audience `mysms-platform-admin`, MFA; permissions
+`platform.tenant.read` and `platform.tenant.delete`):
+
+```bash
+export MYSMS_DEMO_PLATFORM_TOKEN='<token>'
+mvn -pl demo-seed exec:java -Dmysms.demo.baseUrl=https://sms.example.org -Dmysms.demo.action=remove \
+    -Dmysms.demo.tenantCode=demo-20261118
+```
+
+`remove` reads the manifest and deletes exactly the tenant it names (`platform.DeleteTenant`), and only when the platform
+still knows that tenant under that code; iam then closes it, so nobody can sign in to it any more. The rows stay in the
+modules' schemas, invisible to every other tenant. iam does not issue platform-staff tokens yet (ROADMAP.md), so outside
+the component test, which signs one with its own test key, there is no such token to give `remove` until it does.
+
+**Safety.** `seed` and `remove` refuse any tenant code that does not start with `demo-`; `remove` refuses without a
+manifest. Run it against a pilot installation, never against a school's live tenant code.

@@ -231,6 +231,12 @@ reading another schema. A deleted record keeps its row: its attendance stays the
 | `comms.task_assignee.class_section_id` | `academics.class_section` | owner is never hard-deleted (archived by status); no action needed |
 | `comms.task_assignee.user_id` | `iam.user_account` | owner is never hard-deleted (archived by status); no action needed |
 
+`comms.staff_record` and `comms.guardian_link` are copies kept from events, like `comms.student_record` (which now also
+keeps the student's institution): each row mirrors one `hr.staff` or `sis.student_guardian` row from its own created,
+updated and deleted events (`StaffRecordSync`, `GuardianLinkSync`), so feedback threads reach their guardian, and mail
+and conversations reach only accounts of the sender's school, without calling sis or hr. A deleted record keeps its
+row, marked deleted.
+
 ## facility (6 references)
 
 | Column | References (owner) | Event action on owner deletion |
@@ -286,6 +292,10 @@ reading another schema. A deleted record keeps its row: its attendance stays the
 mirrors the person of one `sis.student` row from that row's own created and updated events (`StudentRecordSync`), so
 privacy's tasks find a person's fee dues, concessions, invoices and payments without reading sis's schema. A deleted
 student keeps its row: its books of account stay the person's.
+
+`finance.staff_record` is a copy kept from events, like `finance.student_record` (which now also keeps the student's
+account and institution): each row mirrors one `hr.staff` row from its own created, updated and deleted events
+(`StaffRecordSync`), so `RaiseChargeInvoice` bills only students and accounts of the charge's institution.
 
 ## frontoffice (12 references)
 
@@ -500,6 +510,14 @@ the copy itself (a tombstone), and `iam.GetMe` reads the caller's records withou
 | `org.institution.state_province_id` | `master.state_province` | owner is never hard-deleted (archived by status); no action needed |
 | `org.institution.theme_id` | `platform.theme` | null the column |
 
+`org.tenant_directory` is a copy kept from `platform.tenant` events (`TenantDirectorySync`), like
+`iam.tenant_directory`, and `org.institution_directory` a copy of org's own institutions written with each of their
+changes; its `city_id` and `country_id` are the institution's own references into master, copied. Neither is a set of
+references of its own: the owner's deletion reaches them through the rows they copy. `org.finder_listing` is likewise
+a copy, of the institution values of iam's setting `directory.listedInSchoolFinder`, kept from `iam.setting_value`
+events (`FinderListingSync`, against the dependency arrow: org never calls iam); a deleted value is kept as a
+tombstone that lists nothing.
+
 ## payroll (12 references)
 
 | Column | References (owner) | Event action on owner deletion |
@@ -536,6 +554,16 @@ tasks find a person's payroll records (`PayrollPrivacyTaskHandler`) — without 
 | `people.person_document.institution_id` | `org.institution` | owner is never hard-deleted (archived by status); no action needed |
 | `people.public_profile.country_id` | `master.country` | owner is never hard-deleted (archived by status); no action needed |
 | `people.public_profile.cover_image_file_id` | `platform.file_object` | null the column |
+
+`people.member_link` is not a set of references but a copy kept from events, like `iam.member_record`: each row
+mirrors one `sis.student`, `hr.staff` or `sis.student_guardian` row — its person and institution, for a guardian link
+the child and whether the link is active instead (the guardian belongs to the child's institutions), for staff the
+joining date — from that row's own created, updated and deleted events (`MemberLinkSync`, against the dependency
+arrow: people never calls sis or hr), so the owner's deletion is applied by the copy itself (a tombstone).
+
+`people.greeting_template` is a copy kept from events: each row mirrors one `comms.message_template` row (its
+institution and whether it is used) from its own created, updated and deleted events (`GreetingTemplateSync`), so
+`SendGreetings` refuses a template comms would not deliver. people may not call comms.
 
 ## platform (4 references)
 
@@ -628,6 +656,11 @@ Consent records, consent states and nominees name their subject or principal thr
 | `timetable.session.staff_id` | `hr.staff` | owner is never hard-deleted (archived by status); no action needed |
 | `timetable.session.subject_id` | `academics.subject` | owner is never hard-deleted (archived by status); no action needed |
 | `timetable.session_student.student_id` | `sis.student` | owner is never hard-deleted (archived by status); no action needed |
+
+`timetable.institution_zone` is not a set of references but a copy kept from events, like `iam.member_record`: each
+row mirrors the time zone of one `org.institution` row from that row's own created, updated and deleted events
+(`InstitutionZoneSync`), so `GenerateSessions` uses the school's zone without calling org. A deleted school keeps its
+row, marked deleted.
 
 ## transport (4 references)
 

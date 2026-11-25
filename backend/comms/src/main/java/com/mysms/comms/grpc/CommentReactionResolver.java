@@ -1,5 +1,8 @@
 package com.mysms.comms.grpc;
 
+import com.mysms.comms.api.model.CommentReaction;
+import com.mysms.comms.api.model.CommentReactionUpdate;
+import com.mysms.comms.business.ReactionService;
 import com.mysms.comms.v1.CommentReactionServiceGrpc;
 import com.mysms.comms.v1.CreateCommentReactionRequest;
 import com.mysms.comms.v1.CreateCommentReactionResponse;
@@ -11,45 +14,63 @@ import com.mysms.comms.v1.ListCommentReactionsRequest;
 import com.mysms.comms.v1.ListCommentReactionsResponse;
 import com.mysms.comms.v1.UpdateCommentReactionRequest;
 import com.mysms.comms.v1.UpdateCommentReactionResponse;
-import com.mysms.core.error.NotImplementedException;
+import com.mysms.core.grpc.ProtoBridge;
+import com.mysms.core.paging.Page;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 
-/**
- * gRPC resolver of comms.CommentReactionService: not served yet (REST answers 501), so every RPC answers UNIMPLEMENTED
- * explicitly rather than relying on the generated stub's default. Authentication and permission are checked at the gRPC
- * edge.
- */
+/** gRPC resolver of comms.CommentReactionService: the same business service as REST. */
 @GrpcService
 public class CommentReactionResolver extends CommentReactionServiceGrpc.CommentReactionServiceImplBase {
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
-    @Override
-    public void listCommentReactions(ListCommentReactionsRequest request, StreamObserver<ListCommentReactionsResponse> out) {
-        throw new NotImplementedException();
+    private final ReactionService service;
+    private final ProtoBridge bridge;
+
+    public CommentReactionResolver(ReactionService service, ProtoBridge bridge) {
+        this.service = service;
+        this.bridge = bridge;
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
+    @Override
+    public void listCommentReactions(ListCommentReactionsRequest request,
+            StreamObserver<ListCommentReactionsResponse> out) {
+        ProtoBridge.ListArguments page = bridge.list(request.getPageable());
+        Page<CommentReaction> rows = service.listCommentReactions(page.page(), page.size(), page.cursor(),
+                bridge.orNull(request.getFilter()), page.sort());
+        ProtoBridge.send(out, bridge.page(ListCommentReactionsResponse.newBuilder(), rows).build());
+    }
+
     @Override
     public void getCommentReaction(GetCommentReactionRequest request, StreamObserver<GetCommentReactionResponse> out) {
-        throw new NotImplementedException();
+        CommentReaction found = service.getCommentReaction(bridge.id(request.getId(), "id"));
+        ProtoBridge.send(out, bridge.reply(GetCommentReactionResponse.newBuilder(), "comment_reaction", found).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
-    public void createCommentReaction(CreateCommentReactionRequest request, StreamObserver<CreateCommentReactionResponse> out) {
-        throw new NotImplementedException();
+    public void createCommentReaction(CreateCommentReactionRequest request,
+            StreamObserver<CreateCommentReactionResponse> out) {
+        CommentReaction created = service.createCommentReaction(
+                bridge.body(request.getCommentReaction(), CommentReaction.class), request.getValidateOnly());
+        ProtoBridge.send(out, bridge.reply(CreateCommentReactionResponse.newBuilder(), "comment_reaction", created)
+                .build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
-    public void updateCommentReaction(UpdateCommentReactionRequest request, StreamObserver<UpdateCommentReactionResponse> out) {
-        throw new NotImplementedException();
+    public void updateCommentReaction(UpdateCommentReactionRequest request,
+            StreamObserver<UpdateCommentReactionResponse> out) {
+        CommentReaction updated = service.updateCommentReaction(
+                bridge.id(request.getCommentReaction().getId(), "id"),
+                bridge.requiredIfMatch(request.getCommentReaction().getEtag()),
+                bridge.changes(request.getCommentReaction(), request.getUpdateMask(), CommentReactionUpdate.class),
+                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+        ProtoBridge.send(out, bridge.reply(UpdateCommentReactionResponse.newBuilder(), "comment_reaction", updated)
+                .build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
-    public void deleteCommentReaction(DeleteCommentReactionRequest request, StreamObserver<DeleteCommentReactionResponse> out) {
-        throw new NotImplementedException();
+    public void deleteCommentReaction(DeleteCommentReactionRequest request,
+            StreamObserver<DeleteCommentReactionResponse> out) {
+        service.deleteCommentReaction(bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()));
+        ProtoBridge.send(out, DeleteCommentReactionResponse.getDefaultInstance());
     }
 }

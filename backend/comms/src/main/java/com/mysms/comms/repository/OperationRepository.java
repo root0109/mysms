@@ -50,10 +50,36 @@ public class OperationRepository {
                AND id = :id AND row_version = :expected AND status = 'running' AND deleted_at IS NULL
             """;
 
+    private static final String INSERT_COMPLETED = """
+            INSERT INTO comms.operation
+                (id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent,
+                 result_entity_type, result_entity_id, started_by_user_id, started_at, finished_at,
+                 created_at, created_by, updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :operationName, :resourceType, :resourceId, 'succeeded', 100,
+                    :resultType, :resultId, :startedBy, :startedAt, :finishedAt,
+                    :createdAt, :createdBy, :updatedAt, :updatedBy, :rowVersion)
+            RETURNING id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent,
+                      error_code, error_message, result_entity_type, result_entity_id, started_by_user_id,
+                      started_at, finished_at, created_at, created_by, updated_at, updated_by, deleted_at,
+                      row_version
+            """;
+
     private final JdbcClient jdbc;
 
     public OperationRepository(@Qualifier(CommsDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** Records work that finished within the request as a succeeded operation. */
+    public OperationEntity insertCompleted(OperationEntity entity) {
+        return jdbc.sql(INSERT_COMPLETED).param("id", entity.getId()).param("tenantId", entity.getTenantId())
+                .param("operationName", entity.getOperationName()).param("resourceType", entity.getResourceType())
+                .param("resourceId", entity.getResourceId()).param("resultType", entity.getResultEntityType())
+                .param("resultId", entity.getResultEntityId()).param("startedBy", entity.getStartedByUserId())
+                .param("startedAt", entity.getStartedAt()).param("finishedAt", entity.getFinishedAt())
+                .param("createdAt", entity.getCreatedAt()).param("createdBy", entity.getCreatedBy())
+                .param("updatedAt", entity.getUpdatedAt()).param("updatedBy", entity.getUpdatedBy())
+                .param("rowVersion", entity.getRowVersion()).query(OperationRepository::map).single();
     }
 
     public Optional<OperationEntity> findById(UUID id) {

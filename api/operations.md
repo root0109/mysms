@@ -1,6 +1,6 @@
 # MySMS API operations
 
-All 2122 operations. REST path parameters are UUIDs unless noted. "Public" operations can be called without a token.
+All 2123 operations. REST path parameters are UUIDs unless noted. "Public" operations can be called without a token.
 
 ## Master Data (`master`)
 
@@ -263,7 +263,7 @@ All 2122 operations. REST path parameters are UUIDs unless noted. "Public" opera
 | 240 | `GET /v1/org/holidays/{holidayId}` | `HolidayService/GetHoliday` | `org.holiday.read` |  | Get Holiday. |
 | 241 | `PATCH /v1/org/holidays/{holidayId}` | `HolidayService/UpdateHoliday` | `org.holiday.update` |  | Update Holiday. |
 | 242 | `DELETE /v1/org/holidays/{holidayId}` | `HolidayService/DeleteHoliday` | `org.holiday.delete` |  | Delete Holiday. |
-| 243 | `GET /v1/org/institutions:find` | `InstitutionService/FindInstitutions` | `org.institution.find_institutions` | Public | Find a school / college to sign in to (mobile app school picker). |
+| 243 | `GET /v1/org/institutions:find` | `InstitutionService/FindInstitutions` | `org.institution.find_institutions` | Public | Find a school / college to sign in to (mobile app school picker); lists only schools whose administrators opted in (iam setting `directory.listedInSchoolFinder`, off by default). |
 | 244 | `POST /v1/org/academic-years/{academicYearId}:activate` | `AcademicYearService/ActivateAcademicYear` | `org.academic_year.activate_academic_year` |  | Make the year active and current for its institution. |
 | 245 | `POST /v1/org/academic-years/{academicYearId}:close` | `AcademicYearService/CloseAcademicYear` | `org.academic_year.close_academic_year` |  | Close the year (read-only afterwards). |
 | 246 | `POST /v1/org/academic-years/{academicYearId}:generateTerms` | `AcademicYearService/GenerateTerms` | `org.academic_year.generate_terms` |  | Create terms from term_structure. |
@@ -1694,542 +1694,543 @@ All 2122 operations. REST path parameters are UUIDs unless noted. "Public" opera
 | 1611 | `POST /v1/finance/invoices/{invoiceId}:cancel` | `InvoiceService/CancelInvoice` | `finance.invoice.cancel_invoice` |  | Cancel. |
 | 1612 | `POST /v1/finance/invoices:sendReminders` | `InvoiceService/SendFeeReminders` | `finance.invoice.send_fee_reminders` |  | Remind guardians of unpaid fees. |
 | 1613 | `GET /v1/finance/students/{studentId}/fee-statement` | `InvoiceService/GetFeeStatement` | `finance.invoice.get_fee_statement` |  | Student fee statement. |
-| 1614 | `POST /v1/finance/checkout:quote` | `PaymentService/QuoteCheckout` | `finance.payment.quote_checkout` |  | Price with coupon, tax and currency. |
-| 1615 | `POST /v1/finance/checkout:start` | `PaymentService/StartCheckout` | `finance.payment.start_checkout` |  | Create a payment and gateway order. |
-| 1616 | `POST /v1/finance/payment-gateways/{gateway}:webhook` | `PaymentService/ReceiveGatewayWebhook` | `finance.gateway_event.receive_webhook` | Public | Gateway callback; marks payments received / failed and fulfils enrolments. |
-| 1617 | `POST /v1/finance/payments/{paymentId}:refund` | `PaymentService/RefundPayment` | `finance.payment.refund_payment` |  | Refund through the gateway. |
-| 1618 | `GET /v1/finance/acquisition-sources` | `AcquisitionSourceService/ListAcquisitionSources` | `finance.acquisition_source.read` |  | List AcquisitionSources. |
-| 1619 | `POST /v1/finance/acquisition-sources` | `AcquisitionSourceService/CreateAcquisitionSource` | `finance.acquisition_source.create` |  | Create AcquisitionSource. |
-| 1620 | `GET /v1/finance/acquisition-sources/{acquisitionSourceId}` | `AcquisitionSourceService/GetAcquisitionSource` | `finance.acquisition_source.read` |  | Get AcquisitionSource. |
-| 1621 | `PATCH /v1/finance/acquisition-sources/{acquisitionSourceId}` | `AcquisitionSourceService/UpdateAcquisitionSource` | `finance.acquisition_source.update` |  | Update AcquisitionSource. |
-| 1622 | `DELETE /v1/finance/acquisition-sources/{acquisitionSourceId}` | `AcquisitionSourceService/DeleteAcquisitionSource` | `finance.acquisition_source.delete` |  | Delete AcquisitionSource. |
-| 1623 | `GET /v1/finance/fee-structures` | `FeeStructureService/ListFeeStructures` | `finance.fee_structure.read` |  | List FeeStructures. |
-| 1624 | `POST /v1/finance/fee-structures` | `FeeStructureService/CreateFeeStructure` | `finance.fee_structure.create` |  | Create FeeStructure. |
-| 1625 | `GET /v1/finance/fee-structures/{feeStructureId}` | `FeeStructureService/GetFeeStructure` | `finance.fee_structure.read` |  | Get FeeStructure. |
-| 1626 | `PATCH /v1/finance/fee-structures/{feeStructureId}` | `FeeStructureService/UpdateFeeStructure` | `finance.fee_structure.update` |  | Update FeeStructure. |
-| 1627 | `DELETE /v1/finance/fee-structures/{feeStructureId}` | `FeeStructureService/DeleteFeeStructure` | `finance.fee_structure.delete` |  | Delete FeeStructure. |
-| 1628 | `POST /v1/finance/fee-structures/{feeStructureId}:publish` | `FeeStructureService/PublishFeeStructure` | `finance.fee_structure.publish` |  | Publish a fee structure and generate dues. |
-| 1629 | `GET /v1/finance/fee-concessions` | `FeeConcessionService/ListFeeConcessions` | `finance.fee_concession.read` |  | List FeeConcessions. |
-| 1630 | `POST /v1/finance/fee-concessions` | `FeeConcessionService/CreateFeeConcession` | `finance.fee_concession.create` |  | Create FeeConcession. |
-| 1631 | `GET /v1/finance/fee-concessions/{feeConcessionId}` | `FeeConcessionService/GetFeeConcession` | `finance.fee_concession.read` |  | Get FeeConcession. |
-| 1632 | `PATCH /v1/finance/fee-concessions/{feeConcessionId}` | `FeeConcessionService/UpdateFeeConcession` | `finance.fee_concession.update` |  | Update FeeConcession. |
-| 1633 | `DELETE /v1/finance/fee-concessions/{feeConcessionId}` | `FeeConcessionService/DeleteFeeConcession` | `finance.fee_concession.delete` |  | Delete FeeConcession. |
-| 1634 | `POST /v1/finance/payments:record` | `PaymentService/RecordPayment` | `finance.payment.record` |  | Record an offline/counter payment. |
-| 1635 | `GET /v1/finance/refunds` | `RefundService/ListRefunds` | `finance.refund.read` |  | List Refunds. |
-| 1636 | `GET /v1/finance/refunds/{refundId}` | `RefundService/GetRefund` | `finance.refund.read` |  | Get Refund. |
-| 1637 | `GET /v1/finance/payment-gateway-accounts` | `PaymentGatewayAccountService/ListPaymentGatewayAccounts` | `finance.payment_gateway_account.read` |  | List PaymentGatewayAccounts. |
-| 1638 | `POST /v1/finance/payment-gateway-accounts` | `PaymentGatewayAccountService/CreatePaymentGatewayAccount` | `finance.payment_gateway_account.create` |  | Create PaymentGatewayAccount. |
-| 1639 | `GET /v1/finance/payment-gateway-accounts/{paymentGatewayAccountId}` | `PaymentGatewayAccountService/GetPaymentGatewayAccount` | `finance.payment_gateway_account.read` |  | Get PaymentGatewayAccount. |
-| 1640 | `PATCH /v1/finance/payment-gateway-accounts/{paymentGatewayAccountId}` | `PaymentGatewayAccountService/UpdatePaymentGatewayAccount` | `finance.payment_gateway_account.update` |  | Update PaymentGatewayAccount. |
-| 1641 | `DELETE /v1/finance/payment-gateway-accounts/{paymentGatewayAccountId}` | `PaymentGatewayAccountService/DeletePaymentGatewayAccount` | `finance.payment_gateway_account.delete` |  | Delete PaymentGatewayAccount. |
-| 1642 | `POST /v1/finance/fee-structures/{feeStructureId}:archive` | `FeeStructureService/ArchiveFeeStructure` | `finance.fee_structure.archive` |  | Archive a fee structure. |
-| 1643 | `GET /v1/finance/operations` | `OperationService/ListOperations` | `finance.operation.read` |  | Long-running operations of this module started by the caller. |
-| 1644 | `GET /v1/finance/operations/{operationId}` | `OperationService/GetOperation` | `finance.operation.read` |  | Status of a long-running operation started in this module. |
-| 1645 | `POST /v1/finance/operations/{operationId}:cancel` | `OperationService/CancelOperation` | `finance.operation.cancel_operation` |  | Request cancellation of a running operation. |
+| 1614 | `POST /v1/finance/invoices:raiseCharge` | `InvoiceService/RaiseChargeInvoice` | `finance.invoice.create` |  | Raise a draft invoice for a charge another module computed (one per source). |
+| 1615 | `POST /v1/finance/checkout:quote` | `PaymentService/QuoteCheckout` | `finance.payment.quote_checkout` |  | Price with coupon, tax and currency. |
+| 1616 | `POST /v1/finance/checkout:start` | `PaymentService/StartCheckout` | `finance.payment.start_checkout` |  | Create a payment and gateway order. |
+| 1617 | `POST /v1/finance/payment-gateways/{gateway}:webhook` | `PaymentService/ReceiveGatewayWebhook` | `finance.gateway_event.receive_webhook` | Public | Gateway callback; marks payments received / failed and fulfils enrolments. |
+| 1618 | `POST /v1/finance/payments/{paymentId}:refund` | `PaymentService/RefundPayment` | `finance.payment.refund_payment` |  | Refund through the gateway. |
+| 1619 | `GET /v1/finance/acquisition-sources` | `AcquisitionSourceService/ListAcquisitionSources` | `finance.acquisition_source.read` |  | List AcquisitionSources. |
+| 1620 | `POST /v1/finance/acquisition-sources` | `AcquisitionSourceService/CreateAcquisitionSource` | `finance.acquisition_source.create` |  | Create AcquisitionSource. |
+| 1621 | `GET /v1/finance/acquisition-sources/{acquisitionSourceId}` | `AcquisitionSourceService/GetAcquisitionSource` | `finance.acquisition_source.read` |  | Get AcquisitionSource. |
+| 1622 | `PATCH /v1/finance/acquisition-sources/{acquisitionSourceId}` | `AcquisitionSourceService/UpdateAcquisitionSource` | `finance.acquisition_source.update` |  | Update AcquisitionSource. |
+| 1623 | `DELETE /v1/finance/acquisition-sources/{acquisitionSourceId}` | `AcquisitionSourceService/DeleteAcquisitionSource` | `finance.acquisition_source.delete` |  | Delete AcquisitionSource. |
+| 1624 | `GET /v1/finance/fee-structures` | `FeeStructureService/ListFeeStructures` | `finance.fee_structure.read` |  | List FeeStructures. |
+| 1625 | `POST /v1/finance/fee-structures` | `FeeStructureService/CreateFeeStructure` | `finance.fee_structure.create` |  | Create FeeStructure. |
+| 1626 | `GET /v1/finance/fee-structures/{feeStructureId}` | `FeeStructureService/GetFeeStructure` | `finance.fee_structure.read` |  | Get FeeStructure. |
+| 1627 | `PATCH /v1/finance/fee-structures/{feeStructureId}` | `FeeStructureService/UpdateFeeStructure` | `finance.fee_structure.update` |  | Update FeeStructure. |
+| 1628 | `DELETE /v1/finance/fee-structures/{feeStructureId}` | `FeeStructureService/DeleteFeeStructure` | `finance.fee_structure.delete` |  | Delete FeeStructure. |
+| 1629 | `POST /v1/finance/fee-structures/{feeStructureId}:publish` | `FeeStructureService/PublishFeeStructure` | `finance.fee_structure.publish` |  | Publish a fee structure and generate dues. |
+| 1630 | `GET /v1/finance/fee-concessions` | `FeeConcessionService/ListFeeConcessions` | `finance.fee_concession.read` |  | List FeeConcessions. |
+| 1631 | `POST /v1/finance/fee-concessions` | `FeeConcessionService/CreateFeeConcession` | `finance.fee_concession.create` |  | Create FeeConcession. |
+| 1632 | `GET /v1/finance/fee-concessions/{feeConcessionId}` | `FeeConcessionService/GetFeeConcession` | `finance.fee_concession.read` |  | Get FeeConcession. |
+| 1633 | `PATCH /v1/finance/fee-concessions/{feeConcessionId}` | `FeeConcessionService/UpdateFeeConcession` | `finance.fee_concession.update` |  | Update FeeConcession. |
+| 1634 | `DELETE /v1/finance/fee-concessions/{feeConcessionId}` | `FeeConcessionService/DeleteFeeConcession` | `finance.fee_concession.delete` |  | Delete FeeConcession. |
+| 1635 | `POST /v1/finance/payments:record` | `PaymentService/RecordPayment` | `finance.payment.record` |  | Record an offline/counter payment. |
+| 1636 | `GET /v1/finance/refunds` | `RefundService/ListRefunds` | `finance.refund.read` |  | List Refunds. |
+| 1637 | `GET /v1/finance/refunds/{refundId}` | `RefundService/GetRefund` | `finance.refund.read` |  | Get Refund. |
+| 1638 | `GET /v1/finance/payment-gateway-accounts` | `PaymentGatewayAccountService/ListPaymentGatewayAccounts` | `finance.payment_gateway_account.read` |  | List PaymentGatewayAccounts. |
+| 1639 | `POST /v1/finance/payment-gateway-accounts` | `PaymentGatewayAccountService/CreatePaymentGatewayAccount` | `finance.payment_gateway_account.create` |  | Create PaymentGatewayAccount. |
+| 1640 | `GET /v1/finance/payment-gateway-accounts/{paymentGatewayAccountId}` | `PaymentGatewayAccountService/GetPaymentGatewayAccount` | `finance.payment_gateway_account.read` |  | Get PaymentGatewayAccount. |
+| 1641 | `PATCH /v1/finance/payment-gateway-accounts/{paymentGatewayAccountId}` | `PaymentGatewayAccountService/UpdatePaymentGatewayAccount` | `finance.payment_gateway_account.update` |  | Update PaymentGatewayAccount. |
+| 1642 | `DELETE /v1/finance/payment-gateway-accounts/{paymentGatewayAccountId}` | `PaymentGatewayAccountService/DeletePaymentGatewayAccount` | `finance.payment_gateway_account.delete` |  | Delete PaymentGatewayAccount. |
+| 1643 | `POST /v1/finance/fee-structures/{feeStructureId}:archive` | `FeeStructureService/ArchiveFeeStructure` | `finance.fee_structure.archive` |  | Archive a fee structure. |
+| 1644 | `GET /v1/finance/operations` | `OperationService/ListOperations` | `finance.operation.read` |  | Long-running operations of this module started by the caller. |
+| 1645 | `GET /v1/finance/operations/{operationId}` | `OperationService/GetOperation` | `finance.operation.read` |  | Status of a long-running operation started in this module. |
+| 1646 | `POST /v1/finance/operations/{operationId}:cancel` | `OperationService/CancelOperation` | `finance.operation.cancel_operation` |  | Request cancellation of a running operation. |
 
 ## Library (`library`)
 
 | # | REST | gRPC | Permission | Public | Description |
 |---|---|---|---|---|---|
-| 1646 | `GET /v1/library/media-types` | `MediaTypeService/ListMediaTypes` | `library.media_type.read` |  | List MediaTypes. |
-| 1647 | `POST /v1/library/media-types` | `MediaTypeService/CreateMediaType` | `library.media_type.create` |  | Create MediaType. |
-| 1648 | `GET /v1/library/media-types/{mediaTypeId}` | `MediaTypeService/GetMediaType` | `library.media_type.read` |  | Get MediaType. |
-| 1649 | `PATCH /v1/library/media-types/{mediaTypeId}` | `MediaTypeService/UpdateMediaType` | `library.media_type.update` |  | Update MediaType. |
-| 1650 | `DELETE /v1/library/media-types/{mediaTypeId}` | `MediaTypeService/DeleteMediaType` | `library.media_type.delete` |  | Delete MediaType. |
-| 1651 | `GET /v1/library/media-categories` | `MediaCategoryService/ListMediaCategories` | `library.media_category.read` |  | List MediaCategories. |
-| 1652 | `POST /v1/library/media-categories` | `MediaCategoryService/CreateMediaCategory` | `library.media_category.create` |  | Create MediaCategory. |
-| 1653 | `GET /v1/library/media-categories/{mediaCategoryId}` | `MediaCategoryService/GetMediaCategory` | `library.media_category.read` |  | Get MediaCategory. |
-| 1654 | `PATCH /v1/library/media-categories/{mediaCategoryId}` | `MediaCategoryService/UpdateMediaCategory` | `library.media_category.update` |  | Update MediaCategory. |
-| 1655 | `DELETE /v1/library/media-categories/{mediaCategoryId}` | `MediaCategoryService/DeleteMediaCategory` | `library.media_category.delete` |  | Delete MediaCategory. |
-| 1656 | `GET /v1/library/authors` | `AuthorService/ListAuthors` | `library.author.read` |  | List Authors. |
-| 1657 | `POST /v1/library/authors` | `AuthorService/CreateAuthor` | `library.author.create` |  | Create Author. |
-| 1658 | `GET /v1/library/authors/{authorId}` | `AuthorService/GetAuthor` | `library.author.read` |  | Get Author. |
-| 1659 | `PATCH /v1/library/authors/{authorId}` | `AuthorService/UpdateAuthor` | `library.author.update` |  | Update Author. |
-| 1660 | `DELETE /v1/library/authors/{authorId}` | `AuthorService/DeleteAuthor` | `library.author.delete` |  | Delete Author. |
-| 1661 | `GET /v1/library/publishers` | `PublisherService/ListPublishers` | `library.publisher.read` |  | List Publishers. |
-| 1662 | `POST /v1/library/publishers` | `PublisherService/CreatePublisher` | `library.publisher.create` |  | Create Publisher. |
-| 1663 | `GET /v1/library/publishers/{publisherId}` | `PublisherService/GetPublisher` | `library.publisher.read` |  | Get Publisher. |
-| 1664 | `PATCH /v1/library/publishers/{publisherId}` | `PublisherService/UpdatePublisher` | `library.publisher.update` |  | Update Publisher. |
-| 1665 | `DELETE /v1/library/publishers/{publisherId}` | `PublisherService/DeletePublisher` | `library.publisher.delete` |  | Delete Publisher. |
-| 1666 | `GET /v1/library/media` | `MediaService/ListMedia` | `library.media.read` |  | List Media. |
-| 1667 | `POST /v1/library/media` | `MediaService/CreateMedia` | `library.media.create` |  | Create Media. |
-| 1668 | `GET /v1/library/media/{mediaId}` | `MediaService/GetMedia` | `library.media.read` |  | Get Media. |
-| 1669 | `PATCH /v1/library/media/{mediaId}` | `MediaService/UpdateMedia` | `library.media.update` |  | Update Media. |
-| 1670 | `DELETE /v1/library/media/{mediaId}` | `MediaService/DeleteMedia` | `library.media.delete` |  | Delete Media. |
-| 1671 | `GET /v1/library/media/{mediaId}/authors` | `MediaService/ListMediaAuthors` | `library.media_author.read` |  | List MediaAuthors. |
-| 1672 | `POST /v1/library/media/{mediaId}/authors` | `MediaService/CreateMediaAuthor` | `library.media_author.create` |  | Create MediaAuthor. |
-| 1673 | `GET /v1/library/media/{mediaId}/authors/{mediaAuthorId}` | `MediaService/GetMediaAuthor` | `library.media_author.read` |  | Get MediaAuthor. |
-| 1674 | `PATCH /v1/library/media/{mediaId}/authors/{mediaAuthorId}` | `MediaService/UpdateMediaAuthor` | `library.media_author.update` |  | Update MediaAuthor. |
-| 1675 | `DELETE /v1/library/media/{mediaId}/authors/{mediaAuthorId}` | `MediaService/DeleteMediaAuthor` | `library.media_author.delete` |  | Delete MediaAuthor. |
-| 1676 | `GET /v1/library/media/{mediaId}/publishers` | `MediaService/ListMediaPublishers` | `library.media_publisher.read` |  | List MediaPublishers. |
-| 1677 | `POST /v1/library/media/{mediaId}/publishers` | `MediaService/CreateMediaPublisher` | `library.media_publisher.create` |  | Create MediaPublisher. |
-| 1678 | `GET /v1/library/media/{mediaId}/publishers/{mediaPublisherId}` | `MediaService/GetMediaPublisher` | `library.media_publisher.read` |  | Get MediaPublisher. |
-| 1679 | `PATCH /v1/library/media/{mediaId}/publishers/{mediaPublisherId}` | `MediaService/UpdateMediaPublisher` | `library.media_publisher.update` |  | Update MediaPublisher. |
-| 1680 | `DELETE /v1/library/media/{mediaId}/publishers/{mediaPublisherId}` | `MediaService/DeleteMediaPublisher` | `library.media_publisher.delete` |  | Delete MediaPublisher. |
-| 1681 | `GET /v1/library/media/{mediaId}/courses` | `MediaService/ListMediaCourses` | `library.media_course.read` |  | List MediaCourses. |
-| 1682 | `POST /v1/library/media/{mediaId}/courses` | `MediaService/CreateMediaCourse` | `library.media_course.create` |  | Create MediaCourse. |
-| 1683 | `GET /v1/library/media/{mediaId}/courses/{mediaCourseId}` | `MediaService/GetMediaCourse` | `library.media_course.read` |  | Get MediaCourse. |
-| 1684 | `PATCH /v1/library/media/{mediaId}/courses/{mediaCourseId}` | `MediaService/UpdateMediaCourse` | `library.media_course.update` |  | Update MediaCourse. |
-| 1685 | `DELETE /v1/library/media/{mediaId}/courses/{mediaCourseId}` | `MediaService/DeleteMediaCourse` | `library.media_course.delete` |  | Delete MediaCourse. |
-| 1686 | `GET /v1/library/media/{mediaId}/subjects` | `MediaService/ListMediaSubjects` | `library.media_subject.read` |  | List MediaSubjects. |
-| 1687 | `POST /v1/library/media/{mediaId}/subjects` | `MediaService/CreateMediaSubject` | `library.media_subject.create` |  | Create MediaSubject. |
-| 1688 | `GET /v1/library/media/{mediaId}/subjects/{mediaSubjectId}` | `MediaService/GetMediaSubject` | `library.media_subject.read` |  | Get MediaSubject. |
-| 1689 | `PATCH /v1/library/media/{mediaId}/subjects/{mediaSubjectId}` | `MediaService/UpdateMediaSubject` | `library.media_subject.update` |  | Update MediaSubject. |
-| 1690 | `DELETE /v1/library/media/{mediaId}/subjects/{mediaSubjectId}` | `MediaService/DeleteMediaSubject` | `library.media_subject.delete` |  | Delete MediaSubject. |
-| 1691 | `GET /v1/library/media/{mediaId}/units` | `MediaService/ListMediaUnits` | `library.media_unit.read` |  | List MediaUnits. |
-| 1692 | `POST /v1/library/media/{mediaId}/units` | `MediaService/CreateMediaUnit` | `library.media_unit.create` |  | Create MediaUnit. |
-| 1693 | `GET /v1/library/media/{mediaId}/units/{mediaUnitId}` | `MediaService/GetMediaUnit` | `library.media_unit.read` |  | Get MediaUnit. |
-| 1694 | `PATCH /v1/library/media/{mediaId}/units/{mediaUnitId}` | `MediaService/UpdateMediaUnit` | `library.media_unit.update` |  | Update MediaUnit. |
-| 1695 | `DELETE /v1/library/media/{mediaId}/units/{mediaUnitId}` | `MediaService/DeleteMediaUnit` | `library.media_unit.delete` |  | Delete MediaUnit. |
-| 1696 | `GET /v1/library/library-card-types` | `LibraryCardTypeService/ListLibraryCardTypes` | `library.library_card_type.read` |  | List LibraryCardTypes. |
-| 1697 | `POST /v1/library/library-card-types` | `LibraryCardTypeService/CreateLibraryCardType` | `library.library_card_type.create` |  | Create LibraryCardType. |
-| 1698 | `GET /v1/library/library-card-types/{libraryCardTypeId}` | `LibraryCardTypeService/GetLibraryCardType` | `library.library_card_type.read` |  | Get LibraryCardType. |
-| 1699 | `PATCH /v1/library/library-card-types/{libraryCardTypeId}` | `LibraryCardTypeService/UpdateLibraryCardType` | `library.library_card_type.update` |  | Update LibraryCardType. |
-| 1700 | `DELETE /v1/library/library-card-types/{libraryCardTypeId}` | `LibraryCardTypeService/DeleteLibraryCardType` | `library.library_card_type.delete` |  | Delete LibraryCardType. |
-| 1701 | `GET /v1/library/library-cards` | `LibraryCardService/ListLibraryCards` | `library.library_card.read` |  | List LibraryCards. |
-| 1702 | `POST /v1/library/library-cards` | `LibraryCardService/CreateLibraryCard` | `library.library_card.create` |  | Create LibraryCard. |
-| 1703 | `GET /v1/library/library-cards/{libraryCardId}` | `LibraryCardService/GetLibraryCard` | `library.library_card.read` |  | Get LibraryCard. |
-| 1704 | `PATCH /v1/library/library-cards/{libraryCardId}` | `LibraryCardService/UpdateLibraryCard` | `library.library_card.update` |  | Update LibraryCard. |
-| 1705 | `DELETE /v1/library/library-cards/{libraryCardId}` | `LibraryCardService/DeleteLibraryCard` | `library.library_card.delete` |  | Delete LibraryCard. |
-| 1706 | `GET /v1/library/loans` | `LoanService/ListLoans` | `library.loan.read` |  | List Loans. |
-| 1707 | `POST /v1/library/loans` | `LoanService/CreateLoan` | `library.loan.create` |  | Create Loan. |
-| 1708 | `GET /v1/library/loans/{loanId}` | `LoanService/GetLoan` | `library.loan.read` |  | Get Loan. |
-| 1709 | `PATCH /v1/library/loans/{loanId}` | `LoanService/UpdateLoan` | `library.loan.update` |  | Update Loan. |
-| 1710 | `DELETE /v1/library/loans/{loanId}` | `LoanService/DeleteLoan` | `library.loan.delete` |  | Delete Loan. |
-| 1711 | `GET /v1/library/reservations` | `ReservationService/ListReservations` | `library.reservation.read` |  | List Reservations. |
-| 1712 | `POST /v1/library/reservations` | `ReservationService/CreateReservation` | `library.reservation.create` |  | Create Reservation. |
-| 1713 | `GET /v1/library/reservations/{reservationId}` | `ReservationService/GetReservation` | `library.reservation.read` |  | Get Reservation. |
-| 1714 | `PATCH /v1/library/reservations/{reservationId}` | `ReservationService/UpdateReservation` | `library.reservation.update` |  | Update Reservation. |
-| 1715 | `DELETE /v1/library/reservations/{reservationId}` | `ReservationService/DeleteReservation` | `library.reservation.delete` |  | Delete Reservation. |
-| 1716 | `GET /v1/library/purchase-requests` | `PurchaseRequestService/ListPurchaseRequests` | `library.purchase_request.read` |  | List PurchaseRequests. |
-| 1717 | `POST /v1/library/purchase-requests` | `PurchaseRequestService/CreatePurchaseRequest` | `library.purchase_request.create` |  | Create PurchaseRequest. |
-| 1718 | `GET /v1/library/purchase-requests/{purchaseRequestId}` | `PurchaseRequestService/GetPurchaseRequest` | `library.purchase_request.read` |  | Get PurchaseRequest. |
-| 1719 | `PATCH /v1/library/purchase-requests/{purchaseRequestId}` | `PurchaseRequestService/UpdatePurchaseRequest` | `library.purchase_request.update` |  | Update PurchaseRequest. |
-| 1720 | `DELETE /v1/library/purchase-requests/{purchaseRequestId}` | `PurchaseRequestService/DeletePurchaseRequest` | `library.purchase_request.delete` |  | Delete PurchaseRequest. |
-| 1721 | `GET /v1/library/purchase-requests/{purchaseRequestId}/courses` | `PurchaseRequestService/ListPurchaseRequestCourses` | `library.purchase_request_course.read` |  | List PurchaseRequestCourses. |
-| 1722 | `POST /v1/library/purchase-requests/{purchaseRequestId}/courses` | `PurchaseRequestService/CreatePurchaseRequestCourse` | `library.purchase_request_course.create` |  | Create PurchaseRequestCourse. |
-| 1723 | `GET /v1/library/purchase-requests/{purchaseRequestId}/courses/{purchaseRequestCourseId}` | `PurchaseRequestService/GetPurchaseRequestCourse` | `library.purchase_request_course.read` |  | Get PurchaseRequestCourse. |
-| 1724 | `PATCH /v1/library/purchase-requests/{purchaseRequestId}/courses/{purchaseRequestCourseId}` | `PurchaseRequestService/UpdatePurchaseRequestCourse` | `library.purchase_request_course.update` |  | Update PurchaseRequestCourse. |
-| 1725 | `DELETE /v1/library/purchase-requests/{purchaseRequestId}/courses/{purchaseRequestCourseId}` | `PurchaseRequestService/DeletePurchaseRequestCourse` | `library.purchase_request_course.delete` |  | Delete PurchaseRequestCourse. |
-| 1726 | `GET /v1/library/purchase-requests/{purchaseRequestId}/subjects` | `PurchaseRequestService/ListPurchaseRequestSubjects` | `library.purchase_request_subject.read` |  | List PurchaseRequestSubjects. |
-| 1727 | `POST /v1/library/purchase-requests/{purchaseRequestId}/subjects` | `PurchaseRequestService/CreatePurchaseRequestSubject` | `library.purchase_request_subject.create` |  | Create PurchaseRequestSubject. |
-| 1728 | `GET /v1/library/purchase-requests/{purchaseRequestId}/subjects/{purchaseRequestSubjectId}` | `PurchaseRequestService/GetPurchaseRequestSubject` | `library.purchase_request_subject.read` |  | Get PurchaseRequestSubject. |
-| 1729 | `PATCH /v1/library/purchase-requests/{purchaseRequestId}/subjects/{purchaseRequestSubjectId}` | `PurchaseRequestService/UpdatePurchaseRequestSubject` | `library.purchase_request_subject.update` |  | Update PurchaseRequestSubject. |
-| 1730 | `DELETE /v1/library/purchase-requests/{purchaseRequestId}/subjects/{purchaseRequestSubjectId}` | `PurchaseRequestService/DeletePurchaseRequestSubject` | `library.purchase_request_subject.delete` |  | Delete PurchaseRequestSubject. |
-| 1731 | `POST /v1/library/loans/{loanId}:requestReturn` | `LoanService/RequestLoanReturn` | `library.loan.request_loan_return` |  | Borrower drops the copy for return (status return_pending until checked). |
-| 1732 | `POST /v1/library/loans/{loanId}:return` | `LoanService/ReturnLoan` | `library.loan.return_loan` |  | Librarian checks the copy in (status returned); fine is computed. |
-| 1733 | `POST /v1/library/loans/{loanId}:markLost` | `LoanService/MarkLoanLost` | `library.loan.mark_loan_lost` |  | Copy lost. |
-| 1734 | `POST /v1/library/loans/{loanId}:invoiceFine` | `LoanService/InvoiceLoanFine` | `library.loan.invoice_loan_fine` |  | Raise an invoice for the fine. |
-| 1735 | `POST /v1/library/reservations/{reservationId}:accept` | `ReservationService/AcceptReservation` | `library.reservation.accept_reservation` |  | Accept. |
-| 1736 | `POST /v1/library/reservations/{reservationId}:reject` | `ReservationService/RejectReservation` | `library.reservation.reject_reservation` |  | Reject. |
-| 1737 | `POST /v1/library/reservations/{reservationId}:requestAgain` | `ReservationService/RequestReservationAgain` | `library.reservation.request_reservation_again` |  | Re-request. |
-| 1738 | `POST /v1/library/purchase-requests/{purchaseRequestId}:submit` | `PurchaseRequestService/SubmitPurchaseRequest` | `library.purchase_request.submit_purchase_request` |  | Send to the librarian. |
-| 1739 | `POST /v1/library/purchase-requests/{purchaseRequestId}:accept` | `PurchaseRequestService/AcceptPurchaseRequest` | `library.purchase_request.accept_purchase_request` |  | Accept. |
-| 1740 | `POST /v1/library/purchase-requests/{purchaseRequestId}:reject` | `PurchaseRequestService/RejectPurchaseRequest` | `library.purchase_request.reject_purchase_request` |  | Reject. |
+| 1647 | `GET /v1/library/media-types` | `MediaTypeService/ListMediaTypes` | `library.media_type.read` |  | List MediaTypes. |
+| 1648 | `POST /v1/library/media-types` | `MediaTypeService/CreateMediaType` | `library.media_type.create` |  | Create MediaType. |
+| 1649 | `GET /v1/library/media-types/{mediaTypeId}` | `MediaTypeService/GetMediaType` | `library.media_type.read` |  | Get MediaType. |
+| 1650 | `PATCH /v1/library/media-types/{mediaTypeId}` | `MediaTypeService/UpdateMediaType` | `library.media_type.update` |  | Update MediaType. |
+| 1651 | `DELETE /v1/library/media-types/{mediaTypeId}` | `MediaTypeService/DeleteMediaType` | `library.media_type.delete` |  | Delete MediaType. |
+| 1652 | `GET /v1/library/media-categories` | `MediaCategoryService/ListMediaCategories` | `library.media_category.read` |  | List MediaCategories. |
+| 1653 | `POST /v1/library/media-categories` | `MediaCategoryService/CreateMediaCategory` | `library.media_category.create` |  | Create MediaCategory. |
+| 1654 | `GET /v1/library/media-categories/{mediaCategoryId}` | `MediaCategoryService/GetMediaCategory` | `library.media_category.read` |  | Get MediaCategory. |
+| 1655 | `PATCH /v1/library/media-categories/{mediaCategoryId}` | `MediaCategoryService/UpdateMediaCategory` | `library.media_category.update` |  | Update MediaCategory. |
+| 1656 | `DELETE /v1/library/media-categories/{mediaCategoryId}` | `MediaCategoryService/DeleteMediaCategory` | `library.media_category.delete` |  | Delete MediaCategory. |
+| 1657 | `GET /v1/library/authors` | `AuthorService/ListAuthors` | `library.author.read` |  | List Authors. |
+| 1658 | `POST /v1/library/authors` | `AuthorService/CreateAuthor` | `library.author.create` |  | Create Author. |
+| 1659 | `GET /v1/library/authors/{authorId}` | `AuthorService/GetAuthor` | `library.author.read` |  | Get Author. |
+| 1660 | `PATCH /v1/library/authors/{authorId}` | `AuthorService/UpdateAuthor` | `library.author.update` |  | Update Author. |
+| 1661 | `DELETE /v1/library/authors/{authorId}` | `AuthorService/DeleteAuthor` | `library.author.delete` |  | Delete Author. |
+| 1662 | `GET /v1/library/publishers` | `PublisherService/ListPublishers` | `library.publisher.read` |  | List Publishers. |
+| 1663 | `POST /v1/library/publishers` | `PublisherService/CreatePublisher` | `library.publisher.create` |  | Create Publisher. |
+| 1664 | `GET /v1/library/publishers/{publisherId}` | `PublisherService/GetPublisher` | `library.publisher.read` |  | Get Publisher. |
+| 1665 | `PATCH /v1/library/publishers/{publisherId}` | `PublisherService/UpdatePublisher` | `library.publisher.update` |  | Update Publisher. |
+| 1666 | `DELETE /v1/library/publishers/{publisherId}` | `PublisherService/DeletePublisher` | `library.publisher.delete` |  | Delete Publisher. |
+| 1667 | `GET /v1/library/media` | `MediaService/ListMedia` | `library.media.read` |  | List Media. |
+| 1668 | `POST /v1/library/media` | `MediaService/CreateMedia` | `library.media.create` |  | Create Media. |
+| 1669 | `GET /v1/library/media/{mediaId}` | `MediaService/GetMedia` | `library.media.read` |  | Get Media. |
+| 1670 | `PATCH /v1/library/media/{mediaId}` | `MediaService/UpdateMedia` | `library.media.update` |  | Update Media. |
+| 1671 | `DELETE /v1/library/media/{mediaId}` | `MediaService/DeleteMedia` | `library.media.delete` |  | Delete Media. |
+| 1672 | `GET /v1/library/media/{mediaId}/authors` | `MediaService/ListMediaAuthors` | `library.media_author.read` |  | List MediaAuthors. |
+| 1673 | `POST /v1/library/media/{mediaId}/authors` | `MediaService/CreateMediaAuthor` | `library.media_author.create` |  | Create MediaAuthor. |
+| 1674 | `GET /v1/library/media/{mediaId}/authors/{mediaAuthorId}` | `MediaService/GetMediaAuthor` | `library.media_author.read` |  | Get MediaAuthor. |
+| 1675 | `PATCH /v1/library/media/{mediaId}/authors/{mediaAuthorId}` | `MediaService/UpdateMediaAuthor` | `library.media_author.update` |  | Update MediaAuthor. |
+| 1676 | `DELETE /v1/library/media/{mediaId}/authors/{mediaAuthorId}` | `MediaService/DeleteMediaAuthor` | `library.media_author.delete` |  | Delete MediaAuthor. |
+| 1677 | `GET /v1/library/media/{mediaId}/publishers` | `MediaService/ListMediaPublishers` | `library.media_publisher.read` |  | List MediaPublishers. |
+| 1678 | `POST /v1/library/media/{mediaId}/publishers` | `MediaService/CreateMediaPublisher` | `library.media_publisher.create` |  | Create MediaPublisher. |
+| 1679 | `GET /v1/library/media/{mediaId}/publishers/{mediaPublisherId}` | `MediaService/GetMediaPublisher` | `library.media_publisher.read` |  | Get MediaPublisher. |
+| 1680 | `PATCH /v1/library/media/{mediaId}/publishers/{mediaPublisherId}` | `MediaService/UpdateMediaPublisher` | `library.media_publisher.update` |  | Update MediaPublisher. |
+| 1681 | `DELETE /v1/library/media/{mediaId}/publishers/{mediaPublisherId}` | `MediaService/DeleteMediaPublisher` | `library.media_publisher.delete` |  | Delete MediaPublisher. |
+| 1682 | `GET /v1/library/media/{mediaId}/courses` | `MediaService/ListMediaCourses` | `library.media_course.read` |  | List MediaCourses. |
+| 1683 | `POST /v1/library/media/{mediaId}/courses` | `MediaService/CreateMediaCourse` | `library.media_course.create` |  | Create MediaCourse. |
+| 1684 | `GET /v1/library/media/{mediaId}/courses/{mediaCourseId}` | `MediaService/GetMediaCourse` | `library.media_course.read` |  | Get MediaCourse. |
+| 1685 | `PATCH /v1/library/media/{mediaId}/courses/{mediaCourseId}` | `MediaService/UpdateMediaCourse` | `library.media_course.update` |  | Update MediaCourse. |
+| 1686 | `DELETE /v1/library/media/{mediaId}/courses/{mediaCourseId}` | `MediaService/DeleteMediaCourse` | `library.media_course.delete` |  | Delete MediaCourse. |
+| 1687 | `GET /v1/library/media/{mediaId}/subjects` | `MediaService/ListMediaSubjects` | `library.media_subject.read` |  | List MediaSubjects. |
+| 1688 | `POST /v1/library/media/{mediaId}/subjects` | `MediaService/CreateMediaSubject` | `library.media_subject.create` |  | Create MediaSubject. |
+| 1689 | `GET /v1/library/media/{mediaId}/subjects/{mediaSubjectId}` | `MediaService/GetMediaSubject` | `library.media_subject.read` |  | Get MediaSubject. |
+| 1690 | `PATCH /v1/library/media/{mediaId}/subjects/{mediaSubjectId}` | `MediaService/UpdateMediaSubject` | `library.media_subject.update` |  | Update MediaSubject. |
+| 1691 | `DELETE /v1/library/media/{mediaId}/subjects/{mediaSubjectId}` | `MediaService/DeleteMediaSubject` | `library.media_subject.delete` |  | Delete MediaSubject. |
+| 1692 | `GET /v1/library/media/{mediaId}/units` | `MediaService/ListMediaUnits` | `library.media_unit.read` |  | List MediaUnits. |
+| 1693 | `POST /v1/library/media/{mediaId}/units` | `MediaService/CreateMediaUnit` | `library.media_unit.create` |  | Create MediaUnit. |
+| 1694 | `GET /v1/library/media/{mediaId}/units/{mediaUnitId}` | `MediaService/GetMediaUnit` | `library.media_unit.read` |  | Get MediaUnit. |
+| 1695 | `PATCH /v1/library/media/{mediaId}/units/{mediaUnitId}` | `MediaService/UpdateMediaUnit` | `library.media_unit.update` |  | Update MediaUnit. |
+| 1696 | `DELETE /v1/library/media/{mediaId}/units/{mediaUnitId}` | `MediaService/DeleteMediaUnit` | `library.media_unit.delete` |  | Delete MediaUnit. |
+| 1697 | `GET /v1/library/library-card-types` | `LibraryCardTypeService/ListLibraryCardTypes` | `library.library_card_type.read` |  | List LibraryCardTypes. |
+| 1698 | `POST /v1/library/library-card-types` | `LibraryCardTypeService/CreateLibraryCardType` | `library.library_card_type.create` |  | Create LibraryCardType. |
+| 1699 | `GET /v1/library/library-card-types/{libraryCardTypeId}` | `LibraryCardTypeService/GetLibraryCardType` | `library.library_card_type.read` |  | Get LibraryCardType. |
+| 1700 | `PATCH /v1/library/library-card-types/{libraryCardTypeId}` | `LibraryCardTypeService/UpdateLibraryCardType` | `library.library_card_type.update` |  | Update LibraryCardType. |
+| 1701 | `DELETE /v1/library/library-card-types/{libraryCardTypeId}` | `LibraryCardTypeService/DeleteLibraryCardType` | `library.library_card_type.delete` |  | Delete LibraryCardType. |
+| 1702 | `GET /v1/library/library-cards` | `LibraryCardService/ListLibraryCards` | `library.library_card.read` |  | List LibraryCards. |
+| 1703 | `POST /v1/library/library-cards` | `LibraryCardService/CreateLibraryCard` | `library.library_card.create` |  | Create LibraryCard. |
+| 1704 | `GET /v1/library/library-cards/{libraryCardId}` | `LibraryCardService/GetLibraryCard` | `library.library_card.read` |  | Get LibraryCard. |
+| 1705 | `PATCH /v1/library/library-cards/{libraryCardId}` | `LibraryCardService/UpdateLibraryCard` | `library.library_card.update` |  | Update LibraryCard. |
+| 1706 | `DELETE /v1/library/library-cards/{libraryCardId}` | `LibraryCardService/DeleteLibraryCard` | `library.library_card.delete` |  | Delete LibraryCard. |
+| 1707 | `GET /v1/library/loans` | `LoanService/ListLoans` | `library.loan.read` |  | List Loans. |
+| 1708 | `POST /v1/library/loans` | `LoanService/CreateLoan` | `library.loan.create` |  | Create Loan. |
+| 1709 | `GET /v1/library/loans/{loanId}` | `LoanService/GetLoan` | `library.loan.read` |  | Get Loan. |
+| 1710 | `PATCH /v1/library/loans/{loanId}` | `LoanService/UpdateLoan` | `library.loan.update` |  | Update Loan. |
+| 1711 | `DELETE /v1/library/loans/{loanId}` | `LoanService/DeleteLoan` | `library.loan.delete` |  | Delete Loan. |
+| 1712 | `GET /v1/library/reservations` | `ReservationService/ListReservations` | `library.reservation.read` |  | List Reservations. |
+| 1713 | `POST /v1/library/reservations` | `ReservationService/CreateReservation` | `library.reservation.create` |  | Create Reservation. |
+| 1714 | `GET /v1/library/reservations/{reservationId}` | `ReservationService/GetReservation` | `library.reservation.read` |  | Get Reservation. |
+| 1715 | `PATCH /v1/library/reservations/{reservationId}` | `ReservationService/UpdateReservation` | `library.reservation.update` |  | Update Reservation. |
+| 1716 | `DELETE /v1/library/reservations/{reservationId}` | `ReservationService/DeleteReservation` | `library.reservation.delete` |  | Delete Reservation. |
+| 1717 | `GET /v1/library/purchase-requests` | `PurchaseRequestService/ListPurchaseRequests` | `library.purchase_request.read` |  | List PurchaseRequests. |
+| 1718 | `POST /v1/library/purchase-requests` | `PurchaseRequestService/CreatePurchaseRequest` | `library.purchase_request.create` |  | Create PurchaseRequest. |
+| 1719 | `GET /v1/library/purchase-requests/{purchaseRequestId}` | `PurchaseRequestService/GetPurchaseRequest` | `library.purchase_request.read` |  | Get PurchaseRequest. |
+| 1720 | `PATCH /v1/library/purchase-requests/{purchaseRequestId}` | `PurchaseRequestService/UpdatePurchaseRequest` | `library.purchase_request.update` |  | Update PurchaseRequest. |
+| 1721 | `DELETE /v1/library/purchase-requests/{purchaseRequestId}` | `PurchaseRequestService/DeletePurchaseRequest` | `library.purchase_request.delete` |  | Delete PurchaseRequest. |
+| 1722 | `GET /v1/library/purchase-requests/{purchaseRequestId}/courses` | `PurchaseRequestService/ListPurchaseRequestCourses` | `library.purchase_request_course.read` |  | List PurchaseRequestCourses. |
+| 1723 | `POST /v1/library/purchase-requests/{purchaseRequestId}/courses` | `PurchaseRequestService/CreatePurchaseRequestCourse` | `library.purchase_request_course.create` |  | Create PurchaseRequestCourse. |
+| 1724 | `GET /v1/library/purchase-requests/{purchaseRequestId}/courses/{purchaseRequestCourseId}` | `PurchaseRequestService/GetPurchaseRequestCourse` | `library.purchase_request_course.read` |  | Get PurchaseRequestCourse. |
+| 1725 | `PATCH /v1/library/purchase-requests/{purchaseRequestId}/courses/{purchaseRequestCourseId}` | `PurchaseRequestService/UpdatePurchaseRequestCourse` | `library.purchase_request_course.update` |  | Update PurchaseRequestCourse. |
+| 1726 | `DELETE /v1/library/purchase-requests/{purchaseRequestId}/courses/{purchaseRequestCourseId}` | `PurchaseRequestService/DeletePurchaseRequestCourse` | `library.purchase_request_course.delete` |  | Delete PurchaseRequestCourse. |
+| 1727 | `GET /v1/library/purchase-requests/{purchaseRequestId}/subjects` | `PurchaseRequestService/ListPurchaseRequestSubjects` | `library.purchase_request_subject.read` |  | List PurchaseRequestSubjects. |
+| 1728 | `POST /v1/library/purchase-requests/{purchaseRequestId}/subjects` | `PurchaseRequestService/CreatePurchaseRequestSubject` | `library.purchase_request_subject.create` |  | Create PurchaseRequestSubject. |
+| 1729 | `GET /v1/library/purchase-requests/{purchaseRequestId}/subjects/{purchaseRequestSubjectId}` | `PurchaseRequestService/GetPurchaseRequestSubject` | `library.purchase_request_subject.read` |  | Get PurchaseRequestSubject. |
+| 1730 | `PATCH /v1/library/purchase-requests/{purchaseRequestId}/subjects/{purchaseRequestSubjectId}` | `PurchaseRequestService/UpdatePurchaseRequestSubject` | `library.purchase_request_subject.update` |  | Update PurchaseRequestSubject. |
+| 1731 | `DELETE /v1/library/purchase-requests/{purchaseRequestId}/subjects/{purchaseRequestSubjectId}` | `PurchaseRequestService/DeletePurchaseRequestSubject` | `library.purchase_request_subject.delete` |  | Delete PurchaseRequestSubject. |
+| 1732 | `POST /v1/library/loans/{loanId}:requestReturn` | `LoanService/RequestLoanReturn` | `library.loan.request_loan_return` |  | Borrower drops the copy for return (status return_pending until checked). |
+| 1733 | `POST /v1/library/loans/{loanId}:return` | `LoanService/ReturnLoan` | `library.loan.return_loan` |  | Librarian checks the copy in (status returned); fine is computed. |
+| 1734 | `POST /v1/library/loans/{loanId}:markLost` | `LoanService/MarkLoanLost` | `library.loan.mark_loan_lost` |  | Copy lost. |
+| 1735 | `POST /v1/library/loans/{loanId}:invoiceFine` | `LoanService/InvoiceLoanFine` | `library.loan.invoice_loan_fine` |  | Raise an invoice for the fine. |
+| 1736 | `POST /v1/library/reservations/{reservationId}:accept` | `ReservationService/AcceptReservation` | `library.reservation.accept_reservation` |  | Accept. |
+| 1737 | `POST /v1/library/reservations/{reservationId}:reject` | `ReservationService/RejectReservation` | `library.reservation.reject_reservation` |  | Reject. |
+| 1738 | `POST /v1/library/reservations/{reservationId}:requestAgain` | `ReservationService/RequestReservationAgain` | `library.reservation.request_reservation_again` |  | Re-request. |
+| 1739 | `POST /v1/library/purchase-requests/{purchaseRequestId}:submit` | `PurchaseRequestService/SubmitPurchaseRequest` | `library.purchase_request.submit_purchase_request` |  | Send to the librarian. |
+| 1740 | `POST /v1/library/purchase-requests/{purchaseRequestId}:accept` | `PurchaseRequestService/AcceptPurchaseRequest` | `library.purchase_request.accept_purchase_request` |  | Accept. |
+| 1741 | `POST /v1/library/purchase-requests/{purchaseRequestId}:reject` | `PurchaseRequestService/RejectPurchaseRequest` | `library.purchase_request.reject_purchase_request` |  | Reject. |
 
 ## Transport (`transport`)
 
 | # | REST | gRPC | Permission | Public | Description |
 |---|---|---|---|---|---|
-| 1741 | `GET /v1/transport/routes` | `RouteService/ListRoutes` | `transport.route.read` |  | List Routes. |
-| 1742 | `POST /v1/transport/routes` | `RouteService/CreateRoute` | `transport.route.create` |  | Create Route. |
-| 1743 | `GET /v1/transport/routes/{routeId}` | `RouteService/GetRoute` | `transport.route.read` |  | Get Route. |
-| 1744 | `PATCH /v1/transport/routes/{routeId}` | `RouteService/UpdateRoute` | `transport.route.update` |  | Update Route. |
-| 1745 | `DELETE /v1/transport/routes/{routeId}` | `RouteService/DeleteRoute` | `transport.route.delete` |  | Delete Route. |
-| 1746 | `GET /v1/transport/routes/{routeId}/stops` | `RouteService/ListRouteStops` | `transport.route_stop.read` |  | List RouteStops. |
-| 1747 | `POST /v1/transport/routes/{routeId}/stops` | `RouteService/CreateRouteStop` | `transport.route_stop.create` |  | Create RouteStop. |
-| 1748 | `GET /v1/transport/routes/{routeId}/stops/{routeStopId}` | `RouteService/GetRouteStop` | `transport.route_stop.read` |  | Get RouteStop. |
-| 1749 | `PATCH /v1/transport/routes/{routeId}/stops/{routeStopId}` | `RouteService/UpdateRouteStop` | `transport.route_stop.update` |  | Update RouteStop. |
-| 1750 | `DELETE /v1/transport/routes/{routeId}/stops/{routeStopId}` | `RouteService/DeleteRouteStop` | `transport.route_stop.delete` |  | Delete RouteStop. |
-| 1751 | `GET /v1/transport/student-transports` | `StudentTransportService/ListStudentTransports` | `transport.student_transport.read` |  | List StudentTransports. |
-| 1752 | `POST /v1/transport/student-transports` | `StudentTransportService/CreateStudentTransport` | `transport.student_transport.create` |  | Create StudentTransport. |
-| 1753 | `GET /v1/transport/student-transports/{studentTransportId}` | `StudentTransportService/GetStudentTransport` | `transport.student_transport.read` |  | Get StudentTransport. |
-| 1754 | `PATCH /v1/transport/student-transports/{studentTransportId}` | `StudentTransportService/UpdateStudentTransport` | `transport.student_transport.update` |  | Update StudentTransport. |
-| 1755 | `DELETE /v1/transport/student-transports/{studentTransportId}` | `StudentTransportService/DeleteStudentTransport` | `transport.student_transport.delete` |  | Delete StudentTransport. |
+| 1742 | `GET /v1/transport/routes` | `RouteService/ListRoutes` | `transport.route.read` |  | List Routes. |
+| 1743 | `POST /v1/transport/routes` | `RouteService/CreateRoute` | `transport.route.create` |  | Create Route. |
+| 1744 | `GET /v1/transport/routes/{routeId}` | `RouteService/GetRoute` | `transport.route.read` |  | Get Route. |
+| 1745 | `PATCH /v1/transport/routes/{routeId}` | `RouteService/UpdateRoute` | `transport.route.update` |  | Update Route. |
+| 1746 | `DELETE /v1/transport/routes/{routeId}` | `RouteService/DeleteRoute` | `transport.route.delete` |  | Delete Route. |
+| 1747 | `GET /v1/transport/routes/{routeId}/stops` | `RouteService/ListRouteStops` | `transport.route_stop.read` |  | List RouteStops. |
+| 1748 | `POST /v1/transport/routes/{routeId}/stops` | `RouteService/CreateRouteStop` | `transport.route_stop.create` |  | Create RouteStop. |
+| 1749 | `GET /v1/transport/routes/{routeId}/stops/{routeStopId}` | `RouteService/GetRouteStop` | `transport.route_stop.read` |  | Get RouteStop. |
+| 1750 | `PATCH /v1/transport/routes/{routeId}/stops/{routeStopId}` | `RouteService/UpdateRouteStop` | `transport.route_stop.update` |  | Update RouteStop. |
+| 1751 | `DELETE /v1/transport/routes/{routeId}/stops/{routeStopId}` | `RouteService/DeleteRouteStop` | `transport.route_stop.delete` |  | Delete RouteStop. |
+| 1752 | `GET /v1/transport/student-transports` | `StudentTransportService/ListStudentTransports` | `transport.student_transport.read` |  | List StudentTransports. |
+| 1753 | `POST /v1/transport/student-transports` | `StudentTransportService/CreateStudentTransport` | `transport.student_transport.create` |  | Create StudentTransport. |
+| 1754 | `GET /v1/transport/student-transports/{studentTransportId}` | `StudentTransportService/GetStudentTransport` | `transport.student_transport.read` |  | Get StudentTransport. |
+| 1755 | `PATCH /v1/transport/student-transports/{studentTransportId}` | `StudentTransportService/UpdateStudentTransport` | `transport.student_transport.update` |  | Update StudentTransport. |
+| 1756 | `DELETE /v1/transport/student-transports/{studentTransportId}` | `StudentTransportService/DeleteStudentTransport` | `transport.student_transport.delete` |  | Delete StudentTransport. |
 
 ## Communication & Community (`comms`)
 
 | # | REST | gRPC | Permission | Public | Description |
 |---|---|---|---|---|---|
-| 1756 | `GET /v1/comms/message-templates` | `MessageTemplateService/ListMessageTemplates` | `comms.message_template.read` |  | List MessageTemplates. |
-| 1757 | `POST /v1/comms/message-templates` | `MessageTemplateService/CreateMessageTemplate` | `comms.message_template.create` |  | Create MessageTemplate. |
-| 1758 | `GET /v1/comms/message-templates/{messageTemplateId}` | `MessageTemplateService/GetMessageTemplate` | `comms.message_template.read` |  | Get MessageTemplate. |
-| 1759 | `PATCH /v1/comms/message-templates/{messageTemplateId}` | `MessageTemplateService/UpdateMessageTemplate` | `comms.message_template.update` |  | Update MessageTemplate. |
-| 1760 | `DELETE /v1/comms/message-templates/{messageTemplateId}` | `MessageTemplateService/DeleteMessageTemplate` | `comms.message_template.delete` |  | Delete MessageTemplate. |
-| 1761 | `GET /v1/comms/outbound-messages` | `OutboundMessageService/ListOutboundMessages` | `comms.outbound_message.read` |  | List OutboundMessages. |
-| 1762 | `GET /v1/comms/outbound-messages/{outboundMessageId}` | `OutboundMessageService/GetOutboundMessage` | `comms.outbound_message.read` |  | Get OutboundMessage. |
-| 1763 | `GET /v1/comms/mailbox-messages` | `MailboxMessageService/ListMailboxMessages` | `comms.mailbox_message.read` |  | List MailboxMessages. |
-| 1764 | `GET /v1/comms/mailbox-messages/{mailboxMessageId}` | `MailboxMessageService/GetMailboxMessage` | `comms.mailbox_message.read` |  | Get MailboxMessage. |
-| 1765 | `DELETE /v1/comms/mailbox-messages/{mailboxMessageId}` | `MailboxMessageService/DeleteMailboxMessage` | `comms.mailbox_message.delete` |  | Delete MailboxMessage. |
-| 1766 | `GET /v1/comms/notifications` | `InAppNotificationService/ListInAppNotifications` | `comms.in_app_notification.read` |  | List InAppNotifications. |
-| 1767 | `GET /v1/comms/notifications/{inAppNotificationId}` | `InAppNotificationService/GetInAppNotification` | `comms.in_app_notification.read` |  | Get InAppNotification. |
-| 1768 | `GET /v1/comms/notice-backgrounds` | `NoticeBackgroundService/ListNoticeBackgrounds` | `comms.notice_background.read` |  | List NoticeBackgrounds. |
-| 1769 | `POST /v1/comms/notice-backgrounds` | `NoticeBackgroundService/CreateNoticeBackground` | `comms.notice_background.create` |  | Create NoticeBackground. |
-| 1770 | `GET /v1/comms/notice-backgrounds/{noticeBackgroundId}` | `NoticeBackgroundService/GetNoticeBackground` | `comms.notice_background.read` |  | Get NoticeBackground. |
-| 1771 | `PATCH /v1/comms/notice-backgrounds/{noticeBackgroundId}` | `NoticeBackgroundService/UpdateNoticeBackground` | `comms.notice_background.update` |  | Update NoticeBackground. |
-| 1772 | `DELETE /v1/comms/notice-backgrounds/{noticeBackgroundId}` | `NoticeBackgroundService/DeleteNoticeBackground` | `comms.notice_background.delete` |  | Delete NoticeBackground. |
-| 1773 | `GET /v1/comms/notices` | `NoticeService/ListNotices` | `comms.notice.read` |  | List Notices. |
-| 1774 | `POST /v1/comms/notices` | `NoticeService/CreateNotice` | `comms.notice.create` |  | Create Notice. |
-| 1775 | `GET /v1/comms/notices/{noticeId}` | `NoticeService/GetNotice` | `comms.notice.read` |  | Get Notice. |
-| 1776 | `PATCH /v1/comms/notices/{noticeId}` | `NoticeService/UpdateNotice` | `comms.notice.update` |  | Update Notice. |
-| 1777 | `DELETE /v1/comms/notices/{noticeId}` | `NoticeService/DeleteNotice` | `comms.notice.delete` |  | Delete Notice. |
-| 1778 | `GET /v1/comms/events` | `EventService/ListEvents` | `comms.event.read` |  | List Events. |
-| 1779 | `POST /v1/comms/events` | `EventService/CreateEvent` | `comms.event.create` |  | Create Event. |
-| 1780 | `GET /v1/comms/events/{eventId}` | `EventService/GetEvent` | `comms.event.read` |  | Get Event. |
-| 1781 | `PATCH /v1/comms/events/{eventId}` | `EventService/UpdateEvent` | `comms.event.update` |  | Update Event. |
-| 1782 | `DELETE /v1/comms/events/{eventId}` | `EventService/DeleteEvent` | `comms.event.delete` |  | Delete Event. |
-| 1783 | `GET /v1/comms/events/{eventId}/gallery-items` | `EventService/ListEventGalleryItems` | `comms.event_gallery_item.read` |  | List EventGalleryItems. |
-| 1784 | `POST /v1/comms/events/{eventId}/gallery-items` | `EventService/CreateEventGalleryItem` | `comms.event_gallery_item.create` |  | Create EventGalleryItem. |
-| 1785 | `GET /v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}` | `EventService/GetEventGalleryItem` | `comms.event_gallery_item.read` |  | Get EventGalleryItem. |
-| 1786 | `PATCH /v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}` | `EventService/UpdateEventGalleryItem` | `comms.event_gallery_item.update` |  | Update EventGalleryItem. |
-| 1787 | `DELETE /v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}` | `EventService/DeleteEventGalleryItem` | `comms.event_gallery_item.delete` |  | Delete EventGalleryItem. |
-| 1788 | `GET /v1/comms/magazines` | `MagazineService/ListMagazines` | `comms.magazine.read` |  | List Magazines. |
-| 1789 | `POST /v1/comms/magazines` | `MagazineService/CreateMagazine` | `comms.magazine.create` |  | Create Magazine. |
-| 1790 | `GET /v1/comms/magazines/{magazineId}` | `MagazineService/GetMagazine` | `comms.magazine.read` |  | Get Magazine. |
-| 1791 | `PATCH /v1/comms/magazines/{magazineId}` | `MagazineService/UpdateMagazine` | `comms.magazine.update` |  | Update Magazine. |
-| 1792 | `DELETE /v1/comms/magazines/{magazineId}` | `MagazineService/DeleteMagazine` | `comms.magazine.delete` |  | Delete Magazine. |
-| 1793 | `GET /v1/comms/conversations` | `ConversationService/ListConversations` | `comms.conversation.read` |  | List Conversations. |
-| 1794 | `POST /v1/comms/conversations` | `ConversationService/CreateConversation` | `comms.conversation.create` |  | Create Conversation. |
-| 1795 | `GET /v1/comms/conversations/{conversationId}` | `ConversationService/GetConversation` | `comms.conversation.read` |  | Get Conversation. |
-| 1796 | `PATCH /v1/comms/conversations/{conversationId}` | `ConversationService/UpdateConversation` | `comms.conversation.update` |  | Update Conversation. |
-| 1797 | `DELETE /v1/comms/conversations/{conversationId}` | `ConversationService/DeleteConversation` | `comms.conversation.delete` |  | Delete Conversation. |
-| 1798 | `GET /v1/comms/conversations/{conversationId}/participants` | `ConversationService/ListConversationParticipants` | `comms.conversation_participant.read` |  | List ConversationParticipants. |
-| 1799 | `POST /v1/comms/conversations/{conversationId}/participants` | `ConversationService/CreateConversationParticipant` | `comms.conversation_participant.create` |  | Create ConversationParticipant. |
-| 1800 | `GET /v1/comms/conversations/{conversationId}/participants/{conversationParticipantId}` | `ConversationService/GetConversationParticipant` | `comms.conversation_participant.read` |  | Get ConversationParticipant. |
-| 1801 | `PATCH /v1/comms/conversations/{conversationId}/participants/{conversationParticipantId}` | `ConversationService/UpdateConversationParticipant` | `comms.conversation_participant.update` |  | Update ConversationParticipant. |
-| 1802 | `DELETE /v1/comms/conversations/{conversationId}/participants/{conversationParticipantId}` | `ConversationService/DeleteConversationParticipant` | `comms.conversation_participant.delete` |  | Delete ConversationParticipant. |
-| 1803 | `GET /v1/comms/conversations/{conversationId}/messages` | `ConversationService/ListConversationMessages` | `comms.conversation_message.read` |  | List ConversationMessages. |
-| 1804 | `POST /v1/comms/conversations/{conversationId}/messages` | `ConversationService/CreateConversationMessage` | `comms.conversation_message.create` |  | Create ConversationMessage. |
-| 1805 | `GET /v1/comms/conversations/{conversationId}/messages/{conversationMessageId}` | `ConversationService/GetConversationMessage` | `comms.conversation_message.read` |  | Get ConversationMessage. |
-| 1806 | `PATCH /v1/comms/conversations/{conversationId}/messages/{conversationMessageId}` | `ConversationService/UpdateConversationMessage` | `comms.conversation_message.update` |  | Update ConversationMessage. |
-| 1807 | `DELETE /v1/comms/conversations/{conversationId}/messages/{conversationMessageId}` | `ConversationService/DeleteConversationMessage` | `comms.conversation_message.delete` |  | Delete ConversationMessage. |
-| 1808 | `GET /v1/comms/feedback-threads` | `FeedbackThreadService/ListFeedbackThreads` | `comms.feedback_thread.read` |  | List FeedbackThreads. |
-| 1809 | `POST /v1/comms/feedback-threads` | `FeedbackThreadService/CreateFeedbackThread` | `comms.feedback_thread.create` |  | Create FeedbackThread. |
-| 1810 | `GET /v1/comms/feedback-threads/{feedbackThreadId}` | `FeedbackThreadService/GetFeedbackThread` | `comms.feedback_thread.read` |  | Get FeedbackThread. |
-| 1811 | `PATCH /v1/comms/feedback-threads/{feedbackThreadId}` | `FeedbackThreadService/UpdateFeedbackThread` | `comms.feedback_thread.update` |  | Update FeedbackThread. |
-| 1812 | `DELETE /v1/comms/feedback-threads/{feedbackThreadId}` | `FeedbackThreadService/DeleteFeedbackThread` | `comms.feedback_thread.delete` |  | Delete FeedbackThread. |
-| 1813 | `GET /v1/comms/feedback-threads/{feedbackThreadId}/messages` | `FeedbackThreadService/ListFeedbackMessages` | `comms.feedback_message.read` |  | List FeedbackMessages. |
-| 1814 | `POST /v1/comms/feedback-threads/{feedbackThreadId}/messages` | `FeedbackThreadService/CreateFeedbackMessage` | `comms.feedback_message.create` |  | Create FeedbackMessage. |
-| 1815 | `GET /v1/comms/feedback-threads/{feedbackThreadId}/messages/{feedbackMessageId}` | `FeedbackThreadService/GetFeedbackMessage` | `comms.feedback_message.read` |  | Get FeedbackMessage. |
-| 1816 | `PATCH /v1/comms/feedback-threads/{feedbackThreadId}/messages/{feedbackMessageId}` | `FeedbackThreadService/UpdateFeedbackMessage` | `comms.feedback_message.update` |  | Update FeedbackMessage. |
-| 1817 | `DELETE /v1/comms/feedback-threads/{feedbackThreadId}/messages/{feedbackMessageId}` | `FeedbackThreadService/DeleteFeedbackMessage` | `comms.feedback_message.delete` |  | Delete FeedbackMessage. |
-| 1818 | `GET /v1/comms/audience-groups` | `AudienceGroupService/ListAudienceGroups` | `comms.audience_group.read` |  | List AudienceGroups. |
-| 1819 | `POST /v1/comms/audience-groups` | `AudienceGroupService/CreateAudienceGroup` | `comms.audience_group.create` |  | Create AudienceGroup. |
-| 1820 | `GET /v1/comms/audience-groups/{audienceGroupId}` | `AudienceGroupService/GetAudienceGroup` | `comms.audience_group.read` |  | Get AudienceGroup. |
-| 1821 | `PATCH /v1/comms/audience-groups/{audienceGroupId}` | `AudienceGroupService/UpdateAudienceGroup` | `comms.audience_group.update` |  | Update AudienceGroup. |
-| 1822 | `DELETE /v1/comms/audience-groups/{audienceGroupId}` | `AudienceGroupService/DeleteAudienceGroup` | `comms.audience_group.delete` |  | Delete AudienceGroup. |
-| 1823 | `GET /v1/comms/audience-groups/{audienceGroupId}/members` | `AudienceGroupService/ListAudienceGroupMembers` | `comms.audience_group_member.read` |  | List AudienceGroupMembers. |
-| 1824 | `POST /v1/comms/audience-groups/{audienceGroupId}/members` | `AudienceGroupService/CreateAudienceGroupMember` | `comms.audience_group_member.create` |  | Create AudienceGroupMember. |
-| 1825 | `GET /v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}` | `AudienceGroupService/GetAudienceGroupMember` | `comms.audience_group_member.read` |  | Get AudienceGroupMember. |
-| 1826 | `PATCH /v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}` | `AudienceGroupService/UpdateAudienceGroupMember` | `comms.audience_group_member.update` |  | Update AudienceGroupMember. |
-| 1827 | `DELETE /v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}` | `AudienceGroupService/DeleteAudienceGroupMember` | `comms.audience_group_member.delete` |  | Delete AudienceGroupMember. |
-| 1828 | `GET /v1/comms/tasks` | `TaskService/ListTasks` | `comms.task.read` |  | List Tasks. |
-| 1829 | `POST /v1/comms/tasks` | `TaskService/CreateTask` | `comms.task.create` |  | Create Task. |
-| 1830 | `GET /v1/comms/tasks/{taskId}` | `TaskService/GetTask` | `comms.task.read` |  | Get Task. |
-| 1831 | `PATCH /v1/comms/tasks/{taskId}` | `TaskService/UpdateTask` | `comms.task.update` |  | Update Task. |
-| 1832 | `DELETE /v1/comms/tasks/{taskId}` | `TaskService/DeleteTask` | `comms.task.delete` |  | Delete Task. |
-| 1833 | `GET /v1/comms/tasks/{taskId}/assignees` | `TaskService/ListTaskAssignees` | `comms.task_assignee.read` |  | List TaskAssignees. |
-| 1834 | `POST /v1/comms/tasks/{taskId}/assignees` | `TaskService/CreateTaskAssignee` | `comms.task_assignee.create` |  | Create TaskAssignee. |
-| 1835 | `GET /v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}` | `TaskService/GetTaskAssignee` | `comms.task_assignee.read` |  | Get TaskAssignee. |
-| 1836 | `PATCH /v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}` | `TaskService/UpdateTaskAssignee` | `comms.task_assignee.update` |  | Update TaskAssignee. |
-| 1837 | `DELETE /v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}` | `TaskService/DeleteTaskAssignee` | `comms.task_assignee.delete` |  | Delete TaskAssignee. |
-| 1838 | `GET /v1/comms/content-views` | `ContentViewService/ListContentViews` | `comms.content_view.read` |  | List ContentViews. |
-| 1839 | `POST /v1/comms/content-views` | `ContentViewService/CreateContentView` | `comms.content_view.create` |  | Create ContentView. |
-| 1840 | `GET /v1/comms/content-views/{contentViewId}` | `ContentViewService/GetContentView` | `comms.content_view.read` |  | Get ContentView. |
-| 1841 | `PATCH /v1/comms/content-views/{contentViewId}` | `ContentViewService/UpdateContentView` | `comms.content_view.update` |  | Update ContentView. |
-| 1842 | `DELETE /v1/comms/content-views/{contentViewId}` | `ContentViewService/DeleteContentView` | `comms.content_view.delete` |  | Delete ContentView. |
-| 1843 | `GET /v1/comms/page-categories` | `PageCategoryService/ListPageCategories` | `comms.page_category.read` |  | List PageCategories. |
-| 1844 | `POST /v1/comms/page-categories` | `PageCategoryService/CreatePageCategory` | `comms.page_category.create` |  | Create PageCategory. |
-| 1845 | `GET /v1/comms/page-categories/{pageCategoryId}` | `PageCategoryService/GetPageCategory` | `comms.page_category.read` |  | Get PageCategory. |
-| 1846 | `PATCH /v1/comms/page-categories/{pageCategoryId}` | `PageCategoryService/UpdatePageCategory` | `comms.page_category.update` |  | Update PageCategory. |
-| 1847 | `DELETE /v1/comms/page-categories/{pageCategoryId}` | `PageCategoryService/DeletePageCategory` | `comms.page_category.delete` |  | Delete PageCategory. |
-| 1848 | `GET /v1/comms/class-pages` | `ClassPageService/ListClassPages` | `comms.class_page.read` |  | List ClassPages. |
-| 1849 | `POST /v1/comms/class-pages` | `ClassPageService/CreateClassPage` | `comms.class_page.create` |  | Create ClassPage. |
-| 1850 | `GET /v1/comms/class-pages/{classPageId}` | `ClassPageService/GetClassPage` | `comms.class_page.read` |  | Get ClassPage. |
-| 1851 | `PATCH /v1/comms/class-pages/{classPageId}` | `ClassPageService/UpdateClassPage` | `comms.class_page.update` |  | Update ClassPage. |
-| 1852 | `DELETE /v1/comms/class-pages/{classPageId}` | `ClassPageService/DeleteClassPage` | `comms.class_page.delete` |  | Delete ClassPage. |
-| 1853 | `GET /v1/comms/class-pages/{classPageId}/attachments` | `ClassPageService/ListClassPageAttachments` | `comms.class_page_attachment.read` |  | List ClassPageAttachments. |
-| 1854 | `POST /v1/comms/class-pages/{classPageId}/attachments` | `ClassPageService/CreateClassPageAttachment` | `comms.class_page_attachment.create` |  | Create ClassPageAttachment. |
-| 1855 | `GET /v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}` | `ClassPageService/GetClassPageAttachment` | `comms.class_page_attachment.read` |  | Get ClassPageAttachment. |
-| 1856 | `PATCH /v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}` | `ClassPageService/UpdateClassPageAttachment` | `comms.class_page_attachment.update` |  | Update ClassPageAttachment. |
-| 1857 | `DELETE /v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}` | `ClassPageService/DeleteClassPageAttachment` | `comms.class_page_attachment.delete` |  | Delete ClassPageAttachment. |
-| 1858 | `GET /v1/comms/class-pages/{classPageId}/members` | `ClassPageService/ListClassPageMembers` | `comms.class_page_member.read` |  | List ClassPageMembers. |
-| 1859 | `POST /v1/comms/class-pages/{classPageId}/members` | `ClassPageService/CreateClassPageMember` | `comms.class_page_member.create` |  | Create ClassPageMember. |
-| 1860 | `GET /v1/comms/class-pages/{classPageId}/members/{classPageMemberId}` | `ClassPageService/GetClassPageMember` | `comms.class_page_member.read` |  | Get ClassPageMember. |
-| 1861 | `PATCH /v1/comms/class-pages/{classPageId}/members/{classPageMemberId}` | `ClassPageService/UpdateClassPageMember` | `comms.class_page_member.update` |  | Update ClassPageMember. |
-| 1862 | `DELETE /v1/comms/class-pages/{classPageId}/members/{classPageMemberId}` | `ClassPageService/DeleteClassPageMember` | `comms.class_page_member.delete` |  | Delete ClassPageMember. |
-| 1863 | `GET /v1/comms/posts` | `PostService/ListPosts` | `comms.post.read` |  | List Posts. |
-| 1864 | `POST /v1/comms/posts` | `PostService/CreatePost` | `comms.post.create` |  | Create Post. |
-| 1865 | `GET /v1/comms/posts/{postId}` | `PostService/GetPost` | `comms.post.read` |  | Get Post. |
-| 1866 | `PATCH /v1/comms/posts/{postId}` | `PostService/UpdatePost` | `comms.post.update` |  | Update Post. |
-| 1867 | `DELETE /v1/comms/posts/{postId}` | `PostService/DeletePost` | `comms.post.delete` |  | Delete Post. |
-| 1868 | `GET /v1/comms/posts/{postId}/audience-classes` | `PostService/ListPostAudienceClasses` | `comms.post_audience_class.read` |  | List PostAudienceClasses. |
-| 1869 | `POST /v1/comms/posts/{postId}/audience-classes` | `PostService/CreatePostAudienceClass` | `comms.post_audience_class.create` |  | Create PostAudienceClass. |
-| 1870 | `GET /v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}` | `PostService/GetPostAudienceClass` | `comms.post_audience_class.read` |  | Get PostAudienceClass. |
-| 1871 | `PATCH /v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}` | `PostService/UpdatePostAudienceClass` | `comms.post_audience_class.update` |  | Update PostAudienceClass. |
-| 1872 | `DELETE /v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}` | `PostService/DeletePostAudienceClass` | `comms.post_audience_class.delete` |  | Delete PostAudienceClass. |
-| 1873 | `GET /v1/comms/posts/{postId}/reactions` | `PostService/ListPostReactions` | `comms.post_reaction.read` |  | List PostReactions. |
-| 1874 | `POST /v1/comms/posts/{postId}/reactions` | `PostService/CreatePostReaction` | `comms.post_reaction.create` |  | Create PostReaction. |
-| 1875 | `GET /v1/comms/posts/{postId}/reactions/{postReactionId}` | `PostService/GetPostReaction` | `comms.post_reaction.read` |  | Get PostReaction. |
-| 1876 | `PATCH /v1/comms/posts/{postId}/reactions/{postReactionId}` | `PostService/UpdatePostReaction` | `comms.post_reaction.update` |  | Update PostReaction. |
-| 1877 | `DELETE /v1/comms/posts/{postId}/reactions/{postReactionId}` | `PostService/DeletePostReaction` | `comms.post_reaction.delete` |  | Delete PostReaction. |
-| 1878 | `GET /v1/comms/posts/{postId}/comments` | `PostService/ListPostComments` | `comms.post_comment.read` |  | List PostComments. |
-| 1879 | `POST /v1/comms/posts/{postId}/comments` | `PostService/CreatePostComment` | `comms.post_comment.create` |  | Create PostComment. |
-| 1880 | `GET /v1/comms/posts/{postId}/comments/{postCommentId}` | `PostService/GetPostComment` | `comms.post_comment.read` |  | Get PostComment. |
-| 1881 | `PATCH /v1/comms/posts/{postId}/comments/{postCommentId}` | `PostService/UpdatePostComment` | `comms.post_comment.update` |  | Update PostComment. |
-| 1882 | `DELETE /v1/comms/posts/{postId}/comments/{postCommentId}` | `PostService/DeletePostComment` | `comms.post_comment.delete` |  | Delete PostComment. |
-| 1883 | `GET /v1/comms/comment-reactions` | `CommentReactionService/ListCommentReactions` | `comms.comment_reaction.read` |  | List CommentReactions. |
-| 1884 | `POST /v1/comms/comment-reactions` | `CommentReactionService/CreateCommentReaction` | `comms.comment_reaction.create` |  | Create CommentReaction. |
-| 1885 | `GET /v1/comms/comment-reactions/{commentReactionId}` | `CommentReactionService/GetCommentReaction` | `comms.comment_reaction.read` |  | Get CommentReaction. |
-| 1886 | `PATCH /v1/comms/comment-reactions/{commentReactionId}` | `CommentReactionService/UpdateCommentReaction` | `comms.comment_reaction.update` |  | Update CommentReaction. |
-| 1887 | `DELETE /v1/comms/comment-reactions/{commentReactionId}` | `CommentReactionService/DeleteCommentReaction` | `comms.comment_reaction.delete` |  | Delete CommentReaction. |
-| 1888 | `GET /v1/comms/notices/{noticeId}/audiences` | `NoticeService/ListNoticeAudiences` | `comms.notice_audience.read` |  | List NoticeAudiences. |
-| 1889 | `POST /v1/comms/notices/{noticeId}/audiences` | `NoticeService/CreateNoticeAudience` | `comms.notice_audience.create` |  | Create NoticeAudience. |
-| 1890 | `GET /v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}` | `NoticeService/GetNoticeAudience` | `comms.notice_audience.read` |  | Get NoticeAudience. |
-| 1891 | `PATCH /v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}` | `NoticeService/UpdateNoticeAudience` | `comms.notice_audience.update` |  | Update NoticeAudience. |
-| 1892 | `DELETE /v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}` | `NoticeService/DeleteNoticeAudience` | `comms.notice_audience.delete` |  | Delete NoticeAudience. |
-| 1893 | `GET /v1/comms/notices/{noticeId}/versions` | `NoticeService/ListNoticeVersions` | `comms.notice_version.read` |  | List NoticeVersions. |
-| 1894 | `GET /v1/comms/notices/{noticeId}/versions/{noticeVersionId}` | `NoticeService/GetNoticeVersion` | `comms.notice_version.read` |  | Get NoticeVersion. |
-| 1895 | `GET /v1/comms/events/{eventId}/institutions` | `EventService/ListEventInstitutions` | `comms.event_institution.read` |  | List EventInstitutions. |
-| 1896 | `POST /v1/comms/events/{eventId}/institutions` | `EventService/CreateEventInstitution` | `comms.event_institution.create` |  | Create EventInstitution. |
-| 1897 | `GET /v1/comms/events/{eventId}/institutions/{eventInstitutionId}` | `EventService/GetEventInstitution` | `comms.event_institution.read` |  | Get EventInstitution. |
-| 1898 | `PATCH /v1/comms/events/{eventId}/institutions/{eventInstitutionId}` | `EventService/UpdateEventInstitution` | `comms.event_institution.update` |  | Update EventInstitution. |
-| 1899 | `DELETE /v1/comms/events/{eventId}/institutions/{eventInstitutionId}` | `EventService/DeleteEventInstitution` | `comms.event_institution.delete` |  | Delete EventInstitution. |
-| 1900 | `GET /v1/comms/events/{eventId}/occurrences` | `EventService/ListEventOccurrences` | `comms.event_occurrence.read` |  | List EventOccurrences. |
-| 1901 | `POST /v1/comms/events/{eventId}/occurrences` | `EventService/CreateEventOccurrence` | `comms.event_occurrence.create` |  | Create EventOccurrence. |
-| 1902 | `GET /v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}` | `EventService/GetEventOccurrence` | `comms.event_occurrence.read` |  | Get EventOccurrence. |
-| 1903 | `PATCH /v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}` | `EventService/UpdateEventOccurrence` | `comms.event_occurrence.update` |  | Update EventOccurrence. |
-| 1904 | `DELETE /v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}` | `EventService/DeleteEventOccurrence` | `comms.event_occurrence.delete` |  | Delete EventOccurrence. |
-| 1905 | `GET /v1/comms/events/{eventId}/attendees` | `EventService/ListEventAttendees` | `comms.event_attendee.read` |  | List EventAttendees. |
-| 1906 | `POST /v1/comms/events/{eventId}/attendees` | `EventService/CreateEventAttendee` | `comms.event_attendee.create` |  | Create EventAttendee. |
-| 1907 | `GET /v1/comms/events/{eventId}/attendees/{eventAttendeeId}` | `EventService/GetEventAttendee` | `comms.event_attendee.read` |  | Get EventAttendee. |
-| 1908 | `PATCH /v1/comms/events/{eventId}/attendees/{eventAttendeeId}` | `EventService/UpdateEventAttendee` | `comms.event_attendee.update` |  | Update EventAttendee. |
-| 1909 | `DELETE /v1/comms/events/{eventId}/attendees/{eventAttendeeId}` | `EventService/DeleteEventAttendee` | `comms.event_attendee.delete` |  | Delete EventAttendee. |
-| 1910 | `GET /v1/comms/calendar-exports` | `CalendarExportService/ListCalendarExports` | `comms.calendar_export.read` |  | List CalendarExports. |
-| 1911 | `GET /v1/comms/calendar-exports/{calendarExportId}` | `CalendarExportService/GetCalendarExport` | `comms.calendar_export.read` |  | Get CalendarExport. |
-| 1912 | `DELETE /v1/comms/calendar-exports/{calendarExportId}` | `CalendarExportService/DeleteCalendarExport` | `comms.calendar_export.delete` |  | Delete CalendarExport. |
-| 1913 | `GET /v1/comms/notification-types` | `NotificationTypeService/ListNotificationTypes` | `comms.notification_type.read` |  | List NotificationTypes. |
-| 1914 | `POST /v1/comms/notification-types` | `NotificationTypeService/CreateNotificationType` | `comms.notification_type.create` |  | Create NotificationType. |
-| 1915 | `GET /v1/comms/notification-types/{notificationTypeId}` | `NotificationTypeService/GetNotificationType` | `comms.notification_type.read` |  | Get NotificationType. |
-| 1916 | `PATCH /v1/comms/notification-types/{notificationTypeId}` | `NotificationTypeService/UpdateNotificationType` | `comms.notification_type.update` |  | Update NotificationType. |
-| 1917 | `DELETE /v1/comms/notification-types/{notificationTypeId}` | `NotificationTypeService/DeleteNotificationType` | `comms.notification_type.delete` |  | Delete NotificationType. |
-| 1918 | `GET /v1/comms/notification-types/{notificationTypeId}/properties` | `NotificationTypeService/ListNotificationTypeProperties` | `comms.notification_type_property.read` |  | List NotificationTypeProperties. |
-| 1919 | `POST /v1/comms/notification-types/{notificationTypeId}/properties` | `NotificationTypeService/CreateNotificationTypeProperty` | `comms.notification_type_property.create` |  | Create NotificationTypeProperty. |
-| 1920 | `GET /v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId}` | `NotificationTypeService/GetNotificationTypeProperty` | `comms.notification_type_property.read` |  | Get NotificationTypeProperty. |
-| 1921 | `PATCH /v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId}` | `NotificationTypeService/UpdateNotificationTypeProperty` | `comms.notification_type_property.update` |  | Update NotificationTypeProperty. |
-| 1922 | `DELETE /v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId}` | `NotificationTypeService/DeleteNotificationTypeProperty` | `comms.notification_type_property.delete` |  | Delete NotificationTypeProperty. |
-| 1923 | `GET /v1/comms/notification-types/{notificationTypeId}/rules` | `NotificationTypeService/ListNotificationRules` | `comms.notification_rule.read` |  | List NotificationRules. |
-| 1924 | `POST /v1/comms/notification-types/{notificationTypeId}/rules` | `NotificationTypeService/CreateNotificationRule` | `comms.notification_rule.create` |  | Create NotificationRule. |
-| 1925 | `GET /v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId}` | `NotificationTypeService/GetNotificationRule` | `comms.notification_rule.read` |  | Get NotificationRule. |
-| 1926 | `PATCH /v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId}` | `NotificationTypeService/UpdateNotificationRule` | `comms.notification_rule.update` |  | Update NotificationRule. |
-| 1927 | `DELETE /v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId}` | `NotificationTypeService/DeleteNotificationRule` | `comms.notification_rule.delete` |  | Delete NotificationRule. |
-| 1928 | `GET /v1/comms/notification-types/{notificationTypeId}/cohort-settings` | `NotificationTypeService/ListNotificationCohortSettings` | `comms.notification_cohort_setting.read` |  | List NotificationCohortSettings. |
-| 1929 | `POST /v1/comms/notification-types/{notificationTypeId}/cohort-settings` | `NotificationTypeService/CreateNotificationCohortSetting` | `comms.notification_cohort_setting.create` |  | Create NotificationCohortSetting. |
-| 1930 | `GET /v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId}` | `NotificationTypeService/GetNotificationCohortSetting` | `comms.notification_cohort_setting.read` |  | Get NotificationCohortSetting. |
-| 1931 | `PATCH /v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId}` | `NotificationTypeService/UpdateNotificationCohortSetting` | `comms.notification_cohort_setting.update` |  | Update NotificationCohortSetting. |
-| 1932 | `DELETE /v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId}` | `NotificationTypeService/DeleteNotificationCohortSetting` | `comms.notification_cohort_setting.delete` |  | Delete NotificationCohortSetting. |
-| 1933 | `GET /v1/comms/notification-channels` | `NotificationChannelService/ListNotificationChannels` | `comms.notification_channel.read` |  | List NotificationChannels. |
-| 1934 | `POST /v1/comms/notification-channels` | `NotificationChannelService/CreateNotificationChannel` | `comms.notification_channel.create` |  | Create NotificationChannel. |
-| 1935 | `GET /v1/comms/notification-channels/{notificationChannelId}` | `NotificationChannelService/GetNotificationChannel` | `comms.notification_channel.read` |  | Get NotificationChannel. |
-| 1936 | `PATCH /v1/comms/notification-channels/{notificationChannelId}` | `NotificationChannelService/UpdateNotificationChannel` | `comms.notification_channel.update` |  | Update NotificationChannel. |
-| 1937 | `DELETE /v1/comms/notification-channels/{notificationChannelId}` | `NotificationChannelService/DeleteNotificationChannel` | `comms.notification_channel.delete` |  | Delete NotificationChannel. |
-| 1938 | `GET /v1/comms/notification-channels/{notificationChannelId}/properties` | `NotificationChannelService/ListNotificationChannelProperties` | `comms.notification_channel_property.read` |  | List NotificationChannelProperties. |
-| 1939 | `POST /v1/comms/notification-channels/{notificationChannelId}/properties` | `NotificationChannelService/CreateNotificationChannelProperty` | `comms.notification_channel_property.create` |  | Create NotificationChannelProperty. |
-| 1940 | `GET /v1/comms/notification-channels/{notificationChannelId}/properties/{notificationChannelPropertyId}` | `NotificationChannelService/GetNotificationChannelProperty` | `comms.notification_channel_property.read` |  | Get NotificationChannelProperty. |
-| 1941 | `PATCH /v1/comms/notification-channels/{notificationChannelId}/properties/{notificationChannelPropertyId}` | `NotificationChannelService/UpdateNotificationChannelProperty` | `comms.notification_channel_property.update` |  | Update NotificationChannelProperty. |
-| 1942 | `DELETE /v1/comms/notification-channels/{notificationChannelId}/properties/{notificationChannelPropertyId}` | `NotificationChannelService/DeleteNotificationChannelProperty` | `comms.notification_channel_property.delete` |  | Delete NotificationChannelProperty. |
-| 1943 | `GET /v1/comms/notification-preference-sets` | `NotificationPreferenceSetService/ListNotificationPreferenceSets` | `comms.notification_preference_set.read` |  | List NotificationPreferenceSets. |
-| 1944 | `POST /v1/comms/notification-preference-sets` | `NotificationPreferenceSetService/CreateNotificationPreferenceSet` | `comms.notification_preference_set.create` |  | Create NotificationPreferenceSet. |
-| 1945 | `GET /v1/comms/notification-preference-sets/{notificationPreferenceSetId}` | `NotificationPreferenceSetService/GetNotificationPreferenceSet` | `comms.notification_preference_set.read` |  | Get NotificationPreferenceSet. |
-| 1946 | `PATCH /v1/comms/notification-preference-sets/{notificationPreferenceSetId}` | `NotificationPreferenceSetService/UpdateNotificationPreferenceSet` | `comms.notification_preference_set.update` |  | Update NotificationPreferenceSet. |
-| 1947 | `DELETE /v1/comms/notification-preference-sets/{notificationPreferenceSetId}` | `NotificationPreferenceSetService/DeleteNotificationPreferenceSet` | `comms.notification_preference_set.delete` |  | Delete NotificationPreferenceSet. |
-| 1948 | `GET /v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences` | `NotificationPreferenceSetService/ListNotificationPreferences` | `comms.notification_preference.read` |  | List NotificationPreferences. |
-| 1949 | `POST /v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences` | `NotificationPreferenceSetService/CreateNotificationPreference` | `comms.notification_preference.create` |  | Create NotificationPreference. |
-| 1950 | `GET /v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences/{notificationPreferenceId}` | `NotificationPreferenceSetService/GetNotificationPreference` | `comms.notification_preference.read` |  | Get NotificationPreference. |
-| 1951 | `PATCH /v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences/{notificationPreferenceId}` | `NotificationPreferenceSetService/UpdateNotificationPreference` | `comms.notification_preference.update` |  | Update NotificationPreference. |
-| 1952 | `DELETE /v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences/{notificationPreferenceId}` | `NotificationPreferenceSetService/DeleteNotificationPreference` | `comms.notification_preference.delete` |  | Delete NotificationPreference. |
-| 1953 | `POST /v1/comms/notices/{noticeId}:publish` | `NoticeService/PublishNotice` | `comms.notice.publish_notice` |  | Publish. |
-| 1954 | `POST /v1/comms/notices/{noticeId}:unpublish` | `NoticeService/UnpublishNotice` | `comms.notice.unpublish_notice` |  | Unpublish. |
-| 1955 | `POST /v1/comms/events/{eventId}:activate` | `EventService/ActivateEvent` | `comms.event.activate_event` |  | Approve / show. |
-| 1956 | `POST /v1/comms/events/{eventId}:deactivate` | `EventService/DeactivateEvent` | `comms.event.deactivate_event` |  | Hide. |
-| 1957 | `POST /v1/comms/outbound-messages:send` | `OutboundMessageService/SendMessage` | `comms.outbound_message.send_message` |  | Queue SMS / e-mail / push to people, classes, groups or guardians. |
-| 1958 | `POST /v1/comms/outbound-messages/{outboundMessageId}:cancel` | `OutboundMessageService/CancelOutboundMessage` | `comms.outbound_message.cancel_outbound_message` |  | Cancel a queued message. |
-| 1959 | `POST /v1/comms/outbound-messages/{outboundMessageId}:retry` | `OutboundMessageService/RetryOutboundMessage` | `comms.outbound_message.retry_outbound_message` |  | Retry a failed message. |
-| 1960 | `POST /v1/comms/notifications/{inAppNotificationId}:markRead` | `InAppNotificationService/MarkNotificationRead` | `comms.in_app_notification.mark_notification_read` |  | Mark read. |
-| 1961 | `POST /v1/comms/notifications:markAllRead` | `InAppNotificationService/MarkAllNotificationsRead` | `comms.in_app_notification.mark_all_notifications_read` |  | Mark all of the caller's notifications read. |
-| 1962 | `POST /v1/comms/mailbox-messages:compose` | `MailboxMessageService/ComposeMail` | `comms.mailbox_message.compose_mail` |  | Send internal mail; copies land in recipients' inboxes. |
-| 1963 | `POST /v1/comms/mailbox-messages/{mailboxMessageId}:markRead` | `MailboxMessageService/MarkMailRead` | `comms.mailbox_message.mark_mail_read` |  | Mark read. |
-| 1964 | `POST /v1/comms/conversations/{conversationId}:markRead` | `ConversationService/MarkConversationRead` | `comms.conversation.mark_conversation_read` |  | Mark all messages read for the caller. |
-| 1965 | `POST /v1/comms/messages/{messageId}:hideForMe` | `ConversationService/HideMessageForMe` | `comms.conversation_message.hide_message_for_me` |  | Hide a message for the caller only. |
-| 1966 | `POST /v1/comms/feedback-threads/{feedbackThreadId}:close` | `FeedbackThreadService/CloseFeedbackThread` | `comms.feedback_thread.close_feedback_thread` |  | Close. |
-| 1967 | `POST /v1/comms/feedback-threads/{feedbackThreadId}:reopen` | `FeedbackThreadService/ReopenFeedbackThread` | `comms.feedback_thread.reopen_feedback_thread` |  | Reopen. |
-| 1968 | `POST /v1/comms/feedback-messages/{messageId}:markReviewStatus` | `FeedbackThreadService/MarkFeedbackMessage` | `comms.feedback_message.mark_feedback_message` |  | Mark seen / action taken. |
-| 1969 | `POST /v1/comms/audience-groups/{audienceGroupId}:addMembers` | `AudienceGroupService/AddGroupMembers` | `comms.audience_group.add_group_members` |  | Add many members. |
-| 1970 | `POST /v1/comms/tasks/{taskId}:complete` | `TaskService/CompleteTask` | `comms.task.complete_task` |  | Complete. |
-| 1971 | `POST /v1/comms/tasks/{taskId}:reopen` | `TaskService/ReopenTask` | `comms.task.reopen_task` |  | Reopen. |
-| 1972 | `POST /v1/comms/tasks/{taskId}:snooze` | `TaskService/SnoozeTask` | `comms.task.snooze_task` |  | Snooze reminder. |
-| 1973 | `POST /v1/comms/tasks/{taskId}:claim` | `TaskService/ClaimTask` | `comms.task.claim_task` |  | Claim an open task. |
-| 1974 | `POST /v1/comms/posts/{postId}:submit` | `PostService/SubmitPost` | `comms.post.submit_post` |  | Submit for moderation / publish. |
-| 1975 | `POST /v1/comms/posts/{postId}:approve` | `PostService/ApprovePost` | `comms.post.approve_post` |  | Approve and publish. |
-| 1976 | `POST /v1/comms/posts/{postId}:cancel` | `PostService/CancelPost` | `comms.post.cancel_post` |  | Withdraw. |
-| 1977 | `GET /v1/comms/posts:feed` | `PostService/GetFeed` | `comms.post.get_feed` |  | Personalised feed. |
-| 1978 | `POST /v1/comms/class-pages/{classPageId}:follow` | `ClassPageService/FollowClassPage` | `comms.class_page.follow_class_page` |  | Follow or unfollow. |
-| 1979 | `POST /v1/comms/notices/{noticeId}:closeReplies` | `NoticeService/CloseNoticeReplies` | `comms.notice.close_notice_replies` |  | Stop accepting replies. |
-| 1980 | `POST /v1/comms/notices/{noticeId}:deactivate` | `NoticeService/DeactivateNotice` | `comms.notice.deactivate_notice` |  | Withdraw a notice. |
-| 1981 | `POST /v1/comms/notices/{noticeId}:reactivate` | `NoticeService/ReactivateNotice` | `comms.notice.reactivate_notice` |  | Restore a withdrawn notice. |
-| 1982 | `GET /v1/comms/me/calendar` | `EventService/GetMyCalendar` | `comms.event.get_my_calendar` |  | Merged calendar of the caller: institution and cohort events, personal events, item due dates, live classes, cohort sessions and holidays. |
-| 1983 | `POST /v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}:cancel` | `EventService/CancelEventOccurrence` | `comms.event_occurrence.cancel_event_occurrence` |  | Cancel one occurrence. |
-| 1984 | `POST /v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}:complete` | `EventService/CompletePersonalEvent` | `comms.event_occurrence.complete_personal_event` |  | Mark a personal to-do event complete. |
-| 1985 | `POST /v1/comms/me/calendar:export` | `CalendarExportService/ExportCalendar` | `comms.calendar_export.export_calendar` |  | Push the caller's calendar items to a connected external calendar (updates and deletions are tracked). |
-| 1986 | `POST /v1/comms/notification-channels/{notificationChannelId}:sendTest` | `NotificationChannelService/SendTestMessage` | `comms.notification_channel.send_test_message` |  | Send a test message through the channel configuration. |
-| 1987 | `POST /v1/comms/notifications:archive` | `InAppNotificationService/ArchiveNotifications` | `comms.in_app_notification.archive_notifications` |  | Hide notifications from the caller's inbox (archived_at); they stay in the audit history. |
-| 1988 | `GET /v1/comms/operations` | `OperationService/ListOperations` | `comms.operation.read` |  | Long-running operations of this module started by the caller. |
-| 1989 | `GET /v1/comms/operations/{operationId}` | `OperationService/GetOperation` | `comms.operation.read` |  | Status of a long-running operation started in this module. |
-| 1990 | `POST /v1/comms/operations/{operationId}:cancel` | `OperationService/CancelOperation` | `comms.operation.cancel_operation` |  | Request cancellation of a running operation. |
+| 1757 | `GET /v1/comms/message-templates` | `MessageTemplateService/ListMessageTemplates` | `comms.message_template.read` |  | List MessageTemplates. |
+| 1758 | `POST /v1/comms/message-templates` | `MessageTemplateService/CreateMessageTemplate` | `comms.message_template.create` |  | Create MessageTemplate. |
+| 1759 | `GET /v1/comms/message-templates/{messageTemplateId}` | `MessageTemplateService/GetMessageTemplate` | `comms.message_template.read` |  | Get MessageTemplate. |
+| 1760 | `PATCH /v1/comms/message-templates/{messageTemplateId}` | `MessageTemplateService/UpdateMessageTemplate` | `comms.message_template.update` |  | Update MessageTemplate. |
+| 1761 | `DELETE /v1/comms/message-templates/{messageTemplateId}` | `MessageTemplateService/DeleteMessageTemplate` | `comms.message_template.delete` |  | Delete MessageTemplate. |
+| 1762 | `GET /v1/comms/outbound-messages` | `OutboundMessageService/ListOutboundMessages` | `comms.outbound_message.read` |  | List OutboundMessages. |
+| 1763 | `GET /v1/comms/outbound-messages/{outboundMessageId}` | `OutboundMessageService/GetOutboundMessage` | `comms.outbound_message.read` |  | Get OutboundMessage. |
+| 1764 | `GET /v1/comms/mailbox-messages` | `MailboxMessageService/ListMailboxMessages` | `comms.mailbox_message.read` |  | List MailboxMessages. |
+| 1765 | `GET /v1/comms/mailbox-messages/{mailboxMessageId}` | `MailboxMessageService/GetMailboxMessage` | `comms.mailbox_message.read` |  | Get MailboxMessage. |
+| 1766 | `DELETE /v1/comms/mailbox-messages/{mailboxMessageId}` | `MailboxMessageService/DeleteMailboxMessage` | `comms.mailbox_message.delete` |  | Delete MailboxMessage. |
+| 1767 | `GET /v1/comms/notifications` | `InAppNotificationService/ListInAppNotifications` | `comms.in_app_notification.read` |  | List InAppNotifications. |
+| 1768 | `GET /v1/comms/notifications/{inAppNotificationId}` | `InAppNotificationService/GetInAppNotification` | `comms.in_app_notification.read` |  | Get InAppNotification. |
+| 1769 | `GET /v1/comms/notice-backgrounds` | `NoticeBackgroundService/ListNoticeBackgrounds` | `comms.notice_background.read` |  | List NoticeBackgrounds. |
+| 1770 | `POST /v1/comms/notice-backgrounds` | `NoticeBackgroundService/CreateNoticeBackground` | `comms.notice_background.create` |  | Create NoticeBackground. |
+| 1771 | `GET /v1/comms/notice-backgrounds/{noticeBackgroundId}` | `NoticeBackgroundService/GetNoticeBackground` | `comms.notice_background.read` |  | Get NoticeBackground. |
+| 1772 | `PATCH /v1/comms/notice-backgrounds/{noticeBackgroundId}` | `NoticeBackgroundService/UpdateNoticeBackground` | `comms.notice_background.update` |  | Update NoticeBackground. |
+| 1773 | `DELETE /v1/comms/notice-backgrounds/{noticeBackgroundId}` | `NoticeBackgroundService/DeleteNoticeBackground` | `comms.notice_background.delete` |  | Delete NoticeBackground. |
+| 1774 | `GET /v1/comms/notices` | `NoticeService/ListNotices` | `comms.notice.read` |  | List Notices. |
+| 1775 | `POST /v1/comms/notices` | `NoticeService/CreateNotice` | `comms.notice.create` |  | Create Notice. |
+| 1776 | `GET /v1/comms/notices/{noticeId}` | `NoticeService/GetNotice` | `comms.notice.read` |  | Get Notice. |
+| 1777 | `PATCH /v1/comms/notices/{noticeId}` | `NoticeService/UpdateNotice` | `comms.notice.update` |  | Update Notice. |
+| 1778 | `DELETE /v1/comms/notices/{noticeId}` | `NoticeService/DeleteNotice` | `comms.notice.delete` |  | Delete Notice. |
+| 1779 | `GET /v1/comms/events` | `EventService/ListEvents` | `comms.event.read` |  | List Events. |
+| 1780 | `POST /v1/comms/events` | `EventService/CreateEvent` | `comms.event.create` |  | Create Event. |
+| 1781 | `GET /v1/comms/events/{eventId}` | `EventService/GetEvent` | `comms.event.read` |  | Get Event. |
+| 1782 | `PATCH /v1/comms/events/{eventId}` | `EventService/UpdateEvent` | `comms.event.update` |  | Update Event. |
+| 1783 | `DELETE /v1/comms/events/{eventId}` | `EventService/DeleteEvent` | `comms.event.delete` |  | Delete Event. |
+| 1784 | `GET /v1/comms/events/{eventId}/gallery-items` | `EventService/ListEventGalleryItems` | `comms.event_gallery_item.read` |  | List EventGalleryItems. |
+| 1785 | `POST /v1/comms/events/{eventId}/gallery-items` | `EventService/CreateEventGalleryItem` | `comms.event_gallery_item.create` |  | Create EventGalleryItem. |
+| 1786 | `GET /v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}` | `EventService/GetEventGalleryItem` | `comms.event_gallery_item.read` |  | Get EventGalleryItem. |
+| 1787 | `PATCH /v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}` | `EventService/UpdateEventGalleryItem` | `comms.event_gallery_item.update` |  | Update EventGalleryItem. |
+| 1788 | `DELETE /v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}` | `EventService/DeleteEventGalleryItem` | `comms.event_gallery_item.delete` |  | Delete EventGalleryItem. |
+| 1789 | `GET /v1/comms/magazines` | `MagazineService/ListMagazines` | `comms.magazine.read` |  | List Magazines. |
+| 1790 | `POST /v1/comms/magazines` | `MagazineService/CreateMagazine` | `comms.magazine.create` |  | Create Magazine. |
+| 1791 | `GET /v1/comms/magazines/{magazineId}` | `MagazineService/GetMagazine` | `comms.magazine.read` |  | Get Magazine. |
+| 1792 | `PATCH /v1/comms/magazines/{magazineId}` | `MagazineService/UpdateMagazine` | `comms.magazine.update` |  | Update Magazine. |
+| 1793 | `DELETE /v1/comms/magazines/{magazineId}` | `MagazineService/DeleteMagazine` | `comms.magazine.delete` |  | Delete Magazine. |
+| 1794 | `GET /v1/comms/conversations` | `ConversationService/ListConversations` | `comms.conversation.read` |  | List Conversations. |
+| 1795 | `POST /v1/comms/conversations` | `ConversationService/CreateConversation` | `comms.conversation.create` |  | Create Conversation. |
+| 1796 | `GET /v1/comms/conversations/{conversationId}` | `ConversationService/GetConversation` | `comms.conversation.read` |  | Get Conversation. |
+| 1797 | `PATCH /v1/comms/conversations/{conversationId}` | `ConversationService/UpdateConversation` | `comms.conversation.update` |  | Update Conversation. |
+| 1798 | `DELETE /v1/comms/conversations/{conversationId}` | `ConversationService/DeleteConversation` | `comms.conversation.delete` |  | Delete Conversation. |
+| 1799 | `GET /v1/comms/conversations/{conversationId}/participants` | `ConversationService/ListConversationParticipants` | `comms.conversation_participant.read` |  | List ConversationParticipants. |
+| 1800 | `POST /v1/comms/conversations/{conversationId}/participants` | `ConversationService/CreateConversationParticipant` | `comms.conversation_participant.create` |  | Create ConversationParticipant. |
+| 1801 | `GET /v1/comms/conversations/{conversationId}/participants/{conversationParticipantId}` | `ConversationService/GetConversationParticipant` | `comms.conversation_participant.read` |  | Get ConversationParticipant. |
+| 1802 | `PATCH /v1/comms/conversations/{conversationId}/participants/{conversationParticipantId}` | `ConversationService/UpdateConversationParticipant` | `comms.conversation_participant.update` |  | Update ConversationParticipant. |
+| 1803 | `DELETE /v1/comms/conversations/{conversationId}/participants/{conversationParticipantId}` | `ConversationService/DeleteConversationParticipant` | `comms.conversation_participant.delete` |  | Delete ConversationParticipant. |
+| 1804 | `GET /v1/comms/conversations/{conversationId}/messages` | `ConversationService/ListConversationMessages` | `comms.conversation_message.read` |  | List ConversationMessages. |
+| 1805 | `POST /v1/comms/conversations/{conversationId}/messages` | `ConversationService/CreateConversationMessage` | `comms.conversation_message.create` |  | Create ConversationMessage. |
+| 1806 | `GET /v1/comms/conversations/{conversationId}/messages/{conversationMessageId}` | `ConversationService/GetConversationMessage` | `comms.conversation_message.read` |  | Get ConversationMessage. |
+| 1807 | `PATCH /v1/comms/conversations/{conversationId}/messages/{conversationMessageId}` | `ConversationService/UpdateConversationMessage` | `comms.conversation_message.update` |  | Update ConversationMessage. |
+| 1808 | `DELETE /v1/comms/conversations/{conversationId}/messages/{conversationMessageId}` | `ConversationService/DeleteConversationMessage` | `comms.conversation_message.delete` |  | Delete ConversationMessage. |
+| 1809 | `GET /v1/comms/feedback-threads` | `FeedbackThreadService/ListFeedbackThreads` | `comms.feedback_thread.read` |  | List FeedbackThreads. |
+| 1810 | `POST /v1/comms/feedback-threads` | `FeedbackThreadService/CreateFeedbackThread` | `comms.feedback_thread.create` |  | Create FeedbackThread. |
+| 1811 | `GET /v1/comms/feedback-threads/{feedbackThreadId}` | `FeedbackThreadService/GetFeedbackThread` | `comms.feedback_thread.read` |  | Get FeedbackThread. |
+| 1812 | `PATCH /v1/comms/feedback-threads/{feedbackThreadId}` | `FeedbackThreadService/UpdateFeedbackThread` | `comms.feedback_thread.update` |  | Update FeedbackThread. |
+| 1813 | `DELETE /v1/comms/feedback-threads/{feedbackThreadId}` | `FeedbackThreadService/DeleteFeedbackThread` | `comms.feedback_thread.delete` |  | Delete FeedbackThread. |
+| 1814 | `GET /v1/comms/feedback-threads/{feedbackThreadId}/messages` | `FeedbackThreadService/ListFeedbackMessages` | `comms.feedback_message.read` |  | List FeedbackMessages. |
+| 1815 | `POST /v1/comms/feedback-threads/{feedbackThreadId}/messages` | `FeedbackThreadService/CreateFeedbackMessage` | `comms.feedback_message.create` |  | Create FeedbackMessage. |
+| 1816 | `GET /v1/comms/feedback-threads/{feedbackThreadId}/messages/{feedbackMessageId}` | `FeedbackThreadService/GetFeedbackMessage` | `comms.feedback_message.read` |  | Get FeedbackMessage. |
+| 1817 | `PATCH /v1/comms/feedback-threads/{feedbackThreadId}/messages/{feedbackMessageId}` | `FeedbackThreadService/UpdateFeedbackMessage` | `comms.feedback_message.update` |  | Update FeedbackMessage. |
+| 1818 | `DELETE /v1/comms/feedback-threads/{feedbackThreadId}/messages/{feedbackMessageId}` | `FeedbackThreadService/DeleteFeedbackMessage` | `comms.feedback_message.delete` |  | Delete FeedbackMessage. |
+| 1819 | `GET /v1/comms/audience-groups` | `AudienceGroupService/ListAudienceGroups` | `comms.audience_group.read` |  | List AudienceGroups. |
+| 1820 | `POST /v1/comms/audience-groups` | `AudienceGroupService/CreateAudienceGroup` | `comms.audience_group.create` |  | Create AudienceGroup. |
+| 1821 | `GET /v1/comms/audience-groups/{audienceGroupId}` | `AudienceGroupService/GetAudienceGroup` | `comms.audience_group.read` |  | Get AudienceGroup. |
+| 1822 | `PATCH /v1/comms/audience-groups/{audienceGroupId}` | `AudienceGroupService/UpdateAudienceGroup` | `comms.audience_group.update` |  | Update AudienceGroup. |
+| 1823 | `DELETE /v1/comms/audience-groups/{audienceGroupId}` | `AudienceGroupService/DeleteAudienceGroup` | `comms.audience_group.delete` |  | Delete AudienceGroup. |
+| 1824 | `GET /v1/comms/audience-groups/{audienceGroupId}/members` | `AudienceGroupService/ListAudienceGroupMembers` | `comms.audience_group_member.read` |  | List AudienceGroupMembers. |
+| 1825 | `POST /v1/comms/audience-groups/{audienceGroupId}/members` | `AudienceGroupService/CreateAudienceGroupMember` | `comms.audience_group_member.create` |  | Create AudienceGroupMember. |
+| 1826 | `GET /v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}` | `AudienceGroupService/GetAudienceGroupMember` | `comms.audience_group_member.read` |  | Get AudienceGroupMember. |
+| 1827 | `PATCH /v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}` | `AudienceGroupService/UpdateAudienceGroupMember` | `comms.audience_group_member.update` |  | Update AudienceGroupMember. |
+| 1828 | `DELETE /v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}` | `AudienceGroupService/DeleteAudienceGroupMember` | `comms.audience_group_member.delete` |  | Delete AudienceGroupMember. |
+| 1829 | `GET /v1/comms/tasks` | `TaskService/ListTasks` | `comms.task.read` |  | List Tasks. |
+| 1830 | `POST /v1/comms/tasks` | `TaskService/CreateTask` | `comms.task.create` |  | Create Task. |
+| 1831 | `GET /v1/comms/tasks/{taskId}` | `TaskService/GetTask` | `comms.task.read` |  | Get Task. |
+| 1832 | `PATCH /v1/comms/tasks/{taskId}` | `TaskService/UpdateTask` | `comms.task.update` |  | Update Task. |
+| 1833 | `DELETE /v1/comms/tasks/{taskId}` | `TaskService/DeleteTask` | `comms.task.delete` |  | Delete Task. |
+| 1834 | `GET /v1/comms/tasks/{taskId}/assignees` | `TaskService/ListTaskAssignees` | `comms.task_assignee.read` |  | List TaskAssignees. |
+| 1835 | `POST /v1/comms/tasks/{taskId}/assignees` | `TaskService/CreateTaskAssignee` | `comms.task_assignee.create` |  | Create TaskAssignee. |
+| 1836 | `GET /v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}` | `TaskService/GetTaskAssignee` | `comms.task_assignee.read` |  | Get TaskAssignee. |
+| 1837 | `PATCH /v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}` | `TaskService/UpdateTaskAssignee` | `comms.task_assignee.update` |  | Update TaskAssignee. |
+| 1838 | `DELETE /v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}` | `TaskService/DeleteTaskAssignee` | `comms.task_assignee.delete` |  | Delete TaskAssignee. |
+| 1839 | `GET /v1/comms/content-views` | `ContentViewService/ListContentViews` | `comms.content_view.read` |  | List ContentViews. |
+| 1840 | `POST /v1/comms/content-views` | `ContentViewService/CreateContentView` | `comms.content_view.create` |  | Create ContentView. |
+| 1841 | `GET /v1/comms/content-views/{contentViewId}` | `ContentViewService/GetContentView` | `comms.content_view.read` |  | Get ContentView. |
+| 1842 | `PATCH /v1/comms/content-views/{contentViewId}` | `ContentViewService/UpdateContentView` | `comms.content_view.update` |  | Update ContentView. |
+| 1843 | `DELETE /v1/comms/content-views/{contentViewId}` | `ContentViewService/DeleteContentView` | `comms.content_view.delete` |  | Delete ContentView. |
+| 1844 | `GET /v1/comms/page-categories` | `PageCategoryService/ListPageCategories` | `comms.page_category.read` |  | List PageCategories. |
+| 1845 | `POST /v1/comms/page-categories` | `PageCategoryService/CreatePageCategory` | `comms.page_category.create` |  | Create PageCategory. |
+| 1846 | `GET /v1/comms/page-categories/{pageCategoryId}` | `PageCategoryService/GetPageCategory` | `comms.page_category.read` |  | Get PageCategory. |
+| 1847 | `PATCH /v1/comms/page-categories/{pageCategoryId}` | `PageCategoryService/UpdatePageCategory` | `comms.page_category.update` |  | Update PageCategory. |
+| 1848 | `DELETE /v1/comms/page-categories/{pageCategoryId}` | `PageCategoryService/DeletePageCategory` | `comms.page_category.delete` |  | Delete PageCategory. |
+| 1849 | `GET /v1/comms/class-pages` | `ClassPageService/ListClassPages` | `comms.class_page.read` |  | List ClassPages. |
+| 1850 | `POST /v1/comms/class-pages` | `ClassPageService/CreateClassPage` | `comms.class_page.create` |  | Create ClassPage. |
+| 1851 | `GET /v1/comms/class-pages/{classPageId}` | `ClassPageService/GetClassPage` | `comms.class_page.read` |  | Get ClassPage. |
+| 1852 | `PATCH /v1/comms/class-pages/{classPageId}` | `ClassPageService/UpdateClassPage` | `comms.class_page.update` |  | Update ClassPage. |
+| 1853 | `DELETE /v1/comms/class-pages/{classPageId}` | `ClassPageService/DeleteClassPage` | `comms.class_page.delete` |  | Delete ClassPage. |
+| 1854 | `GET /v1/comms/class-pages/{classPageId}/attachments` | `ClassPageService/ListClassPageAttachments` | `comms.class_page_attachment.read` |  | List ClassPageAttachments. |
+| 1855 | `POST /v1/comms/class-pages/{classPageId}/attachments` | `ClassPageService/CreateClassPageAttachment` | `comms.class_page_attachment.create` |  | Create ClassPageAttachment. |
+| 1856 | `GET /v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}` | `ClassPageService/GetClassPageAttachment` | `comms.class_page_attachment.read` |  | Get ClassPageAttachment. |
+| 1857 | `PATCH /v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}` | `ClassPageService/UpdateClassPageAttachment` | `comms.class_page_attachment.update` |  | Update ClassPageAttachment. |
+| 1858 | `DELETE /v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}` | `ClassPageService/DeleteClassPageAttachment` | `comms.class_page_attachment.delete` |  | Delete ClassPageAttachment. |
+| 1859 | `GET /v1/comms/class-pages/{classPageId}/members` | `ClassPageService/ListClassPageMembers` | `comms.class_page_member.read` |  | List ClassPageMembers. |
+| 1860 | `POST /v1/comms/class-pages/{classPageId}/members` | `ClassPageService/CreateClassPageMember` | `comms.class_page_member.create` |  | Create ClassPageMember. |
+| 1861 | `GET /v1/comms/class-pages/{classPageId}/members/{classPageMemberId}` | `ClassPageService/GetClassPageMember` | `comms.class_page_member.read` |  | Get ClassPageMember. |
+| 1862 | `PATCH /v1/comms/class-pages/{classPageId}/members/{classPageMemberId}` | `ClassPageService/UpdateClassPageMember` | `comms.class_page_member.update` |  | Update ClassPageMember. |
+| 1863 | `DELETE /v1/comms/class-pages/{classPageId}/members/{classPageMemberId}` | `ClassPageService/DeleteClassPageMember` | `comms.class_page_member.delete` |  | Delete ClassPageMember. |
+| 1864 | `GET /v1/comms/posts` | `PostService/ListPosts` | `comms.post.read` |  | List Posts. |
+| 1865 | `POST /v1/comms/posts` | `PostService/CreatePost` | `comms.post.create` |  | Create Post. |
+| 1866 | `GET /v1/comms/posts/{postId}` | `PostService/GetPost` | `comms.post.read` |  | Get Post. |
+| 1867 | `PATCH /v1/comms/posts/{postId}` | `PostService/UpdatePost` | `comms.post.update` |  | Update Post. |
+| 1868 | `DELETE /v1/comms/posts/{postId}` | `PostService/DeletePost` | `comms.post.delete` |  | Delete Post. |
+| 1869 | `GET /v1/comms/posts/{postId}/audience-classes` | `PostService/ListPostAudienceClasses` | `comms.post_audience_class.read` |  | List PostAudienceClasses. |
+| 1870 | `POST /v1/comms/posts/{postId}/audience-classes` | `PostService/CreatePostAudienceClass` | `comms.post_audience_class.create` |  | Create PostAudienceClass. |
+| 1871 | `GET /v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}` | `PostService/GetPostAudienceClass` | `comms.post_audience_class.read` |  | Get PostAudienceClass. |
+| 1872 | `PATCH /v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}` | `PostService/UpdatePostAudienceClass` | `comms.post_audience_class.update` |  | Update PostAudienceClass. |
+| 1873 | `DELETE /v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}` | `PostService/DeletePostAudienceClass` | `comms.post_audience_class.delete` |  | Delete PostAudienceClass. |
+| 1874 | `GET /v1/comms/posts/{postId}/reactions` | `PostService/ListPostReactions` | `comms.post_reaction.read` |  | List PostReactions. |
+| 1875 | `POST /v1/comms/posts/{postId}/reactions` | `PostService/CreatePostReaction` | `comms.post_reaction.create` |  | Create PostReaction. |
+| 1876 | `GET /v1/comms/posts/{postId}/reactions/{postReactionId}` | `PostService/GetPostReaction` | `comms.post_reaction.read` |  | Get PostReaction. |
+| 1877 | `PATCH /v1/comms/posts/{postId}/reactions/{postReactionId}` | `PostService/UpdatePostReaction` | `comms.post_reaction.update` |  | Update PostReaction. |
+| 1878 | `DELETE /v1/comms/posts/{postId}/reactions/{postReactionId}` | `PostService/DeletePostReaction` | `comms.post_reaction.delete` |  | Delete PostReaction. |
+| 1879 | `GET /v1/comms/posts/{postId}/comments` | `PostService/ListPostComments` | `comms.post_comment.read` |  | List PostComments. |
+| 1880 | `POST /v1/comms/posts/{postId}/comments` | `PostService/CreatePostComment` | `comms.post_comment.create` |  | Create PostComment. |
+| 1881 | `GET /v1/comms/posts/{postId}/comments/{postCommentId}` | `PostService/GetPostComment` | `comms.post_comment.read` |  | Get PostComment. |
+| 1882 | `PATCH /v1/comms/posts/{postId}/comments/{postCommentId}` | `PostService/UpdatePostComment` | `comms.post_comment.update` |  | Update PostComment. |
+| 1883 | `DELETE /v1/comms/posts/{postId}/comments/{postCommentId}` | `PostService/DeletePostComment` | `comms.post_comment.delete` |  | Delete PostComment. |
+| 1884 | `GET /v1/comms/comment-reactions` | `CommentReactionService/ListCommentReactions` | `comms.comment_reaction.read` |  | List CommentReactions. |
+| 1885 | `POST /v1/comms/comment-reactions` | `CommentReactionService/CreateCommentReaction` | `comms.comment_reaction.create` |  | Create CommentReaction. |
+| 1886 | `GET /v1/comms/comment-reactions/{commentReactionId}` | `CommentReactionService/GetCommentReaction` | `comms.comment_reaction.read` |  | Get CommentReaction. |
+| 1887 | `PATCH /v1/comms/comment-reactions/{commentReactionId}` | `CommentReactionService/UpdateCommentReaction` | `comms.comment_reaction.update` |  | Update CommentReaction. |
+| 1888 | `DELETE /v1/comms/comment-reactions/{commentReactionId}` | `CommentReactionService/DeleteCommentReaction` | `comms.comment_reaction.delete` |  | Delete CommentReaction. |
+| 1889 | `GET /v1/comms/notices/{noticeId}/audiences` | `NoticeService/ListNoticeAudiences` | `comms.notice_audience.read` |  | List NoticeAudiences. |
+| 1890 | `POST /v1/comms/notices/{noticeId}/audiences` | `NoticeService/CreateNoticeAudience` | `comms.notice_audience.create` |  | Create NoticeAudience. |
+| 1891 | `GET /v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}` | `NoticeService/GetNoticeAudience` | `comms.notice_audience.read` |  | Get NoticeAudience. |
+| 1892 | `PATCH /v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}` | `NoticeService/UpdateNoticeAudience` | `comms.notice_audience.update` |  | Update NoticeAudience. |
+| 1893 | `DELETE /v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}` | `NoticeService/DeleteNoticeAudience` | `comms.notice_audience.delete` |  | Delete NoticeAudience. |
+| 1894 | `GET /v1/comms/notices/{noticeId}/versions` | `NoticeService/ListNoticeVersions` | `comms.notice_version.read` |  | List NoticeVersions. |
+| 1895 | `GET /v1/comms/notices/{noticeId}/versions/{noticeVersionId}` | `NoticeService/GetNoticeVersion` | `comms.notice_version.read` |  | Get NoticeVersion. |
+| 1896 | `GET /v1/comms/events/{eventId}/institutions` | `EventService/ListEventInstitutions` | `comms.event_institution.read` |  | List EventInstitutions. |
+| 1897 | `POST /v1/comms/events/{eventId}/institutions` | `EventService/CreateEventInstitution` | `comms.event_institution.create` |  | Create EventInstitution. |
+| 1898 | `GET /v1/comms/events/{eventId}/institutions/{eventInstitutionId}` | `EventService/GetEventInstitution` | `comms.event_institution.read` |  | Get EventInstitution. |
+| 1899 | `PATCH /v1/comms/events/{eventId}/institutions/{eventInstitutionId}` | `EventService/UpdateEventInstitution` | `comms.event_institution.update` |  | Update EventInstitution. |
+| 1900 | `DELETE /v1/comms/events/{eventId}/institutions/{eventInstitutionId}` | `EventService/DeleteEventInstitution` | `comms.event_institution.delete` |  | Delete EventInstitution. |
+| 1901 | `GET /v1/comms/events/{eventId}/occurrences` | `EventService/ListEventOccurrences` | `comms.event_occurrence.read` |  | List EventOccurrences. |
+| 1902 | `POST /v1/comms/events/{eventId}/occurrences` | `EventService/CreateEventOccurrence` | `comms.event_occurrence.create` |  | Create EventOccurrence. |
+| 1903 | `GET /v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}` | `EventService/GetEventOccurrence` | `comms.event_occurrence.read` |  | Get EventOccurrence. |
+| 1904 | `PATCH /v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}` | `EventService/UpdateEventOccurrence` | `comms.event_occurrence.update` |  | Update EventOccurrence. |
+| 1905 | `DELETE /v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}` | `EventService/DeleteEventOccurrence` | `comms.event_occurrence.delete` |  | Delete EventOccurrence. |
+| 1906 | `GET /v1/comms/events/{eventId}/attendees` | `EventService/ListEventAttendees` | `comms.event_attendee.read` |  | List EventAttendees. |
+| 1907 | `POST /v1/comms/events/{eventId}/attendees` | `EventService/CreateEventAttendee` | `comms.event_attendee.create` |  | Create EventAttendee. |
+| 1908 | `GET /v1/comms/events/{eventId}/attendees/{eventAttendeeId}` | `EventService/GetEventAttendee` | `comms.event_attendee.read` |  | Get EventAttendee. |
+| 1909 | `PATCH /v1/comms/events/{eventId}/attendees/{eventAttendeeId}` | `EventService/UpdateEventAttendee` | `comms.event_attendee.update` |  | Update EventAttendee. |
+| 1910 | `DELETE /v1/comms/events/{eventId}/attendees/{eventAttendeeId}` | `EventService/DeleteEventAttendee` | `comms.event_attendee.delete` |  | Delete EventAttendee. |
+| 1911 | `GET /v1/comms/calendar-exports` | `CalendarExportService/ListCalendarExports` | `comms.calendar_export.read` |  | List CalendarExports. |
+| 1912 | `GET /v1/comms/calendar-exports/{calendarExportId}` | `CalendarExportService/GetCalendarExport` | `comms.calendar_export.read` |  | Get CalendarExport. |
+| 1913 | `DELETE /v1/comms/calendar-exports/{calendarExportId}` | `CalendarExportService/DeleteCalendarExport` | `comms.calendar_export.delete` |  | Delete CalendarExport. |
+| 1914 | `GET /v1/comms/notification-types` | `NotificationTypeService/ListNotificationTypes` | `comms.notification_type.read` |  | List NotificationTypes. |
+| 1915 | `POST /v1/comms/notification-types` | `NotificationTypeService/CreateNotificationType` | `comms.notification_type.create` |  | Create NotificationType. |
+| 1916 | `GET /v1/comms/notification-types/{notificationTypeId}` | `NotificationTypeService/GetNotificationType` | `comms.notification_type.read` |  | Get NotificationType. |
+| 1917 | `PATCH /v1/comms/notification-types/{notificationTypeId}` | `NotificationTypeService/UpdateNotificationType` | `comms.notification_type.update` |  | Update NotificationType. |
+| 1918 | `DELETE /v1/comms/notification-types/{notificationTypeId}` | `NotificationTypeService/DeleteNotificationType` | `comms.notification_type.delete` |  | Delete NotificationType. |
+| 1919 | `GET /v1/comms/notification-types/{notificationTypeId}/properties` | `NotificationTypeService/ListNotificationTypeProperties` | `comms.notification_type_property.read` |  | List NotificationTypeProperties. |
+| 1920 | `POST /v1/comms/notification-types/{notificationTypeId}/properties` | `NotificationTypeService/CreateNotificationTypeProperty` | `comms.notification_type_property.create` |  | Create NotificationTypeProperty. |
+| 1921 | `GET /v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId}` | `NotificationTypeService/GetNotificationTypeProperty` | `comms.notification_type_property.read` |  | Get NotificationTypeProperty. |
+| 1922 | `PATCH /v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId}` | `NotificationTypeService/UpdateNotificationTypeProperty` | `comms.notification_type_property.update` |  | Update NotificationTypeProperty. |
+| 1923 | `DELETE /v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId}` | `NotificationTypeService/DeleteNotificationTypeProperty` | `comms.notification_type_property.delete` |  | Delete NotificationTypeProperty. |
+| 1924 | `GET /v1/comms/notification-types/{notificationTypeId}/rules` | `NotificationTypeService/ListNotificationRules` | `comms.notification_rule.read` |  | List NotificationRules. |
+| 1925 | `POST /v1/comms/notification-types/{notificationTypeId}/rules` | `NotificationTypeService/CreateNotificationRule` | `comms.notification_rule.create` |  | Create NotificationRule. |
+| 1926 | `GET /v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId}` | `NotificationTypeService/GetNotificationRule` | `comms.notification_rule.read` |  | Get NotificationRule. |
+| 1927 | `PATCH /v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId}` | `NotificationTypeService/UpdateNotificationRule` | `comms.notification_rule.update` |  | Update NotificationRule. |
+| 1928 | `DELETE /v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId}` | `NotificationTypeService/DeleteNotificationRule` | `comms.notification_rule.delete` |  | Delete NotificationRule. |
+| 1929 | `GET /v1/comms/notification-types/{notificationTypeId}/cohort-settings` | `NotificationTypeService/ListNotificationCohortSettings` | `comms.notification_cohort_setting.read` |  | List NotificationCohortSettings. |
+| 1930 | `POST /v1/comms/notification-types/{notificationTypeId}/cohort-settings` | `NotificationTypeService/CreateNotificationCohortSetting` | `comms.notification_cohort_setting.create` |  | Create NotificationCohortSetting. |
+| 1931 | `GET /v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId}` | `NotificationTypeService/GetNotificationCohortSetting` | `comms.notification_cohort_setting.read` |  | Get NotificationCohortSetting. |
+| 1932 | `PATCH /v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId}` | `NotificationTypeService/UpdateNotificationCohortSetting` | `comms.notification_cohort_setting.update` |  | Update NotificationCohortSetting. |
+| 1933 | `DELETE /v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId}` | `NotificationTypeService/DeleteNotificationCohortSetting` | `comms.notification_cohort_setting.delete` |  | Delete NotificationCohortSetting. |
+| 1934 | `GET /v1/comms/notification-channels` | `NotificationChannelService/ListNotificationChannels` | `comms.notification_channel.read` |  | List NotificationChannels. |
+| 1935 | `POST /v1/comms/notification-channels` | `NotificationChannelService/CreateNotificationChannel` | `comms.notification_channel.create` |  | Create NotificationChannel. |
+| 1936 | `GET /v1/comms/notification-channels/{notificationChannelId}` | `NotificationChannelService/GetNotificationChannel` | `comms.notification_channel.read` |  | Get NotificationChannel. |
+| 1937 | `PATCH /v1/comms/notification-channels/{notificationChannelId}` | `NotificationChannelService/UpdateNotificationChannel` | `comms.notification_channel.update` |  | Update NotificationChannel. |
+| 1938 | `DELETE /v1/comms/notification-channels/{notificationChannelId}` | `NotificationChannelService/DeleteNotificationChannel` | `comms.notification_channel.delete` |  | Delete NotificationChannel. |
+| 1939 | `GET /v1/comms/notification-channels/{notificationChannelId}/properties` | `NotificationChannelService/ListNotificationChannelProperties` | `comms.notification_channel_property.read` |  | List NotificationChannelProperties. |
+| 1940 | `POST /v1/comms/notification-channels/{notificationChannelId}/properties` | `NotificationChannelService/CreateNotificationChannelProperty` | `comms.notification_channel_property.create` |  | Create NotificationChannelProperty. |
+| 1941 | `GET /v1/comms/notification-channels/{notificationChannelId}/properties/{notificationChannelPropertyId}` | `NotificationChannelService/GetNotificationChannelProperty` | `comms.notification_channel_property.read` |  | Get NotificationChannelProperty. |
+| 1942 | `PATCH /v1/comms/notification-channels/{notificationChannelId}/properties/{notificationChannelPropertyId}` | `NotificationChannelService/UpdateNotificationChannelProperty` | `comms.notification_channel_property.update` |  | Update NotificationChannelProperty. |
+| 1943 | `DELETE /v1/comms/notification-channels/{notificationChannelId}/properties/{notificationChannelPropertyId}` | `NotificationChannelService/DeleteNotificationChannelProperty` | `comms.notification_channel_property.delete` |  | Delete NotificationChannelProperty. |
+| 1944 | `GET /v1/comms/notification-preference-sets` | `NotificationPreferenceSetService/ListNotificationPreferenceSets` | `comms.notification_preference_set.read` |  | List NotificationPreferenceSets. |
+| 1945 | `POST /v1/comms/notification-preference-sets` | `NotificationPreferenceSetService/CreateNotificationPreferenceSet` | `comms.notification_preference_set.create` |  | Create NotificationPreferenceSet. |
+| 1946 | `GET /v1/comms/notification-preference-sets/{notificationPreferenceSetId}` | `NotificationPreferenceSetService/GetNotificationPreferenceSet` | `comms.notification_preference_set.read` |  | Get NotificationPreferenceSet. |
+| 1947 | `PATCH /v1/comms/notification-preference-sets/{notificationPreferenceSetId}` | `NotificationPreferenceSetService/UpdateNotificationPreferenceSet` | `comms.notification_preference_set.update` |  | Update NotificationPreferenceSet. |
+| 1948 | `DELETE /v1/comms/notification-preference-sets/{notificationPreferenceSetId}` | `NotificationPreferenceSetService/DeleteNotificationPreferenceSet` | `comms.notification_preference_set.delete` |  | Delete NotificationPreferenceSet. |
+| 1949 | `GET /v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences` | `NotificationPreferenceSetService/ListNotificationPreferences` | `comms.notification_preference.read` |  | List NotificationPreferences. |
+| 1950 | `POST /v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences` | `NotificationPreferenceSetService/CreateNotificationPreference` | `comms.notification_preference.create` |  | Create NotificationPreference. |
+| 1951 | `GET /v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences/{notificationPreferenceId}` | `NotificationPreferenceSetService/GetNotificationPreference` | `comms.notification_preference.read` |  | Get NotificationPreference. |
+| 1952 | `PATCH /v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences/{notificationPreferenceId}` | `NotificationPreferenceSetService/UpdateNotificationPreference` | `comms.notification_preference.update` |  | Update NotificationPreference. |
+| 1953 | `DELETE /v1/comms/notification-preference-sets/{notificationPreferenceSetId}/preferences/{notificationPreferenceId}` | `NotificationPreferenceSetService/DeleteNotificationPreference` | `comms.notification_preference.delete` |  | Delete NotificationPreference. |
+| 1954 | `POST /v1/comms/notices/{noticeId}:publish` | `NoticeService/PublishNotice` | `comms.notice.publish_notice` |  | Publish. |
+| 1955 | `POST /v1/comms/notices/{noticeId}:unpublish` | `NoticeService/UnpublishNotice` | `comms.notice.unpublish_notice` |  | Unpublish. |
+| 1956 | `POST /v1/comms/events/{eventId}:activate` | `EventService/ActivateEvent` | `comms.event.activate_event` |  | Approve / show. |
+| 1957 | `POST /v1/comms/events/{eventId}:deactivate` | `EventService/DeactivateEvent` | `comms.event.deactivate_event` |  | Hide. |
+| 1958 | `POST /v1/comms/outbound-messages:send` | `OutboundMessageService/SendMessage` | `comms.outbound_message.send_message` |  | Queue SMS / e-mail / push to people, classes, groups or guardians. |
+| 1959 | `POST /v1/comms/outbound-messages/{outboundMessageId}:cancel` | `OutboundMessageService/CancelOutboundMessage` | `comms.outbound_message.cancel_outbound_message` |  | Cancel a queued message. |
+| 1960 | `POST /v1/comms/outbound-messages/{outboundMessageId}:retry` | `OutboundMessageService/RetryOutboundMessage` | `comms.outbound_message.retry_outbound_message` |  | Retry a failed message. |
+| 1961 | `POST /v1/comms/notifications/{inAppNotificationId}:markRead` | `InAppNotificationService/MarkNotificationRead` | `comms.in_app_notification.mark_notification_read` |  | Mark read. |
+| 1962 | `POST /v1/comms/notifications:markAllRead` | `InAppNotificationService/MarkAllNotificationsRead` | `comms.in_app_notification.mark_all_notifications_read` |  | Mark all of the caller's notifications read. |
+| 1963 | `POST /v1/comms/mailbox-messages:compose` | `MailboxMessageService/ComposeMail` | `comms.mailbox_message.compose_mail` |  | Send internal mail; copies land in recipients' inboxes. |
+| 1964 | `POST /v1/comms/mailbox-messages/{mailboxMessageId}:markRead` | `MailboxMessageService/MarkMailRead` | `comms.mailbox_message.mark_mail_read` |  | Mark read. |
+| 1965 | `POST /v1/comms/conversations/{conversationId}:markRead` | `ConversationService/MarkConversationRead` | `comms.conversation.mark_conversation_read` |  | Mark all messages read for the caller. |
+| 1966 | `POST /v1/comms/messages/{messageId}:hideForMe` | `ConversationService/HideMessageForMe` | `comms.conversation_message.hide_message_for_me` |  | Hide a message for the caller only. |
+| 1967 | `POST /v1/comms/feedback-threads/{feedbackThreadId}:close` | `FeedbackThreadService/CloseFeedbackThread` | `comms.feedback_thread.close_feedback_thread` |  | Close. |
+| 1968 | `POST /v1/comms/feedback-threads/{feedbackThreadId}:reopen` | `FeedbackThreadService/ReopenFeedbackThread` | `comms.feedback_thread.reopen_feedback_thread` |  | Reopen. |
+| 1969 | `POST /v1/comms/feedback-messages/{messageId}:markReviewStatus` | `FeedbackThreadService/MarkFeedbackMessage` | `comms.feedback_message.mark_feedback_message` |  | Mark seen / action taken. |
+| 1970 | `POST /v1/comms/audience-groups/{audienceGroupId}:addMembers` | `AudienceGroupService/AddGroupMembers` | `comms.audience_group.add_group_members` |  | Add many members. |
+| 1971 | `POST /v1/comms/tasks/{taskId}:complete` | `TaskService/CompleteTask` | `comms.task.complete_task` |  | Complete. |
+| 1972 | `POST /v1/comms/tasks/{taskId}:reopen` | `TaskService/ReopenTask` | `comms.task.reopen_task` |  | Reopen. |
+| 1973 | `POST /v1/comms/tasks/{taskId}:snooze` | `TaskService/SnoozeTask` | `comms.task.snooze_task` |  | Snooze reminder. |
+| 1974 | `POST /v1/comms/tasks/{taskId}:claim` | `TaskService/ClaimTask` | `comms.task.claim_task` |  | Claim an open task. |
+| 1975 | `POST /v1/comms/posts/{postId}:submit` | `PostService/SubmitPost` | `comms.post.submit_post` |  | Submit for moderation / publish. |
+| 1976 | `POST /v1/comms/posts/{postId}:approve` | `PostService/ApprovePost` | `comms.post.approve_post` |  | Approve and publish. |
+| 1977 | `POST /v1/comms/posts/{postId}:cancel` | `PostService/CancelPost` | `comms.post.cancel_post` |  | Withdraw. |
+| 1978 | `GET /v1/comms/posts:feed` | `PostService/GetFeed` | `comms.post.get_feed` |  | Personalised feed. |
+| 1979 | `POST /v1/comms/class-pages/{classPageId}:follow` | `ClassPageService/FollowClassPage` | `comms.class_page.follow_class_page` |  | Follow or unfollow. |
+| 1980 | `POST /v1/comms/notices/{noticeId}:closeReplies` | `NoticeService/CloseNoticeReplies` | `comms.notice.close_notice_replies` |  | Stop accepting replies. |
+| 1981 | `POST /v1/comms/notices/{noticeId}:deactivate` | `NoticeService/DeactivateNotice` | `comms.notice.deactivate_notice` |  | Withdraw a notice. |
+| 1982 | `POST /v1/comms/notices/{noticeId}:reactivate` | `NoticeService/ReactivateNotice` | `comms.notice.reactivate_notice` |  | Restore a withdrawn notice. |
+| 1983 | `GET /v1/comms/me/calendar` | `EventService/GetMyCalendar` | `comms.event.get_my_calendar` |  | Merged calendar of the caller: institution and cohort events, personal events, item due dates, live classes, cohort sessions and holidays. |
+| 1984 | `POST /v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}:cancel` | `EventService/CancelEventOccurrence` | `comms.event_occurrence.cancel_event_occurrence` |  | Cancel one occurrence. |
+| 1985 | `POST /v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}:complete` | `EventService/CompletePersonalEvent` | `comms.event_occurrence.complete_personal_event` |  | Mark a personal to-do event complete. |
+| 1986 | `POST /v1/comms/me/calendar:export` | `CalendarExportService/ExportCalendar` | `comms.calendar_export.export_calendar` |  | Push the caller's calendar items to a connected external calendar (updates and deletions are tracked). |
+| 1987 | `POST /v1/comms/notification-channels/{notificationChannelId}:sendTest` | `NotificationChannelService/SendTestMessage` | `comms.notification_channel.send_test_message` |  | Send a test message through the channel configuration. |
+| 1988 | `POST /v1/comms/notifications:archive` | `InAppNotificationService/ArchiveNotifications` | `comms.in_app_notification.archive_notifications` |  | Hide notifications from the caller's inbox (archived_at); they stay in the audit history. |
+| 1989 | `GET /v1/comms/operations` | `OperationService/ListOperations` | `comms.operation.read` |  | Long-running operations of this module started by the caller. |
+| 1990 | `GET /v1/comms/operations/{operationId}` | `OperationService/GetOperation` | `comms.operation.read` |  | Status of a long-running operation started in this module. |
+| 1991 | `POST /v1/comms/operations/{operationId}:cancel` | `OperationService/CancelOperation` | `comms.operation.cancel_operation` |  | Request cancellation of a running operation. |
 
 ## Front Office (`frontoffice`)
 
 | # | REST | gRPC | Permission | Public | Description |
 |---|---|---|---|---|---|
-| 1991 | `GET /v1/frontoffice/visitor-logs` | `VisitorLogService/ListVisitorLogs` | `frontoffice.visitor_log.read` |  | List VisitorLogs. |
-| 1992 | `POST /v1/frontoffice/visitor-logs` | `VisitorLogService/CreateVisitorLog` | `frontoffice.visitor_log.create` |  | Create VisitorLog. |
-| 1993 | `GET /v1/frontoffice/visitor-logs/{visitorLogId}` | `VisitorLogService/GetVisitorLog` | `frontoffice.visitor_log.read` |  | Get VisitorLog. |
-| 1994 | `PATCH /v1/frontoffice/visitor-logs/{visitorLogId}` | `VisitorLogService/UpdateVisitorLog` | `frontoffice.visitor_log.update` |  | Update VisitorLog. |
-| 1995 | `DELETE /v1/frontoffice/visitor-logs/{visitorLogId}` | `VisitorLogService/DeleteVisitorLog` | `frontoffice.visitor_log.delete` |  | Delete VisitorLog. |
-| 1996 | `GET /v1/frontoffice/call-logs` | `CallLogService/ListCallLogs` | `frontoffice.call_log.read` |  | List CallLogs. |
-| 1997 | `POST /v1/frontoffice/call-logs` | `CallLogService/CreateCallLog` | `frontoffice.call_log.create` |  | Create CallLog. |
-| 1998 | `GET /v1/frontoffice/call-logs/{callLogId}` | `CallLogService/GetCallLog` | `frontoffice.call_log.read` |  | Get CallLog. |
-| 1999 | `PATCH /v1/frontoffice/call-logs/{callLogId}` | `CallLogService/UpdateCallLog` | `frontoffice.call_log.update` |  | Update CallLog. |
-| 2000 | `DELETE /v1/frontoffice/call-logs/{callLogId}` | `CallLogService/DeleteCallLog` | `frontoffice.call_log.delete` |  | Delete CallLog. |
-| 2001 | `GET /v1/frontoffice/postal-records` | `PostalRecordService/ListPostalRecords` | `frontoffice.postal_record.read` |  | List PostalRecords. |
-| 2002 | `POST /v1/frontoffice/postal-records` | `PostalRecordService/CreatePostalRecord` | `frontoffice.postal_record.create` |  | Create PostalRecord. |
-| 2003 | `GET /v1/frontoffice/postal-records/{postalRecordId}` | `PostalRecordService/GetPostalRecord` | `frontoffice.postal_record.read` |  | Get PostalRecord. |
-| 2004 | `PATCH /v1/frontoffice/postal-records/{postalRecordId}` | `PostalRecordService/UpdatePostalRecord` | `frontoffice.postal_record.update` |  | Update PostalRecord. |
-| 2005 | `DELETE /v1/frontoffice/postal-records/{postalRecordId}` | `PostalRecordService/DeletePostalRecord` | `frontoffice.postal_record.delete` |  | Delete PostalRecord. |
-| 2006 | `GET /v1/frontoffice/directory-contacts` | `DirectoryContactService/ListDirectoryContacts` | `frontoffice.directory_contact.read` |  | List DirectoryContacts. |
-| 2007 | `POST /v1/frontoffice/directory-contacts` | `DirectoryContactService/CreateDirectoryContact` | `frontoffice.directory_contact.create` |  | Create DirectoryContact. |
-| 2008 | `GET /v1/frontoffice/directory-contacts/{directoryContactId}` | `DirectoryContactService/GetDirectoryContact` | `frontoffice.directory_contact.read` |  | Get DirectoryContact. |
-| 2009 | `PATCH /v1/frontoffice/directory-contacts/{directoryContactId}` | `DirectoryContactService/UpdateDirectoryContact` | `frontoffice.directory_contact.update` |  | Update DirectoryContact. |
-| 2010 | `DELETE /v1/frontoffice/directory-contacts/{directoryContactId}` | `DirectoryContactService/DeleteDirectoryContact` | `frontoffice.directory_contact.delete` |  | Delete DirectoryContact. |
-| 2011 | `POST /v1/frontoffice/visitor-logs/{visitorLogId}:checkOut` | `VisitorLogService/CheckOutVisitor` | `frontoffice.visitor_log.check_out_visitor` |  | Record exit time. |
+| 1992 | `GET /v1/frontoffice/visitor-logs` | `VisitorLogService/ListVisitorLogs` | `frontoffice.visitor_log.read` |  | List VisitorLogs. |
+| 1993 | `POST /v1/frontoffice/visitor-logs` | `VisitorLogService/CreateVisitorLog` | `frontoffice.visitor_log.create` |  | Create VisitorLog. |
+| 1994 | `GET /v1/frontoffice/visitor-logs/{visitorLogId}` | `VisitorLogService/GetVisitorLog` | `frontoffice.visitor_log.read` |  | Get VisitorLog. |
+| 1995 | `PATCH /v1/frontoffice/visitor-logs/{visitorLogId}` | `VisitorLogService/UpdateVisitorLog` | `frontoffice.visitor_log.update` |  | Update VisitorLog. |
+| 1996 | `DELETE /v1/frontoffice/visitor-logs/{visitorLogId}` | `VisitorLogService/DeleteVisitorLog` | `frontoffice.visitor_log.delete` |  | Delete VisitorLog. |
+| 1997 | `GET /v1/frontoffice/call-logs` | `CallLogService/ListCallLogs` | `frontoffice.call_log.read` |  | List CallLogs. |
+| 1998 | `POST /v1/frontoffice/call-logs` | `CallLogService/CreateCallLog` | `frontoffice.call_log.create` |  | Create CallLog. |
+| 1999 | `GET /v1/frontoffice/call-logs/{callLogId}` | `CallLogService/GetCallLog` | `frontoffice.call_log.read` |  | Get CallLog. |
+| 2000 | `PATCH /v1/frontoffice/call-logs/{callLogId}` | `CallLogService/UpdateCallLog` | `frontoffice.call_log.update` |  | Update CallLog. |
+| 2001 | `DELETE /v1/frontoffice/call-logs/{callLogId}` | `CallLogService/DeleteCallLog` | `frontoffice.call_log.delete` |  | Delete CallLog. |
+| 2002 | `GET /v1/frontoffice/postal-records` | `PostalRecordService/ListPostalRecords` | `frontoffice.postal_record.read` |  | List PostalRecords. |
+| 2003 | `POST /v1/frontoffice/postal-records` | `PostalRecordService/CreatePostalRecord` | `frontoffice.postal_record.create` |  | Create PostalRecord. |
+| 2004 | `GET /v1/frontoffice/postal-records/{postalRecordId}` | `PostalRecordService/GetPostalRecord` | `frontoffice.postal_record.read` |  | Get PostalRecord. |
+| 2005 | `PATCH /v1/frontoffice/postal-records/{postalRecordId}` | `PostalRecordService/UpdatePostalRecord` | `frontoffice.postal_record.update` |  | Update PostalRecord. |
+| 2006 | `DELETE /v1/frontoffice/postal-records/{postalRecordId}` | `PostalRecordService/DeletePostalRecord` | `frontoffice.postal_record.delete` |  | Delete PostalRecord. |
+| 2007 | `GET /v1/frontoffice/directory-contacts` | `DirectoryContactService/ListDirectoryContacts` | `frontoffice.directory_contact.read` |  | List DirectoryContacts. |
+| 2008 | `POST /v1/frontoffice/directory-contacts` | `DirectoryContactService/CreateDirectoryContact` | `frontoffice.directory_contact.create` |  | Create DirectoryContact. |
+| 2009 | `GET /v1/frontoffice/directory-contacts/{directoryContactId}` | `DirectoryContactService/GetDirectoryContact` | `frontoffice.directory_contact.read` |  | Get DirectoryContact. |
+| 2010 | `PATCH /v1/frontoffice/directory-contacts/{directoryContactId}` | `DirectoryContactService/UpdateDirectoryContact` | `frontoffice.directory_contact.update` |  | Update DirectoryContact. |
+| 2011 | `DELETE /v1/frontoffice/directory-contacts/{directoryContactId}` | `DirectoryContactService/DeleteDirectoryContact` | `frontoffice.directory_contact.delete` |  | Delete DirectoryContact. |
+| 2012 | `POST /v1/frontoffice/visitor-logs/{visitorLogId}:checkOut` | `VisitorLogService/CheckOutVisitor` | `frontoffice.visitor_log.check_out_visitor` |  | Record exit time. |
 
 ## Careers (`careers`)
 
 | # | REST | gRPC | Permission | Public | Description |
 |---|---|---|---|---|---|
-| 2012 | `GET /v1/careers/function-areas` | `FunctionAreaService/ListFunctionAreas` | `careers.function_area.read` |  | List FunctionAreas. |
-| 2013 | `POST /v1/careers/function-areas` | `FunctionAreaService/CreateFunctionArea` | `careers.function_area.create` |  | Create FunctionArea. |
-| 2014 | `GET /v1/careers/function-areas/{functionAreaId}` | `FunctionAreaService/GetFunctionArea` | `careers.function_area.read` |  | Get FunctionArea. |
-| 2015 | `PATCH /v1/careers/function-areas/{functionAreaId}` | `FunctionAreaService/UpdateFunctionArea` | `careers.function_area.update` |  | Update FunctionArea. |
-| 2016 | `DELETE /v1/careers/function-areas/{functionAreaId}` | `FunctionAreaService/DeleteFunctionArea` | `careers.function_area.delete` |  | Delete FunctionArea. |
-| 2017 | `GET /v1/careers/industries` | `IndustryService/ListIndustries` | `careers.industry.read` |  | List Industries. |
-| 2018 | `POST /v1/careers/industries` | `IndustryService/CreateIndustry` | `careers.industry.create` |  | Create Industry. |
-| 2019 | `GET /v1/careers/industries/{industryId}` | `IndustryService/GetIndustry` | `careers.industry.read` |  | Get Industry. |
-| 2020 | `PATCH /v1/careers/industries/{industryId}` | `IndustryService/UpdateIndustry` | `careers.industry.update` |  | Update Industry. |
-| 2021 | `DELETE /v1/careers/industries/{industryId}` | `IndustryService/DeleteIndustry` | `careers.industry.delete` |  | Delete Industry. |
-| 2022 | `GET /v1/careers/job-openings` | `JobOpeningService/ListJobOpenings` | `careers.job_opening.read` | Public | List JobOpenings. |
-| 2023 | `POST /v1/careers/job-openings` | `JobOpeningService/CreateJobOpening` | `careers.job_opening.create` |  | Create JobOpening. |
-| 2024 | `GET /v1/careers/job-openings/{jobOpeningId}` | `JobOpeningService/GetJobOpening` | `careers.job_opening.read` | Public | Get JobOpening. |
-| 2025 | `PATCH /v1/careers/job-openings/{jobOpeningId}` | `JobOpeningService/UpdateJobOpening` | `careers.job_opening.update` |  | Update JobOpening. |
-| 2026 | `DELETE /v1/careers/job-openings/{jobOpeningId}` | `JobOpeningService/DeleteJobOpening` | `careers.job_opening.delete` |  | Delete JobOpening. |
-| 2027 | `GET /v1/careers/job-openings/{jobOpeningId}/applications` | `JobOpeningService/ListJobApplications` | `careers.job_application.read` |  | List JobApplications. |
-| 2028 | `POST /v1/careers/job-openings/{jobOpeningId}/applications` | `JobOpeningService/CreateJobApplication` | `careers.job_application.create` |  | Create JobApplication. |
-| 2029 | `GET /v1/careers/job-openings/{jobOpeningId}/applications/{jobApplicationId}` | `JobOpeningService/GetJobApplication` | `careers.job_application.read` |  | Get JobApplication. |
-| 2030 | `PATCH /v1/careers/job-openings/{jobOpeningId}/applications/{jobApplicationId}` | `JobOpeningService/UpdateJobApplication` | `careers.job_application.update` |  | Update JobApplication. |
-| 2031 | `DELETE /v1/careers/job-openings/{jobOpeningId}/applications/{jobApplicationId}` | `JobOpeningService/DeleteJobApplication` | `careers.job_application.delete` |  | Delete JobApplication. |
-| 2032 | `GET /v1/careers/candidate-preferences` | `CandidatePreferenceService/ListCandidatePreferences` | `careers.candidate_preference.read` |  | List CandidatePreferences. |
-| 2033 | `POST /v1/careers/candidate-preferences` | `CandidatePreferenceService/CreateCandidatePreference` | `careers.candidate_preference.create` |  | Create CandidatePreference. |
-| 2034 | `GET /v1/careers/candidate-preferences/{candidatePreferenceId}` | `CandidatePreferenceService/GetCandidatePreference` | `careers.candidate_preference.read` |  | Get CandidatePreference. |
-| 2035 | `PATCH /v1/careers/candidate-preferences/{candidatePreferenceId}` | `CandidatePreferenceService/UpdateCandidatePreference` | `careers.candidate_preference.update` |  | Update CandidatePreference. |
-| 2036 | `DELETE /v1/careers/candidate-preferences/{candidatePreferenceId}` | `CandidatePreferenceService/DeleteCandidatePreference` | `careers.candidate_preference.delete` |  | Delete CandidatePreference. |
-| 2037 | `GET /v1/careers/candidate-preferences/{candidatePreferenceId}/functions` | `CandidatePreferenceService/ListCandidatePreferredFunctions` | `careers.candidate_preferred_function.read` |  | List CandidatePreferredFunctions. |
-| 2038 | `POST /v1/careers/candidate-preferences/{candidatePreferenceId}/functions` | `CandidatePreferenceService/CreateCandidatePreferredFunction` | `careers.candidate_preferred_function.create` |  | Create CandidatePreferredFunction. |
-| 2039 | `GET /v1/careers/candidate-preferences/{candidatePreferenceId}/functions/{candidatePreferredFunctionId}` | `CandidatePreferenceService/GetCandidatePreferredFunction` | `careers.candidate_preferred_function.read` |  | Get CandidatePreferredFunction. |
-| 2040 | `PATCH /v1/careers/candidate-preferences/{candidatePreferenceId}/functions/{candidatePreferredFunctionId}` | `CandidatePreferenceService/UpdateCandidatePreferredFunction` | `careers.candidate_preferred_function.update` |  | Update CandidatePreferredFunction. |
-| 2041 | `DELETE /v1/careers/candidate-preferences/{candidatePreferenceId}/functions/{candidatePreferredFunctionId}` | `CandidatePreferenceService/DeleteCandidatePreferredFunction` | `careers.candidate_preferred_function.delete` |  | Delete CandidatePreferredFunction. |
-| 2042 | `GET /v1/careers/candidate-preferences/{candidatePreferenceId}/industries` | `CandidatePreferenceService/ListCandidatePreferredIndustries` | `careers.candidate_preferred_industry.read` |  | List CandidatePreferredIndustries. |
-| 2043 | `POST /v1/careers/candidate-preferences/{candidatePreferenceId}/industries` | `CandidatePreferenceService/CreateCandidatePreferredIndustry` | `careers.candidate_preferred_industry.create` |  | Create CandidatePreferredIndustry. |
-| 2044 | `GET /v1/careers/candidate-preferences/{candidatePreferenceId}/industries/{candidatePreferredIndustryId}` | `CandidatePreferenceService/GetCandidatePreferredIndustry` | `careers.candidate_preferred_industry.read` |  | Get CandidatePreferredIndustry. |
-| 2045 | `PATCH /v1/careers/candidate-preferences/{candidatePreferenceId}/industries/{candidatePreferredIndustryId}` | `CandidatePreferenceService/UpdateCandidatePreferredIndustry` | `careers.candidate_preferred_industry.update` |  | Update CandidatePreferredIndustry. |
-| 2046 | `DELETE /v1/careers/candidate-preferences/{candidatePreferenceId}/industries/{candidatePreferredIndustryId}` | `CandidatePreferenceService/DeleteCandidatePreferredIndustry` | `careers.candidate_preferred_industry.delete` |  | Delete CandidatePreferredIndustry. |
-| 2047 | `POST /v1/careers/job-openings/{jobOpeningId}:close` | `JobOpeningService/CloseJobOpening` | `careers.job_opening.close_job_opening` |  | Close. |
-| 2048 | `POST /v1/careers/job-openings/{jobOpeningId}:reopen` | `JobOpeningService/ReopenJobOpening` | `careers.job_opening.reopen_job_opening` |  | Reopen. |
-| 2049 | `POST /v1/careers/job-openings/{jobOpeningId}:report` | `JobOpeningService/ReportJobOpening` | `careers.job_opening.report_job_opening` |  | Report a listing to moderators. |
-| 2050 | `POST /v1/careers/job-applications/{applicationId}:email` | `JobOpeningService/EmailApplicant` | `careers.job_application.email_applicant` |  | E-mail the applicant. |
-| 2051 | `POST /v1/careers/job-openings/{jobOpeningId}/applications/{jobApplicationId}:setStatus` | `JobOpeningService/UpdateApplicationStatus` | `careers.job_application.update_application_status` |  | Shortlist / reject / hire. |
+| 2013 | `GET /v1/careers/function-areas` | `FunctionAreaService/ListFunctionAreas` | `careers.function_area.read` |  | List FunctionAreas. |
+| 2014 | `POST /v1/careers/function-areas` | `FunctionAreaService/CreateFunctionArea` | `careers.function_area.create` |  | Create FunctionArea. |
+| 2015 | `GET /v1/careers/function-areas/{functionAreaId}` | `FunctionAreaService/GetFunctionArea` | `careers.function_area.read` |  | Get FunctionArea. |
+| 2016 | `PATCH /v1/careers/function-areas/{functionAreaId}` | `FunctionAreaService/UpdateFunctionArea` | `careers.function_area.update` |  | Update FunctionArea. |
+| 2017 | `DELETE /v1/careers/function-areas/{functionAreaId}` | `FunctionAreaService/DeleteFunctionArea` | `careers.function_area.delete` |  | Delete FunctionArea. |
+| 2018 | `GET /v1/careers/industries` | `IndustryService/ListIndustries` | `careers.industry.read` |  | List Industries. |
+| 2019 | `POST /v1/careers/industries` | `IndustryService/CreateIndustry` | `careers.industry.create` |  | Create Industry. |
+| 2020 | `GET /v1/careers/industries/{industryId}` | `IndustryService/GetIndustry` | `careers.industry.read` |  | Get Industry. |
+| 2021 | `PATCH /v1/careers/industries/{industryId}` | `IndustryService/UpdateIndustry` | `careers.industry.update` |  | Update Industry. |
+| 2022 | `DELETE /v1/careers/industries/{industryId}` | `IndustryService/DeleteIndustry` | `careers.industry.delete` |  | Delete Industry. |
+| 2023 | `GET /v1/careers/job-openings` | `JobOpeningService/ListJobOpenings` | `careers.job_opening.read` | Public | List JobOpenings. |
+| 2024 | `POST /v1/careers/job-openings` | `JobOpeningService/CreateJobOpening` | `careers.job_opening.create` |  | Create JobOpening. |
+| 2025 | `GET /v1/careers/job-openings/{jobOpeningId}` | `JobOpeningService/GetJobOpening` | `careers.job_opening.read` | Public | Get JobOpening. |
+| 2026 | `PATCH /v1/careers/job-openings/{jobOpeningId}` | `JobOpeningService/UpdateJobOpening` | `careers.job_opening.update` |  | Update JobOpening. |
+| 2027 | `DELETE /v1/careers/job-openings/{jobOpeningId}` | `JobOpeningService/DeleteJobOpening` | `careers.job_opening.delete` |  | Delete JobOpening. |
+| 2028 | `GET /v1/careers/job-openings/{jobOpeningId}/applications` | `JobOpeningService/ListJobApplications` | `careers.job_application.read` |  | List JobApplications. |
+| 2029 | `POST /v1/careers/job-openings/{jobOpeningId}/applications` | `JobOpeningService/CreateJobApplication` | `careers.job_application.create` |  | Create JobApplication. |
+| 2030 | `GET /v1/careers/job-openings/{jobOpeningId}/applications/{jobApplicationId}` | `JobOpeningService/GetJobApplication` | `careers.job_application.read` |  | Get JobApplication. |
+| 2031 | `PATCH /v1/careers/job-openings/{jobOpeningId}/applications/{jobApplicationId}` | `JobOpeningService/UpdateJobApplication` | `careers.job_application.update` |  | Update JobApplication. |
+| 2032 | `DELETE /v1/careers/job-openings/{jobOpeningId}/applications/{jobApplicationId}` | `JobOpeningService/DeleteJobApplication` | `careers.job_application.delete` |  | Delete JobApplication. |
+| 2033 | `GET /v1/careers/candidate-preferences` | `CandidatePreferenceService/ListCandidatePreferences` | `careers.candidate_preference.read` |  | List CandidatePreferences. |
+| 2034 | `POST /v1/careers/candidate-preferences` | `CandidatePreferenceService/CreateCandidatePreference` | `careers.candidate_preference.create` |  | Create CandidatePreference. |
+| 2035 | `GET /v1/careers/candidate-preferences/{candidatePreferenceId}` | `CandidatePreferenceService/GetCandidatePreference` | `careers.candidate_preference.read` |  | Get CandidatePreference. |
+| 2036 | `PATCH /v1/careers/candidate-preferences/{candidatePreferenceId}` | `CandidatePreferenceService/UpdateCandidatePreference` | `careers.candidate_preference.update` |  | Update CandidatePreference. |
+| 2037 | `DELETE /v1/careers/candidate-preferences/{candidatePreferenceId}` | `CandidatePreferenceService/DeleteCandidatePreference` | `careers.candidate_preference.delete` |  | Delete CandidatePreference. |
+| 2038 | `GET /v1/careers/candidate-preferences/{candidatePreferenceId}/functions` | `CandidatePreferenceService/ListCandidatePreferredFunctions` | `careers.candidate_preferred_function.read` |  | List CandidatePreferredFunctions. |
+| 2039 | `POST /v1/careers/candidate-preferences/{candidatePreferenceId}/functions` | `CandidatePreferenceService/CreateCandidatePreferredFunction` | `careers.candidate_preferred_function.create` |  | Create CandidatePreferredFunction. |
+| 2040 | `GET /v1/careers/candidate-preferences/{candidatePreferenceId}/functions/{candidatePreferredFunctionId}` | `CandidatePreferenceService/GetCandidatePreferredFunction` | `careers.candidate_preferred_function.read` |  | Get CandidatePreferredFunction. |
+| 2041 | `PATCH /v1/careers/candidate-preferences/{candidatePreferenceId}/functions/{candidatePreferredFunctionId}` | `CandidatePreferenceService/UpdateCandidatePreferredFunction` | `careers.candidate_preferred_function.update` |  | Update CandidatePreferredFunction. |
+| 2042 | `DELETE /v1/careers/candidate-preferences/{candidatePreferenceId}/functions/{candidatePreferredFunctionId}` | `CandidatePreferenceService/DeleteCandidatePreferredFunction` | `careers.candidate_preferred_function.delete` |  | Delete CandidatePreferredFunction. |
+| 2043 | `GET /v1/careers/candidate-preferences/{candidatePreferenceId}/industries` | `CandidatePreferenceService/ListCandidatePreferredIndustries` | `careers.candidate_preferred_industry.read` |  | List CandidatePreferredIndustries. |
+| 2044 | `POST /v1/careers/candidate-preferences/{candidatePreferenceId}/industries` | `CandidatePreferenceService/CreateCandidatePreferredIndustry` | `careers.candidate_preferred_industry.create` |  | Create CandidatePreferredIndustry. |
+| 2045 | `GET /v1/careers/candidate-preferences/{candidatePreferenceId}/industries/{candidatePreferredIndustryId}` | `CandidatePreferenceService/GetCandidatePreferredIndustry` | `careers.candidate_preferred_industry.read` |  | Get CandidatePreferredIndustry. |
+| 2046 | `PATCH /v1/careers/candidate-preferences/{candidatePreferenceId}/industries/{candidatePreferredIndustryId}` | `CandidatePreferenceService/UpdateCandidatePreferredIndustry` | `careers.candidate_preferred_industry.update` |  | Update CandidatePreferredIndustry. |
+| 2047 | `DELETE /v1/careers/candidate-preferences/{candidatePreferenceId}/industries/{candidatePreferredIndustryId}` | `CandidatePreferenceService/DeleteCandidatePreferredIndustry` | `careers.candidate_preferred_industry.delete` |  | Delete CandidatePreferredIndustry. |
+| 2048 | `POST /v1/careers/job-openings/{jobOpeningId}:close` | `JobOpeningService/CloseJobOpening` | `careers.job_opening.close_job_opening` |  | Close. |
+| 2049 | `POST /v1/careers/job-openings/{jobOpeningId}:reopen` | `JobOpeningService/ReopenJobOpening` | `careers.job_opening.reopen_job_opening` |  | Reopen. |
+| 2050 | `POST /v1/careers/job-openings/{jobOpeningId}:report` | `JobOpeningService/ReportJobOpening` | `careers.job_opening.report_job_opening` |  | Report a listing to moderators. |
+| 2051 | `POST /v1/careers/job-applications/{applicationId}:email` | `JobOpeningService/EmailApplicant` | `careers.job_application.email_applicant` |  | E-mail the applicant. |
+| 2052 | `POST /v1/careers/job-openings/{jobOpeningId}/applications/{jobApplicationId}:setStatus` | `JobOpeningService/UpdateApplicationStatus` | `careers.job_application.update_application_status` |  | Shortlist / reject / hire. |
 
 ## Privacy & Consent (`privacy`)
 
 | # | REST | gRPC | Permission | Public | Description |
 |---|---|---|---|---|---|
-| 2052 | `POST /v1/privacy/rights-requests/{rightsRequestId}:assign` | `RightsRequestService/AssignRightsRequest` | `privacy.rights_request.assign` |  | Assign RightsRequest. |
-| 2053 | `POST /v1/privacy/consent-decisions:batchCheck` | `ConsentDecisionService/BatchCheckConsent` | `privacy.consent_decision.batch_check` |  | Batch Check Consent. |
-| 2054 | `GET /v1/privacy/consent-decisions:check` | `ConsentDecisionService/CheckConsent` | `privacy.consent_decision.check` |  | Check Consent. |
-| 2055 | `POST /v1/privacy/breaches/{breachId}:close` | `BreachService/CloseBreach` | `privacy.breach.close` |  | Close Breach. |
-| 2056 | `POST /v1/privacy/rights-requests/{rightsRequestId}:close` | `RightsRequestService/CloseRightsRequest` | `privacy.rights_request.close` |  | Close RightsRequest. |
-| 2057 | `POST /v1/privacy/breaches/{breachId}:contain` | `BreachService/ContainBreach` | `privacy.breach.contain` |  | Contain Breach. |
-| 2058 | `POST /v1/privacy/notices` | `NoticeService/CreateNotice` | `privacy.notice.create` |  | Create Notice. |
-| 2059 | `POST /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations` | `NoticeService/CreateNoticeTranslation` | `privacy.notice_translation.create` |  | Create NoticeTranslation. |
-| 2060 | `POST /v1/privacy/notices/{noticeId}/versions` | `NoticeService/CreateNoticeVersion` | `privacy.notice_version.create` |  | Create NoticeVersion. |
-| 2061 | `DELETE /v1/privacy/notices/{noticeId}` | `NoticeService/DeleteNotice` | `privacy.notice.delete` |  | Delete Notice. |
-| 2062 | `DELETE /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}` | `NoticeService/DeleteNoticeTranslation` | `privacy.notice_translation.delete` |  | Delete NoticeTranslation. |
-| 2063 | `POST /v1/privacy/rights-requests/{rightsRequestId}:extend` | `RightsRequestService/ExtendRightsRequest` | `privacy.rights_request.extend` |  | Extend RightsRequest. |
-| 2064 | `POST /v1/privacy/rights-requests/{rightsRequestId}:fulfilAccess` | `RightsRequestService/FulfilAccessRequest` | `privacy.rights_request.fulfil` |  | Fulfil an access RightsRequest. |
-| 2065 | `POST /v1/privacy/rights-requests/{rightsRequestId}:fulfilWithdrawAll` | `RightsRequestService/FulfilWithdrawAllRequest` | `privacy.rights_request.fulfil` |  | Fulfil a withdraw-all request. |
-| 2066 | `GET /v1/privacy/rights-requests/{rightsRequestId}/access-summary` | `RightsRequestService/GetAccessSummary` | `privacy.rights_request.read` |  | Get the access summary of a RightsRequest. |
-| 2067 | `GET /v1/privacy/breaches/{breachId}` | `BreachService/GetBreach` | `privacy.breach.read` |  | Get Breach. |
-| 2068 | `GET /v1/privacy/coverage` | `ConsentCoverageService/GetConsentCoverage` | `privacy.coverage.read` |  | Consent coverage of a purpose, in counts. |
-| 2069 | `GET /v1/privacy/consent-records/{consentRecordId}` | `ConsentService/GetConsentRecord` | `privacy.consent_record.read` |  | Get ConsentRecord. |
-| 2070 | `GET /v1/privacy/legal-holds/{legalHoldId}` | `LegalHoldService/GetLegalHold` | `privacy.legal_hold.read` |  | Get LegalHold. |
-| 2071 | `GET /v1/privacy/my/requests/{rightsRequestId}/access-summary` | `RightsRequestService/GetMyAccessSummary` | `privacy.my_request.read` |  | Get my access summary. |
-| 2072 | `GET /v1/privacy/my/nominee` | `NomineeService/GetMyNominee` | `privacy.my_nominee.read` |  | Get my nominee. |
-| 2073 | `GET /v1/privacy/my/notices/{noticeCode}` | `ConsentService/GetMyNotice` | `privacy.my_consent.read` |  | Get my Notice. |
-| 2074 | `GET /v1/privacy/my/requests/{rightsRequestId}` | `RightsRequestService/GetMyRequest` | `privacy.my_request.read` |  | Get my RightsRequest. |
-| 2075 | `GET /v1/privacy/notices/{noticeId}` | `NoticeService/GetNotice` | `privacy.notice.read` |  | Get Notice. |
-| 2076 | `GET /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}` | `NoticeService/GetNoticeTranslation` | `privacy.notice_translation.read` |  | Get NoticeTranslation. |
-| 2077 | `GET /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}` | `NoticeService/GetNoticeVersion` | `privacy.notice_version.read` |  | Get NoticeVersion. |
-| 2078 | `GET /v1/privacy/processing-activities:export` | `ProcessingActivityService/GetProcessingRegisterExport` | `privacy.processing_activity.read` |  | Export the processing register as CSV. |
-| 2079 | `GET /v1/privacy/purposes/{purposeId}` | `PurposeService/GetPurpose` | `privacy.tenant_purpose.read` |  | Get Purpose. |
-| 2080 | `GET /v1/privacy/consent-decisions:purposeStatus` | `ConsentDecisionService/GetPurposeStatus` | `privacy.consent_decision.get_purpose_status` |  | Get Purpose Status. |
-| 2081 | `GET /v1/privacy/retention-policies/{retentionPolicyId}` | `RetentionService/GetRetentionPolicy` | `privacy.retention_policy.read` |  | Get RetentionPolicy. |
-| 2082 | `GET /v1/privacy/rights-requests/{rightsRequestId}` | `RightsRequestService/GetRightsRequest` | `privacy.rights_request.read` |  | Get RightsRequest. |
-| 2083 | `GET /v1/privacy/legal-holds:active` | `LegalHoldService/ListActiveHolds` | `privacy.legal_hold.check` |  | The active holds covering a subject (internal). |
-| 2084 | `GET /v1/privacy/breaches` | `BreachService/ListBreaches` | `privacy.breach.read` |  | List Breaches. |
-| 2085 | `GET /v1/privacy/consent-records` | `ConsentService/ListConsentRecords` | `privacy.consent_record.read` |  | List ConsentRecords. |
-| 2086 | `GET /v1/privacy/legal-holds` | `LegalHoldService/ListLegalHolds` | `privacy.legal_hold.read` |  | List LegalHolds. |
-| 2087 | `GET /v1/privacy/my/consents` | `ConsentService/ListMyConsents` | `privacy.my_consent.read` |  | List my Consents. |
-| 2088 | `GET /v1/privacy/my/requests` | `RightsRequestService/ListMyRequests` | `privacy.my_request.read` |  | List my RightsRequests. |
-| 2089 | `GET /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations` | `NoticeService/ListNoticeTranslations` | `privacy.notice_translation.read` |  | List NoticeTranslations. |
-| 2090 | `GET /v1/privacy/notices/{noticeId}/versions` | `NoticeService/ListNoticeVersions` | `privacy.notice_version.read` |  | List NoticeVersions. |
-| 2091 | `GET /v1/privacy/notices` | `NoticeService/ListNotices` | `privacy.notice.read` |  | List Notices. |
-| 2092 | `GET /v1/privacy/processing-activities` | `ProcessingActivityService/ListProcessingActivities` | `privacy.processing_activity.read` |  | List Processing Activities. |
-| 2093 | `GET /v1/privacy/purposes` | `PurposeService/ListPurposes` | `privacy.tenant_purpose.read` |  | List Purposes. |
-| 2094 | `GET /v1/privacy/retention-policies` | `RetentionService/ListRetentionPolicies` | `privacy.retention_policy.read` |  | List RetentionPolicies. |
-| 2095 | `GET /v1/privacy/retention-runs` | `RetentionService/ListRetentionRuns` | `privacy.retention_run.read` |  | List RetentionRuns. |
-| 2096 | `GET /v1/privacy/rights-requests` | `RightsRequestService/ListRightsRequests` | `privacy.rights_request.read` |  | List RightsRequests. |
-| 2097 | `GET /v1/privacy/consent-decisions:subjects` | `ConsentDecisionService/ListSubjectsWithConsent` | `privacy.consent_decision.list_subjects` |  | List Subjects With Consent. |
-| 2098 | `POST /v1/privacy/breaches/{breachId}:markNotABreach` | `BreachService/MarkBreachNotABreach` | `privacy.breach.mark_not_a_breach` |  | Record that a Breach is not a personal data breach. |
-| 2099 | `POST /v1/privacy/legal-holds` | `LegalHoldService/PlaceLegalHold` | `privacy.legal_hold.place` |  | Place a legal hold. |
-| 2100 | `POST /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}:publish` | `NoticeService/PublishNoticeVersion` | `privacy.notice_version.publish` |  | Publish NoticeVersion. |
-| 2101 | `POST /v1/privacy/breaches/{breachId}:recordNotification` | `BreachService/RecordBreachNotification` | `privacy.breach.record_notification` |  | Record a notice sent about a Breach. |
-| 2102 | `POST /v1/privacy/consent-records` | `ConsentService/RecordConsentOnBehalf` | `privacy.consent_record.record_on_behalf` |  | Record Consent on behalf. |
-| 2103 | `POST /v1/privacy/my/consents` | `ConsentService/RecordMyConsent` | `privacy.my_consent.create` |  | Record my Consent. |
-| 2104 | `POST /v1/privacy/rights-requests/{rightsRequestId}:reject` | `RightsRequestService/RejectRightsRequest` | `privacy.rights_request.reject` |  | Reject RightsRequest. |
-| 2105 | `POST /v1/privacy/legal-holds/{legalHoldId}:release` | `LegalHoldService/ReleaseLegalHold` | `privacy.legal_hold.release` |  | Release a legal hold. |
-| 2106 | `POST /v1/privacy/breaches` | `BreachService/ReportBreach` | `privacy.breach.report` |  | Report a breach into the register. |
-| 2107 | `POST /v1/privacy/rights-requests/{rightsRequestId}/tasks/{taskId}:retry` | `RightsRequestService/RetryRightsRequestTask` | `privacy.rights_request.retry_task` |  | Retry a module's task. |
-| 2108 | `POST /v1/privacy/my/nominee:revoke` | `NomineeService/RevokeMyNominee` | `privacy.my_nominee.revoke` |  | Revoke my nominee. |
-| 2109 | `POST /v1/privacy/my/nominee:set` | `NomineeService/SetMyNominee` | `privacy.my_nominee.set` |  | Set my nominee. |
-| 2110 | `POST /v1/privacy/rights-requests/{rightsRequestId}:startFulfilment` | `RightsRequestService/StartRightsRequestFulfilment` | `privacy.rights_request.fulfil` |  | Start fulfilling an erasure or export request. |
-| 2111 | `POST /v1/privacy/my/requests` | `RightsRequestService/SubmitMyRequest` | `privacy.my_request.create` |  | Submit my RightsRequest. |
-| 2112 | `POST /v1/privacy/breaches/{breachId}:triage` | `BreachService/TriageBreach` | `privacy.breach.triage` |  | Triage Breach. |
-| 2113 | `PATCH /v1/privacy/breaches/{breachId}` | `BreachService/UpdateBreach` | `privacy.breach.update` |  | Update what is known of an open Breach. |
-| 2114 | `PATCH /v1/privacy/legal-holds/{legalHoldId}` | `LegalHoldService/UpdateLegalHold` | `privacy.legal_hold.update` |  | Move a legal hold's review date. |
-| 2115 | `PATCH /v1/privacy/notices/{noticeId}` | `NoticeService/UpdateNotice` | `privacy.notice.update` |  | Update Notice. |
-| 2116 | `PATCH /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}` | `NoticeService/UpdateNoticeTranslation` | `privacy.notice_translation.update` |  | Update NoticeTranslation. |
-| 2117 | `PATCH /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}` | `NoticeService/UpdateNoticeVersion` | `privacy.notice_version.update` |  | Update NoticeVersion. |
-| 2118 | `PATCH /v1/privacy/purposes/{purposeId}` | `PurposeService/UpdatePurpose` | `privacy.tenant_purpose.update` |  | Update Purpose. |
-| 2119 | `PATCH /v1/privacy/retention-policies/{retentionPolicyId}` | `RetentionService/UpdateRetentionPolicy` | `privacy.retention_policy.update` |  | Update RetentionPolicy. |
-| 2120 | `POST /v1/privacy/consent-records/{consentRecordId}:verify` | `ConsentService/VerifyConsentRecord` | `privacy.consent_record.verify` |  | Verify ConsentRecord. |
-| 2121 | `POST /v1/privacy/rights-requests/{rightsRequestId}:verifyIdentity` | `RightsRequestService/VerifyRightsRequestIdentity` | `privacy.rights_request.verify_identity` |  | Verify RightsRequest identity. |
-| 2122 | `POST /v1/privacy/my/consents/{consentRecordId}:withdraw` | `ConsentService/WithdrawMyConsent` | `privacy.my_consent.withdraw` |  | Withdraw my Consent. |
+| 2053 | `POST /v1/privacy/rights-requests/{rightsRequestId}:assign` | `RightsRequestService/AssignRightsRequest` | `privacy.rights_request.assign` |  | Assign RightsRequest. |
+| 2054 | `POST /v1/privacy/consent-decisions:batchCheck` | `ConsentDecisionService/BatchCheckConsent` | `privacy.consent_decision.batch_check` |  | Batch Check Consent. |
+| 2055 | `GET /v1/privacy/consent-decisions:check` | `ConsentDecisionService/CheckConsent` | `privacy.consent_decision.check` |  | Check Consent. |
+| 2056 | `POST /v1/privacy/breaches/{breachId}:close` | `BreachService/CloseBreach` | `privacy.breach.close` |  | Close Breach. |
+| 2057 | `POST /v1/privacy/rights-requests/{rightsRequestId}:close` | `RightsRequestService/CloseRightsRequest` | `privacy.rights_request.close` |  | Close RightsRequest. |
+| 2058 | `POST /v1/privacy/breaches/{breachId}:contain` | `BreachService/ContainBreach` | `privacy.breach.contain` |  | Contain Breach. |
+| 2059 | `POST /v1/privacy/notices` | `NoticeService/CreateNotice` | `privacy.notice.create` |  | Create Notice. |
+| 2060 | `POST /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations` | `NoticeService/CreateNoticeTranslation` | `privacy.notice_translation.create` |  | Create NoticeTranslation. |
+| 2061 | `POST /v1/privacy/notices/{noticeId}/versions` | `NoticeService/CreateNoticeVersion` | `privacy.notice_version.create` |  | Create NoticeVersion. |
+| 2062 | `DELETE /v1/privacy/notices/{noticeId}` | `NoticeService/DeleteNotice` | `privacy.notice.delete` |  | Delete Notice. |
+| 2063 | `DELETE /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}` | `NoticeService/DeleteNoticeTranslation` | `privacy.notice_translation.delete` |  | Delete NoticeTranslation. |
+| 2064 | `POST /v1/privacy/rights-requests/{rightsRequestId}:extend` | `RightsRequestService/ExtendRightsRequest` | `privacy.rights_request.extend` |  | Extend RightsRequest. |
+| 2065 | `POST /v1/privacy/rights-requests/{rightsRequestId}:fulfilAccess` | `RightsRequestService/FulfilAccessRequest` | `privacy.rights_request.fulfil` |  | Fulfil an access RightsRequest. |
+| 2066 | `POST /v1/privacy/rights-requests/{rightsRequestId}:fulfilWithdrawAll` | `RightsRequestService/FulfilWithdrawAllRequest` | `privacy.rights_request.fulfil` |  | Fulfil a withdraw-all request. |
+| 2067 | `GET /v1/privacy/rights-requests/{rightsRequestId}/access-summary` | `RightsRequestService/GetAccessSummary` | `privacy.rights_request.read` |  | Get the access summary of a RightsRequest. |
+| 2068 | `GET /v1/privacy/breaches/{breachId}` | `BreachService/GetBreach` | `privacy.breach.read` |  | Get Breach. |
+| 2069 | `GET /v1/privacy/coverage` | `ConsentCoverageService/GetConsentCoverage` | `privacy.coverage.read` |  | Consent coverage of a purpose, in counts. |
+| 2070 | `GET /v1/privacy/consent-records/{consentRecordId}` | `ConsentService/GetConsentRecord` | `privacy.consent_record.read` |  | Get ConsentRecord. |
+| 2071 | `GET /v1/privacy/legal-holds/{legalHoldId}` | `LegalHoldService/GetLegalHold` | `privacy.legal_hold.read` |  | Get LegalHold. |
+| 2072 | `GET /v1/privacy/my/requests/{rightsRequestId}/access-summary` | `RightsRequestService/GetMyAccessSummary` | `privacy.my_request.read` |  | Get my access summary. |
+| 2073 | `GET /v1/privacy/my/nominee` | `NomineeService/GetMyNominee` | `privacy.my_nominee.read` |  | Get my nominee. |
+| 2074 | `GET /v1/privacy/my/notices/{noticeCode}` | `ConsentService/GetMyNotice` | `privacy.my_consent.read` |  | Get my Notice. |
+| 2075 | `GET /v1/privacy/my/requests/{rightsRequestId}` | `RightsRequestService/GetMyRequest` | `privacy.my_request.read` |  | Get my RightsRequest. |
+| 2076 | `GET /v1/privacy/notices/{noticeId}` | `NoticeService/GetNotice` | `privacy.notice.read` |  | Get Notice. |
+| 2077 | `GET /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}` | `NoticeService/GetNoticeTranslation` | `privacy.notice_translation.read` |  | Get NoticeTranslation. |
+| 2078 | `GET /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}` | `NoticeService/GetNoticeVersion` | `privacy.notice_version.read` |  | Get NoticeVersion. |
+| 2079 | `GET /v1/privacy/processing-activities:export` | `ProcessingActivityService/GetProcessingRegisterExport` | `privacy.processing_activity.read` |  | Export the processing register as CSV. |
+| 2080 | `GET /v1/privacy/purposes/{purposeId}` | `PurposeService/GetPurpose` | `privacy.tenant_purpose.read` |  | Get Purpose. |
+| 2081 | `GET /v1/privacy/consent-decisions:purposeStatus` | `ConsentDecisionService/GetPurposeStatus` | `privacy.consent_decision.get_purpose_status` |  | Get Purpose Status. |
+| 2082 | `GET /v1/privacy/retention-policies/{retentionPolicyId}` | `RetentionService/GetRetentionPolicy` | `privacy.retention_policy.read` |  | Get RetentionPolicy. |
+| 2083 | `GET /v1/privacy/rights-requests/{rightsRequestId}` | `RightsRequestService/GetRightsRequest` | `privacy.rights_request.read` |  | Get RightsRequest. |
+| 2084 | `GET /v1/privacy/legal-holds:active` | `LegalHoldService/ListActiveHolds` | `privacy.legal_hold.check` |  | The active holds covering a subject (internal). |
+| 2085 | `GET /v1/privacy/breaches` | `BreachService/ListBreaches` | `privacy.breach.read` |  | List Breaches. |
+| 2086 | `GET /v1/privacy/consent-records` | `ConsentService/ListConsentRecords` | `privacy.consent_record.read` |  | List ConsentRecords. |
+| 2087 | `GET /v1/privacy/legal-holds` | `LegalHoldService/ListLegalHolds` | `privacy.legal_hold.read` |  | List LegalHolds. |
+| 2088 | `GET /v1/privacy/my/consents` | `ConsentService/ListMyConsents` | `privacy.my_consent.read` |  | List my Consents. |
+| 2089 | `GET /v1/privacy/my/requests` | `RightsRequestService/ListMyRequests` | `privacy.my_request.read` |  | List my RightsRequests. |
+| 2090 | `GET /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations` | `NoticeService/ListNoticeTranslations` | `privacy.notice_translation.read` |  | List NoticeTranslations. |
+| 2091 | `GET /v1/privacy/notices/{noticeId}/versions` | `NoticeService/ListNoticeVersions` | `privacy.notice_version.read` |  | List NoticeVersions. |
+| 2092 | `GET /v1/privacy/notices` | `NoticeService/ListNotices` | `privacy.notice.read` |  | List Notices. |
+| 2093 | `GET /v1/privacy/processing-activities` | `ProcessingActivityService/ListProcessingActivities` | `privacy.processing_activity.read` |  | List Processing Activities. |
+| 2094 | `GET /v1/privacy/purposes` | `PurposeService/ListPurposes` | `privacy.tenant_purpose.read` |  | List Purposes. |
+| 2095 | `GET /v1/privacy/retention-policies` | `RetentionService/ListRetentionPolicies` | `privacy.retention_policy.read` |  | List RetentionPolicies. |
+| 2096 | `GET /v1/privacy/retention-runs` | `RetentionService/ListRetentionRuns` | `privacy.retention_run.read` |  | List RetentionRuns. |
+| 2097 | `GET /v1/privacy/rights-requests` | `RightsRequestService/ListRightsRequests` | `privacy.rights_request.read` |  | List RightsRequests. |
+| 2098 | `GET /v1/privacy/consent-decisions:subjects` | `ConsentDecisionService/ListSubjectsWithConsent` | `privacy.consent_decision.list_subjects` |  | List Subjects With Consent. |
+| 2099 | `POST /v1/privacy/breaches/{breachId}:markNotABreach` | `BreachService/MarkBreachNotABreach` | `privacy.breach.mark_not_a_breach` |  | Record that a Breach is not a personal data breach. |
+| 2100 | `POST /v1/privacy/legal-holds` | `LegalHoldService/PlaceLegalHold` | `privacy.legal_hold.place` |  | Place a legal hold. |
+| 2101 | `POST /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}:publish` | `NoticeService/PublishNoticeVersion` | `privacy.notice_version.publish` |  | Publish NoticeVersion. |
+| 2102 | `POST /v1/privacy/breaches/{breachId}:recordNotification` | `BreachService/RecordBreachNotification` | `privacy.breach.record_notification` |  | Record a notice sent about a Breach. |
+| 2103 | `POST /v1/privacy/consent-records` | `ConsentService/RecordConsentOnBehalf` | `privacy.consent_record.record_on_behalf` |  | Record Consent on behalf. |
+| 2104 | `POST /v1/privacy/my/consents` | `ConsentService/RecordMyConsent` | `privacy.my_consent.create` |  | Record my Consent. |
+| 2105 | `POST /v1/privacy/rights-requests/{rightsRequestId}:reject` | `RightsRequestService/RejectRightsRequest` | `privacy.rights_request.reject` |  | Reject RightsRequest. |
+| 2106 | `POST /v1/privacy/legal-holds/{legalHoldId}:release` | `LegalHoldService/ReleaseLegalHold` | `privacy.legal_hold.release` |  | Release a legal hold. |
+| 2107 | `POST /v1/privacy/breaches` | `BreachService/ReportBreach` | `privacy.breach.report` |  | Report a breach into the register. |
+| 2108 | `POST /v1/privacy/rights-requests/{rightsRequestId}/tasks/{taskId}:retry` | `RightsRequestService/RetryRightsRequestTask` | `privacy.rights_request.retry_task` |  | Retry a module's task. |
+| 2109 | `POST /v1/privacy/my/nominee:revoke` | `NomineeService/RevokeMyNominee` | `privacy.my_nominee.revoke` |  | Revoke my nominee. |
+| 2110 | `POST /v1/privacy/my/nominee:set` | `NomineeService/SetMyNominee` | `privacy.my_nominee.set` |  | Set my nominee. |
+| 2111 | `POST /v1/privacy/rights-requests/{rightsRequestId}:startFulfilment` | `RightsRequestService/StartRightsRequestFulfilment` | `privacy.rights_request.fulfil` |  | Start fulfilling an erasure or export request. |
+| 2112 | `POST /v1/privacy/my/requests` | `RightsRequestService/SubmitMyRequest` | `privacy.my_request.create` |  | Submit my RightsRequest. |
+| 2113 | `POST /v1/privacy/breaches/{breachId}:triage` | `BreachService/TriageBreach` | `privacy.breach.triage` |  | Triage Breach. |
+| 2114 | `PATCH /v1/privacy/breaches/{breachId}` | `BreachService/UpdateBreach` | `privacy.breach.update` |  | Update what is known of an open Breach. |
+| 2115 | `PATCH /v1/privacy/legal-holds/{legalHoldId}` | `LegalHoldService/UpdateLegalHold` | `privacy.legal_hold.update` |  | Move a legal hold's review date. |
+| 2116 | `PATCH /v1/privacy/notices/{noticeId}` | `NoticeService/UpdateNotice` | `privacy.notice.update` |  | Update Notice. |
+| 2117 | `PATCH /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}/translations/{noticeTranslationId}` | `NoticeService/UpdateNoticeTranslation` | `privacy.notice_translation.update` |  | Update NoticeTranslation. |
+| 2118 | `PATCH /v1/privacy/notices/{noticeId}/versions/{noticeVersionId}` | `NoticeService/UpdateNoticeVersion` | `privacy.notice_version.update` |  | Update NoticeVersion. |
+| 2119 | `PATCH /v1/privacy/purposes/{purposeId}` | `PurposeService/UpdatePurpose` | `privacy.tenant_purpose.update` |  | Update Purpose. |
+| 2120 | `PATCH /v1/privacy/retention-policies/{retentionPolicyId}` | `RetentionService/UpdateRetentionPolicy` | `privacy.retention_policy.update` |  | Update RetentionPolicy. |
+| 2121 | `POST /v1/privacy/consent-records/{consentRecordId}:verify` | `ConsentService/VerifyConsentRecord` | `privacy.consent_record.verify` |  | Verify ConsentRecord. |
+| 2122 | `POST /v1/privacy/rights-requests/{rightsRequestId}:verifyIdentity` | `RightsRequestService/VerifyRightsRequestIdentity` | `privacy.rights_request.verify_identity` |  | Verify RightsRequest identity. |
+| 2123 | `POST /v1/privacy/my/consents/{consentRecordId}:withdraw` | `ConsentService/WithdrawMyConsent` | `privacy.my_consent.withdraw` |  | Withdraw my Consent. |

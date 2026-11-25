@@ -22,9 +22,6 @@ import java.util.*;
 
 public class PostReactionUpdate {
 
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID userId;
-
   /**
    * Reaction.
    */
@@ -68,26 +65,6 @@ public class PostReactionUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Boolean isActive;
-
-  public PostReactionUpdate userId(@Nullable UUID userId) {
-    this.userId = userId;
-    return this;
-  }
-
-  /**
-   * User.
-   * @return userId
-   */
-  @Valid 
-  @JsonProperty("userId")
-  public @Nullable UUID getUserId() {
-    return userId;
-  }
-
-  @JsonProperty("userId")
-  public void setUserId(@Nullable UUID userId) {
-    this.userId = userId;
-  }
 
   public PostReactionUpdate reaction(@Nullable ReactionEnum reaction) {
     this.reaction = reaction;
@@ -158,22 +135,20 @@ public class PostReactionUpdate {
       return false;
     }
     PostReactionUpdate postReactionUpdate = (PostReactionUpdate) o;
-    return Objects.equals(this.userId, postReactionUpdate.userId) &&
-        Objects.equals(this.reaction, postReactionUpdate.reaction) &&
+    return Objects.equals(this.reaction, postReactionUpdate.reaction) &&
         Objects.equals(this.isSaved, postReactionUpdate.isSaved) &&
         Objects.equals(this.isActive, postReactionUpdate.isActive);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(userId, reaction, isSaved, isActive);
+    return Objects.hash(reaction, isSaved, isActive);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class PostReactionUpdate {\n");
-    sb.append("    userId: ").append(toIndentedString(userId)).append("\n");
     sb.append("    reaction: ").append(toIndentedString(reaction)).append("\n");
     sb.append("    isSaved: ").append(toIndentedString(isSaved)).append("\n");
     sb.append("    isActive: ").append(toIndentedString(isActive)).append("\n");

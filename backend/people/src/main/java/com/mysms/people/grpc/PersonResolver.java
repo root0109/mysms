@@ -1,8 +1,9 @@
 package com.mysms.people.grpc;
 
-import com.mysms.core.error.NotImplementedException;
+import com.mysms.core.error.InvalidArgumentException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
+import com.mysms.people.api.model.BirthdayEntry;
 import com.mysms.people.api.model.Certification;
 import com.mysms.people.api.model.CertificationUpdate;
 import com.mysms.people.api.model.EducationHistory;
@@ -22,8 +23,10 @@ import com.mysms.people.api.model.PersonSocialLinkUpdate;
 import com.mysms.people.api.model.PersonUpdate;
 import com.mysms.people.api.model.PublicProfile;
 import com.mysms.people.api.model.PublicProfileUpdate;
+import com.mysms.people.api.model.SendResult;
 import com.mysms.people.api.model.WorkExperience;
 import com.mysms.people.api.model.WorkExperienceUpdate;
+import com.mysms.people.business.GreetingService;
 import com.mysms.people.business.MyPersonService;
 import com.mysms.people.business.PersonService;
 import com.mysms.people.v1.CreateCertificationRequest;
@@ -134,6 +137,8 @@ import com.mysms.people.v1.UpdatePublicProfileResponse;
 import com.mysms.people.v1.UpdateWorkExperienceRequest;
 import com.mysms.people.v1.UpdateWorkExperienceResponse;
 import io.grpc.stub.StreamObserver;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import net.devh.boot.grpc.server.service.GrpcService;
 
 /**
@@ -145,11 +150,14 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
 
     private final MyPersonService myPerson;
     private final PersonService personService;
+    private final GreetingService greetingService;
     private final ProtoBridge bridge;
 
-    public PersonResolver(MyPersonService myPerson, PersonService personService, ProtoBridge bridge) {
+    public PersonResolver(MyPersonService myPerson, PersonService personService, GreetingService greetingService,
+            ProtoBridge bridge) {
         this.myPerson = myPerson;
         this.personService = personService;
+        this.greetingService = greetingService;
         this.bridge = bridge;
     }
 
@@ -580,15 +588,29 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
         ProtoBridge.send(out, DeletePersonSocialLinkResponse.getDefaultInstance());
     }
 
-    /** Not served by this release (REST answers 501 too): UNIMPLEMENTED. */
+    /** REST's query string as fields: the institution and both days are required; kinds and roles narrow. */
     @Override
     public void listBirthdays(ListBirthdaysRequest request, StreamObserver<ListBirthdaysResponse> out) {
-        throw new NotImplementedException();
+        ProtoBridge.ListArguments page = bridge.list(request.getPageable());
+        Page<BirthdayEntry> rows = greetingService.listBirthdays(bridge.id(request.getInstitutionId(),
+                        "institutionId"), date(request.getFromDate(), "fromDate"), date(request.getToDate(), "toDate"),
+                request.getKindsList(), request.getRolesList(), page.page(), page.size(), page.cursor());
+        ProtoBridge.send(out, bridge.page(ListBirthdaysResponse.newBuilder(), rows).build());
     }
 
-    /** Not served by this release (REST answers 501 too): UNIMPLEMENTED. */
     @Override
     public void sendGreetings(SendGreetingsRequest request, StreamObserver<SendGreetingsResponse> out) {
-        throw new NotImplementedException();
+        SendResult sent = greetingService.sendGreetings(bridge.body(request,
+                com.mysms.people.api.model.SendGreetingsRequest.class, "request_id"));
+        ProtoBridge.send(out, bridge.reply(SendGreetingsResponse.newBuilder(), "result", sent).build());
+    }
+
+    /** A required ISO date of REST's query string: 400 when absent or malformed, like REST's parameter binding. */
+    private static LocalDate date(String value, String name) {
+        try {
+            return LocalDate.parse(value);
+        } catch (DateTimeParseException e) {
+            throw new InvalidArgumentException("Invalid value for " + name + ".");
+        }
     }
 }

@@ -22,9 +22,11 @@ import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
 import com.mysms.core.web.UpdateMask;
 import com.mysms.org.api.model.AcademicTerm;
+import com.mysms.org.api.model.AcademicTermList;
 import com.mysms.org.api.model.AcademicTermUpdate;
 import com.mysms.org.api.model.AcademicYear;
 import com.mysms.org.api.model.AcademicYearUpdate;
+import com.mysms.org.api.model.ActivateAcademicYearRequest;
 import com.mysms.org.api.model.CloseAcademicYearRequest;
 import com.mysms.org.config.OrgDatabaseConfig;
 import com.mysms.org.config.OrgEventsConfig;
@@ -36,11 +38,14 @@ import com.mysms.org.mapper.AcademicYearMapper;
 import com.mysms.org.repository.AcademicTermRepository;
 import com.mysms.org.repository.AcademicYearRepository;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -65,6 +70,8 @@ public class AcademicYearService extends AppTransactionManager {
     static final String PERMISSION_UPDATE = "org.academic_year.update";
     static final String PERMISSION_DELETE = "org.academic_year.delete";
     static final String PERMISSION_CLOSE_ACADEMIC_YEAR = "org.academic_year.close_academic_year";
+    static final String PERMISSION_ACTIVATE_ACADEMIC_YEAR = "org.academic_year.activate_academic_year";
+    static final String PERMISSION_GENERATE_TERMS = "org.academic_year.generate_terms";
     /** The contract's AcademicYearUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("institutionId", "name", "description", "startDate", "endDate", "termStructure", "isCurrent");
@@ -238,6 +245,129 @@ public class AcademicYearService extends AppTransactionManager {
             return mapper.toDto(repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
         });
+    }
+
+    /**
+     * org.ActivateAcademicYear: a planned year becomes its institution's active and current year (any other year
+     * marked current loses the mark). One active year per institution: while another is active the answer is 409 —
+     * close it first. Publishes {@code org.academic_year.activate} with the institution for the modules that follow
+     * the current year.
+     */
+    public AcademicYear activateAcademicYear(UUID id, ActivateAcademicYearRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_ACTIVATE_ACADEMIC_YEAR);
+        OptionalInt bodyVersion = Etags.bodyVersion(request == null ? null : request.getEtag());
+        return doInWriteTransaction(() -> {
+            AcademicYearEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            if (bodyVersion.isPresent() && bodyVersion.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!"planned".equals(entity.getStatus())) {
+                throw new InvalidStateException("The academic year cannot be changed this way in its current state.");
+            }
+            UUID institution = entity.getInstitutionId();
+            if (repository.otherActive(institution, id)) {
+                throw new InvalidStateException(
+                        "Another academic year of the institution is active; close it before activating this one.");
+            }
+            OffsetDateTime now = now();
+            UUID actor = Actor.current().orElse(null);
+            for (UUID other : repository.lockOtherCurrent(institution, id)) {
+                repository.clearCurrent(other, now, actor);
+                audit.recordUpdate(AGGREGATE, other, List.of("isCurrent"));
+                outbox.publish(AGGREGATE + OrgEvents.UPDATED, AGGREGATE, other, OrgEvents.payload(other));
+            }
+            if (repository.activateAcademicYear(id, entity.getRowVersion(), now, actor) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, "activate", List.of("status", "isCurrent"), null);
+            outbox.publish(AGGREGATE + ".activate", AGGREGATE, id,
+                    Map.of("id", id.toString(), "institutionId", institution.toString()));
+            return mapper.toDto(repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    /**
+     * org.GenerateTerms: creates the terms the year's term structure divides it into ({@link TermPlan}), quarters
+     * inside their semesters. Idempotent: a planned term that already exists with its name and dates is kept, so a
+     * re-run creates nothing, also when runs overlap (each waits for the year's row lock); a planned term that would
+     * overlap another live term at its level is refused (409), as is a closed year, and a year without a structure to
+     * plan from is 422. Answers every planned term, in order.
+     */
+    public AcademicTermList generateTerms(UUID academicYearId) {
+        DataScope scope = DataScope.current(PERMISSION_GENERATE_TERMS);
+        return doInWriteTransaction(() -> {
+            loadVisible(scope, academicYearId);
+            AcademicYearEntity year = repository.lockById(academicYearId)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, academicYearId));
+            scope.requireWritable(institutionOf(year));
+            if ("closed".equals(year.getStatus())) {
+                throw new InvalidStateException("A closed academic year no longer changes.");
+            }
+            List<TermPlan.Term> plan = TermPlan.of(year.getTermStructure(), year.getStartDate(), year.getEndDate())
+                    .orElseThrow(() -> new ValidationFailedException(List.of(new FieldError("termStructure",
+                            "the year has no term structure to generate terms from", "TERM_STRUCTURE"))));
+            if (!TermPlan.fits(year.getTermStructure(), year.getStartDate(), year.getEndDate())) {
+                throw new ValidationFailedException(List.of(new FieldError("endDate",
+                        "the year is too short for its term structure", "TERM_STRUCTURE")));
+            }
+            List<AcademicTermEntity> existing = new ArrayList<>(academicTermRepository.ofYear(academicYearId));
+            AcademicTermList result = new AcademicTermList();
+            for (TermPlan.Term term : plan) {
+                AcademicTermEntity parent = placeTerm(year, null, term, existing, result);
+                for (TermPlan.Term child : term.children()) {
+                    placeTerm(year, parent.getId(), child, existing, result);
+                }
+            }
+            return result;
+        });
+    }
+
+    /** The existing term the plan names, or the new one written for it; refused when it would overlap another. */
+    private AcademicTermEntity placeTerm(AcademicYearEntity year, UUID parentId, TermPlan.Term term,
+            List<AcademicTermEntity> existing, AcademicTermList result) {
+        AcademicTermEntity placed = null;
+        for (AcademicTermEntity other : existing) {
+            if (!Objects.equals(other.getParentTermId(), parentId)) {
+                continue;
+            }
+            boolean same = other.getName().equals(term.name()) && other.getStartDate().equals(term.startDate())
+                    && other.getEndDate().equals(term.endDate());
+            if (same) {
+                placed = other;
+            } else if (overlaps(other, term.startDate(), term.endDate()) || other.getName().equals(term.name())) {
+                throw new InvalidStateException("The year already has terms that overlap the ones its structure "
+                        + "plans; remove or change them first.");
+            }
+        }
+        if (placed == null) {
+            AcademicTermEntity entity = new AcademicTermEntity();
+            entity.onCreatingData(Actor.current(), clock);
+            entity.setTenantId(year.getTenantId());
+            entity.setAcademicYearId(year.getId());
+            entity.setParentTermId(parentId);
+            entity.setName(term.name());
+            entity.setStartDate(term.startDate());
+            entity.setEndDate(term.endDate());
+            entity.setSequence(term.sequence());
+            entity.setIsActive(true);
+            placed = academicTermRepository.insert(entity);
+            existing.add(placed);
+            audit.recordCreate(ACADEMIC_TERM_AGGREGATE, placed.getId());
+            outbox.publish(ACADEMIC_TERM_AGGREGATE + OrgEvents.CREATED, ACADEMIC_TERM_AGGREGATE, placed.getId(),
+                    OrgEvents.payload(placed.getId()));
+        }
+        result.addItemsItem(academicTermMapper.toDto(placed));
+        return placed;
+    }
+
+    private static boolean overlaps(AcademicTermEntity term, LocalDate start, LocalDate end) {
+        return !term.getStartDate().isAfter(end) && !term.getEndDate().isBefore(start);
+    }
+
+    private OffsetDateTime now() {
+        return OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
     }
 
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */

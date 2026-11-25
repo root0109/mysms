@@ -4,6 +4,7 @@ import java.util.List;
 import com.mysms.core.paging.PagingUtil;
 import com.mysms.core.paging.PagingInfo;
 import com.mysms.comms.business.PostService;
+import com.mysms.comms.business.ReactionService;
 import com.mysms.comms.api.PostApi;
 import com.mysms.comms.api.model.ApprovePostRequest;
 import com.mysms.comms.api.model.CancelPostRequest;
@@ -16,7 +17,6 @@ import com.mysms.comms.api.model.PostReaction;
 import com.mysms.comms.api.model.PostReactionUpdate;
 import com.mysms.comms.api.model.PostUpdate;
 import com.mysms.comms.api.model.SubmitPostRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -24,16 +24,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST edge of the Post operations; authentication and the permission check already ran in the auth-client filter.
- * Operations not served yet answer 501.
+ * REST edge of the Post operations (posts, their audiences, comments and reactions, the feed); authentication and
+ * the permission check already ran in the auth-client filter.
  */
 @RestController
 public class PostController implements PostApi {
 
     private final PostService postService;
+    private final ReactionService reactionService;
 
-    public PostController(PostService postService) {
+    public PostController(PostService postService, ReactionService reactionService) {
         this.postService = postService;
+        this.reactionService = reactionService;
     }
 
     @Override
@@ -88,7 +90,13 @@ public class PostController implements PostApi {
     @Override
     public ResponseEntity<PostReaction> createPostReaction(UUID postId, PostReaction postReaction,
             UUID idempotencyKey, Boolean validateOnly) {
-        throw new NotImplementedException();
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        PostReaction created = reactionService.createPostReaction(postId, postReaction, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(URI.create("/v1/comms/posts/" + postId + "/reactions/" + created.getId()))
+                .eTag(created.getEtag()).body(created);
     }
 
     @Override
@@ -112,13 +120,15 @@ public class PostController implements PostApi {
 
     @Override
     public ResponseEntity<Void> deletePostReaction(UUID postId, UUID postReactionId, String ifMatch) {
-        throw new NotImplementedException();
+        reactionService.deletePostReaction(postId, postReactionId, ifMatch);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
     public ResponseEntity<PagingInfo<Post>> getFeed(UUID classSectionId, UUID classPageId, Boolean savedOnly,
             Integer page, Integer size, String cursor) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(PagingUtil.pagingInfo(
+                postService.getFeed(classSectionId, classPageId, savedOnly, page, size, cursor)));
     }
 
     @Override
@@ -142,7 +152,8 @@ public class PostController implements PostApi {
 
     @Override
     public ResponseEntity<PostReaction> getPostReaction(UUID postId, UUID postReactionId, String fields) {
-        throw new NotImplementedException();
+        PostReaction found = reactionService.getPostReaction(postId, postReactionId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
     }
 
     @Override
@@ -166,7 +177,10 @@ public class PostController implements PostApi {
     @Override
     public ResponseEntity<PagingInfo<PostReaction>> listPostReactions(UUID postId, Integer page, Integer size,
             String cursor, String filter, List<String> sort, String fields) {
-        throw new NotImplementedException();
+        PagingInfo<PostReaction> list =
+                PagingUtil.pagingInfo(reactionService.listPostReactions(postId, page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
     }
 
     @Override
@@ -180,7 +194,8 @@ public class PostController implements PostApi {
     @Override
     public ResponseEntity<Post> submitPost(UUID postId, SubmitPostRequest submitPostRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Post changed = postService.submitPost(postId, submitPostRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -214,6 +229,8 @@ public class PostController implements PostApi {
     @Override
     public ResponseEntity<PostReaction> updatePostReaction(UUID postId, UUID postReactionId,
             String ifMatch, PostReactionUpdate postReactionUpdate, String updateMask, Boolean validateOnly) {
-        throw new NotImplementedException();
+        PostReaction updated = reactionService.updatePostReaction(postId, postReactionId, ifMatch, postReactionUpdate,
+                updateMask, Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 }

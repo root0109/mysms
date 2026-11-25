@@ -2,6 +2,7 @@ package com.mysms.iam.events;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -46,12 +47,34 @@ public final class IamEvents {
     public static final String CREATED = ".created";
     public static final String UPDATED = ".updated";
     public static final String DELETED = ".deleted";
+    /** The setting scopes whose values a setting-value event carries. */
+    static final Set<String> VALUE_SCOPES = Set.of("tenant", "institution");
 
     private IamEvents() {
     }
 
     public static Map<String, Object> payload(UUID id) {
         return Map.of("id", id.toString());
+    }
+
+    /**
+     * The payload of an administrator's setting value (iam.setting_value): besides its id, the setting, the scope it
+     * applies to and the row version the event reflects; the value only for a tenant or school setting, since a
+     * department's, class's or person's value is nobody else's business. org keeps whether a school is in the public
+     * school finder from these (org.finder_listing); the version lets it ignore a late event.
+     */
+    public static Map<String, Object> settingValue(UUID id, String settingKey, String scopeType, UUID scopeId,
+            String value, int rowVersion) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("id", id.toString());
+        payload.put("settingKey", settingKey);
+        payload.put("scopeType", scopeType);
+        payload.put("scopeId", scopeId == null ? null : scopeId.toString());
+        if (VALUE_SCOPES.contains(scopeType)) {
+            payload.put("value", value);
+        }
+        payload.put("rowVersion", rowVersion);
+        return payload;
     }
 
     /** An impersonation: the account acted as, the administrator acting and the session it happens in. */

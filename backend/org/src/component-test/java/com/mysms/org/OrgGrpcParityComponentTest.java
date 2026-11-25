@@ -48,7 +48,7 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * Every RPC of org's six gRPC services against the same operation over REST, on real PostgreSQL: each resource of
  * crud-spec.json gives the same resource and the same refusals (403, 404, 409, 412, 428, 422) over both transports, as
- * do the academic year's close transition and the operations this release does not serve (501).
+ * do the academic year's steps, the terms it generates and the public school finder.
  */
 @SpringBootTest(classes = OrgApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = GrpcParity.IN_PROCESS_SERVER + "=OrgGrpcParityComponentTest")
@@ -178,13 +178,15 @@ class OrgGrpcParityComponentTest {
 
     @Test
     void closingAnAcademicYearAnswersLikeRest() throws Exception {
-        fixtures(TENANT, List.of("INSERT INTO org.institution (tenant_id, code, name, row_version, id) VALUES (:tenant,"
-                + " 'CLOSE1', 'Close school', 1, '0196f000-0000-7000-8000-00000000c001') ON CONFLICT (id) DO NOTHING"));
         String[] ids = new String[2];
         for (int i = 0; i < 2; i++) {
+            // one active year per institution: each year is its own school's
+            fixtures(TENANT, List.of("INSERT INTO org.institution (tenant_id, code, name, row_version, id) VALUES "
+                    + "(:tenant, 'CLOSE" + i + "', 'Close school', 1, '0196f000-0000-7000-8000-00000000c00" + i
+                    + "') ON CONFLICT (id) DO NOTHING"));
             Answer year = rest("POST", "/v1/org/academic-years", ADMIN, "{\"institutionId\":"
-                    + "\"0196f000-0000-7000-8000-00000000c001\",\"name\":\"Year " + i + "\",\"startDate\":\"2027-0" + (i + 1)
-                    + "-01\",\"endDate\":\"2027-0" + (i + 1) + "-20\"}");
+                    + "\"0196f000-0000-7000-8000-00000000c00" + i + "\",\"name\":\"Year " + i
+                    + "\",\"startDate\":\"2027-0" + (i + 1) + "-01\",\"endDate\":\"2027-0" + (i + 1) + "-20\"}");
             assertThat(year.status()).as(year.body().toString()).isEqualTo(201);
             ids[i] = year.body().path("id").asString();
         }
@@ -192,7 +194,8 @@ class OrgGrpcParityComponentTest {
         // planned years cannot be closed: 409 on both
         GrpcParityContract.assertSameAnswer(rest("POST", "/v1/org/academic-years/" + ids[0] + ":close", ADMIN, "{}"),
                 grpc(close, set(request(close), "academic_year_id", ids[0]).build(), ADMIN));
-        fixtures(TENANT, List.of("UPDATE org.academic_year SET status = 'active' WHERE tenant_id = :tenant"));
+        fixtures(TENANT, List.of("UPDATE org.academic_year SET status = 'active' WHERE tenant_id = :tenant AND id IN ('"
+                + ids[0] + "', '" + ids[1] + "')"));
         GrpcParityContract.assertSameAnswer(rest("POST", "/v1/org/academic-years/" + ids[0] + ":close", ADMIN,
                         "{\"etag\":\"\\\"99\\\"\"}"),
                 grpc(close, set(set(request(close), "academic_year_id", ids[0]), "etag", "\"99\"").build(), ADMIN));
@@ -252,18 +255,83 @@ class OrgGrpcParityComponentTest {
     }
 
     @Test
-    void theOperationsThisReleaseDoesNotServeAre501OnBoth() throws Exception {
-        String year = UUID.randomUUID().toString();
+    void activatingAYearAndGeneratingItsTermsAnswerLikeRest() throws Exception {
+        String[] years = new String[2];
+        for (int i = 0; i < 2; i++) {
+            String institution = "0196f000-0000-7000-8000-00000000e00" + i;
+            fixtures(TENANT, List.of("INSERT INTO org.institution (tenant_id, code, name, row_version, id) VALUES "
+                    + "(:tenant, 'ACTV" + i + "', 'Activation school " + i + "', 1, '" + institution
+                    + "') ON CONFLICT (id) DO NOTHING"));
+            Answer year = rest("POST", "/v1/org/academic-years", ADMIN, "{\"institutionId\":\"" + institution
+                    + "\",\"name\":\"2027-28\",\"startDate\":\"2027-04-01\",\"endDate\":\"2028-03-31\","
+                    + "\"termStructure\":\"two_semesters_quarterly\"}");
+            assertThat(year.status()).as(year.body().toString()).isEqualTo(201);
+            years[i] = year.body().path("id").asString();
+        }
         MethodDescriptor activate = rpc("ActivateAcademicYear");
-        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/org/academic-years/" + year + ":activate", ADMIN, "{}"),
-                grpc(activate, set(request(activate), "academic_year_id", year).build(), ADMIN));
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/org/academic-years/" + years[0] + ":activate", NOBODY,
+                "{}"), grpc(activate, set(request(activate), "academic_year_id", years[0]).build(), NOBODY));
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/org/academic-years/" + years[0] + ":activate", STRANGER,
+                "{}"), grpc(activate, set(request(activate), "academic_year_id", years[0]).build(), STRANGER));
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/org/academic-years/" + years[0] + ":activate", ADMIN,
+                        "{\"etag\":\"\\\"99\\\"\"}"),
+                grpc(activate, set(set(request(activate), "academic_year_id", years[0]), "etag", "\"99\"").build(),
+                        ADMIN));
+        Answer byRest = rest("POST", "/v1/org/academic-years/" + years[0] + ":activate", ADMIN, "{}");
+        Answer byGrpc = grpc(activate, set(request(activate), "academic_year_id", years[1]).build(), ADMIN);
+        assertThat(byRest.status()).as(byRest.body().toString()).isEqualTo(200);
+        assertThat(byGrpc.status()).isEqualTo(200);
+        assertThat(byGrpc.body().path("academicYear").path("status").asString()).isEqualTo("STATUS_ACTIVE");
+        GrpcParity.assertSameResource(rest("GET", "/v1/org/academic-years/" + years[1], ADMIN, null).body(),
+                byGrpc.body().path("academicYear"));
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/org/academic-years/" + years[0] + ":activate", ADMIN,
+                "{}"), grpc(activate, set(request(activate), "academic_year_id", years[1]).build(), ADMIN));
+
         MethodDescriptor generate = rpc("GenerateTerms");
-        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/org/academic-years/" + year + ":generateTerms", ADMIN, "{}"),
-                grpc(generate, set(request(generate), "academic_year_id", year).build(), ADMIN));
-        MethodDescriptor find = rpc("FindInstitutions");
-        GrpcParityContract.assertSameAnswer(rest("GET", "/v1/org/institutions:find?query=abc", null, null),
-                grpc(find, set(request(find), "query", "abc").build(), null));
-        assertThat(grpc(activate, set(request(activate), "academic_year_id", year).build(), null).status())
+        Answer termsByRest = rest("POST", "/v1/org/academic-years/" + years[0] + ":generateTerms", ADMIN, "{}");
+        Answer termsByGrpc = grpc(generate, set(request(generate), "academic_year_id", years[1]).build(), ADMIN);
+        assertThat(termsByRest.status()).as(termsByRest.body().toString()).isEqualTo(200);
+        assertThat(termsByGrpc.status()).isEqualTo(200);
+        assertThat(termsByGrpc.body().path("items").findValuesAsString("name"))
+                .isEqualTo(termsByRest.body().path("items").findValuesAsString("name"));
+        assertThat(termsByGrpc.body().path("items").findValuesAsString("startDate"))
+                .isEqualTo(termsByRest.body().path("items").findValuesAsString("startDate"));
+        Answer again = grpc(generate, set(request(generate), "academic_year_id", years[1]).build(), ADMIN);
+        assertThat(again.body().path("items").findValuesAsString("id"))
+                .as("a re-run answers the terms it made").isEqualTo(termsByGrpc.body().path("items")
+                        .findValuesAsString("id"));
+        String unknown = UUID.randomUUID().toString();
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/org/academic-years/" + unknown + ":generateTerms",
+                ADMIN, "{}"), grpc(generate, set(request(generate), "academic_year_id", unknown).build(), ADMIN));
+        GrpcParityContract.assertSameAnswer(rest("POST", "/v1/org/academic-years/" + years[0] + ":generateTerms",
+                NOBODY, "{}"), grpc(generate, set(request(generate), "academic_year_id", years[0]).build(), NOBODY));
+        assertThat(grpc(activate, set(request(activate), "academic_year_id", unknown).build(), null).status())
                 .as("authentication first, as on REST").isEqualTo(401);
+    }
+
+    /** The public school finder answers a guest alike over both transports. */
+    @Test
+    void theSchoolFinderAnswersAGuestLikeRest() throws Exception {
+        fixtures(TENANT, List.of("INSERT INTO org.tenant_directory (tenant_id, tenant_code, status, source_version)"
+                + " VALUES (:tenant, 'parity-finder', 'active', 1) ON CONFLICT (tenant_id) DO NOTHING"));
+        for (String name : List.of("Paritown East", "Paritown West")) {
+            Answer created = rest("POST", "/v1/org/institutions", ADMIN, "{\"code\":\"PT" + name.length() + name.charAt(9)
+                    + "\",\"name\":\"" + name + "\"}");
+            assertThat(created.status()).as(created.body().toString()).isEqualTo(201);
+            fixtures(TENANT, List.of("INSERT INTO org.finder_listing (setting_value_id, tenant_id, institution_id,"
+                    + " is_listed, source_version, synced_at) VALUES (gen_random_uuid(), :tenant, '"
+                    + created.body().path("id").asString() + "', true, 1, now())"));
+        }
+        MethodDescriptor find = rpc("FindInstitutions");
+        Answer overRest = rest("GET", "/v1/org/institutions:find?query=paritown", null, null);
+        Answer overGrpc = grpc(find, set(request(find), "query", "paritown").build(), null);
+        assertThat(overRest.status()).as(overRest.body().toString()).isEqualTo(200);
+        assertThat(overGrpc.status()).isEqualTo(200);
+        assertThat(overGrpc.body().path("items").findValuesAsString("name"))
+                .isEqualTo(overRest.body().path("data").findValuesAsString("name"))
+                .containsExactly("Paritown East", "Paritown West");
+        assertThat(overGrpc.body().path("items").findValuesAsString("tenantCode")).containsOnly("parity-finder");
+        GrpcParityContract.assertSameAnswer(rest("GET", "/v1/org/institutions:find?query=pa", null, null),
+                grpc(find, set(request(find), "query", "pa").build(), null));
     }
 }

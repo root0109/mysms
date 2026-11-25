@@ -37,7 +37,7 @@ public class Post {
   private @Nullable UUID classPageId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID authorUserId;
+  private @Nullable UUID authorUserId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private String body;
@@ -156,10 +156,9 @@ public class Post {
   /**
    * Constructor with only required parameters
    */
-  public Post(UUID institutionId, UUID academicYearId, UUID authorUserId, String body) {
+  public Post(UUID institutionId, UUID academicYearId, String body) {
     this.institutionId = institutionId;
     this.academicYearId = academicYearId;
-    this.authorUserId = authorUserId;
     this.body = body;
   }
 
@@ -243,23 +242,23 @@ public class Post {
     this.classPageId = classPageId;
   }
 
-  public Post authorUserId(UUID authorUserId) {
+  public Post authorUserId(@Nullable UUID authorUserId) {
     this.authorUserId = authorUserId;
     return this;
   }
 
   /**
-   * Author.
+   * Author. Output only: the caller, from the token.
    * @return authorUserId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("authorUserId")
-  public UUID getAuthorUserId() {
+  public @Nullable UUID getAuthorUserId() {
     return authorUserId;
   }
 
   @JsonProperty("authorUserId")
-  public void setAuthorUserId(UUID authorUserId) {
+  public void setAuthorUserId(@Nullable UUID authorUserId) {
     this.authorUserId = authorUserId;
   }
 

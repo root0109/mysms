@@ -83,6 +83,17 @@ public class InvoiceRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** The row whether live or deleted: an id that is taken stays taken. */
+    private static final String FIND_ANY_BY_ID = """
+            SELECT r.id, r.tenant_id, r.institution_id, r.invoice_number, r.student_id, r.bill_to_user_id,
+                   r.bill_to_name, r.invoice_date, r.due_date, r.currency_id, r.subtotal, r.discount_total,
+                   r.tax_total, r.total, r.amount_paid, r.status, r.invoice_type, r.credit_for_invoice_id,
+                   r.posted_at, r.cancelled_at, r.document_file_id, r.created_at, r.created_by, r.updated_at,
+                   r.updated_by, r.deleted_at, r.row_version
+              FROM finance.invoice r
+             WHERE r.tenant_id = :tenantId
+               AND r.id = :id
+            """;
     private static final String LOCK = SELECT_LIVE + " AND r.id = ANY(:ids) ORDER BY r.id FOR UPDATE";
     private static final String OF_STUDENT = SELECT_LIVE + """
                AND r.student_id = :studentId
@@ -104,6 +115,8 @@ public class InvoiceRepository {
                     :invoiceDate, :dueDate, :currencyId, :subtotal, :discountTotal, :taxTotal, :total, 0, 'draft',
                     'invoice', :createdAt, :createdBy, :updatedAt, :updatedBy, :rowVersion)
             """;
+    /** {@link #INSERT}, writing nothing when the id is taken (a concurrent writer of the same id waits, then skips). */
+    private static final String INSERT_IF_ABSENT = INSERT + " ON CONFLICT (id) DO NOTHING";
     private static final String UPDATE = """
             UPDATE finance.invoice
                SET institution_id = :institutionId,
@@ -211,7 +224,21 @@ public class InvoiceRepository {
     }
 
     public void insert(InvoiceEntity e) {
-        jdbc.sql(INSERT)
+        bind(jdbc.sql(INSERT), e).update();
+    }
+
+    /** Inserts the invoice unless its id is taken; whether it was written. */
+    public boolean insertIfAbsent(InvoiceEntity e) {
+        return bind(jdbc.sql(INSERT_IF_ABSENT), e).update() == 1;
+    }
+
+    /** The invoice with the id, live or deleted. */
+    public Optional<InvoiceEntity> findAnyById(UUID id) {
+        return jdbc.sql(FIND_ANY_BY_ID).param("id", id).query(InvoiceRepository::map).optional();
+    }
+
+    private static JdbcClient.StatementSpec bind(JdbcClient.StatementSpec spec, InvoiceEntity e) {
+        return spec
                 .param("id", e.getId())
                 .param("tenantId", e.getTenantId())
                 .param("institutionId", e.getInstitutionId())
@@ -230,8 +257,7 @@ public class InvoiceRepository {
                 .param("createdBy", e.getCreatedBy())
                 .param("updatedAt", e.getUpdatedAt())
                 .param("updatedBy", e.getUpdatedBy())
-                .param("rowVersion", e.getRowVersion())
-                .update();
+                .param("rowVersion", e.getRowVersion());
     }
 
     /** Updates a draft's writable fields under the ETag guard; 0 rows: changed since read, or no longer a draft. */

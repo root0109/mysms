@@ -34,9 +34,6 @@ public class PostUpdate {
   private @Nullable UUID classPageId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID authorUserId;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String body;
 
   /**
@@ -143,26 +140,6 @@ public class PostUpdate {
     this.classPageId = classPageId;
   }
 
-  public PostUpdate authorUserId(@Nullable UUID authorUserId) {
-    this.authorUserId = authorUserId;
-    return this;
-  }
-
-  /**
-   * Author.
-   * @return authorUserId
-   */
-  @Valid 
-  @JsonProperty("authorUserId")
-  public @Nullable UUID getAuthorUserId() {
-    return authorUserId;
-  }
-
-  @JsonProperty("authorUserId")
-  public void setAuthorUserId(@Nullable UUID authorUserId) {
-    this.authorUserId = authorUserId;
-  }
-
   public PostUpdate body(@Nullable String body) {
     this.body = body;
     return this;
@@ -235,7 +212,6 @@ public class PostUpdate {
     return Objects.equals(this.institutionId, postUpdate.institutionId) &&
         Objects.equals(this.academicYearId, postUpdate.academicYearId) &&
         Objects.equals(this.classPageId, postUpdate.classPageId) &&
-        Objects.equals(this.authorUserId, postUpdate.authorUserId) &&
         Objects.equals(this.body, postUpdate.body) &&
         Objects.equals(this.visibility, postUpdate.visibility) &&
         Objects.equals(this.scheduledFor, postUpdate.scheduledFor);
@@ -243,7 +219,7 @@ public class PostUpdate {
 
   @Override
   public int hashCode() {
-    return Objects.hash(institutionId, academicYearId, classPageId, authorUserId, body, visibility, scheduledFor);
+    return Objects.hash(institutionId, academicYearId, classPageId, body, visibility, scheduledFor);
   }
 
   @Override
@@ -253,7 +229,6 @@ public class PostUpdate {
     sb.append("    institutionId: ").append(toIndentedString(institutionId)).append("\n");
     sb.append("    academicYearId: ").append(toIndentedString(academicYearId)).append("\n");
     sb.append("    classPageId: ").append(toIndentedString(classPageId)).append("\n");
-    sb.append("    authorUserId: ").append(toIndentedString(authorUserId)).append("\n");
     sb.append("    body: ").append(toIndentedString(body)).append("\n");
     sb.append("    visibility: ").append(toIndentedString(visibility)).append("\n");
     sb.append("    scheduledFor: ").append(toIndentedString(scheduledFor)).append("\n");

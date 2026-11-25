@@ -22,9 +22,9 @@ import java.util.stream.Stream;
  */
 public final class SourceTree {
 
-    /** Modules that are libraries or the assembly, not one of the 22 domain modules. */
+    /** Modules that are libraries, the assembly or a tool (the demo seeder), not one of the 22 domain modules. */
     public static final Set<String> SHARED =
-            Set.of("core", "auth-client", "privacy-client", "messaging", "app", "conformance");
+            Set.of("core", "auth-client", "privacy-client", "messaging", "app", "demo-seed", "conformance");
 
     private static final Pattern CREATE_TABLE =
             Pattern.compile("(?i)CREATE TABLE ([a-z_]+\\.[a-z_]+) \\((.*?)\\n\\)", Pattern.DOTALL);

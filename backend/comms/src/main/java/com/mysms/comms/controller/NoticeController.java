@@ -15,7 +15,6 @@ import com.mysms.comms.api.model.NoticeVersion;
 import com.mysms.comms.api.model.PublishNoticeRequest;
 import com.mysms.comms.api.model.ReactivateNoticeRequest;
 import com.mysms.comms.api.model.UnpublishNoticeRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the Notice operations; authentication and the permission check already ran in the auth-client filter.
- * Operations not served yet answer 501.
  */
 @RestController
 public class NoticeController implements NoticeApi {
@@ -38,7 +36,8 @@ public class NoticeController implements NoticeApi {
     @Override
     public ResponseEntity<Notice> closeNoticeReplies(UUID noticeId,
             CloseNoticeRepliesRequest closeNoticeRepliesRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Notice changed = noticeService.closeNoticeReplies(noticeId, closeNoticeRepliesRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

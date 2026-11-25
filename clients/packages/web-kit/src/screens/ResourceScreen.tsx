@@ -51,7 +51,14 @@ const ROW_TOOLS: Readonly<Record<NonNullable<ResourceScreenDef['tool']>, RowTool
  * sees (institution scope, tenant-level records); a role without the list permission is told so, never shown a
  * broken list.
  */
-export function ResourceScreen({ screen }: { screen: ResourceScreenDef }) {
+export function ResourceScreen({
+  screen,
+  rowLink,
+}: {
+  screen: ResourceScreenDef;
+  /** Where a row opens, for a screen that shows a row in place rather than on a detail route of its own. */
+  rowLink?: (row: RecordRow) => string;
+}) {
   const { t } = useI18n();
   const permissions = useSession((s) => s.me?.permissions);
   const def = RESOURCES.find((r) => r.key === screen.resource);
@@ -77,9 +84,10 @@ export function ResourceScreen({ screen }: { screen: ResourceScreenDef }) {
     <RecordsOf
       def={def}
       rowLink={
-        detailRoute && detailParam
+        rowLink ??
+        (detailRoute && detailParam
           ? (row) => `/app${buildPath(detailRoute, { [detailParam]: row.id })}`
-          : undefined
+          : undefined)
       }
       rowTool={
         Tool

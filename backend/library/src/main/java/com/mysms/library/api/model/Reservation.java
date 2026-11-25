@@ -208,7 +208,7 @@ public class Reservation {
   }
 
   /**
-   * Requester account.
+   * Requester account. Output only: the caller, from the token.
    * @return requestedByUserId
    */
   @Valid 

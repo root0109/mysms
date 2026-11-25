@@ -1,4 +1,5 @@
 package com.mysms.comms.repository;
+import com.mysms.comms.domain.MessageReceiptEntity;
 import com.mysms.authclient.DataScope;
 import com.mysms.comms.config.CommsDatabaseConfig;
 import com.mysms.comms.domain.ConversationMessageEntity;
@@ -99,6 +100,46 @@ public class ConversationMessageRepository {
     private static final String INSTITUTION_OF = """
             SELECT p0.institution_id FROM comms.conversation p0 WHERE p0.tenant_id = :tenantId AND p0.id = :ref
             """;
+    private static final String HIDE_FOR_SENDER = """
+            UPDATE comms.conversation_message
+               SET deleted_by_sender = true,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String FIND_RECEIPT = """
+            SELECT x.id, x.tenant_id, x.message_id, x.user_id, x.seen_at, x.deleted_at_by_recipient, x.created_at,
+                   x.created_by, x.updated_at, x.updated_by, x.deleted_at, x.row_version
+              FROM comms.message_receipt x
+             WHERE x.tenant_id = :tenantId
+               AND x.message_id = :messageId AND x.user_id = :userId AND x.deleted_at IS NULL
+            """;
+    private static final String INSERT_RECEIPT = """
+            INSERT INTO comms.message_receipt
+            (id, tenant_id, message_id, user_id, seen_at, deleted_at_by_recipient, created_at, created_by, updated_at,
+             updated_by, row_version)
+            VALUES (:id, :tenantId, :messageId, :userId, :seenAt, :hiddenAt, :createdAt, :createdBy, :updatedAt,
+                    :updatedBy, :rowVersion)
+            """;
+    private static final String HIDE_RECEIPT = """
+            UPDATE comms.message_receipt
+               SET deleted_at_by_recipient = :now,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    /** Messages the viewer has not hidden for themself. */
+    private static final String NOT_HIDDEN_FROM = """
+             NOT ((r.sender_user_id = :viewer AND r.deleted_by_sender)
+                  OR EXISTS (SELECT 1 FROM comms.message_receipt x
+                              WHERE x.tenant_id = :tenantId
+                                AND x.message_id = r.id AND x.user_id = :viewer
+                                AND x.deleted_at_by_recipient IS NOT NULL AND x.deleted_at IS NULL))
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.conversation_id IN (SELECT p0.id FROM comms.conversation p0 WHERE p0.tenant_id = :tenantId
                  AND (p0.institution_id =
@@ -182,6 +223,62 @@ public class ConversationMessageRepository {
         return jdbc.sql(INSTITUTION_OF).param("ref", ref)
                 .query((rs, row) -> Optional.ofNullable(rs.getObject(1, UUID.class)))
                 .optional().flatMap(found -> found);
+    }
+
+    /** Marks the message hidden for its sender; 0 rows means the row changed since it was read. */
+    public int hideForSender(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(HIDE_FOR_SENDER).param("id", id).param("expected", expected).param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** The recipient's receipt of the message, when there is one. */
+    public Optional<MessageReceiptEntity> findReceipt(UUID messageId, UUID userId) {
+        return jdbc.sql(FIND_RECEIPT).param("messageId", messageId).param("userId", userId)
+                .query(ConversationMessageRepository::mapReceipt).optional();
+    }
+
+    private static MessageReceiptEntity mapReceipt(ResultSet rs, int row) throws SQLException {
+        return MessageReceiptEntity.builder()
+                        .id(rs.getObject("id", UUID.class))
+                        .tenantId(rs.getObject("tenant_id", UUID.class))
+                        .messageId(rs.getObject("message_id", UUID.class))
+                        .userId(rs.getObject("user_id", UUID.class))
+                        .seenAt(rs.getObject("seen_at", OffsetDateTime.class))
+                        .deletedAtByRecipient(rs.getObject("deleted_at_by_recipient", OffsetDateTime.class))
+                        .createdAt(rs.getObject("created_at", OffsetDateTime.class))
+                        .createdBy(rs.getObject("created_by", UUID.class))
+                        .updatedAt(rs.getObject("updated_at", OffsetDateTime.class))
+                        .updatedBy(rs.getObject("updated_by", UUID.class))
+                        .deletedAt(rs.getObject("deleted_at", OffsetDateTime.class))
+                        .rowVersion(rs.getInt("row_version"))
+                        .build();
+    }
+
+    public void insertReceipt(MessageReceiptEntity e) {
+        jdbc.sql(INSERT_RECEIPT)
+                .param("id", e.getId())
+                .param("tenantId", e.getTenantId())
+                .param("messageId", e.getMessageId())
+                .param("userId", e.getUserId())
+                .param("seenAt", e.getSeenAt())
+                .param("hiddenAt", e.getDeletedAtByRecipient())
+                .param("createdAt", e.getCreatedAt())
+                .param("createdBy", e.getCreatedBy())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("rowVersion", e.getRowVersion())
+                .update();
+    }
+
+    /** Marks the receipt hidden; 0 rows means the row changed since it was read. */
+    public int hideReceipt(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(HIDE_RECEIPT).param("id", id).param("expected", expected).param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Messages the viewer has not hidden for themself. */
+    public static SqlFragment notHiddenFrom(UUID viewer) {
+        return new SqlFragment(NOT_HIDDEN_FROM, Map.of("viewer", viewer));
     }
 
     /** Rows of the caller's institutions only. */

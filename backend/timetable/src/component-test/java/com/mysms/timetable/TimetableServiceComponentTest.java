@@ -32,7 +32,7 @@ import tools.jackson.databind.json.JsonMapper;
 class TimetableServiceComponentTest {
 
     /** CREATE TABLE statements in database/migrations/timetable (partitions included). */
-    private static final int TABLES = 7;
+    private static final int TABLES = 8;
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
     private static final TestTokens TOKENS = new TestTokens();
     private static final HttpClient HTTP = HttpClient.newHttpClient();

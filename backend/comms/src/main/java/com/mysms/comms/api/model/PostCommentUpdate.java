@@ -25,9 +25,6 @@ public class PostCommentUpdate {
   private @Nullable UUID parentCommentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID authorUserId;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable String body;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -54,26 +51,6 @@ public class PostCommentUpdate {
   @JsonProperty("parentCommentId")
   public void setParentCommentId(@Nullable UUID parentCommentId) {
     this.parentCommentId = parentCommentId;
-  }
-
-  public PostCommentUpdate authorUserId(@Nullable UUID authorUserId) {
-    this.authorUserId = authorUserId;
-    return this;
-  }
-
-  /**
-   * Author.
-   * @return authorUserId
-   */
-  @Valid 
-  @JsonProperty("authorUserId")
-  public @Nullable UUID getAuthorUserId() {
-    return authorUserId;
-  }
-
-  @JsonProperty("authorUserId")
-  public void setAuthorUserId(@Nullable UUID authorUserId) {
-    this.authorUserId = authorUserId;
   }
 
   public PostCommentUpdate body(@Nullable String body) {
@@ -146,7 +123,6 @@ public class PostCommentUpdate {
     }
     PostCommentUpdate postCommentUpdate = (PostCommentUpdate) o;
     return Objects.equals(this.parentCommentId, postCommentUpdate.parentCommentId) &&
-        Objects.equals(this.authorUserId, postCommentUpdate.authorUserId) &&
         Objects.equals(this.body, postCommentUpdate.body) &&
         Objects.equals(this.attachmentFileId, postCommentUpdate.attachmentFileId) &&
         Objects.equals(this.isActive, postCommentUpdate.isActive);
@@ -154,7 +130,7 @@ public class PostCommentUpdate {
 
   @Override
   public int hashCode() {
-    return Objects.hash(parentCommentId, authorUserId, body, attachmentFileId, isActive);
+    return Objects.hash(parentCommentId, body, attachmentFileId, isActive);
   }
 
   @Override
@@ -162,7 +138,6 @@ public class PostCommentUpdate {
     StringBuilder sb = new StringBuilder();
     sb.append("class PostCommentUpdate {\n");
     sb.append("    parentCommentId: ").append(toIndentedString(parentCommentId)).append("\n");
-    sb.append("    authorUserId: ").append(toIndentedString(authorUserId)).append("\n");
     sb.append("    body: ").append(toIndentedString(body)).append("\n");
     sb.append("    attachmentFileId: ").append(toIndentedString(attachmentFileId)).append("\n");
     sb.append("    isActive: ").append(toIndentedString(isActive)).append("\n");

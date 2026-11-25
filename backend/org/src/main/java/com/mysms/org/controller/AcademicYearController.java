@@ -11,7 +11,6 @@ import com.mysms.org.api.model.AcademicYear;
 import com.mysms.org.api.model.AcademicYearUpdate;
 import com.mysms.org.api.model.ActivateAcademicYearRequest;
 import com.mysms.org.api.model.CloseAcademicYearRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.org.business.AcademicYearService;
 import java.net.URI;
@@ -21,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the AcademicYear operations; authentication and the permission check already happened in the auth-client
- * filter; operations not served yet answer 501 NOT_IMPLEMENTED.
+ * filter.
  */
 @RestController
 public class AcademicYearController implements AcademicYearApi {
@@ -35,7 +34,8 @@ public class AcademicYearController implements AcademicYearApi {
     @Override
     public ResponseEntity<AcademicYear> activateAcademicYear(UUID academicYearId,
             ActivateAcademicYearRequest activateAcademicYearRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        AcademicYear changed = academicYearService.activateAcademicYear(academicYearId, activateAcademicYearRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -86,7 +86,7 @@ public class AcademicYearController implements AcademicYearApi {
     @Override
     public ResponseEntity<AcademicTermList> generateTerms(UUID academicYearId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(academicYearService.generateTerms(academicYearId));
     }
 
     @Override

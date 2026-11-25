@@ -1,4 +1,7 @@
-/** The cohort screens the phone (S) and tablet (B) carry (ui/02 §3): cohorts, roster, schedule, forums, live classes. */
+/**
+ * The cohort screens the phone (S) and tablet (B) carry (ui/02 §3): cohorts, roster, schedule, forums, live classes,
+ * announcements.
+ */
 export const COHORT_SCREEN_IDS = [
   'LMS-15',
   'LMS-20',
@@ -8,6 +11,7 @@ export const COHORT_SCREEN_IDS = [
   'LMS-25',
   'LMS-26',
   'LMS-27',
+  'LMS-28',
 ] as const;
 
 /** The coursework screens the phone and tablet carry: quizzes, assignments, groups, grades and the drive. */

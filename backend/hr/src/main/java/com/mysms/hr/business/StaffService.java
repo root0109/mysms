@@ -397,7 +397,7 @@ public class StaffService extends AppTransactionManager {
     /** The event payload of a staff record as stored: whose it is, where, and its row version. */
     private static Map<String, Object> memberPayload(StaffEntity staff) {
         return HrEvents.member(staff.getId(), staff.getUserId(), staff.getPersonId(), staff.getInstitutionId(),
-                staff.getRowVersion());
+                staff.getJoiningDate(), staff.getRowVersion());
     }
 
     /**

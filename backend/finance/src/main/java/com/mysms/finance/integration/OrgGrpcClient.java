@@ -4,6 +4,9 @@ import com.mysms.core.grpc.IntegrationGrpcClientException;
 import com.mysms.org.v1.AcademicYearServiceGrpc;
 import com.mysms.org.v1.GetAcademicYearRequest;
 import com.mysms.org.v1.GetAcademicYearResponse;
+import com.mysms.org.v1.GetInstitutionRequest;
+import com.mysms.org.v1.GetInstitutionResponse;
+import com.mysms.org.v1.InstitutionServiceGrpc;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
 
@@ -18,10 +21,20 @@ public class OrgGrpcClient {
     private static final String SERVICE = "org";
 
     private AcademicYearServiceGrpc.AcademicYearServiceBlockingStub academicYears;
+    private InstitutionServiceGrpc.InstitutionServiceBlockingStub institutions;
 
     @GrpcClient(ORG_SERVICE_KEY)
     public void initAcademicYearStub(AcademicYearServiceGrpc.AcademicYearServiceBlockingStub stub) {
         this.academicYears = stub;
+    }
+
+    @GrpcClient(ORG_SERVICE_KEY)
+    public void initInstitutionStub(InstitutionServiceGrpc.InstitutionServiceBlockingStub stub) {
+        this.institutions = stub;
+    }
+
+    public GetInstitutionResponse getInstitution(GetInstitutionRequest request) {
+        return IntegrationGrpcClientException.call(SERVICE, () -> institutions.getInstitution(request));
     }
 
     public GetAcademicYearResponse getAcademicYear(GetAcademicYearRequest request) {

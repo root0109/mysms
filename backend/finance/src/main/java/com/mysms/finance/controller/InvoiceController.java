@@ -11,6 +11,7 @@ import com.mysms.finance.api.model.Invoice;
 import com.mysms.finance.api.model.InvoiceLine;
 import com.mysms.finance.api.model.InvoiceUpdate;
 import com.mysms.finance.api.model.PostInvoiceRequest;
+import com.mysms.finance.api.model.RaiseChargeInvoiceRequest;
 import com.mysms.finance.api.model.SendFeeRemindersRequest;
 import com.mysms.finance.api.model.SendResult;
 import com.mysms.finance.business.InvoiceService;
@@ -49,6 +50,13 @@ public class InvoiceController implements InvoiceApi {
         }
         return ResponseEntity.created(URI.create("/v1/finance/invoices/" + created.getId()))
                 .eTag(created.getEtag()).body(created);
+    }
+
+    @Override
+    public ResponseEntity<Invoice> raiseChargeInvoice(RaiseChargeInvoiceRequest raiseChargeInvoiceRequest,
+            UUID idempotencyKey) {
+        Invoice raised = invoiceService.raiseChargeInvoice(raiseChargeInvoiceRequest);
+        return ResponseEntity.ok().eTag(raised.getEtag()).body(raised);
     }
 
     @Override

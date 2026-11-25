@@ -1,5 +1,6 @@
 package com.mysms.comms.business;
 
+import com.mysms.comms.api.model.SendTestMessageRequest;
 import com.mysms.authclient.DataScope;
 import com.mysms.comms.api.model.NotificationChannel;
 import com.mysms.comms.api.model.NotificationChannelProperty;
@@ -60,6 +61,10 @@ public class NotificationChannelService extends AppTransactionManager implements
     static final String PERMISSION_CREATE = "comms.notification_channel.create";
     static final String PERMISSION_UPDATE = "comms.notification_channel.update";
     static final String PERMISSION_DELETE = "comms.notification_channel.delete";
+    static final String PERMISSION_SEND_TEST_MESSAGE = "comms.notification_channel.send_test_message";
+    /** The text of a test message: nothing personal, nothing from the request. */
+    static final String TEST_SUBJECT = "MySMS test message";
+    static final String TEST_BODY = "This is a test message from your school's MySMS notification settings.";
     /** The contract's NotificationChannelUpdate fields, in apply order. */
     static final List<String> WRITABLE = List.of("code", "description", "isEnabled", "sortOrder");
 
@@ -86,6 +91,8 @@ public class NotificationChannelService extends AppTransactionManager implements
     private final Clock clock;
     private final NotificationChannelPropertyRepository notificationChannelPropertyRepository;
     private final NotificationChannelPropertyMapper notificationChannelPropertyMapper;
+    private final DeliveryChannels channels;
+    private final RecipientDirectory directory;
     private final FieldCipher cipher;
 
     public NotificationChannelService(NotificationChannelRepository repository,
@@ -98,7 +105,7 @@ public class NotificationChannelService extends AppTransactionManager implements
             Clock clock,
             NotificationChannelPropertyRepository notificationChannelPropertyRepository,
             NotificationChannelPropertyMapper notificationChannelPropertyMapper,
-            FieldCipher cipher) {
+            FieldCipher cipher, DeliveryChannels channels, RecipientDirectory directory) {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
@@ -109,6 +116,40 @@ public class NotificationChannelService extends AppTransactionManager implements
         this.notificationChannelPropertyRepository = notificationChannelPropertyRepository;
         this.notificationChannelPropertyMapper = notificationChannelPropertyMapper;
         this.cipher = cipher;
+        this.channels = channels;
+        this.directory = directory;
+    }
+
+    /**
+     * comms.SendTestMessage: sends a fixed test text through the channel, only to the caller's own verified e-mail
+     * address or mobile number (422 for any other), and only for an administrator of the tenant's channel settings
+     * (the permission held tenant-wide, 403 otherwise). A disabled channel is 409; a channel this deployment cannot
+     * deliver is 503 NOT_CONFIGURED; a channel that is not e-mail, SMS or push has no test (422).
+     */
+    public void sendTestMessage(UUID id, SendTestMessageRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_SEND_TEST_MESSAGE);
+        NotificationChannelEntity channel = doInReadTransaction(() -> {
+            NotificationChannelEntity found = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(found));
+            if (!Boolean.TRUE.equals(found.getIsEnabled())) {
+                throw new InvalidStateException("The channel is disabled.");
+            }
+            return found;
+        });
+        String name = channel.getCode().substring(channel.getCode().lastIndexOf('.') + 1);
+        if (!List.of(EmailChannel.NAME, "sms", "push").contains(name)) {
+            throw new ValidationFailedException(List.of(new FieldError("notificationChannelId",
+                    "names a channel that has no test message", "NOT_SUPPORTED")));
+        }
+        DeliveryChannel delivery = channels.require(name);
+        String to = request.getTo().trim();
+        boolean own = directory.ownVerified(name).filter(address -> address.equalsIgnoreCase(to)).isPresent();
+        if (!own) {
+            throw new ValidationFailedException(List.of(new FieldError("to",
+                    "must be the caller's own verified address or number", "OWN_ADDRESS")));
+        }
+        delivery.deliver(to, TEST_SUBJECT, TEST_BODY);
+        runInWriteTransaction(() -> audit.recordTransition(AGGREGATE, id, "send_test", List.of(), null));
     }
 
     public NotificationChannel getNotificationChannel(UUID id) {

@@ -2,6 +2,7 @@ package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.AudienceGroup;
 import com.mysms.comms.api.model.AudienceGroupMember;
+import com.mysms.comms.api.model.AudienceGroupMemberList;
 import com.mysms.comms.api.model.AudienceGroupMemberUpdate;
 import com.mysms.comms.api.model.AudienceGroupUpdate;
 import com.mysms.comms.business.AudienceGroupService;
@@ -28,7 +29,6 @@ import com.mysms.comms.v1.UpdateAudienceGroupMemberRequest;
 import com.mysms.comms.v1.UpdateAudienceGroupMemberResponse;
 import com.mysms.comms.v1.UpdateAudienceGroupRequest;
 import com.mysms.comms.v1.UpdateAudienceGroupResponse;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import io.grpc.stub.StreamObserver;
@@ -135,9 +135,12 @@ public class AudienceGroupResolver extends AudienceGroupServiceGrpc.AudienceGrou
         ProtoBridge.send(out, DeleteAudienceGroupMemberResponse.getDefaultInstance());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void addGroupMembers(AddGroupMembersRequest request, StreamObserver<AddGroupMembersResponse> out) {
-        throw new NotImplementedException();
+        AudienceGroupMemberList added = service.addGroupMembers(
+                bridge.id(request.getAudienceGroupId(), "audienceGroupId"),
+                bridge.body(request, com.mysms.comms.api.model.AddGroupMembersRequest.class, "audience_group_id",
+                        "request_id"));
+        ProtoBridge.send(out, bridge.reply(AddGroupMembersResponse.newBuilder(), "items", added.getItems()).build());
     }
 }

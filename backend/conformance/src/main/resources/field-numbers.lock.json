@@ -7099,6 +7099,22 @@
 "finance.QuoteCheckoutResponse": {
 "result": 1
 },
+"finance.RaiseChargeInvoiceRequest": {
+"amount": 6,
+"bill_to_name": 4,
+"bill_to_user_id": 3,
+"currency_id": 7,
+"description": 5,
+"due_date": 8,
+"institution_id": 1,
+"request_id": 11,
+"source_id": 10,
+"source_type": 9,
+"student_id": 2
+},
+"finance.RaiseChargeInvoiceResponse": {
+"invoice": 1
+},
 "finance.ReceiveGatewayWebhookRequest": {
 "gateway": 1,
 "headers": 3,
@@ -22595,7 +22611,8 @@
 "institution_id": 1,
 "request_id": 8,
 "slots": 7,
-"start_date": 5
+"start_date": 5,
+"time_zone": 9
 },
 "timetable.GenerateSessionsResponse": {
 "result": 1

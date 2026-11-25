@@ -46,8 +46,8 @@ import tools.jackson.databind.json.JsonMapper;
  * Every RPC of frontoffice's four gRPC services against the same REST operation, on real PostgreSQL: for each resource
  * of crud-spec.json the create, get, list, update and delete give the same resource over both transports, and both
  * refuse alike — 403 without the permission, 404 for an absent row and another tenant's row, 412 for a stale etag, 428
- * without one, 422 for an invalid body; a call's duration and an enum travel alike; and the visitor check-out this
- * release does not serve is 501 on both.
+ * without one, 422 for an invalid body; a call's duration and an enum travel alike; and a visitor's check-out answers
+ * and refuses alike.
  */
 @SpringBootTest(classes = FrontofficeApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = GrpcParity.IN_PROCESS_SERVER + "=FrontofficeGrpcParityComponentTest")
@@ -213,15 +213,49 @@ class FrontofficeGrpcParityComponentTest {
     }
 
     @Test
-    void theVisitorCheckOutThisReleaseDoesNotServeIs501OnBoth() throws Exception {
-        String visitor = UUID.randomUUID().toString();
+    void aVisitorCheckOutAnswersAndRefusesTheSameOverBoth() throws Exception {
         MethodDescriptor checkOut = rpc("CheckOutVisitor");
-        DynamicMessage request = set(set(request(checkOut), "visitor_log_id", visitor), "exit_time", "17:30").build();
-        String path = "/v1/frontoffice/visitor-logs/" + visitor + ":checkOut";
-        GrpcParityContract.assertSameAnswer(rest("POST", path, ADMIN, "{\"exitTime\":\"17:30\"}"),
-                grpc(checkOut, request, ADMIN));
+        String overRest = visitor();
+        String overGrpc = visitor();
+        Answer byRest = rest("POST", "/v1/frontoffice/visitor-logs/" + overRest + ":checkOut", ADMIN,
+                "{\"exitTime\":\"17:30\"}");
+        Answer byGrpc = grpc(checkOut, set(set(request(checkOut), "visitor_log_id", overGrpc), "exit_time", "17:30")
+                .build(), ADMIN);
+        assertThat(byRest.status()).isEqualTo(200);
+        assertThat(byGrpc.status()).as(String.valueOf(byGrpc.code())).isEqualTo(200);
+        assertThat(byGrpc.body().path("visitorLog").path("exitTime").asString())
+                .isEqualTo(byRest.body().path("exitTime").asString());
+        assertThat(byGrpc.body().path("visitorLog").path("etag").asString())
+                .isEqualTo(byRest.body().path("etag").asString());
+        GrpcParity.assertSameResource(rest("GET", "/v1/frontoffice/visitor-logs/" + overGrpc, ADMIN, null).body(),
+                byGrpc.body().path("visitorLog"));
+
+        String again = "/v1/frontoffice/visitor-logs/" + overRest + ":checkOut";
+        GrpcParityContract.assertSameAnswer(rest("POST", again, ADMIN, "{\"exitTime\":\"18:00\"}"),
+                grpc(checkOut, set(set(request(checkOut), "visitor_log_id", overGrpc), "exit_time", "18:00").build(),
+                        ADMIN));
+        String fresh = visitor();
+        DynamicMessage request = set(set(request(checkOut), "visitor_log_id", fresh), "exit_time", "17:30").build();
+        String path = "/v1/frontoffice/visitor-logs/" + fresh + ":checkOut";
         GrpcParityContract.assertSameAnswer(rest("POST", path, NOBODY, "{\"exitTime\":\"17:30\"}"),
                 grpc(checkOut, request, NOBODY));
+        GrpcParityContract.assertSameAnswer(rest("POST", path, STRANGER, "{\"exitTime\":\"17:30\"}"),
+                grpc(checkOut, request, STRANGER));
+        GrpcParityContract.assertSameAnswer(rest("POST", path, ADMIN, "{\"exitTime\":\"17:30\",\"etag\":\"9\"}"),
+                grpc(checkOut, set(set(set(request(checkOut), "visitor_log_id", fresh), "exit_time", "17:30"),
+                        "etag", "9").build(), ADMIN));
+        GrpcParityContract.assertSameAnswer(rest("POST", path, ADMIN, "{\"exitTime\":\"07:00\"}"),
+                grpc(checkOut, set(set(request(checkOut), "visitor_log_id", fresh), "exit_time", "07:00").build(),
+                        ADMIN));
         assertThat(grpc(checkOut, request, null).status()).as("authentication first, as on REST").isEqualTo(401);
+    }
+
+    /** A visitor of the tenant who came in at nine and is still inside; answers its id. */
+    private String visitor() throws Exception {
+        Answer created = rest("POST", "/v1/frontoffice/visitor-logs", ADMIN, "{\"institutionId\":\""
+                + "0196f000-0000-7000-8000-00000000a001\",\"visitorName\":\"Parity visitor\",\"visitorType\":"
+                + "\"parent\",\"purpose\":\"meeting\",\"visitDate\":\"2026-02-03\",\"entryTime\":\"09:00\"}");
+        assertThat(created.status()).as(created.body().toString()).isEqualTo(201);
+        return created.body().path("id").asString();
     }
 }

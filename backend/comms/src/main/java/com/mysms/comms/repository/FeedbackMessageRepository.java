@@ -106,6 +106,16 @@ public class FeedbackMessageRepository {
     private static final String INSTITUTION_OF = """
             SELECT p0.institution_id FROM comms.feedback_thread p0 WHERE p0.tenant_id = :tenantId AND p0.id = :ref
             """;
+    /** comms.MarkFeedbackMessage: the handling state moves on. */
+    private static final String MARK_REVIEW_STATUS = """
+            UPDATE comms.feedback_message
+               SET review_status = :reviewStatus,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.thread_id IN (SELECT p0.id FROM comms.feedback_thread p0 WHERE p0.tenant_id = :tenantId
                  AND (p0.institution_id =
@@ -191,6 +201,12 @@ public class FeedbackMessageRepository {
         return jdbc.sql(INSTITUTION_OF).param("ref", ref)
                 .query((rs, row) -> Optional.ofNullable(rs.getObject(1, UUID.class)))
                 .optional().flatMap(found -> found);
+    }
+
+    /** comms.MarkFeedbackMessage; 0 rows means the row changed (or vanished) since it was read. */
+    public int markReviewStatus(UUID id, int expected, String reviewStatus, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(MARK_REVIEW_STATUS).param("id", id).param("expected", expected)
+                .param("reviewStatus", reviewStatus).param("now", now).param("actor", actor).update();
     }
 
     /** Rows of the caller's institutions only. */

@@ -184,7 +184,7 @@ class PeopleApiComponentTest {
 
     @Test
     @Order(3)
-    void personRegisterMasksSecretsAndOtherOperationsAnswer501() throws Exception {
+    void personRegisterMasksSecretsAndGreetingsReachOnlyTheSchoolsMembers() throws Exception {
         // the people register (standard operations) shows a national id only masked; never the plaintext or envelope
         Reply listed = call("GET", "/v1/people/persons?filter=" + URLEncoder.encode("id = \"" + PERSON + "\"",
                 StandardCharsets.UTF_8), token(TENANT, PERSON, "people.person.read"), null);
@@ -194,6 +194,6 @@ class PeopleApiComponentTest {
         Reply greetings = call("POST", "/v1/people/persons:sendGreetings", token(TENANT, PERSON,
                 "people.person.send_greetings"), "{\"personIds\":[\"" + PERSON + "\"],\"templateId\":\"" + PERSON
                 + "\",\"channel\":\"sms\"}");
-        assertThat(greetings.status()).isEqualTo(501);
+        assertThat(greetings.status()).as("a person in no school of the caller's").isEqualTo(422);
     }
 }

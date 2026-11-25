@@ -68,7 +68,7 @@ Defaults apply until decided. "Rec." is the reviewers' recommendation.
 | DEC-20 | Confirm the privacy rights choices built on the implementer's judgement: separation of duties as 409; nominee activated by a fulfilled nomination request; `:set` / `:revoke` nominee methods; register audiences per activity and the role-filtered access summary (no role = full "may concern" list) | Confirm |
 | DEC-21 | Confirm the privacy P3/P4 choices built on the implementer's judgement: breach notices recorded per audience with the Board's initial notice only once contained and closing only after principals and the detailed report; RoPA export as JSON carrying a `csv` field (lists the whole platform register); coverage counts unrounded, per institution for students only; a finished erasure saga ends `closed` with outcome `fulfilled` or `partially_fulfilled`; withdraw-all as its own step (`:fulfilWithdrawAll`); a partial erasure still withdraws consents and publishes the tombstone but keeps privacy's subject facts; retention catalogue global + tenant settings in days, all ten seeded values "to verify"; erasure modules and retention runs limited to modules with a handler (first wave `iam,comms`); module handlers record a receipt in the inbox transaction and run from a per-module scheduled job (gRPC never inside a transaction); sis keeps the admission register and discipline incidents; iam does not sweep `after_inactivity` until its 48-hour notice exists; proposed JAVA-CODING-RULES text: "A module's privacy tasks extend privacy-client's `PrivacyTaskHandler`; event handlers never call gRPC: work that needs a remote answer is recorded and run by the module's scheduled job" | Confirm |
 | DEC-22 | Confirm what each module's erasure keeps or clears (design §9.1 table: hr, payroll, admission, attendance, assessment), the person mappings added for it (`payroll.staff_member.person_id`; `attendance.member_record` and `assessment.student_record` fed by hr.staff / sis.student events), `attendance.after_leaving` meaning "not marked since the cutoff" (attendance has no leaving date), and the failed-task back-off (retry-delay PT5M doubling, capped at redispatch-after) | Confirm |
-| DEC-23 | Privacy erasure reach: (a) let iam's `user_account` events carry `personId` (reaches lms, comms guardians/staff, careers applications), or (b) module-local projections fed by sis.student / hr.staff events in lms; (c) move retention policy `platform.access_log` to lms (`lms.access_log`); confirm the per-table keep/clear choices of design §9.1 for comms, academics, careers, finance, frontoffice, library, platform, transport | (a) |
+| DEC-23 | Privacy erasure reach: (a) let iam's `user_account` events carry `personId` (reaches lms, comms guardians/staff — their erasure and the greetings people asks for —, careers applications), or (b) module-local projections fed by sis.student / hr.staff events in lms; (c) move retention policy `platform.access_log` to lms (`lms.access_log`); confirm the per-table keep/clear choices of design §9.1 for comms, academics, careers, finance, frontoffice, library, platform, transport | (a) |
 
 Privacy design questions (rights-request SLA, majority defaults, platform as fiduciary, retention values) and the
 counsel questions: [PRIVACY-AND-CONSENT-CENTRE.md §16](docs/design/PRIVACY-AND-CONSENT-CENTRE.md#16-open-questions-and-risks)
@@ -86,6 +86,21 @@ and [PRIVACY-LEGAL-REVIEW-BRIEF.md](docs/design/PRIVACY-LEGAL-REVIEW-BRIEF.md), 
 | HR-07, F7.2 | Pay percentage 100, no leave deduction (request carries no leave input) |
 | HR-05 | Template components in insertion order (no order in the contract) |
 | LMS-49 | LTI 1.1 Basic Outcomes only; AGS JSON answers 422 (P1-39) |
+| SIS-04 | Guardian opens in place (`?guardian=`); a student is found by name and linked there; a guardian's existing links show on each student's page (SIS-02), as the contract has no read of links by guardian |
+| SIS-08 | Person found by name first (`?person=`), then their documents (list, download, upload, archive): documents belong to a person and the contract has no list across persons |
+| ACC-09 | The inbox is read through its contract paths (`/v1/comms/notifications…`): comms has no documented controller for it on master, so the generated SDK has no client; switch to the generated client once ops/comms is merged. 90 days at a time, at most a year (partitioned table) |
+| ACC-12 | Created from My profile (ACC-07) and opened by its id: the contract has no list or singleton read of a person's public profile, so an existing profile is found again only through its link. 422 `CONSENT_REQUIRED` points to the consent centre |
+| COM-03 | Read and export only: a calendar item carries no event id, so `CompletePersonalEvent` and `CancelEventOccurrence` cannot be called from it. Month, week and day lists (not a grid); each item on its day in the viewer's time zone |
+| COM-05 | A new conversation's people are added by user id on its participants list (no user picker for non-administrators); messages refresh on request (no socket in v1) |
+| CAR-01, CAR-02 | Public routes, so they render without the shell also for a signed-in reader (as LMS-01/02) |
+| CAR-04 | Applications read per opening (no list across openings), for the newest 50 openings |
+| LMS-28 | The notice board with `?cohort=` (web) and the cohort page's announcements (phone, tablet); written as cohort notices |
+| LIB-07 | A member's own loans and cards only (their person's cards, loans lent to their account); library staff (issuing or checking in loans, issuing or changing cards) read their school's. A guardian sees no child's loans (library knows no guardian link), so the screen has no child picker |
+| Feedback threads (COM) | Reached only by the thread's guardian (the caller's account or person is the guardian record, from sis's guardian-link events), its handler and the school side of its institution (those holding `comms.feedback_message.mark_feedback_message` there); only the school side opens a thread for someone else |
+| COM-05 participants | Only the opener changes a conversation or adds and removes people; an added account must be a student, staff member or student's guardian of the conversation's school as comms knows them from sis and hr events (an administrator who is no staff member cannot be added); each participant moves only their own read mark and may leave |
+| ComposeMail | Recipient accounts and the student a mail is about must be the school's (as above); at most 10 outside addresses a mail and 50 such mails a sender a day (UTC); bulk mail is SendMessage's |
+| GenerateSessions | The school's own time zone (org's `institution.timezone`, kept from its events) applies; the request's `timeZone` only names one for a school without, and a different one is 422. A draft of the same class, period, weekday, subject, teacher and room within three days is moved, not duplicated; tenant time zone waits for P1-28 |
+| Authorship (comms posts, comments, messages; LIB-05) | Author, sender and requester come from the token. Only the author edits a post, its audience classes or a comment; a moderator (post approval in the school) may also delete a post or comment, never edit it. A feedback message's own fields change only by its sender, its handling state and receiver's hiding only by the school side (state never back). A member reserves for their own person and reaches only their own reservations; library staff (reservation acceptance in the school) reserve for anyone and reach all |
 
 ## 3. Open work
 
@@ -114,7 +129,7 @@ and retention policies and runs (screens ADM-21, ADM-22; ADM-19 runs fulfilment,
 |---|---|---|---|
 | P1-34 | P1 / M | `BatchGet` (AIP-231) and small `*Card` projections for the most-referenced resources (person, student, staff, class section, download URLs); audience tag per operation | E43, C-6, P2-02; ui D-09 |
 | ARC-1 | H | Reference reconciliation: dangling-reference report and job per module; cross-school in-module references; unique-violation races → 409 | P2-02, database/logical-references.md; P1-34 |
-| ARC-2 | P1 | Message delivery: e-mail, SMS, push adapters, per-tenant channels and accounts, retries, suppression, receipts, quiet hours, opt-in. Unblocks guardian notices, reset links, fee reminders, `sendInvite`, comms 501s | E51, E12, ui D-24 |
+| ARC-2 | P1 | Message delivery: e-mail, SMS, push adapters, per-tenant channels and accounts, retries, suppression, receipts, quiet hours, opt-in. Unblocks guardian notices, reset links, fee reminders, `sendInvite`. comms today (BE-13): `SendMessage` and `RetryOutboundMessage` deliver e-mail at once in the request (no queue worker), SMS / push / web push answer 503 `NOT_CONFIGURED`, recipients by class, cohort, guardians or staff only and `scheduledAt` answer 422 `NOT_SUPPORTED` | E51, E12, ui D-24 |
 | ARC-3 | H | Persona (own-data) reads: student and guardian attendance, homework, own timetable; narrow roster and submission reads; personal rows readable tenant-wide | DEC-3 |
 | P1-37 / E13 | P2 | Composite reads in a `/v1/bff/<app>/` namespace: `GetParentHome`, `GetTeacherToday`; fill `sis.GetStudentSummary` | |
 | ARC-4 | P2 | Background jobs beyond scheduled ones: move payslip runs, bonafide, promotions, imports/exports, refund sweeps, plagiarism polling to jobs; long ops → 202 + `Operation` with one `BatchResult` shape | [BACKGROUND-JOB-PATTERN.md](docs/design/BACKGROUND-JOB-PATTERN.md); E7, P1-31 |
@@ -127,7 +142,6 @@ and retention policies and runs (screens ADM-21, ADM-22; ADM-19 runs fulfilment,
 
 | ID | Pri | What | Where / depends on |
 |---|---|---|---|
-| BE-1 | - | Serve the 501 operations: comms (sending, notifications, reactions, feed, calendar, tasks), library (return, lost, fine, return request, reservation again), org (`ActivateAcademicYear`, `FindInstitutions`, `GenerateTerms`), people (`ListBirthdays`, `SendGreetings`), timetable (`GenerateSessions`, `BatchConfirmSessions`), frontoffice (`CheckOutVisitor`) | operations-status.md; comms needs ARC-2 |
 | BE-2 | H | Cut boilerplate: core step helpers (guarded update/delete, unique and scope checks, field errors), DTOs as records; < 600 lines per simple resource | improvement D3 |
 | BE-4 | H | Split `LmsCourseService`, `CohortService`, `ContentItemService` by workflow; largest service < 800 lines | `backend/lms` |
 | D10 | L | Java 17 stays: remove the no-op `spring.threads.virtual.enabled` from the modules' `application.properties` | |
@@ -149,6 +163,10 @@ and retention policies and runs (screens ADM-21, ADM-22; ADM-19 runs fulfilment,
 | BE-9 | P1/P2 | LMS proposals: gradebook → report card (E18), xAPI (E20), standards (E23), alert rules (E25), Open Badges (E26), offline packages (E10), HLS (E11), app release control (E14), bulk teacher endpoints (E31) | |
 | BE-10 | L | API polish: P2-12…P2-20 (incl. read-only views as sub-resources, P2-17, ui D-17), P3-d, P3-e; state flags writable through standard update | |
 | BE-11 | M | Coupon redemptions and limits (P2-10); admission interviews and checklist (P3-c) | |
+| BE-12 | M | Offline video downloads (owner, 2026-11-18): YouTube links stay the primary video source, embedded playback only, never downloaded (YouTube's terms); downloads only for school-owned uploaded videos, app-private storage, expiry default 7 days as a tenant setting, cleared on revocation at next sync | lms; UI-2, P1-35 |
+| BE-15 | M | Review 2026-11-25 leftovers: `RaiseChargeInvoice` `sourceType`/`sourceId` are free, so a creator can take a source's invoice id first; `GenerateSessions` does not check class, course, batch, subject, staff or room ids belong to the institution (timetable calls nobody); `RecipientDirectory` accepts any account id for push and web push (moot until a push provider exists, ARC-2: check through iam first); improvements I3–I8 (fine rate on the loan, reservation dates on accept/reject, greeting cap under a lock, finder city names cached, `getConversationMessage` honouring hide-for-me, exported calendar written after the transaction) | comms, finance, library, people, org, timetable |
+| BE-14 | M | Post moderation gaps: an author can edit an approved post's body (skips re-review; the community design forbids it); `parentCommentId` is not checked to belong to the same post; the generic record editor shows output-only id fields on create (the server ignores them; the OpenAPI lacks readOnly) | comms |
+| BE-13 | P1 | comms after BE-1, as built: `ExportCalendar` writes the caller's calendar as an iCalendar file to the platform file store and answers 202 with a finished `Operation` (download link in `result`), instead of pushing to a connected Google/Microsoft calendar, and tracks no deletions; `GetMyCalendar` shows comms events only (no lms due dates, live classes or cohort sessions: comms cannot call lms); class audiences fail closed until comms has section data (posts for selected classes reach only their author, `GetFeed` by `classSectionId` is empty, class / cohort / alumni events show only to invited attendees); a class page's posts are never surfaced school-wide (not modelled); reaction lists show the caller's own reactions, no counts; `ListInAppNotifications` needs a `createTime` range (partitioned) and notifications carry no ETag; `ComposeMail` attachments answer 422; greetings from `people.greeting.requested` become in-app notifications for students only (comms knows no account of staff or guardians: DEC-23) and are never mailed (no service-callable iam lookup of addresses); `SendTestMessage` needs the permission tenant-wide | ARC-2, DEC-23; docs/product/SCHOOL-COMMUNITY-NETWORK-TECHNICAL-DESIGN.md |
 
 ### 3.4 Data and database
 
@@ -224,7 +242,7 @@ and retention policies and runs (screens ADM-21, ADM-22; ADM-19 runs fulfilment,
 
 | ID | Pri | What | Where / depends on |
 |---|---|---|---|
-| UI-1 | - | Web screens that still show their placeholder (27 of the 179 the web carries): ACA-06 class section workspace; ACC-06 persona switcher, ACC-09 notification inbox (BE-1), ACC-12 public profile editor; ADM-01 admin dashboard, ADM-03 institution detail; ADMN-04 enrol applicant; ASM-04 homework submit, ASM-07 assignment submit; CAR-01…04 careers (job board, opening + apply, employer console, my applications); COM-01 notice board, COM-02 notice composer, COM-03 my calendar (BE-1), COM-05 conversations, COM-13 notification setup; LIB-02 title detail, LIB-07 my loans; LMS-03 enrol/buy, LMS-28 cohort announcements, LMS-35 grade history; SIS-08 documents, SIS-09 bonafide (BE-7), SIS-12 birthdays (BE-1); TT-04 room/staff view. Phone apps: only the native-kit screens exist (home, account, profile, settings, timetable, fees, payslips, leave, coursework, assessment, LMS, cohort, subject registration, consent centre, notification preferences); PLT-02/PLT-04 tenant parts | ui/02; `clients/apps/web/src/routes.ts`; P1-34 |
+| UI-1 | - | Every web route of the inventory is a built screen (the routeless ACC-06, ADMN-04, SIS-09, ASM-04, ASM-07, LMS-03, LMS-35 live inside their host screens). Left: list managers where the inventory asks for more — TT-02 timetable builder, LIB-03 circulation desk (return, lost, fine steps), TRN-01 route with its stops, COM-04 event gallery, COM-06 broadcast composer, COM-07 thread view (web), COM-08 feed and posting (web), COM-09 claim (web), COM-10 group members, COM-11 mailbox; ACA-06 has no wall tab (GetFeed). Phone/tablet: built as native-kit pages (ATT-02/03/04, ACA-06 T, ACC-09, COM-01/02/03/04/05/07/08/09, LIB-05/07, TRN-03, LMS-28); left: COM-02 audiences and versions on T, COM-04 gallery, posting to the feed, the ATT-03 offline queue (E59), PLT-02/PLT-04 tenant parts | ui/02; `clients/apps/web/src/routes.ts`; `native-kit/src/NativeApp.tsx`; P1-34 |
 | E59 | P2 | Teacher phone app first: Today and ATT-03 with the offline queue | ui D-05, D-08 |
 | UI-2 | P2 | Offline: network state, persisted cache, SQLite outbox; tablet lesson cache | P1-35, P2-05, E9, E10 |
 | E53 | P1 | Route-level error boundary; prefetch on hover | `clients/apps/web/src/routes.ts` |
@@ -251,8 +269,8 @@ Children's data in any item follows SEC-11. Product context: [ui/01](ui/01-produ
 | NM-3 | P3 / L | Canteen: menus with allergens, wallet, meal counts (PM POSHAN) | new `canteen` + finance wallet; NM-1 |
 | NM-4 | P3 / L | Inventory and procurement: stores, vendors, POs, stock, sales | new `inventory`; D5 (review) |
 | NM-5 | P2 / L | Transport tracking: vehicles, crew, trips, GPS, boarding, ETA, documents | `transport`; ARC-2, D7, UI-2 |
-| NM-6 | P1 / M | Gate and pickup: authorised pickups with photo/OTP, gate passes, late/early register | `frontoffice`; ARC-2, ARC-3, BE-1 |
-| NM-7 | P2 / M | Substitution and cover from approved leave | `timetable`; BE-1 (`GenerateSessions`), DEC-3 |
+| NM-6 | P1 / M | Gate and pickup: authorised pickups with photo/OTP, gate passes, late/early register | `frontoffice`; ARC-2, ARC-3 |
+| NM-7 | P2 / M | Substitution and cover from approved leave | `timetable`; DEC-3 |
 | NM-8 | P3 / M | Clubs, houses, competitions, achievements | new `activities` |
 | NM-9 | P1 / M | Certificates (TC, bonafide, character…) from templates, numbered, verifiable | `sis`; ARC-4 |
 | NM-10 | P3 / M | Scholarships: schemes, applications, NSP tracking, disbursement | `finance`; NM-9 |
@@ -282,7 +300,7 @@ Children's data in any item follows SEC-11. Product context: [ui/01](ui/01-produ
 | ID | Pri / size | What | Where / depends on |
 |---|---|---|---|
 | CP-1 | P1 / M | Admission enquiry CRM: leads, sources, follow-ups, funnel, convert to application | `admission`; ARC-2, DEC-5, CP-3 |
-| CP-2 | P2 / L | Automatic timetable generator (Timefold Solver) | `timetable`; P2-03, BE-1, ARC-4 |
+| CP-2 | P2 / L | Automatic timetable generator (Timefold Solver) | `timetable`; P2-03, ARC-4 |
 | CP-3 | P1 / M | WhatsApp, free only: share to class groups, invite links | `comms`; ARC-2, SEC-11 |
 | CP-4 | P3 / L | School website with CBSE disclosure pages (approach to be decided) | new `website`; DEC-10, P1-28 |
 | CP-5 | P3 / M | School store: online orders, payment, pickup | NM-4 + `finance`; D5 (review) |
@@ -296,17 +314,12 @@ Evidence and feature ids (G001–G191): [docs/benchmark/GEGOK12-COMPARISON.md](d
 | ID | Pri | Gap | Covered by / note |
 |---|---|---|---|
 | GK-1 | P0 | SMS (an Indian provider with DLT templates), SMTP, FCM delivery | ARC-2 |
-| GK-2 | P0 | In-app notifications inbox (can ship before the rest of ARC-2) | BE-1 |
-| GK-3 | P0 | Library return, fines, return requests, lost | BE-1 |
-| GK-4 | P0 | Calendar view (`GetMyCalendar`, `ExportCalendar`) | BE-1 |
 | GK-5 | P1 | Income and expense cash book in `finance` | feeds IN-3 |
 | GK-6 | P1 | ID cards and bus passes: raise CP-6 | CP-6 |
 | GK-7 | P1 | Certificates incl. TC: raise NM-9 | NM-9 |
-| GK-8 | P1 | Birthdays, greetings, work anniversaries (`ListWorkAnniversaries`) | BE-1 |
-| GK-9 | P1 | Feed, class-wall reactions, follow | BE-1 |
-| GK-10 | P1 | `ActivateAcademicYear`, `AddGroupMembers`, `CheckOutVisitor`, `MarkConversationRead`, `ClaimTask`, `MarkFeedbackMessage` | BE-1 |
+| GK-8 | P1 | Work anniversaries (`ListWorkAnniversaries` is not in the contract yet); greeting delivery by mail and to staff/guardians | BE-13, DEC-23 |
 | GK-11 | P1 | Hall tickets (`GenerateHallTickets`); report-card PDF | `assessment` |
-| GK-12 | P1 | Setup wizard, seeded demo tenant, one-command install | |
+| GK-12 | P1 | Setup wizard, seeded demo tenant, one-command install | `demo-seed` built: org, academics, staff, students, guardians, personas, timetable, attendance (DEPLOYMENT §12); rest paused until after ARC-7 (owner 2026-11-25) |
 | GK-13 | P2 | Timetable generator | CP-2 |
 | GK-14 | P2 | Transport with conductor role and odometer log | NM-5 |
 | GK-15 | P2 | Inventory and stock; reconsider D5 (review) | NM-4 |

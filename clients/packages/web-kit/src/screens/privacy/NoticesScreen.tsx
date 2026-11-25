@@ -21,7 +21,7 @@ import {
   type NoticeVersion,
   type NoticeVersionDraft,
 } from '@mysms/core';
-import { CATALOGS, enumLabel, type MessageKey } from '@mysms/i18n';
+import { enumLabel, LOCALES, type MessageKey } from '@mysms/i18n';
 import {
   Banner,
   Button,
@@ -394,9 +394,6 @@ function VersionCard({
   );
 }
 
-/** The languages a notice is written in: those the apps have a catalogue for. */
-const LANGUAGES = Object.keys(CATALOGS);
-
 /** A version's wording per language; while the version is a draft each one is edited, added or removed. */
 function Translations({ noticeId, version }: { noticeId: string; version: NoticeVersion }) {
   const { t } = useI18n();
@@ -404,7 +401,7 @@ function Translations({ noticeId, version }: { noticeId: string; version: Notice
   const draft = version.status === 'draft';
   const mayCreate = useCan('privacy.notice_translation.create') && draft;
   const items = translations.data?.items ?? [];
-  const missing = LANGUAGES.filter((code) => !items.some((tr) => tr.language === code));
+  const missing = LOCALES.filter((code) => !items.some((tr) => tr.language === code));
   return (
     <section className="consent-card">
       <h3>{t('privacy.notices.translations')}</h3>

@@ -14,7 +14,7 @@ export function HomeScreen({
 }: {
   linked: RouteMatch | null;
   tablet?: boolean;
-  onOpen: (page: Exclude<Page, 'home' | 'student' | 'assessment' | 'lms'>) => void;
+  onOpen: (page: Exclude<Page, 'home' | 'student' | 'assessment' | 'lms' | 'takeAttendance'>) => void;
   onOpenAssessment: (screenId: AssessmentScreenId, params?: Record<string, string>) => void;
   onOpenLms: (route: LmsRoute) => void;
 }) {
@@ -53,6 +53,21 @@ export function HomeScreen({
   const mayLearn = useCan('lms.enrollment.get_student_dashboard');
   const mayBrowseCatalog = useCan('lms.course.read') || mayLearn;
   const mayNotes = useCan('lms.annotation.read');
+  const mayTakeAttendance = useCan('attendance.attendance_sheet.record_attendance');
+  const maySummarizeAttendance = useCan('attendance.attendance_record.summarize_attendance');
+  const mayInbox = useCan('comms.in_app_notification.read');
+  const mayNotices = useCan('comms.notice.read');
+  const mayCalendar = useCan('comms.event.get_my_calendar');
+  const mayConversations = useCan('comms.conversation.read');
+  const mayEvents = useCan('comms.event.read');
+  const mayFeedback = useCan('comms.feedback_thread.read');
+  const mayFeed = useCan('comms.post.get_feed');
+  const mayTasks = useCan('comms.task.read');
+  const mayLoans = useCan('library.loan.read');
+  const mayReservations = useCan('library.reservation.read');
+  const mayTransport = useCan('transport.student_transport.read');
+  const mayClasses = useCan('academics.teaching_assignment.read');
+  const isStaff = useSession((s) => (s.me?.staffIds?.length ?? 0) > 0);
   return (
     <Screen tablet={tablet}>
       <Text variant="h1">{t('shell.home.welcome', { name })}</Text>
@@ -84,6 +99,68 @@ export function HomeScreen({
       {mayPayslips ? (
         <Button variant="secondary" onPress={() => onOpen('payslips')}>
           {t('pay.mine.open')}
+        </Button>
+      ) : null}
+      {mayInbox ? <Button onPress={() => onOpen('inbox')}>{t('screen.ACC09.title')}</Button> : null}
+      {mayNotices ? (
+        <Button variant="secondary" onPress={() => onOpen('notices')}>
+          {t('screen.COM01.title')}
+        </Button>
+      ) : null}
+      {mayCalendar ? (
+        <Button variant="secondary" onPress={() => onOpen('calendar')}>
+          {t('screen.COM03.title')}
+        </Button>
+      ) : null}
+      {mayConversations ? (
+        <Button variant="secondary" onPress={() => onOpen('conversations')}>
+          {t('screen.COM05.title')}
+        </Button>
+      ) : null}
+      {mayFeed ? (
+        <Button variant="secondary" onPress={() => onOpen('feed')}>
+          {t('screen.COM08.title')}
+        </Button>
+      ) : null}
+      {mayEvents && !tablet ? (
+        <Button variant="secondary" onPress={() => onOpen('events')}>
+          {t('screen.COM04.title')}
+        </Button>
+      ) : null}
+      {mayFeedback && mayChildren ? (
+        <Button variant="secondary" onPress={() => onOpen('feedback')}>
+          {t('screen.COM07.title')}
+        </Button>
+      ) : null}
+      {mayTasks && isStaff ? (
+        <Button variant="secondary" onPress={() => onOpen('tasks')}>
+          {t('screen.COM09.title')}
+        </Button>
+      ) : null}
+      {mayClasses && isStaff ? (
+        <Button variant="secondary" onPress={() => onOpen('classWorkspace')}>
+          {t('screen.ACA06.title')}
+        </Button>
+      ) : null}
+      {mayLoans && !tablet ? (
+        <Button variant="secondary" onPress={() => onOpen('myLoans')}>
+          {t('screen.LIB07.title')}
+        </Button>
+      ) : null}
+      {mayReservations && isStudent && !tablet ? (
+        <Button variant="secondary" onPress={() => onOpen('reservations')}>
+          {t('screen.LIB05.title')}
+        </Button>
+      ) : null}
+      {mayTransport && (isStudent || mayChildren) && !tablet ? (
+        <Button variant="secondary" onPress={() => onOpen('myRoute')}>
+          {t('screen.TRN03.title')}
+        </Button>
+      ) : null}
+      {mayTakeAttendance ? <Button onPress={() => onOpen('sheets')}>{t('att.native.open')}</Button> : null}
+      {maySummarizeAttendance && (isStudent || mayChildren) ? (
+        <Button variant="secondary" onPress={() => onOpen('myAttendance')}>
+          {t('att.native.mine')}
         </Button>
       ) : null}
       {mayChildren ? <Button onPress={() => onOpen('children')}>{t('screen.SIS11.title')}</Button> : null}

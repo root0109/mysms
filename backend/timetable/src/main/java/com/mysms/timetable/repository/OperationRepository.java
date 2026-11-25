@@ -35,7 +35,7 @@ public class OperationRepository {
     private static final String SELECT_LIVE = """
             SELECT r.id, r.tenant_id, r.operation_name, r.resource_type, r.resource_id, r.status, r.progress_percent,
                    r.error_code, r.error_message, r.result_entity_type, r.result_entity_id, r.started_by_user_id,
-                   r.started_at, r.finished_at, r.created_at, r.created_by, r.updated_at, r.updated_by,
+                   r.started_at, r.finished_at, r.result, r.created_at, r.created_by, r.updated_at, r.updated_by,
                    r.deleted_at, r.row_version
               FROM timetable.operation r
              WHERE r.tenant_id = :tenantId
@@ -48,6 +48,28 @@ public class OperationRepository {
                    row_version = row_version + 1
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND status = 'running' AND deleted_at IS NULL
+            """;
+
+    private static final String INSERT = """
+            INSERT INTO timetable.operation
+            (id, tenant_id, operation_name, resource_type, resource_id, status, progress_percent, started_by_user_id,
+             started_at, created_at, created_by, updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :operationName, :resourceType, :resourceId, 'running', 0, :actor, :now, :now,
+                    :actor, :now, :actor, 1)
+            """;
+    private static final String SUCCEED = """
+            UPDATE timetable.operation
+               SET status = 'succeeded', progress_percent = 100, result = :result, finished_at = :now,
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND status = 'running' AND deleted_at IS NULL
+            """;
+    private static final String FAIL = """
+            UPDATE timetable.operation
+               SET status = 'failed', error_code = :errorCode, error_message = :errorMessage, finished_at = :now,
+                   updated_at = :now, updated_by = :actor, row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND status = 'running' AND deleted_at IS NULL
             """;
 
     private final JdbcClient jdbc;
@@ -72,6 +94,25 @@ public class OperationRepository {
     public int cancel(UUID id, int expected, OffsetDateTime now, UUID actor) {
         return jdbc.sql(CANCEL).param("id", id).param("expected", expected).param("now", now).param("actor", actor)
                 .update();
+    }
+
+    /** Records a running operation the caller started. */
+    public void insert(UUID id, String operationName, String resourceType, UUID resourceId, OffsetDateTime now,
+            UUID actor) {
+        jdbc.sql(INSERT).param("id", id).param("operationName", operationName).param("resourceType", resourceType)
+                .param("resourceId", resourceId).param("now", now).param("actor", actor).update();
+    }
+
+    /** Ends a running operation as succeeded with its outcome (JSON); 0 when it is no longer running. */
+    public int succeed(UUID id, String result, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(SUCCEED).param("id", id).param("result", result).param("now", now).param("actor", actor)
+                .update();
+    }
+
+    /** Ends a running operation as failed; 0 when it is no longer running. */
+    public int fail(UUID id, String errorCode, String errorMessage, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(FAIL).param("id", id).param("errorCode", errorCode).param("errorMessage", errorMessage)
+                .param("now", now).param("actor", actor).update();
     }
 
     /** Only the caller's own operations, unless every operation of the tenant may be seen. */
@@ -104,6 +145,7 @@ public class OperationRepository {
                 .startedByUserId(rs.getObject("started_by_user_id", UUID.class))
                 .startedAt(rs.getObject("started_at", OffsetDateTime.class))
                 .finishedAt(rs.getObject("finished_at", OffsetDateTime.class))
+                .result(rs.getString("result"))
                 .createdAt(rs.getObject("created_at", OffsetDateTime.class))
                 .createdBy(rs.getObject("created_by", UUID.class))
                 .updatedAt(rs.getObject("updated_at", OffsetDateTime.class))

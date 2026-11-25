@@ -11,6 +11,7 @@ import com.mysms.timetable.config.TimetableDatabaseConfig;
 import com.mysms.timetable.domain.SessionEntity;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -184,6 +185,30 @@ public class SessionRepository {
                         AND ss.student_id = :timetableStudentId AND ss.deleted_at IS NULL)
             """;
 
+    /** The periods a generation run uses. */
+    private static final String PERIODS = """
+            SELECT p.id, p.institution_id, p.start_time, p.duration_minutes
+              FROM timetable.period p
+             WHERE p.tenant_id = :tenantId
+               AND p.deleted_at IS NULL
+               AND p.id = ANY(:ids)
+            """;
+    /** Locked, so two runs over the same periods write one after the other. */
+    private static final String LOCK_PERIODS = PERIODS + " FOR UPDATE";
+    private static final String LIVE_OVERLAPPING = SELECT_LIVE
+            + " AND r.institution_id = :institutionId AND r.status <> 'cancelled' AND r.start_at < :to"
+            + " AND r.end_at > :from";
+    private static final String LOCK_BY_IDS = SELECT_LIVE + " AND r.id = ANY(:ids) FOR UPDATE";
+    /** timetable.BatchConfirmSessions: the drafts among sessions already locked by this transaction. */
+    private static final String CONFIRM_DRAFTS = """
+            UPDATE timetable.session
+               SET status = 'confirmed',
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = ANY(:ids) AND status = 'draft' AND deleted_at IS NULL
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
             """;
@@ -192,6 +217,41 @@ public class SessionRepository {
 
     public SessionRepository(@Qualifier(TimetableDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** The live periods among the ids. */
+    public List<PeriodRow> periods(List<UUID> ids) {
+        return periods(PERIODS, ids);
+    }
+
+    /** The live periods among the ids, locked until the transaction ends. */
+    public List<PeriodRow> lockPeriods(List<UUID> ids) {
+        return periods(LOCK_PERIODS, ids);
+    }
+
+    private List<PeriodRow> periods(String sql, List<UUID> ids) {
+        return jdbc.sql(sql).param("ids", ids.toArray(UUID[]::new))
+                .query((rs, row) -> new PeriodRow(rs.getObject("id", UUID.class),
+                        rs.getObject("institution_id", UUID.class), rs.getObject("start_time", LocalTime.class),
+                        rs.getBigDecimal("duration_minutes")))
+                .list();
+    }
+
+    /** The live sessions of an institution, not cancelled, that overlap {@code from..to}. */
+    public List<SessionEntity> liveOverlapping(UUID institutionId, OffsetDateTime from, OffsetDateTime to) {
+        return jdbc.sql(LIVE_OVERLAPPING).param("institutionId", institutionId).param("from", from).param("to", to)
+                .query(SessionRepository::map).list();
+    }
+
+    /** The live sessions among the ids, locked until the transaction ends. */
+    public List<SessionEntity> lockByIds(List<UUID> ids) {
+        return jdbc.sql(LOCK_BY_IDS).param("ids", ids.toArray(UUID[]::new)).query(SessionRepository::map).list();
+    }
+
+    /** Confirms the drafts among the ids; answers how many were confirmed. */
+    public int confirmDrafts(List<UUID> ids, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(CONFIRM_DRAFTS).param("ids", ids.toArray(UUID[]::new)).param("now", now)
+                .param("actor", actor).update();
     }
 
     public Optional<SessionEntity> findById(UUID id) {

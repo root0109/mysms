@@ -251,7 +251,8 @@ describe('PermissionGate and i18n', () => {
     expect(runtime.locale()).toBe('en');
     await act(() => signIn(runtime));
     expect(result.current.locale).toBe('hi');
-    expect(result.current.t('acc.signIn.title')).toBe('साइन इन करें');
+    // the Hindi catalogue loads on first use, and the strings follow when it arrives
+    await waitFor(() => expect(result.current.t('acc.signIn.title')).toBe('साइन इन करें'));
     expect(result.current.format.money(10, 'INR')).toBe('₹10.00');
     expect(result.current.formatLocale).toBe('hi-IN');
     render(

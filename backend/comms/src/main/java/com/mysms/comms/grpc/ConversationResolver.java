@@ -42,7 +42,6 @@ import com.mysms.comms.v1.UpdateConversationParticipantRequest;
 import com.mysms.comms.v1.UpdateConversationParticipantResponse;
 import com.mysms.comms.v1.UpdateConversationRequest;
 import com.mysms.comms.v1.UpdateConversationResponse;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import io.grpc.stub.StreamObserver;
@@ -200,15 +199,15 @@ public class ConversationResolver extends ConversationServiceGrpc.ConversationSe
         ProtoBridge.send(out, DeleteConversationMessageResponse.getDefaultInstance());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void markConversationRead(MarkConversationReadRequest request, StreamObserver<MarkConversationReadResponse> out) {
-        throw new NotImplementedException();
+        service.markConversationRead(bridge.id(request.getConversationId(), "conversationId"));
+        ProtoBridge.send(out, MarkConversationReadResponse.getDefaultInstance());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void hideMessageForMe(HideMessageForMeRequest request, StreamObserver<HideMessageForMeResponse> out) {
-        throw new NotImplementedException();
+        service.hideMessageForMe(bridge.id(request.getMessageId(), "messageId"));
+        ProtoBridge.send(out, HideMessageForMeResponse.getDefaultInstance());
     }
 }

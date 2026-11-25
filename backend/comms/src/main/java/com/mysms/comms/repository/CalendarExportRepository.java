@@ -100,10 +100,42 @@ public class CalendarExportRepository {
                                   NULL)))
             """;
 
+    /** Records one exported item: a new row, or the live row of the same item refreshed. */
+    private static final String EXPORTED = """
+            INSERT INTO comms.calendar_export AS r
+            (id, tenant_id, user_id, provider, cohort_id, entity_type, entity_id, property_name, property_value,
+             is_deleted, last_exported_at, created_at, created_by, updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :userId, :provider, :cohortId, :entityType, :entityId, :propertyName,
+                    :propertyValue, false, :now, :now, :actor, :now, :actor, 1)
+            ON CONFLICT (user_id, provider, entity_type, entity_id, property_name) WHERE deleted_at IS NULL
+            DO UPDATE SET property_value = EXCLUDED.property_value,
+                          is_deleted = false,
+                          last_exported_at = EXCLUDED.last_exported_at,
+                          updated_at = EXCLUDED.updated_at,
+                          updated_by = EXCLUDED.updated_by,
+                          row_version = r.row_version + 1
+                    WHERE r.tenant_id = :tenantId
+            RETURNING r.id
+            """;
+
     private final JdbcClient jdbc;
 
     public CalendarExportRepository(@Qualifier(CommsDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** Records that the item was exported to the user's calendar now; answers the row's id. */
+    public UUID exported(UUID id, UUID userId, String provider, UUID cohortId, String entityType, UUID entityId,
+            String propertyName, String propertyValue, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(EXPORTED).param("id", id).param("userId", userId).param("provider", provider)
+                .param("cohortId", cohortId).param("entityType", entityType).param("entityId", entityId)
+                .param("propertyName", propertyName).param("propertyValue", propertyValue).param("now", now)
+                .param("actor", actor).query(UUID.class).single();
+    }
+
+    /** The owner's own exports only. */
+    public static SqlFragment ownedBy(UUID owner) {
+        return new SqlFragment("r.user_id = :owner", Map.of("owner", owner));
     }
 
     public Optional<CalendarExportEntity> findById(UUID id) {

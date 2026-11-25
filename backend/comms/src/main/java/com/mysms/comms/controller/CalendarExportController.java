@@ -8,7 +8,6 @@ import com.mysms.comms.api.CalendarExportApi;
 import com.mysms.comms.api.model.CalendarExport;
 import com.mysms.comms.api.model.ExportCalendarRequest;
 import com.mysms.comms.api.model.Operation;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the CalendarExport operations; authentication and the permission check already ran in the auth-client
- * filter. Operations not served yet answer 501.
+ * filter.
  */
 @RestController
 public class CalendarExportController implements CalendarExportApi {
@@ -36,7 +35,7 @@ public class CalendarExportController implements CalendarExportApi {
     @Override
     public ResponseEntity<Operation> exportCalendar(ExportCalendarRequest exportCalendarRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.accepted().body(calendarExportService.exportCalendar(exportCalendarRequest));
     }
 
     @Override

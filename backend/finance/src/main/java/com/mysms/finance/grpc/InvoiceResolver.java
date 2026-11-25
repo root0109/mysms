@@ -26,6 +26,8 @@ import com.mysms.finance.v1.ListInvoiceLinesResponse;
 import com.mysms.finance.v1.ListInvoicesRequest;
 import com.mysms.finance.v1.ListInvoicesResponse;
 import com.mysms.finance.v1.PostInvoiceRequest;
+import com.mysms.finance.v1.RaiseChargeInvoiceRequest;
+import com.mysms.finance.v1.RaiseChargeInvoiceResponse;
 import com.mysms.finance.v1.PostInvoiceResponse;
 import com.mysms.finance.v1.SendFeeRemindersRequest;
 import com.mysms.finance.v1.SendFeeRemindersResponse;
@@ -95,6 +97,13 @@ public class InvoiceResolver extends InvoiceServiceGrpc.InvoiceServiceImplBase {
         InvoiceLine found = service.getInvoiceLine(bridge.id(request.getInvoiceId(), "invoiceId"),
                 bridge.id(request.getId(), "id"));
         ProtoBridge.send(out, bridge.reply(GetInvoiceLineResponse.newBuilder(), "invoice_line", found).build());
+    }
+
+    @Override
+    public void raiseChargeInvoice(RaiseChargeInvoiceRequest request, StreamObserver<RaiseChargeInvoiceResponse> out) {
+        Invoice raised = service.raiseChargeInvoice(
+                bridge.body(request, com.mysms.finance.api.model.RaiseChargeInvoiceRequest.class, "request_id"));
+        ProtoBridge.send(out, bridge.reply(RaiseChargeInvoiceResponse.newBuilder(), "invoice", raised).build());
     }
 
     @Override

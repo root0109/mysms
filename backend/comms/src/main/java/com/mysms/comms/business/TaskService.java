@@ -1,5 +1,7 @@
 package com.mysms.comms.business;
 
+import com.mysms.core.error.PermissionDeniedException;
+import com.mysms.comms.api.model.TaskAssigneeList;
 import com.mysms.authclient.DataScope;
 import com.mysms.comms.api.model.CompleteTaskRequest;
 import com.mysms.comms.api.model.ReopenTaskRequest;
@@ -66,6 +68,7 @@ public class TaskService extends AppTransactionManager {
     static final String PERMISSION_COMPLETE_TASK = "comms.task.complete_task";
     static final String PERMISSION_REOPEN_TASK = "comms.task.reopen_task";
     static final String PERMISSION_SNOOZE_TASK = "comms.task.snooze_task";
+    static final String PERMISSION_CLAIM_TASK = "comms.task.claim_task";
     /** The contract's TaskUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("institutionId", "academicYearId", "ownerUserId", "title", "taskCategory", "dueAt",
@@ -300,6 +303,45 @@ public class TaskService extends AppTransactionManager {
             outbox.publish(AGGREGATE + ".snooze", AGGREGATE, id, CommsEvents.payload(id));
             return mapper.toDto(repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    /**
+     * comms.ClaimTask: the caller takes an open task (assignment mode open, not completed) that is assigned to them,
+     * directly or through one of their groups. Their pending, unclaimed assignments of the task become claimed by
+     * them; answers those assignments. A task not assigned to the caller is 403; one already claimed by someone else
+     * is 409. Assignments to a class are not claimable until comms knows who is in which class.
+     */
+    public TaskAssigneeList claimTask(UUID id) {
+        DataScope scope = DataScope.current(PERMISSION_CLAIM_TASK);
+        UUID caller = OwnRows.caller();
+        return doInWriteTransaction(() -> {
+            TaskEntity task = loadVisible(scope, id);
+            if (Boolean.TRUE.equals(task.getIsCompleted()) || !"open".equals(task.getAssignmentMode())) {
+                throw new InvalidStateException("Only an open task that is not completed can be claimed.");
+            }
+            List<TaskAssigneeEntity> covering = taskAssigneeRepository.covering(id, caller);
+            if (covering.isEmpty()) {
+                throw new PermissionDeniedException("The task is not assigned to the caller.");
+            }
+            List<TaskAssigneeEntity> open = covering.stream()
+                    .filter(row -> row.getClaimedByUserId() == null && "pending".equals(row.getStatus())).toList();
+            if (open.isEmpty() && covering.stream().noneMatch(row -> caller.equals(row.getClaimedByUserId()))) {
+                throw new InvalidStateException("The task has been claimed already.");
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            for (TaskAssigneeEntity row : open) {
+                if (taskAssigneeRepository.claim(row.getId(), row.getRowVersion(), caller, now,
+                        Actor.current().orElse(null)) == 0) {
+                    throw new PreconditionFailedException("The assignment changed since it was read.");
+                }
+                audit.recordTransition(TASK_ASSIGNEE_AGGREGATE, row.getId(), "claim", List.of("claimedByUserId"), null);
+                outbox.publish(TASK_ASSIGNEE_AGGREGATE + ".claim", TASK_ASSIGNEE_AGGREGATE, row.getId(),
+                        CommsEvents.payload(row.getId()));
+            }
+            return new TaskAssigneeList(taskAssigneeRepository.covering(id, caller).stream()
+                    .filter(row -> caller.equals(row.getClaimedByUserId())).map(taskAssigneeMapper::toDto).toList());
         });
     }
 

@@ -398,6 +398,24 @@ with an e-mail address (422 `NO_EMAIL` without one, 409 when not active), signs 
 |---|---|---|---|
 | `library.AcceptReservation` | `status` ∈ {"requested"} | `status` = "accepted" | no |
 | `library.RejectReservation` | `status` ∈ {"requested"} | `status` = "rejected" | yes |
+| `library.RequestReservationAgain` | `status` ∈ {"rejected", "cancelled"} | `status` = "requested" | no |
+
+`RequestReservationAgain` is hand-written: the requester (their account or person) or a librarian in reach may ask
+again; the wanted dates must not have passed (422), and another open request of the requester for the title is 409.
+
+## library.Loan (`library.loan`)
+
+| Operation | Allowed from | Sets | Reason kept |
+|---|---|---|---|
+| `library.RequestLoanReturn` | `status` ∈ {"issued"} | `status` = "return_pending" | no |
+| `library.ReturnLoan` | `status` ∈ {"issued", "return_pending"} | `status` = "returned", `returned_on` = `$param:returnedOn`, `fine_amount` = the card type's `fine_per_day` × days past `due_on`; the copy's `status` = "available" | no |
+| `library.MarkLoanLost` | `status` ∈ {"issued", "return_pending"} | `status` = "lost", `fine_amount` = the overdue fine up to `$today`; the copy's `status` = "lost" | yes |
+| `library.InvoiceLoanFine` | `status` ∈ {"returned", "lost"}; `fine_amount` > 0 | `invoice_id` = the draft invoice finance raises for the fine (`finance.RaiseChargeInvoice`, one per loan) | no |
+
+All four are hand-written. The borrower may drop their own copy for return; the other steps are a librarian's, in
+reach. A return on the day it was already returned answers the loan as it is (idempotent); on another day it is 409.
+The fine's invoice is raised through finance's gRPC with the caller's token (the holder's name from people), outside
+the loan's transaction; the loan is read again before the invoice is recorded on it.
 
 ## lms.AssignmentGroupMember (`lms.assignment_group_member`)
 
@@ -535,7 +553,13 @@ whose listing is published too.
 
 | Operation | Allowed from | Sets | Reason kept |
 |---|---|---|---|
+| `org.ActivateAcademicYear` | `status` ∈ {"planned"}; no other year of the institution "active" | `status` = "active", `is_current` = true; any other year of the institution `is_current` = false | no |
 | `org.CloseAcademicYear` | `status` ∈ {"active"} | `status` = "closed", `is_current` = false | no |
+
+`ActivateAcademicYear` is hand-written: one active year per institution (409 while another is active; the unique index
+`uq_academic_year_active` backs it), and its `org.academic_year.activate` event names the institution.
+`GenerateTerms` creates the terms of the year's `term_structure` (quarters inside semesters), keeps those already
+there and refuses overlapping ones (409) and closed years.
 
 ## payroll.Payslip (`payroll.payslip`)
 
@@ -789,3 +813,12 @@ platform file store is not served).
 | `timetable.CompleteSession` | `status` ∈ {"confirmed"} | `status` = "done" | no |
 | `timetable.CancelSession` | `status` ∈ {"draft", "confirmed"} | `status` = "cancelled" | yes |
 | `timetable.ResetSession` | `status` ∈ {"cancelled"} | `status` = "draft" | no |
+| `timetable.BatchConfirmSessions` | each `status` ∈ {"draft", "confirmed"} | `status` = "confirmed" (a confirmed one is kept) | no |
+
+`BatchConfirmSessions` is hand-written: up to 500 sessions, all or nothing (409 when one is done or cancelled).
+
+## frontoffice.VisitorLog (`frontoffice.visitor_log`)
+
+| Operation | Allowed from | Sets | Reason kept |
+|---|---|---|---|
+| `frontoffice.CheckOutVisitor` | `exit_time` empty | `exit_time` = `$param:exitTime` (not before `entry_time`: 422) | no |

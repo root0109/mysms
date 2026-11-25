@@ -1157,15 +1157,19 @@ CREATE TABLE finance.student_record (
     tenant_id uuid NOT NULL,
     student_id uuid NOT NULL,
     person_id uuid NOT NULL,
+    user_id uuid,
+    institution_id uuid,
     source_version integer NOT NULL,
     synced_at timestamptz NOT NULL,
     CONSTRAINT pk_finance_student_record PRIMARY KEY (tenant_id, student_id),
     CONSTRAINT ck_student_record_source_version CHECK (source_version >= 1)
 );
-COMMENT ON TABLE finance.student_record IS 'The person of each student record, kept from sis.student created/updated events (finance never reads sis''s schema), so privacy''s tasks find a data principal''s fee dues, concessions, invoices and payments (FinancePrivacyTaskHandler).';
+COMMENT ON TABLE finance.student_record IS 'The person, login account and institution of each student record, kept from sis.student created/updated events (finance never reads sis''s schema), so privacy''s tasks find a data principal''s fee dues, concessions, invoices and payments (FinancePrivacyTaskHandler) and RaiseChargeInvoice bills only a student of the invoice''s institution.';
 COMMENT ON COLUMN finance.student_record.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
 COMMENT ON COLUMN finance.student_record.student_id IS 'sis.student.id (logical, maintained from its events), as the fee dues, concessions and invoices name it.';
 COMMENT ON COLUMN finance.student_record.person_id IS 'Person of the student record (people.person.id), the data principal privacy''s tasks name.';
+COMMENT ON COLUMN finance.student_record.user_id IS 'Login account of the student record (iam.user_account.id); NULL while it has none.';
+COMMENT ON COLUMN finance.student_record.institution_id IS 'Institution of the student record (org.institution.id).';
 COMMENT ON COLUMN finance.student_record.source_version IS 'Row version of the sis.student row this entry reflects; an event with an older or equal version is ignored.';
 COMMENT ON COLUMN finance.student_record.synced_at IS 'When the row was last changed by an event.';
 CREATE INDEX ix_finance_student_record_person ON finance.student_record (tenant_id, person_id);
@@ -1173,6 +1177,30 @@ COMMENT ON INDEX finance.ix_finance_student_record_person IS 'Privacy tasks: the
 ALTER TABLE finance.student_record ENABLE ROW LEVEL SECURITY;
 ALTER TABLE finance.student_record FORCE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation ON finance.student_record USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+CREATE TABLE finance.staff_record (
+    tenant_id uuid NOT NULL,
+    staff_id uuid NOT NULL,
+    user_id uuid,
+    institution_id uuid,
+    is_deleted boolean NOT NULL DEFAULT false,
+    source_version integer NOT NULL,
+    synced_at timestamptz NOT NULL,
+    CONSTRAINT pk_finance_staff_record PRIMARY KEY (tenant_id, staff_id),
+    CONSTRAINT ck_staff_record_source_version CHECK (source_version >= 1)
+);
+COMMENT ON TABLE finance.staff_record IS 'The login account and institution of each staff record, kept from hr.staff created/updated/deleted events (finance never reads hr''s schema), so RaiseChargeInvoice bills an account only when it is staff of the invoice''s institution.';
+COMMENT ON COLUMN finance.staff_record.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
+COMMENT ON COLUMN finance.staff_record.staff_id IS 'hr.staff.id (logical, maintained from its events).';
+COMMENT ON COLUMN finance.staff_record.user_id IS 'Login account of the staff record (iam.user_account.id); NULL while it has none.';
+COMMENT ON COLUMN finance.staff_record.institution_id IS 'Institution of the staff record (org.institution.id).';
+COMMENT ON COLUMN finance.staff_record.is_deleted IS 'The staff record was deleted in hr; kept so a late event cannot restore it.';
+COMMENT ON COLUMN finance.staff_record.source_version IS 'Row version of the hr.staff row this entry reflects; an event with an older or equal version is ignored.';
+COMMENT ON COLUMN finance.staff_record.synced_at IS 'When the row was last changed by an event.';
+CREATE INDEX ix_finance_staff_record_user ON finance.staff_record (tenant_id, user_id) WHERE NOT is_deleted AND user_id IS NOT NULL;
+COMMENT ON INDEX finance.ix_finance_staff_record_user IS 'RaiseChargeInvoice: the staff records of the billed account.';
+ALTER TABLE finance.staff_record ENABLE ROW LEVEL SECURITY;
+ALTER TABLE finance.staff_record FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON finance.staff_record USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
 
 -- === Privacy tasks (design PRIVACY-AND-CONSENT-CENTRE §9.1, §10) and the module's scheduled jobs (core JobSchedule) ===
 CREATE TABLE finance.privacy_task_receipt (

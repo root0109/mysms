@@ -1,5 +1,6 @@
 package com.mysms.hr.events;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -22,15 +23,18 @@ public final class HrEvents {
     }
 
     /**
-     * The payload of an hr.staff event: the record's login account (may be absent), person, institution and row
-     * version. iam keeps its member records from these for iam.GetMe; the version lets it ignore a late event.
+     * The payload of an hr.staff event: the record's login account (may be absent), person, institution, joining date
+     * and row version. iam keeps its member records from these for iam.GetMe, people its member links for birthdays
+     * and work anniversaries; the version lets them ignore a late event.
      */
-    public static Map<String, Object> member(UUID id, UUID userId, UUID personId, UUID institutionId, int rowVersion) {
+    public static Map<String, Object> member(UUID id, UUID userId, UUID personId, UUID institutionId,
+            LocalDate joiningDate, int rowVersion) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("id", id.toString());
         payload.put("userId", userId == null ? null : userId.toString());
         payload.put("personId", personId == null ? null : personId.toString());
         payload.put("institutionId", institutionId == null ? null : institutionId.toString());
+        payload.put("joiningDate", joiningDate == null ? null : joiningDate.toString());
         payload.put("rowVersion", rowVersion);
         return payload;
     }

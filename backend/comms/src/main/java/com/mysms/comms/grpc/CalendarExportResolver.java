@@ -1,5 +1,6 @@
 package com.mysms.comms.grpc;
 
+import com.mysms.comms.api.model.Operation;
 import com.mysms.comms.api.model.CalendarExport;
 import com.mysms.comms.business.CalendarExportService;
 import com.mysms.comms.v1.CalendarExportServiceGrpc;
@@ -11,7 +12,6 @@ import com.mysms.comms.v1.GetCalendarExportRequest;
 import com.mysms.comms.v1.GetCalendarExportResponse;
 import com.mysms.comms.v1.ListCalendarExportsRequest;
 import com.mysms.comms.v1.ListCalendarExportsResponse;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import io.grpc.stub.StreamObserver;
@@ -52,9 +52,10 @@ public class CalendarExportResolver extends CalendarExportServiceGrpc.CalendarEx
         ProtoBridge.send(out, DeleteCalendarExportResponse.getDefaultInstance());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void exportCalendar(ExportCalendarRequest request, StreamObserver<ExportCalendarResponse> out) {
-        throw new NotImplementedException();
+        Operation accepted = service.exportCalendar(bridge.body(request,
+                com.mysms.comms.api.model.ExportCalendarRequest.class, "request_id"));
+        ProtoBridge.send(out, bridge.reply(ExportCalendarResponse.newBuilder(), "result", accepted).build());
     }
 }

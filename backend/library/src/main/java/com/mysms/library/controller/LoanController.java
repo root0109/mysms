@@ -10,7 +10,6 @@ import com.mysms.library.api.model.LoanUpdate;
 import com.mysms.library.api.model.MarkLoanLostRequest;
 import com.mysms.library.api.model.RequestLoanReturnRequest;
 import com.mysms.library.api.model.ReturnLoanRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.library.business.LoanService;
 import java.net.URI;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the Loan operations; authentication and the permission check already ran in the auth-client filter.
- * Operations not served yet answer 501.
  */
 @RestController
 public class LoanController implements LoanApi {
@@ -56,7 +54,8 @@ public class LoanController implements LoanApi {
 
     @Override
     public ResponseEntity<Invoice> invoiceLoanFine(UUID loanId, Object body, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Invoice invoice = loanService.invoiceLoanFine(loanId);
+        return ResponseEntity.ok().eTag(invoice.getEtag()).body(invoice);
     }
 
     @Override
@@ -70,19 +69,22 @@ public class LoanController implements LoanApi {
     @Override
     public ResponseEntity<Loan> markLoanLost(UUID loanId, MarkLoanLostRequest markLoanLostRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Loan changed = loanService.markLoanLost(loanId, markLoanLostRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<Loan> requestLoanReturn(UUID loanId,
             RequestLoanReturnRequest requestLoanReturnRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Loan changed = loanService.requestLoanReturn(loanId, requestLoanReturnRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<Loan> returnLoan(UUID loanId, ReturnLoanRequest returnLoanRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Loan changed = loanService.returnLoan(loanId, returnLoanRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

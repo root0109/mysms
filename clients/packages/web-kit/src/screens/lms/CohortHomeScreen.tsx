@@ -127,6 +127,7 @@ export function CohortHomeScreen() {
         <Link to={`/app/lms/cohorts/${cohortId}/outline`}>{t('screen.LMS22.title')}</Link>
         <Link to={`/app/lms/cohorts/${cohortId}/release-rules`}>{t('screen.LMS29.title')}</Link>
         <Link to={`/app/lms/cohorts/${cohortId}/analytics`}>{t('screen.LMS30.title')}</Link>
+        <Link to={`/app/comms/notices?cohort=${cohortId}`}>{t('screen.LMS28.title')}</Link>
       </nav>
       <div className="page__grid">
         <Card

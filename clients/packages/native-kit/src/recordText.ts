@@ -17,6 +17,13 @@ const ACTION_LABELS: readonly [RegExp, MessageKey][] = [
   [/^Submit/, 'asm.native.submit'],
   [/^Cancel/, 'common.action.cancel'],
   [/^Reset/, 'asm.native.reset'],
+  [/^Unpublish/, 'native.action.unpublish'],
+  [/^Deactivate/, 'native.action.deactivate'],
+  [/^Reactivate/, 'native.action.reactivate'],
+  [/^Activate/, 'native.action.activate'],
+  [/^Close/, 'native.action.close'],
+  [/^Reopen/, 'native.action.reopen'],
+  [/^Snooze/, 'native.action.snooze'],
 ];
 
 /** The label key of an action; none for a transition the assessment screens do not offer through this list. */

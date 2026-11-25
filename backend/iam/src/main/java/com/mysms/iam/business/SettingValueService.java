@@ -33,6 +33,7 @@ import com.mysms.iam.repository.SettingValueRepository;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -121,7 +122,7 @@ public class SettingValueService extends AppTransactionManager {
             if (!validateOnly) {
                 repository.insert(entity);
                 audit.recordCreate(AGGREGATE, entity.getId());
-                outbox.publish(AGGREGATE + IamEvents.CREATED, AGGREGATE, entity.getId(), IamEvents.payload(entity.getId()));
+                outbox.publish(AGGREGATE + IamEvents.CREATED, AGGREGATE, entity.getId(), eventPayload(entity));
             }
             return mapper.toDto(entity);
         });
@@ -156,7 +157,7 @@ public class SettingValueService extends AppTransactionManager {
                 }
                 entity.setRowVersion(expected + 1);
                 audit.recordUpdate(AGGREGATE, id, fields);
-                outbox.publish(AGGREGATE + IamEvents.UPDATED, AGGREGATE, id, IamEvents.payload(id));
+                outbox.publish(AGGREGATE + IamEvents.UPDATED, AGGREGATE, id, eventPayload(entity));
             }
             return mapper.toDto(entity);
         });
@@ -177,9 +178,15 @@ public class SettingValueService extends AppTransactionManager {
             if (repository.softDelete(entity, expected) == 0) {
                 throw new PreconditionFailedException(STALE);
             }
+            entity.setRowVersion(expected + 1);
             audit.recordDelete(AGGREGATE, id);
-            outbox.publish(AGGREGATE + IamEvents.DELETED, AGGREGATE, id, IamEvents.payload(id));
+            outbox.publish(AGGREGATE + IamEvents.DELETED, AGGREGATE, id, eventPayload(entity));
         });
+    }
+
+    private static Map<String, Object> eventPayload(SettingValueEntity entity) {
+        return IamEvents.settingValue(entity.getId(), entity.getSettingKey(), entity.getScopeType(),
+                entity.getScopeId(), entity.getValue(), entity.getRowVersion());
     }
 
     /** The row, or 404 when it does not exist or lies outside the caller's readable scopes. */

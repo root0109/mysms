@@ -1,5 +1,6 @@
 package com.mysms.comms.business;
 
+import com.mysms.authclient.AuthContext;
 import com.mysms.authclient.DataScope;
 import com.mysms.comms.api.model.ApprovePostRequest;
 import com.mysms.comms.api.model.CancelPostRequest;
@@ -9,6 +10,7 @@ import com.mysms.comms.api.model.PostAudienceClassUpdate;
 import com.mysms.comms.api.model.PostComment;
 import com.mysms.comms.api.model.PostCommentUpdate;
 import com.mysms.comms.api.model.PostUpdate;
+import com.mysms.comms.api.model.SubmitPostRequest;
 import com.mysms.comms.config.CommsDatabaseConfig;
 import com.mysms.comms.config.CommsEventsConfig;
 import com.mysms.comms.domain.PostAudienceClassEntity;
@@ -28,6 +30,7 @@ import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.DuplicateResourceException;
 import com.mysms.core.error.FieldError;
 import com.mysms.core.error.InvalidStateException;
+import com.mysms.core.error.PermissionDeniedException;
 import com.mysms.core.error.PreconditionFailedException;
 import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.error.ValidationFailedException;
@@ -47,6 +50,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -58,7 +62,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 /**
  * Business service of comms.post and of the records that exist only as part of a Post (PostAudienceClass, PostComment):
  * audit and domain event commit in the same transaction as every change. Rows outside the caller's institutions are
- * invisible; tenant-level rows change only through a tenant-wide grant.
+ * invisible; tenant-level rows change only through a tenant-wide grant. A post or comment is always the caller's own:
+ * the author comes from the token, only the author edits it (anyone else gets 404), and a class page's members-only
+ * rule holds for writes as for reads.
  */
 @Service
 public class PostService extends AppTransactionManager {
@@ -71,10 +77,11 @@ public class PostService extends AppTransactionManager {
     static final String PERMISSION_DELETE = "comms.post.delete";
     static final String PERMISSION_APPROVE_POST = "comms.post.approve_post";
     static final String PERMISSION_CANCEL_POST = "comms.post.cancel_post";
-    /** The contract's PostUpdate fields, in apply order. */
+    static final String PERMISSION_SUBMIT_POST = "comms.post.submit_post";
+    static final String PERMISSION_GET_FEED = "comms.post.get_feed";
+    /** The contract's PostUpdate fields, in apply order; the author is the caller, from the token. */
     static final List<String> WRITABLE =
-            List.of("institutionId", "academicYearId", "classPageId", "authorUserId", "body", "visibility",
-                    "scheduledFor");
+            List.of("institutionId", "academicYearId", "classPageId", "body", "visibility", "scheduledFor");
 
     public static final String POST_AUDIENCE_CLASS_AGGREGATE = PostAudienceClassEntity.TABLE;
     static final String POST_AUDIENCE_CLASS_PERMISSION_LIST = "comms.post_audience_class.read";
@@ -91,9 +98,8 @@ public class PostService extends AppTransactionManager {
     static final String POST_COMMENT_PERMISSION_CREATE = "comms.post_comment.create";
     static final String POST_COMMENT_PERMISSION_UPDATE = "comms.post_comment.update";
     static final String POST_COMMENT_PERMISSION_DELETE = "comms.post_comment.delete";
-    /** The contract's PostCommentUpdate fields, in apply order. */
-    static final List<String> POST_COMMENT_WRITABLE =
-            List.of("parentCommentId", "authorUserId", "body", "attachmentFileId", "isActive");
+    /** The contract's PostCommentUpdate fields, in apply order; the author is the caller, from the token. */
+    static final List<String> POST_COMMENT_WRITABLE = List.of("parentCommentId", "body", "attachmentFileId", "isActive");
 
     private final PostRepository repository;
     private final PostMapper mapper;
@@ -131,18 +137,21 @@ public class PostService extends AppTransactionManager {
         this.postCommentMapper = postCommentMapper;
     }
 
+    /** The post, when it is in the caller's scope and, on a class page, the caller is its author or a member. */
     public Post getPost(UUID id) {
-        return doInReadTransaction(() -> {
-            return mapper.toDto(loadVisible(DataScope.current(PERMISSION_GET), id));
-        });
+        DataScope scope = DataScope.current(PERMISSION_GET);
+        UUID caller = OwnRows.caller();
+        return doInReadTransaction(() -> mapper.toDto(loadReadable(scope, id, caller)));
     }
 
+    /** The posts in the caller's scope; a class page's posts only to their author and the page's members. */
     public Page<Post> listPosts(Integer pageNumber, Integer pageSize, String cursor, String filter,
             List<String> sortBy) {
         SortSpec sort = SortSpec.parse(sortBy, PostRepository.SORT_FIELDS, PostRepository.DEFAULT_ORDER,
                 PostRepository.ID_COLUMN);
         SqlFragment where = FilterParser.parse(filter, PostRepository.FILTER_FIELDS)
-                .and(PostRepository.scope(DataScope.current(PERMISSION_LIST)));
+                .and(PostRepository.scope(DataScope.current(PERMISSION_LIST)))
+                .and(PostRepository.pageAccess(OwnRows.caller()));
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
         return doInReadTransaction(() -> {
             Page<PostEntity> rows = repository.list(page, where);
@@ -150,16 +159,22 @@ public class PostService extends AppTransactionManager {
         });
     }
 
-    /** Creates the row; with validateOnly every check runs and nothing is written. */
+    /**
+     * Creates the caller's post (a class page's only while the caller is a member of it, 403 otherwise); with
+     * validateOnly every check runs and nothing is written.
+     */
     public Post createPost(Post request, boolean validateOnly) {
         validator.validate(request);
         PostEntity entity = mapper.toEntity(request);
+        UUID caller = OwnRows.caller();
+        entity.setAuthorUserId(caller);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
         DataScope scope = DataScope.current(PERMISSION_CREATE);
         return doInWriteTransaction(() -> {
             assertValid(entity, true);
             scope.requireWritable(institutionOf(entity));
+            requirePageMember(entity.getClassPageId(), caller);
             assertUnique(entity);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -173,23 +188,30 @@ public class PostService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update of the caller's own post under If-Match (anyone else's is 404): an updateMask sets the listed
+     * fields (clearing absent ones), otherwise the non-null fields apply; the merged row must validate, stay in the
+     * caller's scope, and move only to a class page the caller is a member of.
      */
     public Post updatePost(UUID id, String ifMatch, PostUpdate changes, String updateMask, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
         List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
+        UUID caller = OwnRows.caller();
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             PostEntity entity = loadVisible(scope, id);
+            OwnRows.require(entity.getAuthorUserId(), AGGREGATE, id);
             scope.requireWritable(institutionOf(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
+            UUID page = entity.getClassPageId();
             apply(entity, changes, fields);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
+            if (!Objects.equals(page, entity.getClassPageId())) {
+                requirePageMember(entity.getClassPageId(), caller);
+            }
             assertUnique(entity);
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
@@ -205,12 +227,16 @@ public class PostService extends AppTransactionManager {
         });
     }
 
-    /** Soft delete under If-Match; refused while live rows of this module still reference the row. */
+    /**
+     * Soft delete under If-Match by the author or a moderator of the post's institution (404 to anyone else); refused
+     * while live rows of this module still reference the row.
+     */
     public void deletePost(UUID id, String ifMatch) {
         int expected = Etags.expectedVersion(ifMatch);
         runInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_DELETE);
             PostEntity entity = loadVisible(scope, id);
+            requireAuthorOrModerator(entity, entity.getAuthorUserId(), AGGREGATE, id);
             scope.requireWritable(institutionOf(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -299,6 +325,74 @@ public class PostService extends AppTransactionManager {
         });
     }
 
+    /**
+     * comms.SubmitPost: the author hands a draft in for moderation (draft → pending; ApprovePost publishes it). Only
+     * the author submits, and a post on a class page only while the author is a member of that page.
+     */
+    public Post submitPost(UUID id, SubmitPostRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_SUBMIT_POST);
+        UUID caller = OwnRows.caller();
+        return doInWriteTransaction(() -> {
+            PostEntity entity = loadVisible(scope, id);
+            OwnRows.require(entity.getAuthorUserId(), AGGREGATE, id);
+            scope.requireWritable(institutionOf(entity));
+            OptionalInt expected = Etags.bodyVersion(request == null ? null : request.getEtag());
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!"draft".equals(entity.getStatus())) {
+                throw new InvalidStateException("Only a draft post can be submitted.");
+            }
+            if (entity.getClassPageId() != null && !repository.isPageMember(entity.getClassPageId(), caller)) {
+                throw new PermissionDeniedException("Only members of the class page post to it.");
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            if (repository.submitPost(id, entity.getRowVersion(), now, Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(AGGREGATE, id, "submit", List.of("status"), null);
+            outbox.publish(AGGREGATE + ".submit", AGGREGATE, id, CommsEvents.payload(id));
+            return mapper.toDto(repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+        });
+    }
+
+    /**
+     * comms.GetFeed: the published posts the caller may read, newest first — their own, those of the active class
+     * pages they are a member of, and school-wide posts of their institutions — narrowed to a page, a class or their
+     * bookmarks when asked.
+     */
+    public Page<Post> getFeed(UUID classSectionId, UUID classPageId, Boolean savedOnly, Integer pageNumber,
+            Integer pageSize, String cursor) {
+        UUID caller = OwnRows.caller();
+        SqlFragment where = PostRepository.readableBy(caller, DataScope.current(PERMISSION_GET_FEED));
+        if (classPageId != null) {
+            where = where.and(PostRepository.onClassPage(classPageId));
+        }
+        if (classSectionId != null) {
+            where = where.and(PostRepository.forClassSection(classSectionId));
+        }
+        if (Boolean.TRUE.equals(savedOnly)) {
+            where = where.and(PostRepository.savedBy(caller));
+        }
+        SortSpec sort = SortSpec.parse(null, PostRepository.FEED_SORT_FIELDS, PostRepository.FEED_ORDER,
+                PostRepository.ID_COLUMN);
+        String view = "feed|" + caller + "|" + classPageId + "|" + classSectionId + "|" + Boolean.TRUE.equals(savedOnly);
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, view, clock);
+        SqlFragment admitted = where;
+        return doInReadTransaction(() -> repository.list(page, admitted).map(mapper::toDto));
+    }
+
+    /** {@link #loadVisible}, and on a class page only for its author and the page's active members (404 otherwise). */
+    private PostEntity loadReadable(DataScope scope, UUID id, UUID reader) {
+        PostEntity entity = loadVisible(scope, id);
+        if (!repository.pageAdmits(entity, reader)) {
+            throw new ResourceNotFoundException(AGGREGATE, id);
+        }
+        return entity;
+    }
+
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
     private PostEntity loadVisible(DataScope scope, UUID id) {
         PostEntity entity = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
@@ -308,9 +402,47 @@ public class PostService extends AppTransactionManager {
         return entity;
     }
 
+    /**
+     * A class page's post — with its comments and audience classes — is reached only by its author and the page's
+     * members (404 otherwise).
+     */
+    private void requirePostReadable(UUID postId, UUID reader) {
+        if (repository.findById(postId).filter(post -> !repository.pageAdmits(post, reader)).isPresent()) {
+            throw new ResourceNotFoundException(AGGREGATE, postId);
+        }
+    }
+
+    /** 404 (as {@code aggregate} {@code id}) unless the post exists and the caller wrote it. */
+    private void requirePostAuthor(UUID postId, String aggregate, UUID id) {
+        if (repository.findById(postId).filter(post -> OwnRows.caller().equals(post.getAuthorUserId())).isEmpty()) {
+            throw new ResourceNotFoundException(aggregate, id);
+        }
+    }
+
     /** The institution that owns the row. */
     private Optional<UUID> institutionOf(PostEntity entity) {
         return Optional.ofNullable(entity.getInstitutionId());
+    }
+
+    /** 403 unless the caller is an active member of the class page (none: no page, nothing to check). */
+    private void requirePageMember(UUID classPageId, UUID caller) {
+        if (classPageId != null && !repository.isPageMember(classPageId, caller)) {
+            throw new PermissionDeniedException("Only members of the class page post to it.");
+        }
+    }
+
+    /**
+     * 404 unless the caller wrote the content or moderates the post's institution (holds the post approval there):
+     * moderators remove content, they never edit it.
+     */
+    private void requireAuthorOrModerator(PostEntity post, UUID author, String aggregate, UUID id) {
+        if (OwnRows.caller().equals(author)) {
+            return;
+        }
+        if (!AuthContext.require().hasPermission(PERMISSION_APPROVE_POST)
+                || !DataScope.current(PERMISSION_APPROVE_POST).canRead(institutionOf(post))) {
+            throw new ResourceNotFoundException(aggregate, id);
+        }
     }
 
     /** Applies the selected PostUpdate fields; explicit per field so a mask can clear values. */
@@ -320,7 +452,6 @@ public class PostService extends AppTransactionManager {
                 case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
                 case "academicYearId" -> entity.setAcademicYearId(changes.getAcademicYearId());
                 case "classPageId" -> entity.setClassPageId(changes.getClassPageId());
-                case "authorUserId" -> entity.setAuthorUserId(changes.getAuthorUserId());
                 case "body" -> entity.setBody(changes.getBody());
                 case "visibility" -> entity.setVisibility(Optional.ofNullable(changes.getVisibility())
                         .map(v -> v.getValue()).orElse(null));
@@ -338,9 +469,6 @@ public class PostService extends AppTransactionManager {
         }
         if (entity.getAcademicYearId() == null) {
             errors.add(new FieldError("academicYearId", "must not be null", "NotNull"));
-        }
-        if (entity.getAuthorUserId() == null) {
-            errors.add(new FieldError("authorUserId", "must not be null", "NotNull"));
         }
         if (entity.getBody() == null) {
             errors.add(new FieldError("body", "must not be null", "NotNull"));
@@ -362,13 +490,17 @@ public class PostService extends AppTransactionManager {
 
     // ---- PostAudienceClass ----
 
+    /** The audience class, when its post is readable to the caller ({@link #getPost}'s class-page rule). */
     public PostAudienceClass getPostAudienceClass(UUID postId, UUID id) {
+        DataScope scope = DataScope.current(POST_AUDIENCE_CLASS_PERMISSION_GET);
+        UUID caller = OwnRows.caller();
         return doInReadTransaction(() -> {
-            return postAudienceClassMapper.toDto(loadVisiblePostAudienceClass(DataScope.current(
-                    POST_AUDIENCE_CLASS_PERMISSION_GET), postId, id));
+            requirePostReadable(postId, caller);
+            return postAudienceClassMapper.toDto(loadVisiblePostAudienceClass(scope, postId, id));
         });
     }
 
+    /** The audience classes of a post readable to the caller ({@link #getPost}'s class-page rule; 404 otherwise). */
     public Page<PostAudienceClass> listPostAudienceClasss(UUID postId, Integer pageNumber, Integer pageSize,
             String cursor, String filter, List<String> sortBy) {
         SortSpec sort =
@@ -379,13 +511,18 @@ public class PostService extends AppTransactionManager {
                 .and(PostAudienceClassRepository.ofParent(postId))
                         .and(PostAudienceClassRepository.scope(DataScope.current(POST_AUDIENCE_CLASS_PERMISSION_LIST)));
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + postId, clock);
+        UUID caller = OwnRows.caller();
         return doInReadTransaction(() -> {
+            requirePostReadable(postId, caller);
             Page<PostAudienceClassEntity> rows = postAudienceClassRepository.list(page, where);
             return rows.map(postAudienceClassMapper::toDto);
         });
     }
 
-    /** Creates the row; with validateOnly every check runs and nothing is written. */
+    /**
+     * Addresses the caller's own post to one more class (another author's post is 404); with validateOnly every check
+     * runs and nothing is written.
+     */
     public PostAudienceClass createPostAudienceClass(UUID postId, PostAudienceClass request, boolean validateOnly) {
         validator.validate(request);
         PostAudienceClassEntity entity = postAudienceClassMapper.toEntity(request);
@@ -400,6 +537,7 @@ public class PostService extends AppTransactionManager {
             if (!scope.canRead(institutionOfPostAudienceClass(entity))) {
                 throw new ResourceNotFoundException("comms.post", entity.getPostId());
             }
+            requirePostAuthor(postId, AGGREGATE, postId);
             assertValidPostAudienceClass(entity, true);
             scope.requireWritable(institutionOfPostAudienceClass(entity));
             assertUniquePostAudienceClass(entity);
@@ -415,8 +553,9 @@ public class PostService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update of an audience class of the caller's own post under If-Match (404 on another author's post): an
+     * updateMask sets the listed fields (clearing absent ones), otherwise the non-null fields apply; the merged row
+     * must validate and stay in the caller's scope.
      */
     public PostAudienceClass updatePostAudienceClass(UUID postId, UUID id, String ifMatch,
             PostAudienceClassUpdate changes, String updateMask, boolean validateOnly) {
@@ -425,6 +564,7 @@ public class PostService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(POST_AUDIENCE_CLASS_PERMISSION_UPDATE);
             PostAudienceClassEntity entity = loadVisiblePostAudienceClass(scope, postId, id);
+            requirePostAuthor(postId, POST_AUDIENCE_CLASS_AGGREGATE, id);
             scope.requireWritable(institutionOfPostAudienceClass(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -449,12 +589,13 @@ public class PostService extends AppTransactionManager {
         });
     }
 
-    /** Soft delete under If-Match; refused while live rows of this module still reference the row. */
+    /** Soft delete under If-Match of an audience class of the caller's own post (404 on another author's post). */
     public void deletePostAudienceClass(UUID postId, UUID id, String ifMatch) {
         int expected = Etags.expectedVersion(ifMatch);
         runInWriteTransaction(() -> {
             DataScope scope = DataScope.current(POST_AUDIENCE_CLASS_PERMISSION_DELETE);
             PostAudienceClassEntity entity = loadVisiblePostAudienceClass(scope, postId, id);
+            requirePostAuthor(postId, POST_AUDIENCE_CLASS_AGGREGATE, id);
             scope.requireWritable(institutionOfPostAudienceClass(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -521,12 +662,17 @@ public class PostService extends AppTransactionManager {
 
     // ---- PostComment ----
 
+    /** The comment, when its post is readable to the caller ({@link #getPost}'s class-page rule). */
     public PostComment getPostComment(UUID postId, UUID id) {
+        DataScope scope = DataScope.current(POST_COMMENT_PERMISSION_GET);
+        UUID caller = OwnRows.caller();
         return doInReadTransaction(() -> {
-            return postCommentMapper.toDto(loadVisiblePostComment(DataScope.current(POST_COMMENT_PERMISSION_GET), postId, id));
+            requirePostReadable(postId, caller);
+            return postCommentMapper.toDto(loadVisiblePostComment(scope, postId, id));
         });
     }
 
+    /** The comments of a post readable to the caller ({@link #getPost}'s class-page rule; 404 otherwise). */
     public Page<PostComment> listPostComments(UUID postId, Integer pageNumber, Integer pageSize, String cursor,
             String filter, List<String> sortBy) {
         SortSpec sort = SortSpec.parse(sortBy, PostCommentRepository.SORT_FIELDS, PostCommentRepository.DEFAULT_ORDER,
@@ -535,17 +681,24 @@ public class PostService extends AppTransactionManager {
                 .and(PostCommentRepository.ofParent(postId))
                         .and(PostCommentRepository.scope(DataScope.current(POST_COMMENT_PERMISSION_LIST)));
         PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + postId, clock);
+        UUID caller = OwnRows.caller();
         return doInReadTransaction(() -> {
+            requirePostReadable(postId, caller);
             Page<PostCommentEntity> rows = postCommentRepository.list(page, where);
             return rows.map(postCommentMapper::toDto);
         });
     }
 
-    /** Creates the row; with validateOnly every check runs and nothing is written. */
+    /**
+     * Creates the caller's comment on a post readable to them ({@link #getPost}'s class-page rule; 404 otherwise); with
+     * validateOnly every check runs and nothing is written.
+     */
     public PostComment createPostComment(UUID postId, PostComment request, boolean validateOnly) {
         validator.validate(request);
         PostCommentEntity entity = postCommentMapper.toEntity(request);
         entity.setPostId(postId);
+        UUID caller = OwnRows.caller();
+        entity.setAuthorUserId(caller);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
         DataScope scope = DataScope.current(POST_COMMENT_PERMISSION_CREATE);
@@ -556,6 +709,7 @@ public class PostService extends AppTransactionManager {
             if (!scope.canRead(institutionOfPostComment(entity))) {
                 throw new ResourceNotFoundException("comms.post", entity.getPostId());
             }
+            requirePostReadable(postId, caller);
             assertValidPostComment(entity, true);
             scope.requireWritable(institutionOfPostComment(entity));
             assertUniquePostComment(entity);
@@ -571,8 +725,9 @@ public class PostService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update of the caller's own comment under If-Match (anyone else's is 404): an updateMask sets the listed
+     * fields (clearing absent ones), otherwise the non-null fields apply; the merged row must validate and stay in the
+     * caller's scope.
      */
     public PostComment updatePostComment(UUID postId, UUID id, String ifMatch, PostCommentUpdate changes,
             String updateMask, boolean validateOnly) {
@@ -581,6 +736,7 @@ public class PostService extends AppTransactionManager {
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(POST_COMMENT_PERMISSION_UPDATE);
             PostCommentEntity entity = loadVisiblePostComment(scope, postId, id);
+            OwnRows.require(entity.getAuthorUserId(), POST_COMMENT_AGGREGATE, id);
             scope.requireWritable(institutionOfPostComment(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -604,12 +760,18 @@ public class PostService extends AppTransactionManager {
         });
     }
 
-    /** Soft delete under If-Match; refused while live rows of this module still reference the row. */
+    /**
+     * Soft delete under If-Match by the comment's author or a moderator of the post's institution (404 to anyone
+     * else); refused while live rows of this module still reference the row.
+     */
     public void deletePostComment(UUID postId, UUID id, String ifMatch) {
         int expected = Etags.expectedVersion(ifMatch);
         runInWriteTransaction(() -> {
             DataScope scope = DataScope.current(POST_COMMENT_PERMISSION_DELETE);
             PostCommentEntity entity = loadVisiblePostComment(scope, postId, id);
+            requireAuthorOrModerator(repository.findById(postId)
+                    .orElseThrow(() -> new ResourceNotFoundException(POST_COMMENT_AGGREGATE, id)),
+                    entity.getAuthorUserId(), POST_COMMENT_AGGREGATE, id);
             scope.requireWritable(institutionOfPostComment(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
@@ -641,6 +803,7 @@ public class PostService extends AppTransactionManager {
         return entity;
     }
 
+
     /** The institution of the comms.post the row belongs to. */
     private Optional<UUID> institutionOfPostComment(PostCommentEntity entity) {
         return postCommentRepository.institutionOf(entity.getPostId());
@@ -651,7 +814,6 @@ public class PostService extends AppTransactionManager {
         for (String field : fields) {
             switch (field) {
                 case "parentCommentId" -> entity.setParentCommentId(changes.getParentCommentId());
-                case "authorUserId" -> entity.setAuthorUserId(changes.getAuthorUserId());
                 case "body" -> entity.setBody(changes.getBody());
                 case "attachmentFileId" -> entity.setAttachmentFileId(changes.getAttachmentFileId());
                 case "isActive" -> entity.setIsActive(changes.getIsActive());
@@ -665,9 +827,6 @@ public class PostService extends AppTransactionManager {
         List<FieldError> errors = new ArrayList<>();
         if (entity.getPostId() == null) {
             errors.add(new FieldError("postId", "must not be null", "NotNull"));
-        }
-        if (entity.getAuthorUserId() == null) {
-            errors.add(new FieldError("authorUserId", "must not be null", "NotNull"));
         }
         if (!creating && entity.getIsActive() == null) {
             errors.add(new FieldError("isActive", "must not be null", "NotNull"));

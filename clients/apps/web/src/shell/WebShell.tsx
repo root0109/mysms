@@ -12,6 +12,17 @@ import type { MessageKey } from '@mysms/i18n';
 
 const NAV: readonly NavItem[] = [
   { to: '/app', label: 'shell.nav.home', end: true },
+  // ADM-01: shown to a role that may list any of the records it counts
+  {
+    to: '/app/org/overview',
+    label: 'screen.ADM01.title',
+    anyPermission: [
+      'admission.application.read',
+      'hr.leave_application.read',
+      'attendance.attendance_sheet.read',
+      'comms.feedback_thread.read',
+    ],
+  },
   { to: '/app/people/me', label: 'shell.nav.profile' },
   { to: '/app/comms/in-app-notifications', label: 'shell.nav.inbox' },
   { to: '/app/iam/me/settings', label: 'shell.nav.settings' },
@@ -20,6 +31,15 @@ const NAV: readonly NavItem[] = [
 
 /** Setup ends with the generic records manager and the settings by scope (ui/02 §2.1, Setup → Data, Access). */
 const SETUP_EXTRA: readonly NavItem[] = [
+  {
+    to: '/app/comms/notification-rules',
+    label: 'screen.COM13.title',
+    anyPermission: [
+      'comms.notification_rule.read',
+      'comms.notification_channel.read',
+      'comms.message_template.read',
+    ],
+  },
   { to: '/app/iam/user-accounts', label: 'screen.ADM08.title', permission: 'iam.user_account.read' },
   { to: '/app/admin/records', label: 'shell.nav.records', anyPermission: RECORD_PERMISSIONS },
   { to: '/app/iam/setting-values', label: 'shell.nav.settingValues', permission: 'iam.setting_value.read' },
@@ -27,6 +47,12 @@ const SETUP_EXTRA: readonly NavItem[] = [
 
 /** Students & staff also carries leave, which staff and approvers use as one screen and not as a list of records. */
 const PEOPLE_EXTRA: readonly NavItem[] = [
+  {
+    to: '/app/people/person-documents',
+    label: 'screen.SIS08.title',
+    permission: 'people.person_document.read',
+  },
+  { to: '/app/people/birthdays', label: 'screen.SIS12.title', permission: 'people.person.list_birthdays' },
   {
     to: '/app/hr/leave-applications',
     label: 'screen.HR04.title',
@@ -41,6 +67,12 @@ const PEOPLE_EXTRA: readonly NavItem[] = [
 /** Academics also carries the attendance summary, which is a report and not a list of one record type. */
 const ACADEMICS_EXTRA: readonly NavItem[] = [
   { to: '/app/timetable/my', label: 'screen.TT03.title', permission: 'timetable.session.get_timetable' },
+  {
+    to: '/app/timetable/sessions?view=room',
+    label: 'screen.TT04.title',
+    permission: 'timetable.session.get_timetable',
+    anyPermission: ['facility.room.read', 'hr.staff.read'],
+  },
   {
     to: '/app/attendance/summary',
     label: 'screen.ATT05.title',
@@ -88,6 +120,24 @@ const MONEY_EXTRA: readonly NavItem[] = [
   { to: '/app/finance/pay', label: 'screen.FIN07.title', permission: 'finance.payment.start_checkout' },
 ];
 
+/** Communication carries the notice board, conversations and the calendar, which are not lists of one record type. */
+const COMMUNICATION_EXTRA: readonly NavItem[] = [
+  { to: '/app/comms/notices', label: 'screen.COM01.title', permission: 'comms.notice.read' },
+  { to: '/app/comms/conversations', label: 'screen.COM05.title', permission: 'comms.conversation.read' },
+  { to: '/app/comms/calendar', label: 'screen.COM03.title', permission: 'comms.event.get_my_calendar' },
+];
+
+/** Services carries the "my …" views of the library and careers and the job board. */
+const SERVICES_EXTRA: readonly NavItem[] = [
+  { to: '/app/library/loans?mine', label: 'screen.LIB07.title', permission: 'library.loan.read' },
+  { to: '/app/careers/job-openings', label: 'screen.CAR01.title', permission: 'careers.job_opening.read' },
+  {
+    to: '/app/careers/job-applications?mine',
+    label: 'screen.CAR04.title',
+    permission: 'careers.job_application.create',
+  },
+];
+
 /** Setup → Catalogues carries the salary templates (HR-05). */
 const SETUP_PAYROLL: readonly NavItem[] = [
   { to: '/app/finance/fee-heads', label: 'screen.FIN01.title', permission: 'finance.fee_head.read' },
@@ -114,6 +164,8 @@ const GROUPS: readonly NavGroup[] = NAV_GROUPS.map((group) => ({
     ...(group === 'people' ? PEOPLE_EXTRA : []),
     ...(group === 'academics' ? ACADEMICS_EXTRA : []),
     ...(group === 'money' ? MONEY_EXTRA : []),
+    ...(group === 'communication' ? COMMUNICATION_EXTRA : []),
+    ...(group === 'services' ? SERVICES_EXTRA : []),
     ...(group === 'setup' ? [...SETUP_PAYROLL, ...SETUP_EXTRA] : []),
   ],
 }));

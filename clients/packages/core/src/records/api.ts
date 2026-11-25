@@ -27,7 +27,8 @@ function path(template: string, parentId: string | undefined, id?: string): stri
   return out;
 }
 
-async function send(
+/** One call of a contract path through the API client's transport (token, locale, retries); a failure is an ApiError. */
+export async function send(
   api: ApiClient,
   method: string,
   url: string,
@@ -201,4 +202,10 @@ export async function runAction(
   const headers: Record<string, string> = action.ifMatch && etag ? { 'If-Match': etag } : {};
   const response = await send(api, 'POST', path(action.path, parentId, id), body, headers);
   return (await response.json()) as RecordRow;
+}
+
+/** A filter that holds for rows whose `field` is one of `values` (OR of equals); undefined for no values. */
+export function fieldIn(field: string, values: readonly string[]): string | undefined {
+  if (values.length === 0) return undefined;
+  return values.map((value) => `${field} = "${value.replace(/["\\]/g, '')}"`).join(' OR ');
 }

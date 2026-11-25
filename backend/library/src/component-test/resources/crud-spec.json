@@ -99,10 +99,12 @@
     "mediaUnitId": "9296635a-1006-54e9-994e-3bde65283766",
     "mediaId": "76365677-5d4d-5773-881d-664515802a12",
     "libraryCardId": "699996c4-194d-52b8-9f30-397018b35638",
+    "borrowerUserId": "0196f000-0000-7000-8000-00000000c0c2",
     "issuedOn": "2026-01-10"
    },
    "update": {},
-   "duplicateConflicts": false
+   "duplicateConflicts": false,
+   "ownerOnly": "0196f000-0000-7000-8000-00000000c0c2"
   },
   {
    "name": "Media",
@@ -473,6 +475,7 @@
     "reference": "Updated reference"
    },
    "duplicateConflicts": false,
+   "ownerOnly": "0196f000-0000-7000-8000-00000000c0c1",
    "transitions": [
     {
      "operation": "library.AcceptReservation",

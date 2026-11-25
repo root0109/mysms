@@ -10,6 +10,7 @@ import com.mysms.finance.api.model.InvoiceLine;
 import com.mysms.finance.api.model.InvoiceUpdate;
 import org.springframework.lang.Nullable;
 import com.mysms.finance.api.model.PostInvoiceRequest;
+import com.mysms.finance.api.model.RaiseChargeInvoiceRequest;
 import com.mysms.finance.api.model.SendFeeRemindersRequest;
 import com.mysms.finance.api.model.SendResult;
 import java.util.UUID;
@@ -116,6 +117,35 @@ public interface InvoiceApi {
     ResponseEntity<Invoice> createInvoiceFromDues(
         @NotNull  @RequestHeader(value = "Idempotency-Key", required = true) UUID idempotencyKey,
          @Valid @RequestBody CreateInvoiceFromDuesRequest createInvoiceFromDuesRequest
+    );
+
+
+    String PATH_RAISE_CHARGE_INVOICE = "/v1/finance/invoices:raiseCharge";
+    /**
+     * POST /v1/finance/invoices:raiseCharge : Raise a draft invoice for a charge another module computed
+     * Raise a draft invoice with one line for a charge another module computed (a library fine...). One invoice per source: raising the same source again answers the invoice it made.
+     *
+     * @param raiseChargeInvoiceRequest  (required)
+     * @param idempotencyKey Client-generated UUID; repeating a request with the same key returns the original result for 24 h. (optional)
+     * @return OK (status code 200)
+     *         or Malformed request. (status code 400)
+     *         or Missing or invalid credentials. (status code 401)
+     *         or Authenticated but not permitted. (status code 403)
+     *         or Resource not found (or not visible to the caller). (status code 404)
+     *         or Conflict with the current state (duplicate, invalid state transition). (status code 409)
+     *         or Validation failed; see errors[]. (status code 422)
+     *         or Rate limit exceeded. (status code 429)
+     *         or Unexpected server error. (status code 500)
+     */
+    @RequestMapping(
+        method = RequestMethod.POST,
+        value = InvoiceApi.PATH_RAISE_CHARGE_INVOICE,
+        produces = { "application/json", "application/problem+json" },
+        consumes = { "application/json" }
+    )
+    ResponseEntity<Invoice> raiseChargeInvoice(
+         @Valid @RequestBody RaiseChargeInvoiceRequest raiseChargeInvoiceRequest,
+         @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey
     );
 
 

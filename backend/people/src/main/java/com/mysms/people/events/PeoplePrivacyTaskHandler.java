@@ -21,10 +21,11 @@ import tools.jackson.databind.json.JsonMapper;
 
 /**
  * people's part in privacy's erasure and export requests (design PRIVACY-AND-CONSENT-CENTRE §9.1): a subject's
- * addresses, emergency contacts, education, work experience, certifications, skills, documents, public profile and
- * social links are cleared and soft-deleted, and the person anonymised ("Erased person", the national id's envelope
- * cleared) and kept, since other modules refer to it; rows a legal hold covers are kept and counted. An export
- * answers the rows per table (no export part is written yet). people has no retention policy of its own.
+ * addresses, emergency contacts, education, work experience, certifications, skills, documents, public profile,
+ * social links and the greetings asked for them are cleared and soft-deleted, and the person anonymised ("Erased
+ * person", the national id's envelope cleared) and kept, since other modules refer to it; rows a legal hold covers
+ * are kept and counted. An export answers the rows per table (no export part is written yet). people has no
+ * retention policy of its own.
  */
 @Component
 public class PeoplePrivacyTaskHandler extends PrivacyTaskHandler {
@@ -49,6 +50,8 @@ public class PeoplePrivacyTaskHandler extends PrivacyTaskHandler {
                     PrivacyErasureRepository.ERASE_PUBLIC_PROFILE),
             delete("people.person_social_link", "contact", PrivacyErasureRepository.PERSON_SOCIAL_LINK_ROWS,
                     PrivacyErasureRepository.ERASE_PERSON_SOCIAL_LINK),
+            delete("people.greeting", "contact", PrivacyErasureRepository.GREETING_ROWS,
+                    PrivacyErasureRepository.ERASE_GREETING),
             new ErasureStep("people.person", "identity", PrivacyErasureRepository.PERSON_ROWS,
                     PrivacyErasureRepository.ANONYMISE_PERSON, false,
                     List.of("honorificId", "firstName", "middleName", "lastName", "displayName", "dateOfBirth",

@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -125,6 +126,14 @@ public class LibraryCardRepository {
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
             """;
+    /** Every card of the institutions the staff scope reaches (a caller with no person holds no card). */
+    private static final String REACHABLE = """
+             (:staffAll OR r.institution_id = ANY(:staffIds))
+            """;
+    /** {@link #REACHABLE}, and the cards of the holder's person. */
+    private static final String REACHABLE_WITH_PERSON = """
+             (r.person_id = :holderPerson OR :staffAll OR r.institution_id = ANY(:staffIds))
+            """;
 
     private final JdbcClient jdbc;
 
@@ -220,6 +229,14 @@ public class LibraryCardRepository {
     }
 
     /** Rows of the caller's institutions only. */
+    /** The cards of the holder's person, and every card of the institutions the staff scope reaches. */
+    public static SqlFragment reachableBy(Optional<UUID> person, DataScope staff) {
+        Map<String, Object> params = new HashMap<>(Map.of("staffAll", staff.all(), "staffIds",
+                staff.institutionArray()));
+        person.ifPresent(p -> params.put("holderPerson", p));
+        return new SqlFragment(person.isPresent() ? REACHABLE_WITH_PERSON : REACHABLE, params);
+    }
+
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
     }

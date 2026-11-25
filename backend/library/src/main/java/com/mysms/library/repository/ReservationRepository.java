@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -115,6 +116,18 @@ public class ReservationRepository {
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
 
+    /** library.RequestReservationAgain: allowed while status is rejected or cancelled. */
+    private static final String TRANSITION_REQUEST_AGAIN = """
+            UPDATE library.reservation
+               SET status = 'requested',
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+               AND status IN ('rejected', 'cancelled')
+            """;
+
     /** library.RejectReservation: allowed while status is requested. */
     private static final String TRANSITION_REJECT_RESERVATION = """
             UPDATE library.reservation
@@ -129,6 +142,21 @@ public class ReservationRepository {
              (:scopeAll OR r.media_id IN (SELECT p0.id FROM library.media p0 WHERE p0.tenant_id = :tenantId
                  AND (p0.institution_id =
              ANY(:scopeIds))))
+            """;
+
+    /** The requester's own reservations, or any of a title of an institution the caller staffs. */
+    private static final String REACHABLE = """
+             (r.requested_by_user_id = :requesterUser
+              OR (:staff AND (:staffAll OR r.media_id IN (SELECT s0.id FROM library.media s0
+                                                          WHERE s0.tenant_id = :tenantId
+                                                            AND s0.institution_id = ANY(:staffIds)))))
+            """;
+    /** {@link #REACHABLE}, and the reservations made for the requester's person by staff. */
+    private static final String REACHABLE_WITH_PERSON = """
+             (r.requested_by_user_id = :requesterUser OR r.requested_by_person_id = :requesterPerson
+              OR (:staff AND (:staffAll OR r.media_id IN (SELECT s0.id FROM library.media s0
+                                                          WHERE s0.tenant_id = :tenantId
+                                                            AND s0.institution_id = ANY(:staffIds)))))
             """;
 
     private final JdbcClient jdbc;
@@ -210,6 +238,11 @@ public class ReservationRepository {
     }
 
     /** library.AcceptReservation; 0 rows means the row changed (or vanished) since it was read. */
+    public int requestAgain(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_REQUEST_AGAIN).param("id", id).param("expected", expected).param("now", now)
+                .param("actor", actor).update();
+    }
+
     public int acceptReservation(UUID id, int expected, OffsetDateTime now, UUID actor) {
         return jdbc.sql(TRANSITION_ACCEPT_RESERVATION)
                 .param("id", id)
@@ -230,6 +263,17 @@ public class ReservationRepository {
     /** Rows of the caller's institutions only. */
     public static SqlFragment scope(DataScope scope) {
         return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    /**
+     * The reservations this requester (account, and person when known) made or had made for them, plus — when
+     * {@code staff} — every reservation of a title of an institution in {@code staffScope}.
+     */
+    public static SqlFragment reachableBy(UUID user, Optional<UUID> person, boolean staff, DataScope staffScope) {
+        Map<String, Object> params = new HashMap<>(Map.of("requesterUser", user, "staff", staff,
+                "staffAll", staffScope.all(), "staffIds", staffScope.institutionArray()));
+        person.ifPresent(p -> params.put("requesterPerson", p));
+        return new SqlFragment(person.isPresent() ? REACHABLE_WITH_PERSON : REACHABLE, params);
     }
 
     private static List<Object> sortValues(SortSpec sort, ReservationEntity e) {

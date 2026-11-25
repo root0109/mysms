@@ -98,6 +98,16 @@ public class MediaUnitRepository {
             SELECT EXISTS (SELECT 1 FROM library.media WHERE tenant_id = :tenantId
                 AND id = :id AND deleted_at IS NULL)
             """;
+    /** A copy's status as its loan moves on (back on the shelf, lost). */
+    private static final String SET_STATUS = """
+            UPDATE library.media_unit
+               SET status = :status,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND deleted_at IS NULL AND status <> :status
+            """;
     private static final String INSTITUTION_OF = """
             SELECT p0.institution_id FROM library.media p0 WHERE p0.tenant_id = :tenantId AND p0.id = :ref
             """;
@@ -111,6 +121,12 @@ public class MediaUnitRepository {
 
     public MediaUnitRepository(@Qualifier(LibraryDatabaseConfig.DATABASE) ModuleDatabase database) {
         this.jdbc = database.jdbc();
+    }
+
+    /** Sets a live copy's status; answers 0 when it is gone or already has that status. */
+    public int setStatus(UUID id, String status, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(SET_STATUS).param("id", id).param("status", status).param("now", now).param("actor", actor)
+                .update();
     }
 
     public Optional<MediaUnitEntity> findById(UUID id) {

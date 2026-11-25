@@ -5,8 +5,11 @@ import com.mysms.comms.api.model.PostAudienceClass;
 import com.mysms.comms.api.model.PostAudienceClassUpdate;
 import com.mysms.comms.api.model.PostComment;
 import com.mysms.comms.api.model.PostCommentUpdate;
+import com.mysms.comms.api.model.PostReaction;
+import com.mysms.comms.api.model.PostReactionUpdate;
 import com.mysms.comms.api.model.PostUpdate;
 import com.mysms.comms.business.PostService;
+import com.mysms.comms.business.ReactionService;
 import com.mysms.comms.v1.ApprovePostRequest;
 import com.mysms.comms.v1.ApprovePostResponse;
 import com.mysms.comms.v1.CancelPostRequest;
@@ -56,7 +59,6 @@ import com.mysms.comms.v1.UpdatePostReactionRequest;
 import com.mysms.comms.v1.UpdatePostReactionResponse;
 import com.mysms.comms.v1.UpdatePostRequest;
 import com.mysms.comms.v1.UpdatePostResponse;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import io.grpc.stub.StreamObserver;
@@ -70,10 +72,12 @@ import net.devh.boot.grpc.server.service.GrpcService;
 public class PostResolver extends PostServiceGrpc.PostServiceImplBase {
 
     private final PostService service;
+    private final ReactionService reactions;
     private final ProtoBridge bridge;
 
-    public PostResolver(PostService service, ProtoBridge bridge) {
+    public PostResolver(PostService service, ReactionService reactions, ProtoBridge bridge) {
         this.service = service;
+        this.reactions = reactions;
         this.bridge = bridge;
     }
 
@@ -158,34 +162,44 @@ public class PostResolver extends PostServiceGrpc.PostServiceImplBase {
         ProtoBridge.send(out, DeletePostAudienceClassResponse.getDefaultInstance());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void listPostReactions(ListPostReactionsRequest request, StreamObserver<ListPostReactionsResponse> out) {
-        throw new NotImplementedException();
+        ProtoBridge.ListArguments page = bridge.list(request.getPageable());
+        Page<PostReaction> rows = reactions.listPostReactions(
+                bridge.id(request.getPostId(), "postId"), page.page(), page.size(), page.cursor(),
+                bridge.orNull(request.getFilter()), page.sort());
+        ProtoBridge.send(out, bridge.page(ListPostReactionsResponse.newBuilder(), rows).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void getPostReaction(GetPostReactionRequest request, StreamObserver<GetPostReactionResponse> out) {
-        throw new NotImplementedException();
+        PostReaction found = reactions.getPostReaction(bridge.id(request.getPostId(), "postId"),
+                bridge.id(request.getId(), "id"));
+        ProtoBridge.send(out, bridge.reply(GetPostReactionResponse.newBuilder(), "post_reaction", found).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void createPostReaction(CreatePostReactionRequest request, StreamObserver<CreatePostReactionResponse> out) {
-        throw new NotImplementedException();
+        PostReaction created = reactions.createPostReaction(bridge.id(request.getPostId(), "postId"),
+                bridge.body(request.getPostReaction(), PostReaction.class), request.getValidateOnly());
+        ProtoBridge.send(out, bridge.reply(CreatePostReactionResponse.newBuilder(), "post_reaction", created).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void updatePostReaction(UpdatePostReactionRequest request, StreamObserver<UpdatePostReactionResponse> out) {
-        throw new NotImplementedException();
+        PostReaction updated = reactions.updatePostReaction(
+                bridge.id(request.getPostId(), "postId"), bridge.id(request.getPostReaction().getId(), "id"),
+                bridge.requiredIfMatch(request.getPostReaction().getEtag()),
+                bridge.changes(request.getPostReaction(), request.getUpdateMask(), PostReactionUpdate.class),
+                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+        ProtoBridge.send(out, bridge.reply(UpdatePostReactionResponse.newBuilder(), "post_reaction", updated).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void deletePostReaction(DeletePostReactionRequest request, StreamObserver<DeletePostReactionResponse> out) {
-        throw new NotImplementedException();
+        reactions.deletePostReaction(bridge.id(request.getPostId(), "postId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()));
+        ProtoBridge.send(out, DeletePostReactionResponse.getDefaultInstance());
     }
 
     @Override
@@ -229,10 +243,13 @@ public class PostResolver extends PostServiceGrpc.PostServiceImplBase {
         ProtoBridge.send(out, DeletePostCommentResponse.getDefaultInstance());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
+    /** The REST body (the workflow etag, its other fields) is the request without its path ids and idempotency key. */
     @Override
     public void submitPost(SubmitPostRequest request, StreamObserver<SubmitPostResponse> out) {
-        throw new NotImplementedException();
+        Post changed = service.submitPost(
+                bridge.id(request.getPostId(), "postId"),
+                bridge.body(request, com.mysms.comms.api.model.SubmitPostRequest.class, "post_id", "request_id"));
+        ProtoBridge.send(out, bridge.reply(SubmitPostResponse.newBuilder(), "post", changed).build());
     }
 
     /** The REST body (the workflow etag, its other fields) is the request without its path ids and idempotency key. */
@@ -253,9 +270,13 @@ public class PostResolver extends PostServiceGrpc.PostServiceImplBase {
         ProtoBridge.send(out, bridge.reply(CancelPostResponse.newBuilder(), "post", changed).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void getFeed(GetFeedRequest request, StreamObserver<GetFeedResponse> out) {
-        throw new NotImplementedException();
+        ProtoBridge.ListArguments page = bridge.list(request.getPageable());
+        Page<Post> rows = service.getFeed(
+                request.hasClassSectionId() ? bridge.id(request.getClassSectionId(), "classSectionId") : null,
+                request.hasClassPageId() ? bridge.id(request.getClassPageId(), "classPageId") : null,
+                request.hasSavedOnly() ? request.getSavedOnly() : null, page.page(), page.size(), page.cursor());
+        ProtoBridge.send(out, bridge.page(GetFeedResponse.newBuilder(), rows).build());
     }
 }

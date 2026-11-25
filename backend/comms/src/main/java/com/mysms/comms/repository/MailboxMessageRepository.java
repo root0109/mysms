@@ -104,8 +104,36 @@ public class MailboxMessageRepository {
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
+    private static final String MARK_READ = """
+            UPDATE comms.mailbox_message
+               SET read_at = :now,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND read_at IS NULL AND deleted_at IS NULL
+            """;
+    private static final String RECORD_DELIVERY = """
+            UPDATE comms.mailbox_message
+               SET delivery_status = :deliveryStatus,
+                   is_processed = true,
+                   processed_at = :now,
+                   dispatched_at = :now,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND delivery_status = 'queued' AND deleted_at IS NULL
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
+            """;
+
+    /** The sender's sent mails since a moment that went to addresses outside the school (they carry a delivery). */
+    private static final String EXTERNAL_SENT_SINCE = """
+            SELECT count(*) FROM comms.mailbox_message r
+             WHERE r.tenant_id = :tenantId AND r.owner_user_id = :owner AND r.folder = 'sent'
+               AND r.delivery_status IS NOT NULL AND r.created_at >= :since
             """;
 
     private final JdbcClient jdbc;
@@ -174,6 +202,28 @@ public class MailboxMessageRepository {
                 .param("updatedBy", e.getUpdatedBy())
                 .param("expected", expectedVersion)
                 .update();
+    }
+
+    /** Marks the message read; 0 rows when it was read already or changed meanwhile. */
+    public int markRead(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(MARK_READ).param("id", id).param("expected", expected).param("now", now).param("actor", actor)
+                .update();
+    }
+
+    /** Records how the e-mail to the external addresses went; 0 rows when it was recorded already. */
+    /** How many mails with outside addresses the sender sent since the moment (deleted ones count too). */
+    public long externalSentSince(UUID owner, OffsetDateTime since) {
+        return jdbc.sql(EXTERNAL_SENT_SINCE).param("owner", owner).param("since", since).query(Long.class).single();
+    }
+
+    public int recordDelivery(UUID id, String deliveryStatus, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(RECORD_DELIVERY).param("id", id).param("deliveryStatus", deliveryStatus).param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** The owner's own mailbox only. */
+    public static SqlFragment ownedBy(UUID owner) {
+        return new SqlFragment("r.owner_user_id = :owner", Map.of("owner", owner));
     }
 
     /** Rows of the caller's institutions only. */

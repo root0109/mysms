@@ -7,7 +7,6 @@ import com.mysms.frontoffice.api.VisitorLogApi;
 import com.mysms.frontoffice.api.model.CheckOutVisitorRequest;
 import com.mysms.frontoffice.api.model.VisitorLog;
 import com.mysms.frontoffice.api.model.VisitorLogUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.frontoffice.business.VisitorLogService;
 import java.net.URI;
@@ -17,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the VisitorLog operations; authentication and the permission check already ran in the auth-client
- * filter. Operations not served yet answer 501.
+ * filter.
  */
 @RestController
 public class VisitorLogController implements VisitorLogApi {
@@ -31,7 +30,8 @@ public class VisitorLogController implements VisitorLogApi {
     @Override
     public ResponseEntity<VisitorLog> checkOutVisitor(UUID visitorLogId,
             CheckOutVisitorRequest checkOutVisitorRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        VisitorLog changed = visitorLogService.checkOutVisitor(visitorLogId, checkOutVisitorRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

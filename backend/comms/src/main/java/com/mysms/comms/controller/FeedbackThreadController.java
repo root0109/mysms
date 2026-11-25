@@ -12,7 +12,6 @@ import com.mysms.comms.api.model.FeedbackThread;
 import com.mysms.comms.api.model.FeedbackThreadUpdate;
 import com.mysms.comms.api.model.MarkFeedbackMessageRequest;
 import com.mysms.comms.api.model.ReopenFeedbackThreadRequest;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.util.UUID;
@@ -21,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the FeedbackThread operations; authentication and the permission check already ran in the auth-client
- * filter. Operations not served yet answer 501.
+ * filter.
  */
 @RestController
 public class FeedbackThreadController implements FeedbackThreadApi {
@@ -114,7 +113,8 @@ public class FeedbackThreadController implements FeedbackThreadApi {
     @Override
     public ResponseEntity<FeedbackMessage> markFeedbackMessage(UUID messageId,
             MarkFeedbackMessageRequest markFeedbackMessageRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        FeedbackMessage changed = feedbackThreadService.markFeedbackMessage(messageId, markFeedbackMessageRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

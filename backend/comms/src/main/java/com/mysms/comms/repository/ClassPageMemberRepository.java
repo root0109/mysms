@@ -103,6 +103,18 @@ public class ClassPageMemberRepository {
     private static final String INSTITUTION_OF = """
             SELECT p0.institution_id FROM comms.class_page p0 WHERE p0.tenant_id = :tenantId AND p0.id = :ref
             """;
+    private static final String FIND_MEMBERSHIP = SELECT_LIVE + """
+             AND r.class_page_id = :classPageId AND r.user_id = :userId AND r.is_active
+            """;
+    private static final String SET_FOLLOWING = """
+            UPDATE comms.class_page_member
+               SET is_following = :following,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.class_page_id IN (SELECT p0.id FROM comms.class_page p0 WHERE p0.tenant_id = :tenantId
                  AND (p0.institution_id =
@@ -191,6 +203,18 @@ public class ClassPageMemberRepository {
         return jdbc.sql(INSTITUTION_OF).param("ref", ref)
                 .query((rs, row) -> Optional.ofNullable(rs.getObject(1, UUID.class)))
                 .optional().flatMap(found -> found);
+    }
+
+    /** The user's active membership of the class page. */
+    public Optional<ClassPageMemberEntity> findMembership(UUID classPageId, UUID userId) {
+        return jdbc.sql(FIND_MEMBERSHIP).param("classPageId", classPageId).param("userId", userId)
+                .query(ClassPageMemberRepository::map).optional();
+    }
+
+    /** Sets the member's follow preference; 0 rows means the row changed (or vanished) since it was read. */
+    public int setFollowing(UUID id, int expected, boolean following, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(SET_FOLLOWING).param("id", id).param("expected", expected).param("following", following)
+                .param("now", now).param("actor", actor).update();
     }
 
     /** Rows of the caller's institutions only. */

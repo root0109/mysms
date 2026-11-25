@@ -41,7 +41,6 @@ import com.mysms.comms.v1.UpdateNoticeAudienceRequest;
 import com.mysms.comms.v1.UpdateNoticeAudienceResponse;
 import com.mysms.comms.v1.UpdateNoticeRequest;
 import com.mysms.comms.v1.UpdateNoticeResponse;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import io.grpc.stub.StreamObserver;
@@ -173,10 +172,14 @@ public class NoticeResolver extends NoticeServiceGrpc.NoticeServiceImplBase {
         ProtoBridge.send(out, bridge.reply(UnpublishNoticeResponse.newBuilder(), "notice", changed).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
+    /** The REST body (the workflow etag, its other fields) is the request without its path ids and idempotency key. */
     @Override
     public void closeNoticeReplies(CloseNoticeRepliesRequest request, StreamObserver<CloseNoticeRepliesResponse> out) {
-        throw new NotImplementedException();
+        Notice changed = service.closeNoticeReplies(
+                bridge.id(request.getNoticeId(), "noticeId"),
+                bridge.body(request, com.mysms.comms.api.model.CloseNoticeRepliesRequest.class, "notice_id",
+                        "request_id"));
+        ProtoBridge.send(out, bridge.reply(CloseNoticeRepliesResponse.newBuilder(), "notice", changed).build());
     }
 
     /** The REST body (the workflow etag, its other fields) is the request without its path ids and idempotency key. */

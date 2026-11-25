@@ -14,7 +14,7 @@ import {
   type ConsentScope,
   type MyConsent,
 } from '@mysms/core';
-import { CATALOGS, enumLabel, type MessageKey } from '@mysms/i18n';
+import { enumLabel, LOCALES, type MessageKey } from '@mysms/i18n';
 import { Banner, Button, ChoiceGroup, Screen, Text, useTheme } from '@mysms/ui-native';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -23,7 +23,6 @@ import { View } from 'react-native';
 const rowKey = (row: MyConsent) => `${row.subjectPersonId}|${row.purposeCode}`;
 
 /** The languages a notice can be asked for: those the app has a catalogue for (the server falls back to English). */
-const NOTICE_LANGUAGES = Object.keys(CATALOGS);
 
 /**
  * ACC-13 Consent centre on the phone and tablet (ui/02; design PRIVACY-AND-CONSENT-CENTRE §12): the web screen's
@@ -216,7 +215,7 @@ function DecisionPage({
   onSaved: () => void;
 }) {
   const { t, format, locale } = useI18n();
-  const [language, setLanguage] = useState(NOTICE_LANGUAGES.includes(locale) ? locale : 'en');
+  const [language, setLanguage] = useState(LOCALES.includes(locale) ? locale : 'en');
   const notice = useMyNotice(row.noticeCode ?? null, language);
   const record = useRecordMyConsent();
   const widths = row.allowedScopes.length > 1;
@@ -253,7 +252,7 @@ function DecisionPage({
       <Text variant="h2">{t('privacy.consentCentre.notice.title')}</Text>
       <ChoiceGroup
         label={t('privacy.consentCentre.notice.language')}
-        choices={NOTICE_LANGUAGES.map((code) => ({
+        choices={LOCALES.map((code) => ({
           value: code,
           label: t(`setting.value.${code}` as MessageKey),
         }))}

@@ -1,10 +1,11 @@
 package com.mysms.timetable.grpc;
 
 import com.mysms.core.error.InvalidArgumentException;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
+import com.mysms.timetable.api.model.Operation;
 import com.mysms.timetable.api.model.Session;
+import com.mysms.timetable.api.model.SessionList;
 import com.mysms.timetable.api.model.SessionStudent;
 import com.mysms.timetable.api.model.SessionStudentUpdate;
 import com.mysms.timetable.api.model.SessionUpdate;
@@ -172,16 +173,21 @@ public class SessionResolver extends SessionServiceGrpc.SessionServiceImplBase {
         ProtoBridge.send(out, bridge.reply(ResetSessionResponse.newBuilder(), "session", changed).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
-    public void batchConfirmSessions(BatchConfirmSessionsRequest request, StreamObserver<BatchConfirmSessionsResponse> out) {
-        throw new NotImplementedException();
+    public void batchConfirmSessions(BatchConfirmSessionsRequest request,
+            StreamObserver<BatchConfirmSessionsResponse> out) {
+        SessionList confirmed = service.batchConfirmSessions(bridge.body(request,
+                com.mysms.timetable.api.model.BatchConfirmSessionsRequest.class, "request_id"));
+        ProtoBridge.send(out, bridge.reply(BatchConfirmSessionsResponse.newBuilder(), "items", confirmed.getItems())
+                .build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
+    /** timetable.GenerateSessions: the run's operation, as REST's 202 answers it. */
     @Override
     public void generateSessions(GenerateSessionsRequest request, StreamObserver<GenerateSessionsResponse> out) {
-        throw new NotImplementedException();
+        Operation run = service.generateSessions(bridge.body(request,
+                com.mysms.timetable.api.model.GenerateSessionsRequest.class, "request_id"));
+        ProtoBridge.send(out, bridge.reply(GenerateSessionsResponse.newBuilder(), "result", run).build());
     }
 
     /**

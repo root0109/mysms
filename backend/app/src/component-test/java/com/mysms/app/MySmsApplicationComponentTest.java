@@ -67,7 +67,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The monolith assembles all 22 modules, each on its own database with its own migrations, all 733 tables present,
+ * The monolith assembles all 22 modules, each on its own database with its own migrations, all 743 tables present,
  * every operation routed at the edge — and a real cross-module flow: sign-in at iam, GetMe reading the person from
  * people over in-process gRPC with the caller's token, a profile update at people.
  */
@@ -358,13 +358,13 @@ class MySmsApplicationComponentTest {
                 "SELECT count(*) FROM information_schema.tables WHERE table_name <> 'flyway_schema_history'"
                         + " AND table_schema = ANY(:schemas)")
                 .param("schemas", MODULES).query(Integer.class).single();
-        assertThat(tables).as("every CREATE TABLE of database/migrations").isEqualTo(733);
+        assertThat(tables).as("every CREATE TABLE of database/migrations").isEqualTo(743);
         Integer histories = any.jdbc().sql(
                 // the catalog, not information_schema: the application role has no privilege on the Flyway history
                 "SELECT count(*) FROM pg_catalog.pg_class WHERE relname = 'flyway_schema_history' AND relkind = 'r'")
                 .query(Integer.class).single();
         assertThat(histories).isEqualTo(22);
-        assertThat(operations.size()).isEqualTo(2122);
+        assertThat(operations.size()).isEqualTo(2123);
     }
 
     @Test
@@ -406,7 +406,7 @@ class MySmsApplicationComponentTest {
                 .isEqualTo("Principal");
 
         JsonNode settings = call("GET", "/v1/iam/me/settings", token, null, 200);
-        assertThat(settings.path("items")).as("every setting definition of iam's catalogue").hasSize(12);
+        assertThat(settings.path("items")).as("every setting definition of iam's catalogue").hasSize(13);
         assertThat(call("PUT", "/v1/iam/me/settings/ui.theme", token, "{\"value\":\"dark\"}", 200).path("sourceScope")
                 .asString()).isEqualTo("user");
         assertThat(call("GET", "/oauth2/jwks", null, null, 200).path("keys")).hasSize(1);
@@ -417,7 +417,7 @@ class MySmsApplicationComponentTest {
         assertThat(listed.path("data").findValuesAsString("id")).contains(school.path("id").asString());
         String id = school.path("id").asString();
         call("POST", "/v1/people/persons:sendGreetings", token, "{\"personIds\":[\"" + id + "\"],\"templateId\":\""
-                + id + "\",\"channel\":\"sms\"}", 501);
+                + id + "\",\"channel\":\"sms\"}", 422);
     }
 
     /**

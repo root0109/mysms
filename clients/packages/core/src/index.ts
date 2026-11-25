@@ -658,6 +658,7 @@ export {
   allOf,
   createRecord,
   deleteRecord,
+  fieldIn,
   getRecord,
   listRecords,
   MAX_RANGE_DAYS,
@@ -667,9 +668,12 @@ export {
   type RecordListParams,
 } from './records/api';
 export {
+  resourceDef,
+  useAllRecords,
   useCreateRecord,
   useDeleteRecord,
   useInfiniteRecords,
+  useRecordTotal,
   useRecord,
   useRecordAction,
   useUpdateRecord,
@@ -994,3 +998,47 @@ export {
   type LessonBlock,
   type LessonBlockType,
 } from './hooks/lessonBlocks';
+export { useActivateAcademicYear, useGenerateTerms } from './hooks/org';
+export { usePermissionCatalogue, type Permission } from './hooks/roles';
+export { useClassSubjects, type ClassSubjectLine } from './hooks/classWorkspace';
+export { useMyStudents, type MyStudent } from './hooks/myStudents';
+export {
+  calendarDays,
+  calendarRange,
+  INBOX_MAX_DAYS,
+  INBOX_WINDOW_DAYS,
+  shiftCalendar,
+  useInbox,
+  useClaimTask,
+  useCloseNoticeReplies,
+  useExportCalendar,
+  useFeed,
+  useHideMessageForMe,
+  useInboxSteps,
+  useMarkConversationRead,
+  useMyCalendar,
+  useSendTestMessage,
+  type CalendarItem,
+  type CalendarItemType,
+  type CalendarProvider,
+  type CalendarRange,
+  type CalendarView,
+  type InAppNotification,
+} from './hooks/comms';
+export {
+  useBirthdays,
+  useSendGreetings,
+  type BirthdayEntry,
+  type BirthdayKind,
+  type BirthdayQuery,
+  type BirthdayRole,
+  type GreetingChannel,
+} from './hooks/birthdays';
+export { useMyLoans, useMyTransport } from './hooks/myServices';
+export {
+  MY_APPLICATIONS_OPENINGS,
+  useEmailApplicant,
+  useMyApplications,
+  useUpdateApplicationStatus,
+  type JobApplicationStatus,
+} from './hooks/careers';

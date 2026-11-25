@@ -10,7 +10,6 @@ import com.mysms.comms.api.model.OutboundMessage;
 import com.mysms.comms.api.model.RetryOutboundMessageRequest;
 import com.mysms.comms.api.model.SendMessageRequest;
 import com.mysms.comms.api.model.SendResult;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the OutboundMessage operations; authentication and the permission check already ran in the auth-client
- * filter. Operations not served yet answer 501.
+ * filter.
  */
 @RestController
 public class OutboundMessageController implements OutboundMessageApi {
@@ -32,7 +31,9 @@ public class OutboundMessageController implements OutboundMessageApi {
     @Override
     public ResponseEntity<OutboundMessage> cancelOutboundMessage(UUID outboundMessageId,
             CancelOutboundMessageRequest cancelOutboundMessageRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        OutboundMessage changed = outboundMessageService.cancelOutboundMessage(outboundMessageId,
+                cancelOutboundMessageRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -53,12 +54,14 @@ public class OutboundMessageController implements OutboundMessageApi {
     @Override
     public ResponseEntity<OutboundMessage> retryOutboundMessage(UUID outboundMessageId,
             RetryOutboundMessageRequest retryOutboundMessageRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        OutboundMessage changed = outboundMessageService.retryOutboundMessage(outboundMessageId,
+                retryOutboundMessageRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
     public ResponseEntity<SendResult> sendMessage(UUID idempotencyKey,
             SendMessageRequest sendMessageRequest) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(outboundMessageService.sendMessage(sendMessageRequest));
     }
 }

@@ -344,6 +344,8 @@ message GenerateSessionsRequest {
   repeated mysms.common.v1.WeeklySlot slots = 7;
   // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
   optional string request_id = 8;
+  // IANA time zone the periods' start times are in, only for a school without a time zone of its own in org (e.g. Asia/Kolkata); a school's own zone always applies, and naming another one is 422.
+  string time_zone = 9;
 }
 message GenerateSessionsResponse {
   mysms.common.v1.Operation result = 1;

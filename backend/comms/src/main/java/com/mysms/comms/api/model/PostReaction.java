@@ -31,7 +31,7 @@ public class PostReaction {
   private @Nullable UUID postId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID userId;
+  private @Nullable UUID userId;
 
   /**
    * Reaction.
@@ -98,13 +98,6 @@ public class PostReaction {
     super();
   }
 
-  /**
-   * Constructor with only required parameters
-   */
-  public PostReaction(UUID userId) {
-    this.userId = userId;
-  }
-
   public PostReaction id(@Nullable UUID id) {
     this.id = id;
     return this;
@@ -145,23 +138,23 @@ public class PostReaction {
     this.postId = postId;
   }
 
-  public PostReaction userId(UUID userId) {
+  public PostReaction userId(@Nullable UUID userId) {
     this.userId = userId;
     return this;
   }
 
   /**
-   * User.
+   * User. Output only: the caller, from the token.
    * @return userId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("userId")
-  public UUID getUserId() {
+  public @Nullable UUID getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(UUID userId) {
+  public void setUserId(@Nullable UUID userId) {
     this.userId = userId;
   }
 

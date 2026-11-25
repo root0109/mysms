@@ -7,7 +7,6 @@ import com.mysms.comms.business.MailboxMessageService;
 import com.mysms.comms.api.MailboxMessageApi;
 import com.mysms.comms.api.model.ComposeMailRequest;
 import com.mysms.comms.api.model.MailboxMessage;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the MailboxMessage operations; authentication and the permission check already ran in the auth-client
- * filter. Operations not served yet answer 501.
+ * filter.
  */
 @RestController
 public class MailboxMessageController implements MailboxMessageApi {
@@ -29,7 +28,7 @@ public class MailboxMessageController implements MailboxMessageApi {
     @Override
     public ResponseEntity<MailboxMessage> composeMail(ComposeMailRequest composeMailRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(mailboxMessageService.composeMail(composeMailRequest));
     }
 
     @Override
@@ -56,6 +55,7 @@ public class MailboxMessageController implements MailboxMessageApi {
     @Override
     public ResponseEntity<MailboxMessage> markMailRead(UUID mailboxMessageId, Object body,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        MailboxMessage read = mailboxMessageService.markMailRead(mailboxMessageId);
+        return ResponseEntity.ok().eTag(read.getEtag()).body(read);
     }
 }

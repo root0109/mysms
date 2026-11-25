@@ -122,6 +122,16 @@ public class EventOccurrenceRepository {
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
+    /** comms.CompletePersonalEvent: a personal to-do occurrence marked done. */
+    private static final String TRANSITION_COMPLETE_PERSONAL_EVENT = """
+            UPDATE comms.event_occurrence
+               SET response_status = 'completed',
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.event_id IN (SELECT p0.id FROM comms.event p0 WHERE p0.tenant_id = :tenantId
                  AND (p0.institution_id = ANY(:scopeIds) OR
@@ -218,6 +228,15 @@ public class EventOccurrenceRepository {
     /** comms.CancelEventOccurrence; 0 rows means the row changed (or vanished) since it was read. */
     public int cancelEventOccurrence(UUID id, int expected, OffsetDateTime now, UUID actor) {
         return jdbc.sql(TRANSITION_CANCEL_EVENT_OCCURRENCE)
+                .param("id", id)
+                .param("expected", expected)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** comms.CompletePersonalEvent; 0 rows means the row changed (or vanished) since it was read. */
+    public int completePersonalEvent(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_COMPLETE_PERSONAL_EVENT)
                 .param("id", id)
                 .param("expected", expected)
                 .param("now", now)

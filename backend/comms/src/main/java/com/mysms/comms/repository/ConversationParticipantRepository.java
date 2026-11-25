@@ -99,6 +99,18 @@ public class ConversationParticipantRepository {
     private static final String INSTITUTION_OF = """
             SELECT p0.institution_id FROM comms.conversation p0 WHERE p0.tenant_id = :tenantId AND p0.id = :ref
             """;
+    private static final String FIND_PARTICIPANT = SELECT_LIVE + """
+             AND r.conversation_id = :conversationId AND r.user_id = :userId
+            """;
+    private static final String MARK_READ = """
+            UPDATE comms.conversation_participant
+               SET last_read_at = :now,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.conversation_id IN (SELECT p0.id FROM comms.conversation p0 WHERE p0.tenant_id = :tenantId
                  AND (p0.institution_id =
@@ -183,6 +195,18 @@ public class ConversationParticipantRepository {
         return jdbc.sql(INSTITUTION_OF).param("ref", ref)
                 .query((rs, row) -> Optional.ofNullable(rs.getObject(1, UUID.class)))
                 .optional().flatMap(found -> found);
+    }
+
+    /** The user's live participation in the conversation. */
+    public Optional<ConversationParticipantEntity> findParticipant(UUID conversationId, UUID userId) {
+        return jdbc.sql(FIND_PARTICIPANT).param("conversationId", conversationId).param("userId", userId)
+                .query(ConversationParticipantRepository::map).optional();
+    }
+
+    /** Moves the participant's read mark to now; 0 rows means the row changed since it was read. */
+    public int markRead(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(MARK_READ).param("id", id).param("expected", expected).param("now", now)
+                .param("actor", actor).update();
     }
 
     /** Rows of the caller's institutions only. */

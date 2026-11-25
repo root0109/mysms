@@ -116,6 +116,7 @@ The caller cannot answer when the callee is down, so these are the dependencies 
 | attendance | timetable | GetSession, ListSessionStudents |
 | attendance | org | GetInstitution |
 | careers | iam | ResolveTenantCode, GetUserAccount |
+| comms | iam / platform | GetMe, ListUserAccounts / CreateUploadUrl, CompleteUpload, GetDownloadUrl |
 | finance | sis | GetStudentSummary, ListMyChildren, ListClassRoster, ListProgramEnrollments |
 | finance | academics | ListClassSections, ListCourses |
 | finance | iam / master / org | GetMe / GetCurrency / GetAcademicYear |
@@ -129,7 +130,7 @@ The caller cannot answer when the callee is down, so these are the dependencies 
 | sis | iam | ListUserAccounts, CreateUserAccount, CreateUserRole, ListRoles |
 | sis | org / people | GetAcademicYear, GetInstitution / ListPersons |
 
-26 caller→callee edges, 65 RPCs. Callers of nobody: master, org, people, academics, payroll, facility, timetable, library, transport, comms, frontoffice, privacy. Most called: iam (6 callers), sis (4), org (4), academics (3). Shared libraries add two more: auth-client → iam (`GetRolePermissions`, every module) and privacy-client → privacy (`BatchCheckConsent`, used by people).
+28 caller→callee edges, 70 RPCs. Callers of nobody: master, org, people, academics, payroll, facility, timetable, library, transport, frontoffice, privacy. Most called: iam (7 callers), sis (4), org (4), academics (3). Shared libraries add two more: auth-client → iam (`GetRolePermissions`, every module) and privacy-client → privacy (`BatchCheckConsent`, used by people).
 
 ### 5.2 Asynchronous (events)
 
@@ -141,7 +142,8 @@ Consumers declare `EventSubscriptions` in their `events` package. The flows:
 | Audit trail | every module's `audit.recorded` → platform (`platform.audit_log`) |
 | Permission catalogue | every module's `<module>.api_permissions.published` → iam (`iam.api_permission`) |
 | Tenant directory | `platform.tenant.*` → iam (`iam.tenant_directory`); `iam.tenant_directory.bootstrapped` → platform (`platform.tenant`) |
-| Local copies | `hr.staff` and `sis.student` → iam (`iam.member_record`); `hr.staff` → payroll (`payroll.staff_member`); `people.person`, `sis.student`, `sis.student_guardian` → privacy (`privacy.subject`, `privacy.guardian_link`) |
+| Local copies | `hr.staff` and `sis.student` → iam (`iam.member_record`); `hr.staff` → payroll (`payroll.staff_member`); `sis.student`, `hr.staff`, `sis.student_guardian` → comms (`comms.student_record`, `comms.staff_record`, `comms.guardian_link`); `sis.student`, `hr.staff` → finance (`finance.student_record`, `finance.staff_record`); `org.institution` → timetable (`timetable.institution_zone`); `comms.message_template` → people (`people.greeting_template`); `people.person`, `sis.student`, `sis.student_guardian` → privacy (`privacy.subject`, `privacy.guardian_link`) |
+| Delivery requests | `people.greeting.requested` → comms (an in-app notification to each account comms knows of the person; people cannot call comms); `comms.greeting_delivery.rejected` → people (a greeting comms could not deliver is taken back) |
 | Imports | `platform.import.batch_requested` → hr, library, org, sis; `<module>.import.batch_applied` → platform |
 
 Outbox and inbox make these reliable, so they are cheap coupling. Diagram: [events and outbox](docs/diagrams/architecture/events-outbox-sequence.drawio) — open with draw.io / diagrams.net.

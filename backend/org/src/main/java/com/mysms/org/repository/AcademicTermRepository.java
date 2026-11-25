@@ -70,6 +70,8 @@ public class AcademicTermRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String OF_YEAR = SELECT_LIVE
+            + " AND r.academic_year_id = :academicYearId ORDER BY r.start_date, r.end_date DESC, r.id";
     private static final String INSERT = """
             INSERT INTO org.academic_term
             (id, tenant_id, academic_year_id, parent_term_id, name, start_date, end_date, sequence, code, is_active,
@@ -146,6 +148,11 @@ public class AcademicTermRepository {
 
     public Optional<AcademicTermEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(AcademicTermRepository::map).optional();
+    }
+
+    /** Every live term of a year, by start date (a parent before the first of its children). */
+    public List<AcademicTermEntity> ofYear(UUID academicYearId) {
+        return jdbc.sql(OF_YEAR).param("academicYearId", academicYearId).query(AcademicTermRepository::map).list();
     }
 
     public Page<AcademicTermEntity> list(PageRequest page, SqlFragment filter) {

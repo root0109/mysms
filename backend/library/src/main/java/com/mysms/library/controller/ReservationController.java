@@ -9,7 +9,6 @@ import com.mysms.library.api.model.RejectReservationRequest;
 import com.mysms.library.api.model.RequestReservationAgainRequest;
 import com.mysms.library.api.model.Reservation;
 import com.mysms.library.api.model.ReservationUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.library.business.ReservationService;
 import java.net.URI;
@@ -80,7 +79,9 @@ public class ReservationController implements ReservationApi {
     @Override
     public ResponseEntity<Reservation> requestReservationAgain(UUID reservationId,
             RequestReservationAgainRequest requestReservationAgainRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        Reservation changed = reservationService.requestReservationAgain(reservationId,
+                requestReservationAgainRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override

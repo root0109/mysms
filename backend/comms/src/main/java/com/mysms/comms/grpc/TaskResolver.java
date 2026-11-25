@@ -1,5 +1,6 @@
 package com.mysms.comms.grpc;
 
+import com.mysms.comms.api.model.TaskAssigneeList;
 import com.mysms.comms.api.model.Task;
 import com.mysms.comms.api.model.TaskAssignee;
 import com.mysms.comms.api.model.TaskAssigneeUpdate;
@@ -34,7 +35,6 @@ import com.mysms.comms.v1.UpdateTaskAssigneeRequest;
 import com.mysms.comms.v1.UpdateTaskAssigneeResponse;
 import com.mysms.comms.v1.UpdateTaskRequest;
 import com.mysms.comms.v1.UpdateTaskResponse;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import io.grpc.stub.StreamObserver;
@@ -158,9 +158,9 @@ public class TaskResolver extends TaskServiceGrpc.TaskServiceImplBase {
         ProtoBridge.send(out, bridge.reply(SnoozeTaskResponse.newBuilder(), "task", changed).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void claimTask(ClaimTaskRequest request, StreamObserver<ClaimTaskResponse> out) {
-        throw new NotImplementedException();
+        TaskAssigneeList claimed = service.claimTask(bridge.id(request.getTaskId(), "taskId"));
+        ProtoBridge.send(out, bridge.reply(ClaimTaskResponse.newBuilder(), "items", claimed.getItems()).build());
     }
 }

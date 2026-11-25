@@ -31,7 +31,7 @@ public class FeedbackMessage {
   private @Nullable UUID threadId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID senderUserId;
+  private @Nullable UUID senderUserId;
 
   /**
    * Category.
@@ -153,8 +153,7 @@ public class FeedbackMessage {
   /**
    * Constructor with only required parameters
    */
-  public FeedbackMessage(UUID senderUserId, CategoryEnum category, String message) {
-    this.senderUserId = senderUserId;
+  public FeedbackMessage(CategoryEnum category, String message) {
     this.category = category;
     this.message = message;
   }
@@ -199,23 +198,23 @@ public class FeedbackMessage {
     this.threadId = threadId;
   }
 
-  public FeedbackMessage senderUserId(UUID senderUserId) {
+  public FeedbackMessage senderUserId(@Nullable UUID senderUserId) {
     this.senderUserId = senderUserId;
     return this;
   }
 
   /**
-   * Sender.
+   * Sender. Output only: the caller, from the token.
    * @return senderUserId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("senderUserId")
-  public UUID getSenderUserId() {
+  public @Nullable UUID getSenderUserId() {
     return senderUserId;
   }
 
   @JsonProperty("senderUserId")
-  public void setSenderUserId(UUID senderUserId) {
+  public void setSenderUserId(@Nullable UUID senderUserId) {
     this.senderUserId = senderUserId;
   }
 

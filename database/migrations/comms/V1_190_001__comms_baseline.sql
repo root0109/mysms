@@ -1295,6 +1295,10 @@ COMMENT ON COLUMN comms.notification_type.updated_at IS 'Last update time.';
 COMMENT ON COLUMN comms.notification_type.updated_by IS 'User account that last updated the row (audit reference to iam.user_account; not FK-constrained).';
 COMMENT ON COLUMN comms.notification_type.deleted_at IS 'Soft-delete marker; NULL = live row.';
 COMMENT ON COLUMN comms.notification_type.row_version IS 'Optimistic-locking version.';
+INSERT INTO comms.notification_type (id, code, description, module_code, row_version)
+VALUES ('0196f0c0-6000-7000-8000-000000000001', 'people.greeting',
+        'A birthday or work-anniversary greeting sent with people.SendGreetings; the text is the chosen template''s.',
+        'people', 1);
 
 CREATE TABLE comms.notification_type_property (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -1963,16 +1967,18 @@ CREATE TABLE comms.student_record (
     student_id uuid NOT NULL,
     person_id uuid NOT NULL,
     user_id uuid,
+    institution_id uuid,
     source_version integer NOT NULL,
     synced_at timestamptz NOT NULL,
     CONSTRAINT pk_comms_student_record PRIMARY KEY (tenant_id, student_id),
     CONSTRAINT ck_student_record_source_version CHECK (source_version >= 1)
 );
-COMMENT ON TABLE comms.student_record IS 'The person and login account of each student record, kept from sis.student created/updated events (comms never reads sis''s schema), so privacy''s tasks find a data principal''s messages, notifications, memberships and posts (CommsPrivacyTaskHandler).';
+COMMENT ON TABLE comms.student_record IS 'The person, login account and institution of each student record, kept from sis.student created/updated events (comms never reads sis''s schema), so privacy''s tasks find a data principal''s messages, notifications, memberships and posts (CommsPrivacyTaskHandler) and mail and conversations reach only accounts of the sender''s school.';
 COMMENT ON COLUMN comms.student_record.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
 COMMENT ON COLUMN comms.student_record.student_id IS 'sis.student.id (logical, maintained from its events), as feedback threads, content views and mailbox messages name it.';
 COMMENT ON COLUMN comms.student_record.person_id IS 'Person of the student record (people.person.id), the data principal privacy''s tasks name.';
 COMMENT ON COLUMN comms.student_record.user_id IS 'Login account of the student record (iam.user_account.id), as recipients, participants, members and authors name it; null while the student has none.';
+COMMENT ON COLUMN comms.student_record.institution_id IS 'Institution of the student record (org.institution.id).';
 COMMENT ON COLUMN comms.student_record.source_version IS 'Row version of the sis.student row this entry reflects; an event with an older or equal version is ignored.';
 COMMENT ON COLUMN comms.student_record.synced_at IS 'When the row was last changed by an event.';
 CREATE INDEX ix_comms_student_record_person ON comms.student_record (tenant_id, person_id);
@@ -1980,6 +1986,65 @@ COMMENT ON INDEX comms.ix_comms_student_record_person IS 'Privacy tasks: the stu
 ALTER TABLE comms.student_record ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comms.student_record FORCE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation ON comms.student_record USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+
+CREATE INDEX ix_comms_student_record_user ON comms.student_record (tenant_id, user_id) WHERE user_id IS NOT NULL;
+COMMENT ON INDEX comms.ix_comms_student_record_user IS 'Mail and conversations: whether an account is a student of the sender''s school.';
+CREATE TABLE comms.staff_record (
+    tenant_id uuid NOT NULL,
+    staff_id uuid NOT NULL,
+    user_id uuid,
+    institution_id uuid,
+    is_deleted boolean NOT NULL DEFAULT false,
+    source_version integer NOT NULL,
+    synced_at timestamptz NOT NULL,
+    CONSTRAINT pk_comms_staff_record PRIMARY KEY (tenant_id, staff_id),
+    CONSTRAINT ck_comms_staff_record_source_version CHECK (source_version >= 1)
+);
+COMMENT ON TABLE comms.staff_record IS 'The login account and institution of each staff record, kept from hr.staff created/updated/deleted events (comms never reads hr''s schema), so mail and conversations reach only accounts of the sender''s school.';
+COMMENT ON COLUMN comms.staff_record.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
+COMMENT ON COLUMN comms.staff_record.staff_id IS 'hr.staff.id (logical, maintained from its events).';
+COMMENT ON COLUMN comms.staff_record.user_id IS 'Login account of the staff record (iam.user_account.id); NULL while it has none.';
+COMMENT ON COLUMN comms.staff_record.institution_id IS 'Institution of the staff record (org.institution.id).';
+COMMENT ON COLUMN comms.staff_record.is_deleted IS 'The staff record was deleted in hr; kept so a late event cannot restore it.';
+COMMENT ON COLUMN comms.staff_record.source_version IS 'Row version of the hr.staff row this entry reflects; an event with an older or equal version is ignored.';
+COMMENT ON COLUMN comms.staff_record.synced_at IS 'When the row was last changed by an event.';
+CREATE INDEX ix_comms_staff_record_user ON comms.staff_record (tenant_id, user_id) WHERE NOT is_deleted AND user_id IS NOT NULL;
+COMMENT ON INDEX comms.ix_comms_staff_record_user IS 'Mail and conversations: whether an account is staff of the sender''s school.';
+ALTER TABLE comms.staff_record ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comms.staff_record FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON comms.staff_record USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+CREATE TABLE comms.guardian_link (
+    tenant_id uuid NOT NULL,
+    link_id uuid NOT NULL,
+    student_id uuid NOT NULL,
+    guardian_id uuid NOT NULL,
+    guardian_person_id uuid NOT NULL,
+    guardian_user_id uuid,
+    status varchar(20) NOT NULL,
+    is_deleted boolean NOT NULL DEFAULT false,
+    source_version integer NOT NULL,
+    synced_at timestamptz NOT NULL,
+    CONSTRAINT pk_comms_guardian_link PRIMARY KEY (tenant_id, link_id),
+    CONSTRAINT ck_comms_guardian_link_source_version CHECK (source_version >= 1)
+);
+COMMENT ON TABLE comms.guardian_link IS 'Which guardian record, person and login account is linked to which student, kept from sis.student_guardian created/updated/deleted events (comms never reads sis''s schema), so a guardian reaches only the feedback threads opened as them and mail and conversations reach the guardians of the sender''s school.';
+COMMENT ON COLUMN comms.guardian_link.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
+COMMENT ON COLUMN comms.guardian_link.link_id IS 'sis.student_guardian.id (logical, maintained from its events).';
+COMMENT ON COLUMN comms.guardian_link.student_id IS 'sis.student.id of the child.';
+COMMENT ON COLUMN comms.guardian_link.guardian_id IS 'sis.guardian.id, as feedback threads name the guardian.';
+COMMENT ON COLUMN comms.guardian_link.guardian_person_id IS 'Person of the guardian (people.person.id), matched against the token''s person.';
+COMMENT ON COLUMN comms.guardian_link.guardian_user_id IS 'Login account of the guardian when the link was last announced (iam.user_account.id); NULL while it has none.';
+COMMENT ON COLUMN comms.guardian_link.status IS 'State of the link in sis; only an active link counts.';
+COMMENT ON COLUMN comms.guardian_link.is_deleted IS 'The link was deleted in sis; kept so a late event cannot restore it.';
+COMMENT ON COLUMN comms.guardian_link.source_version IS 'Row version of the sis.student_guardian row this entry reflects; an event with an older or equal version is ignored.';
+COMMENT ON COLUMN comms.guardian_link.synced_at IS 'When the row was last changed by an event.';
+CREATE INDEX ix_comms_guardian_link_guardian ON comms.guardian_link (tenant_id, guardian_id) WHERE NOT is_deleted;
+COMMENT ON INDEX comms.ix_comms_guardian_link_guardian IS 'Feedback threads: whether the caller is the thread''s guardian.';
+CREATE INDEX ix_comms_guardian_link_user ON comms.guardian_link (tenant_id, guardian_user_id) WHERE NOT is_deleted AND guardian_user_id IS NOT NULL;
+COMMENT ON INDEX comms.ix_comms_guardian_link_user IS 'Mail and conversations: whether an account is a guardian of a student of the sender''s school.';
+ALTER TABLE comms.guardian_link ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comms.guardian_link FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON comms.guardian_link USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
 
 -- === Privacy tasks (design PRIVACY-AND-CONSENT-CENTRE §9.1, §10) and the module's scheduled jobs (core JobSchedule) ===
 CREATE TABLE comms.privacy_task_receipt (

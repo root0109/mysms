@@ -1,5 +1,9 @@
 package com.mysms.comms.business;
 
+import java.time.temporal.ChronoUnit;
+import java.time.ZoneOffset;
+import java.time.OffsetDateTime;
+import com.mysms.comms.api.model.FollowClassPageRequest;
 import com.mysms.authclient.DataScope;
 import com.mysms.comms.api.model.ClassPage;
 import com.mysms.comms.api.model.ClassPageAttachment;
@@ -62,6 +66,7 @@ public class ClassPageService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "comms.class_page.create";
     static final String PERMISSION_UPDATE = "comms.class_page.update";
     static final String PERMISSION_DELETE = "comms.class_page.delete";
+    static final String PERMISSION_FOLLOW_CLASS_PAGE = "comms.class_page.follow_class_page";
     /** The contract's ClassPageUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("institutionId", "academicYearId", "pageCategoryId", "name", "description", "coverImageFileId",
@@ -224,6 +229,39 @@ public class ClassPageService extends AppTransactionManager {
             }
             audit.recordDelete(AGGREGATE, id);
             outbox.publish(AGGREGATE + CommsEvents.DELETED, AGGREGATE, id, CommsEvents.payload(id));
+        });
+    }
+
+    /**
+     * comms.FollowClassPage: a member sets whether they follow the page. Following is a preference of an existing
+     * member, never a way in: the page of someone who is not an active member of it is 404, like an absent page.
+     */
+    public ClassPageMember followClassPage(UUID id, FollowClassPageRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_FOLLOW_CLASS_PAGE);
+        UUID caller = OwnRows.caller();
+        boolean follow = Boolean.TRUE.equals(request.getFollow());
+        return doInWriteTransaction(() -> {
+            ClassPageEntity page = loadVisible(scope, id);
+            ClassPageMemberEntity member = Boolean.TRUE.equals(page.getIsActive())
+                    ? classPageMemberRepository.findMembership(id, caller).orElse(null) : null;
+            if (member == null) {
+                throw new ResourceNotFoundException(AGGREGATE, id);
+            }
+            if (Boolean.valueOf(follow).equals(member.getIsFollowing())) {
+                return classPageMemberMapper.toDto(member);
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            if (classPageMemberRepository.setFollowing(member.getId(), member.getRowVersion(), follow, now,
+                    Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The membership changed since it was read.");
+            }
+            String step = follow ? "follow" : "unfollow";
+            audit.recordTransition(CLASS_PAGE_MEMBER_AGGREGATE, member.getId(), step, List.of("isFollowing"), null);
+            outbox.publish(CLASS_PAGE_MEMBER_AGGREGATE + "." + step, CLASS_PAGE_MEMBER_AGGREGATE, member.getId(),
+                    CommsEvents.payload(member.getId()));
+            return classPageMemberMapper.toDto(classPageMemberRepository.findById(member.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException(CLASS_PAGE_MEMBER_AGGREGATE, member.getId())));
         });
     }
 

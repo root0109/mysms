@@ -152,7 +152,8 @@ public class InstitutionService extends AppTransactionManager {
             }
             InstitutionEntity stored = repository.insert(entity);
             audit.recordCreate(AGGREGATE, stored.getId());
-            outbox.publish(AGGREGATE + OrgEvents.CREATED, AGGREGATE, stored.getId(), OrgEvents.payload(stored.getId()));
+            outbox.publish(AGGREGATE + OrgEvents.CREATED, AGGREGATE, stored.getId(),
+                    OrgEvents.institution(stored.getId(), stored.getTimezone(), stored.getRowVersion()));
             return mapper.toDto(stored);
         });
     }
@@ -186,7 +187,8 @@ public class InstitutionService extends AppTransactionManager {
             }
             entity.setRowVersion(expected + 1);
             audit.recordUpdate(AGGREGATE, id, fields);
-            outbox.publish(AGGREGATE + OrgEvents.UPDATED, AGGREGATE, id, OrgEvents.payload(id));
+            outbox.publish(AGGREGATE + OrgEvents.UPDATED, AGGREGATE, id,
+                    OrgEvents.institution(id, entity.getTimezone(), entity.getRowVersion()));
             return mapper.toDto(entity);
         });
     }
@@ -226,7 +228,8 @@ public class InstitutionService extends AppTransactionManager {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
             audit.recordDelete(AGGREGATE, id);
-            outbox.publish(AGGREGATE + OrgEvents.DELETED, AGGREGATE, id, OrgEvents.payload(id));
+            outbox.publish(AGGREGATE + OrgEvents.DELETED, AGGREGATE, id,
+                    OrgEvents.institution(id, entity.getTimezone(), expected + 1));
         });
     }
 

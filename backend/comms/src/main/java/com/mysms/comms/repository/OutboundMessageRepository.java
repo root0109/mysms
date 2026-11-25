@@ -111,6 +111,18 @@ public class OutboundMessageRepository {
             SELECT EXISTS (SELECT 1 FROM comms.message_template WHERE tenant_id = :tenantId
                 AND id = :id AND deleted_at IS NULL)
             """;
+    /** One delivery step: the status moves from what the step expects, under the row_version guard. */
+    private static final String MOVE = """
+            UPDATE comms.outbound_message
+               SET status = :to,
+                   provider_response = :response,
+                   sent_at = :sentAt,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND status = :fromStatus AND deleted_at IS NULL
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
             """;
@@ -185,6 +197,17 @@ public class OutboundMessageRepository {
     /** Whether the referenced comms.message_template row exists (live). */
     public boolean existsTemplateId(UUID id) {
         return Boolean.TRUE.equals(jdbc.sql(EXISTS_TEMPLATE_ID).param("id", id).query(Boolean.class).single());
+    }
+
+    /**
+     * Moves the message from one delivery status to another, setting the provider's answer and the sent time (null
+     * clears them); 0 rows when it changed meanwhile.
+     */
+    public int move(UUID id, int expected, String from, String to, String response, OffsetDateTime sentAt,
+            OffsetDateTime now, UUID actor) {
+        return jdbc.sql(MOVE).param("id", id).param("expected", expected).param("fromStatus", from).param("to", to)
+                .param("response", response).param("sentAt", sentAt).param("now", now).param("actor", actor)
+                .update();
     }
 
     /** Rows of the caller's institutions only. */

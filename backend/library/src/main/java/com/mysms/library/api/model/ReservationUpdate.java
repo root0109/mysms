@@ -33,9 +33,6 @@ public class ReservationUpdate {
   private @Nullable UUID requestedByPersonId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID requestedByUserId;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private @Nullable LocalDate dateFrom;
 
@@ -103,26 +100,6 @@ public class ReservationUpdate {
     this.requestedByPersonId = requestedByPersonId;
   }
 
-  public ReservationUpdate requestedByUserId(@Nullable UUID requestedByUserId) {
-    this.requestedByUserId = requestedByUserId;
-    return this;
-  }
-
-  /**
-   * Requester account.
-   * @return requestedByUserId
-   */
-  @Valid 
-  @JsonProperty("requestedByUserId")
-  public @Nullable UUID getRequestedByUserId() {
-    return requestedByUserId;
-  }
-
-  @JsonProperty("requestedByUserId")
-  public void setRequestedByUserId(@Nullable UUID requestedByUserId) {
-    this.requestedByUserId = requestedByUserId;
-  }
-
   public ReservationUpdate dateFrom(@Nullable LocalDate dateFrom) {
     this.dateFrom = dateFrom;
     return this;
@@ -175,14 +152,13 @@ public class ReservationUpdate {
     return Objects.equals(this.mediaId, reservationUpdate.mediaId) &&
         Objects.equals(this.reference, reservationUpdate.reference) &&
         Objects.equals(this.requestedByPersonId, reservationUpdate.requestedByPersonId) &&
-        Objects.equals(this.requestedByUserId, reservationUpdate.requestedByUserId) &&
         Objects.equals(this.dateFrom, reservationUpdate.dateFrom) &&
         Objects.equals(this.dateTo, reservationUpdate.dateTo);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(mediaId, reference, requestedByPersonId, requestedByUserId, dateFrom, dateTo);
+    return Objects.hash(mediaId, reference, requestedByPersonId, dateFrom, dateTo);
   }
 
   @Override
@@ -192,7 +168,6 @@ public class ReservationUpdate {
     sb.append("    mediaId: ").append(toIndentedString(mediaId)).append("\n");
     sb.append("    reference: ").append(toIndentedString(reference)).append("\n");
     sb.append("    requestedByPersonId: ").append(toIndentedString(requestedByPersonId)).append("\n");
-    sb.append("    requestedByUserId: ").append(toIndentedString(requestedByUserId)).append("\n");
     sb.append("    dateFrom: ").append(toIndentedString(dateFrom)).append("\n");
     sb.append("    dateTo: ").append(toIndentedString(dateTo)).append("\n");
     sb.append("}");

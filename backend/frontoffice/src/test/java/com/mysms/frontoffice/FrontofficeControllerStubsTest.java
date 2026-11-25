@@ -20,6 +20,6 @@ class FrontofficeControllerStubsTest {
         assertThat(ControllerStubs.count(CallLogController.class)).as("CallLog").isEqualTo(0);
         assertThat(ControllerStubs.count(DirectoryContactController.class)).as("DirectoryContact").isEqualTo(0);
         assertThat(ControllerStubs.count(PostalRecordController.class)).as("PostalRecord").isEqualTo(0);
-        assertThat(ControllerStubs.count(VisitorLogController.class)).as("VisitorLog").isEqualTo(1);
+        assertThat(ControllerStubs.count(VisitorLogController.class)).as("VisitorLog").isEqualTo(0);
     }
 }

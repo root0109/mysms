@@ -32,7 +32,6 @@ import com.mysms.comms.v1.UpdateFeedbackMessageRequest;
 import com.mysms.comms.v1.UpdateFeedbackMessageResponse;
 import com.mysms.comms.v1.UpdateFeedbackThreadRequest;
 import com.mysms.comms.v1.UpdateFeedbackThreadResponse;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import io.grpc.stub.StreamObserver;
@@ -153,9 +152,11 @@ public class FeedbackThreadResolver extends FeedbackThreadServiceGrpc.FeedbackTh
         ProtoBridge.send(out, bridge.reply(ReopenFeedbackThreadResponse.newBuilder(), "feedback_thread", changed).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void markFeedbackMessage(MarkFeedbackMessageRequest request, StreamObserver<MarkFeedbackMessageResponse> out) {
-        throw new NotImplementedException();
+        FeedbackMessage changed = service.markFeedbackMessage(bridge.id(request.getMessageId(), "messageId"),
+                bridge.body(request, com.mysms.comms.api.model.MarkFeedbackMessageRequest.class, "message_id",
+                        "request_id"));
+        ProtoBridge.send(out, bridge.reply(MarkFeedbackMessageResponse.newBuilder(), "result", changed).build());
     }
 }

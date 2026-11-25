@@ -1,6 +1,7 @@
 package com.mysms.frontoffice.business;
 
 import com.mysms.authclient.DataScope;
+import com.mysms.frontoffice.api.model.CheckOutVisitorRequest;
 import com.mysms.frontoffice.api.model.VisitorLog;
 import com.mysms.frontoffice.api.model.VisitorLogUpdate;
 import com.mysms.core.context.Actor;
@@ -8,6 +9,7 @@ import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.FieldError;
+import com.mysms.core.error.InvalidStateException;
 import com.mysms.core.error.PreconditionFailedException;
 import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.error.ValidationFailedException;
@@ -29,9 +31,12 @@ import com.mysms.frontoffice.events.FrontofficeEvents;
 import com.mysms.frontoffice.mapper.VisitorLogMapper;
 import com.mysms.frontoffice.repository.VisitorLogRepository;
 import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -50,6 +55,10 @@ public class VisitorLogService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "frontoffice.visitor_log.create";
     static final String PERMISSION_UPDATE = "frontoffice.visitor_log.update";
     static final String PERMISSION_DELETE = "frontoffice.visitor_log.delete";
+    static final String PERMISSION_CHECK_OUT = "frontoffice.visitor_log.check_out_visitor";
+    static final String STEP_CHECK_OUT = "checkOutVisitor";
+    /** The zone whose day starts first: a visit dated after its today has not happened anywhere yet. */
+    private static final ZoneOffset LATEST_ZONE = ZoneOffset.ofHours(14);
     /** The contract's VisitorLogUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("institutionId", "academicYearId", "visitorName", "visitorType", "email", "phone", "companyName",
@@ -184,6 +193,50 @@ public class VisitorLogService extends AppTransactionManager {
             }
             audit.recordDelete(AGGREGATE, id);
             outbox.publish(AGGREGATE + FrontofficeEvents.DELETED, AGGREGATE, id, FrontofficeEvents.payload(id));
+        });
+    }
+
+    /**
+     * Records when a visitor still inside left: once only (409 after), not before the entry time and not for a visit
+     * dated after today anywhere on earth (422), under the body etag when one is sent (412). A visit is one day's: one
+     * that runs past midnight is checked out at 23:59.
+     */
+    public VisitorLog checkOutVisitor(UUID id, CheckOutVisitorRequest request) {
+        validator.validate(request);
+        List<FieldError> wire = new ArrayList<>();
+        WireValues.checkTime("exitTime", request.getExitTime(), wire);
+        if (!wire.isEmpty()) {
+            throw new ValidationFailedException(wire);
+        }
+        OptionalInt bodyVersion = Etags.bodyVersion(request.getEtag());
+        DataScope scope = DataScope.current(PERMISSION_CHECK_OUT);
+        return doInWriteTransaction(() -> {
+            VisitorLogEntity entity = loadVisible(scope, id);
+            scope.requireWritable(institutionOf(entity));
+            if (bodyVersion.isPresent() && bodyVersion.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (entity.getExitTime() != null) {
+                throw new InvalidStateException("The visitor has already been checked out.");
+            }
+            if (entity.getVisitDate().isAfter(LocalDate.now(clock.withZone(LATEST_ZONE)))) {
+                throw new ValidationFailedException(
+                        List.of(new FieldError("exitTime", "the visit is still to come", "VisitNotStarted")));
+            }
+            entity.setExitTime(WireValues.time(request.getExitTime()));
+            if (entity.getEntryTime() != null && entity.getExitTime().isBefore(entity.getEntryTime())) {
+                throw new ValidationFailedException(
+                        List.of(new FieldError("exitTime", "must not be before the entry time", "ExitBeforeEntry")));
+            }
+            int expected = entity.getRowVersion();
+            entity.onUpdatingData(Actor.current(), clock);
+            if (repository.checkOut(entity, expected) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            entity.setRowVersion(expected + 1);
+            audit.recordTransition(AGGREGATE, id, STEP_CHECK_OUT, List.of("exitTime"), null);
+            outbox.publish(AGGREGATE + "." + STEP_CHECK_OUT, AGGREGATE, id, FrontofficeEvents.payload(id));
+            return mapper.toDto(entity);
         });
     }
 

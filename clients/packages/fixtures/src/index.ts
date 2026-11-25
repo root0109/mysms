@@ -63,3 +63,7 @@ export {
   PRIVACY_GOVERNANCE,
   privacyOfficer,
 } from './privacyGovernance';
+export { ORG_ADMIN, fakeOrg, orgFixture } from './org';
+export { PEOPLE_OFFICE, fakePeople, peopleFixture } from './people';
+export { ACADEMICS_ADMIN, academicsFixture, fakeAcademics } from './academics';
+export { COMMS_STAFF, SERVICES_MEMBER, commsFixture, fakeComms, fakeServices } from './comms';

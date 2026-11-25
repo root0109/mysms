@@ -9,11 +9,13 @@ import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.paging.ValueType;
 import com.mysms.library.config.LibraryDatabaseConfig;
 import com.mysms.library.domain.LoanEntity;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -118,6 +120,58 @@ public class LoanRepository {
     private static final String INSTITUTION_OF = """
             SELECT p0.institution_id FROM library.media p0 WHERE p0.tenant_id = :tenantId AND p0.id = :ref
             """;
+    /** The loan's own lifecycle steps: status, the return date and the fine, under the version guard. */
+    private static final String SETTLE = """
+            UPDATE library.loan
+               SET status = :status,
+                   returned_on = :returnedOn,
+                   fine_amount = :fineAmount,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String LINK_INVOICE = """
+            UPDATE library.loan
+               SET invoice_id = :invoiceId,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL AND invoice_id IS NULL
+            """;
+    /** The overdue fine per day of the card type behind the loan's card; empty when the card or type is gone. */
+    private static final String FINE_PER_DAY = """
+            SELECT t.fine_per_day
+              FROM library.library_card c
+              JOIN library.library_card_type t ON t.id = c.card_type_id AND t.tenant_id = :tenantId
+             WHERE c.tenant_id = :tenantId
+               AND c.id = :cardId
+            """;
+    /** The library card of the loan: whose it is, for the fine's invoice. */
+    private static final String CARD_HOLDER = """
+            SELECT c.institution_id, c.person_id, c.student_id, c.holder_type
+              FROM library.library_card c
+             WHERE c.tenant_id = :tenantId
+               AND c.id = :cardId
+            """;
+    /** The borrower's own loans (lent to their account or on a card of their person), and the staffed ones. */
+    private static final String REACHABLE = """
+             (r.borrower_user_id = :borrowerUser
+              OR (:staff AND (:staffAll OR r.media_id IN (SELECT s0.id FROM library.media s0
+                                                          WHERE s0.tenant_id = :tenantId
+                                                            AND s0.institution_id = ANY(:staffIds)))))
+            """;
+    /** {@link #REACHABLE}, and the loans on a card of the borrower's person. */
+    private static final String REACHABLE_WITH_PERSON = """
+             (r.borrower_user_id = :borrowerUser
+              OR r.library_card_id IN (SELECT c0.id FROM library.library_card c0
+                                        WHERE c0.tenant_id = :tenantId AND c0.person_id = :borrowerPerson)
+              OR (:staff AND (:staffAll OR r.media_id IN (SELECT s0.id FROM library.media s0
+                                                          WHERE s0.tenant_id = :tenantId
+                                                            AND s0.institution_id = ANY(:staffIds)))))
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.media_id IN (SELECT p0.id FROM library.media p0 WHERE p0.tenant_id = :tenantId
                  AND (p0.institution_id =
@@ -206,6 +260,32 @@ public class LoanRepository {
     }
 
     /** The institution owning the row reached through media_id (empty: a tenant-level row, or none). */
+    /** Moves the loan to a status with its return date and fine; 0 rows means it changed since it was read. */
+    public int settle(UUID id, int expected, String status, LocalDate returnedOn, BigDecimal fineAmount,
+            OffsetDateTime now, UUID actor) {
+        return jdbc.sql(SETTLE).param("id", id).param("expected", expected).param("status", status)
+                .param("returnedOn", returnedOn).param("fineAmount", fineAmount).param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Records the fine's invoice once; 0 rows when the loan changed or already has one. */
+    public int linkInvoice(UUID id, int expected, UUID invoiceId, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(LINK_INVOICE).param("id", id).param("expected", expected).param("invoiceId", invoiceId)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    public Optional<BigDecimal> finePerDay(UUID cardId) {
+        return jdbc.sql(FINE_PER_DAY).param("cardId", cardId).query(BigDecimal.class).optional();
+    }
+
+    public Optional<CardHolder> cardHolder(UUID cardId) {
+        return jdbc.sql(CARD_HOLDER).param("cardId", cardId)
+                .query((rs, row) -> new CardHolder(rs.getObject("institution_id", UUID.class),
+                        rs.getObject("person_id", UUID.class), rs.getObject("student_id", UUID.class),
+                        rs.getString("holder_type")))
+                .optional();
+    }
+
     public Optional<UUID> institutionOf(UUID ref) {
         if (ref == null) {
             return Optional.empty();
@@ -213,6 +293,14 @@ public class LoanRepository {
         return jdbc.sql(INSTITUTION_OF).param("ref", ref)
                 .query((rs, row) -> Optional.ofNullable(rs.getObject(1, UUID.class)))
                 .optional().flatMap(found -> found);
+    }
+
+    /** The loans of the borrower's account or person, and every loan of the institutions the staff scope reaches. */
+    public static SqlFragment reachableBy(UUID user, Optional<UUID> person, DataScope staff) {
+        Map<String, Object> params = new HashMap<>(Map.of("borrowerUser", user, "staff", !staff.institutions().isEmpty()
+                || staff.all(), "staffAll", staff.all(), "staffIds", staff.institutionArray()));
+        person.ifPresent(p -> params.put("borrowerPerson", p));
+        return new SqlFragment(person.isPresent() ? REACHABLE_WITH_PERSON : REACHABLE, params);
     }
 
     /** Rows of the caller's institutions only. */

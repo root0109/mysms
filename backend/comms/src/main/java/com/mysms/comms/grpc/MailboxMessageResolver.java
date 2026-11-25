@@ -13,7 +13,6 @@ import com.mysms.comms.v1.ListMailboxMessagesResponse;
 import com.mysms.comms.v1.MailboxMessageServiceGrpc;
 import com.mysms.comms.v1.MarkMailReadRequest;
 import com.mysms.comms.v1.MarkMailReadResponse;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import io.grpc.stub.StreamObserver;
@@ -54,15 +53,16 @@ public class MailboxMessageResolver extends MailboxMessageServiceGrpc.MailboxMes
         ProtoBridge.send(out, DeleteMailboxMessageResponse.getDefaultInstance());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void composeMail(ComposeMailRequest request, StreamObserver<ComposeMailResponse> out) {
-        throw new NotImplementedException();
+        MailboxMessage sent = service.composeMail(bridge.body(request,
+                com.mysms.comms.api.model.ComposeMailRequest.class, "request_id"));
+        ProtoBridge.send(out, bridge.reply(ComposeMailResponse.newBuilder(), "mailbox_message", sent).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void markMailRead(MarkMailReadRequest request, StreamObserver<MarkMailReadResponse> out) {
-        throw new NotImplementedException();
+        MailboxMessage read = service.markMailRead(bridge.id(request.getMailboxMessageId(), "mailboxMessageId"));
+        ProtoBridge.send(out, bridge.reply(MarkMailReadResponse.newBuilder(), "mailbox_message", read).build());
     }
 }

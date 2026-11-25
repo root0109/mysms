@@ -57,7 +57,9 @@ class FeeStatementOwnershipTest {
     private final InvoiceService service = new InvoiceService(tx.database, tx.transactions, invoices,
             mock(InvoiceMapper.class), mock(InvoiceLineRepository.class), mock(InvoiceLineMapper.class), dues,
             mock(StudentFeeDueMapper.class), payments, views, ledger, mock(NumberSequenceRepository.class), ownership,
-            mock(CurrencyLookup.class), mock(OutboxWriter.class), mock(AuditWriter.class), mock(DtoValidator.class),
+            mock(CurrencyLookup.class), mock(InstitutionCurrencyLookup.class), mock(ChargeTargets.class),
+            mock(OutboxWriter.class),
+            mock(AuditWriter.class), mock(DtoValidator.class),
             Clock.systemUTC());
     private final UUID schoolA = UUID.randomUUID();
     private final UUID schoolB = UUID.randomUUID();

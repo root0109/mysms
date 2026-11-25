@@ -70,6 +70,7 @@ public class AcademicYearRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String LOCK_BY_ID = FIND_BY_ID + " FOR UPDATE";
     private static final String INSERT = """
             INSERT INTO org.academic_year
             (id, tenant_id, institution_id, name, description, start_date, end_date, term_structure, is_current,
@@ -129,6 +130,36 @@ public class AcademicYearRepository {
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
+    private static final String TRANSITION_ACTIVATE_ACADEMIC_YEAR = """
+            UPDATE org.academic_year
+               SET status = 'active',
+                   is_current = true,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL AND status = 'planned'
+            """;
+    private static final String OTHER_ACTIVE = """
+            SELECT EXISTS (SELECT 1 FROM org.academic_year r
+                            WHERE r.tenant_id = :tenantId AND r.deleted_at IS NULL
+                              AND r.institution_id = :institutionId AND r.status = 'active' AND r.id <> :id)
+            """;
+    private static final String OTHER_CURRENT = """
+            SELECT r.id FROM org.academic_year r
+             WHERE r.tenant_id = :tenantId AND r.deleted_at IS NULL
+               AND r.institution_id = :institutionId AND r.is_current AND r.id <> :id
+               FOR UPDATE
+            """;
+    private static final String CLEAR_CURRENT = """
+            UPDATE org.academic_year
+               SET is_current = false,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND deleted_at IS NULL AND is_current
+            """;
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds))
             """;
@@ -141,6 +172,11 @@ public class AcademicYearRepository {
 
     public Optional<AcademicYearEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(AcademicYearRepository::map).optional();
+    }
+
+    /** The live year, locked until the transaction ends, so work that reads and then writes its terms serializes. */
+    public Optional<AcademicYearEntity> lockById(UUID id) {
+        return jdbc.sql(LOCK_BY_ID).param("id", id).query(AcademicYearRepository::map).optional();
     }
 
     public Page<AcademicYearEntity> list(PageRequest page, SqlFragment filter) {
@@ -219,6 +255,29 @@ public class AcademicYearRepository {
     }
 
     /** org.CloseAcademicYear; 0 rows means the row changed (or vanished) since it was read. */
+    /** Activates a planned year as its institution's current one; 0 rows means it changed since it was read. */
+    public int activateAcademicYear(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_ACTIVATE_ACADEMIC_YEAR).param("id", id).param("expected", expected)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    /** Whether another live year of the institution is active. */
+    public boolean otherActive(UUID institutionId, UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(OTHER_ACTIVE).param("institutionId", institutionId).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** The other live years of the institution marked current, locked until the transaction ends. */
+    public List<UUID> lockOtherCurrent(UUID institutionId, UUID id) {
+        return jdbc.sql(OTHER_CURRENT).param("institutionId", institutionId).param("id", id).query(UUID.class)
+                .list();
+    }
+
+    /** Takes the current mark off a year (another one became current). */
+    public int clearCurrent(UUID id, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(CLEAR_CURRENT).param("id", id).param("now", now).param("actor", actor).update();
+    }
+
     public int closeAcademicYear(UUID id, int expected, OffsetDateTime now, UUID actor) {
         return jdbc.sql(TRANSITION_CLOSE_ACADEMIC_YEAR)
                 .param("id", id)

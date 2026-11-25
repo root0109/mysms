@@ -1,5 +1,6 @@
 package com.mysms.comms.business;
 
+import com.mysms.comms.api.model.CompletePersonalEventRequest;
 import com.mysms.authclient.DataScope;
 import com.mysms.comms.api.model.ActivateEventRequest;
 import com.mysms.comms.api.model.CancelEventOccurrenceRequest;
@@ -125,6 +126,7 @@ public class EventService extends AppTransactionManager {
     static final String EVENT_OCCURRENCE_PERMISSION_UPDATE = "comms.event_occurrence.update";
     static final String EVENT_OCCURRENCE_PERMISSION_DELETE = "comms.event_occurrence.delete";
     static final String PERMISSION_CANCEL_EVENT_OCCURRENCE = "comms.event_occurrence.cancel_event_occurrence";
+    static final String PERMISSION_COMPLETE_PERSONAL_EVENT = "comms.event_occurrence.complete_personal_event";
     /** The contract's EventOccurrenceUpdate fields, in apply order. */
     static final List<String> EVENT_OCCURRENCE_WRITABLE =
             List.of("userId", "cohortId", "title", "color", "description", "startAt", "endAt", "isCancelled",
@@ -1048,6 +1050,44 @@ public class EventService extends AppTransactionManager {
             audit.recordTransition(EVENT_OCCURRENCE_AGGREGATE, id, "cancel", List.of("isCancelled"), request == null ? null
                     : request.getReason());
             outbox.publish(EVENT_OCCURRENCE_AGGREGATE + ".cancel", EVENT_OCCURRENCE_AGGREGATE, id, CommsEvents.payload(id));
+            return eventOccurrenceMapper.toDto(eventOccurrenceRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(EVENT_OCCURRENCE_AGGREGATE, id)));
+        });
+    }
+
+    /**
+     * comms.CompletePersonalEvent: the caller marks an occurrence of their own personal to-do event done. Personal
+     * events are private: an occurrence that is not the caller's — another person's event, or another attendee's copy
+     * — is 404 whatever the caller's grants. Allowed while the occurrence is neither cancelled nor completed.
+     */
+    public EventOccurrence completePersonalEvent(UUID eventId, UUID id, CompletePersonalEventRequest request) {
+        UUID caller = OwnRows.caller();
+        return doInWriteTransaction(() -> {
+            EventOccurrenceEntity entity = eventOccurrenceRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(EVENT_OCCURRENCE_AGGREGATE, id));
+            EventEntity event = repository.findById(eventId).orElse(null);
+            boolean own = event != null && eventId.equals(entity.getEventId()) && "personal".equals(event.getAudience())
+                    && (caller.equals(entity.getUserId())
+                        || entity.getUserId() == null && caller.equals(event.getOwnerUserId()));
+            if (!own) {
+                throw new ResourceNotFoundException(EVENT_OCCURRENCE_AGGREGATE, id);
+            }
+            OptionalInt expected = Etags.bodyVersion(request == null ? null : request.getEtag());
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (Boolean.TRUE.equals(entity.getIsCancelled()) || "completed".equals(entity.getResponseStatus())) {
+                throw new InvalidStateException("Only an open occurrence can be completed.");
+            }
+            OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
+                    .truncatedTo(ChronoUnit.MICROS);
+            if (eventOccurrenceRepository.completePersonalEvent(id, entity.getRowVersion(), now,
+                    Actor.current().orElse(null)) == 0) {
+                throw new PreconditionFailedException("The row changed since it was read.");
+            }
+            audit.recordTransition(EVENT_OCCURRENCE_AGGREGATE, id, "complete", List.of("responseStatus"), null);
+            outbox.publish(EVENT_OCCURRENCE_AGGREGATE + ".complete", EVENT_OCCURRENCE_AGGREGATE, id,
+                    CommsEvents.payload(id));
             return eventOccurrenceMapper.toDto(eventOccurrenceRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(EVENT_OCCURRENCE_AGGREGATE, id)));
         });

@@ -1,9 +1,11 @@
 export { en, type Catalog, type MessageKey } from './catalogs/en';
-export { hi } from './catalogs/hi';
 export {
-  CATALOGS,
+  catalogVersion,
   createTranslator,
   enumLabel,
+  loadCatalog,
+  LOCALES,
+  onCatalogLoaded,
   resolveLocale,
   type Translate,
   type Values,

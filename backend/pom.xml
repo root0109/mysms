@@ -52,6 +52,7 @@
     <module>careers</module>
     <module>privacy</module>
     <module>app</module>
+    <module>demo-seed</module>
     <module>conformance</module>
   </modules>
 

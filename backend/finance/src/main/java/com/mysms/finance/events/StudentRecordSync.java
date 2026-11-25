@@ -15,11 +15,12 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Keeps finance.student_record — the person of each student record — in step with sis.student from its created and
- * updated events (finance never reads sis's schema), so privacy's tasks find a data principal's fee dues, concessions,
- * invoices and payments ({@link FinancePrivacyTaskHandler}). An entry changes only to a newer row version, so
- * out-of-order and repeated deliveries are harmless; a deleted student keeps its entry, since its books of account stay
- * the person's. Runs inside the event's tenant (messaging's InboxProcessor: exactly once per event).
+ * Keeps finance.student_record — the person, login account and institution of each student record — in step with
+ * sis.student from its created and updated events (finance never reads sis's schema), so privacy's tasks find a data
+ * principal's fee dues, concessions, invoices and payments ({@link FinancePrivacyTaskHandler}) and a charge bills only
+ * a student of its institution. An entry changes only to a newer row version, so out-of-order and repeated deliveries
+ * are harmless; a deleted student keeps its entry, since its books of account stay the person's. Runs inside the
+ * event's tenant (messaging's InboxProcessor: exactly once per event).
  */
 @Component
 public class StudentRecordSync implements EventSubscriptions {
@@ -61,12 +62,22 @@ public class StudentRecordSync implements EventSubscriptions {
             throw new RejectedEventException("student event " + event.id() + " has no row version");
         }
         UUID personId;
+        UUID userId;
+        UUID institutionId;
         try {
             personId = UUID.fromString(data.path("personId").asString(""));
+            userId = optionalUuid(data, "userId");
+            institutionId = optionalUuid(data, "institutionId");
         } catch (IllegalArgumentException malformed) {
-            throw new RejectedEventException("student event " + event.id() + " names no person");
+            throw new RejectedEventException("student event " + event.id() + " names no person or a malformed id");
         }
-        return records.apply(event.aggregateId(), personId, version,
+        return records.apply(event.aggregateId(), personId, userId, institutionId, version,
                 OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC));
+    }
+
+    /** The field's id, or none when it is absent, null or empty. */
+    static UUID optionalUuid(JsonNode data, String field) {
+        JsonNode value = data.path(field);
+        return value.isString() && !value.asString().isEmpty() ? UUID.fromString(value.asString()) : null;
     }
 }

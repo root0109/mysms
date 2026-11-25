@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FIRST_PAGE, nextPage, pageQuery } from '../api/pages';
+import { allPages, FIRST_PAGE, nextPage, pageQuery } from '../api/pages';
+import { RESOURCES } from '../generated/resources';
 import { STALE_TIME } from '../query/queryClient';
 import { queryKey } from '../query/keys';
 import { useRuntime } from '../react/useRuntime';
@@ -110,5 +111,48 @@ export function useRecordAction(def: ResourceDef) {
       void qc.invalidateQueries({ queryKey: queryKey(KEY, `${def.key}#item`) });
       return invalidate();
     },
+  });
+}
+
+/** The record type of api/standard-resources.json named `<module>.<Resource>`; undefined for an unknown name. */
+export function resourceDef(key: string): ResourceDef | undefined {
+  return RESOURCES.find((r) => r.key === key);
+}
+
+/**
+ * Every row of one record type that meets `params` (all pages), for a page that shows a small set whole: a role's
+ * permissions, a route's stops, a title's copies. Off while `enabled` is false or a nested type has no parent.
+ */
+export function useAllRecords(
+  key: string,
+  params: Omit<RecordListParams, 'page' | 'cursor' | 'size'> = {},
+  enabled = true,
+) {
+  const { api } = useRuntime();
+  const def = resourceDef(key);
+  return useQuery({
+    queryKey: queryKey(KEY, key, { ...params, all: true }),
+    queryFn: () =>
+      allPages((page) => listRecords(api, def as ResourceDef, { ...params, size: 500, ...pageQuery(page) })),
+    enabled: enabled && def !== undefined && (!def.parent || Boolean(params.parentId)),
+    staleTime: STALE_TIME.list,
+  });
+}
+
+/**
+ * How many rows of a record type meet a filter, counted up to `cap` (a dashboard says "50+" past it): one page of
+ * `cap` rows, no more. Off while `enabled` is false.
+ */
+export function useRecordTotal(key: string, filter: string | undefined, enabled = true, cap = 50) {
+  const { api } = useRuntime();
+  const def = resourceDef(key);
+  return useQuery({
+    queryKey: queryKey(KEY, key, { filter, total: cap }),
+    queryFn: async () => {
+      const page = await listRecords(api, def as ResourceDef, { size: cap, ...(filter ? { filter } : {}) });
+      return { count: page.data.length, more: page.paging.next !== undefined };
+    },
+    enabled: enabled && def !== undefined && !def.parent,
+    staleTime: STALE_TIME.list,
   });
 }

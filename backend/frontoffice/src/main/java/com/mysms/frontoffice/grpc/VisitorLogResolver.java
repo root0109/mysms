@@ -1,6 +1,5 @@
 package com.mysms.frontoffice.grpc;
 
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.frontoffice.api.model.VisitorLog;
@@ -75,9 +74,11 @@ public class VisitorLogResolver extends VisitorLogServiceGrpc.VisitorLogServiceI
         ProtoBridge.send(out, DeleteVisitorLogResponse.getDefaultInstance());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void checkOutVisitor(CheckOutVisitorRequest request, StreamObserver<CheckOutVisitorResponse> out) {
-        throw new NotImplementedException();
+        VisitorLog changed = visitorLogService.checkOutVisitor(bridge.id(request.getVisitorLogId(), "visitorLogId"),
+                bridge.body(request, com.mysms.frontoffice.api.model.CheckOutVisitorRequest.class, "visitor_log_id",
+                        "request_id"));
+        ProtoBridge.send(out, bridge.reply(CheckOutVisitorResponse.newBuilder(), "visitor_log", changed).build());
     }
 }

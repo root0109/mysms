@@ -1,17 +1,46 @@
 import { IntlMessageFormat } from 'intl-messageformat';
 import { en, type Catalog, type MessageKey } from './catalogs/en';
-import { hi } from './catalogs/hi';
 
 export type Values = Record<string, string | number | Date | boolean>;
 export type Translate = (key: MessageKey, values?: Values) => string;
 
-export const CATALOGS: Record<string, Partial<Catalog>> = { en, hi };
+/** The locales the apps ship a catalogue for. en is built in; every other one loads on first use. */
+export const LOCALES: readonly string[] = ['en', 'hi'];
+
+/** How each catalogue but en is fetched: its own chunk, so the initial route carries English only (ui/05 §10). */
+const LOADERS: Readonly<Record<string, () => Promise<Partial<Catalog>>>> = {
+  hi: () => import('./catalogs/hi').then((module) => module.hi),
+};
+const loaded = new Map<string, Partial<Catalog>>([['en', en]]);
+const listeners = new Set<() => void>();
+let version = 0;
+
+/**
+ * Loads a locale's catalogue once (en and unknown locales need nothing); listeners hear when one arrives, so a
+ * screen first shown in English re-renders in the reader's language (Observer).
+ */
+export async function loadCatalog(locale: string): Promise<void> {
+  const load = LOADERS[locale];
+  if (!load || loaded.has(locale)) return;
+  loaded.set(locale, await load());
+  version += 1;
+  for (const listener of listeners) listener();
+}
+
+/** Counts the catalogues loaded so far: a snapshot for React's `useSyncExternalStore`. */
+export const catalogVersion = (): number => version;
+
+/** Calls `listener` each time a catalogue arrives; returns the way to stop. */
+export function onCatalogLoaded(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
 
 /** user locale → tenant default → en (ui/04 §7); only locales with a catalogue are chosen. */
 export function resolveLocale(
   userLocale?: string | null,
   tenantDefault?: string | null,
-  available = Object.keys(CATALOGS),
+  available: readonly string[] = LOCALES,
 ): string {
   for (const candidate of [userLocale, tenantDefault]) {
     if (!candidate) continue;
@@ -22,12 +51,14 @@ export function resolveLocale(
   return 'en';
 }
 
-/** A translator for one locale. Missing keys fall back to en; formats are cached per key. */
+/**
+ * A translator for one locale, from its catalogue as loaded now (`loadCatalog`) or the one given. Missing keys — and
+ * every key while the catalogue is still loading — fall back to en; formats are cached per key.
+ */
 export function createTranslator(
   locale: string,
-  catalogs: Record<string, Partial<Catalog>> = CATALOGS,
+  catalog: Partial<Catalog> = loaded.get(locale) ?? {},
 ): Translate {
-  const catalog = catalogs[locale] ?? {};
   const cache = new Map<MessageKey, IntlMessageFormat>();
   return (key, values) => {
     let fmt = cache.get(key);

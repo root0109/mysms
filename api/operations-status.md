@@ -12,24 +12,24 @@ misleading 404.
 | assessment | 132 | 132 | 0 |
 | attendance | 33 | 33 | 0 |
 | careers | 40 | 40 | 0 |
-| comms | 235 | 202 | 33 |
+| comms | 235 | 235 | 0 |
 | facility | 25 | 25 | 0 |
-| finance | 79 | 79 | 0 |
-| frontoffice | 21 | 20 | 1 |
+| finance | 80 | 80 | 0 |
+| frontoffice | 21 | 21 | 0 |
 | hr | 40 | 40 | 0 |
 | iam | 91 | 91 | 0 |
-| library | 95 | 90 | 5 |
+| library | 95 | 95 | 0 |
 | lms | 712 | 712 | 0 |
 | master | 20 | 20 | 0 |
-| org | 50 | 47 | 3 |
+| org | 50 | 50 | 0 |
 | payroll | 58 | 58 | 0 |
-| people | 68 | 66 | 2 |
+| people | 68 | 68 | 0 |
 | platform | 86 | 86 | 0 |
 | privacy | 71 | 71 | 0 |
 | sis | 108 | 108 | 0 |
-| timetable | 25 | 23 | 2 |
+| timetable | 25 | 25 | 0 |
 | transport | 15 | 15 | 0 |
-| **all** | **2122** | **2076** | **46** |
+| **all** | **2123** | **2123** | **0** |
 
 ## academics
 
@@ -384,25 +384,25 @@ misleading 404.
 | Operation | Method | Path | Permission | Status | Why not served |
 |---|---|---|---|---|---|
 | `comms.ActivateEvent` | POST | `/v1/comms/events/{eventId}:activate` | `comms.event.activate_event` | served |  |
-| `comms.AddGroupMembers` | POST | `/v1/comms/audience-groups/{audienceGroupId}:addMembers` | `comms.audience_group.add_group_members` | 501 | workflow / custom operation |
+| `comms.AddGroupMembers` | POST | `/v1/comms/audience-groups/{audienceGroupId}:addMembers` | `comms.audience_group.add_group_members` | served |  |
 | `comms.ApprovePost` | POST | `/v1/comms/posts/{postId}:approve` | `comms.post.approve_post` | served |  |
-| `comms.ArchiveNotifications` | POST | `/v1/comms/notifications:archive` | `comms.in_app_notification.archive_notifications` | 501 | workflow / custom operation |
+| `comms.ArchiveNotifications` | POST | `/v1/comms/notifications:archive` | `comms.in_app_notification.archive_notifications` | served |  |
 | `comms.CancelEventOccurrence` | POST | `/v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}:cancel` | `comms.event_occurrence.cancel_event_occurrence` | served |  |
 | `comms.CancelOperation` | POST | `/v1/comms/operations/{operationId}:cancel` | `comms.operation.cancel_operation` | served |  |
-| `comms.CancelOutboundMessage` | POST | `/v1/comms/outbound-messages/{outboundMessageId}:cancel` | `comms.outbound_message.cancel_outbound_message` | 501 | workflow / custom operation |
+| `comms.CancelOutboundMessage` | POST | `/v1/comms/outbound-messages/{outboundMessageId}:cancel` | `comms.outbound_message.cancel_outbound_message` | served |  |
 | `comms.CancelPost` | POST | `/v1/comms/posts/{postId}:cancel` | `comms.post.cancel_post` | served |  |
-| `comms.ClaimTask` | POST | `/v1/comms/tasks/{taskId}:claim` | `comms.task.claim_task` | 501 | workflow / custom operation |
+| `comms.ClaimTask` | POST | `/v1/comms/tasks/{taskId}:claim` | `comms.task.claim_task` | served |  |
 | `comms.CloseFeedbackThread` | POST | `/v1/comms/feedback-threads/{feedbackThreadId}:close` | `comms.feedback_thread.close_feedback_thread` | served |  |
-| `comms.CloseNoticeReplies` | POST | `/v1/comms/notices/{noticeId}:closeReplies` | `comms.notice.close_notice_replies` | 501 | workflow / custom operation |
-| `comms.CompletePersonalEvent` | POST | `/v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}:complete` | `comms.event_occurrence.complete_personal_event` | 501 | workflow / custom operation |
+| `comms.CloseNoticeReplies` | POST | `/v1/comms/notices/{noticeId}:closeReplies` | `comms.notice.close_notice_replies` | served |  |
+| `comms.CompletePersonalEvent` | POST | `/v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}:complete` | `comms.event_occurrence.complete_personal_event` | served |  |
 | `comms.CompleteTask` | POST | `/v1/comms/tasks/{taskId}:complete` | `comms.task.complete_task` | served |  |
-| `comms.ComposeMail` | POST | `/v1/comms/mailbox-messages:compose` | `comms.mailbox_message.compose_mail` | 501 | workflow / custom operation |
+| `comms.ComposeMail` | POST | `/v1/comms/mailbox-messages:compose` | `comms.mailbox_message.compose_mail` | served |  |
 | `comms.CreateAudienceGroup` | POST | `/v1/comms/audience-groups` | `comms.audience_group.create` | served |  |
 | `comms.CreateAudienceGroupMember` | POST | `/v1/comms/audience-groups/{audienceGroupId}/members` | `comms.audience_group_member.create` | served |  |
 | `comms.CreateClassPage` | POST | `/v1/comms/class-pages` | `comms.class_page.create` | served |  |
 | `comms.CreateClassPageAttachment` | POST | `/v1/comms/class-pages/{classPageId}/attachments` | `comms.class_page_attachment.create` | served |  |
 | `comms.CreateClassPageMember` | POST | `/v1/comms/class-pages/{classPageId}/members` | `comms.class_page_member.create` | served |  |
-| `comms.CreateCommentReaction` | POST | `/v1/comms/comment-reactions` | `comms.comment_reaction.create` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.CreateCommentReaction` | POST | `/v1/comms/comment-reactions` | `comms.comment_reaction.create` | served |  |
 | `comms.CreateContentView` | POST | `/v1/comms/content-views` | `comms.content_view.create` | served |  |
 | `comms.CreateConversation` | POST | `/v1/comms/conversations` | `comms.conversation.create` | served |  |
 | `comms.CreateConversationMessage` | POST | `/v1/comms/conversations/{conversationId}/messages` | `comms.conversation_message.create` | served |  |
@@ -431,7 +431,7 @@ misleading 404.
 | `comms.CreatePost` | POST | `/v1/comms/posts` | `comms.post.create` | served |  |
 | `comms.CreatePostAudienceClass` | POST | `/v1/comms/posts/{postId}/audience-classes` | `comms.post_audience_class.create` | served |  |
 | `comms.CreatePostComment` | POST | `/v1/comms/posts/{postId}/comments` | `comms.post_comment.create` | served |  |
-| `comms.CreatePostReaction` | POST | `/v1/comms/posts/{postId}/reactions` | `comms.post_reaction.create` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.CreatePostReaction` | POST | `/v1/comms/posts/{postId}/reactions` | `comms.post_reaction.create` | served |  |
 | `comms.CreateTask` | POST | `/v1/comms/tasks` | `comms.task.create` | served |  |
 | `comms.CreateTaskAssignee` | POST | `/v1/comms/tasks/{taskId}/assignees` | `comms.task_assignee.create` | served |  |
 | `comms.DeactivateEvent` | POST | `/v1/comms/events/{eventId}:deactivate` | `comms.event.deactivate_event` | served |  |
@@ -442,7 +442,7 @@ misleading 404.
 | `comms.DeleteClassPage` | DELETE | `/v1/comms/class-pages/{classPageId}` | `comms.class_page.delete` | served |  |
 | `comms.DeleteClassPageAttachment` | DELETE | `/v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}` | `comms.class_page_attachment.delete` | served |  |
 | `comms.DeleteClassPageMember` | DELETE | `/v1/comms/class-pages/{classPageId}/members/{classPageMemberId}` | `comms.class_page_member.delete` | served |  |
-| `comms.DeleteCommentReaction` | DELETE | `/v1/comms/comment-reactions/{commentReactionId}` | `comms.comment_reaction.delete` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.DeleteCommentReaction` | DELETE | `/v1/comms/comment-reactions/{commentReactionId}` | `comms.comment_reaction.delete` | served |  |
 | `comms.DeleteContentView` | DELETE | `/v1/comms/content-views/{contentViewId}` | `comms.content_view.delete` | served |  |
 | `comms.DeleteConversation` | DELETE | `/v1/comms/conversations/{conversationId}` | `comms.conversation.delete` | served |  |
 | `comms.DeleteConversationMessage` | DELETE | `/v1/comms/conversations/{conversationId}/messages/{conversationMessageId}` | `comms.conversation_message.delete` | served |  |
@@ -472,18 +472,18 @@ misleading 404.
 | `comms.DeletePost` | DELETE | `/v1/comms/posts/{postId}` | `comms.post.delete` | served |  |
 | `comms.DeletePostAudienceClass` | DELETE | `/v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}` | `comms.post_audience_class.delete` | served |  |
 | `comms.DeletePostComment` | DELETE | `/v1/comms/posts/{postId}/comments/{postCommentId}` | `comms.post_comment.delete` | served |  |
-| `comms.DeletePostReaction` | DELETE | `/v1/comms/posts/{postId}/reactions/{postReactionId}` | `comms.post_reaction.delete` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.DeletePostReaction` | DELETE | `/v1/comms/posts/{postId}/reactions/{postReactionId}` | `comms.post_reaction.delete` | served |  |
 | `comms.DeleteTask` | DELETE | `/v1/comms/tasks/{taskId}` | `comms.task.delete` | served |  |
 | `comms.DeleteTaskAssignee` | DELETE | `/v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}` | `comms.task_assignee.delete` | served |  |
-| `comms.ExportCalendar` | POST | `/v1/comms/me/calendar:export` | `comms.calendar_export.export_calendar` | 501 | workflow / custom operation |
-| `comms.FollowClassPage` | POST | `/v1/comms/class-pages/{classPageId}:follow` | `comms.class_page.follow_class_page` | 501 | workflow / custom operation |
+| `comms.ExportCalendar` | POST | `/v1/comms/me/calendar:export` | `comms.calendar_export.export_calendar` | served |  |
+| `comms.FollowClassPage` | POST | `/v1/comms/class-pages/{classPageId}:follow` | `comms.class_page.follow_class_page` | served |  |
 | `comms.GetAudienceGroup` | GET | `/v1/comms/audience-groups/{audienceGroupId}` | `comms.audience_group.read` | served |  |
 | `comms.GetAudienceGroupMember` | GET | `/v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}` | `comms.audience_group_member.read` | served |  |
 | `comms.GetCalendarExport` | GET | `/v1/comms/calendar-exports/{calendarExportId}` | `comms.calendar_export.read` | served |  |
 | `comms.GetClassPage` | GET | `/v1/comms/class-pages/{classPageId}` | `comms.class_page.read` | served |  |
 | `comms.GetClassPageAttachment` | GET | `/v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}` | `comms.class_page_attachment.read` | served |  |
 | `comms.GetClassPageMember` | GET | `/v1/comms/class-pages/{classPageId}/members/{classPageMemberId}` | `comms.class_page_member.read` | served |  |
-| `comms.GetCommentReaction` | GET | `/v1/comms/comment-reactions/{commentReactionId}` | `comms.comment_reaction.read` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.GetCommentReaction` | GET | `/v1/comms/comment-reactions/{commentReactionId}` | `comms.comment_reaction.read` | served |  |
 | `comms.GetContentView` | GET | `/v1/comms/content-views/{contentViewId}` | `comms.content_view.read` | served |  |
 | `comms.GetConversation` | GET | `/v1/comms/conversations/{conversationId}` | `comms.conversation.read` | served |  |
 | `comms.GetConversationMessage` | GET | `/v1/comms/conversations/{conversationId}/messages/{conversationMessageId}` | `comms.conversation_message.read` | served |  |
@@ -493,14 +493,14 @@ misleading 404.
 | `comms.GetEventGalleryItem` | GET | `/v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}` | `comms.event_gallery_item.read` | served |  |
 | `comms.GetEventInstitution` | GET | `/v1/comms/events/{eventId}/institutions/{eventInstitutionId}` | `comms.event_institution.read` | served |  |
 | `comms.GetEventOccurrence` | GET | `/v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}` | `comms.event_occurrence.read` | served |  |
-| `comms.GetFeed` | GET | `/v1/comms/posts:feed` | `comms.post.get_feed` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.GetFeed` | GET | `/v1/comms/posts:feed` | `comms.post.get_feed` | served |  |
 | `comms.GetFeedbackMessage` | GET | `/v1/comms/feedback-threads/{feedbackThreadId}/messages/{feedbackMessageId}` | `comms.feedback_message.read` | served |  |
 | `comms.GetFeedbackThread` | GET | `/v1/comms/feedback-threads/{feedbackThreadId}` | `comms.feedback_thread.read` | served |  |
-| `comms.GetInAppNotification` | GET | `/v1/comms/notifications/{inAppNotificationId}` | `comms.in_app_notification.read` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.GetInAppNotification` | GET | `/v1/comms/notifications/{inAppNotificationId}` | `comms.in_app_notification.read` | served |  |
 | `comms.GetMagazine` | GET | `/v1/comms/magazines/{magazineId}` | `comms.magazine.read` | served |  |
 | `comms.GetMailboxMessage` | GET | `/v1/comms/mailbox-messages/{mailboxMessageId}` | `comms.mailbox_message.read` | served |  |
 | `comms.GetMessageTemplate` | GET | `/v1/comms/message-templates/{messageTemplateId}` | `comms.message_template.read` | served |  |
-| `comms.GetMyCalendar` | GET | `/v1/comms/me/calendar` | `comms.event.get_my_calendar` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.GetMyCalendar` | GET | `/v1/comms/me/calendar` | `comms.event.get_my_calendar` | served |  |
 | `comms.GetNotice` | GET | `/v1/comms/notices/{noticeId}` | `comms.notice.read` | served |  |
 | `comms.GetNoticeAudience` | GET | `/v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}` | `comms.notice_audience.read` | served |  |
 | `comms.GetNoticeBackground` | GET | `/v1/comms/notice-backgrounds/{noticeBackgroundId}` | `comms.notice_background.read` | served |  |
@@ -519,17 +519,17 @@ misleading 404.
 | `comms.GetPost` | GET | `/v1/comms/posts/{postId}` | `comms.post.read` | served |  |
 | `comms.GetPostAudienceClass` | GET | `/v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}` | `comms.post_audience_class.read` | served |  |
 | `comms.GetPostComment` | GET | `/v1/comms/posts/{postId}/comments/{postCommentId}` | `comms.post_comment.read` | served |  |
-| `comms.GetPostReaction` | GET | `/v1/comms/posts/{postId}/reactions/{postReactionId}` | `comms.post_reaction.read` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.GetPostReaction` | GET | `/v1/comms/posts/{postId}/reactions/{postReactionId}` | `comms.post_reaction.read` | served |  |
 | `comms.GetTask` | GET | `/v1/comms/tasks/{taskId}` | `comms.task.read` | served |  |
 | `comms.GetTaskAssignee` | GET | `/v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}` | `comms.task_assignee.read` | served |  |
-| `comms.HideMessageForMe` | POST | `/v1/comms/messages/{messageId}:hideForMe` | `comms.conversation_message.hide_message_for_me` | 501 | workflow / custom operation |
+| `comms.HideMessageForMe` | POST | `/v1/comms/messages/{messageId}:hideForMe` | `comms.conversation_message.hide_message_for_me` | served |  |
 | `comms.ListAudienceGroupMembers` | GET | `/v1/comms/audience-groups/{audienceGroupId}/members` | `comms.audience_group_member.read` | served |  |
 | `comms.ListAudienceGroups` | GET | `/v1/comms/audience-groups` | `comms.audience_group.read` | served |  |
 | `comms.ListCalendarExports` | GET | `/v1/comms/calendar-exports` | `comms.calendar_export.read` | served |  |
 | `comms.ListClassPageAttachments` | GET | `/v1/comms/class-pages/{classPageId}/attachments` | `comms.class_page_attachment.read` | served |  |
 | `comms.ListClassPageMembers` | GET | `/v1/comms/class-pages/{classPageId}/members` | `comms.class_page_member.read` | served |  |
 | `comms.ListClassPages` | GET | `/v1/comms/class-pages` | `comms.class_page.read` | served |  |
-| `comms.ListCommentReactions` | GET | `/v1/comms/comment-reactions` | `comms.comment_reaction.read` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.ListCommentReactions` | GET | `/v1/comms/comment-reactions` | `comms.comment_reaction.read` | served |  |
 | `comms.ListContentViews` | GET | `/v1/comms/content-views` | `comms.content_view.read` | served |  |
 | `comms.ListConversationMessages` | GET | `/v1/comms/conversations/{conversationId}/messages` | `comms.conversation_message.read` | served |  |
 | `comms.ListConversationParticipants` | GET | `/v1/comms/conversations/{conversationId}/participants` | `comms.conversation_participant.read` | served |  |
@@ -541,7 +541,7 @@ misleading 404.
 | `comms.ListEvents` | GET | `/v1/comms/events` | `comms.event.read` | served |  |
 | `comms.ListFeedbackMessages` | GET | `/v1/comms/feedback-threads/{feedbackThreadId}/messages` | `comms.feedback_message.read` | served |  |
 | `comms.ListFeedbackThreads` | GET | `/v1/comms/feedback-threads` | `comms.feedback_thread.read` | served |  |
-| `comms.ListInAppNotifications` | GET | `/v1/comms/notifications` | `comms.in_app_notification.read` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.ListInAppNotifications` | GET | `/v1/comms/notifications` | `comms.in_app_notification.read` | served |  |
 | `comms.ListMagazines` | GET | `/v1/comms/magazines` | `comms.magazine.read` | served |  |
 | `comms.ListMailboxMessages` | GET | `/v1/comms/mailbox-messages` | `comms.mailbox_message.read` | served |  |
 | `comms.ListMessageTemplates` | GET | `/v1/comms/message-templates` | `comms.message_template.read` | served |  |
@@ -562,31 +562,31 @@ misleading 404.
 | `comms.ListPageCategories` | GET | `/v1/comms/page-categories` | `comms.page_category.read` | served |  |
 | `comms.ListPostAudienceClasses` | GET | `/v1/comms/posts/{postId}/audience-classes` | `comms.post_audience_class.read` | served |  |
 | `comms.ListPostComments` | GET | `/v1/comms/posts/{postId}/comments` | `comms.post_comment.read` | served |  |
-| `comms.ListPostReactions` | GET | `/v1/comms/posts/{postId}/reactions` | `comms.post_reaction.read` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.ListPostReactions` | GET | `/v1/comms/posts/{postId}/reactions` | `comms.post_reaction.read` | served |  |
 | `comms.ListPosts` | GET | `/v1/comms/posts` | `comms.post.read` | served |  |
 | `comms.ListTaskAssignees` | GET | `/v1/comms/tasks/{taskId}/assignees` | `comms.task_assignee.read` | served |  |
 | `comms.ListTasks` | GET | `/v1/comms/tasks` | `comms.task.read` | served |  |
-| `comms.MarkAllNotificationsRead` | POST | `/v1/comms/notifications:markAllRead` | `comms.in_app_notification.mark_all_notifications_read` | 501 | workflow / custom operation |
-| `comms.MarkConversationRead` | POST | `/v1/comms/conversations/{conversationId}:markRead` | `comms.conversation.mark_conversation_read` | 501 | workflow / custom operation |
-| `comms.MarkFeedbackMessage` | POST | `/v1/comms/feedback-messages/{messageId}:markReviewStatus` | `comms.feedback_message.mark_feedback_message` | 501 | workflow / custom operation |
-| `comms.MarkMailRead` | POST | `/v1/comms/mailbox-messages/{mailboxMessageId}:markRead` | `comms.mailbox_message.mark_mail_read` | 501 | workflow / custom operation |
-| `comms.MarkNotificationRead` | POST | `/v1/comms/notifications/{inAppNotificationId}:markRead` | `comms.in_app_notification.mark_notification_read` | 501 | workflow / custom operation |
+| `comms.MarkAllNotificationsRead` | POST | `/v1/comms/notifications:markAllRead` | `comms.in_app_notification.mark_all_notifications_read` | served |  |
+| `comms.MarkConversationRead` | POST | `/v1/comms/conversations/{conversationId}:markRead` | `comms.conversation.mark_conversation_read` | served |  |
+| `comms.MarkFeedbackMessage` | POST | `/v1/comms/feedback-messages/{messageId}:markReviewStatus` | `comms.feedback_message.mark_feedback_message` | served |  |
+| `comms.MarkMailRead` | POST | `/v1/comms/mailbox-messages/{mailboxMessageId}:markRead` | `comms.mailbox_message.mark_mail_read` | served |  |
+| `comms.MarkNotificationRead` | POST | `/v1/comms/notifications/{inAppNotificationId}:markRead` | `comms.in_app_notification.mark_notification_read` | served |  |
 | `comms.PublishNotice` | POST | `/v1/comms/notices/{noticeId}:publish` | `comms.notice.publish_notice` | served |  |
 | `comms.ReactivateNotice` | POST | `/v1/comms/notices/{noticeId}:reactivate` | `comms.notice.reactivate_notice` | served |  |
 | `comms.ReopenFeedbackThread` | POST | `/v1/comms/feedback-threads/{feedbackThreadId}:reopen` | `comms.feedback_thread.reopen_feedback_thread` | served |  |
 | `comms.ReopenTask` | POST | `/v1/comms/tasks/{taskId}:reopen` | `comms.task.reopen_task` | served |  |
-| `comms.RetryOutboundMessage` | POST | `/v1/comms/outbound-messages/{outboundMessageId}:retry` | `comms.outbound_message.retry_outbound_message` | 501 | workflow / custom operation |
-| `comms.SendMessage` | POST | `/v1/comms/outbound-messages:send` | `comms.outbound_message.send_message` | 501 | workflow / custom operation |
-| `comms.SendTestMessage` | POST | `/v1/comms/notification-channels/{notificationChannelId}:sendTest` | `comms.notification_channel.send_test_message` | 501 | workflow / custom operation |
+| `comms.RetryOutboundMessage` | POST | `/v1/comms/outbound-messages/{outboundMessageId}:retry` | `comms.outbound_message.retry_outbound_message` | served |  |
+| `comms.SendMessage` | POST | `/v1/comms/outbound-messages:send` | `comms.outbound_message.send_message` | served |  |
+| `comms.SendTestMessage` | POST | `/v1/comms/notification-channels/{notificationChannelId}:sendTest` | `comms.notification_channel.send_test_message` | served |  |
 | `comms.SnoozeTask` | POST | `/v1/comms/tasks/{taskId}:snooze` | `comms.task.snooze_task` | served |  |
-| `comms.SubmitPost` | POST | `/v1/comms/posts/{postId}:submit` | `comms.post.submit_post` | 501 | workflow / custom operation |
+| `comms.SubmitPost` | POST | `/v1/comms/posts/{postId}:submit` | `comms.post.submit_post` | served |  |
 | `comms.UnpublishNotice` | POST | `/v1/comms/notices/{noticeId}:unpublish` | `comms.notice.unpublish_notice` | served |  |
 | `comms.UpdateAudienceGroup` | PATCH | `/v1/comms/audience-groups/{audienceGroupId}` | `comms.audience_group.update` | served |  |
 | `comms.UpdateAudienceGroupMember` | PATCH | `/v1/comms/audience-groups/{audienceGroupId}/members/{audienceGroupMemberId}` | `comms.audience_group_member.update` | served |  |
 | `comms.UpdateClassPage` | PATCH | `/v1/comms/class-pages/{classPageId}` | `comms.class_page.update` | served |  |
 | `comms.UpdateClassPageAttachment` | PATCH | `/v1/comms/class-pages/{classPageId}/attachments/{classPageAttachmentId}` | `comms.class_page_attachment.update` | served |  |
 | `comms.UpdateClassPageMember` | PATCH | `/v1/comms/class-pages/{classPageId}/members/{classPageMemberId}` | `comms.class_page_member.update` | served |  |
-| `comms.UpdateCommentReaction` | PATCH | `/v1/comms/comment-reactions/{commentReactionId}` | `comms.comment_reaction.update` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.UpdateCommentReaction` | PATCH | `/v1/comms/comment-reactions/{commentReactionId}` | `comms.comment_reaction.update` | served |  |
 | `comms.UpdateContentView` | PATCH | `/v1/comms/content-views/{contentViewId}` | `comms.content_view.update` | served |  |
 | `comms.UpdateConversation` | PATCH | `/v1/comms/conversations/{conversationId}` | `comms.conversation.update` | served |  |
 | `comms.UpdateConversationMessage` | PATCH | `/v1/comms/conversations/{conversationId}/messages/{conversationMessageId}` | `comms.conversation_message.update` | served |  |
@@ -615,7 +615,7 @@ misleading 404.
 | `comms.UpdatePost` | PATCH | `/v1/comms/posts/{postId}` | `comms.post.update` | served |  |
 | `comms.UpdatePostAudienceClass` | PATCH | `/v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}` | `comms.post_audience_class.update` | served |  |
 | `comms.UpdatePostComment` | PATCH | `/v1/comms/posts/{postId}/comments/{postCommentId}` | `comms.post_comment.update` | served |  |
-| `comms.UpdatePostReaction` | PATCH | `/v1/comms/posts/{postId}/reactions/{postReactionId}` | `comms.post_reaction.update` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `comms.UpdatePostReaction` | PATCH | `/v1/comms/posts/{postId}/reactions/{postReactionId}` | `comms.post_reaction.update` | served |  |
 | `comms.UpdateTask` | PATCH | `/v1/comms/tasks/{taskId}` | `comms.task.update` | served |  |
 | `comms.UpdateTaskAssignee` | PATCH | `/v1/comms/tasks/{taskId}/assignees/{taskAssigneeId}` | `comms.task_assignee.update` | served |  |
 
@@ -715,6 +715,7 @@ misleading 404.
 | `finance.PostInvoice` | POST | `/v1/finance/invoices/{invoiceId}:post` | `finance.invoice.post_invoice` | served |  |
 | `finance.PublishFeeStructure` | POST | `/v1/finance/fee-structures/{feeStructureId}:publish` | `finance.fee_structure.publish` | served |  |
 | `finance.QuoteCheckout` | POST | `/v1/finance/checkout:quote` | `finance.payment.quote_checkout` | served |  |
+| `finance.RaiseChargeInvoice` | POST | `/v1/finance/invoices:raiseCharge` | `finance.invoice.create` | served |  |
 | `finance.ReceiveGatewayWebhook` | POST | `/v1/finance/payment-gateways/{gateway}:webhook` | `finance.gateway_event.receive_webhook` | served |  |
 | `finance.RecordPayment` | POST | `/v1/finance/payments:record` | `finance.payment.record` | served |  |
 | `finance.RefundPayment` | POST | `/v1/finance/payments/{paymentId}:refund` | `finance.payment.refund_payment` | served |  |
@@ -737,7 +738,7 @@ misleading 404.
 
 | Operation | Method | Path | Permission | Status | Why not served |
 |---|---|---|---|---|---|
-| `frontoffice.CheckOutVisitor` | POST | `/v1/frontoffice/visitor-logs/{visitorLogId}:checkOut` | `frontoffice.visitor_log.check_out_visitor` | 501 | workflow / custom operation |
+| `frontoffice.CheckOutVisitor` | POST | `/v1/frontoffice/visitor-logs/{visitorLogId}:checkOut` | `frontoffice.visitor_log.check_out_visitor` | served |  |
 | `frontoffice.CreateCallLog` | POST | `/v1/frontoffice/call-logs` | `frontoffice.call_log.create` | served |  |
 | `frontoffice.CreateDirectoryContact` | POST | `/v1/frontoffice/directory-contacts` | `frontoffice.directory_contact.create` | served |  |
 | `frontoffice.CreatePostalRecord` | POST | `/v1/frontoffice/postal-records` | `frontoffice.postal_record.create` | served |  |
@@ -957,7 +958,7 @@ misleading 404.
 | `library.GetPurchaseRequestCourse` | GET | `/v1/library/purchase-requests/{purchaseRequestId}/courses/{purchaseRequestCourseId}` | `library.purchase_request_course.read` | served |  |
 | `library.GetPurchaseRequestSubject` | GET | `/v1/library/purchase-requests/{purchaseRequestId}/subjects/{purchaseRequestSubjectId}` | `library.purchase_request_subject.read` | served |  |
 | `library.GetReservation` | GET | `/v1/library/reservations/{reservationId}` | `library.reservation.read` | served |  |
-| `library.InvoiceLoanFine` | POST | `/v1/library/loans/{loanId}:invoiceFine` | `library.loan.invoice_loan_fine` | 501 | workflow / custom operation |
+| `library.InvoiceLoanFine` | POST | `/v1/library/loans/{loanId}:invoiceFine` | `library.loan.invoice_loan_fine` | served |  |
 | `library.ListAuthors` | GET | `/v1/library/authors` | `library.author.read` | served |  |
 | `library.ListLibraryCardTypes` | GET | `/v1/library/library-card-types` | `library.library_card_type.read` | served |  |
 | `library.ListLibraryCards` | GET | `/v1/library/library-cards` | `library.library_card.read` | served |  |
@@ -975,12 +976,12 @@ misleading 404.
 | `library.ListPurchaseRequestSubjects` | GET | `/v1/library/purchase-requests/{purchaseRequestId}/subjects` | `library.purchase_request_subject.read` | served |  |
 | `library.ListPurchaseRequests` | GET | `/v1/library/purchase-requests` | `library.purchase_request.read` | served |  |
 | `library.ListReservations` | GET | `/v1/library/reservations` | `library.reservation.read` | served |  |
-| `library.MarkLoanLost` | POST | `/v1/library/loans/{loanId}:markLost` | `library.loan.mark_loan_lost` | 501 | workflow / custom operation |
+| `library.MarkLoanLost` | POST | `/v1/library/loans/{loanId}:markLost` | `library.loan.mark_loan_lost` | served |  |
 | `library.RejectPurchaseRequest` | POST | `/v1/library/purchase-requests/{purchaseRequestId}:reject` | `library.purchase_request.reject_purchase_request` | served |  |
 | `library.RejectReservation` | POST | `/v1/library/reservations/{reservationId}:reject` | `library.reservation.reject_reservation` | served |  |
-| `library.RequestLoanReturn` | POST | `/v1/library/loans/{loanId}:requestReturn` | `library.loan.request_loan_return` | 501 | workflow / custom operation |
-| `library.RequestReservationAgain` | POST | `/v1/library/reservations/{reservationId}:requestAgain` | `library.reservation.request_reservation_again` | 501 | workflow / custom operation |
-| `library.ReturnLoan` | POST | `/v1/library/loans/{loanId}:return` | `library.loan.return_loan` | 501 | workflow / custom operation |
+| `library.RequestLoanReturn` | POST | `/v1/library/loans/{loanId}:requestReturn` | `library.loan.request_loan_return` | served |  |
+| `library.RequestReservationAgain` | POST | `/v1/library/reservations/{reservationId}:requestAgain` | `library.reservation.request_reservation_again` | served |  |
+| `library.ReturnLoan` | POST | `/v1/library/loans/{loanId}:return` | `library.loan.return_loan` | served |  |
 | `library.SubmitPurchaseRequest` | POST | `/v1/library/purchase-requests/{purchaseRequestId}:submit` | `library.purchase_request.submit_purchase_request` | served |  |
 | `library.UpdateAuthor` | PATCH | `/v1/library/authors/{authorId}` | `library.author.update` | served |  |
 | `library.UpdateLibraryCard` | PATCH | `/v1/library/library-cards/{libraryCardId}` | `library.library_card.update` | served |  |
@@ -1746,7 +1747,7 @@ misleading 404.
 
 | Operation | Method | Path | Permission | Status | Why not served |
 |---|---|---|---|---|---|
-| `org.ActivateAcademicYear` | POST | `/v1/org/academic-years/{academicYearId}:activate` | `org.academic_year.activate_academic_year` | 501 | workflow / custom operation |
+| `org.ActivateAcademicYear` | POST | `/v1/org/academic-years/{academicYearId}:activate` | `org.academic_year.activate_academic_year` | served |  |
 | `org.CloseAcademicYear` | POST | `/v1/org/academic-years/{academicYearId}:close` | `org.academic_year.close_academic_year` | served |  |
 | `org.CreateAcademicTerm` | POST | `/v1/org/academic-years/{academicYearId}/terms` | `org.academic_term.create` | served |  |
 | `org.CreateAcademicYear` | POST | `/v1/org/academic-years` | `org.academic_year.create` | served |  |
@@ -1766,8 +1767,8 @@ misleading 404.
 | `org.DeleteInstitutionAttribute` | DELETE | `/v1/org/institutions/{institutionId}/attributes/{institutionAttributeId}` | `org.institution_attribute.delete` | served |  |
 | `org.DeleteInstitutionType` | DELETE | `/v1/org/institution-types/{institutionTypeId}` | `org.institution_type.delete` | served |  |
 | `org.DeleteInstitutionTypeAttribute` | DELETE | `/v1/org/institution-types/{institutionTypeId}/attributes/{institutionTypeAttributeId}` | `org.institution_type_attribute.delete` | served |  |
-| `org.FindInstitutions` | GET | `/v1/org/institutions:find` | `org.institution.find_institutions` | 501 | workflow / custom operation |
-| `org.GenerateTerms` | POST | `/v1/org/academic-years/{academicYearId}:generateTerms` | `org.academic_year.generate_terms` | 501 | workflow / custom operation |
+| `org.FindInstitutions` | GET | `/v1/org/institutions:find` | `org.institution.find_institutions` | served |  |
+| `org.GenerateTerms` | POST | `/v1/org/academic-years/{academicYearId}:generateTerms` | `org.academic_year.generate_terms` | served |  |
 | `org.GetAcademicTerm` | GET | `/v1/org/academic-years/{academicYearId}/terms/{academicTermId}` | `org.academic_term.read` | served |  |
 | `org.GetAcademicYear` | GET | `/v1/org/academic-years/{academicYearId}` | `org.academic_year.read` | served |  |
 | `org.GetAttributeDefinition` | GET | `/v1/org/attribute-definitions/{attributeDefinitionId}` | `org.attribute_definition.read` | served |  |
@@ -1904,7 +1905,7 @@ misleading 404.
 | `people.GetQualification` | GET | `/v1/people/qualifications/{qualificationId}` | `people.qualification.read` | served |  |
 | `people.GetSkill` | GET | `/v1/people/skills/{skillId}` | `people.skill.read` | served |  |
 | `people.GetWorkExperience` | GET | `/v1/people/persons/{personId}/work-experience/{workExperienceId}` | `people.work_experience.read` | served |  |
-| `people.ListBirthdays` | GET | `/v1/people/persons:birthdays` | `people.person.list_birthdays` | 501 | standard operation not built yet (public, platform-staff or extra-parameter variant) |
+| `people.ListBirthdays` | GET | `/v1/people/persons:birthdays` | `people.person.list_birthdays` | served |  |
 | `people.ListCertifications` | GET | `/v1/people/persons/{personId}/certifications` | `people.certification.read` | served |  |
 | `people.ListEducationHistory` | GET | `/v1/people/persons/{personId}/education` | `people.education_history.read` | served |  |
 | `people.ListEmergencyContacts` | GET | `/v1/people/persons/{personId}/emergency-contacts` | `people.emergency_contact.read` | served |  |
@@ -1917,7 +1918,7 @@ misleading 404.
 | `people.ListQualifications` | GET | `/v1/people/qualifications` | `people.qualification.read` | served |  |
 | `people.ListSkills` | GET | `/v1/people/skills` | `people.skill.read` | served |  |
 | `people.ListWorkExperiences` | GET | `/v1/people/persons/{personId}/work-experience` | `people.work_experience.read` | served |  |
-| `people.SendGreetings` | POST | `/v1/people/persons:sendGreetings` | `people.person.send_greetings` | 501 | workflow / custom operation |
+| `people.SendGreetings` | POST | `/v1/people/persons:sendGreetings` | `people.person.send_greetings` | served |  |
 | `people.UpdateCertification` | PATCH | `/v1/people/persons/{personId}/certifications/{certificationId}` | `people.certification.update` | served |  |
 | `people.UpdateEducationHistory` | PATCH | `/v1/people/persons/{personId}/education/{educationHistoryId}` | `people.education_history.update` | served |  |
 | `people.UpdateEmergencyContact` | PATCH | `/v1/people/persons/{personId}/emergency-contacts/{emergencyContactId}` | `people.emergency_contact.update` | served |  |
@@ -2217,7 +2218,7 @@ misleading 404.
 
 | Operation | Method | Path | Permission | Status | Why not served |
 |---|---|---|---|---|---|
-| `timetable.BatchConfirmSessions` | POST | `/v1/timetable/sessions:batchConfirm` | `timetable.session.batch_confirm_sessions` | 501 | workflow / custom operation |
+| `timetable.BatchConfirmSessions` | POST | `/v1/timetable/sessions:batchConfirm` | `timetable.session.batch_confirm_sessions` | served |  |
 | `timetable.CancelOperation` | POST | `/v1/timetable/operations/{operationId}:cancel` | `timetable.operation.cancel_operation` | served |  |
 | `timetable.CancelSession` | POST | `/v1/timetable/sessions/{sessionId}:cancel` | `timetable.session.cancel_session` | served |  |
 | `timetable.CompleteSession` | POST | `/v1/timetable/sessions/{sessionId}:complete` | `timetable.session.complete_session` | served |  |
@@ -2228,7 +2229,7 @@ misleading 404.
 | `timetable.DeletePeriod` | DELETE | `/v1/timetable/periods/{periodId}` | `timetable.period.delete` | served |  |
 | `timetable.DeleteSession` | DELETE | `/v1/timetable/sessions/{sessionId}` | `timetable.session.delete` | served |  |
 | `timetable.DeleteSessionStudent` | DELETE | `/v1/timetable/sessions/{sessionId}/students/{sessionStudentId}` | `timetable.session_student.delete` | served |  |
-| `timetable.GenerateSessions` | POST | `/v1/timetable/sessions:generate` | `timetable.session.generate_sessions` | 501 | workflow / custom operation |
+| `timetable.GenerateSessions` | POST | `/v1/timetable/sessions:generate` | `timetable.session.generate_sessions` | served |  |
 | `timetable.GetOperation` | GET | `/v1/timetable/operations/{operationId}` | `timetable.operation.read` | served |  |
 | `timetable.GetPeriod` | GET | `/v1/timetable/periods/{periodId}` | `timetable.period.read` | served |  |
 | `timetable.GetSession` | GET | `/v1/timetable/sessions/{sessionId}` | `timetable.session.read` | served |  |

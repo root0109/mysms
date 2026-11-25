@@ -31,7 +31,7 @@ public class CommentReaction {
   private UUID commentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID userId;
+  private @Nullable UUID userId;
 
   /**
    * Reaction.
@@ -98,9 +98,8 @@ public class CommentReaction {
   /**
    * Constructor with only required parameters
    */
-  public CommentReaction(UUID commentId, UUID userId) {
+  public CommentReaction(UUID commentId) {
     this.commentId = commentId;
-    this.userId = userId;
   }
 
   public CommentReaction id(@Nullable UUID id) {
@@ -143,23 +142,23 @@ public class CommentReaction {
     this.commentId = commentId;
   }
 
-  public CommentReaction userId(UUID userId) {
+  public CommentReaction userId(@Nullable UUID userId) {
     this.userId = userId;
     return this;
   }
 
   /**
-   * User.
+   * User. Output only: the caller, from the token.
    * @return userId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("userId")
-  public UUID getUserId() {
+  public @Nullable UUID getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(UUID userId) {
+  public void setUserId(@Nullable UUID userId) {
     this.userId = userId;
   }
 

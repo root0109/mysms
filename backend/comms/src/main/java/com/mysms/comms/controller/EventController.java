@@ -1,5 +1,6 @@
 package com.mysms.comms.controller;
 
+import com.mysms.comms.business.MyCalendarService;
 import com.mysms.comms.api.model.CalendarItem;
 import com.mysms.core.paging.PagingUtil;
 import com.mysms.core.paging.PagingInfo;
@@ -19,7 +20,6 @@ import com.mysms.comms.api.model.EventInstitutionUpdate;
 import com.mysms.comms.api.model.EventOccurrence;
 import com.mysms.comms.api.model.EventOccurrenceUpdate;
 import com.mysms.comms.api.model.EventUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
 import java.time.OffsetDateTime;
@@ -30,15 +30,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the Event operations; authentication and the permission check already ran in the auth-client filter.
- * Operations not served yet answer 501.
  */
 @RestController
 public class EventController implements EventApi {
 
     private final EventService eventService;
+    private final MyCalendarService myCalendarService;
 
-    public EventController(EventService eventService) {
+    public EventController(EventService eventService, MyCalendarService myCalendarService) {
         this.eventService = eventService;
+        this.myCalendarService = myCalendarService;
     }
 
     @Override
@@ -59,7 +60,9 @@ public class EventController implements EventApi {
     @Override
     public ResponseEntity<EventOccurrence> completePersonalEvent(UUID eventId, UUID eventOccurrenceId,
             CompletePersonalEventRequest completePersonalEventRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        EventOccurrence changed = eventService.completePersonalEvent(eventId, eventOccurrenceId,
+                completePersonalEventRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
     }
 
     @Override
@@ -198,7 +201,8 @@ public class EventController implements EventApi {
     @Override
     public ResponseEntity<PagingInfo<CalendarItem>> getMyCalendar(OffsetDateTime from, OffsetDateTime to, UUID cohortId,
             List<String> itemTypes, Integer page, Integer size, String cursor) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(PagingUtil.pagingInfo(
+                myCalendarService.getMyCalendar(from, to, cohortId, itemTypes, page, size, cursor)));
     }
 
     @Override

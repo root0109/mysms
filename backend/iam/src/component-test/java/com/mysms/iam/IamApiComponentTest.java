@@ -414,8 +414,8 @@ class IamApiComponentTest {
         String token = accessToken("admin", ADMIN_PASSWORD);
         Reply all = call("GET", "/v1/iam/setting-definitions", token, null);
         assertThat(all.status()).isEqualTo(200);
-        assertThat(all.body().path("data")).hasSize(12);
-        assertThat(all.body().path("paging").path("size").asInt()).isEqualTo(12);
+        assertThat(all.body().path("data")).hasSize(13);
+        assertThat(all.body().path("paging").path("size").asInt()).isEqualTo(13);
         assertThat(all.body().path("data").get(0).path("category").asString()).isEqualTo("appearance");
         Reply appearance = call("GET", "/v1/iam/setting-definitions?filter=" + q("category = \"appearance\""), token, null);
         assertThat(appearance.body().path("data")).hasSize(4);
@@ -450,7 +450,7 @@ class IamApiComponentTest {
         String timeoutId = adminDefinitionId(admin, "security.sessionTimeoutMinutes");
         assertThat(call("GET", "/v1/iam/setting-definitions/" + timeoutId, me, null).status()).isEqualTo(404);
         assertThat(call("GET", "/v1/iam/setting-definitions/" + timeoutId, admin, null).status()).isEqualTo(200);
-        assertThat(call("GET", "/v1/iam/me/settings", admin, null).body().path("items")).hasSize(12);
+        assertThat(call("GET", "/v1/iam/me/settings", admin, null).body().path("items")).hasSize(13);
         assertThat(effective(defaults, "ui.theme").path("value").asString()).isEqualTo("system");
         assertThat(effective(defaults, "ui.theme").path("sourceScope").asString()).isEqualTo("default");
 
@@ -598,6 +598,13 @@ class IamApiComponentTest {
         assertThat(call("GET", "/v1/iam/setting-definitions", head, null).body().path("data")).hasSize(9);
         Reply own = createValue(head, "department", DEPARTMENT, "ui.density", "comfortable", false);
         assertThat(own.status()).as(own.raw().body()).isEqualTo(201);
+        String ownEvent = as(tenant(), () -> TestTransactions.of(database).read(() -> database.jdbc()
+                .sql("SELECT payload FROM iam.outbox_event WHERE event_type = 'iam.setting_value.created'"
+                        + " AND aggregate_id = :id").param("id", UUID.fromString(own.body().path("id").asString()))
+                .query(String.class).single()));
+        assertThat(JSON.readTree(ownEvent).path("settingKey").asString()).isEqualTo("ui.density");
+        assertThat(JSON.readTree(ownEvent).path("scopeType").asString()).isEqualTo("department");
+        assertThat(JSON.readTree(ownEvent).has("value")).as("only tenant and school values travel").isFalse();
         assertThat(createValue(head, "department", OTHER_DEPARTMENT, "ui.density", "compact", false).status())
                 .isEqualTo(403);
         assertThat(createValue(head, "tenant", null, "ui.dateFormat", "yyyy-MM-dd", false).status()).isEqualTo(403);
@@ -617,6 +624,53 @@ class IamApiComponentTest {
         String teacherToken = accessToken("teacher1", PASSWORD);
         assertThat(call("GET", "/v1/iam/setting-values", teacherToken, null).status()).as("no permission at the edge")
                 .isEqualTo(403);
+    }
+
+    /**
+     * The school finder's opt-in (directory.listedInSchoolFinder) is off by default and set only at a school, only by
+     * an administrator of that school (or of the tenant); its events tell org which school opted in.
+     */
+    @Test
+    @Order(15)
+    void onlyASchoolsAdministratorsOptItInToTheSchoolFinder() throws Exception {
+        String key = "directory.listedInSchoolFinder";
+        UUID otherInstitution = UUID.randomUUID();
+        UUID schoolAdmin = user("schooladmin", "active", null);
+        grant(schoolAdmin, role("school_admin", "iam.setting_value.read", "iam.setting_value.create",
+                "iam.setting_value.update", "iam.setting_value.delete"), "institution", INSTITUTION, true);
+        String head = accessToken("schooladmin", PASSWORD);
+        String teacherToken = accessToken("teacher1", PASSWORD);
+
+        assertThat(effective(call("GET", "/v1/iam/me/settings", head, null, "X-Institution-Id",
+                INSTITUTION.toString()), key).path("value").asString()).as("off by default").isEqualTo("false");
+        assertThat(createValue(teacherToken, "institution", INSTITUTION, key, "true", false).status())
+                .as("not an administrator").isEqualTo(403);
+        assertThat(call("PUT", "/v1/iam/me/settings/" + key, teacherToken, "{\"value\":\"true\"}").status())
+                .as("nor a user's own setting").isEqualTo(404);
+        assertThat(createValue(head, "institution", otherInstitution, key, "true", false).status())
+                .as("another school's administrator").isEqualTo(403);
+        assertThat(createValue(head, "tenant", null, key, "true", false).status()).as("a school setting only")
+                .isEqualTo(422);
+        assertThat(createValue(head, "institution", INSTITUTION, key, "maybe", false).status()).isEqualTo(422);
+
+        Reply optedIn = createValue(head, "institution", INSTITUTION, key, "true", false);
+        assertThat(optedIn.status()).as(optedIn.raw().body()).isEqualTo(201);
+        String id = optedIn.body().path("id").asString();
+        assertThat(call("PATCH", "/v1/iam/setting-values/" + id, teacherToken, "{\"value\":\"false\"}", "If-Match",
+                "\"1\"").status()).as("a non-administrator cannot switch it off either").isEqualTo(403);
+        String event = as(tenant(), () -> TestTransactions.of(database).read(() -> database.jdbc()
+                .sql("SELECT payload FROM iam.outbox_event WHERE event_type = 'iam.setting_value.created'"
+                        + " AND aggregate_id = :id").param("id", UUID.fromString(id)).query(String.class).single()));
+        assertThat(JSON.readTree(event).path("settingKey").asString()).isEqualTo(key);
+        assertThat(JSON.readTree(event).path("scopeId").asString()).isEqualTo(INSTITUTION.toString());
+        assertThat(JSON.readTree(event).path("value").asString()).isEqualTo("true");
+        assertThat(JSON.readTree(event).path("rowVersion").asInt()).isEqualTo(1);
+        assertThat(call("DELETE", "/v1/iam/setting-values/" + id, head, null, "If-Match", "\"1\"").status())
+                .isEqualTo(204);
+        String deleted = as(tenant(), () -> TestTransactions.of(database).read(() -> database.jdbc()
+                .sql("SELECT payload FROM iam.outbox_event WHERE event_type = 'iam.setting_value.deleted'"
+                        + " AND aggregate_id = :id").param("id", UUID.fromString(id)).query(String.class).single()));
+        assertThat(JSON.readTree(deleted).path("rowVersion").asInt()).as("the version the deletion made").isEqualTo(2);
     }
 
     @Test

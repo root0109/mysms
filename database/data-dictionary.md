@@ -2670,6 +2670,25 @@ People & Profiles: Every human known to the system (students, guardians, staff, 
 
 - `ck_work_experience_experience_type`: experience_type IN ('job', 'internship')
 
+<a id="peoplegreeting_template"></a>
+### people.greeting_template
+
+Which comms message templates a greeting may name, kept from `comms.message_template` events, so `SendGreetings` refuses a template comms would not deliver.
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `tenant_id` | uuid | Y |  | PK | Owning tenant. Row-level security key. |
+| 2 | `template_id` | uuid | Y |  | PK | `comms.message_template.id` (kept from its events) |
+| 3 | `institution_id` | uuid |  |  |  | Institution of the template; NULL for a tenant-wide one |
+| 4 | `is_active` | bool | Y |  |  | Whether comms uses the template |
+| 5 | `is_deleted` | bool | Y | false |  | Deleted in its module; kept so a late event cannot restore it |
+| 6 | `source_version` | int4 | Y |  |  | Source row version this entry reflects; older events are ignored |
+| 7 | `synced_at` | timestamptz | Y |  |  | When an event last changed the row |
+
+**Checks**
+
+- `ck_greeting_template_source_version`: source_version >= 1
+
 ## `academics` — Academic Structure
 
 Academic Structure: Programs, courses, batches, grade levels, sections, class sections, subjects and their offerings, teaching assignments, curriculum units and lesson plans. Serves both K-12 (grade/section) and higher education (program/course/batch).
@@ -5720,7 +5739,7 @@ Rooms & Facilities: Rooms (classrooms, labs, exam halls), the facilities they of
 
 Timetable: Period definitions and scheduled teaching sessions.
 
-7 tables: [`idempotency_key`](#timetableidempotency_key), [`inbox_event`](#timetableinbox_event), [`operation`](#timetableoperation), [`outbox_event`](#timetableoutbox_event), [`period`](#timetableperiod), [`session`](#timetablesession), [`session_student`](#timetablesession_student)
+8 tables: [`idempotency_key`](#timetableidempotency_key), [`inbox_event`](#timetableinbox_event), [`institution_zone`](#timetableinstitution_zone), [`operation`](#timetableoperation), [`outbox_event`](#timetableoutbox_event), [`period`](#timetableperiod), [`session`](#timetablesession), [`session_student`](#timetablesession_student)
 
 <a id="timetableidempotency_key"></a>
 ### timetable.idempotency_key
@@ -5760,6 +5779,24 @@ Timetable: Period definitions and scheduled teaching sessions.
 | 4 | `received_at` | timestamptz | Y | now() |  |  |
 | 5 | `processed_at` | timestamptz |  |  |  |  |
 | 6 | `processing_error` | text |  |  |  |  |
+
+<a id="timetableinstitution_zone"></a>
+### timetable.institution_zone
+
+Each school's own time zone, kept from `org.institution` created/updated/deleted events (timetable never calls org), so `GenerateSessions` places periods in the school's zone.
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `tenant_id` | uuid | Y |  | PK | Owning tenant. Row-level security key. |
+| 2 | `institution_id` | uuid | Y |  | PK | `org.institution.id` (kept from its events) |
+| 3 | `time_zone` | varchar(64) |  |  |  | IANA zone of the school; NULL while it keeps the tenant's |
+| 4 | `is_deleted` | bool | Y | false |  | Deleted in org; kept so a late event cannot restore it |
+| 5 | `source_version` | int4 | Y |  |  | Source row version this entry reflects; older events are ignored |
+| 6 | `synced_at` | timestamptz | Y |  |  | When an event last changed the row |
+
+**Checks**
+
+- `ck_institution_zone_source_version`: source_version >= 1
 
 <a id="timetableoperation"></a>
 ### timetable.operation
@@ -11664,6 +11701,25 @@ Fees & Payments: Fee heads, fee plans with installments, student dues, invoices,
 - ← `finance.payment_allocation.student_fee_due_id` — referenced by (1:N)
 - ← `finance.payment_allocation.student_fee_due_id` — referenced by (1:N)
 
+<a id="financestaff_record"></a>
+### finance.staff_record
+
+The login account and institution of each staff record, kept from `hr.staff` events, so `RaiseChargeInvoice` bills an account only when it is staff of the charge's institution.
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `tenant_id` | uuid | Y |  | PK | Owning tenant. Row-level security key. |
+| 2 | `staff_id` | uuid | Y |  | PK | `hr.staff.id` (kept from its events) |
+| 3 | `user_id` | uuid |  |  |  | Login account of the record |
+| 4 | `institution_id` | uuid |  |  |  | Institution of the record |
+| 5 | `is_deleted` | bool | Y | false |  | Deleted in its module; kept so a late event cannot restore it |
+| 6 | `source_version` | int4 | Y |  |  | Source row version this entry reflects; older events are ignored |
+| 7 | `synced_at` | timestamptz | Y |  |  | When an event last changed the row |
+
+**Checks**
+
+- `ck_staff_record_source_version`: source_version >= 1
+
 ## `library` — Library
 
 Library: Catalogue (media titles), copies, library cards, circulation (loans, returns, fines), reservations and purchase requests.
@@ -13715,6 +13771,47 @@ Communication & Community: Message templates, outbound notifications/reminders, 
 - `ck_task_assignee_assignee_type`: assignee_type IN ('user', 'class', 'group')
 - `ck_task_assignee_status`: status IN ('pending', 'completed')
 - `ck_task_assignee_1`: num_nonnulls(user_id, class_section_id, group_id) = 1
+
+<a id="commsstaff_record"></a>
+### comms.staff_record
+
+The login account and institution of each staff record, kept from `hr.staff` events, so mail and conversations reach only accounts of the sender's school.
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `tenant_id` | uuid | Y |  | PK | Owning tenant. Row-level security key. |
+| 2 | `staff_id` | uuid | Y |  | PK | `hr.staff.id` (kept from its events) |
+| 3 | `user_id` | uuid |  |  |  | Login account of the record |
+| 4 | `institution_id` | uuid |  |  |  | Institution of the record |
+| 5 | `is_deleted` | bool | Y | false |  | Deleted in its module; kept so a late event cannot restore it |
+| 6 | `source_version` | int4 | Y |  |  | Source row version this entry reflects; older events are ignored |
+| 7 | `synced_at` | timestamptz | Y |  |  | When an event last changed the row |
+
+**Checks**
+
+- `ck_comms_staff_record_source_version`: source_version >= 1
+
+<a id="commsguardian_link"></a>
+### comms.guardian_link
+
+Which guardian record, person and account is linked to which student, kept from `sis.student_guardian` events, so a guardian reaches only the feedback threads opened as them.
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `tenant_id` | uuid | Y |  | PK | Owning tenant. Row-level security key. |
+| 2 | `link_id` | uuid | Y |  | PK | `sis.student_guardian.id` (kept from its events) |
+| 3 | `student_id` | uuid | Y |  |  | The child (`sis.student.id`) |
+| 4 | `guardian_id` | uuid | Y |  |  | `sis.guardian.id`, as feedback threads name it |
+| 5 | `guardian_person_id` | uuid | Y |  |  | Person of the guardian |
+| 6 | `guardian_user_id` | uuid |  |  |  | Login account of the guardian when last announced |
+| 7 | `status` | varchar(20) | Y |  |  | State of the link; only active counts |
+| 8 | `is_deleted` | bool | Y | false |  | Deleted in its module; kept so a late event cannot restore it |
+| 9 | `source_version` | int4 | Y |  |  | Source row version this entry reflects; older events are ignored |
+| 10 | `synced_at` | timestamptz | Y |  |  | When an event last changed the row |
+
+**Checks**
+
+- `ck_comms_guardian_link_source_version`: source_version >= 1
 
 ## `frontoffice` — Front Office
 

@@ -175,6 +175,7 @@ COMMENT ON COLUMN org.academic_year.updated_by IS 'User account that last update
 COMMENT ON COLUMN org.academic_year.deleted_at IS 'Soft-delete marker; NULL = live row.';
 COMMENT ON COLUMN org.academic_year.row_version IS 'Optimistic-locking version.';
 CREATE UNIQUE INDEX ix_academic_year_1 ON org.academic_year (institution_id) WHERE (is_current AND deleted_at IS NULL);
+CREATE UNIQUE INDEX uq_academic_year_active ON org.academic_year (institution_id) WHERE status = 'active' AND deleted_at IS NULL;
 
 CREATE TABLE org.academic_term (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -331,6 +332,66 @@ COMMENT ON COLUMN org.holiday.updated_at IS 'Last update time.';
 COMMENT ON COLUMN org.holiday.updated_by IS 'User account that last updated the row (audit reference to iam.user_account; not FK-constrained).';
 COMMENT ON COLUMN org.holiday.deleted_at IS 'Soft-delete marker; NULL = live row.';
 COMMENT ON COLUMN org.holiday.row_version IS 'Optimistic-locking version.';
+
+CREATE TABLE org.tenant_directory (
+    tenant_id uuid NOT NULL,
+    tenant_code varchar(60) NOT NULL,
+    status varchar(20) NOT NULL DEFAULT 'active',
+    source_version integer NOT NULL DEFAULT 0,
+    synced_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT pk_org_tenant_directory PRIMARY KEY (tenant_id),
+    CONSTRAINT ck_org_tenant_directory_status CHECK (status IN ('active', 'suspended', 'closed'))
+);
+COMMENT ON TABLE org.tenant_directory IS 'Local copy of tenant codes and status, kept from platform tenant events, so the public school finder names each school''s tenant code and leaves out suspended and closed tenants without reading another schema. Holds no personal data; read before a tenant is known, so it carries no row-level security.';
+COMMENT ON COLUMN org.tenant_directory.tenant_id IS 'Tenant (platform.tenant.id; logical, maintained from platform events).';
+COMMENT ON COLUMN org.tenant_directory.tenant_code IS 'Code users type at sign-in.';
+COMMENT ON COLUMN org.tenant_directory.status IS 'Only the schools of active tenants are found.';
+COMMENT ON COLUMN org.tenant_directory.source_version IS 'platform.tenant row version this entry reflects; an event with an older version is ignored.';
+COMMENT ON COLUMN org.tenant_directory.synced_at IS 'When the row was last updated from a platform event.';
+
+CREATE TABLE org.institution_directory (
+    institution_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    code varchar(30) NOT NULL,
+    name varchar(200) NOT NULL,
+    city_id uuid,
+    country_id uuid,
+    is_listed boolean NOT NULL,
+    synced_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT pk_institution_directory PRIMARY KEY (institution_id)
+);
+COMMENT ON TABLE org.institution_directory IS 'The public face of each institution — its name, code and place, nothing else — written with every change of org.institution, so the public school finder (org.FindInstitutions) can search across tenants before a tenant is known. Holds no personal data; carries no row-level security.';
+COMMENT ON COLUMN org.institution_directory.institution_id IS 'Institution (org.institution.id).';
+COMMENT ON COLUMN org.institution_directory.tenant_id IS 'Tenant of the institution.';
+COMMENT ON COLUMN org.institution_directory.code IS 'Institution code.';
+COMMENT ON COLUMN org.institution_directory.name IS 'Institution name.';
+COMMENT ON COLUMN org.institution_directory.city_id IS 'City (master.city; logical).';
+COMMENT ON COLUMN org.institution_directory.country_id IS 'Country (master.country; logical).';
+COMMENT ON COLUMN org.institution_directory.is_listed IS 'The institution is active and not deleted; the finder shows it only while its administrators have also opted in (org.finder_listing).';
+COMMENT ON COLUMN org.institution_directory.synced_at IS 'When the row was last written from org.institution.';
+CREATE INDEX ix_institution_directory_tenant ON org.institution_directory (tenant_id) WHERE is_listed;
+
+CREATE TABLE org.finder_listing (
+    setting_value_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    institution_id uuid NOT NULL,
+    is_listed boolean NOT NULL,
+    is_deleted boolean NOT NULL DEFAULT false,
+    source_version integer NOT NULL,
+    synced_at timestamptz NOT NULL,
+    CONSTRAINT pk_finder_listing PRIMARY KEY (setting_value_id),
+    CONSTRAINT ck_finder_listing_source_version CHECK (source_version >= 1)
+);
+COMMENT ON TABLE org.finder_listing IS 'Whether a school''s administrators opted in to the public school finder: a copy of the institution-scoped values of the iam setting directory.listedInSchoolFinder, kept from iam.setting_value events (org never calls iam). A school without a live opted-in value is not found (off by default). Ids and a flag only; read before a tenant is known, so it carries no row-level security.';
+COMMENT ON COLUMN org.finder_listing.setting_value_id IS 'The iam.setting_value row this entry mirrors (logical, maintained from its events).';
+COMMENT ON COLUMN org.finder_listing.tenant_id IS 'Tenant of the setting value.';
+COMMENT ON COLUMN org.finder_listing.institution_id IS 'The institution the value is set for (org.institution.id).';
+COMMENT ON COLUMN org.finder_listing.is_listed IS 'The value is true: the school opted in.';
+COMMENT ON COLUMN org.finder_listing.is_deleted IS 'The value was deleted in iam (the default, off, applies again); kept so a late event cannot restore it.';
+COMMENT ON COLUMN org.finder_listing.source_version IS 'Row version of the iam.setting_value row this entry reflects; an event with an older version is ignored.';
+COMMENT ON COLUMN org.finder_listing.synced_at IS 'When the row was last updated from an event.';
+CREATE INDEX ix_finder_listing_institution ON org.finder_listing (institution_id) WHERE is_listed AND NOT is_deleted;
+COMMENT ON INDEX org.ix_finder_listing_institution IS 'org.FindInstitutions: the schools that opted in.';
 
 -- Intra-module foreign keys
 ALTER TABLE org.institution ADD CONSTRAINT fk_institution_parent_institution_id FOREIGN KEY (parent_institution_id, tenant_id) REFERENCES org.institution (id, tenant_id) ON DELETE SET NULL (parent_institution_id);

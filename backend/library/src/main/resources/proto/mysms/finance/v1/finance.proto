@@ -1,0 +1,2030 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.finance.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "FinanceProto";
+option java_package = "com.mysms.finance.v1";
+
+// FeeHeadService: operations on the FeeHead aggregate.
+service FeeHeadService {
+  // List FeeHeads.
+  rpc ListFeeHeads(ListFeeHeadsRequest) returns (ListFeeHeadsResponse);
+  // Get FeeHead.
+  rpc GetFeeHead(GetFeeHeadRequest) returns (GetFeeHeadResponse);
+  // Create FeeHead.
+  rpc CreateFeeHead(CreateFeeHeadRequest) returns (CreateFeeHeadResponse);
+  // Update FeeHead.
+  rpc UpdateFeeHead(UpdateFeeHeadRequest) returns (UpdateFeeHeadResponse);
+  // Soft-delete FeeHead.
+  rpc DeleteFeeHead(DeleteFeeHeadRequest) returns (DeleteFeeHeadResponse);
+}
+
+// FeePlanService: operations on the FeePlan aggregate.
+service FeePlanService {
+  // List FeePlans.
+  rpc ListFeePlans(ListFeePlansRequest) returns (ListFeePlansResponse);
+  // Get FeePlan.
+  rpc GetFeePlan(GetFeePlanRequest) returns (GetFeePlanResponse);
+  // Create FeePlan.
+  rpc CreateFeePlan(CreateFeePlanRequest) returns (CreateFeePlanResponse);
+  // Update FeePlan.
+  rpc UpdateFeePlan(UpdateFeePlanRequest) returns (UpdateFeePlanResponse);
+  // Soft-delete FeePlan.
+  rpc DeleteFeePlan(DeleteFeePlanRequest) returns (DeleteFeePlanResponse);
+  // List FeePlanInstallments.
+  rpc ListFeePlanInstallments(ListFeePlanInstallmentsRequest) returns (ListFeePlanInstallmentsResponse);
+  // Get FeePlanInstallment.
+  rpc GetFeePlanInstallment(GetFeePlanInstallmentRequest) returns (GetFeePlanInstallmentResponse);
+  // Create FeePlanInstallment.
+  rpc CreateFeePlanInstallment(CreateFeePlanInstallmentRequest) returns (CreateFeePlanInstallmentResponse);
+  // Update FeePlanInstallment.
+  rpc UpdateFeePlanInstallment(UpdateFeePlanInstallmentRequest) returns (UpdateFeePlanInstallmentResponse);
+  // Soft-delete FeePlanInstallment.
+  rpc DeleteFeePlanInstallment(DeleteFeePlanInstallmentRequest) returns (DeleteFeePlanInstallmentResponse);
+}
+
+// FeePlanInstallmentComponentService: operations on the FeePlanInstallmentComponent aggregate.
+service FeePlanInstallmentComponentService {
+  // List FeePlanInstallmentComponents.
+  rpc ListFeePlanInstallmentComponents(ListFeePlanInstallmentComponentsRequest) returns (ListFeePlanInstallmentComponentsResponse);
+  // Get FeePlanInstallmentComponent.
+  rpc GetFeePlanInstallmentComponent(GetFeePlanInstallmentComponentRequest) returns (GetFeePlanInstallmentComponentResponse);
+  // Create FeePlanInstallmentComponent.
+  rpc CreateFeePlanInstallmentComponent(CreateFeePlanInstallmentComponentRequest) returns (CreateFeePlanInstallmentComponentResponse);
+  // Update FeePlanInstallmentComponent.
+  rpc UpdateFeePlanInstallmentComponent(UpdateFeePlanInstallmentComponentRequest) returns (UpdateFeePlanInstallmentComponentResponse);
+  // Soft-delete FeePlanInstallmentComponent.
+  rpc DeleteFeePlanInstallmentComponent(DeleteFeePlanInstallmentComponentRequest) returns (DeleteFeePlanInstallmentComponentResponse);
+}
+
+// StudentFeeDueService: operations on the StudentFeeDue aggregate.
+service StudentFeeDueService {
+  // List StudentFeeDues.
+  rpc ListStudentFeeDues(ListStudentFeeDuesRequest) returns (ListStudentFeeDuesResponse);
+  // Get StudentFeeDue.
+  rpc GetStudentFeeDue(GetStudentFeeDueRequest) returns (GetStudentFeeDueResponse);
+  // Update StudentFeeDue.
+  rpc UpdateStudentFeeDue(UpdateStudentFeeDueRequest) returns (UpdateStudentFeeDueResponse);
+  // Create dues for students from a fee plan.
+  rpc GenerateFeeDues(GenerateFeeDuesRequest) returns (GenerateFeeDuesResponse);
+}
+
+// InvoiceService: operations on the Invoice aggregate.
+service InvoiceService {
+  // List Invoices.
+  rpc ListInvoices(ListInvoicesRequest) returns (ListInvoicesResponse);
+  // Get Invoice.
+  rpc GetInvoice(GetInvoiceRequest) returns (GetInvoiceResponse);
+  // Create Invoice.
+  rpc CreateInvoice(CreateInvoiceRequest) returns (CreateInvoiceResponse);
+  // Update Invoice.
+  rpc UpdateInvoice(UpdateInvoiceRequest) returns (UpdateInvoiceResponse);
+  // List InvoiceLines.
+  rpc ListInvoiceLines(ListInvoiceLinesRequest) returns (ListInvoiceLinesResponse);
+  // Get InvoiceLine.
+  rpc GetInvoiceLine(GetInvoiceLineRequest) returns (GetInvoiceLineResponse);
+  // Raise an invoice for dues.
+  rpc CreateInvoiceFromDues(CreateInvoiceFromDuesRequest) returns (CreateInvoiceFromDuesResponse);
+  // Post (number assigned).
+  rpc PostInvoice(PostInvoiceRequest) returns (PostInvoiceResponse);
+  // Cancel.
+  rpc CancelInvoice(CancelInvoiceRequest) returns (CancelInvoiceResponse);
+  // Raise a draft invoice for a charge another module computed (one per source).
+  rpc RaiseChargeInvoice(RaiseChargeInvoiceRequest) returns (RaiseChargeInvoiceResponse);
+  // Remind guardians of unpaid fees.
+  rpc SendFeeReminders(SendFeeRemindersRequest) returns (SendFeeRemindersResponse);
+  // Student fee statement.
+  rpc GetFeeStatement(GetFeeStatementRequest) returns (GetFeeStatementResponse);
+}
+
+// CouponService: operations on the Coupon aggregate.
+service CouponService {
+  // List Coupons.
+  rpc ListCoupons(ListCouponsRequest) returns (ListCouponsResponse);
+  // Get Coupon.
+  rpc GetCoupon(GetCouponRequest) returns (GetCouponResponse);
+  // Create Coupon.
+  rpc CreateCoupon(CreateCouponRequest) returns (CreateCouponResponse);
+  // Update Coupon.
+  rpc UpdateCoupon(UpdateCouponRequest) returns (UpdateCouponResponse);
+  // Soft-delete Coupon.
+  rpc DeleteCoupon(DeleteCouponRequest) returns (DeleteCouponResponse);
+  // List CouponScopes.
+  rpc ListCouponScopes(ListCouponScopesRequest) returns (ListCouponScopesResponse);
+  // Get CouponScope.
+  rpc GetCouponScope(GetCouponScopeRequest) returns (GetCouponScopeResponse);
+  // Create CouponScope.
+  rpc CreateCouponScope(CreateCouponScopeRequest) returns (CreateCouponScopeResponse);
+  // Update CouponScope.
+  rpc UpdateCouponScope(UpdateCouponScopeRequest) returns (UpdateCouponScopeResponse);
+  // Soft-delete CouponScope.
+  rpc DeleteCouponScope(DeleteCouponScopeRequest) returns (DeleteCouponScopeResponse);
+}
+
+// PaymentService: operations on the Payment aggregate.
+service PaymentService {
+  // Record an offline/counter payment with allocations. Idempotency required.
+  rpc RecordPayment(RecordPaymentRequest) returns (RecordPaymentResponse);
+  // List Payments.
+  rpc ListPayments(ListPaymentsRequest) returns (ListPaymentsResponse);
+  // Get Payment.
+  rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse);
+  // Price with coupon, tax and currency.
+  rpc QuoteCheckout(QuoteCheckoutRequest) returns (QuoteCheckoutResponse);
+  // Create a payment and gateway order.
+  rpc StartCheckout(StartCheckoutRequest) returns (StartCheckoutResponse);
+  // Gateway callback; marks payments received / failed and fulfils enrolments. Authenticated by the gateway signature over the raw body, not by a token; the tenant is resolved from the stored gateway order id. Processed idempotently by gateway event id.
+  rpc ReceiveGatewayWebhook(ReceiveGatewayWebhookRequest) returns (ReceiveGatewayWebhookResponse);
+  // Refund through the gateway.
+  rpc RefundPayment(RefundPaymentRequest) returns (RefundPaymentResponse);
+}
+
+message ListFeeHeadsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListFeeHeadsResponse {
+  repeated FeeHead items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetFeeHeadRequest {
+  // FeeHead id (UUID).
+  string id = 1;
+}
+message GetFeeHeadResponse {
+  FeeHead fee_head = 1;
+}
+
+message CreateFeeHeadRequest {
+  FeeHead fee_head = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateFeeHeadResponse {
+  FeeHead fee_head = 1;
+}
+
+message UpdateFeeHeadRequest {
+  // Resource with id and etag set.
+  FeeHead fee_head = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateFeeHeadResponse {
+  FeeHead fee_head = 1;
+}
+
+message DeleteFeeHeadRequest {
+  // FeeHead id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteFeeHeadResponse {
+}
+
+message ListFeePlansRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListFeePlansResponse {
+  repeated FeePlan items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetFeePlanRequest {
+  // FeePlan id (UUID).
+  string id = 1;
+}
+message GetFeePlanResponse {
+  FeePlan fee_plan = 1;
+}
+
+message CreateFeePlanRequest {
+  FeePlan fee_plan = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateFeePlanResponse {
+  FeePlan fee_plan = 1;
+}
+
+message UpdateFeePlanRequest {
+  // Resource with id and etag set.
+  FeePlan fee_plan = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateFeePlanResponse {
+  FeePlan fee_plan = 1;
+}
+
+message DeleteFeePlanRequest {
+  // FeePlan id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteFeePlanResponse {
+}
+
+message ListFeePlanInstallmentsRequest {
+  // FeePlan id (UUID).
+  string fee_plan_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListFeePlanInstallmentsResponse {
+  repeated FeePlanInstallment items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetFeePlanInstallmentRequest {
+  // FeePlan id (UUID).
+  string fee_plan_id = 1;
+  // FeePlanInstallment id (UUID).
+  string id = 2;
+}
+message GetFeePlanInstallmentResponse {
+  FeePlanInstallment fee_plan_installment = 1;
+}
+
+message CreateFeePlanInstallmentRequest {
+  // FeePlan id (UUID).
+  string fee_plan_id = 1;
+  FeePlanInstallment fee_plan_installment = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateFeePlanInstallmentResponse {
+  FeePlanInstallment fee_plan_installment = 1;
+}
+
+message UpdateFeePlanInstallmentRequest {
+  // FeePlan id (UUID).
+  string fee_plan_id = 1;
+  // Resource with id and etag set.
+  FeePlanInstallment fee_plan_installment = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateFeePlanInstallmentResponse {
+  FeePlanInstallment fee_plan_installment = 1;
+}
+
+message DeleteFeePlanInstallmentRequest {
+  // FeePlan id (UUID).
+  string fee_plan_id = 1;
+  // FeePlanInstallment id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteFeePlanInstallmentResponse {
+}
+
+message ListFeePlanInstallmentComponentsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListFeePlanInstallmentComponentsResponse {
+  repeated FeePlanInstallmentComponent items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetFeePlanInstallmentComponentRequest {
+  // FeePlanInstallmentComponent id (UUID).
+  string id = 1;
+}
+message GetFeePlanInstallmentComponentResponse {
+  FeePlanInstallmentComponent fee_plan_installment_component = 1;
+}
+
+message CreateFeePlanInstallmentComponentRequest {
+  FeePlanInstallmentComponent fee_plan_installment_component = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateFeePlanInstallmentComponentResponse {
+  FeePlanInstallmentComponent fee_plan_installment_component = 1;
+}
+
+message UpdateFeePlanInstallmentComponentRequest {
+  // Resource with id and etag set.
+  FeePlanInstallmentComponent fee_plan_installment_component = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateFeePlanInstallmentComponentResponse {
+  FeePlanInstallmentComponent fee_plan_installment_component = 1;
+}
+
+message DeleteFeePlanInstallmentComponentRequest {
+  // FeePlanInstallmentComponent id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteFeePlanInstallmentComponentResponse {
+}
+
+message ListStudentFeeDuesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListStudentFeeDuesResponse {
+  repeated StudentFeeDue items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetStudentFeeDueRequest {
+  // StudentFeeDue id (UUID).
+  string id = 1;
+}
+message GetStudentFeeDueResponse {
+  StudentFeeDue student_fee_due = 1;
+}
+
+message UpdateStudentFeeDueRequest {
+  // Resource with id and etag set.
+  StudentFeeDue student_fee_due = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStudentFeeDueResponse {
+  StudentFeeDue student_fee_due = 1;
+}
+
+message ListInvoicesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListInvoicesResponse {
+  repeated Invoice items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetInvoiceRequest {
+  // Invoice id (UUID).
+  string id = 1;
+}
+message GetInvoiceResponse {
+  Invoice invoice = 1;
+}
+
+message CreateInvoiceRequest {
+  Invoice invoice = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateInvoiceResponse {
+  Invoice invoice = 1;
+}
+
+message UpdateInvoiceRequest {
+  // Resource with id and etag set.
+  Invoice invoice = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateInvoiceResponse {
+  Invoice invoice = 1;
+}
+
+message ListInvoiceLinesRequest {
+  // Invoice id (UUID).
+  string invoice_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListInvoiceLinesResponse {
+  repeated InvoiceLine items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetInvoiceLineRequest {
+  // Invoice id (UUID).
+  string invoice_id = 1;
+  // InvoiceLine id (UUID).
+  string id = 2;
+}
+message GetInvoiceLineResponse {
+  InvoiceLine invoice_line = 1;
+}
+
+message ListCouponsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListCouponsResponse {
+  repeated Coupon items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetCouponRequest {
+  // Coupon id (UUID).
+  string id = 1;
+}
+message GetCouponResponse {
+  Coupon coupon = 1;
+}
+
+message CreateCouponRequest {
+  Coupon coupon = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateCouponResponse {
+  Coupon coupon = 1;
+}
+
+message UpdateCouponRequest {
+  // Resource with id and etag set.
+  Coupon coupon = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateCouponResponse {
+  Coupon coupon = 1;
+}
+
+message DeleteCouponRequest {
+  // Coupon id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteCouponResponse {
+}
+
+message ListCouponScopesRequest {
+  // Coupon id (UUID).
+  string coupon_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListCouponScopesResponse {
+  repeated CouponScope items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetCouponScopeRequest {
+  // Coupon id (UUID).
+  string coupon_id = 1;
+  // CouponScope id (UUID).
+  string id = 2;
+}
+message GetCouponScopeResponse {
+  CouponScope coupon_scope = 1;
+}
+
+message CreateCouponScopeRequest {
+  // Coupon id (UUID).
+  string coupon_id = 1;
+  CouponScope coupon_scope = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateCouponScopeResponse {
+  CouponScope coupon_scope = 1;
+}
+
+message UpdateCouponScopeRequest {
+  // Coupon id (UUID).
+  string coupon_id = 1;
+  // Resource with id and etag set.
+  CouponScope coupon_scope = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateCouponScopeResponse {
+  CouponScope coupon_scope = 1;
+}
+
+message DeleteCouponScopeRequest {
+  // Coupon id (UUID).
+  string coupon_id = 1;
+  // CouponScope id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteCouponScopeResponse {
+}
+
+message ListPaymentsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListPaymentsResponse {
+  repeated Payment items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetPaymentRequest {
+  // Payment id (UUID).
+  string id = 1;
+}
+message GetPaymentResponse {
+  Payment payment = 1;
+}
+
+message GenerateFeeDuesRequest {
+  // Fee plan. Required.
+  string fee_plan_id = 1;
+  // Students.
+  repeated string student_ids = 2;
+  // Whole class.
+  optional string class_section_id = 3;
+  // Registrations.
+  repeated string program_enrollment_ids = 4;
+  // Schedule start. Required.
+  string start_date = 5;
+  // Override the sum of fee heads.
+  optional string total_amount = 6;
+  // Academic year the dues belong to. Required.
+  string academic_year_id = 8;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 7;
+}
+message GenerateFeeDuesResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message CreateInvoiceFromDuesRequest {
+  // Student. Required.
+  string student_id = 1;
+  // Dues to bill. Required.
+  repeated string due_ids = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+  // Name printed on the invoice; when omitted, the student's name as sis shows it to the caller.
+  optional string bill_to_name = 4;
+}
+message CreateInvoiceFromDuesResponse {
+  Invoice invoice = 1;
+}
+
+message RaiseChargeInvoiceRequest {
+  // Institution the charge belongs to. Required. [UUID]
+  string institution_id = 1;
+  // Student billed (at least one of student_id and bill_to_user_id). [UUID]
+  optional string student_id = 2;
+  // User account billed (at least one of student_id and bill_to_user_id). [UUID]
+  optional string bill_to_user_id = 3;
+  // Name printed on the invoice. Required.
+  string bill_to_name = 4;
+  // What the charge is for, printed as the invoice's one line. Required.
+  string description = 5;
+  // Amount charged (decimal string, more than zero). Required.
+  string amount = 6;
+  // Currency; when omitted, the institution's currency. [UUID]
+  optional string currency_id = 7;
+  // Due date. [date]
+  optional string due_date = 8;
+  // What raised the charge (<module>.<table>, e.g. library.loan). Required.
+  string source_type = 9;
+  // Id of that record; one charge invoice per source. Required. [UUID]
+  string source_id = 10;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 11;
+}
+message RaiseChargeInvoiceResponse {
+  Invoice invoice = 1;
+}
+
+message PostInvoiceRequest {
+  // Path parameter invoiceId.
+  string invoice_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message PostInvoiceResponse {
+  Invoice invoice = 1;
+}
+
+message CancelInvoiceRequest {
+  // Path parameter invoiceId.
+  string invoice_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CancelInvoiceResponse {
+  Invoice invoice = 1;
+}
+
+message SendFeeRemindersRequest {
+  // Institution. Required.
+  string institution_id = 1;
+  // Invoices (default all overdue).
+  repeated string invoice_ids = 2;
+  // Channel. Required.
+  Channel channel = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+  // Allowed values of channel; REST/JSON uses the lowercase value shown in each comment.
+  enum Channel {
+    CHANNEL_UNSPECIFIED = 0;
+    // "sms"
+    CHANNEL_SMS = 1;
+    // "email"
+    CHANNEL_EMAIL = 2;
+    // "push"
+    CHANNEL_PUSH = 3;
+  }
+}
+message SendFeeRemindersResponse {
+  mysms.common.v1.SendResult result = 1;
+}
+
+message GetFeeStatementRequest {
+  // Path parameter studentId.
+  string student_id = 1;
+  // Year.
+  optional string academic_year_id = 2;
+}
+message GetFeeStatementResponse {
+  FeeStatement result = 1;
+}
+
+message QuoteCheckoutRequest {
+  // What is bought. Required.
+  Purpose purpose = 1;
+  // Invoice / course / cohort / application. Required.
+  string target_id = 2;
+  // Coupon.
+  optional string coupon_code = 3;
+  // Buyer country.
+  optional string country_code = 4;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 5;
+  // Allowed values of purpose; REST/JSON uses the lowercase value shown in each comment.
+  enum Purpose {
+    PURPOSE_UNSPECIFIED = 0;
+    // "invoice"
+    PURPOSE_INVOICE = 1;
+    // "lms_course"
+    PURPOSE_LMS_COURSE = 2;
+    // "lms_cohort"
+    PURPOSE_LMS_COHORT = 3;
+    // "lms_certificate"
+    PURPOSE_LMS_CERTIFICATE = 4;
+    // "admission"
+    PURPOSE_ADMISSION = 5;
+  }
+}
+message QuoteCheckoutResponse {
+  mysms.common.v1.OrderQuote result = 1;
+}
+
+message StartCheckoutRequest {
+  // What is bought. Required.
+  Purpose purpose = 1;
+  // Target. Required.
+  string target_id = 2;
+  // Coupon.
+  optional string coupon_code = 3;
+  // Billing name. Required.
+  string billing_name = 4;
+  // Address.
+  optional string billing_address_id = 5;
+  // GSTIN etc.
+  optional string tax_registration_number = 6;
+  // PAN etc.
+  optional string tax_identity = 7;
+  // Terms accepted. Required.
+  bool payer_consent = 8;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 9;
+  // Allowed values of purpose; REST/JSON uses the lowercase value shown in each comment.
+  enum Purpose {
+    PURPOSE_UNSPECIFIED = 0;
+    // "invoice"
+    PURPOSE_INVOICE = 1;
+    // "lms_course"
+    PURPOSE_LMS_COURSE = 2;
+    // "lms_cohort"
+    PURPOSE_LMS_COHORT = 3;
+    // "lms_certificate"
+    PURPOSE_LMS_CERTIFICATE = 4;
+    // "admission"
+    PURPOSE_ADMISSION = 5;
+  }
+}
+message StartCheckoutResponse {
+  CheckoutSession result = 1;
+}
+
+message ReceiveGatewayWebhookRequest {
+  // Path parameter gateway.
+  string gateway = 1;
+  // Unmodified request body as sent by the gateway. Required.
+  bytes raw_body = 2;
+  // Gateway signature headers.
+  map<string, string> headers = 3;
+}
+message ReceiveGatewayWebhookResponse {
+}
+
+message RefundPaymentRequest {
+  // Path parameter paymentId.
+  string payment_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Partial amount.
+  optional string amount = 3;
+  // Reason / comment recorded with the transition.
+  optional string reason = 4;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 5;
+  // How the money goes back (defaults to the payment's own method).
+  optional string refund_method = 6;
+}
+message RefundPaymentResponse {
+  Refund refund = 1;
+}
+
+// Chargeable fee item (tuition, transport, lab, admission, course fee...).
+message FeeHead {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution (NULL = tenant-wide). [UUID]
+  optional string institution_id = 2;
+  // Fee head code.
+  string code = 3;
+  // Fee head name.
+  string name = 4;
+  // Description.
+  optional string description = 5;
+  // Default amount. [Decimal string]
+  optional string default_amount = 6;
+  // Currency. [UUID]
+  optional string currency_id = 7;
+  // General-ledger account code for accounting export.
+  optional string ledger_account_code = 8;
+  // Whether billable.
+  bool is_active = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+}
+
+// Fee plan (payment terms) defining installments.
+message FeePlan {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Plan code.
+  string code = 3;
+  // Plan name.
+  string name = 4;
+  // Installments due after N days or on fixed dates.
+  ScheduleBasis schedule_basis = 5;
+  // Days used with offset_direction for the first installment.
+  optional int32 offset_days = 6;
+  // Before or after the reference date.
+  optional OffsetDirection offset_direction = 7;
+  // Plan-level discount. [Decimal string]
+  optional string discount_percent = 8;
+  // Notes.
+  optional string notes = 9;
+  // Whether usable.
+  bool is_active = 10;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 11;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 12;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 13;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 14;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 15;
+  // Allowed values of schedule_basis; REST/JSON uses the lowercase value shown in each comment.
+  enum ScheduleBasis {
+    SCHEDULE_BASIS_UNSPECIFIED = 0;
+    // "fixed_days"
+    SCHEDULE_BASIS_FIXED_DAYS = 1;
+    // "fixed_date"
+    SCHEDULE_BASIS_FIXED_DATE = 2;
+  }
+  // Allowed values of offset_direction; REST/JSON uses the lowercase value shown in each comment.
+  enum OffsetDirection {
+    OFFSET_DIRECTION_UNSPECIFIED = 0;
+    // "before"
+    OFFSET_DIRECTION_BEFORE = 1;
+    // "after"
+    OFFSET_DIRECTION_AFTER = 2;
+  }
+}
+
+// Installment of a fee plan.
+message FeePlanInstallment {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Plan. [UUID] Set from the parent path on create.
+  string fee_plan_id = 2;
+  // Installment number.
+  int32 sequence = 3;
+  // Days after the start date (fixed_days).
+  optional int32 due_days = 4;
+  // Fixed due date (fixed_date). [ISO-8601 date (YYYY-MM-DD)]
+  optional string due_date = 5;
+  // Share of the total fee due in this installment. [Decimal string]
+  string share_percent = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+}
+
+// Fee head included in an installment and its share.
+message FeePlanInstallmentComponent {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Installment. [UUID]
+  string installment_id = 2;
+  // Fee head. [UUID]
+  string fee_head_id = 3;
+  // Order.
+  optional int32 sequence = 4;
+  // Share of the installment amount. [Decimal string]
+  string share_percent = 5;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 6;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 7;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 8;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 9;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 10;
+}
+
+// Fee amount due from a student for an installment / fee head.
+message StudentFeeDue {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Student. [UUID]
+  string student_id = 3;
+  // Course registration the fee belongs to. [UUID]
+  optional string program_enrollment_id = 4;
+  // School-year placement the fee belongs to. [UUID]
+  optional string student_enrollment_id = 5;
+  // Installment. [UUID]
+  optional string installment_id = 6;
+  // Fee head. [UUID]
+  optional string fee_head_id = 7;
+  // Due date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string due_date = 8;
+  // Amount before discount. [Decimal string]
+  string amount = 9;
+  // Currency. [UUID]
+  string currency_id = 10;
+  // Discount. [Decimal string]
+  optional string discount_percent = 11;
+  // Multiplier applied (e.g. pro-rata). [Decimal string]
+  optional string fee_factor = 12;
+  // State.
+  Status status = 13;
+  // Invoice raised. [UUID]
+  optional string invoice_id = 14;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 15;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 16;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 17;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 18;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 19;
+  // Academic year the due belongs to. [UUID] Output only.
+  optional string academic_year_id = 20;
+  // Fee structure that generated this due (absent for manual dues). [UUID] Output only.
+  optional string fee_structure_id = 21;
+  // Concession applied to this due. [UUID] Output only.
+  optional string concession_id = 22;
+  // Concession/discount applied to this due. [Decimal string] Output only.
+  optional string discount_amount = 23;
+  // Payable after discount (amount - discount_amount). [Decimal string] Output only.
+  optional string net_amount = 24;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "invoiced"
+    STATUS_INVOICED = 2;
+    // "cancelled"
+    STATUS_CANCELLED = 3;
+  }
+}
+
+// Invoice raised to a student / guardian / user (fees, library fines, purchases).
+message Invoice {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  optional string institution_id = 2;
+  // Invoice number.
+  string invoice_number = 3;
+  // Billed student. [UUID]
+  optional string student_id = 4;
+  // Billed user (guardian / student). [UUID]
+  optional string bill_to_user_id = 5;
+  // Name on the invoice.
+  string bill_to_name = 6;
+  // Invoice date. [ISO-8601 date (YYYY-MM-DD)]
+  string invoice_date = 7;
+  // Due date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string due_date = 8;
+  // Currency. [UUID]
+  string currency_id = 9;
+  // Sum of line amounts. [Decimal string]
+  string subtotal = 10;
+  // Discounts. [Decimal string]
+  string discount_total = 11;
+  // Taxes. [Decimal string]
+  string tax_total = 12;
+  // Grand total. [Decimal string]
+  string total = 13;
+  // Paid so far. [Decimal string]
+  string amount_paid = 14;
+  // State. Changed only through the workflow operations. Output only.
+  Status status = 15;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 16;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 17;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 18;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 19;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 20;
+  // invoice or credit_note. A posted invoice is never edited; corrections are credit notes. Output only.
+  InvoiceType invoice_type = 21;
+  // Invoice a credit note corrects. [UUID] Output only.
+  optional string credit_for_invoice_id = 22;
+  // When the invoice became a posted (immutable) document. Output only.
+  google.protobuf.Timestamp posted_at = 23;
+  // When it was cancelled (allowed only while draft). Output only.
+  google.protobuf.Timestamp cancelled_at = 24;
+  // Rendered PDF of the issued document. [UUID] Output only.
+  optional string document_file_id = 25;
+  // Allowed values of invoice_type; REST/JSON uses the lowercase value shown in each comment.
+  enum InvoiceType {
+    INVOICE_TYPE_UNSPECIFIED = 0;
+    // "invoice"
+    INVOICE_TYPE_INVOICE = 1;
+    // "credit_note"
+    INVOICE_TYPE_CREDIT_NOTE = 2;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "draft"
+    STATUS_DRAFT = 1;
+    // "posted"
+    STATUS_POSTED = 2;
+    // "partially_paid"
+    STATUS_PARTIALLY_PAID = 3;
+    // "paid"
+    STATUS_PAID = 4;
+    // "cancelled"
+    STATUS_CANCELLED = 5;
+  }
+}
+
+// Line of an invoice.
+message InvoiceLine {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Invoice. [UUID] Set from the parent path on create.
+  string invoice_id = 2;
+  // Fee head. [UUID]
+  optional string fee_head_id = 3;
+  // Line description.
+  string description = 4;
+  // Quantity. [Decimal string]
+  string quantity = 5;
+  // Unit price. [Decimal string]
+  string unit_price = 6;
+  // Discount. [Decimal string]
+  string discount_amount = 7;
+  // Tax. [Decimal string]
+  string tax_amount = 8;
+  // Line total. [Decimal string]
+  string line_total = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+  // Tax rate applied to the line. [Decimal string] Output only.
+  optional string tax_rate_percent = 15;
+  // Tax code applied (GST slab...). Output only.
+  optional string tax_code = 16;
+}
+
+// Discount coupon for LMS courses / cohorts.
+message Coupon {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Coupon code.
+  string code = 2;
+  // Discount type.
+  DiscountType discount_type = 3;
+  // Percentage off. [Decimal string]
+  optional string percentage_discount = 4;
+  // Amount off. [Decimal string]
+  optional string fixed_discount = 5;
+  // Expiry. [ISO-8601 date (YYYY-MM-DD)]
+  optional string expires_on = 6;
+  // Maximum redemptions.
+  optional int32 usage_limit = 7;
+  // Redemptions so far.
+  int32 redemption_count = 8;
+  // Whether active.
+  bool is_enabled = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+  // Allowed values of discount_type; REST/JSON uses the lowercase value shown in each comment.
+  enum DiscountType {
+    DISCOUNT_TYPE_UNSPECIFIED = 0;
+    // "percentage"
+    DISCOUNT_TYPE_PERCENTAGE = 1;
+    // "fixed_amount"
+    DISCOUNT_TYPE_FIXED_AMOUNT = 2;
+  }
+}
+
+// Course or cohort a coupon applies to.
+message CouponScope {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Coupon. [UUID] Set from the parent path on create.
+  string coupon_id = 2;
+  // Course. [UUID]
+  optional string lms_course_id = 3;
+  // Cohort. [UUID]
+  optional string lms_cohort_id = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+}
+
+// Money received: fees, LMS course / cohort / certificate purchases, admission fees.
+message Payment {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution receiving the money. [UUID]
+  optional string institution_id = 2;
+  // Payer. [UUID]
+  string payer_user_id = 3;
+  // What the payment is for.
+  Purpose purpose = 4;
+  // Invoice settled. [UUID]
+  optional string invoice_id = 5;
+  // Course purchased. [UUID]
+  optional string lms_course_id = 6;
+  // Cohort purchased. [UUID]
+  optional string lms_cohort_id = 7;
+  // Application paid for. [UUID]
+  optional string admission_application_id = 8;
+  // Payment gateway.
+  optional string gateway_name = 9;
+  // Gateway order id.
+  optional string gateway_order_id = 10;
+  // Gateway payment id.
+  optional string gateway_payment_id = 11;
+  // Amount before discount. [Decimal string]
+  optional string original_amount = 12;
+  // Discount. [Decimal string]
+  string discount_amount = 13;
+  // Amount payable before tax. [Decimal string]
+  string amount = 14;
+  // Amount including tax. [Decimal string]
+  optional string amount_with_tax = 15;
+  // Currency. [UUID]
+  string currency_id = 16;
+  // Coupon used. [UUID]
+  optional string coupon_id = 17;
+  // Coupon code entered.
+  optional string coupon_code = 18;
+  // Billing name.
+  string billing_name = 19;
+  // Billing address. [UUID]
+  optional string billing_address_id = 20;
+  // Buyer's tax registration (e.g. GSTIN).
+  optional string tax_registration_number = 21;
+  // Plain value, input only: stored encrypted and never returned. Buyer's tax identity number (e.g. PAN), encrypted.
+  optional string tax_identity = 22;
+  // Masked form for display, e.g. "••••1234". Output only.
+  optional string tax_identity_masked = 23;
+  // Marketing source. [UUID]
+  optional string acquisition_source_id = 24;
+  // Payer accepted terms.
+  bool payer_consent = 25;
+  // State. Changed only through the workflow operations. Output only.
+  Status status = 26;
+  // When the money was received.
+  google.protobuf.Timestamp received_at = 27;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 28;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 29;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 30;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 31;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 32;
+  // Allowed values of purpose; REST/JSON uses the lowercase value shown in each comment.
+  enum Purpose {
+    PURPOSE_UNSPECIFIED = 0;
+    // "invoice"
+    PURPOSE_INVOICE = 1;
+    // "lms_course"
+    PURPOSE_LMS_COURSE = 2;
+    // "lms_cohort"
+    PURPOSE_LMS_COHORT = 3;
+    // "lms_certificate"
+    PURPOSE_LMS_CERTIFICATE = 4;
+    // "admission"
+    PURPOSE_ADMISSION = 5;
+    // "fees"
+    PURPOSE_FEES = 6;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "initiated"
+    STATUS_INITIATED = 1;
+    // "received"
+    STATUS_RECEIVED = 2;
+    // "failed"
+    STATUS_FAILED = 3;
+    // "refunded"
+    STATUS_REFUNDED = 4;
+  }
+  // How the money arrived: gateway, cash, cheque, dd, bank_transfer, card_pos or adjustment. Output only.
+  optional string payment_method = 33;
+  // Tenant receipt number for offline/counter payments. Output only.
+  optional string receipt_number = 34;
+  // Paying person when they have no user account. [UUID] Output only.
+  optional string payer_person_id = 35;
+  // Free-text payer name for counter payments. Output only.
+  optional string payer_name = 36;
+  // Cheque/DD/transfer reference. Output only.
+  optional string instrument_reference = 37;
+  // Staff user who recorded a counter payment. [UUID] Output only.
+  optional string received_by_user_id = 38;
+  // Gateway account the payment was taken on. [UUID] Output only.
+  optional string gateway_account_id = 39;
+  // How this payment settles invoices and dues. Output only.
+  repeated PaymentAllocation allocations = 40;
+  // Date on the cheque/DD/transfer instrument. [ISO-8601 date (YYYY-MM-DD)] Output only.
+  optional string instrument_date = 41;
+  // Drawee bank for cheque/DD payments. Output only.
+  optional string bank_name = 42;
+}
+
+message FeeStatement {
+  // Dues.
+  repeated StudentFeeDue dues = 1;
+  // Invoices.
+  repeated Invoice invoices = 2;
+  // Payments.
+  repeated Payment payments = 3;
+  // Total billed. Required. [Decimal string]
+  string total_due = 4;
+  // Total paid. Required. [Decimal string]
+  string total_paid = 5;
+  // Outstanding. Required. [Decimal string]
+  string balance = 6;
+  // ISO 4217 code of the currency, when master could be read.
+  optional string currency_code = 7;
+  // Currency of every amount of the statement (master.currency); absent while the student has no fee records.
+  optional string currency_id = 8;
+}
+
+message CheckoutSession {
+  // Payment created in initiated state. Required.
+  Payment payment = 1;
+  // Hosted payment page.
+  optional string redirect_url = 2;
+  // Gateway order id for client SDKs.
+  optional string gateway_order_id = 3;
+  // Publishable key for client SDKs.
+  optional string gateway_public_key = 4;
+}
+
+// Marketing source a student came from (referral, campaign...).
+message AcquisitionSource {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Source name.
+  string name = 2;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 3;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 4;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 5;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 6;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 7;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 8;
+  // Display order.
+  optional int32 sort_order = 9;
+  // Whether offered for new picks.
+  optional bool is_active = 10;
+}
+message CreateAcquisitionSourceRequest {
+  AcquisitionSource acquisition_source = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateAcquisitionSourceResponse {
+  AcquisitionSource acquisition_source = 1;
+}
+message DeleteAcquisitionSourceRequest {
+  // AcquisitionSource id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteAcquisitionSourceResponse {
+}
+message GetAcquisitionSourceRequest {
+  // AcquisitionSource id (UUID).
+  string id = 1;
+}
+message GetAcquisitionSourceResponse {
+  AcquisitionSource acquisition_source = 1;
+}
+message ListAcquisitionSourcesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListAcquisitionSourcesResponse {
+  repeated AcquisitionSource items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+message UpdateAcquisitionSourceRequest {
+  // Resource with id and etag set.
+  AcquisitionSource acquisition_source = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateAcquisitionSourceResponse {
+  AcquisitionSource acquisition_source = 1;
+}
+// AcquisitionSourceService: operations on the AcquisitionSource aggregate.
+service AcquisitionSourceService {
+  // List AcquisitionSources.
+  rpc ListAcquisitionSources(ListAcquisitionSourcesRequest) returns (ListAcquisitionSourcesResponse);
+  // Get AcquisitionSource.
+  rpc GetAcquisitionSource(GetAcquisitionSourceRequest) returns (GetAcquisitionSourceResponse);
+  // Create AcquisitionSource.
+  rpc CreateAcquisitionSource(CreateAcquisitionSourceRequest) returns (CreateAcquisitionSourceResponse);
+  // Update AcquisitionSource.
+  rpc UpdateAcquisitionSource(UpdateAcquisitionSourceRequest) returns (UpdateAcquisitionSourceResponse);
+  // Soft-delete AcquisitionSource.
+  rpc DeleteAcquisitionSource(DeleteAcquisitionSourceRequest) returns (DeleteAcquisitionSourceResponse);
+}
+
+// What a class/program costs in an academic year: binds a fee plan to the year and the class or program. Publishing generates student fee dues.
+message FeeStructure {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution (NULL = tenant-wide). [UUID]
+  optional string institution_id = 2;
+  // Academic year the structure prices. [UUID]
+  string academic_year_id = 3;
+  // K-12 grade level (class) the structure applies to. [UUID]
+  optional string grade_level_id = 4;
+  // Higher-ed program the structure applies to. [UUID]
+  optional string program_id = 5;
+  // Fee plan (heads + installments) charged. [UUID]
+  string fee_plan_id = 6;
+  // Admin-facing name.
+  string name = 7;
+  // draft / published / archived. Changed by PublishFeeStructure / ArchiveFeeStructure. Output only.
+  optional string status = 8;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 9;
+  // User account that created the row (audit reference). [UUID] Output only.
+  optional string created_by = 10;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 11;
+  // User account that last updated the row (audit reference). [UUID] Output only.
+  optional string updated_by = 12;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 13;
+}
+
+message ListFeeStructuresRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListFeeStructuresResponse {
+  repeated FeeStructure items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetFeeStructureRequest {
+  // FeeStructure id (UUID).
+  string id = 1;
+}
+message GetFeeStructureResponse {
+  FeeStructure fee_structure = 1;
+}
+
+message CreateFeeStructureRequest {
+  FeeStructure fee_structure = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateFeeStructureResponse {
+  FeeStructure fee_structure = 1;
+}
+
+message UpdateFeeStructureRequest {
+  // Resource with id and etag set.
+  FeeStructure fee_structure = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateFeeStructureResponse {
+  FeeStructure fee_structure = 1;
+}
+
+message DeleteFeeStructureRequest {
+  // FeeStructure id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteFeeStructureResponse {
+}
+
+// FeeStructureService: operations on the FeeStructure aggregate.
+service FeeStructureService {
+  // List FeeStructures.
+  rpc ListFeeStructures(ListFeeStructuresRequest) returns (ListFeeStructuresResponse);
+  // Get FeeStructure.
+  rpc GetFeeStructure(GetFeeStructureRequest) returns (GetFeeStructureResponse);
+  // Create FeeStructure.
+  rpc CreateFeeStructure(CreateFeeStructureRequest) returns (CreateFeeStructureResponse);
+  // Update FeeStructure.
+  rpc UpdateFeeStructure(UpdateFeeStructureRequest) returns (UpdateFeeStructureResponse);
+  // Soft-delete FeeStructure.
+  rpc DeleteFeeStructure(DeleteFeeStructureRequest) returns (DeleteFeeStructureResponse);
+  // Publish and generate dues (long-running).
+  rpc PublishFeeStructure(PublishFeeStructureRequest) returns (PublishFeeStructureResponse);
+  // Archive a fee structure.
+  rpc ArchiveFeeStructure(ArchiveFeeStructureRequest) returns (ArchiveFeeStructureResponse);
+}
+
+message ArchiveFeeStructureRequest {
+  // Path parameter feeStructureId.
+  string fee_structure_id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message ArchiveFeeStructureResponse {
+  FeeStructure fee_structure = 1;
+}
+
+message PublishFeeStructureRequest {
+  // Path parameter feeStructureId.
+  string fee_structure_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+message PublishFeeStructureResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+// Scholarship / discount granted to one student for an academic year, applied when dues are generated or regenerated.
+message FeeConcession {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution (NULL = tenant-wide). [UUID]
+  optional string institution_id = 2;
+  // Student receiving the concession. [UUID]
+  string student_id = 3;
+  // Academic year it applies to. [UUID]
+  string academic_year_id = 4;
+  // Fee head it applies to (NULL = all heads). [UUID]
+  optional string fee_head_id = 5;
+  // percent or amount.
+  string concession_type = 6;
+  // Percentage (0-100) or absolute amount per the type. [Decimal string]
+  string concession_value = 7;
+  // Why it was granted.
+  optional string reason = 8;
+  // Staff user who approved it. [UUID] Output only.
+  optional string approved_by_user_id = 9;
+  // active / revoked.
+  optional string status = 10;
+  // Start of validity (NULL = whole year).
+  optional string valid_from = 11;
+  // End of validity (NULL = whole year).
+  optional string valid_until = 12;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 13;
+  // User account that created the row (audit reference). [UUID] Output only.
+  optional string created_by = 14;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 15;
+  // User account that last updated the row (audit reference). [UUID] Output only.
+  optional string updated_by = 16;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 17;
+}
+
+message ListFeeConcessionsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListFeeConcessionsResponse {
+  repeated FeeConcession items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetFeeConcessionRequest {
+  // FeeConcession id (UUID).
+  string id = 1;
+}
+message GetFeeConcessionResponse {
+  FeeConcession fee_concession = 1;
+}
+
+message CreateFeeConcessionRequest {
+  FeeConcession fee_concession = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateFeeConcessionResponse {
+  FeeConcession fee_concession = 1;
+}
+
+message UpdateFeeConcessionRequest {
+  // Resource with id and etag set.
+  FeeConcession fee_concession = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateFeeConcessionResponse {
+  FeeConcession fee_concession = 1;
+}
+
+message DeleteFeeConcessionRequest {
+  // FeeConcession id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteFeeConcessionResponse {
+}
+
+// FeeConcessionService: operations on the FeeConcession aggregate.
+service FeeConcessionService {
+  // List FeeConcessions.
+  rpc ListFeeConcessions(ListFeeConcessionsRequest) returns (ListFeeConcessionsResponse);
+  // Get FeeConcession.
+  rpc GetFeeConcession(GetFeeConcessionRequest) returns (GetFeeConcessionResponse);
+  // Create FeeConcession.
+  rpc CreateFeeConcession(CreateFeeConcessionRequest) returns (CreateFeeConcessionResponse);
+  // Update FeeConcession.
+  rpc UpdateFeeConcession(UpdateFeeConcessionRequest) returns (UpdateFeeConcessionResponse);
+  // Soft-delete FeeConcession.
+  rpc DeleteFeeConcession(DeleteFeeConcessionRequest) returns (DeleteFeeConcessionResponse);
+}
+
+message PaymentAllocationInput {
+  // Invoice this slice settles (exactly one of invoice_id / student_fee_due_id). [UUID]
+  optional string invoice_id = 1;
+  // Fee due this slice settles. [UUID]
+  optional string student_fee_due_id = 2;
+  // Allocated amount. [Decimal string]
+  string amount = 3;
+}
+message RecordPaymentRequest {
+  // Paying user, when they have an account. [UUID]
+  optional string payer_user_id = 1;
+  // Paying person without an account. [UUID]
+  optional string payer_person_id = 2;
+  // Free-text payer name when no record exists.
+  optional string payer_name = 3;
+  // Name on the receipt.
+  string billing_name = 4;
+  // Amount received. [Decimal string]
+  string amount = 5;
+  // Currency. [UUID]
+  string currency_id = 6;
+  // How the money arrived: cash, cheque, dd, bank_transfer, card_pos or adjustment.
+  string payment_method = 7;
+  // Cheque/DD/transfer reference.
+  optional string instrument_reference = 8;
+  // Date on the instrument.
+  optional string instrument_date = 9;
+  // Drawee bank.
+  optional string bank_name = 10;
+  // When the money was received (defaults to now).
+  google.protobuf.Timestamp received_at = 11;
+  // How the amount settles invoices and dues.
+  repeated PaymentAllocationInput allocations = 12;
+  // Idempotency key (UUID); required. Retries with the same key return the original result.
+  string request_id = 13;
+}
+message RecordPaymentResponse {
+  Payment payment = 1;
+}
+
+// Refund against a payment (full or partial). Created by RefundPayment; gateway refunds complete asynchronously via the gateway webhook.
+message Refund {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Payment being refunded. [UUID] Output only.
+  optional string payment_id = 2;
+  // Refunded amount. [Decimal string] Output only.
+  optional string amount = 3;
+  // Why the refund was made. Output only.
+  optional string reason = 4;
+  // Refund lifecycle. Output only.
+  optional string status = 5;
+  // Refund id at the gateway for gateway refunds. Output only.
+  optional string gateway_refund_id = 6;
+  // How the money went back. Output only.
+  optional string refund_method = 7;
+  // Staff user who initiated the refund. [UUID] Output only.
+  optional string refunded_by_user_id = 8;
+  // When the refund completed. Output only.
+  google.protobuf.Timestamp refunded_at = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+}
+
+message ListRefundsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListRefundsResponse {
+  repeated Refund items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetRefundRequest {
+  // Refund id (UUID).
+  string id = 1;
+}
+message GetRefundResponse {
+  Refund refund = 1;
+}
+
+// RefundService: operations on the Refund aggregate.
+service RefundService {
+  // List Refunds.
+  rpc ListRefunds(ListRefundsRequest) returns (ListRefundsResponse);
+  // Get Refund.
+  rpc GetRefund(GetRefundRequest) returns (GetRefundResponse);
+}
+
+// Payment-gateway merchant account configured by a tenant (per institution when needed). Secrets are write-only; reads return masked forms.
+message PaymentGatewayAccount {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution (absent = tenant-wide). [UUID]
+  optional string institution_id = 2;
+  // Gateway identifier (razorpay, stripe, payu...).
+  string gateway_name = 3;
+  // Admin-facing name of this account.
+  string display_name = 4;
+  // Merchant/account id at the gateway.
+  optional string merchant_id = 5;
+  // API key id (public part).
+  optional string key_id = 6;
+  // Settlement currency. [UUID]
+  optional string currency_id = 7;
+  // Default account for the tenant/institution.
+  optional bool is_default = 8;
+  // Whether usable for new payments.
+  optional bool is_active = 9;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 10;
+  // User account that created the row (audit reference). [UUID] Output only.
+  optional string created_by = 11;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 12;
+  // User account that last updated the row (audit reference). [UUID] Output only.
+  optional string updated_by = 13;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 14;
+  // API key secret; stored encrypted, never returned. Input only.
+  optional string key_secret = 15;
+  // Webhook signing secret; stored encrypted, never returned. Input only.
+  optional string webhook_secret = 16;
+  // Masked display form of the key secret. Output only.
+  optional string key_secret_masked = 17;
+}
+
+message ListPaymentGatewayAccountsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListPaymentGatewayAccountsResponse {
+  repeated PaymentGatewayAccount items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetPaymentGatewayAccountRequest {
+  // PaymentGatewayAccount id (UUID).
+  string id = 1;
+}
+message GetPaymentGatewayAccountResponse {
+  PaymentGatewayAccount payment_gateway_account = 1;
+}
+
+message CreatePaymentGatewayAccountRequest {
+  PaymentGatewayAccount payment_gateway_account = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreatePaymentGatewayAccountResponse {
+  PaymentGatewayAccount payment_gateway_account = 1;
+}
+
+message UpdatePaymentGatewayAccountRequest {
+  // Resource with id and etag set.
+  PaymentGatewayAccount payment_gateway_account = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdatePaymentGatewayAccountResponse {
+  PaymentGatewayAccount payment_gateway_account = 1;
+}
+
+message DeletePaymentGatewayAccountRequest {
+  // PaymentGatewayAccount id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeletePaymentGatewayAccountResponse {
+}
+
+// PaymentGatewayAccountService: operations on the PaymentGatewayAccount aggregate.
+service PaymentGatewayAccountService {
+  // List PaymentGatewayAccounts.
+  rpc ListPaymentGatewayAccounts(ListPaymentGatewayAccountsRequest) returns (ListPaymentGatewayAccountsResponse);
+  // Get PaymentGatewayAccount.
+  rpc GetPaymentGatewayAccount(GetPaymentGatewayAccountRequest) returns (GetPaymentGatewayAccountResponse);
+  // Create PaymentGatewayAccount.
+  rpc CreatePaymentGatewayAccount(CreatePaymentGatewayAccountRequest) returns (CreatePaymentGatewayAccountResponse);
+  // Update PaymentGatewayAccount.
+  rpc UpdatePaymentGatewayAccount(UpdatePaymentGatewayAccountRequest) returns (UpdatePaymentGatewayAccountResponse);
+  // Soft-delete PaymentGatewayAccount.
+  rpc DeletePaymentGatewayAccount(DeletePaymentGatewayAccountRequest) returns (DeletePaymentGatewayAccountResponse);
+}
+
+// OperationService: long-running operations started in this module.
+service OperationService {
+  // Live status of a long-running operation started in this module.
+  rpc GetOperation(GetOperationRequest) returns (GetOperationResponse);
+  // Long-running operations of this module started by the caller.
+  rpc ListOperations(ListOperationsRequest) returns (ListOperationsResponse);
+  // Request cancellation of a running operation started in this module.
+  rpc CancelOperation(CancelOperationRequest) returns (CancelOperationResponse);
+}
+
+// One slice of a payment settling an invoice or a fee due. Ledger row. Output only.
+message PaymentAllocation {
+  // Allocation id. [UUID] Output only.
+  string id = 1;
+  // Invoice this slice settles. [UUID] Output only.
+  optional string invoice_id = 2;
+  // Fee due this slice settles. [UUID] Output only.
+  optional string student_fee_due_id = 3;
+  // Allocated amount. [Decimal string] Output only.
+  string amount = 4;
+  // Currency of the slice. [UUID] Output only.
+  string currency_id = 5;
+}
+
+message GetOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+}
+
+message GetOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}
+
+message ListOperationsRequest {
+  // Filter by kind.
+  optional string kind = 1;
+  // The page to read: number, size and the cursor of a next page (api/README "Pagination"). Its sort is not taken:
+  // the rows come in their one fixed order, as over REST, which has no sort parameter here.
+  mysms.common.v1.PageableRequest pageable = 4;
+  // Fields 2 (page_size), 3 (page_token) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3;
+  reserved "page_size", "page_token";
+}
+
+message ListOperationsResponse {
+  repeated mysms.common.v1.Operation items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 3;
+  // Fields 2 (next_page_token) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2;
+  reserved "next_page_token";
+}
+
+message CancelOperationRequest {
+  // Path parameter operationId.
+  string operation_id = 1;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 2;
+}
+
+message CancelOperationResponse {
+  mysms.common.v1.Operation result = 1;
+}

@@ -70,7 +70,8 @@
    "seedId": "03e6d29c-fccf-50e7-bf22-3bd6f01b1769",
    "seed": [
     "INSERT INTO comms.calendar_export (user_id, provider, entity_type, entity_id, tenant_id, row_version, id) VALUES ('50b43749-1118-51c4-b9dd-b40f20108997', 'google', 't-entity-type-a03b7f5a', 'a8255f7c-0a69-5024-8210-8ac97c8c3a1c', :tenant, 1, '03e6d29c-fccf-50e7-bf22-3bd6f01b1769')"
-   ]
+   ],
+   "ownerOnly": "50b43749-1118-51c4-b9dd-b40f20108997"
   },
   {
    "name": "ClassPage",
@@ -195,7 +196,8 @@
    "update": {
     "title": "Updated title"
    },
-   "duplicateConflicts": false
+   "duplicateConflicts": false,
+   "ownerOnly": "0196f000-0000-7000-8000-00000000c0c0"
   },
   {
    "name": "ConversationMessage",
@@ -211,17 +213,17 @@
    "item": "/v1/comms/conversations/0189ad16-e46c-5f10-b14e-2b4d28e5aedf/messages/{id}",
    "scope": "chain",
    "fixtures": [
-    "INSERT INTO comms.conversation (tenant_id, institution_id, conversation_type, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'direct', 1, '0189ad16-e46c-5f10-b14e-2b4d28e5aedf') ON CONFLICT (id) DO NOTHING"
+    "INSERT INTO comms.conversation (tenant_id, institution_id, conversation_type, created_by, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'direct', '0196f000-0000-7000-8000-00000000c0c0', 1, '0189ad16-e46c-5f10-b14e-2b4d28e5aedf') ON CONFLICT (id) DO NOTHING"
    ],
    "create": {
     "conversationId": "0189ad16-e46c-5f10-b14e-2b4d28e5aedf",
-    "senderUserId": "28960f87-6d7a-53fb-bd47-ce02c2a39173",
     "body": "t-body-2c62893c"
    },
    "update": {
     "body": "Updated body"
    },
-   "duplicateConflicts": false
+   "duplicateConflicts": false,
+   "ownerOnly": "0196f000-0000-7000-8000-00000000c0c0"
   },
   {
    "name": "ConversationParticipant",
@@ -237,14 +239,16 @@
    "item": "/v1/comms/conversations/0189ad16-e46c-5f10-b14e-2b4d28e5aedf/participants/{id}",
    "scope": "chain",
    "fixtures": [
-    "INSERT INTO comms.conversation (tenant_id, institution_id, conversation_type, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'direct', 1, '0189ad16-e46c-5f10-b14e-2b4d28e5aedf') ON CONFLICT (id) DO NOTHING"
+    "INSERT INTO comms.conversation (tenant_id, institution_id, conversation_type, created_by, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'direct', '0196f000-0000-7000-8000-00000000c0c0', 1, '0189ad16-e46c-5f10-b14e-2b4d28e5aedf') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO comms.staff_record (tenant_id, staff_id, user_id, institution_id, source_version, synced_at) VALUES (:tenant, '0196f000-0000-7000-8000-000000c0c005', '0196f000-0000-7000-8000-00000000c0c0', '0196f000-0000-7000-8000-00000000a001', 1, now()) ON CONFLICT DO NOTHING"
    ],
    "create": {
     "conversationId": "0189ad16-e46c-5f10-b14e-2b4d28e5aedf",
-    "userId": "2692608e-9d99-5d84-b602-a85b4b4ec72e"
+    "userId": "0196f000-0000-7000-8000-00000000c0c0"
    },
    "update": {},
-   "duplicateConflicts": true
+   "duplicateConflicts": true,
+   "ownerOnly": "0196f000-0000-7000-8000-00000000c0c0"
   },
   {
    "name": "Event",
@@ -447,7 +451,6 @@
    ],
    "create": {
     "threadId": "e1e7ab19-88d0-5cc5-91ab-03ef6779e2fa",
-    "senderUserId": "b0cf9600-de88-5683-a86c-de80b1e9a9a7",
     "category": "app_feedback_or_bug",
     "message": "t-message-e93f6626"
    },
@@ -564,8 +567,9 @@
    "duplicateConflicts": false,
    "seedId": "baf44ec8-884c-5b49-b265-8ca4e50bdcb6",
    "seed": [
-    "INSERT INTO comms.mailbox_message (institution_id, folder, tenant_id, row_version, id) VALUES ('0196f000-0000-7000-8000-00000000a001', 'outbox', :tenant, 1, 'baf44ec8-884c-5b49-b265-8ca4e50bdcb6')"
-   ]
+    "INSERT INTO comms.mailbox_message (institution_id, folder, owner_user_id, tenant_id, row_version, id) VALUES ('0196f000-0000-7000-8000-00000000a001', 'outbox', '0196f000-0000-7000-8000-00000000c0c0', :tenant, 1, 'baf44ec8-884c-5b49-b265-8ca4e50bdcb6')"
+   ],
+   "ownerOnly": "0196f000-0000-7000-8000-00000000c0c0"
   },
   {
    "name": "MessageTemplate",
@@ -700,6 +704,26 @@
      "stamps": [],
      "etag": true,
      "ifMatch": false
+    },
+    {
+     "operation": "comms.CloseNoticeReplies",
+     "path": "/v1/comms/notices/{id}:closeReplies",
+     "permission": "comms.notice.close_notice_replies",
+     "guard": {
+      "allowReplies": [
+       true
+      ]
+     },
+     "prepare": [
+      "UPDATE comms.notice SET allow_replies = true WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "allowReplies": false
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
     }
    ]
   },
@@ -822,7 +846,7 @@
     {
      "field": "secretValue",
      "masked": "secretValueMasked",
-     "mask": "\u2022\u2022\u2022\u20221234",
+     "mask": "••••1234",
      "rotated": "Rotated-secret-5678",
      "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM comms.notification_channel_property WHERE id = '{id}' AND (secret_value_enc IS NULL OR secret_value_enc NOT LIKE 'v1.%' OR strpos(secret_value_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
     }
@@ -1042,7 +1066,6 @@
    "create": {
     "institutionId": "0196f000-0000-7000-8000-00000000a001",
     "academicYearId": "98a22e43-ff01-522b-a020-0a1bfa28e41a",
-    "authorUserId": "737d2f6f-ada9-562b-9632-000077355329",
     "body": "t-body-aa201e68"
    },
    "update": {
@@ -1119,7 +1142,8 @@
     "classSectionId": "d168404f-61fb-5cb1-9b61-94052d665953"
    },
    "update": {},
-   "duplicateConflicts": true
+   "duplicateConflicts": true,
+   "ownerOnly": "f71482ff-076a-53ef-8369-4eee9d8763f6"
   },
   {
    "name": "PostComment",
@@ -1138,8 +1162,7 @@
     "INSERT INTO comms.post (tenant_id, institution_id, academic_year_id, author_user_id, body, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '0508a346-b33a-5f98-a9f6-01438fc815d7', 'f71482ff-076a-53ef-8369-4eee9d8763f6', 't-body-d0d53282', 1, '7881eb3d-f824-5883-b284-e2c7b34c9b29') ON CONFLICT (id) DO NOTHING"
    ],
    "create": {
-    "postId": "7881eb3d-f824-5883-b284-e2c7b34c9b29",
-    "authorUserId": "1fd3b296-d374-5c8e-8e5c-58b9b5020d68"
+    "postId": "7881eb3d-f824-5883-b284-e2c7b34c9b29"
    },
    "update": {
     "body": "Updated body"

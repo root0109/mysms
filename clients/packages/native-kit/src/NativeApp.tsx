@@ -1,5 +1,6 @@
 import {
   MySmsProvider,
+  resolveLink,
   useI18n,
   usePreferences,
   useSession,
@@ -34,6 +35,18 @@ import { LmsScreen } from './LmsScreen';
 import { isAssessmentScreenId, type AssessmentRoute } from './assessmentRoutes';
 import { isLmsScreenId, type LmsRoute } from './lmsRoutes';
 import { useDeepLinks } from './useDeepLinks';
+import { SheetsScreen, StudentMonthScreen, TakeAttendanceScreen } from './AttendanceScreens';
+import {
+  CalendarScreen,
+  ClassFeedScreen,
+  ConversationsScreen,
+  EventsScreen,
+  FeedbackScreen,
+  InboxScreen,
+  NoticesScreen,
+  TasksScreen,
+} from './CommsScreens';
+import { ClassWorkspaceScreen, MyLoansScreen, MyRouteScreen, ReservationsScreen } from './ServicesScreens';
 
 export interface NativeAppProps {
   runtime: Runtime;
@@ -62,7 +75,22 @@ export type Page =
   | 'assessment'
   | 'lms'
   | 'verify'
-  | 'persona';
+  | 'persona'
+  | 'sheets'
+  | 'takeAttendance'
+  | 'myAttendance'
+  | 'inbox'
+  | 'notices'
+  | 'calendar'
+  | 'conversations'
+  | 'events'
+  | 'feedback'
+  | 'feed'
+  | 'tasks'
+  | 'myLoans'
+  | 'reservations'
+  | 'myRoute'
+  | 'classWorkspace';
 /**
  * The pages before sign-in: sign in, a password reset (ACC-02), on the tablet sign-up (ACC-03), and the course
  * catalogue read as a guest of the app's school (LMS-01, LMS-02 and preview lessons).
@@ -80,6 +108,22 @@ const PAGE_OF_SCREEN: Readonly<Record<string, Page>> = {
   'ACC-14': 'settings',
   'ACC-15': 'privacyRequests',
   'TT-03': 'timetable',
+  'ATT-02': 'sheets',
+  'ATT-03': 'takeAttendance',
+  'ATT-04': 'myAttendance',
+  'ACA-06': 'classWorkspace',
+  'ACC-09': 'inbox',
+  'COM-01': 'notices',
+  'COM-02': 'notices',
+  'COM-03': 'calendar',
+  'COM-04': 'events',
+  'COM-05': 'conversations',
+  'COM-07': 'feedback',
+  'COM-08': 'feed',
+  'COM-09': 'tasks',
+  'LIB-05': 'reservations',
+  'LIB-07': 'myLoans',
+  'TRN-03': 'myRoute',
   'HR-03': 'leaveBalance',
   'HR-04': 'leave',
   'HR-08': 'payslips',
@@ -132,6 +176,8 @@ function Root({ client, webOrigin, defaultTenantCode, tablet }: Omit<NativeAppPr
   const status = useSession((s) => s.status);
   const linked = useDeepLinks(client, webOrigin);
   const [page, setPage] = useState<Page>('home');
+  // the record a page is about (a sheet, a student), from a deep link or the page that opened it
+  const [pageParams, setPageParams] = useState<Readonly<Record<string, string>>>({});
   // the student a summary is about (SIS-02 from a link, a child card or an incident), and where to go back to
   const [student, setStudent] = useState<{ id: string; from: Page } | null>(null);
   const [assessmentRoute, setAssessmentRoute] = useState<AssessmentRoute | null>(null);
@@ -158,6 +204,7 @@ function Root({ client, webOrigin, defaultTenantCode, tablet }: Omit<NativeAppPr
       setLmsHistory([]);
       setLmsRoute({ screenId: linked.screen.id, params: linked.params });
     }
+    setPageParams(linked.params);
     setPage(target);
   }, [linked]);
   const lmsScreen = (onHome: () => void, onSignIn?: () => void) =>
@@ -218,6 +265,10 @@ function Root({ client, webOrigin, defaultTenantCode, tablet }: Omit<NativeAppPr
   }
   if (termsPending) return <TermsScreen tablet={tablet ?? false} />;
   const home = () => setPage('home');
+  const open = (target: Page, params: Readonly<Record<string, string>> = {}) => {
+    setPageParams(params);
+    setPage(target);
+  };
   const openStudent = (from: Page) => (id: string) => {
     setStudent({ id, from });
     setPage('student');
@@ -270,11 +321,70 @@ function Root({ client, webOrigin, defaultTenantCode, tablet }: Omit<NativeAppPr
   if (page === 'privacyRequests') return <MyRequestsScreen tablet={tablet ?? false} onBack={home} />;
   if (page === 'verify') return <VerifyScreen tablet={tablet ?? false} onBack={home} />;
   if (page === 'persona') return <PersonaScreen tablet={tablet ?? false} onBack={home} />;
+  if (page === 'sheets')
+    return (
+      <SheetsScreen
+        tablet={tablet ?? false}
+        onOpen={(attendanceSheetId) => open('takeAttendance', { attendanceSheetId })}
+        onBack={home}
+      />
+    );
+  if (page === 'takeAttendance' && pageParams.attendanceSheetId)
+    return (
+      <TakeAttendanceScreen
+        sheetId={pageParams.attendanceSheetId}
+        tablet={tablet ?? false}
+        onBack={() => open('sheets')}
+      />
+    );
+  const plain = { tablet: tablet ?? false, onBack: home };
+  if (page === 'inbox')
+    return (
+      <InboxScreen
+        client={client}
+        {...plain}
+        onOpenLink={(link) => {
+          const resolved = resolveLink(link, client, webOrigin);
+          if (resolved.kind !== 'screen') return;
+          const target = PAGE_OF_SCREEN[resolved.match.screen.id];
+          if (target === 'lms' && isLmsScreenId(resolved.match.screen.id)) {
+            setLmsHistory([]);
+            setLmsRoute({ screenId: resolved.match.screen.id, params: resolved.match.params });
+          }
+          if (target === 'assessment' && isAssessmentScreenId(resolved.match.screen.id)) {
+            setAssessmentHistory([]);
+            setAssessmentRoute({ screenId: resolved.match.screen.id, params: resolved.match.params });
+          }
+          if (target === 'student' && resolved.match.params.studentId)
+            setStudent({ id: resolved.match.params.studentId, from: 'inbox' });
+          if (target) open(target, resolved.match.params);
+        }}
+      />
+    );
+  if (page === 'notices') return <NoticesScreen {...plain} />;
+  if (page === 'calendar') return <CalendarScreen {...plain} />;
+  if (page === 'conversations') return <ConversationsScreen {...plain} />;
+  if (page === 'events') return <EventsScreen {...plain} />;
+  if (page === 'feedback') return <FeedbackScreen {...plain} />;
+  if (page === 'feed') return <ClassFeedScreen {...plain} />;
+  if (page === 'tasks') return <TasksScreen {...plain} />;
+  if (page === 'myLoans') return <MyLoansScreen {...plain} />;
+  if (page === 'reservations') return <ReservationsScreen {...plain} />;
+  if (page === 'myRoute') return <MyRouteScreen {...plain} />;
+  if (page === 'classWorkspace') return <ClassWorkspaceScreen {...plain} />;
+  if (page === 'myAttendance')
+    return (
+      <StudentMonthScreen
+        {...(pageParams.studentId ? { studentId: pageParams.studentId } : {})}
+        tablet={tablet ?? false}
+        onBack={home}
+      />
+    );
   return (
     <HomeScreen
       linked={linked}
       tablet={tablet ?? false}
-      onOpen={setPage}
+      onOpen={open}
       onOpenAssessment={(screenId, params = {}) => {
         setAssessmentRoute({ screenId, params });
         setAssessmentHistory([]);

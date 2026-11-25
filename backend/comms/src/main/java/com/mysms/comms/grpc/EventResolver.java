@@ -1,5 +1,12 @@
 package com.mysms.comms.grpc;
 
+import java.time.ZoneOffset;
+import java.time.OffsetDateTime;
+import java.time.Instant;
+import com.mysms.core.error.InvalidArgumentException;
+import com.google.protobuf.Timestamp;
+import com.mysms.comms.api.model.CalendarItem;
+import com.mysms.comms.business.MyCalendarService;
 import com.mysms.comms.api.model.Event;
 import com.mysms.comms.api.model.EventAttendee;
 import com.mysms.comms.api.model.EventAttendeeUpdate;
@@ -72,7 +79,6 @@ import com.mysms.comms.v1.UpdateEventOccurrenceRequest;
 import com.mysms.comms.v1.UpdateEventOccurrenceResponse;
 import com.mysms.comms.v1.UpdateEventRequest;
 import com.mysms.comms.v1.UpdateEventResponse;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import io.grpc.stub.StreamObserver;
@@ -86,10 +92,12 @@ import net.devh.boot.grpc.server.service.GrpcService;
 public class EventResolver extends EventServiceGrpc.EventServiceImplBase {
 
     private final EventService service;
+    private final MyCalendarService calendar;
     private final ProtoBridge bridge;
 
-    public EventResolver(EventService service, ProtoBridge bridge) {
+    public EventResolver(EventService service, MyCalendarService calendar, ProtoBridge bridge) {
         this.service = service;
+        this.calendar = calendar;
         this.bridge = bridge;
     }
 
@@ -320,10 +328,22 @@ public class EventResolver extends EventServiceGrpc.EventServiceImplBase {
         ProtoBridge.send(out, bridge.reply(DeactivateEventResponse.newBuilder(), "event", changed).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void getMyCalendar(GetMyCalendarRequest request, StreamObserver<GetMyCalendarResponse> out) {
-        throw new NotImplementedException();
+        ProtoBridge.ListArguments page = bridge.list(request.getPageable());
+        Page<CalendarItem> rows = calendar.getMyCalendar(instant(request.hasFrom(), request.getFrom(), "from"),
+                instant(request.hasTo(), request.getTo(), "to"),
+                request.hasCohortId() ? bridge.id(request.getCohortId(), "cohortId") : null,
+                request.getItemTypesList(), page.page(), page.size(), page.cursor());
+        ProtoBridge.send(out, bridge.page(GetMyCalendarResponse.newBuilder(), rows).build());
+    }
+
+    /** A required timestamp parameter, 400 when absent like REST's. */
+    private static OffsetDateTime instant(boolean present, Timestamp value, String name) {
+        if (!present) {
+            throw new InvalidArgumentException("Missing parameter " + name + ".");
+        }
+        return OffsetDateTime.ofInstant(Instant.ofEpochSecond(value.getSeconds(), value.getNanos()), ZoneOffset.UTC);
     }
 
     /** The REST body (the workflow etag, its other fields) is the request without its path ids and idempotency key. */
@@ -336,9 +356,13 @@ public class EventResolver extends EventServiceGrpc.EventServiceImplBase {
         ProtoBridge.send(out, bridge.reply(CancelEventOccurrenceResponse.newBuilder(), "event_occurrence", changed).build());
     }
 
-    /** Not served yet: UNIMPLEMENTED, like REST's 501. */
     @Override
     public void completePersonalEvent(CompletePersonalEventRequest request, StreamObserver<CompletePersonalEventResponse> out) {
-        throw new NotImplementedException();
+        EventOccurrence changed = service.completePersonalEvent(bridge.id(request.getEventId(), "eventId"),
+                bridge.id(request.getEventOccurrenceId(), "eventOccurrenceId"),
+                bridge.body(request, com.mysms.comms.api.model.CompletePersonalEventRequest.class, "event_id",
+                        "event_occurrence_id", "request_id"));
+        ProtoBridge.send(out, bridge.reply(CompletePersonalEventResponse.newBuilder(), "event_occurrence", changed)
+                .build());
     }
 }

@@ -1,5 +1,6 @@
 package com.mysms.library.business;
 
+import com.mysms.authclient.AuthContext;
 import com.mysms.authclient.DataScope;
 import com.mysms.library.api.model.LibraryCard;
 import com.mysms.library.api.model.LibraryCardUpdate;
@@ -40,7 +41,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * Business service of library.library_card: audit and domain event commit in the same transaction as every change. Rows
- * outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant.
+ * outside the caller's institutions are invisible; tenant-level rows change only through a tenant-wide grant. A holder
+ * reads only the cards of their own person (404 otherwise); library staff, who issue or change cards in an
+ * institution, every card of it.
  */
 @Service
 public class LibraryCardService extends AppTransactionManager {
@@ -51,6 +54,8 @@ public class LibraryCardService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "library.library_card.create";
     static final String PERMISSION_UPDATE = "library.library_card.update";
     static final String PERMISSION_DELETE = "library.library_card.delete";
+    /** The permissions only library staff hold: whoever issues or changes cards in an institution reads all of them. */
+    private static final String[] STAFF = {PERMISSION_CREATE, PERMISSION_UPDATE};
     /** The contract's LibraryCardUpdate fields, in apply order. */
     static final List<String> WRITABLE =
             List.of("institutionId", "cardNumber", "cardTypeId", "holderType", "personId", "studentId", "staffId",
@@ -80,9 +85,16 @@ public class LibraryCardService extends AppTransactionManager {
         this.clock = clock;
     }
 
+    /** The card, when it is the caller's person's or the caller staffs its institution. */
     public LibraryCard getLibraryCard(UUID id) {
         return doInReadTransaction(() -> {
-            return mapper.toDto(loadVisible(DataScope.current(PERMISSION_GET), id));
+            LibraryCardEntity card = loadVisible(DataScope.current(PERMISSION_GET), id);
+            boolean own = AuthContext.require().personId().map(person -> person.equals(card.getPersonId()))
+                    .orElse(false);
+            if (!own && !LibraryStaff.staffs(institutionOf(card), STAFF)) {
+                throw new ResourceNotFoundException(AGGREGATE, id);
+            }
+            return mapper.toDto(card);
         });
     }
 
@@ -90,9 +102,11 @@ public class LibraryCardService extends AppTransactionManager {
             List<String> sortBy) {
         SortSpec sort = SortSpec.parse(sortBy, LibraryCardRepository.SORT_FIELDS, LibraryCardRepository.DEFAULT_ORDER,
                 LibraryCardRepository.ID_COLUMN);
+        AuthContext caller = AuthContext.require();
         SqlFragment where = FilterParser.parse(filter, LibraryCardRepository.FILTER_FIELDS)
-                .and(LibraryCardRepository.scope(DataScope.current(PERMISSION_LIST)));
-        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter, clock);
+                .and(LibraryCardRepository.scope(DataScope.current(PERMISSION_LIST)))
+                .and(LibraryCardRepository.reachableBy(caller.personId(), LibraryStaff.reach(STAFF)));
+        PageRequest page = PageRequest.of(pageNumber, pageSize, cursor, sort, filter + "|" + caller.userId(), clock);
         return doInReadTransaction(() -> {
             Page<LibraryCardEntity> rows = repository.list(page, where);
             return rows.map(mapper::toDto);

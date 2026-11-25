@@ -22,12 +22,6 @@ import java.util.*;
 
 public class CommentReactionUpdate {
 
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID commentId;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID userId;
-
   /**
    * Reaction.
    */
@@ -68,46 +62,6 @@ public class CommentReactionUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Boolean isActive;
-
-  public CommentReactionUpdate commentId(@Nullable UUID commentId) {
-    this.commentId = commentId;
-    return this;
-  }
-
-  /**
-   * Comment.
-   * @return commentId
-   */
-  @Valid 
-  @JsonProperty("commentId")
-  public @Nullable UUID getCommentId() {
-    return commentId;
-  }
-
-  @JsonProperty("commentId")
-  public void setCommentId(@Nullable UUID commentId) {
-    this.commentId = commentId;
-  }
-
-  public CommentReactionUpdate userId(@Nullable UUID userId) {
-    this.userId = userId;
-    return this;
-  }
-
-  /**
-   * User.
-   * @return userId
-   */
-  @Valid 
-  @JsonProperty("userId")
-  public @Nullable UUID getUserId() {
-    return userId;
-  }
-
-  @JsonProperty("userId")
-  public void setUserId(@Nullable UUID userId) {
-    this.userId = userId;
-  }
 
   public CommentReactionUpdate reaction(@Nullable ReactionEnum reaction) {
     this.reaction = reaction;
@@ -158,23 +112,19 @@ public class CommentReactionUpdate {
       return false;
     }
     CommentReactionUpdate commentReactionUpdate = (CommentReactionUpdate) o;
-    return Objects.equals(this.commentId, commentReactionUpdate.commentId) &&
-        Objects.equals(this.userId, commentReactionUpdate.userId) &&
-        Objects.equals(this.reaction, commentReactionUpdate.reaction) &&
+    return Objects.equals(this.reaction, commentReactionUpdate.reaction) &&
         Objects.equals(this.isActive, commentReactionUpdate.isActive);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(commentId, userId, reaction, isActive);
+    return Objects.hash(reaction, isActive);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class CommentReactionUpdate {\n");
-    sb.append("    commentId: ").append(toIndentedString(commentId)).append("\n");
-    sb.append("    userId: ").append(toIndentedString(userId)).append("\n");
     sb.append("    reaction: ").append(toIndentedString(reaction)).append("\n");
     sb.append("    isActive: ").append(toIndentedString(isActive)).append("\n");
     sb.append("}");

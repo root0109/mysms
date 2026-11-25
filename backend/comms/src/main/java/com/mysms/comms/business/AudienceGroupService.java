@@ -1,5 +1,9 @@
 package com.mysms.comms.business;
 
+import java.util.stream.Collectors;
+import java.util.Set;
+import com.mysms.comms.api.model.AudienceGroupMemberList;
+import com.mysms.comms.api.model.AddGroupMembersRequest;
 import com.mysms.authclient.DataScope;
 import com.mysms.comms.api.model.AudienceGroup;
 import com.mysms.comms.api.model.AudienceGroupMember;
@@ -57,6 +61,9 @@ public class AudienceGroupService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "comms.audience_group.create";
     static final String PERMISSION_UPDATE = "comms.audience_group.update";
     static final String PERMISSION_DELETE = "comms.audience_group.delete";
+    static final String PERMISSION_ADD_GROUP_MEMBERS = "comms.audience_group.add_group_members";
+    /** The most users one AddGroupMembers call takes. */
+    static final int MAX_ADDED = 500;
     /** The contract's AudienceGroupUpdate fields, in apply order. */
     static final List<String> WRITABLE = List.of("institutionId", "classSectionId", "name", "groupScope", "isActive");
 
@@ -200,6 +207,41 @@ public class AudienceGroupService extends AppTransactionManager {
             }
             audit.recordDelete(AGGREGATE, id);
             outbox.publish(AGGREGATE + CommsEvents.DELETED, AGGREGATE, id, CommsEvents.payload(id));
+        });
+    }
+
+    /**
+     * comms.AddGroupMembers: adds the users to the group as members of one type; users already members stay as they
+     * are. Answers every listed user's membership as it now stands.
+     */
+    public AudienceGroupMemberList addGroupMembers(UUID groupId, AddGroupMembersRequest request) {
+        List<UUID> users = request.getUserIds().stream().distinct().toList();
+        if (users.isEmpty() || users.size() > MAX_ADDED) {
+            throw new ValidationFailedException(List.of(new FieldError("userIds",
+                    "must name between 1 and " + MAX_ADDED + " users", "Size")));
+        }
+        String memberType = request.getMemberType().getValue();
+        UUID tenant = CallContextHolder.require().tenantId().orElseThrow();
+        DataScope scope = DataScope.current(PERMISSION_ADD_GROUP_MEMBERS);
+        return doInWriteTransaction(() -> {
+            AudienceGroupEntity group = loadVisible(scope, groupId);
+            scope.requireWritable(institutionOf(group));
+            Set<UUID> present = audienceGroupMemberRepository.membersAmong(groupId, users).stream()
+                    .map(AudienceGroupMemberEntity::getUserId).collect(Collectors.toSet());
+            for (UUID user : users) {
+                if (present.contains(user)) {
+                    continue;
+                }
+                AudienceGroupMemberEntity member = AudienceGroupMemberEntity.builder().groupId(groupId).userId(user)
+                        .memberType(memberType).tenantId(tenant).build();
+                member.onCreatingData(Actor.current(), clock);
+                AudienceGroupMemberEntity stored = audienceGroupMemberRepository.insert(member);
+                audit.recordCreate(AUDIENCE_GROUP_MEMBER_AGGREGATE, stored.getId());
+                outbox.publish(AUDIENCE_GROUP_MEMBER_AGGREGATE + CommsEvents.CREATED, AUDIENCE_GROUP_MEMBER_AGGREGATE,
+                        stored.getId(), CommsEvents.payload(stored.getId()));
+            }
+            return new AudienceGroupMemberList(audienceGroupMemberRepository.membersAmong(groupId, users).stream()
+                    .map(audienceGroupMemberMapper::toDto).toList());
         });
     }
 

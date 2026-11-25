@@ -95,6 +95,8 @@ service InvoiceService {
   rpc PostInvoice(PostInvoiceRequest) returns (PostInvoiceResponse);
   // Cancel.
   rpc CancelInvoice(CancelInvoiceRequest) returns (CancelInvoiceResponse);
+  // Raise a draft invoice for a charge another module computed (one per source).
+  rpc RaiseChargeInvoice(RaiseChargeInvoiceRequest) returns (RaiseChargeInvoiceResponse);
   // Remind guardians of unpaid fees.
   rpc SendFeeReminders(SendFeeRemindersRequest) returns (SendFeeRemindersResponse);
   // Student fee statement.
@@ -707,6 +709,34 @@ message CreateInvoiceFromDuesRequest {
   optional string bill_to_name = 4;
 }
 message CreateInvoiceFromDuesResponse {
+  Invoice invoice = 1;
+}
+
+message RaiseChargeInvoiceRequest {
+  // Institution the charge belongs to. Required. [UUID]
+  string institution_id = 1;
+  // Student billed (at least one of student_id and bill_to_user_id). [UUID]
+  optional string student_id = 2;
+  // User account billed (at least one of student_id and bill_to_user_id). [UUID]
+  optional string bill_to_user_id = 3;
+  // Name printed on the invoice. Required.
+  string bill_to_name = 4;
+  // What the charge is for, printed as the invoice's one line. Required.
+  string description = 5;
+  // Amount charged (decimal string, more than zero). Required.
+  string amount = 6;
+  // Currency; when omitted, the institution's currency. [UUID]
+  optional string currency_id = 7;
+  // Due date. [date]
+  optional string due_date = 8;
+  // What raised the charge (<module>.<table>, e.g. library.loan). Required.
+  string source_type = 9;
+  // Id of that record; one charge invoice per source. Required. [UUID]
+  string source_id = 10;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 11;
+}
+message RaiseChargeInvoiceResponse {
   Invoice invoice = 1;
 }
 

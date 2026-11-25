@@ -102,6 +102,18 @@ public class ConversationRepository {
     private static final String SCOPE = """
              (:scopeAll OR r.institution_id = ANY(:scopeIds) OR r.institution_id IS NULL)
             """;
+    /** A conversation is read and written only by whoever opened it and its participants. */
+    private static final String MEMBER = """
+             (r.created_by = :member
+              OR EXISTS (SELECT 1 FROM comms.conversation_participant p
+                          WHERE p.tenant_id = :tenantId
+                            AND p.conversation_id = r.id AND p.user_id = :member AND p.deleted_at IS NULL))
+            """;
+    private static final String ADMITS = """
+            SELECT EXISTS (SELECT 1 FROM comms.conversation r
+                            WHERE r.tenant_id = :tenantId
+                              AND r.id = :id AND
+            """ + MEMBER + ")";
 
     private final JdbcClient jdbc;
 
@@ -111,6 +123,17 @@ public class ConversationRepository {
 
     public Optional<ConversationEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(ConversationRepository::map).optional();
+    }
+
+    /** Whether the user opened the conversation or takes part in it (soft-deleted conversations included). */
+    public boolean admits(UUID id, UUID userId) {
+        return Boolean.TRUE.equals(jdbc.sql(ADMITS).param("id", id).param("member", userId).query(Boolean.class)
+                .single());
+    }
+
+    /** Conversations the user opened or takes part in. */
+    public static SqlFragment memberOf(UUID userId) {
+        return new SqlFragment(MEMBER, Map.of("member", userId));
     }
 
     public Page<ConversationEntity> list(PageRequest page, SqlFragment filter) {

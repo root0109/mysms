@@ -16,6 +16,6 @@ class TimetableControllerStubsTest {
     @Test
     void unservedOperationsAnswerNotImplemented() {
         assertThat(ControllerStubs.count(PeriodController.class)).as("Period").isEqualTo(0);
-        assertThat(ControllerStubs.count(SessionController.class)).as("Session").isEqualTo(2);
+        assertThat(ControllerStubs.count(SessionController.class)).as("Session").isEqualTo(0);
     }
 }

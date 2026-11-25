@@ -17,7 +17,6 @@ import com.mysms.timetable.api.model.SessionList;
 import com.mysms.timetable.api.model.SessionStudent;
 import com.mysms.timetable.api.model.SessionStudentUpdate;
 import com.mysms.timetable.api.model.SessionUpdate;
-import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.web.ReadMask;
 import com.mysms.timetable.business.SessionService;
 import java.net.URI;
@@ -28,7 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST edge of the Session operations; authentication and the permission check already ran in the auth-client filter.
- * Operations not served yet answer 501.
  */
 @RestController
 public class SessionController implements SessionApi {
@@ -42,7 +40,7 @@ public class SessionController implements SessionApi {
     @Override
     public ResponseEntity<SessionList> batchConfirmSessions(
             BatchConfirmSessionsRequest batchConfirmSessionsRequest, UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.ok(sessionService.batchConfirmSessions(batchConfirmSessionsRequest));
     }
 
     @Override
@@ -107,7 +105,7 @@ public class SessionController implements SessionApi {
     @Override
     public ResponseEntity<Operation> generateSessions(GenerateSessionsRequest generateSessionsRequest,
             UUID idempotencyKey) {
-        throw new NotImplementedException();
+        return ResponseEntity.accepted().body(sessionService.generateSessions(generateSessionsRequest));
     }
 
     @Override

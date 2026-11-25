@@ -174,6 +174,17 @@ public class NoticeRepository {
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
             """;
 
+    /** comms.CloseNoticeReplies: allowed while allow_replies is true. */
+    private static final String TRANSITION_CLOSE_NOTICE_REPLIES = """
+            UPDATE comms.notice
+               SET allow_replies = false,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+
     /** comms.ReactivateNotice: allowed while is_closed is true. */
     private static final String TRANSITION_REACTIVATE_NOTICE = """
             UPDATE comms.notice
@@ -311,6 +322,15 @@ public class NoticeRepository {
     /** comms.DeactivateNotice; 0 rows means the row changed (or vanished) since it was read. */
     public int deactivateNotice(UUID id, int expected, OffsetDateTime now, UUID actor) {
         return jdbc.sql(TRANSITION_DEACTIVATE_NOTICE)
+                .param("id", id)
+                .param("expected", expected)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** comms.CloseNoticeReplies; 0 rows means the row changed (or vanished) since it was read. */
+    public int closeNoticeReplies(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_CLOSE_NOTICE_REPLIES)
                 .param("id", id)
                 .param("expected", expected)
                 .param("now", now)

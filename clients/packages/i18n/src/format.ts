@@ -7,6 +7,7 @@ export function createFormatters(locale: string, timeZone?: string) {
   const weekday = new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: 'UTC' });
   // a calendar date (YYYY-MM-DD) has no time zone: shown as that same day everywhere
   const day = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' });
+  const month = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' });
   const number = new Intl.NumberFormat(locale);
   const percent = new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 });
   const percentExact = new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 2 });
@@ -21,6 +22,8 @@ export function createFormatters(locale: string, timeZone?: string) {
     weekday: (v: string) => weekday.format(new Date(`${v.slice(0, 10)}T00:00:00Z`)),
     /** A contract `date` value, e.g. `2026-03-04`, without shifting it into the viewer's time zone. */
     day: (v: string) => day.format(new Date(`${v.slice(0, 10)}T00:00:00Z`)),
+    /** The month of a contract `date` value, e.g. `March 2026` for `2026-03-04` (or `2026-03`). */
+    month: (v: string) => month.format(new Date(`${v.slice(0, 7)}-01T00:00:00Z`)),
     number: (v: number) => number.format(v),
     percent: (fraction: number) => percent.format(fraction),
     /** A percentage that is compared with a limit: up to two decimals, so 74.6% never reads as 75%. */

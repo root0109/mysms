@@ -1,5 +1,13 @@
-import { createFormatters, createTranslator, type Formatters, type Translate } from '@mysms/i18n';
-import { useMemo } from 'react';
+import {
+  catalogVersion,
+  createFormatters,
+  createTranslator,
+  loadCatalog,
+  onCatalogLoaded,
+  type Formatters,
+  type Translate,
+} from '@mysms/i18n';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { useRuntime } from '../react/useRuntime';
 import { explicitSetting, settingValue } from '../settings/preferences';
 import { useSession } from './session';
@@ -55,6 +63,11 @@ export function useI18n(): I18n {
   const timeZone = knownZone(storedZone) ? storedZone : undefined;
   const locale = runtime.locale();
   const formatLocale = supported(userLocale) ? userLocale : locale;
+  // a catalogue other than en loads on first use; the screens re-render in it when it arrives
+  const catalogs = useSyncExternalStore(onCatalogLoaded, catalogVersion, catalogVersion);
+  useEffect(() => {
+    void loadCatalog(locale);
+  }, [locale]);
   return useMemo(
     () => ({
       locale,
@@ -63,6 +76,7 @@ export function useI18n(): I18n {
       format: createFormatters(formatLocale, timeZone),
       timeZone,
     }),
-    [locale, formatLocale, timeZone],
+    // catalogs: a new translator once the locale's catalogue has loaded
+    [locale, formatLocale, timeZone, catalogs],
   );
 }
