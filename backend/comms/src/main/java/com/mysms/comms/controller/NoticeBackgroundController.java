@@ -61,10 +61,9 @@ public class NoticeBackgroundController implements NoticeBackgroundApi {
 
     @Override
     public ResponseEntity<NoticeBackground> updateNoticeBackground(UUID noticeBackgroundId,
-            String ifMatch, NoticeBackgroundUpdate noticeBackgroundUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, NoticeBackgroundUpdate noticeBackgroundUpdate, Boolean validateOnly) {
         NoticeBackground updated =
                 noticeBackgroundService.updateNoticeBackground(noticeBackgroundId, ifMatch, noticeBackgroundUpdate,
-                        updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

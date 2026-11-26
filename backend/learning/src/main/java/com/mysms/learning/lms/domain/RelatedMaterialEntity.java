@@ -1,0 +1,39 @@
+package com.mysms.learning.lms.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.math.BigDecimal;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of lms.related_material. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class RelatedMaterialEntity extends BaseEntity {
+
+    public static final String TABLE = "lms.related_material";
+
+    private UUID tenantId;
+    private UUID ebookId;
+    private String title;
+    private String url;
+    private String summary;
+    private String source;
+    private String mediaType;
+    private Long contentLength;
+    private String contentLengthBand;
+    private Long videoLengthSeconds;
+    private String videoLengthBand;
+    private Integer initialRank;
+    private Integer interactivityLevel;
+    private String interactivityBand;
+    private String conceptualLevel;
+    private BigDecimal languageComplexity;
+    private String languageComplexityBand;
+}

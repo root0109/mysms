@@ -15,15 +15,15 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of ReservedKeyword that can be updated (partial update; see updateMask).
+ * Fields of ReservedKeyword that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class ReservedKeywordUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String keyword;
+  private @Nullable Optional<@NotNull @Size(max = 120) String> keyword;
 
-  public ReservedKeywordUpdate keyword(@Nullable String keyword) {
+  public ReservedKeywordUpdate keyword(@Nullable Optional<String> keyword) {
     this.keyword = keyword;
     return this;
   }
@@ -32,14 +32,14 @@ public class ReservedKeywordUpdate {
    * Reserved word.
    * @return keyword
    */
-  @Size(max = 120) 
+  
   @JsonProperty("keyword")
-  public @Nullable String getKeyword() {
+  public @Nullable Optional<String> getKeyword() {
     return keyword;
   }
 
   @JsonProperty("keyword")
-  public void setKeyword(@Nullable String keyword) {
+  public void setKeyword(@Nullable Optional<String> keyword) {
     this.keyword = keyword;
   }
 

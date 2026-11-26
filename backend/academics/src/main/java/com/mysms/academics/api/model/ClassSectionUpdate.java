@@ -16,36 +16,36 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of ClassSection that can be updated (partial update; see updateMask).
+ * Fields of ClassSection that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class ClassSectionUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID academicYearId;
+  private @Nullable Optional<@NotNull UUID> academicYearId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID gradeLevelId;
+  private @Nullable Optional<@NotNull UUID> gradeLevelId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID sectionId;
+  private @Nullable Optional<@NotNull UUID> sectionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID classTeacherStaffId;
+  private @Nullable Optional<UUID> classTeacherStaffId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer capacity;
+  private @Nullable Optional<Integer> capacity;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String stream;
+  private @Nullable Optional<@Size(max = 60) String> stream;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public ClassSectionUpdate institutionId(@Nullable UUID institutionId) {
+  public ClassSectionUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -54,18 +54,18 @@ public class ClassSectionUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public ClassSectionUpdate academicYearId(@Nullable UUID academicYearId) {
+  public ClassSectionUpdate academicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
     return this;
   }
@@ -74,18 +74,18 @@ public class ClassSectionUpdate {
    * Academic year.
    * @return academicYearId
    */
-  @Valid 
+  
   @JsonProperty("academicYearId")
-  public @Nullable UUID getAcademicYearId() {
+  public @Nullable Optional<UUID> getAcademicYearId() {
     return academicYearId;
   }
 
   @JsonProperty("academicYearId")
-  public void setAcademicYearId(@Nullable UUID academicYearId) {
+  public void setAcademicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
   }
 
-  public ClassSectionUpdate gradeLevelId(@Nullable UUID gradeLevelId) {
+  public ClassSectionUpdate gradeLevelId(@Nullable Optional<UUID> gradeLevelId) {
     this.gradeLevelId = gradeLevelId;
     return this;
   }
@@ -94,18 +94,18 @@ public class ClassSectionUpdate {
    * Grade.
    * @return gradeLevelId
    */
-  @Valid 
+  
   @JsonProperty("gradeLevelId")
-  public @Nullable UUID getGradeLevelId() {
+  public @Nullable Optional<UUID> getGradeLevelId() {
     return gradeLevelId;
   }
 
   @JsonProperty("gradeLevelId")
-  public void setGradeLevelId(@Nullable UUID gradeLevelId) {
+  public void setGradeLevelId(@Nullable Optional<UUID> gradeLevelId) {
     this.gradeLevelId = gradeLevelId;
   }
 
-  public ClassSectionUpdate sectionId(@Nullable UUID sectionId) {
+  public ClassSectionUpdate sectionId(@Nullable Optional<UUID> sectionId) {
     this.sectionId = sectionId;
     return this;
   }
@@ -114,18 +114,18 @@ public class ClassSectionUpdate {
    * Section.
    * @return sectionId
    */
-  @Valid 
+  
   @JsonProperty("sectionId")
-  public @Nullable UUID getSectionId() {
+  public @Nullable Optional<UUID> getSectionId() {
     return sectionId;
   }
 
   @JsonProperty("sectionId")
-  public void setSectionId(@Nullable UUID sectionId) {
+  public void setSectionId(@Nullable Optional<UUID> sectionId) {
     this.sectionId = sectionId;
   }
 
-  public ClassSectionUpdate classTeacherStaffId(@Nullable UUID classTeacherStaffId) {
+  public ClassSectionUpdate classTeacherStaffId(@Nullable Optional<UUID> classTeacherStaffId) {
     this.classTeacherStaffId = classTeacherStaffId;
     return this;
   }
@@ -134,18 +134,18 @@ public class ClassSectionUpdate {
    * Class (homeroom) teacher.
    * @return classTeacherStaffId
    */
-  @Valid 
+  
   @JsonProperty("classTeacherStaffId")
-  public @Nullable UUID getClassTeacherStaffId() {
+  public @Nullable Optional<UUID> getClassTeacherStaffId() {
     return classTeacherStaffId;
   }
 
   @JsonProperty("classTeacherStaffId")
-  public void setClassTeacherStaffId(@Nullable UUID classTeacherStaffId) {
+  public void setClassTeacherStaffId(@Nullable Optional<UUID> classTeacherStaffId) {
     this.classTeacherStaffId = classTeacherStaffId;
   }
 
-  public ClassSectionUpdate capacity(@Nullable Integer capacity) {
+  public ClassSectionUpdate capacity(@Nullable Optional<Integer> capacity) {
     this.capacity = capacity;
     return this;
   }
@@ -156,16 +156,16 @@ public class ClassSectionUpdate {
    */
   
   @JsonProperty("capacity")
-  public @Nullable Integer getCapacity() {
+  public @Nullable Optional<Integer> getCapacity() {
     return capacity;
   }
 
   @JsonProperty("capacity")
-  public void setCapacity(@Nullable Integer capacity) {
+  public void setCapacity(@Nullable Optional<Integer> capacity) {
     this.capacity = capacity;
   }
 
-  public ClassSectionUpdate stream(@Nullable String stream) {
+  public ClassSectionUpdate stream(@Nullable Optional<String> stream) {
     this.stream = stream;
     return this;
   }
@@ -174,18 +174,18 @@ public class ClassSectionUpdate {
    * Stream for senior grades (Science, Commerce...).
    * @return stream
    */
-  @Size(max = 60) 
+  
   @JsonProperty("stream")
-  public @Nullable String getStream() {
+  public @Nullable Optional<String> getStream() {
     return stream;
   }
 
   @JsonProperty("stream")
-  public void setStream(@Nullable String stream) {
+  public void setStream(@Nullable Optional<String> stream) {
     this.stream = stream;
   }
 
-  public ClassSectionUpdate isActive(@Nullable Boolean isActive) {
+  public ClassSectionUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -196,12 +196,12 @@ public class ClassSectionUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

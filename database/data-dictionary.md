@@ -3274,12 +3274,32 @@ Academic Structure: Programs, courses, batches, grade levels, sections, class se
 - ← `assessment.exam.subject_id`
 - ← `assessment.homework.subject_id`
 - ← `attendance.attendance_register.subject_id`
-- ← `hr.staff_subject.subject_id`
+- ← `academics.teacher_subject.subject_id`
 - ← `library.media_subject.subject_id`
 - ← `library.purchase_request_subject.subject_id`
 - ← `sis.program_enrollment_subject.subject_id`
 - ← `sis.subject_registration_line.subject_id`
 - ← `timetable.session.subject_id`
+
+<a id="academicsteacher_subject"></a>
+### academics.teacher_subject
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `id` | uuid | Y | gen_random_uuid() | PK |  |
+| 2 | `tenant_id` | uuid | Y |  |  |  |
+| 3 | `staff_id` | uuid | Y |  | logical → `hr.staff` (cross-module, no FK; archived on `hr.staff.deleted`) |  |
+| 4 | `subject_id` | uuid | Y |  | FK → `academics.subject` · RESTRICT · tenant-composite |  |
+| 5 | `created_at` | timestamptz | Y | now() |  |  |
+| 6 | `created_by` | uuid |  |  |  |  |
+| 7 | `updated_at` | timestamptz | Y | now() |  |  |
+| 8 | `updated_by` | uuid |  |  |  |  |
+| 9 | `deleted_at` | timestamptz |  |  |  |  |
+| 10 | `row_version` | int4 | Y | 0 |  |  |
+
+**Uniqueness**
+
+- unique index `uq_teacher_subject_1` (`staff_id`, `subject_id`) WHERE deleted_at IS NULL
 
 <a id="academicsteaching_assignment"></a>
 ### academics.teaching_assignment
@@ -4009,7 +4029,7 @@ Student Information: Student and guardian records, placement and registration pe
 
 Workforce / HR: Staff records, designations, departments, subject competencies, leave types and leave applications.
 
-12 tables: [`designation`](#hrdesignation), [`idempotency_key`](#hridempotency_key), [`inbox_event`](#hrinbox_event), [`leave_application`](#hrleave_application), [`leave_balance`](#hrleave_balance), [`leave_type`](#hrleave_type), [`number_sequence`](#hrnumber_sequence), [`operation`](#hroperation), [`outbox_event`](#hroutbox_event), [`staff`](#hrstaff), [`staff_department`](#hrstaff_department), [`staff_subject`](#hrstaff_subject)
+11 tables: [`designation`](#hrdesignation), [`idempotency_key`](#hridempotency_key), [`inbox_event`](#hrinbox_event), [`leave_application`](#hrleave_application), [`leave_balance`](#hrleave_balance), [`leave_type`](#hrleave_type), [`number_sequence`](#hrnumber_sequence), [`operation`](#hroperation), [`outbox_event`](#hroutbox_event), [`staff`](#hrstaff), [`staff_department`](#hrstaff_department)
 
 <a id="hrdesignation"></a>
 ### hr.designation
@@ -4300,7 +4320,6 @@ Workforce / HR: Staff records, designations, departments, subject competencies, 
 - ← `hr.leave_balance.staff_id` — referenced by (1:N)
 - ← `hr.staff.reporting_to_staff_id` — referenced by (1:N)
 - ← `hr.staff_department.staff_id` — referenced by (1:N)
-- ← `hr.staff_subject.staff_id` — referenced by (1:N)
 
 **Referenced from other modules (logical, no FK — archive instead of deleting; publish the deleted/archived event)**
 
@@ -4341,31 +4360,11 @@ Workforce / HR: Staff records, designations, departments, subject competencies, 
 
 - unique index `uq_staff_department_1` (`staff_id`, `department_id`) WHERE deleted_at IS NULL
 
-<a id="hrstaff_subject"></a>
-### hr.staff_subject
-
-| # | Column | Type | NN | Default | Key / relationship | Description |
-|---|---|---|---|---|---|---|
-| 1 | `id` | uuid | Y | gen_random_uuid() | PK |  |
-| 2 | `tenant_id` | uuid | Y |  |  |  |
-| 3 | `staff_id` | uuid | Y |  | FK → `hr.staff` · CASCADE · tenant-composite |  |
-| 4 | `subject_id` | uuid | Y |  | logical → `academics.subject` (cross-module, no FK) |  |
-| 5 | `created_at` | timestamptz | Y | now() |  |  |
-| 6 | `created_by` | uuid |  |  |  |  |
-| 7 | `updated_at` | timestamptz | Y | now() |  |  |
-| 8 | `updated_by` | uuid |  |  |  |  |
-| 9 | `deleted_at` | timestamptz |  |  |  |  |
-| 10 | `row_version` | int4 | Y | 0 |  |  |
-
-**Uniqueness**
-
-- unique index `uq_staff_subject_1` (`staff_id`, `subject_id`) WHERE deleted_at IS NULL
-
 ## `payroll` — Payroll
 
 Payroll: Pay components, salary templates, staff salary structures, payslips and salary disbursements.
 
-18 tables: [`disbursement_account`](#payrolldisbursement_account), [`idempotency_key`](#payrollidempotency_key), [`inbox_event`](#payrollinbox_event), [`number_sequence`](#payrollnumber_sequence), [`operation`](#payrolloperation), [`outbox_event`](#payrolloutbox_event), [`pay_category`](#payrollpay_category), [`pay_component`](#payrollpay_component), [`payment_type`](#payrollpayment_type), [`payroll_payment`](#payrollpayroll_payment), [`payslip`](#payrollpayslip), [`payslip_line`](#payrollpayslip_line), [`salary_template`](#payrollsalary_template), [`salary_template_component`](#payrollsalary_template_component), [`staff_bank_account`](#payrollstaff_bank_account), [`staff_member`](#payrollstaff_member), [`staff_salary`](#payrollstaff_salary), [`staff_salary_component`](#payrollstaff_salary_component)
+17 tables: [`disbursement_account`](#payrolldisbursement_account), [`idempotency_key`](#payrollidempotency_key), [`inbox_event`](#payrollinbox_event), [`number_sequence`](#payrollnumber_sequence), [`operation`](#payrolloperation), [`outbox_event`](#payrolloutbox_event), [`pay_category`](#payrollpay_category), [`pay_component`](#payrollpay_component), [`payment_type`](#payrollpayment_type), [`payroll_payment`](#payrollpayroll_payment), [`payslip`](#payrollpayslip), [`payslip_line`](#payrollpayslip_line), [`salary_template`](#payrollsalary_template), [`salary_template_component`](#payrollsalary_template_component), [`staff_bank_account`](#payrollstaff_bank_account), [`staff_salary`](#payrollstaff_salary), [`staff_salary_component`](#payrollstaff_salary_component)
 
 <a id="payrolldisbursement_account"></a>
 ### payroll.disbursement_account
@@ -4781,28 +4780,6 @@ Payroll: Pay components, salary templates, staff salary structures, payslips and
 **Uniqueness**
 
 - unique index `uq_staff_bank_account_primary` (`staff_id`) WHERE is_primary AND deleted_at IS NULL
-
-<a id="payrollstaff_member"></a>
-### payroll.staff_member
-
-Login account of each staff record, kept from `hr.staff` created/updated/deleted events (payroll never reads hr's schema), so a staff member who is not a payroll officer reads only the payslips of their own staff records.
-
-| # | Column | Type | NN | Default | Key / relationship | Description |
-|---|---|---|---|---|---|---|
-| 1 | `tenant_id` | uuid | Y |  | PK | Owning tenant. Row-level security key. |
-| 2 | `staff_id` | uuid | Y |  | PK | `hr.staff.id` (kept from its events) |
-| 3 | `user_id` | uuid |  |  |  | Login account of the staff record |
-| 4 | `is_deleted` | bool | Y | false |  | Deleted in hr; kept so a late event cannot restore it |
-| 5 | `source_version` | int4 | Y |  |  | Source row version this entry reflects; older or equal events are ignored |
-| 6 | `synced_at` | timestamptz | Y |  |  | When an event last changed the row |
-
-**Checks**
-
-- `ck_staff_member_source_version`: source_version >= 1
-
-**Indexes**
-
-- index `ix_staff_member_user` (`tenant_id`, `user_id`) WHERE NOT is_deleted AND user_id IS NOT NULL
 
 <a id="payrollstaff_salary"></a>
 ### payroll.staff_salary

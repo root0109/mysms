@@ -80,8 +80,8 @@ Useful variants:
 ```bash
 mvn -o install                                  # offline, after the first build; unchanged modules come from the build cache
 mvn install -Dmaven.build.cache.enabled=false   # the gate build: every module built and tested
-mvn -pl iam -am install                         # one module and what it depends on
-mvn -pl iam test -Dtest=SignInServiceTest       # one test class
+mvn -pl identity -am install                    # one module and what it depends on
+mvn -pl identity test -Dtest=SignInServiceTest  # one test class
 mvn -pl app -am package -DskipTests             # just the runnable jars, when the tests already ran
 ```
 
@@ -158,7 +158,7 @@ What else shortens it, by effort:
 |---|---|---|
 | none | Use **external PostgreSQL and RabbitMQ** (§2 option B, the `MYSMS_TEST_*` variables) instead of a Testcontainers database per test JVM | Container start-up removed from every module |
 | none | **Inner loop:** `mvn install -o -DskipTests -Dcheckstyle.skip -Dspotbugs.skip -Djacoco.skip -Dmaven.build.cache.skipSave=true` | Compile only, a few minutes. Does not write the OpenAPI documents, so the client SDK keeps the last ones. |
-| none | **Build only what changed:** `mvn install -o -pl lms -am` (a module and what it needs), or `-pl core -amd` (core and everything that uses it) | Skips unrelated modules |
+| none | **Build only what changed:** `mvn install -o -pl learning -am` (a module and what it needs), or `-pl core -amd` (core and everything that uses it) | Skips unrelated modules |
 | none | **Keep the build cache on** (it is: `.mvn/extensions.xml`). A second run with no changes restores modules instead of rebuilding them. Use `-Dmaven.build.cache.enabled=false` only for the gate build. | Unchanged modules are near-instant |
 | low | **Maven daemon (`mvnd`)** instead of `mvn`, to keep a warm JVM between builds | Warm JVM between builds |
 | low | **Testcontainers reuse:** `testcontainers.reuse.enable=true` in `~/.testcontainers.properties` plus `.withReuse(true)` on the containers | Containers survive between test runs |
@@ -182,7 +182,7 @@ Clients (run by `pnpm verify`): Web components are rendered in jsdom against the
 Contracts and schema:
 
 ```bash
-npx @redocly/cli lint backend/attendance/target/openapi/api-docs.yml   # any module's contract, after mvn verify
+npx @redocly/cli lint backend/academics/target/openapi/attendance/api-docs.yml   # any area's contract, after mvn verify
 psql -v ON_ERROR_STOP=1 -d mysms_scratch -f database/verification/smoke.sql
 ```
 

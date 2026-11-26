@@ -61,9 +61,9 @@ public class FeeConcessionController implements FeeConcessionApi {
 
     @Override
     public ResponseEntity<FeeConcession> updateFeeConcession(UUID feeConcessionId, String ifMatch,
-            FeeConcessionUpdate feeConcessionUpdate, String updateMask, Boolean validateOnly) {
+            FeeConcessionUpdate feeConcessionUpdate, Boolean validateOnly) {
         FeeConcession updated =
-                feeConcessionService.updateFeeConcession(feeConcessionId, ifMatch, feeConcessionUpdate, updateMask,
+                feeConcessionService.updateFeeConcession(feeConcessionId, ifMatch, feeConcessionUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

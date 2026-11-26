@@ -1,15 +1,15 @@
 # Module and product reorganisation — backend and clients
 
 The decided target shape of MySMS: a platform kernel and products (school management, HRMS, learning), on the backend
-and on every client (web, phone, tablet, console), with products and feature areas switched per tenant. Not built;
-scheduled after the privacy work (ROADMAP §3.1, ARC-7). Until it lands, CLAUDE.md, JAVA-CODING-RULES.md and the
-conformance rules stay binding. Still open: product vocabulary (§9) and confirming the packaging (§10).
+and on every client (web, phone, tablet, console), with products and feature areas switched per tenant. **Backend
+module structure built** (22 → 10 modules of areas, 2026-11-25); what is built and what remains: §11. Still open:
+product vocabulary (§9) and confirming the packaging (§10).
 
 ## 1. Where things stand
 
 | Layer | Today | Problem for a product split |
 |---|---|---|
-| Backend | 22 domain modules, one schema each, 26 gRPC edges; staff data spread over `hr` (staff, designations, departments, subject competencies, leave), `payroll` (pay, payslips, bank accounts), `attendance` (`staff_attendance` beside students' registers) | HR functions cannot ship alone: `hr.staff_subject` is school-specific, staff attendance lives in a school module, and eight modules call `hr` over gRPC (payroll and seven school modules: academics, sis, attendance, timetable, assessment, library, frontoffice) |
+| Backend | 22 domain modules, one schema each, 26 gRPC edges; staff data spread over `hr` (staff, designations, departments, subject competencies, leave), `payroll` (pay, payslips, bank accounts), `attendance` (`staff_attendance` beside students' registers) | HR functions cannot ship alone: `hr.staff_subject` is school-specific, staff attendance lives in a school module, and eight modules reference `hr` staff ids (payroll and seven school modules: academics, sis, attendance, timetable, assessment, library, frontoffice). Correction found while building: none of them calls `hr` over gRPC — payroll, comms, finance and iam keep event-fed copies, the others hold logical references only (ARCHITECTURE §5.1) |
 | Organisation model | `org.institution.institution_type` ∈ school, college, university, coaching centre, training centre | No company / branch / office type for an HRMS-only tenant |
 | Web (`apps/web`) | One app for every tenant role; screens in `packages/web-kit/src/screens/<area>` (staff, leave, payroll, students, lms …), list managers in `resourceScreens.ts`, routes generated from the single inventory `ui/02` | Every product is compiled into one app; no product boundary in packages; navigation knows no subscribed product |
 | Phone (`apps/mobile`) | One Expo project, three store variants (`APP_VARIANT` = student, parent, teacher); screens flat in `packages/native-kit/src` (payslips, leave, timetable, fees, LMS …) | No employee app; teacher and employee self-service are mixed; native-kit has no domain structure |
@@ -65,8 +65,8 @@ Rules:
 | Today | Goes to | Notes |
 |---|---|---|
 | `hr.staff`, `designation`, `staff_department`, `leave_type`, `leave_application`, `leave_balance` | hrms | `staff` gains employment type, grade, manager, probation and contract dates (C-7 / P2-04) |
-| `hr.staff_subject` | academics (`teacher_subject`) | school-only concept |
-| `payroll.*` | hrms | the `payroll.staff_member` copy of hr staff disappears (same module) |
+| `hr.staff_subject` | academics (`teacher_subject`) | school-only concept — **done 2026-11-26**: `/v1/academics/teacher-subjects`, `academics.teacher_subject.*`; deleting a staff record archives its rows |
+| `payroll.*` | hrms | the `payroll.staff_member` copy of hr staff disappears (same module) — **done 2026-11-26**: payroll reads `hr.staff` |
 | `attendance.staff_attendance` (partitioned) | hrms (`time_attendance`) | biometric/device capture (HW drafts) lands here; holidays still from `org` |
 | school callers of hr over gRPC (8 modules) | event-fed `staff_record` projections where a module only shows names; gRPC school → hrms where it needs a live answer | removes the "school knows HR internals" coupling |
 | leave ignoring holidays, payroll ignoring leave (BE-6) | fixed inside hrms | becomes one module's rule, no cross-module call |
@@ -239,3 +239,27 @@ Statutory payroll (PF, ESI, PT, TDS) is part of the core plan in these products,
 Principles: compliance and safety are never paid extras (privacy, statutory payroll, audit); usage costs passed
 through (SMS, WhatsApp, storage above quota); entitlements are platform data (GK-20), so plans change without a
 release.
+
+## 11. Status as built (2026-11-25)
+
+### 11.1 Built
+
+| Step | What | Where |
+|---|---|---|
+| 0 | Rules amended for modules of areas: CLAUDE.md §2/§6/§7/§10, JAVA-CODING-RULES §2.2 (added; §2, §3, §10.5, §14 carry a pointer, no rule dropped), ARCHITECTURE §1/§2/§6. Conformance knows areas (`SourceTree.Area`: an area is a migration folder its module's pom packages); `ModuleBoundaryRule` checks area packages, per-area SpotBugs coverage and migrations within the module's schemas; G1/G3/G8/G9, mapper, persistence, SQL and status-report rules work per area. Core test kit: `ModuleChecks.moduleSchemas`, sibling schemas allowed | `backend/conformance`, `core/src/test/.../testkit/ModuleChecks.java` |
+| 2 (structure) | `hrms` = hr + payroll in one module: `com.mysms.hrms.hr`, `com.mysms.hrms.payroll`, one `HrmsApplication`, one `application.properties`, one gRPC server; schemas, contracts, operation ids and permission codes unchanged | `backend/hrms` |
+| 5 | All remaining merges: `platform` (platform, master, org), `identity` (iam, people), `students` (sis, admission, careers), `academics` (academics, timetable, attendance, assessment), `campus` (library, transport, frontoffice, facility), `learning` (lms); `privacy`, `comms`, `finance` in the same shape. `app` assembles the 10 modules | `backend/*`, `backend/app` |
+| — | OpenAPI per area: core `OpenApiGroupsEnvironmentPostProcessor` declares one springdoc group per served area (`/v3/api-docs/<area>`), and the required-field restoration resolves contract classes within the document's area; `<Area>OpenApiComponentTest` writes `target/openapi/<area>/api-docs.yml`; the clients' SDK and core generators find each area's operation table and document in its module, so the 22 SDK namespaces are unchanged | `core`, `clients/packages/{sdk,core}/scripts/generate.mjs` |
+| — | Monolith configuration: a module file counts when its first area's operation table sits beside it (`ModulePropertiesEnvironmentPostProcessor`); callers address an area at its module's host (`dns:///<module>-service`) | `core`, every module's `application.properties` |
+| — | Split deployment on RabbitMQ: a consumer expects an event from the broker user of the module serving its source area (`MessagingModules` area → module table, kept equal to the modules' areas by conformance G9); DEPLOYMENT §RabbitMQ lists each module's areas for its permissions | `backend/messaging`, `backend/conformance` |
+
+### 11.2 Not built yet (in order)
+
+| Step | What remains | Note |
+|---|---|---|
+| 1 | Product entitlements and feature-area switches (platform data, edge 404, navigation filter) | needs the entitlement data model in `platform` and an auth-client edge check |
+| 2 (data) | Move `attendance.staff_attendance` to hrms as the new area `time_attendance` (owner decision: own schema, `/v1/time-attendance`, `time_attendance.*`); fix BE-6 (leave ↔ holidays ↔ pay) inside hrms, holidays from ARC-8's `master.holiday` through an hr event-fed copy. **Done 2026-11-26:** `payroll.staff_member` dropped (payroll reads `hr.staff`); `hr.staff_subject` → `academics.teacher_subject` | contract paths of the moved resources change; clients follow |
+| 2/5 | Replace gRPC between sibling areas by direct calls: admission → sis (students), attendance → timetable, assessment → academics, attendance/timetable/assessment → academics (academics), iam → people (identity), org/platform → master (platform), library → … | in-process gRPC still works; direct calls are allowed and preferred (JAVA-CODING-RULES §2.2) |
+| 5 | Break the module-level students ↔ academics cycle (sis → academics; attendance/assessment → sis): event-fed projections in one direction | the area graph stays a DAG |
+| 3, 6 | Clients: `packages/kernel` and `packages/features/*`, ESLint boundaries; split `ui/02` per product | the SDK keeps one namespace per area |
+| 4 | `apps/web-hrms`, employee phone variant, console entitlements, `app-hrms` / `app-learning` assemblies, `company`/`branch`/`office` institution types | after step 1 and the HRMS v1 scope (§8.1) |

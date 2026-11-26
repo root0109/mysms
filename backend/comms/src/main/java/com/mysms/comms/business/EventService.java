@@ -52,7 +52,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -84,13 +84,6 @@ public class EventService extends AppTransactionManager {
     static final String PERMISSION_DELETE = "comms.event.delete";
     static final String PERMISSION_ACTIVATE_EVENT = "comms.event.activate_event";
     static final String PERMISSION_DEACTIVATE_EVENT = "comms.event.deactivate_event";
-    /** The contract's EventUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("institutionId", "academicYearId", "audience", "classSectionId", "audienceLabel", "title",
-                    "description",
-            "category", "location", "organisedBy", "imageFileId", "color", "startAt", "endAt", "isAllDay",
-            "repeatCount", "repeatInterval", "repeatUnit", "url", "cohortId", "ownerUserId", "recurrenceRule",
-            "forAllMembers", "staffCanEdit", "importance");
 
     public static final String EVENT_ATTENDEE_AGGREGATE = EventAttendeeEntity.TABLE;
     static final String EVENT_ATTENDEE_PERMISSION_LIST = "comms.event_attendee.read";
@@ -98,8 +91,6 @@ public class EventService extends AppTransactionManager {
     static final String EVENT_ATTENDEE_PERMISSION_CREATE = "comms.event_attendee.create";
     static final String EVENT_ATTENDEE_PERMISSION_UPDATE = "comms.event_attendee.update";
     static final String EVENT_ATTENDEE_PERMISSION_DELETE = "comms.event_attendee.delete";
-    /** The contract's EventAttendeeUpdate fields, in apply order. */
-    static final List<String> EVENT_ATTENDEE_WRITABLE = List.of("userId");
 
     public static final String EVENT_GALLERY_ITEM_AGGREGATE = EventGalleryItemEntity.TABLE;
     static final String EVENT_GALLERY_ITEM_PERMISSION_LIST = "comms.event_gallery_item.read";
@@ -107,8 +98,6 @@ public class EventService extends AppTransactionManager {
     static final String EVENT_GALLERY_ITEM_PERMISSION_CREATE = "comms.event_gallery_item.create";
     static final String EVENT_GALLERY_ITEM_PERMISSION_UPDATE = "comms.event_gallery_item.update";
     static final String EVENT_GALLERY_ITEM_PERMISSION_DELETE = "comms.event_gallery_item.delete";
-    /** The contract's EventGalleryItemUpdate fields, in apply order. */
-    static final List<String> EVENT_GALLERY_ITEM_WRITABLE = List.of("fileId", "sortOrder");
 
     public static final String EVENT_INSTITUTION_AGGREGATE = EventInstitutionEntity.TABLE;
     static final String EVENT_INSTITUTION_PERMISSION_LIST = "comms.event_institution.read";
@@ -116,8 +105,6 @@ public class EventService extends AppTransactionManager {
     static final String EVENT_INSTITUTION_PERMISSION_CREATE = "comms.event_institution.create";
     static final String EVENT_INSTITUTION_PERMISSION_UPDATE = "comms.event_institution.update";
     static final String EVENT_INSTITUTION_PERMISSION_DELETE = "comms.event_institution.delete";
-    /** The contract's EventInstitutionUpdate fields, in apply order. */
-    static final List<String> EVENT_INSTITUTION_WRITABLE = List.of("institutionId");
 
     public static final String EVENT_OCCURRENCE_AGGREGATE = EventOccurrenceEntity.TABLE;
     static final String EVENT_OCCURRENCE_PERMISSION_LIST = "comms.event_occurrence.read";
@@ -127,11 +114,6 @@ public class EventService extends AppTransactionManager {
     static final String EVENT_OCCURRENCE_PERMISSION_DELETE = "comms.event_occurrence.delete";
     static final String PERMISSION_CANCEL_EVENT_OCCURRENCE = "comms.event_occurrence.cancel_event_occurrence";
     static final String PERMISSION_COMPLETE_PERSONAL_EVENT = "comms.event_occurrence.complete_personal_event";
-    /** The contract's EventOccurrenceUpdate fields, in apply order. */
-    static final List<String> EVENT_OCCURRENCE_WRITABLE =
-            List.of("userId", "cohortId", "title", "color", "description", "startAt", "endAt", "isCancelled",
-                    "responseStatus",
-            "importance");
 
     private final EventRepository repository;
     private final EventMapper mapper;
@@ -223,12 +205,11 @@ public class EventService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
-    public Event updateEvent(UUID id, String ifMatch, EventUpdate changes, String updateMask, boolean validateOnly) {
+    public Event updateEvent(UUID id, String ifMatch, EventUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             EventEntity entity = loadVisible(scope, id);
@@ -236,7 +217,7 @@ public class EventService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -368,42 +349,35 @@ public class EventService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected EventUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(EventEntity entity, EventUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "academicYearId" -> entity.setAcademicYearId(changes.getAcademicYearId());
-                case "audience" -> entity.setAudience(Optional.ofNullable(changes.getAudience()).map(v -> v.getValue())
-                        .orElse(null));
-                case "classSectionId" -> entity.setClassSectionId(changes.getClassSectionId());
-                case "audienceLabel" -> entity.setAudienceLabel(changes.getAudienceLabel());
-                case "title" -> entity.setTitle(changes.getTitle());
-                case "description" -> entity.setDescription(changes.getDescription());
-                case "category" -> entity.setCategory(Optional.ofNullable(changes.getCategory()).map(v -> v.getValue())
-                        .orElse(null));
-                case "location" -> entity.setLocation(changes.getLocation());
-                case "organisedBy" -> entity.setOrganisedBy(changes.getOrganisedBy());
-                case "imageFileId" -> entity.setImageFileId(changes.getImageFileId());
-                case "color" -> entity.setColor(changes.getColor());
-                case "startAt" -> entity.setStartAt(changes.getStartAt());
-                case "endAt" -> entity.setEndAt(changes.getEndAt());
-                case "isAllDay" -> entity.setIsAllDay(changes.getIsAllDay());
-                case "repeatCount" -> entity.setRepeatCount(changes.getRepeatCount());
-                case "repeatInterval" -> entity.setRepeatInterval(changes.getRepeatInterval());
-                case "repeatUnit" -> entity.setRepeatUnit(Optional.ofNullable(changes.getRepeatUnit())
-                        .map(v -> v.getValue()).orElse(null));
-                case "url" -> entity.setUrl(changes.getUrl());
-                case "cohortId" -> entity.setCohortId(changes.getCohortId());
-                case "ownerUserId" -> entity.setOwnerUserId(changes.getOwnerUserId());
-                case "recurrenceRule" -> entity.setRecurrenceRule(changes.getRecurrenceRule());
-                case "forAllMembers" -> entity.setForAllMembers(changes.getForAllMembers());
-                case "staffCanEdit" -> entity.setStaffCanEdit(changes.getStaffCanEdit());
-                case "importance" -> entity.setImportance(Optional.ofNullable(changes.getImportance())
-                        .map(v -> v.getValue()).orElse(null));
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(EventEntity entity, EventUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("academicYearId", changes.getAcademicYearId(), entity::setAcademicYearId);
+        patch.apply("audience", changes.getAudience(), v -> entity.setAudience(v == null ? null : v.getValue()));
+        patch.apply("classSectionId", changes.getClassSectionId(), entity::setClassSectionId);
+        patch.apply("audienceLabel", changes.getAudienceLabel(), entity::setAudienceLabel);
+        patch.apply("title", changes.getTitle(), entity::setTitle);
+        patch.apply("description", changes.getDescription(), entity::setDescription);
+        patch.apply("category", changes.getCategory(), v -> entity.setCategory(v == null ? null : v.getValue()));
+        patch.apply("location", changes.getLocation(), entity::setLocation);
+        patch.apply("organisedBy", changes.getOrganisedBy(), entity::setOrganisedBy);
+        patch.apply("imageFileId", changes.getImageFileId(), entity::setImageFileId);
+        patch.apply("color", changes.getColor(), entity::setColor);
+        patch.apply("startAt", changes.getStartAt(), entity::setStartAt);
+        patch.apply("endAt", changes.getEndAt(), entity::setEndAt);
+        patch.apply("isAllDay", changes.getIsAllDay(), entity::setIsAllDay);
+        patch.apply("repeatCount", changes.getRepeatCount(), entity::setRepeatCount);
+        patch.apply("repeatInterval", changes.getRepeatInterval(), entity::setRepeatInterval);
+        patch.apply("repeatUnit", changes.getRepeatUnit(), v -> entity.setRepeatUnit(v == null ? null : v.getValue()));
+        patch.apply("url", changes.getUrl(), entity::setUrl);
+        patch.apply("cohortId", changes.getCohortId(), entity::setCohortId);
+        patch.apply("ownerUserId", changes.getOwnerUserId(), entity::setOwnerUserId);
+        patch.apply("recurrenceRule", changes.getRecurrenceRule(), entity::setRecurrenceRule);
+        patch.apply("forAllMembers", changes.getForAllMembers(), entity::setForAllMembers);
+        patch.apply("staffCanEdit", changes.getStaffCanEdit(), entity::setStaffCanEdit);
+        patch.apply("importance", changes.getImportance(), v -> entity.setImportance(v == null ? null : v.getValue()));
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -496,13 +470,12 @@ public class EventService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public EventAttendee updateEventAttendee(UUID eventId, UUID id, String ifMatch, EventAttendeeUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, EVENT_ATTENDEE_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(EVENT_ATTENDEE_PERMISSION_UPDATE);
             EventAttendeeEntity entity = loadVisibleEventAttendee(scope, eventId, id);
@@ -510,7 +483,7 @@ public class EventService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyEventAttendee(entity, changes, fields);
+            List<String> fields = applyEventAttendee(entity, changes);
             validator.validate(eventAttendeeMapper.toDto(entity));
             assertValidEventAttendee(entity, false);
             scope.requireWritable(institutionOfEventAttendee(entity));
@@ -563,14 +536,11 @@ public class EventService extends AppTransactionManager {
         return eventAttendeeRepository.institutionOf(entity.getEventId());
     }
 
-    /** Applies the selected EventAttendeeUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyEventAttendee(EventAttendeeEntity entity, EventAttendeeUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "userId" -> entity.setUserId(changes.getUserId());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyEventAttendee(EventAttendeeEntity entity, EventAttendeeUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("userId", changes.getUserId(), entity::setUserId);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -651,13 +621,12 @@ public class EventService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public EventGalleryItem updateEventGalleryItem(UUID eventId, UUID id, String ifMatch,
-            EventGalleryItemUpdate changes, String updateMask, boolean validateOnly) {
+            EventGalleryItemUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, EVENT_GALLERY_ITEM_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(EVENT_GALLERY_ITEM_PERMISSION_UPDATE);
             EventGalleryItemEntity entity = loadVisibleEventGalleryItem(scope, eventId, id);
@@ -665,7 +634,7 @@ public class EventService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyEventGalleryItem(entity, changes, fields);
+            List<String> fields = applyEventGalleryItem(entity, changes);
             validator.validate(eventGalleryItemMapper.toDto(entity));
             assertValidEventGalleryItem(entity, false);
             scope.requireWritable(institutionOfEventGalleryItem(entity));
@@ -720,16 +689,12 @@ public class EventService extends AppTransactionManager {
         return eventGalleryItemRepository.institutionOf(entity.getEventId());
     }
 
-    /** Applies the selected EventGalleryItemUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyEventGalleryItem(EventGalleryItemEntity entity, EventGalleryItemUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "fileId" -> entity.setFileId(changes.getFileId());
-                case "sortOrder" -> entity.setSortOrder(changes.getSortOrder());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyEventGalleryItem(EventGalleryItemEntity entity, EventGalleryItemUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("fileId", changes.getFileId(), entity::setFileId);
+        patch.apply("sortOrder", changes.getSortOrder(), entity::setSortOrder);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -808,13 +773,12 @@ public class EventService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public EventInstitution updateEventInstitution(UUID eventId, UUID id, String ifMatch,
-            EventInstitutionUpdate changes, String updateMask, boolean validateOnly) {
+            EventInstitutionUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, EVENT_INSTITUTION_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(EVENT_INSTITUTION_PERMISSION_UPDATE);
             EventInstitutionEntity entity = loadVisibleEventInstitution(scope, eventId, id);
@@ -822,7 +786,7 @@ public class EventService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyEventInstitution(entity, changes, fields);
+            List<String> fields = applyEventInstitution(entity, changes);
             validator.validate(eventInstitutionMapper.toDto(entity));
             assertValidEventInstitution(entity, false);
             scope.requireWritable(institutionOfEventInstitution(entity));
@@ -877,15 +841,11 @@ public class EventService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected EventInstitutionUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyEventInstitution(EventInstitutionEntity entity, EventInstitutionUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyEventInstitution(EventInstitutionEntity entity, EventInstitutionUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -966,13 +926,12 @@ public class EventService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public EventOccurrence updateEventOccurrence(UUID eventId, UUID id, String ifMatch, EventOccurrenceUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, EVENT_OCCURRENCE_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(EVENT_OCCURRENCE_PERMISSION_UPDATE);
             EventOccurrenceEntity entity = loadVisibleEventOccurrence(scope, eventId, id);
@@ -980,7 +939,7 @@ public class EventService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyEventOccurrence(entity, changes, fields);
+            List<String> fields = applyEventOccurrence(entity, changes);
             validator.validate(eventOccurrenceMapper.toDto(entity));
             assertValidEventOccurrence(entity, false);
             scope.requireWritable(institutionOfEventOccurrence(entity));
@@ -1108,25 +1067,21 @@ public class EventService extends AppTransactionManager {
         return eventOccurrenceRepository.institutionOf(entity.getEventId());
     }
 
-    /** Applies the selected EventOccurrenceUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyEventOccurrence(EventOccurrenceEntity entity, EventOccurrenceUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "userId" -> entity.setUserId(changes.getUserId());
-                case "cohortId" -> entity.setCohortId(changes.getCohortId());
-                case "title" -> entity.setTitle(changes.getTitle());
-                case "color" -> entity.setColor(changes.getColor());
-                case "description" -> entity.setDescription(changes.getDescription());
-                case "startAt" -> entity.setStartAt(changes.getStartAt());
-                case "endAt" -> entity.setEndAt(changes.getEndAt());
-                case "isCancelled" -> entity.setIsCancelled(changes.getIsCancelled());
-                case "responseStatus" -> entity.setResponseStatus(Optional.ofNullable(changes.getResponseStatus())
-                        .map(v -> v.getValue()).orElse(null));
-                case "importance" -> entity.setImportance(Optional.ofNullable(changes.getImportance())
-                        .map(v -> v.getValue()).orElse(null));
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyEventOccurrence(EventOccurrenceEntity entity, EventOccurrenceUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("userId", changes.getUserId(), entity::setUserId);
+        patch.apply("cohortId", changes.getCohortId(), entity::setCohortId);
+        patch.apply("title", changes.getTitle(), entity::setTitle);
+        patch.apply("color", changes.getColor(), entity::setColor);
+        patch.apply("description", changes.getDescription(), entity::setDescription);
+        patch.apply("startAt", changes.getStartAt(), entity::setStartAt);
+        patch.apply("endAt", changes.getEndAt(), entity::setEndAt);
+        patch.apply("isCancelled", changes.getIsCancelled(), entity::setIsCancelled);
+        patch.apply("responseStatus", changes.getResponseStatus(),
+                v -> entity.setResponseStatus(v == null ? null : v.getValue()));
+        patch.apply("importance", changes.getImportance(), v -> entity.setImportance(v == null ? null : v.getValue()));
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

@@ -61,9 +61,9 @@ public class ProgramLevelController implements ProgramLevelApi {
 
     @Override
     public ResponseEntity<ProgramLevel> updateProgramLevel(UUID programLevelId, String ifMatch,
-            ProgramLevelUpdate programLevelUpdate, String updateMask, Boolean validateOnly) {
+            ProgramLevelUpdate programLevelUpdate, Boolean validateOnly) {
         ProgramLevel updated =
-                programLevelService.updateProgramLevel(programLevelId, ifMatch, programLevelUpdate, updateMask,
+                programLevelService.updateProgramLevel(programLevelId, ifMatch, programLevelUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

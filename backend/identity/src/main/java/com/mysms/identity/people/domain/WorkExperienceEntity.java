@@ -1,0 +1,36 @@
+package com.mysms.identity.people.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.time.LocalDate;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of people.work_experience. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class WorkExperienceEntity extends BaseEntity {
+
+    public static final String TABLE = "people.work_experience";
+
+    private UUID tenantId;
+    private UUID personId;
+    private String experienceType;
+    private String title;
+    private String company;
+    private String location;
+    private LocalDate fromDate;
+    private LocalDate toDate;
+    private Boolean isCurrent;
+    private String description;
+    private String companyWebsite;
+    private String industry;
+    private String responsibilities;
+    private Integer sortOrder;
+}

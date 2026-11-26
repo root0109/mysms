@@ -17,13 +17,13 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of NoticeBackground that can be updated (partial update; see updateMask).
+ * Fields of NoticeBackground that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class NoticeBackgroundUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   /**
    * Where it is used.
@@ -61,12 +61,12 @@ public class NoticeBackgroundUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UsageEnum usage;
+  private @Nullable Optional<@NotNull UsageEnum> usage;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID imageFileId;
+  private @Nullable Optional<UUID> imageFileId;
 
-  public NoticeBackgroundUpdate institutionId(@Nullable UUID institutionId) {
+  public NoticeBackgroundUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -75,18 +75,18 @@ public class NoticeBackgroundUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public NoticeBackgroundUpdate usage(@Nullable UsageEnum usage) {
+  public NoticeBackgroundUpdate usage(@Nullable Optional<UsageEnum> usage) {
     this.usage = usage;
     return this;
   }
@@ -97,16 +97,16 @@ public class NoticeBackgroundUpdate {
    */
   
   @JsonProperty("usage")
-  public @Nullable UsageEnum getUsage() {
+  public @Nullable Optional<UsageEnum> getUsage() {
     return usage;
   }
 
   @JsonProperty("usage")
-  public void setUsage(@Nullable UsageEnum usage) {
+  public void setUsage(@Nullable Optional<UsageEnum> usage) {
     this.usage = usage;
   }
 
-  public NoticeBackgroundUpdate imageFileId(@Nullable UUID imageFileId) {
+  public NoticeBackgroundUpdate imageFileId(@Nullable Optional<UUID> imageFileId) {
     this.imageFileId = imageFileId;
     return this;
   }
@@ -115,14 +115,14 @@ public class NoticeBackgroundUpdate {
    * Image.
    * @return imageFileId
    */
-  @Valid 
+  
   @JsonProperty("imageFileId")
-  public @Nullable UUID getImageFileId() {
+  public @Nullable Optional<UUID> getImageFileId() {
     return imageFileId;
   }
 
   @JsonProperty("imageFileId")
-  public void setImageFileId(@Nullable UUID imageFileId) {
+  public void setImageFileId(@Nullable Optional<UUID> imageFileId) {
     this.imageFileId = imageFileId;
   }
 

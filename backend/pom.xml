@@ -29,27 +29,15 @@
     <module>auth-client</module>
     <module>messaging</module>
     <module>privacy-client</module>
-    <module>master</module>
     <module>platform</module>
-    <module>iam</module>
-    <module>org</module>
-    <module>people</module>
+    <module>identity</module>
     <module>academics</module>
-    <module>sis</module>
-    <module>hr</module>
-    <module>payroll</module>
-    <module>admission</module>
-    <module>attendance</module>
-    <module>facility</module>
-    <module>timetable</module>
-    <module>assessment</module>
-    <module>lms</module>
+    <module>students</module>
+    <module>hrms</module>
+    <module>learning</module>
     <module>finance</module>
-    <module>library</module>
-    <module>transport</module>
+    <module>campus</module>
     <module>comms</module>
-    <module>frontoffice</module>
-    <module>careers</module>
     <module>privacy</module>
     <module>app</module>
     <module>demo-seed</module>
@@ -367,6 +355,9 @@
             <argLine>@{argLine} ${mysms.test.jvm}</argLine>
             <systemPropertyVariables>
               <user.timezone>UTC</user.timezone>
+              <!-- a module's component-test context opens a pool per area: keep few contexts (and their connections)
+                   alive per test JVM, so a module of several areas stays within the database's connection limit -->
+              <spring.test.context.cache.maxSize>4</spring.test.context.cache.maxSize>
             </systemPropertyVariables>
           </configuration>
         </plugin>
@@ -539,6 +530,8 @@
             <exclude>com/mysms/*/v1/**</exclude>
             <!-- the contract layer: declarative DTOs and interfaces; behaviour is covered through the controllers -->
             <exclude>com/mysms/*/api/**</exclude>
+            <!-- the contract layer of an area nested in its module (com.mysms.<module>.<area>.api, JAVA-CODING-RULES §2.2) -->
+            <exclude>com/mysms/*/*/api/**</exclude>
             <!-- main(): starts a server; every module's wiring is covered by its component test instead -->
             <exclude>**/*Application.class</exclude>
           </excludes>

@@ -198,7 +198,7 @@ class RabbitEventBusComponentTest {
         try (RabbitEventBus perModule = new RabbitEventBus(settings(exchange, 3, "mysms-{module}"), JSON, "t");
              EventBus.Subscription s = perModule.subscribe(strict, Set.of("hr.staff.deleted"),
                      e -> handled.incrementAndGet())) {
-            bus.publish(event("hr.staff.deleted")); // published as the test's broker user, not mysms-hr
+            bus.publish(event("hr.staff.deleted")); // published as the test's broker user, not mysms-hrms
             await(() -> waiting(RabbitEventBus.deadQueueOf(strict)) == 1);
             assertThat(handled.get()).isZero();
         }

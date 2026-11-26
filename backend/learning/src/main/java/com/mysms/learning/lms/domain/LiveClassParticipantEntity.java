@@ -1,0 +1,32 @@
+package com.mysms.learning.lms.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of lms.live_class_participant. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class LiveClassParticipantEntity extends BaseEntity {
+
+    public static final String TABLE = "lms.live_class_participant";
+
+    private UUID tenantId;
+    private UUID liveClassId;
+    private UUID userId;
+    private OffsetDateTime joinedAt;
+    private OffsetDateTime leftAt;
+    private Integer durationMinutes;
+    private String joinUrlEnc;
+    private Boolean isPresenter;
+    private Boolean attended;
+    private String inviteStatus;
+}

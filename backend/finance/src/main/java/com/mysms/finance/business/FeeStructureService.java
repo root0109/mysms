@@ -22,7 +22,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.finance.config.FinanceDatabaseConfig;
 import com.mysms.finance.config.FinanceEventsConfig;
 import com.mysms.finance.domain.FeeStructureEntity;
@@ -62,9 +62,6 @@ public class FeeStructureService extends AppTransactionManager {
     static final String PERMISSION_PUBLISH_FEE_STRUCTURE = "finance.fee_structure.publish";
     /** The operation kind of the fee run a published structure starts. */
     public static final String KIND_PUBLISH = "finance.PublishFeeStructure";
-    /** The contract's FeeStructureUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("institutionId", "academicYearId", "gradeLevelId", "programId", "feePlanId", "name");
 
 
     private final FeeStructureRepository repository;
@@ -137,13 +134,11 @@ public class FeeStructureService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set. The merged row is validated as a whole, and must stay within the caller's scope.
      */
-    public FeeStructure updateFeeStructure(UUID id, String ifMatch, FeeStructureUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public FeeStructure updateFeeStructure(UUID id, String ifMatch, FeeStructureUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             FeeStructureEntity entity = loadVisible(scope, id);
@@ -151,7 +146,7 @@ public class FeeStructureService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -278,21 +273,16 @@ public class FeeStructureService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /**
-     * Applies the selected FeeStructureUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
-    private static void apply(FeeStructureEntity entity, FeeStructureUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "academicYearId" -> entity.setAcademicYearId(changes.getAcademicYearId());
-                case "gradeLevelId" -> entity.setGradeLevelId(changes.getGradeLevelId());
-                case "programId" -> entity.setProgramId(changes.getProgramId());
-                case "feePlanId" -> entity.setFeePlanId(changes.getFeePlanId());
-                case "name" -> entity.setName(changes.getName());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(FeeStructureEntity entity, FeeStructureUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("academicYearId", changes.getAcademicYearId(), entity::setAcademicYearId);
+        patch.apply("gradeLevelId", changes.getGradeLevelId(), entity::setGradeLevelId);
+        patch.apply("programId", changes.getProgramId(), entity::setProgramId);
+        patch.apply("feePlanId", changes.getFeePlanId(), entity::setFeePlanId);
+        patch.apply("name", changes.getName(), entity::setName);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

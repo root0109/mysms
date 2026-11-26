@@ -86,7 +86,7 @@ public class ClassPageResolver extends ClassPageServiceGrpc.ClassPageServiceImpl
         ClassPage updated = service.updateClassPage(
                 bridge.id(request.getClassPage().getId(), "id"), bridge.requiredIfMatch(request.getClassPage().getEtag()),
                 bridge.changes(request.getClassPage(), request.getUpdateMask(), ClassPageUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateClassPageResponse.newBuilder(), "class_page", updated).build());
     }
 
@@ -131,7 +131,7 @@ public class ClassPageResolver extends ClassPageServiceGrpc.ClassPageServiceImpl
                 bridge.id(request.getClassPageId(), "classPageId"), bridge.id(request.getClassPageAttachment().getId(), "id"),
                 bridge.requiredIfMatch(request.getClassPageAttachment().getEtag()),
                 bridge.changes(request.getClassPageAttachment(), request.getUpdateMask(), ClassPageAttachmentUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateClassPageAttachmentResponse.newBuilder(), "class_page_attachment", updated).build());
     }
@@ -175,7 +175,7 @@ public class ClassPageResolver extends ClassPageServiceGrpc.ClassPageServiceImpl
                 bridge.id(request.getClassPageId(), "classPageId"), bridge.id(request.getClassPageMember().getId(), "id"),
                 bridge.requiredIfMatch(request.getClassPageMember().getEtag()),
                 bridge.changes(request.getClassPageMember(), request.getUpdateMask(), ClassPageMemberUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateClassPageMemberResponse.newBuilder(), "class_page_member", updated).build());
     }
 

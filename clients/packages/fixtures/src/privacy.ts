@@ -268,11 +268,12 @@ export function fakePrivacyAdmin(): Record<string, Handler> {
       if (!row) return problem(404, 'NOT_FOUND');
       if (stale(req, row)) return problem(412, 'PRECONDITION_FAILED');
       const body = (await req.json()) as privacy.PurposeUpdate;
-      const mask = (new URL(req.url).searchParams.get('updateMask') ?? '').split(',');
+      // a PATCH body names only what changes; null clears (JAVA-CODING-RULES §7.2)
+      const sent = (field: keyof privacy.PurposeUpdate) => Object.prototype.hasOwnProperty.call(body, field);
       const next = { ...row };
-      if (mask.includes('enabled')) next.enabled = body.enabled ?? false;
-      if (mask.includes('noticeId')) next.noticeId = body.noticeId;
-      if (mask.includes('maxScope')) next.maxScope = body.maxScope;
+      if (sent('enabled')) next.enabled = body.enabled ?? false;
+      if (sent('noticeId')) next.noticeId = body.noticeId ?? undefined;
+      if (sent('maxScope')) next.maxScope = (body.maxScope ?? undefined) as privacy.Purpose['maxScope'];
       if (next.maxScope && next.scopeKind !== 'width')
         return fieldProblem('maxScope', 'applies only to a purpose whose consents name a width');
       if (next.enabled && next.fiduciary === 'platform')
@@ -351,7 +352,8 @@ export function fakePrivacyAdmin(): Record<string, Handler> {
           detail: 'The notice version is published; publish a new version to change it.',
         });
       const body = (await req.json()) as privacy.NoticeVersionUpdate;
-      const next = { ...row, ...body, rowVersion: row.rowVersion + 1 };
+      const changes = Object.fromEntries(Object.entries(body).map(([k, v]) => [k, v ?? undefined]));
+      const next = { ...row, ...changes, rowVersion: row.rowVersion + 1 } as Stored<privacy.NoticeVersion>;
       versions.set(row.id, next);
       return json(out(next));
     },

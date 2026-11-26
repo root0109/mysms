@@ -22,7 +22,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.finance.config.FinanceDatabaseConfig;
 import com.mysms.finance.config.FinanceEventsConfig;
 import com.mysms.finance.domain.FeePlanInstallmentComponentEntity;
@@ -52,8 +52,6 @@ public class FeePlanInstallmentComponentService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "finance.fee_plan_installment_component.create";
     static final String PERMISSION_UPDATE = "finance.fee_plan_installment_component.update";
     static final String PERMISSION_DELETE = "finance.fee_plan_installment_component.delete";
-    /** The contract's FeePlanInstallmentComponentUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("installmentId", "feeHeadId", "sequence", "sharePercent");
 
 
     private final FeePlanInstallmentComponentRepository repository;
@@ -125,13 +123,12 @@ public class FeePlanInstallmentComponentService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set. The merged row is validated as a whole, and must stay within the caller's scope.
      */
     public FeePlanInstallmentComponent updateFeePlanInstallmentComponent(UUID id, String ifMatch,
-            FeePlanInstallmentComponentUpdate changes, String updateMask, boolean validateOnly) {
+            FeePlanInstallmentComponentUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             FeePlanInstallmentComponentEntity entity = loadVisible(scope, id);
@@ -139,7 +136,7 @@ public class FeePlanInstallmentComponentService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -192,21 +189,14 @@ public class FeePlanInstallmentComponentService extends AppTransactionManager {
         return repository.institutionOf(entity.getFeeHeadId());
     }
 
-    /**
-     * Applies the selected FeePlanInstallmentComponentUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
-    private static void apply(FeePlanInstallmentComponentEntity entity, FeePlanInstallmentComponentUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "installmentId" -> entity.setInstallmentId(changes.getInstallmentId());
-                case "feeHeadId" -> entity.setFeeHeadId(changes.getFeeHeadId());
-                case "sequence" -> entity.setSequence(changes.getSequence());
-                case "sharePercent" -> entity.setSharePercent(WireValues.decimal(changes.getSharePercent()));
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(FeePlanInstallmentComponentEntity entity, FeePlanInstallmentComponentUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("installmentId", changes.getInstallmentId(), entity::setInstallmentId);
+        patch.apply("feeHeadId", changes.getFeeHeadId(), entity::setFeeHeadId);
+        patch.apply("sequence", changes.getSequence(), entity::setSequence);
+        patch.apply("sharePercent", changes.getSharePercent(), v -> entity.setSharePercent(WireValues.decimal(v)));
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

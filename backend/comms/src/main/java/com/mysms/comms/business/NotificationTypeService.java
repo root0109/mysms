@@ -43,7 +43,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -65,10 +65,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class NotificationTypeService extends AppTransactionManager {
 
     public static final String AGGREGATE = NotificationTypeEntity.TABLE;
-    /** The contract's NotificationTypeUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("code", "description", "moduleCode", "roleCode", "isEnabled", "popupEnabled", "teacherPopupEnabled",
-            "validParameters");
 
     public static final String NOTIFICATION_COHORT_SETTING_AGGREGATE = NotificationCohortSettingEntity.TABLE;
     static final String NOTIFICATION_COHORT_SETTING_PERMISSION_LIST = "comms.notification_cohort_setting.read";
@@ -76,8 +72,6 @@ public class NotificationTypeService extends AppTransactionManager {
     static final String NOTIFICATION_COHORT_SETTING_PERMISSION_CREATE = "comms.notification_cohort_setting.create";
     static final String NOTIFICATION_COHORT_SETTING_PERMISSION_UPDATE = "comms.notification_cohort_setting.update";
     static final String NOTIFICATION_COHORT_SETTING_PERMISSION_DELETE = "comms.notification_cohort_setting.delete";
-    /** The contract's NotificationCohortSettingUpdate fields, in apply order. */
-    static final List<String> NOTIFICATION_COHORT_SETTING_WRITABLE = List.of("cohortId", "popupEnabled");
 
     public static final String NOTIFICATION_RULE_AGGREGATE = NotificationRuleEntity.TABLE;
     static final String NOTIFICATION_RULE_PERMISSION_LIST = "comms.notification_rule.read";
@@ -85,13 +79,8 @@ public class NotificationTypeService extends AppTransactionManager {
     static final String NOTIFICATION_RULE_PERMISSION_CREATE = "comms.notification_rule.create";
     static final String NOTIFICATION_RULE_PERMISSION_UPDATE = "comms.notification_rule.update";
     static final String NOTIFICATION_RULE_PERMISSION_DELETE = "comms.notification_rule.delete";
-    /** The contract's NotificationRuleUpdate fields, in apply order. */
-    static final List<String> NOTIFICATION_RULE_WRITABLE =
-            List.of("roleId", "permissionId", "isEnabled", "emailSubjectTemplate", "emailBodyTemplate", "smsTemplate");
 
     public static final String NOTIFICATION_TYPE_PROPERTY_AGGREGATE = NotificationTypePropertyEntity.TABLE;
-    /** The contract's NotificationTypePropertyUpdate fields, in apply order. */
-    static final List<String> NOTIFICATION_TYPE_PROPERTY_WRITABLE = List.of("moduleCode", "propertyValue");
 
     private final NotificationTypeRepository repository;
     private final NotificationTypeMapper mapper;
@@ -180,13 +169,12 @@ public class NotificationTypeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public NotificationType updateNotificationType(UUID id, String ifMatch, NotificationTypeUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInGlobalWriteTransaction(() -> {
             try (CallContextHolder.Scope global = CallContextHolder.withoutTenant()) {
                 DataScope scope = DataScope.global();
@@ -195,7 +183,7 @@ public class NotificationTypeService extends AppTransactionManager {
                 if (entity.getRowVersion() != expected) {
                     throw new PreconditionFailedException("If-Match does not match the current ETag.");
                 }
-                apply(entity, changes, fields);
+                List<String> fields = apply(entity, changes);
                 validator.validate(mapper.toDto(entity));
                 assertValid(entity, false);
                 scope.requireWritable(institutionOf(entity));
@@ -257,21 +245,18 @@ public class NotificationTypeService extends AppTransactionManager {
         return Optional.empty();
     }
 
-    /** Applies the selected NotificationTypeUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(NotificationTypeEntity entity, NotificationTypeUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "code" -> entity.setCode(changes.getCode());
-                case "description" -> entity.setDescription(changes.getDescription());
-                case "moduleCode" -> entity.setModuleCode(changes.getModuleCode());
-                case "roleCode" -> entity.setRoleCode(changes.getRoleCode());
-                case "isEnabled" -> entity.setIsEnabled(changes.getIsEnabled());
-                case "popupEnabled" -> entity.setPopupEnabled(changes.getPopupEnabled());
-                case "teacherPopupEnabled" -> entity.setTeacherPopupEnabled(changes.getTeacherPopupEnabled());
-                case "validParameters" -> entity.setValidParameters(changes.getValidParameters());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(NotificationTypeEntity entity, NotificationTypeUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("code", changes.getCode(), entity::setCode);
+        patch.apply("description", changes.getDescription(), entity::setDescription);
+        patch.apply("moduleCode", changes.getModuleCode(), entity::setModuleCode);
+        patch.apply("roleCode", changes.getRoleCode(), entity::setRoleCode);
+        patch.apply("isEnabled", changes.getIsEnabled(), entity::setIsEnabled);
+        patch.apply("popupEnabled", changes.getPopupEnabled(), entity::setPopupEnabled);
+        patch.apply("teacherPopupEnabled", changes.getTeacherPopupEnabled(), entity::setTeacherPopupEnabled);
+        patch.apply("validParameters", changes.getValidParameters(), entity::setValidParameters);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -367,13 +352,12 @@ public class NotificationTypeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public NotificationCohortSetting updateNotificationCohortSetting(UUID notificationTypeId, UUID id, String ifMatch,
-            NotificationCohortSettingUpdate changes, String updateMask, boolean validateOnly) {
+            NotificationCohortSettingUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, NOTIFICATION_COHORT_SETTING_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(NOTIFICATION_COHORT_SETTING_PERMISSION_UPDATE);
             NotificationCohortSettingEntity entity = loadVisibleNotificationCohortSetting(scope, notificationTypeId, id);
@@ -381,7 +365,7 @@ public class NotificationTypeService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyNotificationCohortSetting(entity, changes, fields);
+            List<String> fields = applyNotificationCohortSetting(entity, changes);
             validator.validate(notificationCohortSettingMapper.toDto(entity));
             assertValidNotificationCohortSetting(entity, false);
             scope.requireWritable(institutionOfNotificationCohortSetting(entity));
@@ -438,17 +422,13 @@ public class NotificationTypeService extends AppTransactionManager {
         return Optional.empty();
     }
 
-    /** Applies the selected NotificationCohortSettingUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyNotificationCohortSetting(NotificationCohortSettingEntity entity,
-            NotificationCohortSettingUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "cohortId" -> entity.setCohortId(changes.getCohortId());
-                case "popupEnabled" -> entity.setPopupEnabled(changes.getPopupEnabled());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyNotificationCohortSetting(NotificationCohortSettingEntity entity,
+            NotificationCohortSettingUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("cohortId", changes.getCohortId(), entity::setCohortId);
+        patch.apply("popupEnabled", changes.getPopupEnabled(), entity::setPopupEnabled);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -531,13 +511,12 @@ public class NotificationTypeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public NotificationRule updateNotificationRule(UUID notificationTypeId, UUID id, String ifMatch,
-            NotificationRuleUpdate changes, String updateMask, boolean validateOnly) {
+            NotificationRuleUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, NOTIFICATION_RULE_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(NOTIFICATION_RULE_PERMISSION_UPDATE);
             NotificationRuleEntity entity = loadVisibleNotificationRule(scope, notificationTypeId, id);
@@ -545,7 +524,7 @@ public class NotificationTypeService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyNotificationRule(entity, changes, fields);
+            List<String> fields = applyNotificationRule(entity, changes);
             validator.validate(notificationRuleMapper.toDto(entity));
             assertValidNotificationRule(entity, false);
             scope.requireWritable(institutionOfNotificationRule(entity));
@@ -600,20 +579,16 @@ public class NotificationTypeService extends AppTransactionManager {
         return Optional.empty();
     }
 
-    /** Applies the selected NotificationRuleUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyNotificationRule(NotificationRuleEntity entity, NotificationRuleUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "roleId" -> entity.setRoleId(changes.getRoleId());
-                case "permissionId" -> entity.setPermissionId(changes.getPermissionId());
-                case "isEnabled" -> entity.setIsEnabled(changes.getIsEnabled());
-                case "emailSubjectTemplate" -> entity.setEmailSubjectTemplate(changes.getEmailSubjectTemplate());
-                case "emailBodyTemplate" -> entity.setEmailBodyTemplate(changes.getEmailBodyTemplate());
-                case "smsTemplate" -> entity.setSmsTemplate(changes.getSmsTemplate());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyNotificationRule(NotificationRuleEntity entity, NotificationRuleUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("roleId", changes.getRoleId(), entity::setRoleId);
+        patch.apply("permissionId", changes.getPermissionId(), entity::setPermissionId);
+        patch.apply("isEnabled", changes.getIsEnabled(), entity::setIsEnabled);
+        patch.apply("emailSubjectTemplate", changes.getEmailSubjectTemplate(), entity::setEmailSubjectTemplate);
+        patch.apply("emailBodyTemplate", changes.getEmailBodyTemplate(), entity::setEmailBodyTemplate);
+        patch.apply("smsTemplate", changes.getSmsTemplate(), entity::setSmsTemplate);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -696,13 +671,12 @@ public class NotificationTypeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public NotificationTypeProperty updateNotificationTypeProperty(UUID notificationTypeId, UUID id, String ifMatch,
-            NotificationTypePropertyUpdate changes, String updateMask, boolean validateOnly) {
+            NotificationTypePropertyUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, NOTIFICATION_TYPE_PROPERTY_WRITABLE);
         return doInGlobalWriteTransaction(() -> {
             try (CallContextHolder.Scope global = CallContextHolder.withoutTenant()) {
                 DataScope scope = DataScope.global();
@@ -711,7 +685,7 @@ public class NotificationTypeService extends AppTransactionManager {
                 if (entity.getRowVersion() != expected) {
                     throw new PreconditionFailedException("If-Match does not match the current ETag.");
                 }
-                applyNotificationTypeProperty(entity, changes, fields);
+                List<String> fields = applyNotificationTypeProperty(entity, changes);
                 validator.validate(notificationTypePropertyMapper.toDto(entity));
                 assertValidNotificationTypeProperty(entity, false);
                 scope.requireWritable(institutionOfNotificationTypeProperty(entity));
@@ -772,17 +746,13 @@ public class NotificationTypeService extends AppTransactionManager {
         return Optional.empty();
     }
 
-    /** Applies the selected NotificationTypePropertyUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyNotificationTypeProperty(NotificationTypePropertyEntity entity,
-            NotificationTypePropertyUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "moduleCode" -> entity.setModuleCode(changes.getModuleCode());
-                case "propertyValue" -> entity.setPropertyValue(changes.getPropertyValue());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyNotificationTypeProperty(NotificationTypePropertyEntity entity,
+            NotificationTypePropertyUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("moduleCode", changes.getModuleCode(), entity::setModuleCode);
+        patch.apply("propertyValue", changes.getPropertyValue(), entity::setPropertyValue);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

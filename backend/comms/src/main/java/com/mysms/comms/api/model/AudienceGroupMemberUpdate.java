@@ -17,13 +17,13 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of AudienceGroupMember that can be updated (partial update; see updateMask).
+ * Fields of AudienceGroupMember that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class AudienceGroupMemberUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID userId;
+  private @Nullable Optional<@NotNull UUID> userId;
 
   /**
    * Member type.
@@ -63,9 +63,9 @@ public class AudienceGroupMemberUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable MemberTypeEnum memberType;
+  private @Nullable Optional<@NotNull MemberTypeEnum> memberType;
 
-  public AudienceGroupMemberUpdate userId(@Nullable UUID userId) {
+  public AudienceGroupMemberUpdate userId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
     return this;
   }
@@ -74,18 +74,18 @@ public class AudienceGroupMemberUpdate {
    * Member.
    * @return userId
    */
-  @Valid 
+  
   @JsonProperty("userId")
-  public @Nullable UUID getUserId() {
+  public @Nullable Optional<UUID> getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(@Nullable UUID userId) {
+  public void setUserId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
   }
 
-  public AudienceGroupMemberUpdate memberType(@Nullable MemberTypeEnum memberType) {
+  public AudienceGroupMemberUpdate memberType(@Nullable Optional<MemberTypeEnum> memberType) {
     this.memberType = memberType;
     return this;
   }
@@ -96,12 +96,12 @@ public class AudienceGroupMemberUpdate {
    */
   
   @JsonProperty("memberType")
-  public @Nullable MemberTypeEnum getMemberType() {
+  public @Nullable Optional<MemberTypeEnum> getMemberType() {
     return memberType;
   }
 
   @JsonProperty("memberType")
-  public void setMemberType(@Nullable MemberTypeEnum memberType) {
+  public void setMemberType(@Nullable Optional<MemberTypeEnum> memberType) {
     this.memberType = memberType;
   }
 

@@ -60,8 +60,8 @@ public class FeeHeadController implements FeeHeadApi {
 
     @Override
     public ResponseEntity<FeeHead> updateFeeHead(UUID feeHeadId, String ifMatch,
-            FeeHeadUpdate feeHeadUpdate, String updateMask, Boolean validateOnly) {
-        FeeHead updated = feeHeadService.updateFeeHead(feeHeadId, ifMatch, feeHeadUpdate, updateMask,
+            FeeHeadUpdate feeHeadUpdate, Boolean validateOnly) {
+        FeeHead updated = feeHeadService.updateFeeHead(feeHeadId, ifMatch, feeHeadUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

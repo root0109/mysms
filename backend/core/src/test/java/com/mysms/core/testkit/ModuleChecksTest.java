@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -31,9 +32,10 @@ class ModuleChecksTest {
                     static final String PROSE = "see sis.student for details";
                 }
                 """);
-        assertThat(ModuleChecks.foreignSchemaReferences("finance", root)).containsExactly("InvoiceRepository.java: sis.student");
+        assertThat(ModuleChecks.foreignSchemaReferences(Set.of("finance"), root))
+                .containsExactly("InvoiceRepository.java: sis.student");
         assertThat(ModuleChecks.unqualifiedTableReferences(root)).isEmpty();
-        assertThat(ModuleChecks.foreignSchemaReferences("finance", root.resolve("missing"))).isEmpty();
+        assertThat(ModuleChecks.foreignSchemaReferences(Set.of("finance"), root.resolve("missing"))).isEmpty();
     }
 
     @Test
@@ -49,7 +51,7 @@ class ModuleChecksTest {
                 """);
         Files.writeString(sql.resolve("report.sql"), "SELECT * FROM finance.invoice JOIN people.person p ON true");
         Path sources = root.resolve("src/main/java");
-        assertThat(ModuleChecks.foreignSchemaReferences("finance", sources))
+        assertThat(ModuleChecks.foreignSchemaReferences(Set.of("finance"), sources))
                 .containsExactly("Repo.java: sis.student", "report.sql: people.person");
         assertThat(ModuleChecks.unqualifiedTableReferences(sources)).containsExactly("Repo.java: FROM invoice");
     }
@@ -68,18 +70,50 @@ class ModuleChecksTest {
                 """);
         assertThat(ModuleChecks.allowedDependencies("finance", architecture)).containsExactly("academics", "master", "sis");
         assertThat(ModuleChecks.allowedDependencies("master", architecture)).isEmpty();
-        assertThat(ModuleChecks.grpcImportsOutsideAllowlist("finance", root.resolve("src"), architecture))
+        assertThat(ModuleChecks.grpcImportsOutsideAllowlist(Set.of("finance"), root.resolve("src"), architecture))
                 .containsExactly("InvoiceService.java imports the gRPC contract of lms");
         assertThatThrownBy(() -> ModuleChecks.allowedDependencies("nope", architecture))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void theRealArchitectureTableCoversEveryModule() {
+    void aModuleOfAreasMayReachItsSiblingsSchemasAndContracts(@TempDir Path root) throws Exception {
+        Path architecture = Files.writeString(root.resolve("ARCHITECTURE.md"), """
+                | Module | May depend on |
+                |---|---|
+                | `hr` | `iam` (2) |
+                | `payroll` | `hr` (4) |
+                """);
+        Path pom = Files.writeString(root.resolve("pom.xml"), """
+                <resource><directory>${mysms.migrations.dir}/hr</directory></resource>
+                <resource><directory>${mysms.migrations.dir}/payroll</directory></resource>
+                """);
+        Path src = Files.createDirectories(root.resolve("src/com/mysms/hrms/payroll/repository"));
+        Files.writeString(src.resolve("PayslipRepository.java"), """
+                package com.mysms.hrms.payroll.repository;
+                import com.mysms.iam.v1.UserAccountServiceGrpc;
+                import com.mysms.sis.v1.StudentServiceGrpc;
+                class PayslipRepository {
+                    static final String SQL = "SELECT p.id FROM payroll.payslip p JOIN hr.staff s ON true"
+                            + " JOIN sis.student t ON true";
+                }
+                """);
+        Set<String> areas = ModuleChecks.moduleSchemas(pom);
+        assertThat(areas).containsExactly("hr", "payroll");
+        assertThat(ModuleChecks.foreignSchemaReferences(areas, root.resolve("src")))
+                .containsExactly("PayslipRepository.java: sis.student");
+        assertThat(ModuleChecks.grpcImportsOutsideAllowlist(areas, root.resolve("src"), architecture))
+                .containsExactly("PayslipRepository.java imports the gRPC contract of sis");
+        Path empty = Files.writeString(root.resolve("empty.xml"), "<project/>");
+        assertThatThrownBy(() -> ModuleChecks.moduleSchemas(empty)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void theRealArchitectureTableCoversEveryArea() {
         Path architecture = Path.of("..", "..", "ARCHITECTURE.md");
-        for (String module : ModuleChecks.MODULES) {
-            assertThat(ModuleChecks.allowedDependencies(module, architecture)).doesNotContain(module)
-                    .isSubsetOf(ModuleChecks.MODULES);
+        for (String area : ModuleChecks.SCHEMAS) {
+            assertThat(ModuleChecks.allowedDependencies(area, architecture)).doesNotContain(area)
+                    .isSubsetOf(ModuleChecks.SCHEMAS);
         }
     }
 }

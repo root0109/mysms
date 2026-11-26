@@ -67,7 +67,7 @@ public class AcquisitionSourceResolver extends AcquisitionSourceServiceGrpc.Acqu
                 bridge.id(request.getAcquisitionSource().getId(), "id"),
                 bridge.requiredIfMatch(request.getAcquisitionSource().getEtag()),
                 bridge.changes(request.getAcquisitionSource(), request.getUpdateMask(), AcquisitionSourceUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAcquisitionSourceResponse.newBuilder(), "acquisition_source",
                 updated).build());
     }

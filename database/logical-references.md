@@ -32,6 +32,7 @@ Validated against the live catalog when it was written (every column exists, is 
 | `academics.subject.department_id` | `org.department` | owner is never hard-deleted (archived by status); no action needed |
 | `academics.subject.institution_id` | `org.institution` | owner is never hard-deleted (archived by status); no action needed |
 | `academics.teaching_assignment.staff_id` | `hr.staff` | owner is never hard-deleted (archived by status); no action needed |
+| `academics.teacher_subject.staff_id` | `hr.staff` | `hr.staff.deleted` archives the row (`AcademicsReferenceCleanup`) |
 
 `academics.staff_record` is not a set of references but a copy kept from events, like `iam.member_record`: each row
 mirrors the person of one `hr.staff` row from that row's own created and updated events (`StaffRecordSync`), so
@@ -535,11 +536,9 @@ tombstone that lists nothing.
 | `payroll.staff_bank_account.staff_id` | `hr.staff` | archive/delete the dependent row |
 | `payroll.staff_salary.staff_id` | `hr.staff` | owner is never hard-deleted (archived by status); no action needed |
 
-`payroll.staff_member` is not a set of references but a copy kept from events, like `iam.member_record`: each row
-mirrors one `hr.staff` row's account and person from that row's own created, updated and deleted events (`StaffMemberSync`; the
-deletion arrives through `PayrollReferenceCleanup`, the module's one handler of `hr.staff.deleted`), so the owner's
-deletion is applied by the copy itself (a tombstone), and payslip reads apply the owner-only rule — and privacy's
-tasks find a person's payroll records (`PayrollPrivacyTaskHandler`) — without reading hr's schema.
+payroll and hr are sibling areas of the hrms module (JAVA-CODING-RULES §2.2): payslip reads apply the owner-only rule,
+and privacy's tasks find a person's payroll records (`PayrollPrivacyTaskHandler`), by reading `hr.staff` (account,
+person, `deleted_at`) directly; payroll keeps no copy of it.
 
 ## people (9 references)
 
@@ -686,7 +685,6 @@ These point against the module dependency graph; the owner is unaware of them. V
 | `platform.storage_quota.institution_id` → `org.institution` | on owner deletion, delete the row. |
 | `platform.import_job.institution_id` → `org.institution` | on owner deletion, archive/retain (the row is evidence; it keeps the id). |
 | `sis.promotion.based_on_exam_session_id` → `assessment.exam_session` | on owner deletion, null the column. |
-| `hr.staff_subject.subject_id` → `academics.subject` | on owner deletion, archive/retain (the row is evidence; it keeps the id). |
 | `hr.leave_application.absence_reason_id` → `attendance.absence_reason` | on owner deletion, archive/retain (the row is evidence; it keeps the id). |
 | `hr.leave_application.class_section_id` → `academics.class_section` | on owner deletion, archive/retain (the row is evidence; it keeps the id). |
 | `finance.coupon_scope.lms_course_id` → `lms.course` | on owner deletion, delete the row. |

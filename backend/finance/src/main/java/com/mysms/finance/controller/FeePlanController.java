@@ -100,8 +100,8 @@ public class FeePlanController implements FeePlanApi {
 
     @Override
     public ResponseEntity<FeePlan> updateFeePlan(UUID feePlanId, String ifMatch,
-            FeePlanUpdate feePlanUpdate, String updateMask, Boolean validateOnly) {
-        FeePlan updated = feePlanService.updateFeePlan(feePlanId, ifMatch, feePlanUpdate, updateMask,
+            FeePlanUpdate feePlanUpdate, Boolean validateOnly) {
+        FeePlan updated = feePlanService.updateFeePlan(feePlanId, ifMatch, feePlanUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
@@ -109,10 +109,10 @@ public class FeePlanController implements FeePlanApi {
     @Override
     public ResponseEntity<FeePlanInstallment> updateFeePlanInstallment(UUID feePlanId,
             UUID feePlanInstallmentId, String ifMatch, FeePlanInstallmentUpdate feePlanInstallmentUpdate,
-            String updateMask, Boolean validateOnly) {
+            Boolean validateOnly) {
         FeePlanInstallment updated =
                 feePlanService.updateFeePlanInstallment(feePlanId, feePlanInstallmentId, ifMatch,
-                        feePlanInstallmentUpdate, updateMask,
+                        feePlanInstallmentUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

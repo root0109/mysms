@@ -40,8 +40,8 @@ public class PurposeController implements PurposeApi {
 
     @Override
     public ResponseEntity<Purpose> updatePurpose(UUID purposeId, String ifMatch, PurposeUpdate purposeUpdate,
-            String updateMask, Boolean validateOnly) {
-        Purpose updated = purposeService.updatePurpose(purposeId, ifMatch, purposeUpdate, updateMask,
+            Boolean validateOnly) {
+        Purpose updated = purposeService.updatePurpose(purposeId, ifMatch, purposeUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

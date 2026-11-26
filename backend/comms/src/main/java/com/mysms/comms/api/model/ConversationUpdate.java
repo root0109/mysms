@@ -19,13 +19,13 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Conversation that can be updated (partial update; see updateMask).
+ * Fields of Conversation that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class ConversationUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<UUID> institutionId;
 
   /**
    * Direct or group.
@@ -63,19 +63,19 @@ public class ConversationUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable ConversationTypeEnum conversationType;
+  private @Nullable Optional<@NotNull ConversationTypeEnum> conversationType;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String title;
+  private @Nullable Optional<@Size(max = 150) String> title;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime lastMessageAt;
+  private @Nullable Optional<OffsetDateTime> lastMessageAt;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public ConversationUpdate institutionId(@Nullable UUID institutionId) {
+  public ConversationUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -84,18 +84,18 @@ public class ConversationUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public ConversationUpdate conversationType(@Nullable ConversationTypeEnum conversationType) {
+  public ConversationUpdate conversationType(@Nullable Optional<ConversationTypeEnum> conversationType) {
     this.conversationType = conversationType;
     return this;
   }
@@ -106,16 +106,16 @@ public class ConversationUpdate {
    */
   
   @JsonProperty("conversationType")
-  public @Nullable ConversationTypeEnum getConversationType() {
+  public @Nullable Optional<ConversationTypeEnum> getConversationType() {
     return conversationType;
   }
 
   @JsonProperty("conversationType")
-  public void setConversationType(@Nullable ConversationTypeEnum conversationType) {
+  public void setConversationType(@Nullable Optional<ConversationTypeEnum> conversationType) {
     this.conversationType = conversationType;
   }
 
-  public ConversationUpdate title(@Nullable String title) {
+  public ConversationUpdate title(@Nullable Optional<String> title) {
     this.title = title;
     return this;
   }
@@ -124,18 +124,18 @@ public class ConversationUpdate {
    * Group title.
    * @return title
    */
-  @Size(max = 150) 
+  
   @JsonProperty("title")
-  public @Nullable String getTitle() {
+  public @Nullable Optional<String> getTitle() {
     return title;
   }
 
   @JsonProperty("title")
-  public void setTitle(@Nullable String title) {
+  public void setTitle(@Nullable Optional<String> title) {
     this.title = title;
   }
 
-  public ConversationUpdate lastMessageAt(@Nullable OffsetDateTime lastMessageAt) {
+  public ConversationUpdate lastMessageAt(@Nullable Optional<OffsetDateTime> lastMessageAt) {
     this.lastMessageAt = lastMessageAt;
     return this;
   }
@@ -144,18 +144,18 @@ public class ConversationUpdate {
    * Last activity.
    * @return lastMessageAt
    */
-  @Valid 
+  
   @JsonProperty("lastMessageAt")
-  public @Nullable OffsetDateTime getLastMessageAt() {
+  public @Nullable Optional<OffsetDateTime> getLastMessageAt() {
     return lastMessageAt;
   }
 
   @JsonProperty("lastMessageAt")
-  public void setLastMessageAt(@Nullable OffsetDateTime lastMessageAt) {
+  public void setLastMessageAt(@Nullable Optional<OffsetDateTime> lastMessageAt) {
     this.lastMessageAt = lastMessageAt;
   }
 
-  public ConversationUpdate isActive(@Nullable Boolean isActive) {
+  public ConversationUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -166,12 +166,12 @@ public class ConversationUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

@@ -16,7 +16,7 @@ Every diagram here is generated from the SQL migrations in `../migrations/` alon
 - **Standard columns** (`tenant_id` and the audit / soft-delete / version columns `created_at`, `created_by`, `updated_at`, `updated_by`, `deleted_at`, `row_version`) are omitted; every table has them (see the database README).
 - **Large modules** (LMS, Communication) are split into sub-areas. A box that shows only `id` is a table of the same module drawn on the sub-area named in its note.
 
-Totals: 460 tables drawn (the other two, `iam.member_record` and `payroll.staff_member`, are copies kept from other modules' events with no relationships to draw), 458 intra-module foreign keys drawn as lines, 494 cross-module logical references noted in rows.
+Totals: 460 tables drawn (the other one, `iam.member_record`, is a copy kept from other modules' events with no relationships to draw), 458 intra-module foreign keys drawn as lines, 494 cross-module logical references noted in rows.
 
 ## Diagrams
 
@@ -1239,6 +1239,11 @@ erDiagram
         varchar(30) offering_type "NN"
         boolean is_active "NN"
     }
+    academics__teacher_subject["academics.teacher_subject"] {
+        uuid id PK
+        uuid staff_id FK "NN · → hr.staff (logical)"
+        uuid subject_id FK "NN"
+    }
     academics__teaching_assignment["academics.teaching_assignment"] {
         uuid id PK
         uuid class_subject_id FK "NN"
@@ -1339,6 +1344,7 @@ erDiagram
     academics__subject ||--o{ academics__course_subject : "subject_id"
     academics__class_section ||--o{ academics__class_subject : "class_section_id"
     academics__subject ||--o{ academics__class_subject : "subject_id"
+    academics__subject ||--o{ academics__teacher_subject : "subject_id"
     academics__class_subject ||--o{ academics__teaching_assignment : "class_subject_id"
     academics__class_subject ||--o{ academics__curriculum_unit : "class_subject_id"
     academics__teaching_assignment ||--o{ academics__lesson_plan : "teaching_assignment_id"
@@ -1662,11 +1668,6 @@ erDiagram
         uuid staff_id FK "NN"
         uuid department_id FK "NN · → org.department (logical)"
     }
-    hr__staff_subject["hr.staff_subject"] {
-        uuid id PK
-        uuid staff_id FK "NN"
-        uuid subject_id FK "NN · → academics.subject (logical)"
-    }
     hr__leave_type["hr.leave_type"] {
         uuid id PK
         uuid institution_id FK "NN · → org.institution (logical)"
@@ -1757,7 +1758,6 @@ erDiagram
     }
     hr__designation |o--o{ hr__staff : "designation_id"
     hr__staff ||--o{ hr__staff_department : "staff_id"
-    hr__staff ||--o{ hr__staff_subject : "staff_id"
     hr__staff ||--o{ hr__leave_application : "staff_id"
     hr__leave_type |o--o{ hr__leave_application : "leave_type_id"
     hr__staff ||--o{ hr__leave_balance : "staff_id"

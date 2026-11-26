@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -98,5 +99,43 @@ class JsonMappersTest {
                     assertThat(used.isEnabled(tools.jackson.databind.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES))
                             .isTrue();
                 });
+    }
+
+    /** Shaped like a PATCH body (§7.2): Optional bean properties, never initialised, null left out on the way out. */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    public static final class Changes {
+        private Optional<String> name;
+        private Optional<UUID> parentId;
+
+        public Optional<String> getName() {
+            return name;
+        }
+
+        public void setName(Optional<String> name) {
+            this.name = name;
+        }
+
+        public Optional<UUID> getParentId() {
+            return parentId;
+        }
+
+        public void setParentId(Optional<UUID> parentId) {
+            this.parentId = parentId;
+        }
+    }
+
+    @Test
+    void anOptionalPropertyIsNullWhenAbsentEmptyWhenNullAndSetWhenGiven() {
+        UUID parent = UUID.fromString("0190a5f2-0000-7000-8000-000000000001");
+        Changes absent = json.readValue("{}", Changes.class);
+        assertThat(absent.getName()).as("absent: left unchanged").isNull();
+        Changes cleared = json.readValue("{\"name\":null,\"parentId\":\"" + parent + "\"}", Changes.class);
+        assertThat(cleared.getName()).as("JSON null: cleared").isEmpty();
+        assertThat(cleared.getParentId()).contains(parent);
+        assertThatThrownBy(() -> json.readValue("{\"parentId\":\"" + parent.toString().replace("-", "") + "\"}",
+                Changes.class)).as("the strict UUID form holds inside an Optional").hasMessageContaining("parentId");
+        assertThat(json.writeValueAsString(cleared)).as("absent stays absent, a cleared field is written as null")
+                .isEqualTo("{\"name\":null,\"parentId\":\"" + parent + "\"}");
+        assertThat(json.writeValueAsString(absent)).isEqualTo("{}");
     }
 }

@@ -1,0 +1,26 @@
+package com.mysms.learning.lms.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of lms.external_tool. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class ExternalToolEntity extends BaseEntity {
+
+    public static final String TABLE = "lms.external_tool";
+
+    private UUID tenantId;
+    private String title;
+    private String description;
+    private Boolean isIncluded;
+    private Boolean isPaid;
+}

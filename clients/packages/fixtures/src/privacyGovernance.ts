@@ -310,9 +310,9 @@ export function fakePrivacyGovernance(): Record<string, Handler> {
       if (stale(req, row)) return problem(412, 'PRECONDITION_FAILED');
       if (row.closedAt) return stateProblem('A closed breach cannot be changed.');
       const body = (await req.json()) as Record<string, unknown>;
-      const mask = (new URL(req.url).searchParams.get('updateMask') ?? '').split(',').filter(Boolean);
+      // a PATCH sets the fields its body names; null clears one (JAVA-CODING-RULES §7.2)
       const target = row as unknown as Record<string, unknown>;
-      for (const field of mask) target[field] = body[field];
+      for (const [field, value] of Object.entries(body)) target[field] = value ?? undefined;
       row.rowVersion += 1;
       return json(breachOut(row));
     },
@@ -440,12 +440,11 @@ export function fakePrivacyGovernance(): Record<string, Handler> {
       if (!row) return problem(404, 'NOT_FOUND');
       if (stale(req, row)) return problem(412, 'PRECONDITION_FAILED');
       const body = (await req.json()) as privacy.RetentionPolicyUpdate;
-      const mask = (new URL(req.url).searchParams.get('updateMask') ?? '').split(',');
-      const periodDays = mask.includes('periodDays') ? body.periodDays : row.periodDays;
+      const periodDays = 'periodDays' in body ? body.periodDays : row.periodDays;
       if (periodDays === undefined || periodDays < (row.minimumPeriodDays ?? 0))
         return fieldProblem('periodDays', "must not be shorter than the policy's legal floor");
       row.periodDays = periodDays;
-      if (mask.includes('action') && body.action) row.action = body.action;
+      if (body.action) row.action = body.action;
       row.overridden = true;
       row.rowVersion += 1;
       return json(policyOut(row));

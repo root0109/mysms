@@ -589,8 +589,8 @@ Events: `payroll.payslip.created`, `.markPaid`, `.cancel`.
 
 Payslips are owner-only personal data: `payroll.GetPayslip`, `ListPayslips`, `GetPayslipLine` and
 `ListPayslipLines` show a caller the payslips of the institutions where they hold `payroll.payslip.generate_payslips`
-(the payroll office), and otherwise only the payslips of their own staff records — known from `hr.staff` events
-(`payroll.staff_member`); any other payslip is 404 on a get and absent from a list.
+(the payroll office), and otherwise only the payslips of their own live staff records (`hr.staff`, read by payroll
+as its sibling area); any other payslip is 404 on a get and absent from a list.
 
 ## platform.FileObject (`platform.file_object`) — hand-written (api/README "Files")
 

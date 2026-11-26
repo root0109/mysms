@@ -16,6 +16,16 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ReferenceCleanupRepository {
 
+    /** academics.teacher_subject.staff_id, on hr.staff deletion: archive the row. */
+    public static final String ARCHIVE_TEACHER_SUBJECT_STAFF_ID = """
+            UPDATE academics.teacher_subject
+               SET deleted_at = :now, updated_at = :now, row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND staff_id = :ownerId
+               AND deleted_at IS NULL
+            RETURNING id
+            """;
+
     /**
      * academics.class_section.class_teacher_staff_id, on hr.staff deletion: null the column.
      */

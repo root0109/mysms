@@ -64,7 +64,7 @@ public class FeeConcessionResolver extends FeeConcessionServiceGrpc.FeeConcessio
                 bridge.id(request.getFeeConcession().getId(), "id"),
                 bridge.requiredIfMatch(request.getFeeConcession().getEtag()),
                 bridge.changes(request.getFeeConcession(), request.getUpdateMask(), FeeConcessionUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeeConcessionResponse.newBuilder(), "fee_concession",
                 updated).build());
     }

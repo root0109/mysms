@@ -17,19 +17,19 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of AudienceGroup that can be updated (partial update; see updateMask).
+ * Fields of AudienceGroup that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class AudienceGroupUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID classSectionId;
+  private @Nullable Optional<UUID> classSectionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 150) String> name;
 
   /**
    * Scope.
@@ -67,12 +67,12 @@ public class AudienceGroupUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable GroupScopeEnum groupScope;
+  private @Nullable Optional<@NotNull GroupScopeEnum> groupScope;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public AudienceGroupUpdate institutionId(@Nullable UUID institutionId) {
+  public AudienceGroupUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -81,18 +81,18 @@ public class AudienceGroupUpdate {
    * Institution (NULL = tenant-wide group).
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public AudienceGroupUpdate classSectionId(@Nullable UUID classSectionId) {
+  public AudienceGroupUpdate classSectionId(@Nullable Optional<UUID> classSectionId) {
     this.classSectionId = classSectionId;
     return this;
   }
@@ -101,18 +101,18 @@ public class AudienceGroupUpdate {
    * Class (scope = class).
    * @return classSectionId
    */
-  @Valid 
+  
   @JsonProperty("classSectionId")
-  public @Nullable UUID getClassSectionId() {
+  public @Nullable Optional<UUID> getClassSectionId() {
     return classSectionId;
   }
 
   @JsonProperty("classSectionId")
-  public void setClassSectionId(@Nullable UUID classSectionId) {
+  public void setClassSectionId(@Nullable Optional<UUID> classSectionId) {
     this.classSectionId = classSectionId;
   }
 
-  public AudienceGroupUpdate name(@Nullable String name) {
+  public AudienceGroupUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -121,18 +121,18 @@ public class AudienceGroupUpdate {
    * Group name.
    * @return name
    */
-  @Size(max = 150) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public AudienceGroupUpdate groupScope(@Nullable GroupScopeEnum groupScope) {
+  public AudienceGroupUpdate groupScope(@Nullable Optional<GroupScopeEnum> groupScope) {
     this.groupScope = groupScope;
     return this;
   }
@@ -143,16 +143,16 @@ public class AudienceGroupUpdate {
    */
   
   @JsonProperty("groupScope")
-  public @Nullable GroupScopeEnum getGroupScope() {
+  public @Nullable Optional<GroupScopeEnum> getGroupScope() {
     return groupScope;
   }
 
   @JsonProperty("groupScope")
-  public void setGroupScope(@Nullable GroupScopeEnum groupScope) {
+  public void setGroupScope(@Nullable Optional<GroupScopeEnum> groupScope) {
     this.groupScope = groupScope;
   }
 
-  public AudienceGroupUpdate isActive(@Nullable Boolean isActive) {
+  public AudienceGroupUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -163,12 +163,12 @@ public class AudienceGroupUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

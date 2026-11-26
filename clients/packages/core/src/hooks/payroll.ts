@@ -13,6 +13,7 @@ import { StaffSalaryApi } from '@mysms/sdk/payroll/apis/StaffSalaryApi';
 import type { Formatters } from '@mysms/i18n';
 import { newIdempotencyKey } from '../api/ids';
 import { allPages, pageQuery } from '../api/pages';
+import { patchOf } from '../api/patch';
 import { call } from '../api/unwrap';
 import { queryKey } from '../query/keys';
 import { STALE_TIME } from '../query/queryClient';
@@ -391,7 +392,6 @@ export function useSaveSalaryTemplate() {
         templates.updateSalaryTemplate({
           salaryTemplateId: draft.id,
           ifMatch: draft.etag,
-          updateMask: 'name,isActive',
           salaryTemplateUpdate: { name: salaryTemplate.name, isActive: salaryTemplate.isActive },
         }),
       );
@@ -445,13 +445,8 @@ export function useSaveTemplateComponent() {
           salaryTemplateId,
           salaryTemplateComponentId: draft.id,
           ifMatch: draft.etag,
-          // listing value clears it when the field is emptied
-          updateMask: 'payComponentId,payCategoryId,value',
-          salaryTemplateComponentUpdate: {
-            payComponentId,
-            payCategoryId,
-            ...(trimmed ? { value: trimmed } : {}),
-          },
+          // an emptied value is sent as null, which clears it
+          salaryTemplateComponentUpdate: { payComponentId, payCategoryId, value: trimmed || null },
         }),
       );
     },
@@ -552,7 +547,6 @@ export function useSaveStaffSalaryComponent() {
           staffSalaryId: draft.staffSalaryId,
           staffSalaryComponentId: draft.id,
           ifMatch: draft.etag,
-          updateMask: 'amount',
           staffSalaryComponentUpdate: { amount },
         }),
       );
@@ -678,13 +672,18 @@ export function useSaveDisbursementAccount() {
         return call(
           accounts.createDisbursementAccount({ disbursementAccount: { ...body, accountNumber: number } }),
         );
-      const changes = { ...body, ...(number ? { accountNumber: number } : {}) };
+      // an emptied branch is named without a value, which patchOf sends as null: it is cleared; an empty number
+      // keeps the stored one (it is never returned), so it is left out
+      const changes = {
+        ...body,
+        branchName: branch || undefined,
+        ...(number ? { accountNumber: number } : {}),
+      };
       return call(
         accounts.updateDisbursementAccount({
           disbursementAccountId: draft.id,
           ifMatch: draft.etag,
-          updateMask: Object.keys(changes).join(','),
-          disbursementAccountUpdate: changes,
+          disbursementAccountUpdate: patchOf(changes),
         }),
       );
     },

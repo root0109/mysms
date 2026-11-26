@@ -16,15 +16,15 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of EventAttendee that can be updated (partial update; see updateMask).
+ * Fields of EventAttendee that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class EventAttendeeUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID userId;
+  private @Nullable Optional<@NotNull UUID> userId;
 
-  public EventAttendeeUpdate userId(@Nullable UUID userId) {
+  public EventAttendeeUpdate userId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
     return this;
   }
@@ -33,14 +33,14 @@ public class EventAttendeeUpdate {
    * Invited user.
    * @return userId
    */
-  @Valid 
+  
   @JsonProperty("userId")
-  public @Nullable UUID getUserId() {
+  public @Nullable Optional<UUID> getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(@Nullable UUID userId) {
+  public void setUserId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
   }
 

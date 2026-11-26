@@ -1,0 +1,29 @@
+package com.mysms.platform.org.config;
+
+import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.outbox.AuditWriter;
+import com.mysms.core.outbox.OutboxWriter;
+import java.time.Clock;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import tools.jackson.databind.json.JsonMapper;
+
+/** The module's own outbox (org.outbox_event) and the audit writer on top of it. */
+@Configuration(proxyBeanMethods = false)
+public class OrgEventsConfig {
+
+    public static final String OUTBOX = "orgOutboxWriter";
+    public static final String AUDIT = "orgAuditWriter";
+
+    @Bean(name = OUTBOX)
+    public OutboxWriter orgOutboxWriter(@Qualifier(OrgDatabaseConfig.DATABASE) ModuleDatabase database,
+            JsonMapper jsonMapper) {
+        return new OutboxWriter("org", database.jdbc(), jsonMapper);
+    }
+
+    @Bean(name = AUDIT)
+    public AuditWriter orgAuditWriter(@Qualifier(OUTBOX) OutboxWriter outbox, Clock clock) {
+        return new AuditWriter(outbox, clock);
+    }
+}

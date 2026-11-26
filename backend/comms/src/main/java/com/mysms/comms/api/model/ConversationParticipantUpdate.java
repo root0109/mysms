@@ -18,19 +18,19 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of ConversationParticipant that can be updated (partial update; see updateMask).
+ * Fields of ConversationParticipant that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class ConversationParticipantUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID userId;
+  private @Nullable Optional<@NotNull UUID> userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime lastReadAt;
+  private @Nullable Optional<OffsetDateTime> lastReadAt;
 
-  public ConversationParticipantUpdate userId(@Nullable UUID userId) {
+  public ConversationParticipantUpdate userId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
     return this;
   }
@@ -39,18 +39,18 @@ public class ConversationParticipantUpdate {
    * Participant.
    * @return userId
    */
-  @Valid 
+  
   @JsonProperty("userId")
-  public @Nullable UUID getUserId() {
+  public @Nullable Optional<UUID> getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(@Nullable UUID userId) {
+  public void setUserId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
   }
 
-  public ConversationParticipantUpdate lastReadAt(@Nullable OffsetDateTime lastReadAt) {
+  public ConversationParticipantUpdate lastReadAt(@Nullable Optional<OffsetDateTime> lastReadAt) {
     this.lastReadAt = lastReadAt;
     return this;
   }
@@ -59,14 +59,14 @@ public class ConversationParticipantUpdate {
    * Read up to.
    * @return lastReadAt
    */
-  @Valid 
+  
   @JsonProperty("lastReadAt")
-  public @Nullable OffsetDateTime getLastReadAt() {
+  public @Nullable Optional<OffsetDateTime> getLastReadAt() {
     return lastReadAt;
   }
 
   @JsonProperty("lastReadAt")
-  public void setLastReadAt(@Nullable OffsetDateTime lastReadAt) {
+  public void setLastReadAt(@Nullable Optional<OffsetDateTime> lastReadAt) {
     this.lastReadAt = lastReadAt;
   }
 

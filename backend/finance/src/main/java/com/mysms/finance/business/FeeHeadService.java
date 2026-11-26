@@ -23,7 +23,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.finance.config.FinanceDatabaseConfig;
 import com.mysms.finance.config.FinanceEventsConfig;
 import com.mysms.finance.domain.FeeHeadEntity;
@@ -52,10 +52,6 @@ public class FeeHeadService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "finance.fee_head.create";
     static final String PERMISSION_UPDATE = "finance.fee_head.update";
     static final String PERMISSION_DELETE = "finance.fee_head.delete";
-    /** The contract's FeeHeadUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("institutionId", "code", "name", "description", "defaultAmount", "currencyId", "ledgerAccountCode",
-            "isActive");
 
 
     private final FeeHeadRepository repository;
@@ -123,13 +119,11 @@ public class FeeHeadService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set. The merged row is validated as a whole, and must stay within the caller's scope.
      */
-    public FeeHead updateFeeHead(UUID id, String ifMatch, FeeHeadUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public FeeHead updateFeeHead(UUID id, String ifMatch, FeeHeadUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             FeeHeadEntity entity = loadVisible(scope, id);
@@ -137,7 +131,7 @@ public class FeeHeadService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -210,21 +204,18 @@ public class FeeHeadService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected FeeHeadUpdate fields; explicit per field so a mask can clear values (no reflection). */
-    private static void apply(FeeHeadEntity entity, FeeHeadUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "code" -> entity.setCode(changes.getCode());
-                case "name" -> entity.setName(changes.getName());
-                case "description" -> entity.setDescription(changes.getDescription());
-                case "defaultAmount" -> entity.setDefaultAmount(WireValues.decimal(changes.getDefaultAmount()));
-                case "currencyId" -> entity.setCurrencyId(changes.getCurrencyId());
-                case "ledgerAccountCode" -> entity.setLedgerAccountCode(changes.getLedgerAccountCode());
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(FeeHeadEntity entity, FeeHeadUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("code", changes.getCode(), entity::setCode);
+        patch.apply("name", changes.getName(), entity::setName);
+        patch.apply("description", changes.getDescription(), entity::setDescription);
+        patch.apply("defaultAmount", changes.getDefaultAmount(), v -> entity.setDefaultAmount(WireValues.decimal(v)));
+        patch.apply("currencyId", changes.getCurrencyId(), entity::setCurrencyId);
+        patch.apply("ledgerAccountCode", changes.getLedgerAccountCode(), entity::setLedgerAccountCode);
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

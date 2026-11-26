@@ -1,0 +1,38 @@
+package com.mysms.students.admission.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.time.LocalDate;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of admission.admission_cycle. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class AdmissionCycleEntity extends BaseEntity {
+
+    public static final String TABLE = "admission.admission_cycle";
+
+    private UUID tenantId;
+    private UUID institutionId;
+    private String name;
+    private String admissionBasis;
+    private UUID programId;
+    private UUID courseId;
+    private UUID gradeLevelId;
+    private UUID academicYearId;
+    private UUID academicTermId;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private Integer minApplications;
+    private Integer maxApplications;
+    private Integer minimumAgeYears;
+    private UUID applicationFeeHeadId;
+    private String status;
+}

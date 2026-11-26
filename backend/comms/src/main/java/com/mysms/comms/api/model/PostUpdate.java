@@ -19,22 +19,22 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Post that can be updated (partial update; see updateMask).
+ * Fields of Post that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class PostUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID academicYearId;
+  private @Nullable Optional<@NotNull UUID> academicYearId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID classPageId;
+  private @Nullable Optional<UUID> classPageId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String body;
+  private @Nullable Optional<@NotNull String> body;
 
   /**
    * Who sees it.
@@ -74,13 +74,13 @@ public class PostUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable VisibilityEnum visibility;
+  private @Nullable Optional<@NotNull VisibilityEnum> visibility;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime scheduledFor;
+  private @Nullable Optional<OffsetDateTime> scheduledFor;
 
-  public PostUpdate institutionId(@Nullable UUID institutionId) {
+  public PostUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -89,18 +89,18 @@ public class PostUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public PostUpdate academicYearId(@Nullable UUID academicYearId) {
+  public PostUpdate academicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
     return this;
   }
@@ -109,18 +109,18 @@ public class PostUpdate {
    * Academic year.
    * @return academicYearId
    */
-  @Valid 
+  
   @JsonProperty("academicYearId")
-  public @Nullable UUID getAcademicYearId() {
+  public @Nullable Optional<UUID> getAcademicYearId() {
     return academicYearId;
   }
 
   @JsonProperty("academicYearId")
-  public void setAcademicYearId(@Nullable UUID academicYearId) {
+  public void setAcademicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
   }
 
-  public PostUpdate classPageId(@Nullable UUID classPageId) {
+  public PostUpdate classPageId(@Nullable Optional<UUID> classPageId) {
     this.classPageId = classPageId;
     return this;
   }
@@ -129,18 +129,18 @@ public class PostUpdate {
    * Page posted on.
    * @return classPageId
    */
-  @Valid 
+  
   @JsonProperty("classPageId")
-  public @Nullable UUID getClassPageId() {
+  public @Nullable Optional<UUID> getClassPageId() {
     return classPageId;
   }
 
   @JsonProperty("classPageId")
-  public void setClassPageId(@Nullable UUID classPageId) {
+  public void setClassPageId(@Nullable Optional<UUID> classPageId) {
     this.classPageId = classPageId;
   }
 
-  public PostUpdate body(@Nullable String body) {
+  public PostUpdate body(@Nullable Optional<String> body) {
     this.body = body;
     return this;
   }
@@ -151,16 +151,16 @@ public class PostUpdate {
    */
   
   @JsonProperty("body")
-  public @Nullable String getBody() {
+  public @Nullable Optional<String> getBody() {
     return body;
   }
 
   @JsonProperty("body")
-  public void setBody(@Nullable String body) {
+  public void setBody(@Nullable Optional<String> body) {
     this.body = body;
   }
 
-  public PostUpdate visibility(@Nullable VisibilityEnum visibility) {
+  public PostUpdate visibility(@Nullable Optional<VisibilityEnum> visibility) {
     this.visibility = visibility;
     return this;
   }
@@ -171,16 +171,16 @@ public class PostUpdate {
    */
   
   @JsonProperty("visibility")
-  public @Nullable VisibilityEnum getVisibility() {
+  public @Nullable Optional<VisibilityEnum> getVisibility() {
     return visibility;
   }
 
   @JsonProperty("visibility")
-  public void setVisibility(@Nullable VisibilityEnum visibility) {
+  public void setVisibility(@Nullable Optional<VisibilityEnum> visibility) {
     this.visibility = visibility;
   }
 
-  public PostUpdate scheduledFor(@Nullable OffsetDateTime scheduledFor) {
+  public PostUpdate scheduledFor(@Nullable Optional<OffsetDateTime> scheduledFor) {
     this.scheduledFor = scheduledFor;
     return this;
   }
@@ -189,14 +189,14 @@ public class PostUpdate {
    * Scheduled publish time.
    * @return scheduledFor
    */
-  @Valid 
+  
   @JsonProperty("scheduledFor")
-  public @Nullable OffsetDateTime getScheduledFor() {
+  public @Nullable Optional<OffsetDateTime> getScheduledFor() {
     return scheduledFor;
   }
 
   @JsonProperty("scheduledFor")
-  public void setScheduledFor(@Nullable OffsetDateTime scheduledFor) {
+  public void setScheduledFor(@Nullable Optional<OffsetDateTime> scheduledFor) {
     this.scheduledFor = scheduledFor;
   }
 

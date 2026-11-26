@@ -63,11 +63,10 @@ public class TeachingAssignmentController implements TeachingAssignmentApi {
 
     @Override
     public ResponseEntity<TeachingAssignment> updateTeachingAssignment(UUID teachingAssignmentId,
-            String ifMatch, TeachingAssignmentUpdate teachingAssignmentUpdate, String updateMask,
-            Boolean validateOnly) {
+            String ifMatch, TeachingAssignmentUpdate teachingAssignmentUpdate, Boolean validateOnly) {
         TeachingAssignment updated =
                 teachingAssignmentService.updateTeachingAssignment(teachingAssignmentId, ifMatch,
-                        teachingAssignmentUpdate, updateMask,
+                        teachingAssignmentUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

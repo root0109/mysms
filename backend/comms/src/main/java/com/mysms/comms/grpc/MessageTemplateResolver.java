@@ -61,7 +61,7 @@ public class MessageTemplateResolver extends MessageTemplateServiceGrpc.MessageT
                 bridge.id(request.getMessageTemplate().getId(), "id"),
                 bridge.requiredIfMatch(request.getMessageTemplate().getEtag()),
                 bridge.changes(request.getMessageTemplate(), request.getUpdateMask(), MessageTemplateUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMessageTemplateResponse.newBuilder(), "message_template", updated).build());
     }
 

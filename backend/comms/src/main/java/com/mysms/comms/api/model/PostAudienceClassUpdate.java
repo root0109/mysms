@@ -16,15 +16,15 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of PostAudienceClass that can be updated (partial update; see updateMask).
+ * Fields of PostAudienceClass that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class PostAudienceClassUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID classSectionId;
+  private @Nullable Optional<@NotNull UUID> classSectionId;
 
-  public PostAudienceClassUpdate classSectionId(@Nullable UUID classSectionId) {
+  public PostAudienceClassUpdate classSectionId(@Nullable Optional<UUID> classSectionId) {
     this.classSectionId = classSectionId;
     return this;
   }
@@ -33,14 +33,14 @@ public class PostAudienceClassUpdate {
    * Class.
    * @return classSectionId
    */
-  @Valid 
+  
   @JsonProperty("classSectionId")
-  public @Nullable UUID getClassSectionId() {
+  public @Nullable Optional<UUID> getClassSectionId() {
     return classSectionId;
   }
 
   @JsonProperty("classSectionId")
-  public void setClassSectionId(@Nullable UUID classSectionId) {
+  public void setClassSectionId(@Nullable Optional<UUID> classSectionId) {
     this.classSectionId = classSectionId;
   }
 

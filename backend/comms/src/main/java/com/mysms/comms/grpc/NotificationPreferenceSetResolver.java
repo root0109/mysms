@@ -81,7 +81,7 @@ public class NotificationPreferenceSetResolver
                 bridge.id(request.getNotificationPreferenceSet().getId(), "id"),
                 bridge.requiredIfMatch(request.getNotificationPreferenceSet().getEtag()),
                 bridge.changes(request.getNotificationPreferenceSet(), request.getUpdateMask(),
-                NotificationPreferenceSetUpdate.class), bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                NotificationPreferenceSetUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateNotificationPreferenceSetResponse.newBuilder(), "notification_preference_set",
                 updated).build());
@@ -131,8 +131,8 @@ public class NotificationPreferenceSetResolver
                 bridge.id(request.getNotificationPreferenceSetId(), "notificationPreferenceSetId"),
                 bridge.id(request.getNotificationPreference().getId(), "id"),
                 bridge.requiredIfMatch(request.getNotificationPreference().getEtag()),
-                bridge.changes(request.getNotificationPreference(), request.getUpdateMask(), NotificationPreferenceUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getNotificationPreference(), request.getUpdateMask(),
+                NotificationPreferenceUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateNotificationPreferenceResponse.newBuilder(), "notification_preference", updated).build());
     }

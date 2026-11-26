@@ -19,16 +19,16 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Event that can be updated (partial update; see updateMask).
+ * Fields of Event that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class EventUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID academicYearId;
+  private @Nullable Optional<UUID> academicYearId;
 
   /**
    * Audience.
@@ -74,19 +74,19 @@ public class EventUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable AudienceEnum audience;
+  private @Nullable Optional<@NotNull AudienceEnum> audience;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID classSectionId;
+  private @Nullable Optional<UUID> classSectionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String audienceLabel;
+  private @Nullable Optional<@Size(max = 120) String> audienceLabel;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String title;
+  private @Nullable Optional<@NotNull @Size(max = 200) String> title;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String description;
+  private @Nullable Optional<String> description;
 
   /**
    * Category.
@@ -134,36 +134,36 @@ public class EventUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable CategoryEnum category;
+  private @Nullable Optional<@NotNull CategoryEnum> category;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String location;
+  private @Nullable Optional<String> location;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String organisedBy;
+  private @Nullable Optional<String> organisedBy;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID imageFileId;
+  private @Nullable Optional<UUID> imageFileId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String color;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime startAt;
+  private @Nullable Optional<@Size(max = 20) String> color;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime endAt;
+  private @Nullable Optional<@NotNull OffsetDateTime> startAt;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isAllDay;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private @Nullable Optional<OffsetDateTime> endAt;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer repeatCount;
+  private @Nullable Optional<@NotNull Boolean> isAllDay;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer repeatInterval;
+  private @Nullable Optional<@NotNull Integer> repeatCount;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable Optional<@NotNull Integer> repeatInterval;
 
   /**
    * Unit of the interval.
@@ -205,25 +205,25 @@ public class EventUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable RepeatUnitEnum repeatUnit;
+  private @Nullable Optional<RepeatUnitEnum> repeatUnit;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String url;
+  private @Nullable Optional<@Size(max = 500) String> url;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID cohortId;
+  private @Nullable Optional<UUID> cohortId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID ownerUserId;
+  private @Nullable Optional<UUID> ownerUserId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String recurrenceRule;
+  private @Nullable Optional<@Size(max = 500) String> recurrenceRule;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean forAllMembers;
+  private @Nullable Optional<@NotNull Boolean> forAllMembers;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean staffCanEdit;
+  private @Nullable Optional<@NotNull Boolean> staffCanEdit;
 
   /**
    * Importance of a personal event.
@@ -263,9 +263,9 @@ public class EventUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable ImportanceEnum importance;
+  private @Nullable Optional<ImportanceEnum> importance;
 
-  public EventUpdate institutionId(@Nullable UUID institutionId) {
+  public EventUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -274,18 +274,18 @@ public class EventUpdate {
    * Institution (NULL = tenant-wide event, e.g. a live class of a tenant-wide cohort).
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public EventUpdate academicYearId(@Nullable UUID academicYearId) {
+  public EventUpdate academicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
     return this;
   }
@@ -294,18 +294,18 @@ public class EventUpdate {
    * Academic year.
    * @return academicYearId
    */
-  @Valid 
+  
   @JsonProperty("academicYearId")
-  public @Nullable UUID getAcademicYearId() {
+  public @Nullable Optional<UUID> getAcademicYearId() {
     return academicYearId;
   }
 
   @JsonProperty("academicYearId")
-  public void setAcademicYearId(@Nullable UUID academicYearId) {
+  public void setAcademicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
   }
 
-  public EventUpdate audience(@Nullable AudienceEnum audience) {
+  public EventUpdate audience(@Nullable Optional<AudienceEnum> audience) {
     this.audience = audience;
     return this;
   }
@@ -316,16 +316,16 @@ public class EventUpdate {
    */
   
   @JsonProperty("audience")
-  public @Nullable AudienceEnum getAudience() {
+  public @Nullable Optional<AudienceEnum> getAudience() {
     return audience;
   }
 
   @JsonProperty("audience")
-  public void setAudience(@Nullable AudienceEnum audience) {
+  public void setAudience(@Nullable Optional<AudienceEnum> audience) {
     this.audience = audience;
   }
 
-  public EventUpdate classSectionId(@Nullable UUID classSectionId) {
+  public EventUpdate classSectionId(@Nullable Optional<UUID> classSectionId) {
     this.classSectionId = classSectionId;
     return this;
   }
@@ -334,18 +334,18 @@ public class EventUpdate {
    * Class (audience = class).
    * @return classSectionId
    */
-  @Valid 
+  
   @JsonProperty("classSectionId")
-  public @Nullable UUID getClassSectionId() {
+  public @Nullable Optional<UUID> getClassSectionId() {
     return classSectionId;
   }
 
   @JsonProperty("classSectionId")
-  public void setClassSectionId(@Nullable UUID classSectionId) {
+  public void setClassSectionId(@Nullable Optional<UUID> classSectionId) {
     this.classSectionId = classSectionId;
   }
 
-  public EventUpdate audienceLabel(@Nullable String audienceLabel) {
+  public EventUpdate audienceLabel(@Nullable Optional<String> audienceLabel) {
     this.audienceLabel = audienceLabel;
     return this;
   }
@@ -354,18 +354,18 @@ public class EventUpdate {
    * Free-text audience / batch label.
    * @return audienceLabel
    */
-  @Size(max = 120) 
+  
   @JsonProperty("audienceLabel")
-  public @Nullable String getAudienceLabel() {
+  public @Nullable Optional<String> getAudienceLabel() {
     return audienceLabel;
   }
 
   @JsonProperty("audienceLabel")
-  public void setAudienceLabel(@Nullable String audienceLabel) {
+  public void setAudienceLabel(@Nullable Optional<String> audienceLabel) {
     this.audienceLabel = audienceLabel;
   }
 
-  public EventUpdate title(@Nullable String title) {
+  public EventUpdate title(@Nullable Optional<String> title) {
     this.title = title;
     return this;
   }
@@ -374,18 +374,18 @@ public class EventUpdate {
    * Title.
    * @return title
    */
-  @Size(max = 200) 
+  
   @JsonProperty("title")
-  public @Nullable String getTitle() {
+  public @Nullable Optional<String> getTitle() {
     return title;
   }
 
   @JsonProperty("title")
-  public void setTitle(@Nullable String title) {
+  public void setTitle(@Nullable Optional<String> title) {
     this.title = title;
   }
 
-  public EventUpdate description(@Nullable String description) {
+  public EventUpdate description(@Nullable Optional<String> description) {
     this.description = description;
     return this;
   }
@@ -396,16 +396,16 @@ public class EventUpdate {
    */
   
   @JsonProperty("description")
-  public @Nullable String getDescription() {
+  public @Nullable Optional<String> getDescription() {
     return description;
   }
 
   @JsonProperty("description")
-  public void setDescription(@Nullable String description) {
+  public void setDescription(@Nullable Optional<String> description) {
     this.description = description;
   }
 
-  public EventUpdate category(@Nullable CategoryEnum category) {
+  public EventUpdate category(@Nullable Optional<CategoryEnum> category) {
     this.category = category;
     return this;
   }
@@ -416,16 +416,16 @@ public class EventUpdate {
    */
   
   @JsonProperty("category")
-  public @Nullable CategoryEnum getCategory() {
+  public @Nullable Optional<CategoryEnum> getCategory() {
     return category;
   }
 
   @JsonProperty("category")
-  public void setCategory(@Nullable CategoryEnum category) {
+  public void setCategory(@Nullable Optional<CategoryEnum> category) {
     this.category = category;
   }
 
-  public EventUpdate location(@Nullable String location) {
+  public EventUpdate location(@Nullable Optional<String> location) {
     this.location = location;
     return this;
   }
@@ -436,16 +436,16 @@ public class EventUpdate {
    */
   
   @JsonProperty("location")
-  public @Nullable String getLocation() {
+  public @Nullable Optional<String> getLocation() {
     return location;
   }
 
   @JsonProperty("location")
-  public void setLocation(@Nullable String location) {
+  public void setLocation(@Nullable Optional<String> location) {
     this.location = location;
   }
 
-  public EventUpdate organisedBy(@Nullable String organisedBy) {
+  public EventUpdate organisedBy(@Nullable Optional<String> organisedBy) {
     this.organisedBy = organisedBy;
     return this;
   }
@@ -456,16 +456,16 @@ public class EventUpdate {
    */
   
   @JsonProperty("organisedBy")
-  public @Nullable String getOrganisedBy() {
+  public @Nullable Optional<String> getOrganisedBy() {
     return organisedBy;
   }
 
   @JsonProperty("organisedBy")
-  public void setOrganisedBy(@Nullable String organisedBy) {
+  public void setOrganisedBy(@Nullable Optional<String> organisedBy) {
     this.organisedBy = organisedBy;
   }
 
-  public EventUpdate imageFileId(@Nullable UUID imageFileId) {
+  public EventUpdate imageFileId(@Nullable Optional<UUID> imageFileId) {
     this.imageFileId = imageFileId;
     return this;
   }
@@ -474,18 +474,18 @@ public class EventUpdate {
    * Banner image.
    * @return imageFileId
    */
-  @Valid 
+  
   @JsonProperty("imageFileId")
-  public @Nullable UUID getImageFileId() {
+  public @Nullable Optional<UUID> getImageFileId() {
     return imageFileId;
   }
 
   @JsonProperty("imageFileId")
-  public void setImageFileId(@Nullable UUID imageFileId) {
+  public void setImageFileId(@Nullable Optional<UUID> imageFileId) {
     this.imageFileId = imageFileId;
   }
 
-  public EventUpdate color(@Nullable String color) {
+  public EventUpdate color(@Nullable Optional<String> color) {
     this.color = color;
     return this;
   }
@@ -494,18 +494,18 @@ public class EventUpdate {
    * Calendar colour.
    * @return color
    */
-  @Size(max = 20) 
+  
   @JsonProperty("color")
-  public @Nullable String getColor() {
+  public @Nullable Optional<String> getColor() {
     return color;
   }
 
   @JsonProperty("color")
-  public void setColor(@Nullable String color) {
+  public void setColor(@Nullable Optional<String> color) {
     this.color = color;
   }
 
-  public EventUpdate startAt(@Nullable OffsetDateTime startAt) {
+  public EventUpdate startAt(@Nullable Optional<OffsetDateTime> startAt) {
     this.startAt = startAt;
     return this;
   }
@@ -514,18 +514,18 @@ public class EventUpdate {
    * Start.
    * @return startAt
    */
-  @Valid 
+  
   @JsonProperty("startAt")
-  public @Nullable OffsetDateTime getStartAt() {
+  public @Nullable Optional<OffsetDateTime> getStartAt() {
     return startAt;
   }
 
   @JsonProperty("startAt")
-  public void setStartAt(@Nullable OffsetDateTime startAt) {
+  public void setStartAt(@Nullable Optional<OffsetDateTime> startAt) {
     this.startAt = startAt;
   }
 
-  public EventUpdate endAt(@Nullable OffsetDateTime endAt) {
+  public EventUpdate endAt(@Nullable Optional<OffsetDateTime> endAt) {
     this.endAt = endAt;
     return this;
   }
@@ -534,18 +534,18 @@ public class EventUpdate {
    * End.
    * @return endAt
    */
-  @Valid 
+  
   @JsonProperty("endAt")
-  public @Nullable OffsetDateTime getEndAt() {
+  public @Nullable Optional<OffsetDateTime> getEndAt() {
     return endAt;
   }
 
   @JsonProperty("endAt")
-  public void setEndAt(@Nullable OffsetDateTime endAt) {
+  public void setEndAt(@Nullable Optional<OffsetDateTime> endAt) {
     this.endAt = endAt;
   }
 
-  public EventUpdate isAllDay(@Nullable Boolean isAllDay) {
+  public EventUpdate isAllDay(@Nullable Optional<Boolean> isAllDay) {
     this.isAllDay = isAllDay;
     return this;
   }
@@ -556,16 +556,16 @@ public class EventUpdate {
    */
   
   @JsonProperty("isAllDay")
-  public @Nullable Boolean getIsAllDay() {
+  public @Nullable Optional<Boolean> getIsAllDay() {
     return isAllDay;
   }
 
   @JsonProperty("isAllDay")
-  public void setIsAllDay(@Nullable Boolean isAllDay) {
+  public void setIsAllDay(@Nullable Optional<Boolean> isAllDay) {
     this.isAllDay = isAllDay;
   }
 
-  public EventUpdate repeatCount(@Nullable Integer repeatCount) {
+  public EventUpdate repeatCount(@Nullable Optional<Integer> repeatCount) {
     this.repeatCount = repeatCount;
     return this;
   }
@@ -576,16 +576,16 @@ public class EventUpdate {
    */
   
   @JsonProperty("repeatCount")
-  public @Nullable Integer getRepeatCount() {
+  public @Nullable Optional<Integer> getRepeatCount() {
     return repeatCount;
   }
 
   @JsonProperty("repeatCount")
-  public void setRepeatCount(@Nullable Integer repeatCount) {
+  public void setRepeatCount(@Nullable Optional<Integer> repeatCount) {
     this.repeatCount = repeatCount;
   }
 
-  public EventUpdate repeatInterval(@Nullable Integer repeatInterval) {
+  public EventUpdate repeatInterval(@Nullable Optional<Integer> repeatInterval) {
     this.repeatInterval = repeatInterval;
     return this;
   }
@@ -596,16 +596,16 @@ public class EventUpdate {
    */
   
   @JsonProperty("repeatInterval")
-  public @Nullable Integer getRepeatInterval() {
+  public @Nullable Optional<Integer> getRepeatInterval() {
     return repeatInterval;
   }
 
   @JsonProperty("repeatInterval")
-  public void setRepeatInterval(@Nullable Integer repeatInterval) {
+  public void setRepeatInterval(@Nullable Optional<Integer> repeatInterval) {
     this.repeatInterval = repeatInterval;
   }
 
-  public EventUpdate repeatUnit(@Nullable RepeatUnitEnum repeatUnit) {
+  public EventUpdate repeatUnit(@Nullable Optional<RepeatUnitEnum> repeatUnit) {
     this.repeatUnit = repeatUnit;
     return this;
   }
@@ -616,16 +616,16 @@ public class EventUpdate {
    */
   
   @JsonProperty("repeatUnit")
-  public @Nullable RepeatUnitEnum getRepeatUnit() {
+  public @Nullable Optional<RepeatUnitEnum> getRepeatUnit() {
     return repeatUnit;
   }
 
   @JsonProperty("repeatUnit")
-  public void setRepeatUnit(@Nullable RepeatUnitEnum repeatUnit) {
+  public void setRepeatUnit(@Nullable Optional<RepeatUnitEnum> repeatUnit) {
     this.repeatUnit = repeatUnit;
   }
 
-  public EventUpdate url(@Nullable String url) {
+  public EventUpdate url(@Nullable Optional<String> url) {
     this.url = url;
     return this;
   }
@@ -634,18 +634,18 @@ public class EventUpdate {
    * Related link.
    * @return url
    */
-  @Size(max = 500) 
+  
   @JsonProperty("url")
-  public @Nullable String getUrl() {
+  public @Nullable Optional<String> getUrl() {
     return url;
   }
 
   @JsonProperty("url")
-  public void setUrl(@Nullable String url) {
+  public void setUrl(@Nullable Optional<String> url) {
     this.url = url;
   }
 
-  public EventUpdate cohortId(@Nullable UUID cohortId) {
+  public EventUpdate cohortId(@Nullable Optional<UUID> cohortId) {
     this.cohortId = cohortId;
     return this;
   }
@@ -654,18 +654,18 @@ public class EventUpdate {
    * Cohort of a cohort event (audience = cohort).
    * @return cohortId
    */
-  @Valid 
+  
   @JsonProperty("cohortId")
-  public @Nullable UUID getCohortId() {
+  public @Nullable Optional<UUID> getCohortId() {
     return cohortId;
   }
 
   @JsonProperty("cohortId")
-  public void setCohortId(@Nullable UUID cohortId) {
+  public void setCohortId(@Nullable Optional<UUID> cohortId) {
     this.cohortId = cohortId;
   }
 
-  public EventUpdate ownerUserId(@Nullable UUID ownerUserId) {
+  public EventUpdate ownerUserId(@Nullable Optional<UUID> ownerUserId) {
     this.ownerUserId = ownerUserId;
     return this;
   }
@@ -674,18 +674,18 @@ public class EventUpdate {
    * Owner of a personal event (audience = personal).
    * @return ownerUserId
    */
-  @Valid 
+  
   @JsonProperty("ownerUserId")
-  public @Nullable UUID getOwnerUserId() {
+  public @Nullable Optional<UUID> getOwnerUserId() {
     return ownerUserId;
   }
 
   @JsonProperty("ownerUserId")
-  public void setOwnerUserId(@Nullable UUID ownerUserId) {
+  public void setOwnerUserId(@Nullable Optional<UUID> ownerUserId) {
     this.ownerUserId = ownerUserId;
   }
 
-  public EventUpdate recurrenceRule(@Nullable String recurrenceRule) {
+  public EventUpdate recurrenceRule(@Nullable Optional<String> recurrenceRule) {
     this.recurrenceRule = recurrenceRule;
     return this;
   }
@@ -694,18 +694,18 @@ public class EventUpdate {
    * iCalendar RRULE of a recurring event (NULL = not recurring); occurrences are materialised in comms.event_occurrence.
    * @return recurrenceRule
    */
-  @Size(max = 500) 
+  
   @JsonProperty("recurrenceRule")
-  public @Nullable String getRecurrenceRule() {
+  public @Nullable Optional<String> getRecurrenceRule() {
     return recurrenceRule;
   }
 
   @JsonProperty("recurrenceRule")
-  public void setRecurrenceRule(@Nullable String recurrenceRule) {
+  public void setRecurrenceRule(@Nullable Optional<String> recurrenceRule) {
     this.recurrenceRule = recurrenceRule;
   }
 
-  public EventUpdate forAllMembers(@Nullable Boolean forAllMembers) {
+  public EventUpdate forAllMembers(@Nullable Optional<Boolean> forAllMembers) {
     this.forAllMembers = forAllMembers;
     return this;
   }
@@ -716,16 +716,16 @@ public class EventUpdate {
    */
   
   @JsonProperty("forAllMembers")
-  public @Nullable Boolean getForAllMembers() {
+  public @Nullable Optional<Boolean> getForAllMembers() {
     return forAllMembers;
   }
 
   @JsonProperty("forAllMembers")
-  public void setForAllMembers(@Nullable Boolean forAllMembers) {
+  public void setForAllMembers(@Nullable Optional<Boolean> forAllMembers) {
     this.forAllMembers = forAllMembers;
   }
 
-  public EventUpdate staffCanEdit(@Nullable Boolean staffCanEdit) {
+  public EventUpdate staffCanEdit(@Nullable Optional<Boolean> staffCanEdit) {
     this.staffCanEdit = staffCanEdit;
     return this;
   }
@@ -736,16 +736,16 @@ public class EventUpdate {
    */
   
   @JsonProperty("staffCanEdit")
-  public @Nullable Boolean getStaffCanEdit() {
+  public @Nullable Optional<Boolean> getStaffCanEdit() {
     return staffCanEdit;
   }
 
   @JsonProperty("staffCanEdit")
-  public void setStaffCanEdit(@Nullable Boolean staffCanEdit) {
+  public void setStaffCanEdit(@Nullable Optional<Boolean> staffCanEdit) {
     this.staffCanEdit = staffCanEdit;
   }
 
-  public EventUpdate importance(@Nullable ImportanceEnum importance) {
+  public EventUpdate importance(@Nullable Optional<ImportanceEnum> importance) {
     this.importance = importance;
     return this;
   }
@@ -756,12 +756,12 @@ public class EventUpdate {
    */
   
   @JsonProperty("importance")
-  public @Nullable ImportanceEnum getImportance() {
+  public @Nullable Optional<ImportanceEnum> getImportance() {
     return importance;
   }
 
   @JsonProperty("importance")
-  public void setImportance(@Nullable ImportanceEnum importance) {
+  public void setImportance(@Nullable Optional<ImportanceEnum> importance) {
     this.importance = importance;
   }
 

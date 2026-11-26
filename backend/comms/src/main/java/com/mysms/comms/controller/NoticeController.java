@@ -152,18 +152,17 @@ public class NoticeController implements NoticeApi {
 
     @Override
     public ResponseEntity<Notice> updateNotice(UUID noticeId, String ifMatch, NoticeUpdate noticeUpdate,
-            String updateMask, Boolean validateOnly) {
-        Notice updated = noticeService.updateNotice(noticeId, ifMatch, noticeUpdate, updateMask,
+            Boolean validateOnly) {
+        Notice updated = noticeService.updateNotice(noticeId, ifMatch, noticeUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<NoticeAudience> updateNoticeAudience(UUID noticeId, UUID noticeAudienceId,
-            String ifMatch, NoticeAudienceUpdate noticeAudienceUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, NoticeAudienceUpdate noticeAudienceUpdate, Boolean validateOnly) {
         NoticeAudience updated =
                 noticeService.updateNoticeAudience(noticeId, noticeAudienceId, ifMatch, noticeAudienceUpdate,
-                        updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

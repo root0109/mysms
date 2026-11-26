@@ -22,7 +22,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.privacy.api.model.Breach;
 import com.mysms.privacy.api.model.BreachStepRequest;
 import com.mysms.privacy.api.model.BreachUpdate;
@@ -82,9 +82,6 @@ public class BreachService extends AppTransactionManager {
     static final String PERMISSION_MARK_NOT_A_BREACH = "privacy.breach.mark_not_a_breach";
     /** The number series of breaches in privacy.number_sequence (per tenant and calendar year). */
     static final String NUMBER_SEQUENCE = "breach";
-    /** The contract's BreachUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("description", "categories", "modules", "estimatedPrincipals",
-            "likelyConsequences", "mitigation", "ownerUserId");
 
     /** No institution owns a row of this aggregate. */
     private static final Optional<UUID> TENANT_LEVEL = Optional.empty();
@@ -238,11 +235,10 @@ public class BreachService extends AppTransactionManager {
     }
 
     /** privacy.UpdateBreach: what is known of an open breach (409 once closed), under If-Match; the clock is fixed. */
-    public Breach updateBreach(UUID id, String ifMatch, BreachUpdate changes, String updateMask) {
+    public Breach updateBreach(UUID id, String ifMatch, BreachUpdate changes) {
         requireTenantWide(PERMISSION_UPDATE);
         refuseImpersonation(AuthContext.require());
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             BreachEntity entity = load(id);
             if (entity.getRowVersion() != expected) {
@@ -251,7 +247,7 @@ public class BreachService extends AppTransactionManager {
             if (entity.getClosedAt() != null) {
                 throw new InvalidStateException("A closed breach, or one found not to be a breach, cannot be changed.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             requireKnown(entity, new ArrayList<>());
             entity.onUpdatingData(Actor.current(), clock);
@@ -420,20 +416,17 @@ public class BreachService extends AppTransactionManager {
         breach.setRowVersion(breach.getRowVersion() + 1);
     }
 
-    /** Applies the selected BreachUpdate fields; a cleared list is empty, never null. */
-    private static void apply(BreachEntity entity, BreachUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "description" -> entity.setDescription(changes.getDescription());
-                case "categories" -> entity.setCategories(orEmpty(changes.getCategories()));
-                case "modules" -> entity.setModules(orEmpty(changes.getModules()));
-                case "estimatedPrincipals" -> entity.setEstimatedPrincipals(changes.getEstimatedPrincipals());
-                case "likelyConsequences" -> entity.setLikelyConsequences(changes.getLikelyConsequences());
-                case "mitigation" -> entity.setMitigation(changes.getMitigation());
-                case "ownerUserId" -> entity.setOwnerUserId(changes.getOwnerUserId());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(BreachEntity entity, BreachUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("description", changes.getDescription(), entity::setDescription);
+        patch.apply("categories", changes.getCategories(), v -> entity.setCategories(orEmpty(v)));
+        patch.apply("modules", changes.getModules(), v -> entity.setModules(orEmpty(v)));
+        patch.apply("estimatedPrincipals", changes.getEstimatedPrincipals(), entity::setEstimatedPrincipals);
+        patch.apply("likelyConsequences", changes.getLikelyConsequences(), entity::setLikelyConsequences);
+        patch.apply("mitigation", changes.getMitigation(), entity::setMitigation);
+        patch.apply("ownerUserId", changes.getOwnerUserId(), entity::setOwnerUserId);
+        return patch.applied();
     }
 
     /**

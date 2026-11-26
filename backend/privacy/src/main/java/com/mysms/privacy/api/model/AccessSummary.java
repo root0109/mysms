@@ -155,9 +155,9 @@ public class AccessSummary {
    * The tenant's register activities that may concern the subject, by activity code.
    * @return activities
    */
-  @Valid 
+  
   @JsonProperty("activities")
-  public List<AccessSummaryActivity> getActivities() {
+  public List<@Valid AccessSummaryActivity> getActivities() {
     return activities;
   }
 

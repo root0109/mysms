@@ -72,7 +72,7 @@ public class ClassSectionResolver extends ClassSectionServiceGrpc.ClassSectionSe
         ClassSection updated = service.updateClassSection(bridge.id(request.getClassSection().getId(), "id"),
                 bridge.requiredIfMatch(request.getClassSection().getEtag()),
                 bridge.changes(request.getClassSection(), request.getUpdateMask(), ClassSectionUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateClassSectionResponse.newBuilder(), "class_section", updated).build());
     }
 
@@ -109,7 +109,7 @@ public class ClassSectionResolver extends ClassSectionServiceGrpc.ClassSectionSe
         ClassSubject updated = service.updateClassSubject(bridge.id(request.getClassSectionId(), "classSectionId"),
                 bridge.id(request.getClassSubject().getId(), "id"), bridge.requiredIfMatch(request.getClassSubject().getEtag()),
                 bridge.changes(request.getClassSubject(), request.getUpdateMask(), ClassSubjectUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateClassSubjectResponse.newBuilder(), "class_subject", updated).build());
     }
 

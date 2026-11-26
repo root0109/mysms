@@ -60,7 +60,7 @@ public class CurriculumUnitResolver extends CurriculumUnitServiceGrpc.Curriculum
         CurriculumUnit updated = service.updateCurriculumUnit(bridge.id(request.getCurriculumUnit().getId(), "id"),
                 bridge.requiredIfMatch(request.getCurriculumUnit().getEtag()),
                 bridge.changes(request.getCurriculumUnit(), request.getUpdateMask(), CurriculumUnitUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCurriculumUnitResponse.newBuilder(), "curriculum_unit", updated).build());
     }
 

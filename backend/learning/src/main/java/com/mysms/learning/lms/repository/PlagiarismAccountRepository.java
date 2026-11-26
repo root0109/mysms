@@ -1,0 +1,244 @@
+package com.mysms.learning.lms.repository;
+import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.paging.FieldSpec;
+import com.mysms.core.paging.Page;
+import com.mysms.core.paging.PageRequest;
+import com.mysms.core.paging.SortSpec;
+import com.mysms.core.paging.SqlFragment;
+import com.mysms.core.paging.ValueType;
+import com.mysms.learning.lms.config.LmsDatabaseConfig;
+import com.mysms.learning.lms.domain.PlagiarismAccountEntity;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Repository;
+/**
+ * Plain-JDBC access to lms.plagiarism_account: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
+ */
+@Repository
+public class PlagiarismAccountRepository {
+
+    /** Fields clients may filter on (contract names → columns). */
+    public static final Map<String, FieldSpec> FILTER_FIELDS = fields(
+            field("id", "r.id", ValueType.UUID),
+            field("provider", "r.provider", ValueType.STRING),
+            field("accountRef", "r.account_ref", ValueType.STRING),
+            field("subAccountRef", "r.sub_account_ref", ValueType.STRING),
+            field("apiUrl", "r.api_url", ValueType.STRING),
+            field("isDefault", "r.is_default", ValueType.BOOLEAN),
+            field("defaultTeacherUserId", "r.default_teacher_user_id", ValueType.UUID),
+            field("defaultTeacherEmail", "r.default_teacher_email", ValueType.STRING),
+            field("defaultTeacherFirstName", "r.default_teacher_first_name", ValueType.STRING),
+            field("defaultTeacherLastName", "r.default_teacher_last_name", ValueType.STRING),
+            field("createTime", "r.created_at", ValueType.TIMESTAMP),
+            field("updateTime", "r.updated_at", ValueType.TIMESTAMP));
+
+    /** Fields clients may order by; NOT NULL expressions, so keyset paging can compare them. */
+    public static final Map<String, FieldSpec> SORT_FIELDS = fields(
+            field("createTime", "r.created_at", ValueType.TIMESTAMP),
+            field("updateTime", "r.updated_at", ValueType.TIMESTAMP));
+
+    public static final String DEFAULT_ORDER = "createTime";
+    public static final String ID_COLUMN = "r.id";
+
+    private static final Map<String, Function<PlagiarismAccountEntity, Object>> SORT_VALUES = Map.ofEntries(
+            Map.entry("createTime", PlagiarismAccountEntity::getCreatedAt),
+            Map.entry("updateTime", PlagiarismAccountEntity::getUpdatedAt));
+
+    private static final String SELECT_LIVE = """
+            SELECT r.id, r.tenant_id, r.provider, r.account_ref, r.sub_account_ref, r.api_url, r.shared_secret_enc,
+                   r.is_default, r.default_teacher_user_id, r.default_teacher_email, r.default_teacher_first_name,
+                   r.default_teacher_last_name, r.created_at, r.created_by, r.updated_at, r.updated_by, r.deleted_at,
+                   r.row_version
+              FROM lms.plagiarism_account r
+             WHERE r.tenant_id = :tenantId
+               AND r.deleted_at IS NULL
+            """;
+    private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String INSERT = """
+            INSERT INTO lms.plagiarism_account
+            (id, tenant_id, provider, account_ref, sub_account_ref, api_url, shared_secret_enc, is_default,
+             default_teacher_user_id, default_teacher_email, default_teacher_first_name, default_teacher_last_name,
+             created_at, created_by, updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, COALESCE(:provider, 'turnitin'::character varying), :accountRef, :subAccountRef,
+                    :apiUrl, :sharedSecretEnc, COALESCE(:isDefault, false), :defaultTeacherUserId,
+                    :defaultTeacherEmail, :defaultTeacherFirstName, :defaultTeacherLastName, :createdAt, :createdBy,
+                    :updatedAt, :updatedBy, :rowVersion)
+            RETURNING id, tenant_id, provider, account_ref, sub_account_ref, api_url, shared_secret_enc, is_default,
+                      default_teacher_user_id, default_teacher_email, default_teacher_first_name,
+                      default_teacher_last_name, created_at, created_by, updated_at, updated_by, deleted_at, row_version
+            """;
+    private static final String SOFT_DELETE = """
+            UPDATE lms.plagiarism_account
+               SET deleted_at = :deletedAt,
+                   updated_at = :updatedAt,
+                   updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String UPDATE = """
+            UPDATE lms.plagiarism_account
+               SET provider = :provider,
+                   account_ref = :accountRef,
+                   sub_account_ref = :subAccountRef,
+                   api_url = :apiUrl,
+                   shared_secret_enc = :sharedSecretEnc,
+                   is_default = :isDefault,
+                   default_teacher_user_id = :defaultTeacherUserId,
+                   default_teacher_email = :defaultTeacherEmail,
+                   default_teacher_first_name = :defaultTeacherFirstName,
+                   default_teacher_last_name = :defaultTeacherLastName,
+                   updated_at = :updatedAt,
+                   updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String REFERENCED_BY_PLAGIARISM_COHORT_LINK_PLAGIARISM_ACCOUNT_ID = """
+            SELECT EXISTS (SELECT 1 FROM lms.plagiarism_cohort_link WHERE tenant_id = :tenantId
+                AND plagiarism_account_id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_PLAGIARISM_REPORT_PLAGIARISM_ACCOUNT_ID = """
+            SELECT EXISTS (SELECT 1 FROM lms.plagiarism_report WHERE tenant_id = :tenantId
+                AND plagiarism_account_id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_PLAGIARISM_USER_LINK_PLAGIARISM_ACCOUNT_ID = """
+            SELECT EXISTS (SELECT 1 FROM lms.plagiarism_user_link WHERE tenant_id = :tenantId
+                AND plagiarism_account_id = :id AND deleted_at IS NULL)
+            """;
+
+    private final JdbcClient jdbc;
+
+    public PlagiarismAccountRepository(@Qualifier(LmsDatabaseConfig.DATABASE) ModuleDatabase database) {
+        this.jdbc = database.jdbc();
+    }
+
+    public Optional<PlagiarismAccountEntity> findById(UUID id) {
+        return jdbc.sql(FIND_BY_ID).param("id", id).query(PlagiarismAccountRepository::map).optional();
+    }
+
+    public Page<PlagiarismAccountEntity> list(PageRequest page, SqlFragment filter) {
+        SqlFragment where = filter.and(page.keysetPredicate());
+        String sql = SELECT_LIVE + " AND (" + where.sql() + ") ORDER BY " + page.orderByClause() + page.limitClause();
+        List<PlagiarismAccountEntity> rows = jdbc.sql(sql).params(where.params()).params(page.limitParams())
+                .query(PlagiarismAccountRepository::map).list();
+        return page.toPage(rows, e -> sortValues(page.sort(), e), PlagiarismAccountEntity::getId);
+    }
+
+    /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
+    public PlagiarismAccountEntity insert(PlagiarismAccountEntity e) {
+        return jdbc.sql(INSERT)
+                .param("id", e.getId())
+                .param("tenantId", e.getTenantId())
+                .param("provider", e.getProvider())
+                .param("accountRef", e.getAccountRef())
+                .param("subAccountRef", e.getSubAccountRef())
+                .param("apiUrl", e.getApiUrl())
+                .param("sharedSecretEnc", e.getSharedSecretEnc())
+                .param("isDefault", e.getIsDefault())
+                .param("defaultTeacherUserId", e.getDefaultTeacherUserId())
+                .param("defaultTeacherEmail", e.getDefaultTeacherEmail())
+                .param("defaultTeacherFirstName", e.getDefaultTeacherFirstName())
+                .param("defaultTeacherLastName", e.getDefaultTeacherLastName())
+                .param("createdAt", e.getCreatedAt())
+                .param("createdBy", e.getCreatedBy())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("rowVersion", e.getRowVersion())
+                .query(PlagiarismAccountRepository::map).single();
+    }
+
+    /** Updates under the ETag guard; 0 rows means the row changed (or vanished) since it was read. */
+    public int update(PlagiarismAccountEntity e, int expectedVersion) {
+        return jdbc.sql(UPDATE)
+                .param("id", e.getId())
+                .param("provider", e.getProvider())
+                .param("accountRef", e.getAccountRef())
+                .param("subAccountRef", e.getSubAccountRef())
+                .param("apiUrl", e.getApiUrl())
+                .param("sharedSecretEnc", e.getSharedSecretEnc())
+                .param("isDefault", e.getIsDefault())
+                .param("defaultTeacherUserId", e.getDefaultTeacherUserId())
+                .param("defaultTeacherEmail", e.getDefaultTeacherEmail())
+                .param("defaultTeacherFirstName", e.getDefaultTeacherFirstName())
+                .param("defaultTeacherLastName", e.getDefaultTeacherLastName())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("expected", expectedVersion)
+                .update();
+    }
+
+    public int softDelete(PlagiarismAccountEntity e, int expectedVersion) {
+        return jdbc.sql(SOFT_DELETE)
+                .param("id", e.getId())
+                .param("deletedAt", e.getDeletedAt())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("expected", expectedVersion)
+                .update();
+    }
+
+    /** Whether live lms.plagiarism_cohort_link rows still reference the row. */
+    public boolean referencedByPlagiarismCohortLinkPlagiarismAccountId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_PLAGIARISM_COHORT_LINK_PLAGIARISM_ACCOUNT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Whether live lms.plagiarism_report rows still reference the row. */
+    public boolean referencedByPlagiarismReportPlagiarismAccountId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_PLAGIARISM_REPORT_PLAGIARISM_ACCOUNT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Whether live lms.plagiarism_user_link rows still reference the row. */
+    public boolean referencedByPlagiarismUserLinkPlagiarismAccountId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_PLAGIARISM_USER_LINK_PLAGIARISM_ACCOUNT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    private static List<Object> sortValues(SortSpec sort, PlagiarismAccountEntity e) {
+        return sort.orders().stream().map(o -> SORT_VALUES.get(o.field().name()).apply(e)).toList();
+    }
+
+    private static PlagiarismAccountEntity map(ResultSet rs, int row) throws SQLException {
+        return PlagiarismAccountEntity.builder()
+                .id(rs.getObject("id", UUID.class))
+                .tenantId(rs.getObject("tenant_id", UUID.class))
+                .provider(rs.getString("provider"))
+                .accountRef(rs.getString("account_ref"))
+                .subAccountRef(rs.getString("sub_account_ref"))
+                .apiUrl(rs.getString("api_url"))
+                .sharedSecretEnc(rs.getString("shared_secret_enc"))
+                .isDefault(rs.getObject("is_default", Boolean.class))
+                .defaultTeacherUserId(rs.getObject("default_teacher_user_id", UUID.class))
+                .defaultTeacherEmail(rs.getString("default_teacher_email"))
+                .defaultTeacherFirstName(rs.getString("default_teacher_first_name"))
+                .defaultTeacherLastName(rs.getString("default_teacher_last_name"))
+                .createdAt(rs.getObject("created_at", OffsetDateTime.class))
+                .createdBy(rs.getObject("created_by", UUID.class))
+                .updatedAt(rs.getObject("updated_at", OffsetDateTime.class))
+                .updatedBy(rs.getObject("updated_by", UUID.class))
+                .deletedAt(rs.getObject("deleted_at", OffsetDateTime.class))
+                .rowVersion(rs.getInt("row_version"))
+                .build();
+    }
+
+    private static FieldSpec field(String name, String column, ValueType type) {
+        return new FieldSpec(name, column, type);
+    }
+
+    private static Map<String, FieldSpec> fields(FieldSpec... specs) {
+        return Arrays.stream(specs).collect(Collectors.toUnmodifiableMap(FieldSpec::name, s -> s));
+    }
+}

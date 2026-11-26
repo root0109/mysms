@@ -70,8 +70,7 @@ public class CourseResolver extends CourseServiceGrpc.CourseServiceImplBase {
     public void updateCourse(UpdateCourseRequest request, StreamObserver<UpdateCourseResponse> out) {
         Course updated = service.updateCourse(bridge.id(request.getCourse().getId(), "id"),
                 bridge.requiredIfMatch(request.getCourse().getEtag()),
-                bridge.changes(request.getCourse(), request.getUpdateMask(), CourseUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getCourse(), request.getUpdateMask(), CourseUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCourseResponse.newBuilder(), "course", updated).build());
     }
 
@@ -108,7 +107,7 @@ public class CourseResolver extends CourseServiceGrpc.CourseServiceImplBase {
         CourseSubject updated = service.updateCourseSubject(bridge.id(request.getCourseId(), "courseId"),
                 bridge.id(request.getCourseSubject().getId(), "id"), bridge.requiredIfMatch(request.getCourseSubject().getEtag()),
                 bridge.changes(request.getCourseSubject(), request.getUpdateMask(), CourseSubjectUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCourseSubjectResponse.newBuilder(), "course_subject", updated).build());
     }
 

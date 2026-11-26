@@ -61,8 +61,8 @@ public class GradeLevelController implements GradeLevelApi {
 
     @Override
     public ResponseEntity<GradeLevel> updateGradeLevel(UUID gradeLevelId, String ifMatch,
-            GradeLevelUpdate gradeLevelUpdate, String updateMask, Boolean validateOnly) {
-        GradeLevel updated = gradeLevelService.updateGradeLevel(gradeLevelId, ifMatch, gradeLevelUpdate, updateMask,
+            GradeLevelUpdate gradeLevelUpdate, Boolean validateOnly) {
+        GradeLevel updated = gradeLevelService.updateGradeLevel(gradeLevelId, ifMatch, gradeLevelUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

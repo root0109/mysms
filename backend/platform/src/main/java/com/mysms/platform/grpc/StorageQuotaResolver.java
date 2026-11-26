@@ -63,7 +63,7 @@ public class StorageQuotaResolver extends StorageQuotaServiceGrpc.StorageQuotaSe
                 bridge.id(request.getStorageQuota().getId(), "id"),
                 bridge.requiredIfMatch(request.getStorageQuota().getEtag()),
                 bridge.changes(request.getStorageQuota(), request.getUpdateMask(), StorageQuotaUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStorageQuotaResponse.newBuilder(), "storage_quota", updated).build());
     }
 

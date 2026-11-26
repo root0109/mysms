@@ -23,7 +23,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.finance.config.FinanceDatabaseConfig;
 import com.mysms.finance.config.FinanceEventsConfig;
 import com.mysms.finance.domain.PaymentGatewayAccountEntity;
@@ -54,10 +54,6 @@ public class PaymentGatewayAccountService extends AppTransactionManager implemen
     static final String PERMISSION_CREATE = "finance.payment_gateway_account.create";
     static final String PERMISSION_UPDATE = "finance.payment_gateway_account.update";
     static final String PERMISSION_DELETE = "finance.payment_gateway_account.delete";
-    /** The contract's PaymentGatewayAccountUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("keySecret", "webhookSecret", "institutionId", "gatewayName", "displayName", "merchantId", "keyId",
-            "currencyId", "isDefault", "isActive");
 
 
     private final PaymentGatewayAccountRepository repository;
@@ -141,13 +137,12 @@ public class PaymentGatewayAccountService extends AppTransactionManager implemen
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set. The merged row is validated as a whole, and must stay within the caller's scope.
      */
     public PaymentGatewayAccount updatePaymentGatewayAccount(UUID id, String ifMatch,
-            PaymentGatewayAccountUpdate changes, String updateMask, boolean validateOnly) {
+            PaymentGatewayAccountUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             PaymentGatewayAccountEntity entity = loadVisible(scope, id);
@@ -155,7 +150,7 @@ public class PaymentGatewayAccountService extends AppTransactionManager implemen
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validateExcept(dto(entity), SECRETS);
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -235,26 +230,20 @@ public class PaymentGatewayAccountService extends AppTransactionManager implemen
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /**
-     * Applies the selected PaymentGatewayAccountUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
-    private void apply(PaymentGatewayAccountEntity entity, PaymentGatewayAccountUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "keySecret" -> sealKeySecret(entity, changes.getKeySecret());
-                case "webhookSecret" -> sealWebhookSecret(entity, changes.getWebhookSecret());
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "gatewayName" -> entity.setGatewayName(changes.getGatewayName());
-                case "displayName" -> entity.setDisplayName(changes.getDisplayName());
-                case "merchantId" -> entity.setMerchantId(changes.getMerchantId());
-                case "keyId" -> entity.setKeyId(changes.getKeyId());
-                case "currencyId" -> entity.setCurrencyId(changes.getCurrencyId());
-                case "isDefault" -> entity.setIsDefault(changes.getIsDefault());
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private List<String> apply(PaymentGatewayAccountEntity entity, PaymentGatewayAccountUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("keySecret", changes.getKeySecret(), v -> sealKeySecret(entity, v));
+        patch.apply("webhookSecret", changes.getWebhookSecret(), v -> sealWebhookSecret(entity, v));
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("gatewayName", changes.getGatewayName(), entity::setGatewayName);
+        patch.apply("displayName", changes.getDisplayName(), entity::setDisplayName);
+        patch.apply("merchantId", changes.getMerchantId(), entity::setMerchantId);
+        patch.apply("keyId", changes.getKeyId(), entity::setKeyId);
+        patch.apply("currencyId", changes.getCurrencyId(), entity::setCurrencyId);
+        patch.apply("isDefault", changes.getIsDefault(), entity::setIsDefault);
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

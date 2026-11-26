@@ -123,17 +123,17 @@ public class TaskController implements TaskApi {
 
     @Override
     public ResponseEntity<Task> updateTask(UUID taskId, String ifMatch, TaskUpdate taskUpdate,
-            String updateMask, Boolean validateOnly) {
-        Task updated = taskService.updateTask(taskId, ifMatch, taskUpdate, updateMask,
+            Boolean validateOnly) {
+        Task updated = taskService.updateTask(taskId, ifMatch, taskUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<TaskAssignee> updateTaskAssignee(UUID taskId, UUID taskAssigneeId,
-            String ifMatch, TaskAssigneeUpdate taskAssigneeUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, TaskAssigneeUpdate taskAssigneeUpdate, Boolean validateOnly) {
         TaskAssignee updated =
-                taskService.updateTaskAssignee(taskId, taskAssigneeId, ifMatch, taskAssigneeUpdate, updateMask,
+                taskService.updateTaskAssignee(taskId, taskAssigneeId, ifMatch, taskAssigneeUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

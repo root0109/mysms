@@ -24,7 +24,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.platform.config.PlatformDatabaseConfig;
 import com.mysms.platform.config.PlatformEventsConfig;
 import com.mysms.platform.domain.TenantEntity;
@@ -50,11 +50,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class TenantService extends AppTransactionManager {
 
     public static final String AGGREGATE = TenantEntity.TABLE;
-    /** The contract's TenantUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("code", "name", "legalName", "status", "primaryEmail", "primaryPhone", "countryId",
-                    "defaultCurrencyId",
-            "timezone", "locale");
 
 
     private final TenantRepository repository;
@@ -125,12 +120,11 @@ public class TenantService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match. A field the request leaves out is kept, a null one is cleared and a
+     * value is set (§7.2). The merged row is validated as a whole, and must stay within the caller's scope.
      */
-    public Tenant updateTenant(UUID id, String ifMatch, TenantUpdate changes, String updateMask, boolean validateOnly) {
+    public Tenant updateTenant(UUID id, String ifMatch, TenantUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInGlobalWriteTransaction(() -> {
             try (CallContextHolder.Scope global = CallContextHolder.withoutTenant()) {
                 DataScope scope = DataScope.global();
@@ -139,7 +133,7 @@ public class TenantService extends AppTransactionManager {
                 if (entity.getRowVersion() != expected) {
                     throw new PreconditionFailedException("If-Match does not match the current ETag.");
                 }
-                apply(entity, changes, fields);
+                List<String> fields = apply(entity, changes);
                 validator.validate(mapper.toDto(entity));
                 assertValid(entity, false);
                 scope.requireWritable(institutionOf(entity));
@@ -241,24 +235,20 @@ public class TenantService extends AppTransactionManager {
         return Optional.empty();
     }
 
-    /** Applies the selected TenantUpdate fields; explicit per field so a mask can clear values (no reflection). */
-    private static void apply(TenantEntity entity, TenantUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "code" -> entity.setCode(changes.getCode());
-                case "name" -> entity.setName(changes.getName());
-                case "legalName" -> entity.setLegalName(changes.getLegalName());
-                case "status" -> entity.setStatus(Optional.ofNullable(changes.getStatus()).map(v -> v.getValue())
-                        .orElse(null));
-                case "primaryEmail" -> entity.setPrimaryEmail(changes.getPrimaryEmail());
-                case "primaryPhone" -> entity.setPrimaryPhone(changes.getPrimaryPhone());
-                case "countryId" -> entity.setCountryId(changes.getCountryId());
-                case "defaultCurrencyId" -> entity.setDefaultCurrencyId(changes.getDefaultCurrencyId());
-                case "timezone" -> entity.setTimezone(changes.getTimezone());
-                case "locale" -> entity.setLocale(changes.getLocale());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(TenantEntity entity, TenantUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("code", changes.getCode(), entity::setCode);
+        patch.apply("name", changes.getName(), entity::setName);
+        patch.apply("legalName", changes.getLegalName(), entity::setLegalName);
+        patch.apply("status", changes.getStatus(), v -> entity.setStatus(v == null ? null : v.getValue()));
+        patch.apply("primaryEmail", changes.getPrimaryEmail(), entity::setPrimaryEmail);
+        patch.apply("primaryPhone", changes.getPrimaryPhone(), entity::setPrimaryPhone);
+        patch.apply("countryId", changes.getCountryId(), entity::setCountryId);
+        patch.apply("defaultCurrencyId", changes.getDefaultCurrencyId(), entity::setDefaultCurrencyId);
+        patch.apply("timezone", changes.getTimezone(), entity::setTimezone);
+        patch.apply("locale", changes.getLocale(), entity::setLocale);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

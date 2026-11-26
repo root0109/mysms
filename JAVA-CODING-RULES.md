@@ -49,6 +49,8 @@ explains *why*, never *what* the next line does.
 
 ## 2. Maven multi-module layout
 
+> Amended by §2.2: a domain module serves one or more areas, each one schema.
+
 One repository, one parent POM, **flat modules — no nesting, no second level**. One Maven module per database schema; each domain module **is** its own microservice. Module names carry no product prefix — the groupId (`com.mysms`) namespaces the artifacts.
 
 ```
@@ -171,7 +173,25 @@ grpc.client.academics-service.address=${MYSMS_ACADEMICS_GRPC_ADDRESS:in-process:
 
 ---
 
+### 2.2 Modules of areas (ARC-7 amendment, owner decision DEC-19)
+
+> Added with the kernel-and-products reorganisation ([MODULE-AND-PRODUCT-REORGANISATION.md](docs/design/MODULE-AND-PRODUCT-REORGANISATION.md) §3, §11). Where §2, §3, §10.5 and §14 say *module* for a schema, its contract or its packages, read **area**; every rule of those sections still holds, per area.
+
+- **An area** is one database schema with its contract: its protos (`mysms.<area>.v1`), its operation table (`META-INF/mysms/operations/<area>.json`), its URL prefix (`/v1/<area>`), its configuration namespace (`mysms.<area>.*`), its `ModuleDatabase`, transaction manager, outbox, Flyway history (`database/migrations/<area>`) and service identity. Areas keep the 22 names of the former modules; contracts, operation ids, permission codes and schemas did not change.
+- **A domain module** (still a flat Maven module, still its own microservice) serves one or more areas. Its pom packages each area's migration folder (`${mysms.migrations.dir}/<area>`): that list *is* the module's set of areas, read by conformance and by `ModuleChecks.moduleSchemas`. The ten modules: `platform` (platform, master, org), `identity` (iam, people), `privacy`, `comms` (kernel); `hrms` (hr, payroll); `students` (sis, admission, careers), `academics` (academics, timetable, attendance, assessment), `finance`, `campus` (library, transport, frontoffice, facility); `learning` (lms).
+- **Packages.** An area named like its module uses the module's root package `com.mysms.<module>` with the §3 layer packages; any other area uses `com.mysms.<module>.<area>` with the same layer packages. Nothing else lives under `com.mysms.<module>` but the one `<Module>Application` (`@SpringBootApplication(nameGenerator = FullyQualifiedAnnotationBeanNameGenerator.class)`, so two areas may each have, say, a `PersonMapper`). A module serving several areas sets `mysms.spotbugs.onlyAnalyze` to its root package and every layer package of every area (conformance §3).
+- **Inside a module** an area may read and join its sibling areas' schemas and declare foreign keys into them (`ModuleChecks.foreignSchemaReferences(moduleSchemas, …)`, conformance §14 allow the module's own schemas); across modules everything in §10 and §14 holds unchanged. An area may still call a sibling area over gRPC (the in-process server); replacing such calls by direct Java calls between the areas' business services is allowed and preferred.
+- **Configuration.** One `application.properties` per module: `spring.application.name=<module>`, `mysms.auth.modules[i]` = its areas, then each area's keys (`mysms.<area>.*`). Callers address an area's gRPC service at its module's host (`dns:///<module>-service…`, `MYSMS_<MODULE>_SERVICE_PORT_RPC`); the per-area variable `MYSMS_<AREA>_GRPC_ADDRESS` still overrides it.
+- **gRPC callers.** A module may call what any of its areas may (the union of their ARCHITECTURE §2 rows), from any of its areas' `integration` packages (G1, G4).
+- **OpenAPI.** core publishes one springdoc group per area (`OpenApiGroupsEnvironmentPostProcessor`: `/v3/api-docs/<area>`, paths `/v1/<area>/**`); each area's `<Area>OpenApiComponentTest` boots its module and writes `backend/<module>/target/openapi/<area>/api-docs.yml`, the input of that area's SDK namespace (G8).
+- **Tests.** One `ModuleBoundaryTest` per module (over all its areas); component tests boot the module (`<Module>Application`) and register every area's database (`TestDatabase.register(registry, "<area>", …)`); component-test resources sit in a folder per area (`<area>/crud-spec.json`).
+- **Products.** Kernel modules (platform, identity, privacy, comms) serve every product and know none; a product module depends only on the kernel, except school → hrms by id and events (design §2). Learning never depends on school modules.
+
+---
+
 ## 3. Package layout inside a domain module
+
+> Amended by §2.2: the layout below is per area — `com.mysms.<module>` for the area named like its module, `com.mysms.<module>.<area>` for the others.
 
 Single service-root package per module: `com.mysms.<module>`. Map by **layer role**:
 
@@ -249,7 +269,7 @@ The write sequence itself is still law, just written out visibly in each method:
 
 **Audit + outbox are not optional.** Every create/update/patch/soft-delete writes its audit event (materialised into `platform.audit_log` by the platform module) and, when other modules care, a domain event — both as rows of the module's own `outbox_event`, **in the same transaction** as the aggregate row — via the explicit `auditWriter`/`outboxWriter` calls, no annotation-driven audit of any kind. If a service mutates a row and cannot point at the audit entry it produced, the change is non-compliant. Reviewers check for the calls; there is no framework to do it silently.
 
-**Patch flow rule:** apply the partial to the loaded entity, then **re-validate the full DTO** produced from the merged entity before persisting. A patch can never produce a state that `create` would have rejected.
+**Patch flow rule:** apply the partial to the loaded entity, then **re-validate the full DTO** produced from the merged entity before persisting. A patch can never produce a state that `create` would have rejected. The partial is the PATCH body's `Optional` fields, applied one explicit line each through core's `Patches` (§7.2, §8.3).
 
 **Identity established by the service itself.** Sign-in, token refresh and the startup bootstrap act before the edge has bound a tenant: they resolve it (tenant code, refresh-token prefix, bootstrap setting), then run their transactions inside `CallContextHolder.callAs(context.withIdentity(tenant, user), …)`, so `database.bindTenant()` binds the right tenant and audit/outbox rows carry it. A transaction that binds no tenant exists only for a module's global tables (catalogues, `iam.tenant_directory`); row-level security still fails closed there.
 
@@ -440,24 +460,70 @@ import com.mysms.academics.api.model.SubjectUpdate;  // its writable fields only
 import com.mysms.core.paging.PagingInfo;              // every list: data + paging (NavigationInfo)
 ```
 
-- **Required or optional is stated by the field:** a property the contract requires is a plain field; an optional one is `@Nullable` (collections included, even when initialised empty). Core's `OpenApiConfiguration` writes the document's `required` lists from that, and never writes a `null` type (MySMS never sends null), so the generated clients get the contract's types.
+- **Required or optional is stated by the field:** a property the contract requires is a plain field; an optional one is `@Nullable` (collections included, even when initialised empty). Core's `OpenApiConfiguration` writes the document's `required` lists from that, and never writes a `null` type (MySMS never sends null), so the generated clients get the contract's types. The one exception is a PATCH body (§7.2): none of its fields is required, and a clearable one (type argument neither `@NotNull` nor `@NotBlank`) keeps `"null"` in its type, because JSON null is how a client clears it.
+- **`@Valid` goes on the type argument, never on the container:** `List<@Valid InvoiceLine> lines`, `Optional<@Valid Address> address`, never `@Valid List<InvoiceLine> lines` (Hibernate Validator deprecates the container form, HV000271). A container of plain values (`List<String> sort`) carries no `@Valid` at all — there is nothing to cascade into. Nor does an untyped `Object` body (HV000272: it may be a container at runtime). Conformance D2 checks the contracts.
 - Contract DTOs are mutable beans with `@JsonInclude(NON_NULL)` (the contract omits absent values) and Jakarta constraints (`@NotNull`, `@Size`, `@Min`/`@Max`, `@Pattern`). Because the contract interfaces mark bodies `@Valid`, shape errors are rejected before a controller runs (422 `VALIDATION_FAILED`, parameter errors 400).
 - **Validation is still explicit in the write path:** the business service calls `DtoValidator.validate(dto)` on create, and again on the merged model after a partial update (§4 patch rule); business invariants (codes, cross-row rules, logical references) are named private methods that collect every failing field into one 422.
 - **Output-only fields** (`id`, `createTime`, `updateTime`, `createdBy`, `updatedBy`, `etag`) appear in the resource DTO but are never read from a request: mappers ignore them on the way in (§8).
 
 **7.1a One JSON mapper, built by hand.** Every Jackson use in the process — HTTP bodies, page cursors, events, the OpenAPI table — goes through the one `JsonMapper` core declares (`JsonMappers.create()`, taken from `common`'s `CommonConfig`): ISO-8601 dates in UTC, unknown properties ignored (additive contract changes), a primitive set to null refused (an absent one takes its default since Jackson 3.2, so contract DTOs carry no primitives), a single value never accepted for a list, properties in declaration order, enums by name in any letter case and never by number, UUIDs only in canonical form, boxed booleans only as true/false, members without a view in every view, and the Jackson modules on the classpath registered. The bean is named `jacksonJsonMapper`, Boot's own name, so Boot's auto-configured mapper backs off for it; no module builds its own `JsonMapper`/`ObjectMapper` or customizes the shared one.
 
-**7.2 Partial updates: `PATCH` + the `<Resource>Update` DTO + `updateMask`.** The Update DTO carries only the writable fields, as plain nullable properties — never `Optional<>` fields or other three-state wrappers. `core`'s `UpdateMask` decides which fields apply: with `updateMask`, exactly the listed fields (a listed field absent from the body is cleared; clearing a required field is a 422); without it, the non-null body fields. Unknown or non-writable names → 400.
+**7.2 Partial updates: `PATCH` + the `<Resource>Update` DTO with `Optional` fields (owner decision; PATCH APIs only).** Every PATCH operation — every one that exists and every one built later — takes the reference service's shape: the `<Resource>Update` DTO carries only the writable fields, each wrapped in `Optional<…>`, with the Bean Validation constraints on the **type argument**, and no field is ever initialised. The JSON body alone decides what changes; there is no `updateMask` query parameter. Three states, one per field:
+
+| JSON body | DTO field | Effect on the column |
+|---|---|---|
+| property absent | `null` | untouched |
+| `"field": null` | `Optional.empty()` | cleared — a 422 when the type argument is `@NotNull`/`@NotBlank`: a required column can change, never be cleared |
+| `"field": value` | `Optional.of(value)` | set (after the type argument's constraints pass) |
+
+A write-only secret (§4) is replaced, never wiped: its type argument is `@NotNull` (`Optional<@NotNull String> keySecret`), so JSON null is a 422 and an absent one keeps the stored envelope — unless the contract documents that null removes it (an optional integration key such as lms `Settings.unsplashAccessKey`). Shape checks a service runs on the request before applying it read a field through `Patches.value(changes.getX())`. The rule is for PATCH bodies only: every other contract DTO (resources, create bodies, workflow requests, responses) keeps plain nullable properties, and an `Optional` field anywhere else is a D2 violation. Unknown properties are ignored like on every body (§7.1a). The service applies each field with one explicit line through core's `Patches` (§8.3) — never reflection, never MapStruct — then **re-validates the merged DTO** and runs its business checks exactly as before (§4 patch flow rule). Over gRPC the update keeps `Update<Resource>Request` + `FieldMask`, and `ProtoBridge.changes` builds the same three states from it: a masked field the message holds is its value, a masked field it does not hold is null (cleared; a masked bool or number is sent as its default so a mask can switch a flag off), an unmasked field is absent (unchanged) — a list field is never replaced unless masked. Every module is on this shape: core's `UpdateMask`, `ProtoBridge.updateMask`, D2's transitional allow-list and the clients' masked-update branch are gone, and conformance D2 checks every PATCH contract.
 
 ```java
-// ✗ three-state Optional fields decide what a patch changes
-private Optional<@NotBlank @Size(max = 255) String> name;
-private Optional<UUID> parentId;
+// ✗ plain nullable properties + an updateMask query parameter decide what a patch changes
+private @Nullable String name;
+List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
+// ✗ an initialised field (absent and "set to the default" become one state) / constraints on the container
+private Optional<String> note = Optional.empty();
+@Size(max = 255) private Optional<String> name;
 
-// ✓
-List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);   // WRITABLE = the SubjectUpdate fields
-apply(entity, changes, fields);                                          // §8: one case per field
+// ✓ api/model/FeeHeadUpdate.java — the PATCH body: constraints on the type argument, nothing initialised
+public class FeeHeadUpdate {
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable Optional<@NotNull @Size(max = 150) String> name;        // may change, never be cleared
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable Optional<String> description;                           // JSON null clears it
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable Optional<@Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> defaultAmount;
+
+  @JsonProperty("name")
+  public @Nullable Optional<String> getName() { return name; }
+
+  @JsonProperty("name")
+  public void setName(@Nullable Optional<String> name) { this.name = name; }
+  // … one getter/setter pair per field, as generated
+}
+
+// ✓ business/FeeHeadService.java — one explicit line per field; answers the applied names for the audit record
+private static List<String> apply(FeeHeadEntity entity, FeeHeadUpdate changes) {
+    Patches patch = new Patches();
+    patch.apply("name", changes.getName(), entity::setName);
+    patch.apply("description", changes.getDescription(), entity::setDescription);
+    patch.apply("defaultAmount", changes.getDefaultAmount(), v -> entity.setDefaultAmount(WireValues.decimal(v)));
+    return patch.applied();
+}
+
+// ✓ the update method: apply, re-validate the merged DTO, business checks — unchanged
+List<String> fields = apply(entity, changes);
+validator.validate(mapper.toDto(entity));
+assertValid(entity, false);
+…
+audit.recordUpdate(AGGREGATE, id, fields);
 ```
+
+Two flaws of the reference service are **not** copied: patching through MapStruct (`@MappingTarget` with a null-value strategy — §8.3 still bans it), and gRPC list fields that are always replaced (here an unmasked list is absent, so unchanged). Each resource's `crud-spec.json` entry names a clearable field (`patch.clears`) and a required one (`patch.keeps`), and the CRUD contract test checks all three states on them.
 
 **7.3 One update method: PATCH.** A resource is never replaced as a whole with `PUT` next to its `PATCH`. `PUT` exists only where the contract defines an idempotent *set the value at this key* operation (today `iam.SetMySetting`; conformance D2 checks the contracts).
 
@@ -531,7 +597,7 @@ public interface CountryMapper {
 }
 ```
 
-**8.3 A partial update is applied by explicit code in the service, never by MapStruct.** No `@MappingTarget` update/patch methods, no `NullValuePropertyMappingStrategy` / `NullValueCheckStrategy`: the service's `apply(entity, changes, fields)` has one `case` per writable field. Stated reason: update-mask semantics (clear a listed field, skip an unlisted one) cannot be expressed by a null-value strategy, and an explicit switch is reviewable and reflection-free.
+**8.3 A partial update is applied by explicit code in the service, never by MapStruct.** No `@MappingTarget` update/patch methods, no `NullValuePropertyMappingStrategy` / `NullValueCheckStrategy`: the service's `apply(entity, changes)` has one `Patches.apply(name, changes.getX(), setter)` line per writable field of the PATCH body (§7.2), and answers the applied names for the audit record. Stated reason: the three states of a PATCH field (absent: keep, null: clear, value: set) cannot be expressed by a null-value strategy, which cannot tell absent from null, and an explicit line per field is reviewable and reflection-free.
 
 ```java
 // ✗
@@ -539,14 +605,11 @@ public interface CountryMapper {
 void patch(OrganizationPartialDTO partial, @MappingTarget Organization target);
 
 // ✓ business service
-private static void apply(SubjectEntity entity, SubjectUpdate changes, List<String> fields) {
-    for (String field : fields) {
-        switch (field) {
-            case "code" -> entity.setCode(changes.getCode());
-            case "name" -> entity.setName(changes.getName());
-            default -> throw new IllegalStateException("unhandled writable field " + field);
-        }
-    }
+private static List<String> apply(SubjectEntity entity, SubjectUpdate changes) {
+    Patches patch = new Patches();
+    patch.apply("code", changes.getCode(), entity::setCode);
+    patch.apply("name", changes.getName(), entity::setName);
+    return patch.applied();
 }
 ```
 
@@ -862,6 +925,8 @@ An exception nobody maps answers 503 `UNAVAILABLE` with no detail of the callee.
 
 ### 10.5 The OpenAPI document of every module
 
+> Amended by §2.2: one document per area, `/v3/api-docs.yaml/<area>` written to `backend/<module>/target/openapi/<area>/api-docs.yml` by `<Area>OpenApiComponentTest`.
+
 Every module has `src/component-test/java/com/mysms/<module>/<Module>OpenApiComponentTest.java`, the reference
 service's mechanism: boot the module on a random port, fetch `/v3/api-docs.yaml` with
 `Accept: application/vnd.oai.openapi`, check it, and write it to **`backend/<module>/target/openapi/api-docs.yml`**.
@@ -1012,10 +1077,24 @@ Adopted unchanged from the source ADR, including source roots and naming:
 
 ## 14. Migrations (Flyway) — authoring rules
 
+> Amended by §2.2: per area (`database/migrations/<area>`); an area's migration may reference its module's sibling schemas, never another module's.
+
 The platform-wide migration principles of the source, applied to MySMS's existing Flyway layout (`database/migrations/<module>/V<release>_<module-order>_<seq>__description.sql`):
 
 - **Until the first release, one baseline per module.** Each module has exactly one script, `V1_<module-order>_001__<module>_baseline.sql`, which by itself builds the module's final schema and catalogue data. A change edits it in place the way a DBA would write it from scratch: a new column goes into the `CREATE TABLE` (business columns before the audit/version columns), a changed constraint or index replaces the old one, a comment replaces the old comment, a new table sits next to its related tables with its comments, indexes and RLS, and catalogue rows are inserted in their final form. No incremental `V1_…_002` script, no backfill.
 - A migration, the baseline included, touches only its own module's schema; a foreign key never crosses schemas — a reference into another module is an indexed uuid column registered in `database/logical-references.md` (regenerate with the schema docs).
+- **Foreign keys: inside a module yes, across modules never (owner rule, sacred — never relaxed, no exception, no
+  waiver).** A foreign key may join tables of one area or of sibling areas of the same module: a module's schemas
+  always live together on one database instance, so the key is always enforceable. A foreign key into another
+  module's schema is forbidden in every case; that reference is a logical reference (an indexed uuid column, §2.1
+  "Logical references", `database/logical-references.md`). Conformance §14 fails the build on a cross-module key.
+
+  ```sql
+  -- ✓ hrms: payroll → hr (sibling areas of one module)
+  ALTER TABLE payroll.staff_salary ADD CONSTRAINT fk_staff_salary_staff_id
+      FOREIGN KEY (staff_id, tenant_id) REFERENCES hr.staff (id, tenant_id);
+  -- ✗ academics → hrms (another module): never; academics.teacher_subject.staff_id stays a logical reference
+  ```
 - After the first release: one logical change per migration file; descriptive name; the owning module's folder.
 - Released migrations are immutable (§1.2). Post-go-live changes are backward-compatible with the previous running binary: add nullable/defaulted columns, add tables/indexes (`CONCURRENTLY` outside transactions where needed); renames and drops are expand-contract across two releases; `NOT NULL` lands as `NOT VALID` + `VALIDATE` after backfill.
 - Every new table carries the full MySMS audit set, tenant column + RLS policy, comments on every column, and partial-unique business keys per `database/README.md`. Naming follows the schema's existing conventions (`pk_/fk_/uq_/ix_/ck_` prefixes) — consistency with this schema outranks any other naming scheme.
@@ -1043,7 +1122,7 @@ Adapted from the source's design-compliance aspect list; a reviewer (human or ag
 | R4 | New cross-module reference columns are validated through the owner's gRPC service before the write, indexed, registered in `logical-references.md`, and handled in the owner's delete/archive event consumer |
 | M1 | Every mapper uses the module's one `@MapperConfig` (`unmappedTargetPolicy=ERROR`); the way in ignores id, tenant and the whole audit set; no null-value strategies, no `@MappingTarget` patching, no logic or state in mappers (§8) |
 | D1 | No entity beyond the business layer; DTOs match the contract; Update DTO contains only writable fields |
-| D2 | Transport DTOs only in the api/model contract package (no ad-hoc `*DTO` classes); PATCH + `updateMask` (no `Optional` fields, no PUT replace); contract shapes only (`<Resource>List`, 204 delete, no envelopes); read mask via `ReadMask` (no `@JsonView`/`ResponseBodyAdvice`) (§7) |
+| D2 | Transport DTOs only in the api/model contract package (no ad-hoc `*DTO` classes); PATCH with an `Optional`-field `<Resource>Update` and no `updateMask` (§7.2; `Optional` nowhere else; no PUT replace); `@Valid` on type arguments, never on containers; contract shapes only (`<Resource>List`, 204 delete, no envelopes); read mask via `ReadMask` (no `@JsonView`/`ResponseBodyAdvice`) (§7) |
 | N1 | Entities: exact audit set (`OffsetDateTime`, nullable `deletedAt`, `rowVersion`, UUIDv7), exact Lombok, no Jackson/mapping annotations, no view data, no `Map` columns; projections are records in `repository/`; the table named through `TABLE`; hooks called by the service with actor and clock (§5) |
 | R5 | Repositories are plain `@Repository` classes: no repository interfaces, derived queries, `@Query` or `*Impl` fragments; no SQL built at runtime from names or metadata; no database functions; keyset paging (§6) |
 | L1 | After-commit code (cache refresh, notification triggers) writes no business rows and runs only after a successful commit |
@@ -1132,7 +1211,7 @@ String token = TOKENS.tenantUser(TENANT, user, "academics.subject.create");     
 ## Appendix A — what was deliberately NOT adopted
 
 - **Nested Maven modules and per-module `-contract`/`-client`/`-service`/`-boot` artifacts** — per project decision the layout is flat: one module per schema owning its own contract package and protos, no shared client module, exec-classifier jars instead of `-boot` launchers.
-- **Per-operation springdoc annotation blocks and ad-hoc `*DTO` classes** (`@Operation`/`@ApiResponse` walls on every method; `*DTO` classes with `Optional` fields for patches; custom paging and success envelopes; `@JsonView` / response-body advice for slim responses) — MySMS's contract interfaces carry the Spring mappings and validation, core's `OpenApiConfiguration` restores ids, permissions and security document-wide, patches use `updateMask`, and responses are the contract's shapes and the read mask (§7).
+- **Per-operation springdoc annotation blocks and ad-hoc `*DTO` classes** (`@Operation`/`@ApiResponse` walls on every method; ad-hoc `*DTO` classes, patches included; custom paging and success envelopes; `@JsonView` / response-body advice for slim responses) — MySMS's contract interfaces carry the Spring mappings and validation, core's `OpenApiConfiguration` restores ids, permissions and security document-wide, patches use the contract's own `<Resource>Update` with `Optional` fields (the reference pattern, adopted by owner decision — §7.2) applied by explicit service code, never MapStruct, and responses are the contract's shapes and the read mask (§7).
 - **Spring Data repository interfaces and framework lifecycle callbacks** (`CrudRepository`, derived queries, `@Query`, `*Impl` fragments, `BeforeSaveCallback` stamping audit columns) — repositories are plain classes and the service calls the hooks (§5.8, §6).
 - **A generic `BaseController` / `BaseEntityMapper` and one catch-all `BusinessException`** — controllers implement the contract interfaces, each module has one mapper configuration, and failures are typed (§8, §9, §11.3).
 - **Token parsing in each module** (a per-module JWT filter in the module's own source) — one auth facade (`auth-client`) verifies the token; the permissions filter it supplies runs in every module (§16.1, §16.2). Publishing API permissions to iam *is* adopted (§16.2); taking the decision out of the serving process is not.
@@ -1158,8 +1237,8 @@ String token = TOKENS.tenantUser(TENANT, user, "academics.subject.create");     
 | §4 | canonical-template-reference.md §1–§4, §12–§13, §23–§24, §30; layer-reference.md | the write-path *obligations*: one-tx writes, lifecycle hooks, audit+outbox in-tx, 412 on stale version | generic base service, listener pipeline and `MapperContext` rejected — plain per-aggregate services; `@Transactional` and `TransactionTemplate` replaced by programmatic `PlatformTransactionManager`; re-based from Spring Data JDBC onto JdbcClient |
 | §5 | data-model.md, canonical §9, §22 | BaseEntity + hooks, no plain POJOs, records for projections | TaggedEntity default narrowed: MySMS tags via platform.tag_assignment where the schema says so |
 | §6 | ADR bi-java-0001, canonical §10, §16, §24, §26, §32 | explicit SQL, batch template, sort allowlists, no N+1 | no repository derivation at all; tenant predicate + RLS added |
-| §7 | rest-api.md DTO + Partial DTO sections | DTO/entity separation; partial-update DTOs carry only writable fields | DTOs are owned source in the module's `api/model` package instead of hand-written Lombok classes; three-way patch semantics come from `updateMask` (core `UpdateMask`) instead of `Optional` fields |
-| §8 | canonical §6, §8; design-review M1 | id/audit ignores on the way in, AfterMapping discipline | per-module `@MapperConfig` + per-aggregate mappers instead of the generic BaseEntityMapper (the contract DTOs share no base type); unmappedTargetPolicy=ERROR made mandatory; partial updates applied by an explicit per-field switch (update-mask semantics); MapperContext transport binding dropped with the service template |
+| §7 | rest-api.md DTO + Partial DTO sections | DTO/entity separation; partial-update DTOs carry only writable fields | DTOs are owned source in the module's `api/model` package instead of hand-written Lombok classes; three-way patch semantics come from the reference service's `Optional` fields (owner decision, PATCH bodies only; `updateMask` dropped), applied by core `Patches` instead of MapStruct; gRPC lists are replaced only when masked |
+| §8 | canonical §6, §8; design-review M1 | id/audit ignores on the way in, AfterMapping discipline | per-module `@MapperConfig` + per-aggregate mappers instead of the generic BaseEntityMapper (the contract DTOs share no base type); unmappedTargetPolicy=ERROR made mandatory; partial updates applied by one explicit `Patches` line per field (absent / null / value); MapperContext transport binding dropped with the service template |
 | §9 | canonical §7, §20; ADR bi-0007 | thin controllers, explicit validator call, single exception handler, `PagingInfo`/`NavigationInfo`/`PagingUtil` list responses | status map replaced by MySMS api/README (ETag/412, Idempotency-Key); the paging under `PagingInfo` is keyset-by-cursor with a capped offset for page jumps instead of plain offset |
 | §10 | canonical §14, §27; ADR bi-0008 | shared business service, proto-as-T, status parity | field-numbers lock is MySMS's own mechanism |
 | §11 | rest-api.md validation mapping; ADR bi-0007 §3 | typed exceptions, code registry discipline, no-PII details | codes from MySMS problem+json registry |

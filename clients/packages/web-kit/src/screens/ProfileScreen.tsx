@@ -206,7 +206,7 @@ function ContactForm({
     if (!etag) return;
     const dirty = Object.keys(form.formState.dirtyFields) as Field[];
     if (dirty.length === 0) return;
-    // a cleared field is sent as null with its name in the update mask, so the server clears it
+    // only the changed fields are sent; a cleared one is sent as null, so the server clears it
     const changes = Object.fromEntries(
       dirty.map((k) => [k, values[k] === '' ? null : values[k]]),
     ) as MyPersonUpdate;

@@ -91,7 +91,8 @@ describe('ADM-17 Privacy purposes', () => {
     ).toBeInTheDocument();
     const refused = api.calls.find((c) => c.method === 'PATCH');
     expect(refused?.headers.get('If-Match')).toBe('"0"');
-    expect(new URLSearchParams(refused?.search).get('updateMask')).toBe('enabled,noticeId,maxScope');
+    expect(refused?.search).toBe('');
+    expect(Object.keys(JSON.parse(refused?.body ?? '{}'))).toEqual(['enabled', 'noticeId', 'maxScope']);
   });
 
   it('saves the switch, notice and ceiling once the notice is published', async () => {

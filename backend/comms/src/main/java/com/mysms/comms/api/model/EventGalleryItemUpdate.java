@@ -16,18 +16,18 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of EventGalleryItem that can be updated (partial update; see updateMask).
+ * Fields of EventGalleryItem that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class EventGalleryItemUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID fileId;
+  private @Nullable Optional<@NotNull UUID> fileId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer sortOrder;
+  private @Nullable Optional<@NotNull Integer> sortOrder;
 
-  public EventGalleryItemUpdate fileId(@Nullable UUID fileId) {
+  public EventGalleryItemUpdate fileId(@Nullable Optional<UUID> fileId) {
     this.fileId = fileId;
     return this;
   }
@@ -36,18 +36,18 @@ public class EventGalleryItemUpdate {
    * Media file.
    * @return fileId
    */
-  @Valid 
+  
   @JsonProperty("fileId")
-  public @Nullable UUID getFileId() {
+  public @Nullable Optional<UUID> getFileId() {
     return fileId;
   }
 
   @JsonProperty("fileId")
-  public void setFileId(@Nullable UUID fileId) {
+  public void setFileId(@Nullable Optional<UUID> fileId) {
     this.fileId = fileId;
   }
 
-  public EventGalleryItemUpdate sortOrder(@Nullable Integer sortOrder) {
+  public EventGalleryItemUpdate sortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
     return this;
   }
@@ -58,12 +58,12 @@ public class EventGalleryItemUpdate {
    */
   
   @JsonProperty("sortOrder")
-  public @Nullable Integer getSortOrder() {
+  public @Nullable Optional<Integer> getSortOrder() {
     return sortOrder;
   }
 
   @JsonProperty("sortOrder")
-  public void setSortOrder(@Nullable Integer sortOrder) {
+  public void setSortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
   }
 

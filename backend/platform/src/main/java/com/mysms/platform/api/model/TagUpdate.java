@@ -15,30 +15,30 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Tag that can be updated (partial update; see updateMask).
+ * Fields of Tag that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class TagUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String tagType;
+  private @Nullable Optional<@NotNull @Size(max = 50) String> tagType;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 120) String> name;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String slug;
+  private @Nullable Optional<@NotNull @Size(max = 140) String> slug;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Object translations = null;
+  private @Nullable Optional<Object> translations;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer sortOrder;
+  private @Nullable Optional<Integer> sortOrder;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@Size(max = 50) String> code;
 
-  public TagUpdate tagType(@Nullable String tagType) {
+  public TagUpdate tagType(@Nullable Optional<String> tagType) {
     this.tagType = tagType;
     return this;
   }
@@ -47,18 +47,18 @@ public class TagUpdate {
    * Tag family, e.g. general, post, library_media, lms_course.
    * @return tagType
    */
-  @Size(max = 50) 
+  
   @JsonProperty("tagType")
-  public @Nullable String getTagType() {
+  public @Nullable Optional<String> getTagType() {
     return tagType;
   }
 
   @JsonProperty("tagType")
-  public void setTagType(@Nullable String tagType) {
+  public void setTagType(@Nullable Optional<String> tagType) {
     this.tagType = tagType;
   }
 
-  public TagUpdate name(@Nullable String name) {
+  public TagUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -67,18 +67,18 @@ public class TagUpdate {
    * Tag label.
    * @return name
    */
-  @Size(max = 120) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public TagUpdate slug(@Nullable String slug) {
+  public TagUpdate slug(@Nullable Optional<String> slug) {
     this.slug = slug;
     return this;
   }
@@ -87,18 +87,18 @@ public class TagUpdate {
    * URL-safe tag key.
    * @return slug
    */
-  @Size(max = 140) 
+  
   @JsonProperty("slug")
-  public @Nullable String getSlug() {
+  public @Nullable Optional<String> getSlug() {
     return slug;
   }
 
   @JsonProperty("slug")
-  public void setSlug(@Nullable String slug) {
+  public void setSlug(@Nullable Optional<String> slug) {
     this.slug = slug;
   }
 
-  public TagUpdate translations(@Nullable Object translations) {
+  public TagUpdate translations(@Nullable Optional<Object> translations) {
     this.translations = translations;
     return this;
   }
@@ -109,16 +109,16 @@ public class TagUpdate {
    */
   
   @JsonProperty("translations")
-  public @Nullable Object getTranslations() {
+  public @Nullable Optional<Object> getTranslations() {
     return translations;
   }
 
   @JsonProperty("translations")
-  public void setTranslations(@Nullable Object translations) {
+  public void setTranslations(@Nullable Optional<Object> translations) {
     this.translations = translations;
   }
 
-  public TagUpdate sortOrder(@Nullable Integer sortOrder) {
+  public TagUpdate sortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
     return this;
   }
@@ -129,16 +129,16 @@ public class TagUpdate {
    */
   
   @JsonProperty("sortOrder")
-  public @Nullable Integer getSortOrder() {
+  public @Nullable Optional<Integer> getSortOrder() {
     return sortOrder;
   }
 
   @JsonProperty("sortOrder")
-  public void setSortOrder(@Nullable Integer sortOrder) {
+  public void setSortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
   }
 
-  public TagUpdate code(@Nullable String code) {
+  public TagUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -147,14 +147,14 @@ public class TagUpdate {
    * Short code (e.g. subject tag code).
    * @return code
    */
-  @Size(max = 50) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 

@@ -20,7 +20,8 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
 /**
  * Adds the modules' own {@code application.properties} to the monolith after Spring Boot's configuration, so app's
  * file, environment variables, system properties and the command line override them. Only a module's file counts:
- * one whose {@code spring.application.name} has its operation table beside it, never a third-party jar's file.
+ * one whose first area ({@code mysms.auth.modules[0]}) has its operation table beside it, never a third-party jar's
+ * file.
  */
 public final class ModulePropertiesEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
 
@@ -29,6 +30,7 @@ public final class ModulePropertiesEnvironmentPostProcessor implements Environme
 
     static final String FILE = "application.properties";
     private static final String NAME = "spring.application.name";
+    private static final String FIRST_AREA = "mysms.auth.modules[0]";
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
@@ -61,7 +63,9 @@ public final class ModulePropertiesEnvironmentPostProcessor implements Environme
         for (URL file : files.subList(Math.min(1, files.size()), files.size())) {
             Properties properties = load(file);
             String name = properties.getProperty(NAME, "");
-            if (name.matches("[a-z]+") && exists(sibling(file, "META-INF/mysms/operations/" + name + ".json"))) {
+            String area = properties.getProperty(FIRST_AREA, "");
+            if (name.matches("[a-z]+") && area.matches("[a-z]+")
+                    && exists(sibling(file, "META-INF/mysms/operations/" + area + ".json"))) {
                 modules.add(new ModuleFile(name, properties));
             }
         }

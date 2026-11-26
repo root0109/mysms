@@ -6,7 +6,10 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.InputStream;
+import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,8 +22,9 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.springdoc.core.customizers.OpenApiCustomizer;
-import org.springdoc.core.customizers.OperationCustomizer;
+import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
+import org.springdoc.core.customizers.GlobalOperationCustomizer;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -31,21 +35,26 @@ import org.springframework.core.env.Environment;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.JsonNode;
 
 /**
- * The process's OpenAPI document, written by springdoc from the modules' contract interfaces. What the interfaces
- * cannot carry is restored from the module's operation table: the operationId, {@code x-permission}, security schemes,
- * idempotency, and the tag ({@code CountryApi} → {@code Country}) so generated clients name their API classes as the
- * contract does.
+ * The process's OpenAPI documents, written by springdoc from the areas' contract interfaces: one group per area the
+ * process serves ({@code /v3/api-docs/<area>}, {@link OpenApiGroupsEnvironmentPostProcessor}). What the
+ * interfaces cannot carry is restored from the area's operation table: the operationId, {@code x-permission}, security
+ * schemes, idempotency, and the tag ({@code CountryApi} → {@code Country}) so generated clients name their API classes
+ * as the contract does. An area's packages are {@code com.mysms.<module>} or {@code com.mysms.<module>.<area>}.
  */
 @AutoConfiguration
 @ConditionalOnWebApplication
 @ConditionalOnClass(OpenAPI.class)
 public class OpenApiConfiguration {
 
-    /** A handler of a module's controller package; group(1) is the module. */
-    private static final Pattern CONTROLLER_PACKAGE = Pattern.compile("^com\\.mysms\\.([a-z]+)\\.controller\\.");
+    /** The area of a contract path ({@code /v1/<area>/…}). */
+    private static final Pattern DOCUMENTED_AREA = Pattern.compile("^/v1/([a-z]+)/");
+    /** A handler of an area's controller package; group(1) is the area's root package, group(2) the area. */
+    private static final Pattern CONTROLLER_PACKAGE =
+            Pattern.compile("^(com\\.mysms\\.(?:[a-z]+\\.)?([a-z]+))\\.controller\\.");
 
     @Bean
     public OpenAPI mysmsOpenApi(Environment environment) {
@@ -64,16 +73,16 @@ public class OpenApiConfiguration {
                                 + "across tenants; the target tenant is the resource being addressed."));
     }
 
-    /** Restores per operation what the Java signature cannot state, from the module's operation table. */
+    /** Restores per operation what the Java signature cannot state, from the area's operation table. */
     @Bean
-    public OperationCustomizer mysmsOperationCustomizer() {
+    public GlobalOperationCustomizer mysmsOperationCustomizer() {
         Map<String, Map<String, JsonNode>> tables = new ConcurrentHashMap<>();
         return (operation, handler) -> {
             Matcher controller = CONTROLLER_PACKAGE.matcher(handler.getBeanType().getName());
             if (!controller.find()) {
                 return operation;
             }
-            JsonNode row = tables.computeIfAbsent(controller.group(1), OpenApiConfiguration::table)
+            JsonNode row = tables.computeIfAbsent(controller.group(2), OpenApiConfiguration::table)
                     .get(handler.getMethod().getName());
             if (row == null) {
                 return operation;
@@ -92,20 +101,6 @@ public class OpenApiConfiguration {
                 operation.addExtension("x-idempotency", row.get("idempotency").asString());
             }
             return operation;
-        };
-    }
-
-    /**
-     * Drops the {@code "null"} springdoc adds to a {@code @Nullable} property's type: contract fields are
-     * {@code NON_NULL}, so an absent value is left out, never sent as null. A {@code @Nullable Object} loses its
-     * {@code type: "null"} altogether and becomes any JSON value.
-     */
-    @Bean
-    public OpenApiCustomizer mysmsAnyValueCustomizer() {
-        return openApi -> {
-            if (openApi.getComponents() != null && openApi.getComponents().getSchemas() != null) {
-                openApi.getComponents().getSchemas().values().forEach(OpenApiConfiguration::anyValue);
-            }
         };
     }
 
@@ -130,30 +125,69 @@ public class OpenApiConfiguration {
     }
 
     /**
-     * Marks every contract DTO field that is not {@code @Nullable} as required (springdoc reads only
-     * {@code @NotNull}). A schema with no contract class (paging, problems, enums) keeps what springdoc wrote.
+     * The contract's types and required lists, in one pass so their order is fixed. First drops the {@code "null"}
+     * springdoc adds to a {@code @Nullable} property's type: contract fields are {@code NON_NULL}, so an absent value
+     * is left out, never sent as null (a {@code @Nullable Object} loses its {@code type: "null"} altogether and becomes
+     * any JSON value). Then marks every contract DTO field that is not {@code @Nullable} as required (springdoc reads
+     * only {@code @NotNull}) — except the {@code Optional} fields of a PATCH's {@code <Resource>Update} (§7.2): none of
+     * them is required, and one whose type argument is neither {@code @NotNull} nor {@code @NotBlank} may be sent as
+     * null to clear it, so its type keeps {@code "null"}. A schema with no contract class (paging, problems, enums)
+     * keeps what springdoc wrote.
      */
     @Bean
-    public OpenApiCustomizer mysmsRequiredCustomizer(Environment environment) {
-        List<String> modules = Binder.get(environment).bind("mysms.auth.modules", Bindable.listOf(String.class))
-                .orElse(List.of());
+    public GlobalOpenApiCustomizer mysmsContractSchemaCustomizer(ListableBeanFactory beans) {
         return openApi -> {
             if (openApi.getComponents() == null || openApi.getComponents().getSchemas() == null) {
                 return;
             }
-            openApi.getComponents().getSchemas().forEach((name, schema) -> contractClass(modules, name)
+            openApi.getComponents().getSchemas().values().forEach(OpenApiConfiguration::anyValue);
+            List<String> roots = documentedRoots(contractRoots(beans), openApi);
+            openApi.getComponents().getSchemas().forEach((name, schema) -> contractClass(roots, name)
                     .ifPresent(type -> required(schema, type)));
         };
     }
 
     /**
-     * The module class a schema was written from, when exactly one module of the process has a class of that name;
+     * The roots of the areas a document shows (an area's group shows only its {@code /v1/<area>} paths), so a schema
+     * name a sibling area also uses still finds its own area's class; every root when the document has no paths.
+     */
+    static List<String> documentedRoots(List<String> roots, OpenAPI openApi) {
+        Set<String> areas = new java.util.TreeSet<>();
+        if (openApi.getPaths() != null) {
+            openApi.getPaths().keySet().forEach(path -> {
+                Matcher area = DOCUMENTED_AREA.matcher(path);
+                if (area.find()) {
+                    areas.add(area.group(1));
+                }
+            });
+        }
+        if (areas.isEmpty()) {
+            return roots;
+        }
+        return roots.stream().filter(root -> areas.contains(root.substring(root.lastIndexOf('.') + 1))).toList();
+    }
+
+    /** The root packages of the areas the process serves, read from their controllers. */
+    static List<String> contractRoots(ListableBeanFactory beans) {
+        Set<String> roots = new java.util.TreeSet<>();
+        for (String bean : beans.getBeanNamesForAnnotation(RestController.class)) {
+            Class<?> type = beans.getType(bean);
+            Matcher controller = type == null ? null : CONTROLLER_PACKAGE.matcher(ClassUtils.getUserClass(type).getName());
+            if (controller != null && controller.find()) {
+                roots.add(controller.group(1));
+            }
+        }
+        return List.copyOf(roots);
+    }
+
+    /**
+     * The contract class a schema was written from, when exactly one area of the process has a class of that name;
      * with several the merged schema keeps what springdoc wrote.
      */
-    static Optional<Class<?>> contractClass(List<String> modules, String schemaName) {
+    static Optional<Class<?>> contractClass(List<String> roots, String schemaName) {
         List<Class<?>> found = new ArrayList<>();
-        for (String module : modules) {
-            String name = "com.mysms." + module + ".api.model." + schemaName;
+        for (String root : roots) {
+            String name = root + ".api.model." + schemaName;
             if (ClassUtils.isPresent(name, OpenApiConfiguration.class.getClassLoader())) {
                 found.add(ClassUtils.resolveClassName(name, OpenApiConfiguration.class.getClassLoader()));
             }
@@ -166,18 +200,55 @@ public class OpenApiConfiguration {
             return;
         }
         Set<String> required = new LinkedHashSet<>(schema.getRequired() == null ? List.of() : schema.getRequired());
-        for (String property : schema.getProperties().keySet()) {
+        schema.getProperties().forEach((property, propertySchema) -> {
             Field field = ReflectionUtils.findField(type, property);
-            if (field != null && !field.isAnnotationPresent(Nullable.class)) {
+            if (field == null) {
+                return;
+            }
+            if (field.getType() == Optional.class) {
+                required.remove(property);
+                if (clearable(field)) {
+                    nullable(propertySchema);
+                }
+            } else if (!field.isAnnotationPresent(Nullable.class)) {
                 required.add(property);
             }
-        }
+        });
         schema.setRequired(required.isEmpty() ? null : List.copyOf(required));
     }
 
-    /** The tag of an operation: the contract interface that declares it ({@code com.mysms.<module>.api.<Tag>Api}). */
-    private static Optional<String> contractTag(Class<?> controller, Method method, String module) {
-        String contract = "com.mysms." + module + ".api.";
+    /** An update field that JSON null may clear: its {@code Optional}'s type argument is not required. */
+    private static boolean clearable(Field field) {
+        return !(field.getAnnotatedType() instanceof AnnotatedParameterizedType optional)
+                || !(optional.getAnnotatedActualTypeArguments()[0].isAnnotationPresent(NotNull.class)
+                || optional.getAnnotatedActualTypeArguments()[0].isAnnotationPresent(NotBlank.class));
+    }
+
+    /**
+     * Adds {@code "null"} to a property's types (and to its enum values, which would otherwise refuse it); a
+     * {@code $ref} property becomes {@code anyOf: [$ref, null]}.
+     */
+    @SuppressWarnings("unchecked")
+    private static void nullable(Schema<?> property) {
+        if (property.getEnum() != null && !property.getEnum().contains(null)) {
+            List<Object> values = new ArrayList<>(property.getEnum());
+            values.add(null);
+            ((Schema<Object>) property).setEnum(values);
+        }
+        if (property.get$ref() != null) {
+            Schema<?> ref = new Schema<>().$ref(property.get$ref());
+            property.set$ref(null);
+            property.setAnyOf(new ArrayList<>(List.of(ref, new Schema<>().types(Set.of("null")))));
+        } else if (property.getTypes() != null) {
+            Set<String> types = new LinkedHashSet<>(property.getTypes());
+            types.add("null");
+            property.setTypes(types);
+        }
+    }
+
+    /** The tag of an operation: the contract interface that declares it ({@code <area root>.api.<Tag>Api}). */
+    private static Optional<String> contractTag(Class<?> controller, Method method, String root) {
+        String contract = root + ".api.";
         for (Class<?> implemented : controller.getInterfaces()) {
             String name = implemented.getName();
             if (name.startsWith(contract) && name.endsWith("Api") && name.indexOf('.', contract.length()) < 0
@@ -188,9 +259,9 @@ public class OpenApiConfiguration {
         return Optional.empty();
     }
 
-    /** The module's operation rows by controller method name ({@code master.ListCountries} → {@code listCountries}). */
-    private static Map<String, JsonNode> table(String module) {
-        String resource = "META-INF/mysms/operations/" + module + ".json";
+    /** The area's operation rows by controller method name ({@code master.ListCountries} → {@code listCountries}). */
+    private static Map<String, JsonNode> table(String area) {
+        String resource = "META-INF/mysms/operations/" + area + ".json";
         try (InputStream in = OpenApiConfiguration.class.getClassLoader().getResourceAsStream(resource)) {
             if (in == null) {
                 throw new IllegalStateException("operation table not found on the classpath: " + resource);

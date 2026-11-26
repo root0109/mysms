@@ -60,7 +60,7 @@ public class ContentViewResolver extends ContentViewServiceGrpc.ContentViewServi
         ContentView updated = service.updateContentView(
                 bridge.id(request.getContentView().getId(), "id"), bridge.requiredIfMatch(request.getContentView().getEtag()),
                 bridge.changes(request.getContentView(), request.getUpdateMask(), ContentViewUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateContentViewResponse.newBuilder(), "content_view", updated).build());
     }
 

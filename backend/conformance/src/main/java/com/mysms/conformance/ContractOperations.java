@@ -22,19 +22,20 @@ public final class ContractOperations {
     /**
      * One operation of a module contract.
      *
-     * @param operationId {@code module.Name}
+     * @param area        the area whose operation table lists it
+     * @param operationId {@code area.Name}
      * @param method HTTP method, upper case
      * @param permission its x-permission
      * @param schemes the security schemes that may call it
      */
-    public record Operation(String module, String operationId, String method, String path, String permission,
+    public record Operation(String area, String operationId, String method, String path, String permission,
                             Set<String> schemes) {
 
         public Operation {
             schemes = Set.copyOf(schemes); // immutable view: the record is shared between rules
         }
 
-        /** The operation name without its module ({@code ListCountries}): the controller method and the RPC. */
+        /** The operation name without its area ({@code ListCountries}): the controller method and the RPC. */
         public String name() {
             return operationId.substring(operationId.indexOf('.') + 1);
         }
@@ -48,19 +49,19 @@ public final class ContractOperations {
     private ContractOperations() {
     }
 
-    /** Where a module's operation table lives. */
-    public static Path table(SourceTree tree, String module) {
-        return tree.backend().resolve(module).resolve("src/main/resources/META-INF/mysms/operations")
-                .resolve(module + ".json");
+    /** Where an area's operation table lives: in its module's resources, named after the area. */
+    public static Path table(SourceTree tree, String area) {
+        return tree.resources(tree.area(area).module()).resolve("META-INF/mysms/operations").resolve(area + ".json");
     }
 
-    /** The operations of every module, module by module (sorted by name), in table order. */
+    /** The operations of every area, area by area (sorted by name), in table order. */
     public static List<Operation> read(SourceTree tree) {
         LoaderOptions options = new LoaderOptions();
         options.setCodePointLimit(MAX_CODE_POINTS);
         Yaml yaml = new Yaml(new SafeConstructor(options));
         List<Operation> operations = new ArrayList<>();
-        for (String module : tree.domainModules()) {
+        for (SourceTree.Area area : tree.areas()) {
+            String module = area.name();
             Object rows = yaml.load(tree.read(table(tree, module)));
             for (Object value : (List<?>) rows) {
                 Map<?, ?> row = (Map<?, ?>) value;

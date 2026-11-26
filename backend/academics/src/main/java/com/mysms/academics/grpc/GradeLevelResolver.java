@@ -60,7 +60,7 @@ public class GradeLevelResolver extends GradeLevelServiceGrpc.GradeLevelServiceI
         GradeLevel updated = service.updateGradeLevel(bridge.id(request.getGradeLevel().getId(), "id"),
                 bridge.requiredIfMatch(request.getGradeLevel().getEtag()),
                 bridge.changes(request.getGradeLevel(), request.getUpdateMask(), GradeLevelUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateGradeLevelResponse.newBuilder(), "grade_level", updated).build());
     }
 

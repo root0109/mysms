@@ -97,7 +97,7 @@ export function StaffDetailScreen() {
   const mayAccount = useCan('hr.staff.create_staff_portal_account');
   const mayPersons = useCan('people.person.read');
   const mayDepartments = useCan('hr.staff_department.read');
-  const maySubjects = useCan('hr.staff_subject.read');
+  const maySubjects = useCan('academics.teacher_subject.read');
   const mayPosition = useCan('hr.staff.get_leave_balance');
   const mayApplications = useCan('hr.leave_application.read');
   const mayAssignments = mayDepartments || maySubjects;

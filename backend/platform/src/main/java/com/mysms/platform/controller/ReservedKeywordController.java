@@ -61,10 +61,9 @@ public class ReservedKeywordController implements ReservedKeywordApi {
 
     @Override
     public ResponseEntity<ReservedKeyword> updateReservedKeyword(UUID reservedKeywordId, String ifMatch,
-            ReservedKeywordUpdate reservedKeywordUpdate, String updateMask, Boolean validateOnly) {
+            ReservedKeywordUpdate reservedKeywordUpdate, Boolean validateOnly) {
         ReservedKeyword updated =
                 reservedKeywordService.updateReservedKeyword(reservedKeywordId, ifMatch, reservedKeywordUpdate,
-                        updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

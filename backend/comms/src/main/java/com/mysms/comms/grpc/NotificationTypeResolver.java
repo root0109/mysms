@@ -99,7 +99,7 @@ public class NotificationTypeResolver extends NotificationTypeServiceGrpc.Notifi
                 bridge.id(request.getNotificationType().getId(), "id"),
                 bridge.requiredIfMatch(request.getNotificationType().getEtag()),
                 bridge.changes(request.getNotificationType(), request.getUpdateMask(), NotificationTypeUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNotificationTypeResponse.newBuilder(), "notification_type", updated).build());
     }
 
@@ -147,7 +147,7 @@ public class NotificationTypeResolver extends NotificationTypeServiceGrpc.Notifi
                 bridge.id(request.getNotificationTypeProperty().getId(), "id"),
                 bridge.requiredIfMatch(request.getNotificationTypeProperty().getEtag()),
                 bridge.changes(request.getNotificationTypeProperty(), request.getUpdateMask(),
-                NotificationTypePropertyUpdate.class), bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                NotificationTypePropertyUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateNotificationTypePropertyResponse.newBuilder(), "notification_type_property", updated).build());
     }
@@ -194,7 +194,7 @@ public class NotificationTypeResolver extends NotificationTypeServiceGrpc.Notifi
                 bridge.id(request.getNotificationRule().getId(), "id"),
                 bridge.requiredIfMatch(request.getNotificationRule().getEtag()),
                 bridge.changes(request.getNotificationRule(), request.getUpdateMask(), NotificationRuleUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNotificationRuleResponse.newBuilder(), "notification_rule", updated).build());
     }
 
@@ -245,7 +245,7 @@ public class NotificationTypeResolver extends NotificationTypeServiceGrpc.Notifi
                 bridge.id(request.getNotificationCohortSetting().getId(), "id"),
                 bridge.requiredIfMatch(request.getNotificationCohortSetting().getEtag()),
                 bridge.changes(request.getNotificationCohortSetting(), request.getUpdateMask(),
-                NotificationCohortSettingUpdate.class), bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                NotificationCohortSettingUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateNotificationCohortSettingResponse.newBuilder(), "notification_cohort_setting",
                 updated).build());

@@ -16,18 +16,18 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of NotificationCohortSetting that can be updated (partial update; see updateMask).
+ * Fields of NotificationCohortSetting that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class NotificationCohortSettingUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID cohortId;
+  private @Nullable Optional<@NotNull UUID> cohortId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean popupEnabled;
+  private @Nullable Optional<@NotNull Boolean> popupEnabled;
 
-  public NotificationCohortSettingUpdate cohortId(@Nullable UUID cohortId) {
+  public NotificationCohortSettingUpdate cohortId(@Nullable Optional<UUID> cohortId) {
     this.cohortId = cohortId;
     return this;
   }
@@ -36,18 +36,18 @@ public class NotificationCohortSettingUpdate {
    * Cohort.
    * @return cohortId
    */
-  @Valid 
+  
   @JsonProperty("cohortId")
-  public @Nullable UUID getCohortId() {
+  public @Nullable Optional<UUID> getCohortId() {
     return cohortId;
   }
 
   @JsonProperty("cohortId")
-  public void setCohortId(@Nullable UUID cohortId) {
+  public void setCohortId(@Nullable Optional<UUID> cohortId) {
     this.cohortId = cohortId;
   }
 
-  public NotificationCohortSettingUpdate popupEnabled(@Nullable Boolean popupEnabled) {
+  public NotificationCohortSettingUpdate popupEnabled(@Nullable Optional<Boolean> popupEnabled) {
     this.popupEnabled = popupEnabled;
     return this;
   }
@@ -58,12 +58,12 @@ public class NotificationCohortSettingUpdate {
    */
   
   @JsonProperty("popupEnabled")
-  public @Nullable Boolean getPopupEnabled() {
+  public @Nullable Optional<Boolean> getPopupEnabled() {
     return popupEnabled;
   }
 
   @JsonProperty("popupEnabled")
-  public void setPopupEnabled(@Nullable Boolean popupEnabled) {
+  public void setPopupEnabled(@Nullable Optional<Boolean> popupEnabled) {
     this.popupEnabled = popupEnabled;
   }
 

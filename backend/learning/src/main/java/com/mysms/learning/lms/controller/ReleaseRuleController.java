@@ -1,0 +1,197 @@
+package com.mysms.learning.lms.controller;
+
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.learning.lms.api.ReleaseRuleApi;
+import com.mysms.learning.lms.api.model.CopyReleaseRuleRequest;
+import com.mysms.learning.lms.api.model.DisableReleaseRuleRequest;
+import com.mysms.learning.lms.api.model.EnableReleaseRuleRequest;
+import com.mysms.learning.lms.api.model.ReleaseRule;
+import com.mysms.learning.lms.api.model.ReleaseRuleCondition;
+import com.mysms.learning.lms.api.model.ReleaseRuleConditionUpdate;
+import com.mysms.learning.lms.api.model.ReleaseRuleList;
+import com.mysms.learning.lms.api.model.ReleaseRuleTarget;
+import com.mysms.learning.lms.api.model.ReleaseRuleTargetUpdate;
+import com.mysms.learning.lms.api.model.ReleaseRuleUpdate;
+import com.mysms.core.web.ReadMask;
+import com.mysms.learning.lms.business.ReleaseRuleService;
+import java.net.URI;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * REST edge of the ReleaseRule operations; authentication and the permission check already ran in the auth-client
+ * filter. Operations not served yet answer 501.
+ */
+@RestController
+public class ReleaseRuleController implements ReleaseRuleApi {
+
+    private final ReleaseRuleService releaseRuleService;
+
+    public ReleaseRuleController(ReleaseRuleService releaseRuleService) {
+        this.releaseRuleService = releaseRuleService;
+    }
+
+    @Override
+    public ResponseEntity<ReleaseRuleList> copyReleaseRule(UUID releaseRuleId,
+            CopyReleaseRuleRequest copyReleaseRuleRequest, UUID idempotencyKey) {
+        return ResponseEntity.ok(releaseRuleService.copyReleaseRule(releaseRuleId, copyReleaseRuleRequest));
+    }
+
+    @Override
+    public ResponseEntity<ReleaseRule> createReleaseRule(ReleaseRule releaseRule, UUID idempotencyKey,
+            Boolean validateOnly) {
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        ReleaseRule created = releaseRuleService.createReleaseRule(releaseRule, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(URI.create("/v1/lms/release-rules/" + created.getId())).eTag(created.getEtag())
+                .body(created);
+    }
+
+    @Override
+    public ResponseEntity<ReleaseRuleCondition> createReleaseRuleCondition(UUID releaseRuleId,
+            ReleaseRuleCondition releaseRuleCondition, UUID idempotencyKey, Boolean validateOnly) {
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        ReleaseRuleCondition created =
+                releaseRuleService.createReleaseRuleCondition(releaseRuleId, releaseRuleCondition, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(
+                URI.create("/v1/lms/release-rules/" + releaseRuleId + "/release-rule-conditions/" + created.getId()))
+                        .eTag(created.getEtag()).body(created);
+    }
+
+    @Override
+    public ResponseEntity<ReleaseRuleTarget> createReleaseRuleTarget(UUID releaseRuleId,
+            ReleaseRuleTarget releaseRuleTarget, UUID idempotencyKey, Boolean validateOnly) {
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        ReleaseRuleTarget created =
+                releaseRuleService.createReleaseRuleTarget(releaseRuleId, releaseRuleTarget, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(
+                URI.create("/v1/lms/release-rules/" + releaseRuleId + "/release-rule-targets/" + created.getId()))
+                        .eTag(created.getEtag()).body(created);
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteReleaseRule(UUID releaseRuleId, String ifMatch) {
+        releaseRuleService.deleteReleaseRule(releaseRuleId, ifMatch);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteReleaseRuleCondition(UUID releaseRuleId,
+            UUID releaseRuleConditionId, String ifMatch) {
+        releaseRuleService.deleteReleaseRuleCondition(releaseRuleId, releaseRuleConditionId, ifMatch);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteReleaseRuleTarget(UUID releaseRuleId, UUID releaseRuleTargetId,
+            String ifMatch) {
+        releaseRuleService.deleteReleaseRuleTarget(releaseRuleId, releaseRuleTargetId, ifMatch);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<ReleaseRule> disableReleaseRule(UUID releaseRuleId,
+            DisableReleaseRuleRequest disableReleaseRuleRequest, UUID idempotencyKey) {
+        ReleaseRule changed = releaseRuleService.disableReleaseRule(releaseRuleId, disableReleaseRuleRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
+    }
+
+    @Override
+    public ResponseEntity<ReleaseRule> enableReleaseRule(UUID releaseRuleId,
+            EnableReleaseRuleRequest enableReleaseRuleRequest, UUID idempotencyKey) {
+        ReleaseRule changed = releaseRuleService.enableReleaseRule(releaseRuleId, enableReleaseRuleRequest.getEtag());
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
+    }
+
+    @Override
+    public ResponseEntity<ReleaseRule> getReleaseRule(UUID releaseRuleId, String fields) {
+        ReleaseRule found = releaseRuleService.getReleaseRule(releaseRuleId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
+    }
+
+    @Override
+    public ResponseEntity<ReleaseRuleCondition> getReleaseRuleCondition(UUID releaseRuleId,
+            UUID releaseRuleConditionId, String fields) {
+        ReleaseRuleCondition found =
+                releaseRuleService.getReleaseRuleCondition(releaseRuleId, releaseRuleConditionId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
+    }
+
+    @Override
+    public ResponseEntity<ReleaseRuleTarget> getReleaseRuleTarget(UUID releaseRuleId,
+            UUID releaseRuleTargetId, String fields) {
+        ReleaseRuleTarget found = releaseRuleService.getReleaseRuleTarget(releaseRuleId, releaseRuleTargetId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<ReleaseRuleCondition>> listReleaseRuleConditions(UUID releaseRuleId, Integer page,
+            Integer size, String cursor, String filter, List<String> sort, String fields) {
+        PagingInfo<ReleaseRuleCondition> list =
+                PagingUtil.pagingInfo(releaseRuleService.listReleaseRuleConditions(releaseRuleId, page, size, cursor,
+                        filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<ReleaseRuleTarget>> listReleaseRuleTargets(UUID releaseRuleId, Integer page,
+            Integer size, String cursor, String filter, List<String> sort, String fields) {
+        PagingInfo<ReleaseRuleTarget> list =
+                PagingUtil.pagingInfo(releaseRuleService.listReleaseRuleTargets(releaseRuleId, page, size, cursor,
+                        filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<ReleaseRule>> listReleaseRules(Integer page, Integer size, String cursor,
+            String filter, List<String> sort, String fields) {
+        PagingInfo<ReleaseRule> list =
+                PagingUtil.pagingInfo(releaseRuleService.listReleaseRules(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
+    }
+
+    @Override
+    public ResponseEntity<ReleaseRule> updateReleaseRule(UUID releaseRuleId, String ifMatch,
+            ReleaseRuleUpdate releaseRuleUpdate, Boolean validateOnly) {
+        ReleaseRule updated =
+                releaseRuleService.updateReleaseRule(releaseRuleId, ifMatch, releaseRuleUpdate,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
+    }
+
+    @Override
+    public ResponseEntity<ReleaseRuleCondition> updateReleaseRuleCondition(UUID releaseRuleId,
+            UUID releaseRuleConditionId, String ifMatch, ReleaseRuleConditionUpdate releaseRuleConditionUpdate,
+            Boolean validateOnly) {
+        ReleaseRuleCondition updated =
+                releaseRuleService.updateReleaseRuleCondition(releaseRuleId, releaseRuleConditionId, ifMatch,
+                        releaseRuleConditionUpdate,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
+    }
+
+    @Override
+    public ResponseEntity<ReleaseRuleTarget> updateReleaseRuleTarget(UUID releaseRuleId,
+            UUID releaseRuleTargetId, String ifMatch, ReleaseRuleTargetUpdate releaseRuleTargetUpdate,
+            Boolean validateOnly) {
+        ReleaseRuleTarget updated =
+                releaseRuleService.updateReleaseRuleTarget(releaseRuleId, releaseRuleTargetId, ifMatch,
+                        releaseRuleTargetUpdate,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
+    }
+}

@@ -17,7 +17,8 @@ import java.util.regex.Pattern;
 public final class SecurityBoundaryRule implements ConformanceRule {
 
     /** The token issuer signs tokens with the token library. */
-    private static final Set<String> TOKEN_ISSUERS = Set.of("iam/src/main/java/com/mysms/iam/business/TokenIssuer.java");
+    private static final Set<String> TOKEN_ISSUERS =
+            Set.of("identity/src/main/java/com/mysms/identity/iam/business/TokenIssuer.java");
     private static final Pattern TOKEN_LIBRARY = Pattern.compile(
             "(?m)^import (io\\.jsonwebtoken|com\\.nimbusds|org\\.springframework\\.security\\.(?!crypto\\.))");
     private static final Pattern PASSWORD_HASHING = Pattern.compile("(?m)^import org\\.springframework\\.security\\.crypto\\.");
@@ -37,7 +38,7 @@ public final class SecurityBoundaryRule implements ConformanceRule {
                 if (TOKEN_LIBRARY.matcher(source).find() && !TOKEN_ISSUERS.contains(tree.relativeToBackend(file))) {
                     found.add(new Violation("X1", path, "imports a token library (only auth-client verifies tokens)"));
                 }
-                if (PASSWORD_HASHING.matcher(source).find() && !"iam".equals(module)) {
+                if (PASSWORD_HASHING.matcher(source).find() && !path.contains(tree.area("iam").marker())) {
                     found.add(new Violation("X1", path, "password hashing outside iam"));
                 }
                 if (AUTHORIZATION_HEADER.matcher(source).find()) {

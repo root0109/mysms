@@ -58,8 +58,7 @@ public class BatchResolver extends BatchServiceGrpc.BatchServiceImplBase {
     public void updateBatch(UpdateBatchRequest request, StreamObserver<UpdateBatchResponse> out) {
         Batch updated = service.updateBatch(bridge.id(request.getBatch().getId(), "id"),
                 bridge.requiredIfMatch(request.getBatch().getEtag()),
-                bridge.changes(request.getBatch(), request.getUpdateMask(), BatchUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getBatch(), request.getUpdateMask(), BatchUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateBatchResponse.newBuilder(), "batch", updated).build());
     }
 

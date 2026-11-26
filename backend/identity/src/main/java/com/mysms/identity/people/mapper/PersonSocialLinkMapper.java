@@ -1,0 +1,35 @@
+package com.mysms.identity.people.mapper;
+
+import com.mysms.identity.people.api.model.PersonSocialLink;
+import com.mysms.core.web.Etags;
+import com.mysms.identity.people.domain.PersonSocialLinkEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+/**
+ * Entity ⇄ contract DTO for people.person_social_link. The way in ignores the id, tenant, audit set and read-only
+ * fields, so a request can never choose an id, re-tenant a row or set a workflow-only value.
+ */
+@Mapper(config = PeopleMapperConfig.class, imports = {Etags.class})
+public interface PersonSocialLinkMapper {
+
+    @Mapping(target = "network", expression =
+            "java(entity.getNetwork() == null ? null : PersonSocialLink.NetworkEnum.fromValue(entity.getNetwork()))")
+
+    @Mapping(target = "createTime", source = "createdAt")
+    @Mapping(target = "updateTime", source = "updatedAt")
+    @Mapping(target = "etag", expression = "java(Etags.of(entity.getRowVersion()))")
+    PersonSocialLink toDto(PersonSocialLinkEntity entity);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "rowVersion", ignore = true)
+    @Mapping(target = "personId", ignore = true)
+    @Mapping(target = "network", expression = "java(dto.getNetwork() == null ? null : dto.getNetwork().getValue())")
+    PersonSocialLinkEntity toEntity(PersonSocialLink dto);
+}

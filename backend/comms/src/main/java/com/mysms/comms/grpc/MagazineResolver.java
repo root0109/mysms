@@ -58,8 +58,7 @@ public class MagazineResolver extends MagazineServiceGrpc.MagazineServiceImplBas
     public void updateMagazine(UpdateMagazineRequest request, StreamObserver<UpdateMagazineResponse> out) {
         Magazine updated = service.updateMagazine(
                 bridge.id(request.getMagazine().getId(), "id"), bridge.requiredIfMatch(request.getMagazine().getEtag()),
-                bridge.changes(request.getMagazine(), request.getUpdateMask(), MagazineUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getMagazine(), request.getUpdateMask(), MagazineUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMagazineResponse.newBuilder(), "magazine", updated).build());
     }
 

@@ -136,7 +136,7 @@ public interface MagazineApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -144,12 +144,11 @@ public interface MagazineApi {
     String PATH_UPDATE_MAGAZINE = "/v1/comms/magazines/{magazineId}";
     /**
      * PATCH /v1/comms/magazines/{magazineId} : Update Magazine
-     * Partially update a Magazine (updateMask). Requires If-Match with the current ETag.
+     * Partially update a Magazine (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param magazineId Magazine id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param magazineUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -173,7 +172,6 @@ public interface MagazineApi {
          @PathVariable("magazineId") UUID magazineId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody MagazineUpdate magazineUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 

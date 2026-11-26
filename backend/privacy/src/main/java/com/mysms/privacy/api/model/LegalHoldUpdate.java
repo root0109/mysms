@@ -3,9 +3,11 @@ package com.mysms.privacy.api.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.Objects;
+import java.util.Optional;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.lang.Nullable;
 
@@ -17,13 +19,13 @@ public class LegalHoldUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private @Nullable LocalDate reviewBy;
+  private @Nullable Optional<@NotNull LocalDate> reviewBy;
 
   public LegalHoldUpdate() {
     super();
   }
 
-  public LegalHoldUpdate reviewBy(@Nullable LocalDate reviewBy) {
+  public LegalHoldUpdate reviewBy(@Nullable Optional<LocalDate> reviewBy) {
     this.reviewBy = reviewBy;
     return this;
   }
@@ -32,14 +34,14 @@ public class LegalHoldUpdate {
    * When the hold must next be reviewed: today or later.
    * @return reviewBy
    */
-  @Valid 
+  
   @JsonProperty("reviewBy")
-  public @Nullable LocalDate getReviewBy() {
+  public @Nullable Optional<LocalDate> getReviewBy() {
     return reviewBy;
   }
 
   @JsonProperty("reviewBy")
-  public void setReviewBy(@Nullable LocalDate reviewBy) {
+  public void setReviewBy(@Nullable Optional<LocalDate> reviewBy) {
     this.reviewBy = reviewBy;
   }
 

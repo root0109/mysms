@@ -63,9 +63,8 @@ public class LegalHoldController implements LegalHoldApi {
     }
 
     @Override
-    public ResponseEntity<LegalHold> updateLegalHold(UUID legalHoldId, String ifMatch, LegalHoldUpdate legalHoldUpdate,
-            String updateMask) {
-        return changed(legalHoldService.updateLegalHold(legalHoldId, ifMatch, legalHoldUpdate, updateMask));
+    public ResponseEntity<LegalHold> updateLegalHold(UUID legalHoldId, String ifMatch, LegalHoldUpdate legalHoldUpdate) {
+        return changed(legalHoldService.updateLegalHold(legalHoldId, ifMatch, legalHoldUpdate));
     }
 
     private static ResponseEntity<LegalHold> changed(LegalHold hold) {

@@ -16,24 +16,24 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of EntityNote that can be updated (partial update; see updateMask).
+ * Fields of EntityNote that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class EntityNoteUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String entityType;
+  private @Nullable Optional<@NotNull @Size(max = 80) String> entityType;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID entityId;
+  private @Nullable Optional<@NotNull UUID> entityId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String noteText;
+  private @Nullable Optional<@NotNull String> noteText;
 
-  public EntityNoteUpdate institutionId(@Nullable UUID institutionId) {
+  public EntityNoteUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -42,18 +42,18 @@ public class EntityNoteUpdate {
    * Institution scope.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public EntityNoteUpdate entityType(@Nullable String entityType) {
+  public EntityNoteUpdate entityType(@Nullable Optional<String> entityType) {
     this.entityType = entityType;
     return this;
   }
@@ -62,18 +62,18 @@ public class EntityNoteUpdate {
    * Polymorphic target table name.
    * @return entityType
    */
-  @Size(max = 80) 
+  
   @JsonProperty("entityType")
-  public @Nullable String getEntityType() {
+  public @Nullable Optional<String> getEntityType() {
     return entityType;
   }
 
   @JsonProperty("entityType")
-  public void setEntityType(@Nullable String entityType) {
+  public void setEntityType(@Nullable Optional<String> entityType) {
     this.entityType = entityType;
   }
 
-  public EntityNoteUpdate entityId(@Nullable UUID entityId) {
+  public EntityNoteUpdate entityId(@Nullable Optional<UUID> entityId) {
     this.entityId = entityId;
     return this;
   }
@@ -82,18 +82,18 @@ public class EntityNoteUpdate {
    * Polymorphic target record id.
    * @return entityId
    */
-  @Valid 
+  
   @JsonProperty("entityId")
-  public @Nullable UUID getEntityId() {
+  public @Nullable Optional<UUID> getEntityId() {
     return entityId;
   }
 
   @JsonProperty("entityId")
-  public void setEntityId(@Nullable UUID entityId) {
+  public void setEntityId(@Nullable Optional<UUID> entityId) {
     this.entityId = entityId;
   }
 
-  public EntityNoteUpdate noteText(@Nullable String noteText) {
+  public EntityNoteUpdate noteText(@Nullable Optional<String> noteText) {
     this.noteText = noteText;
     return this;
   }
@@ -104,12 +104,12 @@ public class EntityNoteUpdate {
    */
   
   @JsonProperty("noteText")
-  public @Nullable String getNoteText() {
+  public @Nullable Optional<String> getNoteText() {
     return noteText;
   }
 
   @JsonProperty("noteText")
-  public void setNoteText(@Nullable String noteText) {
+  public void setNoteText(@Nullable Optional<String> noteText) {
     this.noteText = noteText;
   }
 

@@ -95,18 +95,17 @@ public class CourseController implements CourseApi {
 
     @Override
     public ResponseEntity<Course> updateCourse(UUID courseId, String ifMatch, CourseUpdate courseUpdate,
-            String updateMask, Boolean validateOnly) {
-        Course updated = courseService.updateCourse(courseId, ifMatch, courseUpdate, updateMask,
+            Boolean validateOnly) {
+        Course updated = courseService.updateCourse(courseId, ifMatch, courseUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<CourseSubject> updateCourseSubject(UUID courseId, UUID courseSubjectId,
-            String ifMatch, CourseSubjectUpdate courseSubjectUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, CourseSubjectUpdate courseSubjectUpdate, Boolean validateOnly) {
         CourseSubject updated =
                 courseService.updateCourseSubject(courseId, courseSubjectId, ifMatch, courseSubjectUpdate,
-                        updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

@@ -1,0 +1,57 @@
+package com.mysms.learning.lms.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of lms.quiz. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class QuizEntity extends BaseEntity {
+
+    public static final String TABLE = "lms.quiz";
+
+    private UUID tenantId;
+    private Integer version;
+    private UUID supersededById;
+    private OffsetDateTime publishedAt;
+    private String title;
+    private UUID courseId;
+    private UUID lessonId;
+    private Integer maxAttempts;
+    private Integer passingPercentage;
+    private BigDecimal totalMarks;
+    private Boolean showAnswers;
+    private Boolean showSubmissionHistory;
+    private Boolean shuffleQuestions;
+    private Integer limitQuestionsTo;
+    private Integer durationMinutes;
+    private Boolean proctoringEnabled;
+    private Integer maxViolations;
+    private Boolean negativeMarkingEnabled;
+    private BigDecimal negativeMarks;
+    private Boolean schedulingEnabled;
+    private OffsetDateTime scheduleStart;
+    private OffsetDateTime scheduleEnd;
+    private UUID institutionId;
+    private String description;
+    private Boolean isAutoGraded;
+    private Boolean isAdaptive;
+    private Boolean equalQuestionWeighting;
+    private BigDecimal marksPerQuestion;
+    private Boolean allowPause;
+    private String attemptScoring;
+    private Boolean dropLowestAttempt;
+    private Boolean drawsFromPool;
+    private Boolean showFeedback;
+    private Boolean isInRepository;
+}

@@ -60,7 +60,7 @@ public class ProgramLevelResolver extends ProgramLevelServiceGrpc.ProgramLevelSe
         ProgramLevel updated = service.updateProgramLevel(bridge.id(request.getProgramLevel().getId(), "id"),
                 bridge.requiredIfMatch(request.getProgramLevel().getEtag()),
                 bridge.changes(request.getProgramLevel(), request.getUpdateMask(), ProgramLevelUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateProgramLevelResponse.newBuilder(), "program_level", updated).build());
     }
 

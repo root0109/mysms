@@ -61,9 +61,9 @@ public class CurriculumUnitController implements CurriculumUnitApi {
 
     @Override
     public ResponseEntity<CurriculumUnit> updateCurriculumUnit(UUID curriculumUnitId, String ifMatch,
-            CurriculumUnitUpdate curriculumUnitUpdate, String updateMask, Boolean validateOnly) {
+            CurriculumUnitUpdate curriculumUnitUpdate, Boolean validateOnly) {
         CurriculumUnit updated =
-                curriculumUnitService.updateCurriculumUnit(curriculumUnitId, ifMatch, curriculumUnitUpdate, updateMask,
+                curriculumUnitService.updateCurriculumUnit(curriculumUnitId, ifMatch, curriculumUnitUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

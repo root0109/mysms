@@ -17,13 +17,13 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of ClassSubject that can be updated (partial update; see updateMask).
+ * Fields of ClassSubject that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class ClassSubjectUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID subjectId;
+  private @Nullable Optional<@NotNull UUID> subjectId;
 
   /**
    * How the subject is offered.
@@ -63,12 +63,12 @@ public class ClassSubjectUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable OfferingTypeEnum offeringType;
+  private @Nullable Optional<@NotNull OfferingTypeEnum> offeringType;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public ClassSubjectUpdate subjectId(@Nullable UUID subjectId) {
+  public ClassSubjectUpdate subjectId(@Nullable Optional<UUID> subjectId) {
     this.subjectId = subjectId;
     return this;
   }
@@ -77,18 +77,18 @@ public class ClassSubjectUpdate {
    * Subject.
    * @return subjectId
    */
-  @Valid 
+  
   @JsonProperty("subjectId")
-  public @Nullable UUID getSubjectId() {
+  public @Nullable Optional<UUID> getSubjectId() {
     return subjectId;
   }
 
   @JsonProperty("subjectId")
-  public void setSubjectId(@Nullable UUID subjectId) {
+  public void setSubjectId(@Nullable Optional<UUID> subjectId) {
     this.subjectId = subjectId;
   }
 
-  public ClassSubjectUpdate offeringType(@Nullable OfferingTypeEnum offeringType) {
+  public ClassSubjectUpdate offeringType(@Nullable Optional<OfferingTypeEnum> offeringType) {
     this.offeringType = offeringType;
     return this;
   }
@@ -99,16 +99,16 @@ public class ClassSubjectUpdate {
    */
   
   @JsonProperty("offeringType")
-  public @Nullable OfferingTypeEnum getOfferingType() {
+  public @Nullable Optional<OfferingTypeEnum> getOfferingType() {
     return offeringType;
   }
 
   @JsonProperty("offeringType")
-  public void setOfferingType(@Nullable OfferingTypeEnum offeringType) {
+  public void setOfferingType(@Nullable Optional<OfferingTypeEnum> offeringType) {
     this.offeringType = offeringType;
   }
 
-  public ClassSubjectUpdate isActive(@Nullable Boolean isActive) {
+  public ClassSubjectUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -119,12 +119,12 @@ public class ClassSubjectUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

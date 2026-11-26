@@ -16,15 +16,15 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of EventInstitution that can be updated (partial update; see updateMask).
+ * Fields of EventInstitution that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class EventInstitutionUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
-  public EventInstitutionUpdate institutionId(@Nullable UUID institutionId) {
+  public EventInstitutionUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -33,14 +33,14 @@ public class EventInstitutionUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 

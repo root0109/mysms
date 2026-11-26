@@ -1,0 +1,326 @@
+package com.mysms.platform.org.repository;
+import com.mysms.authclient.DataScope;
+import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.paging.FieldSpec;
+import com.mysms.core.paging.Page;
+import com.mysms.core.paging.PageRequest;
+import com.mysms.core.paging.SortSpec;
+import com.mysms.core.paging.SqlFragment;
+import com.mysms.core.paging.ValueType;
+import com.mysms.platform.org.config.OrgDatabaseConfig;
+import com.mysms.platform.org.domain.AcademicYearEntity;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Repository;
+/**
+ * Plain-JDBC access to org.academic_year: live rows only, keyset paging over an allowlisted order and the row_version
+ * guard on every update and delete. Every statement filters the caller's tenant itself; row-level security is the
+ * backstop.
+ */
+@Repository
+public class AcademicYearRepository {
+
+    /** Fields clients may filter on (contract names → columns). */
+    public static final Map<String, FieldSpec> FILTER_FIELDS = fields(
+            field("id", "r.id", ValueType.UUID),
+            field("institutionId", "r.institution_id", ValueType.UUID),
+            field("name", "r.name", ValueType.STRING),
+            field("description", "r.description", ValueType.STRING),
+            field("startDate", "r.start_date", ValueType.DATE),
+            field("endDate", "r.end_date", ValueType.DATE),
+            field("termStructure", "r.term_structure", ValueType.STRING),
+            field("status", "r.status", ValueType.STRING),
+            field("isCurrent", "r.is_current", ValueType.BOOLEAN),
+            field("createTime", "r.created_at", ValueType.TIMESTAMP),
+            field("updateTime", "r.updated_at", ValueType.TIMESTAMP));
+
+    /** Fields clients may order by; NOT NULL expressions, so keyset paging can compare them. */
+    public static final Map<String, FieldSpec> SORT_FIELDS = fields(
+            field("createTime", "r.created_at", ValueType.TIMESTAMP),
+            field("updateTime", "r.updated_at", ValueType.TIMESTAMP),
+            field("name", "r.name", ValueType.STRING),
+            field("startDate", "r.start_date", ValueType.DATE));
+
+    public static final String DEFAULT_ORDER = "createTime";
+    public static final String ID_COLUMN = "r.id";
+
+    private static final Map<String, Function<AcademicYearEntity, Object>> SORT_VALUES = Map.ofEntries(
+            Map.entry("createTime", AcademicYearEntity::getCreatedAt),
+            Map.entry("updateTime", AcademicYearEntity::getUpdatedAt),
+            Map.entry("name", AcademicYearEntity::getName),
+            Map.entry("startDate", AcademicYearEntity::getStartDate));
+
+    private static final String SELECT_LIVE = """
+            SELECT r.id, r.tenant_id, r.institution_id, r.name, r.description, r.start_date, r.end_date,
+                   r.term_structure, r.status, r.is_current, r.created_at, r.created_by, r.updated_at, r.updated_by,
+                   r.deleted_at, r.row_version
+              FROM org.academic_year r
+             WHERE r.tenant_id = :tenantId
+               AND r.deleted_at IS NULL
+            """;
+    private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String LOCK_BY_ID = FIND_BY_ID + " FOR UPDATE";
+    private static final String INSERT = """
+            INSERT INTO org.academic_year
+            (id, tenant_id, institution_id, name, description, start_date, end_date, term_structure, is_current,
+             created_at, created_by, updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :institutionId, :name, :description, :startDate, :endDate, :termStructure,
+                    COALESCE(:isCurrent, false), :createdAt, :createdBy, :updatedAt, :updatedBy, :rowVersion)
+            RETURNING id, tenant_id, institution_id, name, description, start_date, end_date, term_structure, status,
+                      is_current, created_at, created_by, updated_at, updated_by, deleted_at, row_version
+            """;
+    private static final String SOFT_DELETE = """
+            UPDATE org.academic_year
+               SET deleted_at = :deletedAt,
+                   updated_at = :updatedAt,
+                   updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String UPDATE = """
+            UPDATE org.academic_year
+               SET institution_id = :institutionId,
+                   name = :name,
+                   description = :description,
+                   start_date = :startDate,
+                   end_date = :endDate,
+                   term_structure = :termStructure,
+                   is_current = :isCurrent,
+                   updated_at = :updatedAt,
+                   updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String UQ_ACADEMIC_YEAR_1_TAKEN = """
+            SELECT EXISTS (SELECT 1 FROM org.academic_year
+                            WHERE tenant_id = :tenantId
+                              AND institution_id = :institutionId AND name = :name AND id <> :id AND ((deleted_at IS
+                                  NULL)))
+            """;
+    private static final String EXISTS_INSTITUTION_ID = """
+            SELECT EXISTS (SELECT 1 FROM org.institution WHERE tenant_id = :tenantId
+                AND id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_ACADEMIC_TERM_ACADEMIC_YEAR_ID = """
+            SELECT EXISTS (SELECT 1 FROM org.academic_term WHERE tenant_id = :tenantId
+                AND academic_year_id = :id AND deleted_at IS NULL)
+            """;
+
+    /** org.CloseAcademicYear: allowed while status is active. */
+    private static final String TRANSITION_CLOSE_ACADEMIC_YEAR = """
+            UPDATE org.academic_year
+               SET status = 'closed',
+                   is_current = false,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String TRANSITION_ACTIVATE_ACADEMIC_YEAR = """
+            UPDATE org.academic_year
+               SET status = 'active',
+                   is_current = true,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL AND status = 'planned'
+            """;
+    private static final String OTHER_ACTIVE = """
+            SELECT EXISTS (SELECT 1 FROM org.academic_year r
+                            WHERE r.tenant_id = :tenantId AND r.deleted_at IS NULL
+                              AND r.institution_id = :institutionId AND r.status = 'active' AND r.id <> :id)
+            """;
+    private static final String OTHER_CURRENT = """
+            SELECT r.id FROM org.academic_year r
+             WHERE r.tenant_id = :tenantId AND r.deleted_at IS NULL
+               AND r.institution_id = :institutionId AND r.is_current AND r.id <> :id
+               FOR UPDATE
+            """;
+    private static final String CLEAR_CURRENT = """
+            UPDATE org.academic_year
+               SET is_current = false,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND deleted_at IS NULL AND is_current
+            """;
+    private static final String SCOPE = """
+             (:scopeAll OR r.institution_id = ANY(:scopeIds))
+            """;
+
+    private final JdbcClient jdbc;
+
+    public AcademicYearRepository(@Qualifier(OrgDatabaseConfig.DATABASE) ModuleDatabase database) {
+        this.jdbc = database.jdbc();
+    }
+
+    public Optional<AcademicYearEntity> findById(UUID id) {
+        return jdbc.sql(FIND_BY_ID).param("id", id).query(AcademicYearRepository::map).optional();
+    }
+
+    /** The live year, locked until the transaction ends, so work that reads and then writes its terms serializes. */
+    public Optional<AcademicYearEntity> lockById(UUID id) {
+        return jdbc.sql(LOCK_BY_ID).param("id", id).query(AcademicYearRepository::map).optional();
+    }
+
+    public Page<AcademicYearEntity> list(PageRequest page, SqlFragment filter) {
+        SqlFragment where = filter.and(page.keysetPredicate());
+        String sql = SELECT_LIVE + " AND (" + where.sql() + ") ORDER BY " + page.orderByClause() + page.limitClause();
+        List<AcademicYearEntity> rows = jdbc.sql(sql).params(where.params()).params(page.limitParams())
+                .query(AcademicYearRepository::map).list();
+        return page.toPage(rows, e -> sortValues(page.sort(), e), AcademicYearEntity::getId);
+    }
+
+    /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
+    public AcademicYearEntity insert(AcademicYearEntity e) {
+        return jdbc.sql(INSERT)
+                .param("id", e.getId())
+                .param("tenantId", e.getTenantId())
+                .param("institutionId", e.getInstitutionId())
+                .param("name", e.getName())
+                .param("description", e.getDescription())
+                .param("startDate", e.getStartDate())
+                .param("endDate", e.getEndDate())
+                .param("termStructure", e.getTermStructure())
+                .param("isCurrent", e.getIsCurrent())
+                .param("createdAt", e.getCreatedAt())
+                .param("createdBy", e.getCreatedBy())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("rowVersion", e.getRowVersion())
+                .query(AcademicYearRepository::map).single();
+    }
+
+    /** Updates under the ETag guard; 0 rows means the row changed (or vanished) since it was read. */
+    public int update(AcademicYearEntity e, int expectedVersion) {
+        return jdbc.sql(UPDATE)
+                .param("id", e.getId())
+                .param("institutionId", e.getInstitutionId())
+                .param("name", e.getName())
+                .param("description", e.getDescription())
+                .param("startDate", e.getStartDate())
+                .param("endDate", e.getEndDate())
+                .param("termStructure", e.getTermStructure())
+                .param("isCurrent", e.getIsCurrent())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("expected", expectedVersion)
+                .update();
+    }
+
+    public int softDelete(AcademicYearEntity e, int expectedVersion) {
+        return jdbc.sql(SOFT_DELETE)
+                .param("id", e.getId())
+                .param("deletedAt", e.getDeletedAt())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("expected", expectedVersion)
+                .update();
+    }
+
+    /** uq_academic_year_1: institution_id, name where (deleted_at IS NULL). */
+    public boolean takenInstitutionIdName1(AcademicYearEntity e) {
+        return Boolean.TRUE.equals(jdbc.sql(UQ_ACADEMIC_YEAR_1_TAKEN)
+                .param("institutionId", e.getInstitutionId())
+                .param("name", e.getName())
+               .param("id", e.getId())
+                .query(Boolean.class).single());
+    }
+
+    /** Whether the referenced org.institution row exists (live). */
+    public boolean existsInstitutionId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(EXISTS_INSTITUTION_ID).param("id", id).query(Boolean.class).single());
+    }
+
+    /** Whether live org.academic_term rows still reference the row. */
+    public boolean referencedByAcademicTermAcademicYearId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_ACADEMIC_TERM_ACADEMIC_YEAR_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** org.CloseAcademicYear; 0 rows means the row changed (or vanished) since it was read. */
+    /** Activates a planned year as its institution's current one; 0 rows means it changed since it was read. */
+    public int activateAcademicYear(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_ACTIVATE_ACADEMIC_YEAR).param("id", id).param("expected", expected)
+                .param("now", now).param("actor", actor).update();
+    }
+
+    /** Whether another live year of the institution is active. */
+    public boolean otherActive(UUID institutionId, UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(OTHER_ACTIVE).param("institutionId", institutionId).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** The other live years of the institution marked current, locked until the transaction ends. */
+    public List<UUID> lockOtherCurrent(UUID institutionId, UUID id) {
+        return jdbc.sql(OTHER_CURRENT).param("institutionId", institutionId).param("id", id).query(UUID.class)
+                .list();
+    }
+
+    /** Takes the current mark off a year (another one became current). */
+    public int clearCurrent(UUID id, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(CLEAR_CURRENT).param("id", id).param("now", now).param("actor", actor).update();
+    }
+
+    public int closeAcademicYear(UUID id, int expected, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_CLOSE_ACADEMIC_YEAR)
+                .param("id", id)
+                .param("expected", expected)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Rows of the caller's institutions only. */
+    public static SqlFragment scope(DataScope scope) {
+        return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    private static List<Object> sortValues(SortSpec sort, AcademicYearEntity e) {
+        return sort.orders().stream().map(o -> SORT_VALUES.get(o.field().name()).apply(e)).toList();
+    }
+
+    private static AcademicYearEntity map(ResultSet rs, int row) throws SQLException {
+        return AcademicYearEntity.builder()
+                .id(rs.getObject("id", UUID.class))
+                .tenantId(rs.getObject("tenant_id", UUID.class))
+                .institutionId(rs.getObject("institution_id", UUID.class))
+                .name(rs.getString("name"))
+                .description(rs.getString("description"))
+                .startDate(rs.getObject("start_date", LocalDate.class))
+                .endDate(rs.getObject("end_date", LocalDate.class))
+                .termStructure(rs.getString("term_structure"))
+                .status(rs.getString("status"))
+                .isCurrent(rs.getObject("is_current", Boolean.class))
+                .createdAt(rs.getObject("created_at", OffsetDateTime.class))
+                .createdBy(rs.getObject("created_by", UUID.class))
+                .updatedAt(rs.getObject("updated_at", OffsetDateTime.class))
+                .updatedBy(rs.getObject("updated_by", UUID.class))
+                .deletedAt(rs.getObject("deleted_at", OffsetDateTime.class))
+                .rowVersion(rs.getInt("row_version"))
+                .build();
+    }
+
+    private static FieldSpec field(String name, String column, ValueType type) {
+        return new FieldSpec(name, column, type);
+    }
+
+    private static Map<String, FieldSpec> fields(FieldSpec... specs) {
+        return Arrays.stream(specs).collect(Collectors.toUnmodifiableMap(FieldSpec::name, s -> s));
+    }
+}

@@ -17,25 +17,25 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of FeePlanInstallment that can be updated (partial update; see updateMask).
+ * Fields of FeePlanInstallment that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class FeePlanInstallmentUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer sequence;
+  private @Nullable Optional<@NotNull Integer> sequence;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer dueDays;
+  private @Nullable Optional<Integer> dueDays;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private @Nullable LocalDate dueDate;
+  private @Nullable Optional<LocalDate> dueDate;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String sharePercent;
+  private @Nullable Optional<@NotNull @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> sharePercent;
 
-  public FeePlanInstallmentUpdate sequence(@Nullable Integer sequence) {
+  public FeePlanInstallmentUpdate sequence(@Nullable Optional<Integer> sequence) {
     this.sequence = sequence;
     return this;
   }
@@ -46,16 +46,16 @@ public class FeePlanInstallmentUpdate {
    */
   
   @JsonProperty("sequence")
-  public @Nullable Integer getSequence() {
+  public @Nullable Optional<Integer> getSequence() {
     return sequence;
   }
 
   @JsonProperty("sequence")
-  public void setSequence(@Nullable Integer sequence) {
+  public void setSequence(@Nullable Optional<Integer> sequence) {
     this.sequence = sequence;
   }
 
-  public FeePlanInstallmentUpdate dueDays(@Nullable Integer dueDays) {
+  public FeePlanInstallmentUpdate dueDays(@Nullable Optional<Integer> dueDays) {
     this.dueDays = dueDays;
     return this;
   }
@@ -66,16 +66,16 @@ public class FeePlanInstallmentUpdate {
    */
   
   @JsonProperty("dueDays")
-  public @Nullable Integer getDueDays() {
+  public @Nullable Optional<Integer> getDueDays() {
     return dueDays;
   }
 
   @JsonProperty("dueDays")
-  public void setDueDays(@Nullable Integer dueDays) {
+  public void setDueDays(@Nullable Optional<Integer> dueDays) {
     this.dueDays = dueDays;
   }
 
-  public FeePlanInstallmentUpdate dueDate(@Nullable LocalDate dueDate) {
+  public FeePlanInstallmentUpdate dueDate(@Nullable Optional<LocalDate> dueDate) {
     this.dueDate = dueDate;
     return this;
   }
@@ -84,18 +84,18 @@ public class FeePlanInstallmentUpdate {
    * Fixed due date (fixed_date).
    * @return dueDate
    */
-  @Valid 
+  
   @JsonProperty("dueDate")
-  public @Nullable LocalDate getDueDate() {
+  public @Nullable Optional<LocalDate> getDueDate() {
     return dueDate;
   }
 
   @JsonProperty("dueDate")
-  public void setDueDate(@Nullable LocalDate dueDate) {
+  public void setDueDate(@Nullable Optional<LocalDate> dueDate) {
     this.dueDate = dueDate;
   }
 
-  public FeePlanInstallmentUpdate sharePercent(@Nullable String sharePercent) {
+  public FeePlanInstallmentUpdate sharePercent(@Nullable Optional<String> sharePercent) {
     this.sharePercent = sharePercent;
     return this;
   }
@@ -104,14 +104,14 @@ public class FeePlanInstallmentUpdate {
    * Share of the total fee due in this installment.
    * @return sharePercent
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("sharePercent")
-  public @Nullable String getSharePercent() {
+  public @Nullable Optional<String> getSharePercent() {
     return sharePercent;
   }
 
   @JsonProperty("sharePercent")
-  public void setSharePercent(@Nullable String sharePercent) {
+  public void setSharePercent(@Nullable Optional<String> sharePercent) {
     this.sharePercent = sharePercent;
   }
 

@@ -19,16 +19,16 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of FeeConcession that can be updated (partial update; see updateMask).
+ * Fields of FeeConcession that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class FeeConcessionUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID feeHeadId;
+  private @Nullable Optional<UUID> feeHeadId;
 
   /**
    * percent or amount.
@@ -66,13 +66,13 @@ public class FeeConcessionUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable ConcessionTypeEnum concessionType;
+  private @Nullable Optional<@NotNull ConcessionTypeEnum> concessionType;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String concessionValue;
+  private @Nullable Optional<@NotNull @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> concessionValue;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String reason;
+  private @Nullable Optional<@Size(max = 300) String> reason;
 
   /**
    * active / revoked.
@@ -110,17 +110,17 @@ public class FeeConcessionUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable StatusEnum status;
+  private @Nullable Optional<@NotNull StatusEnum> status;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private @Nullable LocalDate validFrom;
+  private @Nullable Optional<LocalDate> validFrom;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private @Nullable LocalDate validUntil;
+  private @Nullable Optional<LocalDate> validUntil;
 
-  public FeeConcessionUpdate institutionId(@Nullable UUID institutionId) {
+  public FeeConcessionUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -129,18 +129,18 @@ public class FeeConcessionUpdate {
    * Institution (NULL = tenant-wide).
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public FeeConcessionUpdate feeHeadId(@Nullable UUID feeHeadId) {
+  public FeeConcessionUpdate feeHeadId(@Nullable Optional<UUID> feeHeadId) {
     this.feeHeadId = feeHeadId;
     return this;
   }
@@ -149,18 +149,18 @@ public class FeeConcessionUpdate {
    * Fee head it applies to (NULL = all heads).
    * @return feeHeadId
    */
-  @Valid 
+  
   @JsonProperty("feeHeadId")
-  public @Nullable UUID getFeeHeadId() {
+  public @Nullable Optional<UUID> getFeeHeadId() {
     return feeHeadId;
   }
 
   @JsonProperty("feeHeadId")
-  public void setFeeHeadId(@Nullable UUID feeHeadId) {
+  public void setFeeHeadId(@Nullable Optional<UUID> feeHeadId) {
     this.feeHeadId = feeHeadId;
   }
 
-  public FeeConcessionUpdate concessionType(@Nullable ConcessionTypeEnum concessionType) {
+  public FeeConcessionUpdate concessionType(@Nullable Optional<ConcessionTypeEnum> concessionType) {
     this.concessionType = concessionType;
     return this;
   }
@@ -171,16 +171,16 @@ public class FeeConcessionUpdate {
    */
   
   @JsonProperty("concessionType")
-  public @Nullable ConcessionTypeEnum getConcessionType() {
+  public @Nullable Optional<ConcessionTypeEnum> getConcessionType() {
     return concessionType;
   }
 
   @JsonProperty("concessionType")
-  public void setConcessionType(@Nullable ConcessionTypeEnum concessionType) {
+  public void setConcessionType(@Nullable Optional<ConcessionTypeEnum> concessionType) {
     this.concessionType = concessionType;
   }
 
-  public FeeConcessionUpdate concessionValue(@Nullable String concessionValue) {
+  public FeeConcessionUpdate concessionValue(@Nullable Optional<String> concessionValue) {
     this.concessionValue = concessionValue;
     return this;
   }
@@ -189,18 +189,18 @@ public class FeeConcessionUpdate {
    * Percentage (0-100) or absolute amount per the type.
    * @return concessionValue
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("concessionValue")
-  public @Nullable String getConcessionValue() {
+  public @Nullable Optional<String> getConcessionValue() {
     return concessionValue;
   }
 
   @JsonProperty("concessionValue")
-  public void setConcessionValue(@Nullable String concessionValue) {
+  public void setConcessionValue(@Nullable Optional<String> concessionValue) {
     this.concessionValue = concessionValue;
   }
 
-  public FeeConcessionUpdate reason(@Nullable String reason) {
+  public FeeConcessionUpdate reason(@Nullable Optional<String> reason) {
     this.reason = reason;
     return this;
   }
@@ -209,18 +209,18 @@ public class FeeConcessionUpdate {
    * Why it was granted.
    * @return reason
    */
-  @Size(max = 300) 
+  
   @JsonProperty("reason")
-  public @Nullable String getReason() {
+  public @Nullable Optional<String> getReason() {
     return reason;
   }
 
   @JsonProperty("reason")
-  public void setReason(@Nullable String reason) {
+  public void setReason(@Nullable Optional<String> reason) {
     this.reason = reason;
   }
 
-  public FeeConcessionUpdate status(@Nullable StatusEnum status) {
+  public FeeConcessionUpdate status(@Nullable Optional<StatusEnum> status) {
     this.status = status;
     return this;
   }
@@ -231,16 +231,16 @@ public class FeeConcessionUpdate {
    */
   
   @JsonProperty("status")
-  public @Nullable StatusEnum getStatus() {
+  public @Nullable Optional<StatusEnum> getStatus() {
     return status;
   }
 
   @JsonProperty("status")
-  public void setStatus(@Nullable StatusEnum status) {
+  public void setStatus(@Nullable Optional<StatusEnum> status) {
     this.status = status;
   }
 
-  public FeeConcessionUpdate validFrom(@Nullable LocalDate validFrom) {
+  public FeeConcessionUpdate validFrom(@Nullable Optional<LocalDate> validFrom) {
     this.validFrom = validFrom;
     return this;
   }
@@ -249,18 +249,18 @@ public class FeeConcessionUpdate {
    * Start of validity (NULL = whole year).
    * @return validFrom
    */
-  @Valid 
+  
   @JsonProperty("validFrom")
-  public @Nullable LocalDate getValidFrom() {
+  public @Nullable Optional<LocalDate> getValidFrom() {
     return validFrom;
   }
 
   @JsonProperty("validFrom")
-  public void setValidFrom(@Nullable LocalDate validFrom) {
+  public void setValidFrom(@Nullable Optional<LocalDate> validFrom) {
     this.validFrom = validFrom;
   }
 
-  public FeeConcessionUpdate validUntil(@Nullable LocalDate validUntil) {
+  public FeeConcessionUpdate validUntil(@Nullable Optional<LocalDate> validUntil) {
     this.validUntil = validUntil;
     return this;
   }
@@ -269,14 +269,14 @@ public class FeeConcessionUpdate {
    * End of validity (NULL = whole year).
    * @return validUntil
    */
-  @Valid 
+  
   @JsonProperty("validUntil")
-  public @Nullable LocalDate getValidUntil() {
+  public @Nullable Optional<LocalDate> getValidUntil() {
     return validUntil;
   }
 
   @JsonProperty("validUntil")
-  public void setValidUntil(@Nullable LocalDate validUntil) {
+  public void setValidUntil(@Nullable Optional<LocalDate> validUntil) {
     this.validUntil = validUntil;
   }
 

@@ -13,7 +13,8 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * {@code mysms.events.bus=rabbitmq} (the default) on {@code mysms.events.rabbitmq.uri}; a service refuses to start
  * without the URI rather than run without events. Events are accepted from the broker user
- * {@code mysms.events.rabbitmq.publisher-user} names for their module ({@code self} in the monolith).
+ * {@code mysms.events.rabbitmq.publisher-user} names for the module serving their source area ({@code self} in the
+ * monolith).
  */
 @AutoConfiguration
 @ConditionalOnProperty(name = "mysms.events.bus", havingValue = "rabbitmq", matchIfMissing = true)

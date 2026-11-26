@@ -158,9 +158,9 @@ public class ConversationController implements ConversationApi {
 
     @Override
     public ResponseEntity<Conversation> updateConversation(UUID conversationId, String ifMatch,
-            ConversationUpdate conversationUpdate, String updateMask, Boolean validateOnly) {
+            ConversationUpdate conversationUpdate, Boolean validateOnly) {
         Conversation updated =
-                conversationService.updateConversation(conversationId, ifMatch, conversationUpdate, updateMask,
+                conversationService.updateConversation(conversationId, ifMatch, conversationUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
@@ -168,10 +168,10 @@ public class ConversationController implements ConversationApi {
     @Override
     public ResponseEntity<ConversationMessage> updateConversationMessage(UUID conversationId,
             UUID conversationMessageId, String ifMatch, ConversationMessageUpdate conversationMessageUpdate,
-            String updateMask, Boolean validateOnly) {
+            Boolean validateOnly) {
         ConversationMessage updated =
                 conversationService.updateConversationMessage(conversationId, conversationMessageId, ifMatch,
-                        conversationMessageUpdate, updateMask,
+                        conversationMessageUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
@@ -179,10 +179,10 @@ public class ConversationController implements ConversationApi {
     @Override
     public ResponseEntity<ConversationParticipant> updateConversationParticipant(UUID conversationId,
             UUID conversationParticipantId, String ifMatch, ConversationParticipantUpdate conversationParticipantUpdate,
-            String updateMask, Boolean validateOnly) {
+            Boolean validateOnly) {
         ConversationParticipant updated =
                 conversationService.updateConversationParticipant(conversationId, conversationParticipantId,
-                        ifMatch, conversationParticipantUpdate, updateMask,
+                        ifMatch, conversationParticipantUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

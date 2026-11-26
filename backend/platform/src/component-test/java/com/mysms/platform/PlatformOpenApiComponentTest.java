@@ -27,7 +27,7 @@ import org.springframework.test.context.DynamicPropertySource;
 class PlatformOpenApiComponentTest {
 
     /** Where the document is written, relative to the module. */
-    private static final String OPEN_API_OUTPUT_LOCATION = "target/openapi/api-docs.yml";
+    private static final String OPEN_API_OUTPUT_LOCATION = "target/openapi/platform/api-docs.yml";
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
     private static final TestTokens TOKENS = new TestTokens();
 
@@ -36,7 +36,7 @@ class PlatformOpenApiComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "platform");
+        DATABASE.register(registry, "platform", "master", "org");
         registry.add("mysms.auth.api-docs", () -> true);
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
@@ -44,7 +44,7 @@ class PlatformOpenApiComponentTest {
 
     @Test
     void writesItsOpenApiDocumentFromTheCode() throws Exception {
-        HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/v3/api-docs.yaml"))
+        HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/v3/api-docs.yaml/platform"))
                 .header("Accept", "application/vnd.oai.openapi")
                 .header("Authorization", "Bearer " + TOKENS.tenantUser(UUID.randomUUID(), UUID.randomUUID()))
                 .GET().build();

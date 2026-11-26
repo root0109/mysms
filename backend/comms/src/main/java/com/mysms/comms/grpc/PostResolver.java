@@ -105,8 +105,7 @@ public class PostResolver extends PostServiceGrpc.PostServiceImplBase {
     public void updatePost(UpdatePostRequest request, StreamObserver<UpdatePostResponse> out) {
         Post updated = service.updatePost(
                 bridge.id(request.getPost().getId(), "id"), bridge.requiredIfMatch(request.getPost().getEtag()),
-                bridge.changes(request.getPost(), request.getUpdateMask(), PostUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getPost(), request.getUpdateMask(), PostUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePostResponse.newBuilder(), "post", updated).build());
     }
 
@@ -149,7 +148,7 @@ public class PostResolver extends PostServiceGrpc.PostServiceImplBase {
                 bridge.id(request.getPostId(), "postId"), bridge.id(request.getPostAudienceClass().getId(), "id"),
                 bridge.requiredIfMatch(request.getPostAudienceClass().getEtag()),
                 bridge.changes(request.getPostAudienceClass(), request.getUpdateMask(), PostAudienceClassUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePostAudienceClassResponse.newBuilder(), "post_audience_class", updated).build());
     }
 
@@ -191,7 +190,7 @@ public class PostResolver extends PostServiceGrpc.PostServiceImplBase {
                 bridge.id(request.getPostId(), "postId"), bridge.id(request.getPostReaction().getId(), "id"),
                 bridge.requiredIfMatch(request.getPostReaction().getEtag()),
                 bridge.changes(request.getPostReaction(), request.getUpdateMask(), PostReactionUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePostReactionResponse.newBuilder(), "post_reaction", updated).build());
     }
 
@@ -231,7 +230,7 @@ public class PostResolver extends PostServiceGrpc.PostServiceImplBase {
                 bridge.id(request.getPostId(), "postId"), bridge.id(request.getPostComment().getId(), "id"),
                 bridge.requiredIfMatch(request.getPostComment().getEtag()),
                 bridge.changes(request.getPostComment(), request.getUpdateMask(), PostCommentUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePostCommentResponse.newBuilder(), "post_comment", updated).build());
     }
 

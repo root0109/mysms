@@ -92,7 +92,7 @@ class PlatformGrpcParityComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "platform");
+        DATABASE.register(registry, "platform", "master", "org");
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
         registry.add("mysms.platform.razorpay.url", () -> CLOSED);
@@ -175,7 +175,7 @@ class PlatformGrpcParityComponentTest {
 
     private static JsonNode spec() throws Exception {
         return JSON.readTree(PlatformGrpcParityComponentTest.class.getClassLoader()
-                .getResourceAsStream("crud-spec.json"));
+                .getResourceAsStream("platform/crud-spec.json"));
     }
 
     private static List<String> ids(JsonNode items, String field) {
@@ -217,7 +217,7 @@ class PlatformGrpcParityComponentTest {
     @TestFactory
     List<DynamicNode> everyStandardRpcAnswersLikeRest() throws Exception {
         List<DynamicNode> tests = new ArrayList<>();
-        for (GrpcParityContract.Resource resource : GrpcParityContract.resources("crud-spec.json")) {
+        for (GrpcParityContract.Resource resource : GrpcParityContract.resources("platform/crud-spec.json")) {
             if (!resource.standardOnly()) {
                 continue; // theResourcesWithoutAFullSetAnswerLikeRest
             }

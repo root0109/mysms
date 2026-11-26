@@ -132,7 +132,7 @@ public interface PaymentGatewayAccountApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -140,12 +140,11 @@ public interface PaymentGatewayAccountApi {
     String PATH_UPDATE_PAYMENT_GATEWAY_ACCOUNT = "/v1/finance/payment-gateway-accounts/{paymentGatewayAccountId}";
     /**
      * PATCH /v1/finance/payment-gateway-accounts/{paymentGatewayAccountId} : Update PaymentGatewayAccount
-     * Partially update a PaymentGatewayAccount (updateMask). Requires If-Match with the current ETag.
+     * Partially update a PaymentGatewayAccount (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param paymentGatewayAccountId PaymentGatewayAccount id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param paymentGatewayAccountUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -168,7 +167,6 @@ public interface PaymentGatewayAccountApi {
          @PathVariable("paymentGatewayAccountId") UUID paymentGatewayAccountId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody PaymentGatewayAccountUpdate paymentGatewayAccountUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 

@@ -1,0 +1,292 @@
+[ {
+  "operationId" : "hr.ApproveLeave",
+  "method" : "POST",
+  "path" : "/v1/hr/leave-applications/{leaveApplicationId}:approve",
+  "permission" : "hr.leave_application.approve_leave",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "hr.CancelLeave",
+  "method" : "POST",
+  "path" : "/v1/hr/leave-applications/{leaveApplicationId}:cancel",
+  "permission" : "hr.leave_application.cancel_leave",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "hr.ChangeStaffStatus",
+  "method" : "POST",
+  "path" : "/v1/hr/staff/{staffId}:changeStatus",
+  "permission" : "hr.staff.change_staff_status",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "hr.CreateDesignation",
+  "method" : "POST",
+  "path" : "/v1/hr/designations",
+  "permission" : "hr.designation.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "hr.CreateLeaveApplication",
+  "method" : "POST",
+  "path" : "/v1/hr/leave-applications",
+  "permission" : "hr.leave_application.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "hr.CreateLeaveBalance",
+  "method" : "POST",
+  "path" : "/v1/hr/leave-balances",
+  "permission" : "hr.leave_balance.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "hr.CreateLeaveType",
+  "method" : "POST",
+  "path" : "/v1/hr/leave-types",
+  "permission" : "hr.leave_type.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "hr.CreateStaff",
+  "method" : "POST",
+  "path" : "/v1/hr/staff",
+  "permission" : "hr.staff.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "hr.CreateStaffDepartment",
+  "method" : "POST",
+  "path" : "/v1/hr/staff/{staffId}/departments",
+  "permission" : "hr.staff_department.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "hr.CreateStaffPortalAccount",
+  "method" : "POST",
+  "path" : "/v1/hr/staff/{staffId}:createPortalAccount",
+  "permission" : "hr.staff.create_staff_portal_account",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "hr.DeleteDesignation",
+  "method" : "DELETE",
+  "path" : "/v1/hr/designations/{designationId}",
+  "permission" : "hr.designation.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.DeleteLeaveApplication",
+  "method" : "DELETE",
+  "path" : "/v1/hr/leave-applications/{leaveApplicationId}",
+  "permission" : "hr.leave_application.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.DeleteLeaveType",
+  "method" : "DELETE",
+  "path" : "/v1/hr/leave-types/{leaveTypeId}",
+  "permission" : "hr.leave_type.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.DeleteStaff",
+  "method" : "DELETE",
+  "path" : "/v1/hr/staff/{staffId}",
+  "permission" : "hr.staff.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.DeleteStaffDepartment",
+  "method" : "DELETE",
+  "path" : "/v1/hr/staff/{staffId}/departments/{staffDepartmentId}",
+  "permission" : "hr.staff_department.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.GetDesignation",
+  "method" : "GET",
+  "path" : "/v1/hr/designations/{designationId}",
+  "permission" : "hr.designation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.GetLeaveApplication",
+  "method" : "GET",
+  "path" : "/v1/hr/leave-applications/{leaveApplicationId}",
+  "permission" : "hr.leave_application.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.GetLeaveBalance",
+  "method" : "GET",
+  "path" : "/v1/hr/leave-balances/{leaveBalanceId}",
+  "permission" : "hr.leave_balance.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.GetLeaveType",
+  "method" : "GET",
+  "path" : "/v1/hr/leave-types/{leaveTypeId}",
+  "permission" : "hr.leave_type.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.GetStaff",
+  "method" : "GET",
+  "path" : "/v1/hr/staff/{staffId}",
+  "permission" : "hr.staff.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.GetStaffDepartment",
+  "method" : "GET",
+  "path" : "/v1/hr/staff/{staffId}/departments/{staffDepartmentId}",
+  "permission" : "hr.staff_department.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.GetStaffLeaveBalance",
+  "method" : "GET",
+  "path" : "/v1/hr/staff/{staffId}:leaveBalance",
+  "permission" : "hr.staff.get_leave_balance",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.ListDesignations",
+  "method" : "GET",
+  "path" : "/v1/hr/designations",
+  "permission" : "hr.designation.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.ListLeaveApplications",
+  "method" : "GET",
+  "path" : "/v1/hr/leave-applications",
+  "permission" : "hr.leave_application.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.ListLeaveBalances",
+  "method" : "GET",
+  "path" : "/v1/hr/leave-balances",
+  "permission" : "hr.leave_balance.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.ListLeaveTypes",
+  "method" : "GET",
+  "path" : "/v1/hr/leave-types",
+  "permission" : "hr.leave_type.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.ListStaff",
+  "method" : "GET",
+  "path" : "/v1/hr/staff",
+  "permission" : "hr.staff.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.ListStaffDepartments",
+  "method" : "GET",
+  "path" : "/v1/hr/staff/{staffId}/departments",
+  "permission" : "hr.staff_department.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.RejectLeave",
+  "method" : "POST",
+  "path" : "/v1/hr/leave-applications/{leaveApplicationId}:reject",
+  "permission" : "hr.leave_application.reject_leave",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "hr.UpdateDesignation",
+  "method" : "PATCH",
+  "path" : "/v1/hr/designations/{designationId}",
+  "permission" : "hr.designation.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.UpdateLeaveApplication",
+  "method" : "PATCH",
+  "path" : "/v1/hr/leave-applications/{leaveApplicationId}",
+  "permission" : "hr.leave_application.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.UpdateLeaveBalance",
+  "method" : "PATCH",
+  "path" : "/v1/hr/leave-balances/{leaveBalanceId}",
+  "permission" : "hr.leave_balance.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.UpdateLeaveType",
+  "method" : "PATCH",
+  "path" : "/v1/hr/leave-types/{leaveTypeId}",
+  "permission" : "hr.leave_type.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.UpdateStaff",
+  "method" : "PATCH",
+  "path" : "/v1/hr/staff/{staffId}",
+  "permission" : "hr.staff.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "hr.UpdateStaffDepartment",
+  "method" : "PATCH",
+  "path" : "/v1/hr/staff/{staffId}/departments/{staffDepartmentId}",
+  "permission" : "hr.staff_department.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+} ]

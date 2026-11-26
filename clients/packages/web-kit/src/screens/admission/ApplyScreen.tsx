@@ -162,8 +162,11 @@ export function ApplyScreen() {
   const applicantOk = form.fullName.trim() !== '' && /^\d{4}-\d{2}-\d{2}$/.test(form.dateOfBirth);
   const saveApplicant = () => {
     const body = cleaned(form);
-    if (applicationId && etag)
-      save.mutate({ applicationId, etag, form: body }, { onSuccess: () => setStage('guardians') });
+    if (applicationId && etag && current.data)
+      save.mutate(
+        { applicationId, etag, saved: cleaned(formOf(current.data.data)), form: body },
+        { onSuccess: () => setStage('guardians') },
+      );
     else if (!applicationId)
       start.mutate(
         { cycle: { id: cycle.data.id, institutionId: cycle.data.institutionId }, form: body },

@@ -28,7 +28,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,9 +51,6 @@ public class TeachingAssignmentService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "academics.teaching_assignment.create";
     static final String PERMISSION_UPDATE = "academics.teaching_assignment.update";
     static final String PERMISSION_DELETE = "academics.teaching_assignment.delete";
-    /** The contract's TeachingAssignmentUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("classSubjectId", "staffId", "periodsPerWeek", "periodsRemaining", "teacherRole", "isActive");
 
 
     private final TeachingAssignmentRepository repository;
@@ -123,13 +120,12 @@ public class TeachingAssignmentService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match. A field the request leaves out is kept, a null one is cleared and a
+     * value is set (§7.2). The merged row is validated as a whole, and must stay within the caller's scope.
      */
     public TeachingAssignment updateTeachingAssignment(UUID id, String ifMatch, TeachingAssignmentUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             TeachingAssignmentEntity entity = loadVisible(scope, id);
@@ -137,7 +133,7 @@ public class TeachingAssignmentService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -198,22 +194,16 @@ public class TeachingAssignmentService extends AppTransactionManager {
         return repository.institutionOf(entity.getClassSubjectId());
     }
 
-    /**
-     * Applies the selected TeachingAssignmentUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
-    private static void apply(TeachingAssignmentEntity entity, TeachingAssignmentUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "classSubjectId" -> entity.setClassSubjectId(changes.getClassSubjectId());
-                case "staffId" -> entity.setStaffId(changes.getStaffId());
-                case "periodsPerWeek" -> entity.setPeriodsPerWeek(changes.getPeriodsPerWeek());
-                case "periodsRemaining" -> entity.setPeriodsRemaining(changes.getPeriodsRemaining());
-                case "teacherRole" -> entity.setTeacherRole(changes.getTeacherRole());
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(TeachingAssignmentEntity entity, TeachingAssignmentUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("classSubjectId", changes.getClassSubjectId(), entity::setClassSubjectId);
+        patch.apply("staffId", changes.getStaffId(), entity::setStaffId);
+        patch.apply("periodsPerWeek", changes.getPeriodsPerWeek(), entity::setPeriodsPerWeek);
+        patch.apply("periodsRemaining", changes.getPeriodsRemaining(), entity::setPeriodsRemaining);
+        patch.apply("teacherRole", changes.getTeacherRole(), entity::setTeacherRole);
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

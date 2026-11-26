@@ -60,8 +60,7 @@ public class SaasPlanResolver extends SaasPlanServiceGrpc.SaasPlanServiceImplBas
         SaasPlan updated = service.updateSaasPlan(
                 bridge.id(request.getSaasPlan().getId(), "id"),
                 bridge.requiredIfMatch(request.getSaasPlan().getEtag()),
-                bridge.changes(request.getSaasPlan(), request.getUpdateMask(), SaasPlanUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getSaasPlan(), request.getUpdateMask(), SaasPlanUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSaasPlanResponse.newBuilder(), "saas_plan", updated).build());
     }
 

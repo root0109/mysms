@@ -458,8 +458,6 @@ class CommsWorkflowComponentTest {
         assertThat(call("PATCH", item, writer(other), "{\"body\":\"Mine now\"}", "If-Match", "\"1\"").status())
                 .as("another member's post").isEqualTo(404);
         assertThat(call("DELETE", item, writer(other), null, "If-Match", "\"1\"").status()).isEqualTo(404);
-        assertThat(call("PATCH", item + "?updateMask=authorUserId", writer(me), "{}", "If-Match", "\"1\"").status())
-                .as("the author is not writable").isEqualTo(400);
         Reply edited = call("PATCH", item, writer(me), "{\"body\":\"Trip on Monday\",\"authorUserId\":\"" + other
                 + "\"}", "If-Match", "\"1\"");
         assertThat(edited.status()).as(edited.body().toString()).isEqualTo(200);
@@ -505,8 +503,6 @@ class CommsWorkflowComponentTest {
         assertThat(call("PATCH", comment, writer(me), "{\"body\":\"Not coming\"}", "If-Match", "\"1\"").status())
                 .as("the post's author does not edit another's comment").isEqualTo(404);
         assertThat(call("DELETE", comment, writer(me), null, "If-Match", "\"1\"").status()).isEqualTo(404);
-        assertThat(call("PATCH", comment + "?updateMask=authorUserId", writer(other), "{}", "If-Match", "\"1\"")
-                .status()).as("the author is not writable").isEqualTo(400);
         Reply edited = call("PATCH", comment, writer(other), "{\"body\":\"See you at nine\"}", "If-Match", "\"1\"");
         assertThat(edited.status()).as(edited.body().toString()).isEqualTo(200);
         assertThat(edited.body().path("authorUserId").asString()).isEqualTo(other.toString());
@@ -814,8 +810,6 @@ class CommsWorkflowComponentTest {
         assertThat(call("DELETE", message, user(teacher, true), null, "If-Match", "\"1\"").status()).isEqualTo(404);
         assertThat(call("GET", message, user(teacher, false), null).status()).as("participants still read it")
                 .isEqualTo(200);
-        assertThat(call("PATCH", message + "?updateMask=senderUserId", user(me, false), "{}", "If-Match", "\"1\"")
-                .status()).as("the sender is not writable").isEqualTo(400);
         Reply edited = call("PATCH", message, user(me, false), "{\"body\":\"Running very late\"}", "If-Match", "\"1\"");
         assertThat(edited.status()).as(edited.body().toString()).isEqualTo(200);
         assertThat(call("DELETE", message, user(me, false), null, "If-Match", "\"2\"").status()).isEqualTo(204);
@@ -845,8 +839,6 @@ class CommsWorkflowComponentTest {
         assertThat(call("DELETE", message, school, null, "If-Match", "\"1\"").status()).isEqualTo(404);
         assertThat(call("PATCH", message, parent, "{\"reviewStatus\":\"action_taken\"}", "If-Match", "\"1\"")
                 .status()).as("the sender does not mark it").isEqualTo(403);
-        assertThat(call("PATCH", message + "?updateMask=senderUserId", parent, "{}", "If-Match", "\"1\"").status())
-                .as("the sender is not writable").isEqualTo(400);
         Reply marked = call("PATCH", message, school, "{\"reviewStatus\":\"seen\",\"deletedByReceiver\":true}",
                 "If-Match", "\"1\"");
         assertThat(marked.status()).as(marked.body().toString()).isEqualTo(200);

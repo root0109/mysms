@@ -1,0 +1,382 @@
+{
+ "module": "people",
+ "resources": [
+  {
+   "name": "Certification",
+   "table": "people.certification",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/certifications",
+   "item": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/certifications/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-cad12ef4', 1, 'a2da1934-b1b5-5f1f-8564-66e9edef348f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "personId": "a2da1934-b1b5-5f1f-8564-66e9edef348f",
+    "name": "t-name-5b6488d1",
+    "issuingOrganization": "t-issuing-organization-8f261f4d",
+    "issueDate": "2026-01-10"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "clears": "description",
+    "keeps": "name"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "EducationHistory",
+   "table": "people.education_history",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/education",
+   "item": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/education/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-cad12ef4', 1, 'a2da1934-b1b5-5f1f-8564-66e9edef348f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "personId": "a2da1934-b1b5-5f1f-8564-66e9edef348f",
+    "institutionName": "t-institution-name-c1926b2c"
+   },
+   "update": {
+    "institutionName": "Updated institution_name"
+   },
+   "patch": {
+    "clears": "degreeType",
+    "keeps": "institutionName"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "EmergencyContact",
+   "table": "people.emergency_contact",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/emergency-contacts",
+   "item": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/emergency-contacts/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-cad12ef4', 1, 'a2da1934-b1b5-5f1f-8564-66e9edef348f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "personId": "a2da1934-b1b5-5f1f-8564-66e9edef348f",
+    "contactName": "Ravi Kumar",
+    "phone": "+919800000001"
+   },
+   "update": {
+    "relationship": "Updated relationship"
+   },
+   "patch": {
+    "clears": "relationship",
+    "keeps": "priority"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "Honorific",
+   "table": "people.honorific",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/people/honorifics",
+   "item": "/v1/people/honorifics/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C63A51F8F",
+    "name": "t-name-971d440d"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "clears": "shortcut",
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Person",
+   "table": "people.person",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/people/persons",
+   "item": "/v1/people/persons/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "displayName": "t-display-name-c9af7e6d",
+    "nationalId": "Secret-2d9704-00001234"
+   },
+   "update": {
+    "firstName": "Updated first_name"
+   },
+   "patch": {
+    "clears": "remarks",
+    "keeps": "displayName"
+   },
+   "duplicateConflicts": false,
+   "secrets": [
+    {
+     "field": "nationalId",
+     "masked": "nationalIdMasked",
+     "mask": "••••1234",
+     "rotated": "Rotated-secret-5678",
+     "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM people.person WHERE id = '{id}' AND (national_id_enc IS NULL OR national_id_enc NOT LIKE 'v1.%' OR strpos(national_id_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
+    }
+   ]
+  },
+  {
+   "name": "PersonAddress",
+   "table": "people.person_address",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/addresses",
+   "item": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/addresses/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-cad12ef4', 1, 'a2da1934-b1b5-5f1f-8564-66e9edef348f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "personId": "a2da1934-b1b5-5f1f-8564-66e9edef348f",
+    "addressType": "permanent"
+   },
+   "update": {
+    "line1": "Updated line1"
+   },
+   "patch": {
+    "clears": "line1",
+    "keeps": "addressType"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "PersonDocument",
+   "table": "people.person_document",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/documents",
+   "item": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/documents/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-cad12ef4', 1, 'a2da1934-b1b5-5f1f-8564-66e9edef348f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "personId": "a2da1934-b1b5-5f1f-8564-66e9edef348f",
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "documentType": "certificate",
+    "name": "t-name-b5bdee81",
+    "fileId": "ca50dde4-0b28-5d01-a2e4-d3d881ac6a54"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "name",
+    "clears": "institutionId"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "PersonSkill",
+   "table": "people.person_skill",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/skills",
+   "item": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/skills/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-cad12ef4', 1, 'a2da1934-b1b5-5f1f-8564-66e9edef348f') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO people.skill (tenant_id, name, row_version, code, id) VALUES (:tenant, 't-name-9a28c956', 1, 'C50021FE6', 'a7c36910-35e7-58d8-92bb-39cf5435bc31') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "personId": "a2da1934-b1b5-5f1f-8564-66e9edef348f",
+    "skillId": "a7c36910-35e7-58d8-92bb-39cf5435bc31"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "skillId"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "PersonSocialLink",
+   "table": "people.person_social_link",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/social-links",
+   "item": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/social-links/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-cad12ef4', 1, 'a2da1934-b1b5-5f1f-8564-66e9edef348f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "personId": "a2da1934-b1b5-5f1f-8564-66e9edef348f",
+    "network": "facebook",
+    "handle": "t-handle-5910bd6b"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "network"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "PublicProfile",
+   "table": "people.public_profile",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "Update"
+   ],
+   "collection": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/public-profile",
+   "item": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/public-profile/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-cad12ef4', 1, 'a2da1934-b1b5-5f1f-8564-66e9edef348f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "personId": "a2da1934-b1b5-5f1f-8564-66e9edef348f"
+   },
+   "update": {
+    "headline": "Updated headline"
+   },
+   "patch": {
+    "clears": "headline",
+    "keeps": "hidePrivateInfo"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Qualification",
+   "table": "people.qualification",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/people/qualifications",
+   "item": "/v1/people/qualifications/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C5D14E3E4",
+    "name": "t-name-652df640"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Skill",
+   "table": "people.skill",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/people/skills",
+   "item": "/v1/people/skills/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C5450514C",
+    "name": "t-name-41c3f35c"
+   },
+   "update": {
+    "isActive": true
+   },
+   "patch": {
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "WorkExperience",
+   "table": "people.work_experience",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/work-experience",
+   "item": "/v1/people/persons/a2da1934-b1b5-5f1f-8564-66e9edef348f/work-experience/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO people.person (tenant_id, display_name, row_version, id) VALUES (:tenant, 't-display-name-cad12ef4', 1, 'a2da1934-b1b5-5f1f-8564-66e9edef348f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "personId": "a2da1934-b1b5-5f1f-8564-66e9edef348f",
+    "title": "t-title-bd53a22f",
+    "company": "t-company-b35b80da",
+    "location": "t-location-1c4cd73a",
+    "fromDate": "2026-01-10"
+   },
+   "update": {
+    "title": "Updated title"
+   },
+   "patch": {
+    "clears": "description",
+    "keeps": "title"
+   },
+   "duplicateConflicts": false
+  }
+ ]
+}

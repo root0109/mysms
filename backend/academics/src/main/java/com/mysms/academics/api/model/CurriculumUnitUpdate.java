@@ -17,19 +17,19 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of CurriculumUnit that can be updated (partial update; see updateMask).
+ * Fields of CurriculumUnit that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class CurriculumUnitUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID classSubjectId;
+  private @Nullable Optional<@NotNull UUID> classSubjectId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 200) String> name;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer sequence;
+  private @Nullable Optional<Integer> sequence;
 
   /**
    * Whether in use.
@@ -67,9 +67,9 @@ public class CurriculumUnitUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable StatusEnum status;
+  private @Nullable Optional<@NotNull StatusEnum> status;
 
-  public CurriculumUnitUpdate classSubjectId(@Nullable UUID classSubjectId) {
+  public CurriculumUnitUpdate classSubjectId(@Nullable Optional<UUID> classSubjectId) {
     this.classSubjectId = classSubjectId;
     return this;
   }
@@ -78,18 +78,18 @@ public class CurriculumUnitUpdate {
    * Class subject.
    * @return classSubjectId
    */
-  @Valid 
+  
   @JsonProperty("classSubjectId")
-  public @Nullable UUID getClassSubjectId() {
+  public @Nullable Optional<UUID> getClassSubjectId() {
     return classSubjectId;
   }
 
   @JsonProperty("classSubjectId")
-  public void setClassSubjectId(@Nullable UUID classSubjectId) {
+  public void setClassSubjectId(@Nullable Optional<UUID> classSubjectId) {
     this.classSubjectId = classSubjectId;
   }
 
-  public CurriculumUnitUpdate name(@Nullable String name) {
+  public CurriculumUnitUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -98,18 +98,18 @@ public class CurriculumUnitUpdate {
    * Unit / chapter name.
    * @return name
    */
-  @Size(max = 200) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public CurriculumUnitUpdate sequence(@Nullable Integer sequence) {
+  public CurriculumUnitUpdate sequence(@Nullable Optional<Integer> sequence) {
     this.sequence = sequence;
     return this;
   }
@@ -120,16 +120,16 @@ public class CurriculumUnitUpdate {
    */
   
   @JsonProperty("sequence")
-  public @Nullable Integer getSequence() {
+  public @Nullable Optional<Integer> getSequence() {
     return sequence;
   }
 
   @JsonProperty("sequence")
-  public void setSequence(@Nullable Integer sequence) {
+  public void setSequence(@Nullable Optional<Integer> sequence) {
     this.sequence = sequence;
   }
 
-  public CurriculumUnitUpdate status(@Nullable StatusEnum status) {
+  public CurriculumUnitUpdate status(@Nullable Optional<StatusEnum> status) {
     this.status = status;
     return this;
   }
@@ -140,12 +140,12 @@ public class CurriculumUnitUpdate {
    */
   
   @JsonProperty("status")
-  public @Nullable StatusEnum getStatus() {
+  public @Nullable Optional<StatusEnum> getStatus() {
     return status;
   }
 
   @JsonProperty("status")
-  public void setStatus(@Nullable StatusEnum status) {
+  public void setStatus(@Nullable Optional<StatusEnum> status) {
     this.status = status;
   }
 

@@ -1,0 +1,116 @@
+package com.mysms.learning.lms.controller;
+
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.learning.lms.api.DriveItemApi;
+import com.mysms.learning.lms.api.model.DriveItem;
+import com.mysms.learning.lms.api.model.DriveItemShare;
+import com.mysms.learning.lms.api.model.DriveItemShareList;
+import com.mysms.learning.lms.api.model.DriveItemShareUpdate;
+import com.mysms.learning.lms.api.model.DriveItemUpdate;
+import com.mysms.learning.lms.api.model.ShareDriveItemRequest;
+import com.mysms.core.web.ReadMask;
+import com.mysms.learning.lms.business.DriveItemService;
+import java.net.URI;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * REST edge of the DriveItem operations; authentication and the permission check already ran in the auth-client filter.
+ * Operations not served yet answer 501.
+ */
+@RestController
+public class DriveItemController implements DriveItemApi {
+
+    private final DriveItemService driveItemService;
+
+    public DriveItemController(DriveItemService driveItemService) {
+        this.driveItemService = driveItemService;
+    }
+
+    @Override
+    public ResponseEntity<DriveItem> createDriveItem(DriveItem driveItem, UUID idempotencyKey,
+            Boolean validateOnly) {
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        DriveItem created = driveItemService.createDriveItem(driveItem, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(URI.create("/v1/lms/drive-items/" + created.getId())).eTag(created.getEtag())
+                .body(created);
+    }
+
+    @Override
+    public ResponseEntity<DriveItemShare> createDriveItemShare(UUID driveItemId,
+            DriveItemShare driveItemShare, UUID idempotencyKey, Boolean validateOnly) {
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        DriveItemShare created = driveItemService.createDriveItemShare(driveItemId, driveItemShare, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).eTag(created.getEtag()).body(created);
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteDriveItem(UUID driveItemId, String ifMatch) {
+        driveItemService.deleteDriveItem(driveItemId, ifMatch);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteDriveItemShare(UUID driveItemId, UUID driveItemShareId,
+            String ifMatch) {
+        driveItemService.deleteDriveItemShare(driveItemId, driveItemShareId, ifMatch);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<DriveItem> getDriveItem(UUID driveItemId, String fields) {
+        DriveItem found = driveItemService.getDriveItem(driveItemId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<DriveItemShare>> listDriveItemShares(UUID driveItemId, Integer page, Integer size,
+            String cursor, String filter, List<String> sort, String fields) {
+        PagingInfo<DriveItemShare> list =
+                PagingUtil.pagingInfo(driveItemService.listDriveItemShares(driveItemId, page, size, cursor, filter,
+                        sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<DriveItem>> listDriveItems(Integer page, Integer size, String cursor,
+            String filter, List<String> sort, String fields) {
+        PagingInfo<DriveItem> list =
+                PagingUtil.pagingInfo(driveItemService.listDriveItems(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
+    }
+
+    @Override
+    public ResponseEntity<DriveItemShareList> shareDriveItem(UUID driveItemId,
+            ShareDriveItemRequest shareDriveItemRequest, UUID idempotencyKey) {
+        return ResponseEntity.ok(driveItemService.shareDriveItem(driveItemId, shareDriveItemRequest));
+    }
+
+    @Override
+    public ResponseEntity<DriveItem> updateDriveItem(UUID driveItemId, String ifMatch,
+            DriveItemUpdate driveItemUpdate, Boolean validateOnly) {
+        DriveItem updated = driveItemService.updateDriveItem(driveItemId, ifMatch, driveItemUpdate,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
+    }
+
+    @Override
+    public ResponseEntity<DriveItemShare> updateDriveItemShare(UUID driveItemId, UUID driveItemShareId,
+            String ifMatch, DriveItemShareUpdate driveItemShareUpdate, Boolean validateOnly) {
+        DriveItemShare updated =
+                driveItemService.updateDriveItemShare(driveItemId, driveItemShareId, ifMatch, driveItemShareUpdate,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
+    }
+}

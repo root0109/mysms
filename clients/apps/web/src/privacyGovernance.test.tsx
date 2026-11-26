@@ -125,7 +125,7 @@ describe('ADM-21 Legal holds', () => {
     expect(await within(dialog).findByText('Saved.')).toBeInTheDocument();
     const moved = api.calls.find((c) => c.method === 'PATCH');
     expect(moved?.headers.get('If-Match')).toBe('"1"');
-    expect(moved?.search).toContain('updateMask=reviewBy');
+    expect(moved?.search).toBe('');
     expect(JSON.parse(moved?.body ?? '{}')).toEqual({ reviewBy: '2030-06-30' });
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Release the hold' }));

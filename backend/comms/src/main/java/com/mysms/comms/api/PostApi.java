@@ -524,7 +524,7 @@ public interface PostApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -560,7 +560,7 @@ public interface PostApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -596,7 +596,7 @@ public interface PostApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -630,7 +630,7 @@ public interface PostApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -669,12 +669,11 @@ public interface PostApi {
     String PATH_UPDATE_POST = "/v1/comms/posts/{postId}";
     /**
      * PATCH /v1/comms/posts/{postId} : Update Post
-     * Partially update a Post (updateMask). Requires If-Match with the current ETag.
+     * Partially update a Post (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param postId Post id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param postUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -698,7 +697,6 @@ public interface PostApi {
          @PathVariable("postId") UUID postId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody PostUpdate postUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -706,13 +704,12 @@ public interface PostApi {
     String PATH_UPDATE_POST_AUDIENCE_CLASS = "/v1/comms/posts/{postId}/audience-classes/{postAudienceClassId}";
     /**
      * PATCH /v1/comms/posts/{postId}/audience-classes/{postAudienceClassId} : Update PostAudienceClass
-     * Partially update a PostAudienceClass (updateMask). Requires If-Match with the current ETag.
+     * Partially update a PostAudienceClass (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param postId Post id. (required)
      * @param postAudienceClassId PostAudienceClass id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param postAudienceClassUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -737,7 +734,6 @@ public interface PostApi {
          @PathVariable("postAudienceClassId") UUID postAudienceClassId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody PostAudienceClassUpdate postAudienceClassUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -745,13 +741,12 @@ public interface PostApi {
     String PATH_UPDATE_POST_COMMENT = "/v1/comms/posts/{postId}/comments/{postCommentId}";
     /**
      * PATCH /v1/comms/posts/{postId}/comments/{postCommentId} : Update PostComment
-     * Partially update a PostComment (updateMask). Requires If-Match with the current ETag.
+     * Partially update a PostComment (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param postId Post id. (required)
      * @param postCommentId PostComment id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param postCommentUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -776,7 +771,6 @@ public interface PostApi {
          @PathVariable("postCommentId") UUID postCommentId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody PostCommentUpdate postCommentUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -784,13 +778,12 @@ public interface PostApi {
     String PATH_UPDATE_POST_REACTION = "/v1/comms/posts/{postId}/reactions/{postReactionId}";
     /**
      * PATCH /v1/comms/posts/{postId}/reactions/{postReactionId} : Update PostReaction
-     * Partially update a PostReaction (updateMask). Requires If-Match with the current ETag.
+     * Partially update a PostReaction (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param postId Post id. (required)
      * @param postReactionId PostReaction id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param postReactionUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -815,7 +808,6 @@ public interface PostApi {
          @PathVariable("postReactionId") UUID postReactionId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody PostReactionUpdate postReactionUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 

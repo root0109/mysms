@@ -58,8 +58,7 @@ public class SectionResolver extends SectionServiceGrpc.SectionServiceImplBase {
     public void updateSection(UpdateSectionRequest request, StreamObserver<UpdateSectionResponse> out) {
         Section updated = service.updateSection(bridge.id(request.getSection().getId(), "id"),
                 bridge.requiredIfMatch(request.getSection().getEtag()),
-                bridge.changes(request.getSection(), request.getUpdateMask(), SectionUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getSection(), request.getUpdateMask(), SectionUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSectionResponse.newBuilder(), "section", updated).build());
     }
 

@@ -3,27 +3,29 @@ package com.mysms.privacy.api.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.Objects;
+import java.util.Optional;
 import org.springframework.lang.Nullable;
 
 /**
- * Fields of NoticeTranslation that can be updated while its version is a draft (partial update; see updateMask).
+ * Fields of NoticeTranslation that can be updated while its version is a draft (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class NoticeTranslationUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String language;
+  private @Nullable Optional<@NotNull @Pattern(regexp = "^[a-z]{2,3}(-[A-Z]{2})?$") String> language;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String bodyMarkdown;
+  private @Nullable Optional<@NotNull @Size(min = 1) String> bodyMarkdown;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String summaryForChildren;
+  private @Nullable Optional<String> summaryForChildren;
 
-  public NoticeTranslationUpdate language(@Nullable String language) {
+  public NoticeTranslationUpdate language(@Nullable Optional<String> language) {
     this.language = language;
     return this;
   }
@@ -32,18 +34,18 @@ public class NoticeTranslationUpdate {
    * BCP 47 language code: en, hi, ta, mr-IN ...; one per version.
    * @return language
    */
-  @Pattern(regexp = "^[a-z]{2,3}(-[A-Z]{2})?$") 
+  
   @JsonProperty("language")
-  public @Nullable String getLanguage() {
+  public @Nullable Optional<String> getLanguage() {
     return language;
   }
 
   @JsonProperty("language")
-  public void setLanguage(@Nullable String language) {
+  public void setLanguage(@Nullable Optional<String> language) {
     this.language = language;
   }
 
-  public NoticeTranslationUpdate bodyMarkdown(@Nullable String bodyMarkdown) {
+  public NoticeTranslationUpdate bodyMarkdown(@Nullable Optional<String> bodyMarkdown) {
     this.bodyMarkdown = bodyMarkdown;
     return this;
   }
@@ -52,18 +54,18 @@ public class NoticeTranslationUpdate {
    * The notice in Markdown: the data processed, the purposes, how to withdraw and how to complain.
    * @return bodyMarkdown
    */
-  @Size(min = 1) 
+  
   @JsonProperty("bodyMarkdown")
-  public @Nullable String getBodyMarkdown() {
+  public @Nullable Optional<String> getBodyMarkdown() {
     return bodyMarkdown;
   }
 
   @JsonProperty("bodyMarkdown")
-  public void setBodyMarkdown(@Nullable String bodyMarkdown) {
+  public void setBodyMarkdown(@Nullable Optional<String> bodyMarkdown) {
     this.bodyMarkdown = bodyMarkdown;
   }
 
-  public NoticeTranslationUpdate summaryForChildren(@Nullable String summaryForChildren) {
+  public NoticeTranslationUpdate summaryForChildren(@Nullable Optional<String> summaryForChildren) {
     this.summaryForChildren = summaryForChildren;
     return this;
   }
@@ -72,14 +74,14 @@ public class NoticeTranslationUpdate {
    * Short plain version shown to a minor alongside the notice.
    * @return summaryForChildren
    */
-   
+  
   @JsonProperty("summaryForChildren")
-  public @Nullable String getSummaryForChildren() {
+  public @Nullable Optional<String> getSummaryForChildren() {
     return summaryForChildren;
   }
 
   @JsonProperty("summaryForChildren")
-  public void setSummaryForChildren(@Nullable String summaryForChildren) {
+  public void setSummaryForChildren(@Nullable Optional<String> summaryForChildren) {
     this.summaryForChildren = summaryForChildren;
   }
 

@@ -48,8 +48,7 @@ public class PurposeResolver extends PurposeServiceGrpc.PurposeServiceImplBase {
     public void updatePurpose(UpdatePurposeRequest request, StreamObserver<UpdatePurposeResponse> out) {
         Purpose updated = service.updatePurpose(bridge.id(request.getPurpose().getId(), "id"),
                 bridge.requiredIfMatch(request.getPurpose().getEtag()),
-                bridge.changes(request.getPurpose(), request.getUpdateMask(), PurposeUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getPurpose(), request.getUpdateMask(), PurposeUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePurposeResponse.newBuilder(), "purpose", updated).build());
     }
 }

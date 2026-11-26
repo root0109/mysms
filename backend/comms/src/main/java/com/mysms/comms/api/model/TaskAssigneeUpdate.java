@@ -17,7 +17,7 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of TaskAssignee that can be updated (partial update; see updateMask).
+ * Fields of TaskAssignee that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class TaskAssigneeUpdate {
@@ -60,19 +60,19 @@ public class TaskAssigneeUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable AssigneeTypeEnum assigneeType;
+  private @Nullable Optional<@NotNull AssigneeTypeEnum> assigneeType;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID userId;
+  private @Nullable Optional<UUID> userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID classSectionId;
+  private @Nullable Optional<UUID> classSectionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID groupId;
+  private @Nullable Optional<UUID> groupId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID claimedByUserId;
+  private @Nullable Optional<UUID> claimedByUserId;
 
   /**
    * State.
@@ -110,9 +110,9 @@ public class TaskAssigneeUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable StatusEnum status;
+  private @Nullable Optional<@NotNull StatusEnum> status;
 
-  public TaskAssigneeUpdate assigneeType(@Nullable AssigneeTypeEnum assigneeType) {
+  public TaskAssigneeUpdate assigneeType(@Nullable Optional<AssigneeTypeEnum> assigneeType) {
     this.assigneeType = assigneeType;
     return this;
   }
@@ -123,16 +123,16 @@ public class TaskAssigneeUpdate {
    */
   
   @JsonProperty("assigneeType")
-  public @Nullable AssigneeTypeEnum getAssigneeType() {
+  public @Nullable Optional<AssigneeTypeEnum> getAssigneeType() {
     return assigneeType;
   }
 
   @JsonProperty("assigneeType")
-  public void setAssigneeType(@Nullable AssigneeTypeEnum assigneeType) {
+  public void setAssigneeType(@Nullable Optional<AssigneeTypeEnum> assigneeType) {
     this.assigneeType = assigneeType;
   }
 
-  public TaskAssigneeUpdate userId(@Nullable UUID userId) {
+  public TaskAssigneeUpdate userId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
     return this;
   }
@@ -141,18 +141,18 @@ public class TaskAssigneeUpdate {
    * User.
    * @return userId
    */
-  @Valid 
+  
   @JsonProperty("userId")
-  public @Nullable UUID getUserId() {
+  public @Nullable Optional<UUID> getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(@Nullable UUID userId) {
+  public void setUserId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
   }
 
-  public TaskAssigneeUpdate classSectionId(@Nullable UUID classSectionId) {
+  public TaskAssigneeUpdate classSectionId(@Nullable Optional<UUID> classSectionId) {
     this.classSectionId = classSectionId;
     return this;
   }
@@ -161,18 +161,18 @@ public class TaskAssigneeUpdate {
    * Class.
    * @return classSectionId
    */
-  @Valid 
+  
   @JsonProperty("classSectionId")
-  public @Nullable UUID getClassSectionId() {
+  public @Nullable Optional<UUID> getClassSectionId() {
     return classSectionId;
   }
 
   @JsonProperty("classSectionId")
-  public void setClassSectionId(@Nullable UUID classSectionId) {
+  public void setClassSectionId(@Nullable Optional<UUID> classSectionId) {
     this.classSectionId = classSectionId;
   }
 
-  public TaskAssigneeUpdate groupId(@Nullable UUID groupId) {
+  public TaskAssigneeUpdate groupId(@Nullable Optional<UUID> groupId) {
     this.groupId = groupId;
     return this;
   }
@@ -181,18 +181,18 @@ public class TaskAssigneeUpdate {
    * Group.
    * @return groupId
    */
-  @Valid 
+  
   @JsonProperty("groupId")
-  public @Nullable UUID getGroupId() {
+  public @Nullable Optional<UUID> getGroupId() {
     return groupId;
   }
 
   @JsonProperty("groupId")
-  public void setGroupId(@Nullable UUID groupId) {
+  public void setGroupId(@Nullable Optional<UUID> groupId) {
     this.groupId = groupId;
   }
 
-  public TaskAssigneeUpdate claimedByUserId(@Nullable UUID claimedByUserId) {
+  public TaskAssigneeUpdate claimedByUserId(@Nullable Optional<UUID> claimedByUserId) {
     this.claimedByUserId = claimedByUserId;
     return this;
   }
@@ -201,18 +201,18 @@ public class TaskAssigneeUpdate {
    * User who claimed an open task.
    * @return claimedByUserId
    */
-  @Valid 
+  
   @JsonProperty("claimedByUserId")
-  public @Nullable UUID getClaimedByUserId() {
+  public @Nullable Optional<UUID> getClaimedByUserId() {
     return claimedByUserId;
   }
 
   @JsonProperty("claimedByUserId")
-  public void setClaimedByUserId(@Nullable UUID claimedByUserId) {
+  public void setClaimedByUserId(@Nullable Optional<UUID> claimedByUserId) {
     this.claimedByUserId = claimedByUserId;
   }
 
-  public TaskAssigneeUpdate status(@Nullable StatusEnum status) {
+  public TaskAssigneeUpdate status(@Nullable Optional<StatusEnum> status) {
     this.status = status;
     return this;
   }
@@ -223,12 +223,12 @@ public class TaskAssigneeUpdate {
    */
   
   @JsonProperty("status")
-  public @Nullable StatusEnum getStatus() {
+  public @Nullable Optional<StatusEnum> getStatus() {
     return status;
   }
 
   @JsonProperty("status")
-  public void setStatus(@Nullable StatusEnum status) {
+  public void setStatus(@Nullable Optional<StatusEnum> status) {
     this.status = status;
   }
 

@@ -108,6 +108,10 @@ public class SubjectRepository {
             SELECT EXISTS (SELECT 1 FROM academics.class_subject WHERE tenant_id = :tenantId
                 AND subject_id = :id AND deleted_at IS NULL)
             """;
+    private static final String REFERENCED_BY_TEACHER_SUBJECT_SUBJECT_ID = """
+            SELECT EXISTS (SELECT 1 FROM academics.teacher_subject WHERE tenant_id = :tenantId
+                AND subject_id = :id AND deleted_at IS NULL)
+            """;
     private static final String REFERENCED_BY_COURSE_SUBJECT_SUBJECT_ID = """
             SELECT EXISTS (SELECT 1 FROM academics.course_subject WHERE tenant_id = :tenantId
                 AND subject_id = :id AND deleted_at IS NULL)
@@ -186,6 +190,12 @@ public class SubjectRepository {
     /** Whether live academics.class_subject rows still reference the row. */
     public boolean referencedByClassSubjectSubjectId(UUID id) {
         return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_CLASS_SUBJECT_SUBJECT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Whether live academics.teacher_subject rows still reference the row. */
+    public boolean referencedByTeacherSubjectSubjectId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_TEACHER_SUBJECT_SUBJECT_ID).param("id", id)
                 .query(Boolean.class).single());
     }
 

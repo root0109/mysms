@@ -7,7 +7,7 @@ misleading 404.
 
 | Module | Operations | Served | 501 |
 |---|---:|---:|---:|
-| academics | 75 | 75 | 0 |
+| academics | 80 | 80 | 0 |
 | admission | 43 | 43 | 0 |
 | assessment | 132 | 132 | 0 |
 | attendance | 33 | 33 | 0 |
@@ -16,7 +16,7 @@ misleading 404.
 | facility | 25 | 25 | 0 |
 | finance | 80 | 80 | 0 |
 | frontoffice | 21 | 21 | 0 |
-| hr | 40 | 40 | 0 |
+| hr | 35 | 35 | 0 |
 | iam | 91 | 91 | 0 |
 | library | 95 | 95 | 0 |
 | lms | 712 | 712 | 0 |
@@ -50,6 +50,7 @@ misleading 404.
 | `academics.CreateProgramLevel` | POST | `/v1/academics/program-levels` | `academics.program_level.create` | served |  |
 | `academics.CreateSection` | POST | `/v1/academics/sections` | `academics.section.create` | served |  |
 | `academics.CreateSubject` | POST | `/v1/academics/subjects` | `academics.subject.create` | served |  |
+| `academics.CreateTeacherSubject` | POST | `/v1/academics/teacher-subjects` | `academics.teacher_subject.create` | served |  |
 | `academics.CreateTeachingAssignment` | POST | `/v1/academics/teaching-assignments` | `academics.teaching_assignment.create` | served |  |
 | `academics.DeleteBatch` | DELETE | `/v1/academics/batches/{batchId}` | `academics.batch.delete` | served |  |
 | `academics.DeleteClassSection` | DELETE | `/v1/academics/class-sections/{classSectionId}` | `academics.class_section.delete` | served |  |
@@ -64,6 +65,7 @@ misleading 404.
 | `academics.DeleteProgramLevel` | DELETE | `/v1/academics/program-levels/{programLevelId}` | `academics.program_level.delete` | served |  |
 | `academics.DeleteSection` | DELETE | `/v1/academics/sections/{sectionId}` | `academics.section.delete` | served |  |
 | `academics.DeleteSubject` | DELETE | `/v1/academics/subjects/{subjectId}` | `academics.subject.delete` | served |  |
+| `academics.DeleteTeacherSubject` | DELETE | `/v1/academics/teacher-subjects/{teacherSubjectId}` | `academics.teacher_subject.delete` | served |  |
 | `academics.DeleteTeachingAssignment` | DELETE | `/v1/academics/teaching-assignments/{teachingAssignmentId}` | `academics.teaching_assignment.delete` | served |  |
 | `academics.GetBatch` | GET | `/v1/academics/batches/{batchId}` | `academics.batch.read` | served |  |
 | `academics.GetClassSection` | GET | `/v1/academics/class-sections/{classSectionId}` | `academics.class_section.read` | served |  |
@@ -78,6 +80,7 @@ misleading 404.
 | `academics.GetProgramLevel` | GET | `/v1/academics/program-levels/{programLevelId}` | `academics.program_level.read` | served |  |
 | `academics.GetSection` | GET | `/v1/academics/sections/{sectionId}` | `academics.section.read` | served |  |
 | `academics.GetSubject` | GET | `/v1/academics/subjects/{subjectId}` | `academics.subject.read` | served |  |
+| `academics.GetTeacherSubject` | GET | `/v1/academics/teacher-subjects/{teacherSubjectId}` | `academics.teacher_subject.read` | served |  |
 | `academics.GetTeachingAssignment` | GET | `/v1/academics/teaching-assignments/{teachingAssignmentId}` | `academics.teaching_assignment.read` | served |  |
 | `academics.ListBatches` | GET | `/v1/academics/batches` | `academics.batch.read` | served |  |
 | `academics.ListClassSections` | GET | `/v1/academics/class-sections` | `academics.class_section.read` | served |  |
@@ -92,6 +95,7 @@ misleading 404.
 | `academics.ListPrograms` | GET | `/v1/academics/programs` | `academics.program.read` | served |  |
 | `academics.ListSections` | GET | `/v1/academics/sections` | `academics.section.read` | served |  |
 | `academics.ListSubjects` | GET | `/v1/academics/subjects` | `academics.subject.read` | served |  |
+| `academics.ListTeacherSubjects` | GET | `/v1/academics/teacher-subjects` | `academics.teacher_subject.read` | served |  |
 | `academics.ListTeachingAssignments` | GET | `/v1/academics/teaching-assignments` | `academics.teaching_assignment.read` | served |  |
 | `academics.PublishLessonPlan` | POST | `/v1/academics/lesson-plans/{lessonPlanId}:publish` | `academics.lesson_plan.publish_lesson_plan` | served |  |
 | `academics.RejectLessonPlan` | POST | `/v1/academics/lesson-plans/{lessonPlanId}:reject` | `academics.lesson_plan.reject_lesson_plan` | served |  |
@@ -109,6 +113,7 @@ misleading 404.
 | `academics.UpdateProgramLevel` | PATCH | `/v1/academics/program-levels/{programLevelId}` | `academics.program_level.update` | served |  |
 | `academics.UpdateSection` | PATCH | `/v1/academics/sections/{sectionId}` | `academics.section.update` | served |  |
 | `academics.UpdateSubject` | PATCH | `/v1/academics/subjects/{subjectId}` | `academics.subject.update` | served |  |
+| `academics.UpdateTeacherSubject` | PATCH | `/v1/academics/teacher-subjects/{teacherSubjectId}` | `academics.teacher_subject.update` | served |  |
 | `academics.UpdateTeachingAssignment` | PATCH | `/v1/academics/teaching-assignments/{teachingAssignmentId}` | `academics.teaching_assignment.update` | served |  |
 
 ## admission
@@ -774,13 +779,11 @@ misleading 404.
 | `hr.CreateStaff` | POST | `/v1/hr/staff` | `hr.staff.create` | served |  |
 | `hr.CreateStaffDepartment` | POST | `/v1/hr/staff/{staffId}/departments` | `hr.staff_department.create` | served |  |
 | `hr.CreateStaffPortalAccount` | POST | `/v1/hr/staff/{staffId}:createPortalAccount` | `hr.staff.create_staff_portal_account` | served |  |
-| `hr.CreateStaffSubject` | POST | `/v1/hr/staff/{staffId}/subjects` | `hr.staff_subject.create` | served |  |
 | `hr.DeleteDesignation` | DELETE | `/v1/hr/designations/{designationId}` | `hr.designation.delete` | served |  |
 | `hr.DeleteLeaveApplication` | DELETE | `/v1/hr/leave-applications/{leaveApplicationId}` | `hr.leave_application.delete` | served |  |
 | `hr.DeleteLeaveType` | DELETE | `/v1/hr/leave-types/{leaveTypeId}` | `hr.leave_type.delete` | served |  |
 | `hr.DeleteStaff` | DELETE | `/v1/hr/staff/{staffId}` | `hr.staff.delete` | served |  |
 | `hr.DeleteStaffDepartment` | DELETE | `/v1/hr/staff/{staffId}/departments/{staffDepartmentId}` | `hr.staff_department.delete` | served |  |
-| `hr.DeleteStaffSubject` | DELETE | `/v1/hr/staff/{staffId}/subjects/{staffSubjectId}` | `hr.staff_subject.delete` | served |  |
 | `hr.GetDesignation` | GET | `/v1/hr/designations/{designationId}` | `hr.designation.read` | served |  |
 | `hr.GetLeaveApplication` | GET | `/v1/hr/leave-applications/{leaveApplicationId}` | `hr.leave_application.read` | served |  |
 | `hr.GetLeaveBalance` | GET | `/v1/hr/leave-balances/{leaveBalanceId}` | `hr.leave_balance.read` | served |  |
@@ -788,14 +791,12 @@ misleading 404.
 | `hr.GetStaff` | GET | `/v1/hr/staff/{staffId}` | `hr.staff.read` | served |  |
 | `hr.GetStaffDepartment` | GET | `/v1/hr/staff/{staffId}/departments/{staffDepartmentId}` | `hr.staff_department.read` | served |  |
 | `hr.GetStaffLeaveBalance` | GET | `/v1/hr/staff/{staffId}:leaveBalance` | `hr.staff.get_leave_balance` | served |  |
-| `hr.GetStaffSubject` | GET | `/v1/hr/staff/{staffId}/subjects/{staffSubjectId}` | `hr.staff_subject.read` | served |  |
 | `hr.ListDesignations` | GET | `/v1/hr/designations` | `hr.designation.read` | served |  |
 | `hr.ListLeaveApplications` | GET | `/v1/hr/leave-applications` | `hr.leave_application.read` | served |  |
 | `hr.ListLeaveBalances` | GET | `/v1/hr/leave-balances` | `hr.leave_balance.read` | served |  |
 | `hr.ListLeaveTypes` | GET | `/v1/hr/leave-types` | `hr.leave_type.read` | served |  |
 | `hr.ListStaff` | GET | `/v1/hr/staff` | `hr.staff.read` | served |  |
 | `hr.ListStaffDepartments` | GET | `/v1/hr/staff/{staffId}/departments` | `hr.staff_department.read` | served |  |
-| `hr.ListStaffSubjects` | GET | `/v1/hr/staff/{staffId}/subjects` | `hr.staff_subject.read` | served |  |
 | `hr.RejectLeave` | POST | `/v1/hr/leave-applications/{leaveApplicationId}:reject` | `hr.leave_application.reject_leave` | served |  |
 | `hr.UpdateDesignation` | PATCH | `/v1/hr/designations/{designationId}` | `hr.designation.update` | served |  |
 | `hr.UpdateLeaveApplication` | PATCH | `/v1/hr/leave-applications/{leaveApplicationId}` | `hr.leave_application.update` | served |  |
@@ -803,7 +804,6 @@ misleading 404.
 | `hr.UpdateLeaveType` | PATCH | `/v1/hr/leave-types/{leaveTypeId}` | `hr.leave_type.update` | served |  |
 | `hr.UpdateStaff` | PATCH | `/v1/hr/staff/{staffId}` | `hr.staff.update` | served |  |
 | `hr.UpdateStaffDepartment` | PATCH | `/v1/hr/staff/{staffId}/departments/{staffDepartmentId}` | `hr.staff_department.update` | served |  |
-| `hr.UpdateStaffSubject` | PATCH | `/v1/hr/staff/{staffId}/subjects/{staffSubjectId}` | `hr.staff_subject.update` | served |  |
 
 ## iam
 

@@ -1,0 +1,79 @@
+package com.mysms.students.sis.controller;
+
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.students.sis.api.StudentEnrollmentApi;
+import com.mysms.students.sis.api.model.StudentEnrollment;
+import com.mysms.students.sis.api.model.StudentEnrollmentUpdate;
+import com.mysms.core.web.ReadMask;
+import com.mysms.students.sis.business.StudentEnrollmentService;
+import java.net.URI;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * REST edge of the StudentEnrollment operations; authentication and the permission check already happened in the
+ * auth-client filter; operations not served yet answer 501 NOT_IMPLEMENTED.
+ */
+@RestController
+public class StudentEnrollmentController implements StudentEnrollmentApi {
+
+    private final StudentEnrollmentService studentEnrollmentService;
+
+    public StudentEnrollmentController(StudentEnrollmentService studentEnrollmentService) {
+        this.studentEnrollmentService = studentEnrollmentService;
+    }
+
+    @Override
+    public ResponseEntity<StudentEnrollment> createStudentEnrollment(StudentEnrollment studentEnrollment,
+            UUID idempotencyKey, Boolean validateOnly) {
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        StudentEnrollment created = studentEnrollmentService.createStudentEnrollment(studentEnrollment, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(URI.create("/v1/sis/student-enrollments/" + created.getId()))
+                .eTag(created.getEtag()).body(created);
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteStudentEnrollment(UUID studentEnrollmentId, String ifMatch) {
+        studentEnrollmentService.deleteStudentEnrollment(studentEnrollmentId, ifMatch);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<StudentEnrollment> getStudentEnrollment(UUID studentEnrollmentId,
+            String fields) {
+        StudentEnrollment found = studentEnrollmentService.getStudentEnrollment(studentEnrollmentId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<StudentEnrollment>> listClassRoster(UUID classSectionId, Integer page,
+            Integer size, String cursor) {
+        return ResponseEntity.ok(PagingUtil.pagingInfo(studentEnrollmentService.listClassRoster(classSectionId, page,
+                size, cursor)));
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<StudentEnrollment>> listStudentEnrollments(Integer page, Integer size,
+            String cursor, String filter, List<String> sort, String fields) {
+        PagingInfo<StudentEnrollment> list =
+                PagingUtil.pagingInfo(studentEnrollmentService.listStudentEnrollments(page, size, cursor, filter,
+                        sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
+    }
+
+    @Override
+    public ResponseEntity<StudentEnrollment> updateStudentEnrollment(UUID studentEnrollmentId,
+            String ifMatch, StudentEnrollmentUpdate studentEnrollmentUpdate, Boolean validateOnly) {
+        StudentEnrollment updated =
+                studentEnrollmentService.updateStudentEnrollment(studentEnrollmentId, ifMatch, studentEnrollmentUpdate,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
+    }
+}

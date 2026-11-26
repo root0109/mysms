@@ -110,9 +110,9 @@ public class AudienceGroupController implements AudienceGroupApi {
 
     @Override
     public ResponseEntity<AudienceGroup> updateAudienceGroup(UUID audienceGroupId, String ifMatch,
-            AudienceGroupUpdate audienceGroupUpdate, String updateMask, Boolean validateOnly) {
+            AudienceGroupUpdate audienceGroupUpdate, Boolean validateOnly) {
         AudienceGroup updated =
-                audienceGroupService.updateAudienceGroup(audienceGroupId, ifMatch, audienceGroupUpdate, updateMask,
+                audienceGroupService.updateAudienceGroup(audienceGroupId, ifMatch, audienceGroupUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
@@ -120,10 +120,10 @@ public class AudienceGroupController implements AudienceGroupApi {
     @Override
     public ResponseEntity<AudienceGroupMember> updateAudienceGroupMember(UUID audienceGroupId,
             UUID audienceGroupMemberId, String ifMatch, AudienceGroupMemberUpdate audienceGroupMemberUpdate,
-            String updateMask, Boolean validateOnly) {
+            Boolean validateOnly) {
         AudienceGroupMember updated =
                 audienceGroupService.updateAudienceGroupMember(audienceGroupId, audienceGroupMemberId, ifMatch,
-                        audienceGroupMemberUpdate, updateMask,
+                        audienceGroupMemberUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

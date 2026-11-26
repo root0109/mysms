@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { people } from '@mysms/sdk';
 import { PersonApi } from '@mysms/sdk/people/apis/PersonApi';
+import { patchOf } from '../api/patch';
 import { callWithEtag, type WithEtag } from '../api/unwrap';
 import { queryKey } from '../query/keys';
 import { STALE_TIME } from '../query/queryClient';
@@ -22,7 +23,7 @@ export function useMyPerson() {
   });
 }
 
-/** people.UpdateMyPerson — contact fields under If-Match; the mask lists exactly the fields sent. */
+/** people.UpdateMyPerson — contact fields under If-Match; only the fields sent change, null clears one. */
 export function useUpdateMyPerson() {
   const { api, session } = useRuntime();
   const qc = useQueryClient();
@@ -31,8 +32,7 @@ export function useUpdateMyPerson() {
       callWithEtag(
         api.get(PersonApi).updateMyPersonRaw({
           ifMatch: etag,
-          updateMask: Object.keys(changes).join(','),
-          myPersonUpdate: changes,
+          myPersonUpdate: patchOf(changes),
         }),
       ),
     onSuccess: (result) => {

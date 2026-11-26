@@ -58,9 +58,9 @@ public class CommentReactionController implements CommentReactionApi {
 
     @Override
     public ResponseEntity<CommentReaction> updateCommentReaction(UUID commentReactionId, String ifMatch,
-            CommentReactionUpdate commentReactionUpdate, String updateMask, Boolean validateOnly) {
+            CommentReactionUpdate commentReactionUpdate, Boolean validateOnly) {
         CommentReaction updated = reactionService.updateCommentReaction(commentReactionId, ifMatch,
-                commentReactionUpdate, updateMask, Boolean.TRUE.equals(validateOnly));
+                commentReactionUpdate, Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 }

@@ -16,27 +16,27 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of GradeLevel that can be updated (partial update; see updateMask).
+ * Fields of GradeLevel that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class GradeLevelUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 60) String> name;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String slug;
+  private @Nullable Optional<@NotNull @Size(max = 60) String> slug;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer sortOrder;
+  private @Nullable Optional<Integer> sortOrder;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public GradeLevelUpdate institutionId(@Nullable UUID institutionId) {
+  public GradeLevelUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -45,18 +45,18 @@ public class GradeLevelUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public GradeLevelUpdate name(@Nullable String name) {
+  public GradeLevelUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -65,18 +65,18 @@ public class GradeLevelUpdate {
    * Grade name.
    * @return name
    */
-  @Size(max = 60) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public GradeLevelUpdate slug(@Nullable String slug) {
+  public GradeLevelUpdate slug(@Nullable Optional<String> slug) {
     this.slug = slug;
     return this;
   }
@@ -85,18 +85,18 @@ public class GradeLevelUpdate {
    * Grade key.
    * @return slug
    */
-  @Size(max = 60) 
+  
   @JsonProperty("slug")
-  public @Nullable String getSlug() {
+  public @Nullable Optional<String> getSlug() {
     return slug;
   }
 
   @JsonProperty("slug")
-  public void setSlug(@Nullable String slug) {
+  public void setSlug(@Nullable Optional<String> slug) {
     this.slug = slug;
   }
 
-  public GradeLevelUpdate sortOrder(@Nullable Integer sortOrder) {
+  public GradeLevelUpdate sortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
     return this;
   }
@@ -107,16 +107,16 @@ public class GradeLevelUpdate {
    */
   
   @JsonProperty("sortOrder")
-  public @Nullable Integer getSortOrder() {
+  public @Nullable Optional<Integer> getSortOrder() {
     return sortOrder;
   }
 
   @JsonProperty("sortOrder")
-  public void setSortOrder(@Nullable Integer sortOrder) {
+  public void setSortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
   }
 
-  public GradeLevelUpdate isActive(@Nullable Boolean isActive) {
+  public GradeLevelUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -127,12 +127,12 @@ public class GradeLevelUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

@@ -60,7 +60,7 @@ public class PageCategoryResolver extends PageCategoryServiceGrpc.PageCategorySe
         PageCategory updated = service.updatePageCategory(
                 bridge.id(request.getPageCategory().getId(), "id"), bridge.requiredIfMatch(request.getPageCategory().getEtag()),
                 bridge.changes(request.getPageCategory(), request.getUpdateMask(), PageCategoryUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePageCategoryResponse.newBuilder(), "page_category", updated).build());
     }
 

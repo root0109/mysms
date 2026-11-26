@@ -60,8 +60,7 @@ public class FeeHeadResolver extends FeeHeadServiceGrpc.FeeHeadServiceImplBase {
         FeeHead updated = service.updateFeeHead(
                 bridge.id(request.getFeeHead().getId(), "id"),
                 bridge.requiredIfMatch(request.getFeeHead().getEtag()),
-                bridge.changes(request.getFeeHead(), request.getUpdateMask(), FeeHeadUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getFeeHead(), request.getUpdateMask(), FeeHeadUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeeHeadResponse.newBuilder(), "fee_head", updated).build());
     }
 

@@ -61,9 +61,9 @@ public class UploadPolicyController implements UploadPolicyApi {
 
     @Override
     public ResponseEntity<UploadPolicy> updateUploadPolicy(UUID uploadPolicyId, String ifMatch,
-            UploadPolicyUpdate uploadPolicyUpdate, String updateMask, Boolean validateOnly) {
+            UploadPolicyUpdate uploadPolicyUpdate, Boolean validateOnly) {
         UploadPolicy updated =
-                uploadPolicyService.updateUploadPolicy(uploadPolicyId, ifMatch, uploadPolicyUpdate, updateMask,
+                uploadPolicyService.updateUploadPolicy(uploadPolicyId, ifMatch, uploadPolicyUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

@@ -7,6 +7,7 @@ import { RetentionPolicyApi } from '@mysms/sdk/privacy/apis/RetentionPolicyApi';
 import { RetentionRunApi } from '@mysms/sdk/privacy/apis/RetentionRunApi';
 import { newIdempotencyKey } from '../api/ids';
 import { allPages, pageQuery } from '../api/pages';
+import { patchOf } from '../api/patch';
 import { isApiError } from '../api/problem';
 import { call } from '../api/unwrap';
 import { queryKey } from '../query/keys';
@@ -30,9 +31,6 @@ const BREACHES = queryKey('privacy', 'breaches');
 const LEGAL_HOLDS = queryKey('privacy', 'legal-holds');
 const RETENTION_POLICIES = queryKey('privacy', 'retention-policies');
 const RETENTION_RUNS = queryKey('privacy', 'retention-runs');
-
-/** The fields a partial update names: those present in the change, in the request's update mask. */
-const maskOf = (changes: object) => Object.keys(changes).join(',');
 
 /**
  * Puts the server's answer into every cached list that shows the row before the lists are read again, so the next
@@ -141,7 +139,7 @@ export function useReportBreach() {
 
 /**
  * The fields of an open breach the officer changed: only those differing from the stored breach (an empty text
- * clears nothing: it is left out), so the update mask names exactly them.
+ * clears nothing: it is left out), so the PATCH body carries exactly them.
  */
 export function breachChanges(breach: Breach, draft: BreachUpdate): BreachUpdate {
   const changes: Record<string, unknown> = {};
@@ -158,11 +156,7 @@ export function useUpdateBreach() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ breachId, etag, changes }: { breachId: string; etag: string; changes: BreachUpdate }) =>
-      call(
-        api
-          .get(BreachApi)
-          .updateBreach({ breachId, ifMatch: etag, breachUpdate: changes, updateMask: maskOf(changes) }),
-      ),
+      call(api.get(BreachApi).updateBreach({ breachId, ifMatch: etag, breachUpdate: patchOf(changes) })),
     onSuccess: (breach) => answered(qc, BREACHES, breach),
     onSettled: () => refreshBreaches(qc),
   });
@@ -309,7 +303,6 @@ export function useUpdateLegalHold() {
           legalHoldId,
           ifMatch: etag,
           legalHoldUpdate: { reviewBy },
-          updateMask: 'reviewBy',
         }),
       ),
     onSuccess: (hold) => answered(qc, LEGAL_HOLDS, hold),
@@ -400,8 +393,7 @@ export function useUpdateRetentionPolicy() {
         api.get(RetentionPolicyApi).updateRetentionPolicy({
           retentionPolicyId,
           ifMatch: etag,
-          retentionPolicyUpdate: changes,
-          updateMask: maskOf(changes),
+          retentionPolicyUpdate: patchOf(changes),
         }),
       ),
     onSuccess: (policy) => answered(qc, RETENTION_POLICIES, policy),

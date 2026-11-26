@@ -62,7 +62,7 @@ class FinanceReferenceCleanupComponentTest {
     @TestFactory
     List<DynamicTest> everyReferenceIsCleanedUpWhenItsOwnerIsDeleted() throws IOException {
         JsonNode spec;
-        try (InputStream in = getClass().getResourceAsStream("/reference-cleanup.json")) {
+        try (InputStream in = getClass().getResourceAsStream("/finance/reference-cleanup.json")) {
             spec = JsonMapper.builder().build().readTree(in);
         }
         List<DynamicTest> tests = new ArrayList<>();

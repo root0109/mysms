@@ -1,0 +1,28 @@
+package com.mysms.learning.lms.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.math.BigDecimal;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of lms.rubric_level. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class RubricLevelEntity extends BaseEntity {
+
+    public static final String TABLE = "lms.rubric_level";
+
+    private UUID tenantId;
+    private UUID rubricId;
+    private String label;
+    private String description;
+    private BigDecimal scorePercent;
+    private Integer sortOrder;
+}

@@ -16,33 +16,33 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Theme that can be updated (partial update; see updateMask).
+ * Fields of Theme that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class ThemeUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 120) String> name;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String description;
+  private @Nullable Optional<String> description;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID thumbnailFileId;
+  private @Nullable Optional<UUID> thumbnailFileId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID thumbnailAltFileId;
+  private @Nullable Optional<UUID> thumbnailAltFileId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID logoFileId;
+  private @Nullable Optional<UUID> logoFileId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isDefault;
+  private @Nullable Optional<@NotNull Boolean> isDefault;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Object tokens = null;
+  private @Nullable Optional<Object> tokens;
 
-  public ThemeUpdate name(@Nullable String name) {
+  public ThemeUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -51,18 +51,18 @@ public class ThemeUpdate {
    * Theme name.
    * @return name
    */
-  @Size(max = 120) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public ThemeUpdate description(@Nullable String description) {
+  public ThemeUpdate description(@Nullable Optional<String> description) {
     this.description = description;
     return this;
   }
@@ -73,16 +73,16 @@ public class ThemeUpdate {
    */
   
   @JsonProperty("description")
-  public @Nullable String getDescription() {
+  public @Nullable Optional<String> getDescription() {
     return description;
   }
 
   @JsonProperty("description")
-  public void setDescription(@Nullable String description) {
+  public void setDescription(@Nullable Optional<String> description) {
     this.description = description;
   }
 
-  public ThemeUpdate thumbnailFileId(@Nullable UUID thumbnailFileId) {
+  public ThemeUpdate thumbnailFileId(@Nullable Optional<UUID> thumbnailFileId) {
     this.thumbnailFileId = thumbnailFileId;
     return this;
   }
@@ -91,18 +91,18 @@ public class ThemeUpdate {
    * Preview image.
    * @return thumbnailFileId
    */
-  @Valid 
+  
   @JsonProperty("thumbnailFileId")
-  public @Nullable UUID getThumbnailFileId() {
+  public @Nullable Optional<UUID> getThumbnailFileId() {
     return thumbnailFileId;
   }
 
   @JsonProperty("thumbnailFileId")
-  public void setThumbnailFileId(@Nullable UUID thumbnailFileId) {
+  public void setThumbnailFileId(@Nullable Optional<UUID> thumbnailFileId) {
     this.thumbnailFileId = thumbnailFileId;
   }
 
-  public ThemeUpdate thumbnailAltFileId(@Nullable UUID thumbnailAltFileId) {
+  public ThemeUpdate thumbnailAltFileId(@Nullable Optional<UUID> thumbnailAltFileId) {
     this.thumbnailAltFileId = thumbnailAltFileId;
     return this;
   }
@@ -111,18 +111,18 @@ public class ThemeUpdate {
    * Second preview image (e.g. dark variant).
    * @return thumbnailAltFileId
    */
-  @Valid 
+  
   @JsonProperty("thumbnailAltFileId")
-  public @Nullable UUID getThumbnailAltFileId() {
+  public @Nullable Optional<UUID> getThumbnailAltFileId() {
     return thumbnailAltFileId;
   }
 
   @JsonProperty("thumbnailAltFileId")
-  public void setThumbnailAltFileId(@Nullable UUID thumbnailAltFileId) {
+  public void setThumbnailAltFileId(@Nullable Optional<UUID> thumbnailAltFileId) {
     this.thumbnailAltFileId = thumbnailAltFileId;
   }
 
-  public ThemeUpdate logoFileId(@Nullable UUID logoFileId) {
+  public ThemeUpdate logoFileId(@Nullable Optional<UUID> logoFileId) {
     this.logoFileId = logoFileId;
     return this;
   }
@@ -131,18 +131,18 @@ public class ThemeUpdate {
    * Logo shown on sign-in pages, the app shell and the PWA manifest (the branding of the tenant's default theme).
    * @return logoFileId
    */
-  @Valid 
+  
   @JsonProperty("logoFileId")
-  public @Nullable UUID getLogoFileId() {
+  public @Nullable Optional<UUID> getLogoFileId() {
     return logoFileId;
   }
 
   @JsonProperty("logoFileId")
-  public void setLogoFileId(@Nullable UUID logoFileId) {
+  public void setLogoFileId(@Nullable Optional<UUID> logoFileId) {
     this.logoFileId = logoFileId;
   }
 
-  public ThemeUpdate isDefault(@Nullable Boolean isDefault) {
+  public ThemeUpdate isDefault(@Nullable Optional<Boolean> isDefault) {
     this.isDefault = isDefault;
     return this;
   }
@@ -153,16 +153,16 @@ public class ThemeUpdate {
    */
   
   @JsonProperty("isDefault")
-  public @Nullable Boolean getIsDefault() {
+  public @Nullable Optional<Boolean> getIsDefault() {
     return isDefault;
   }
 
   @JsonProperty("isDefault")
-  public void setIsDefault(@Nullable Boolean isDefault) {
+  public void setIsDefault(@Nullable Optional<Boolean> isDefault) {
     this.isDefault = isDefault;
   }
 
-  public ThemeUpdate tokens(@Nullable Object tokens) {
+  public ThemeUpdate tokens(@Nullable Optional<Object> tokens) {
     this.tokens = tokens;
     return this;
   }
@@ -173,12 +173,12 @@ public class ThemeUpdate {
    */
   
   @JsonProperty("tokens")
-  public @Nullable Object getTokens() {
+  public @Nullable Optional<Object> getTokens() {
     return tokens;
   }
 
   @JsonProperty("tokens")
-  public void setTokens(@Nullable Object tokens) {
+  public void setTokens(@Nullable Optional<Object> tokens) {
     this.tokens = tokens;
   }
 

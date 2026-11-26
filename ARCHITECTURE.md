@@ -12,13 +12,28 @@ One Maven reactor (`backend/pom.xml`), flat modules, Java 17, Spring Boot 4.1:
 | auth-client | The only auth surface modules use: token verification, edge filter and gRPC interceptor, permission resolution, service tokens | none |
 | messaging | `EventBus` API, `EventRuntime` (relay, inbox) and the RabbitMQ, Google Cloud Pub/Sub and in-process adapters | none |
 | privacy-client | Consent checks against privacy over gRPC, with a per-process cache; the base of a module's privacy tasks and retention sweeps (legal holds from privacy over gRPC) | none |
-| 22 domain modules | master, platform, iam, org, people, academics, sis, hr, payroll, admission, attendance, facility, timetable, assessment, lms, finance, library, transport, comms, frontoffice, careers, privacy | one each, same name |
-| app | Assembly only: all 22 domain modules in one process | none |
+| 10 domain modules | platform, identity, privacy, comms (kernel); hrms; students, academics, finance, campus (school); learning — serving the 22 areas below | one per area, same name as the area |
+| app | Assembly only: all 10 domain modules in one process | none |
+
+**Modules and areas** (ARC-7, [JAVA-CODING-RULES §2.2](JAVA-CODING-RULES.md)). An *area* is one schema with its contract: protos (`mysms.<area>.v1`), operation table, `/v1/<area>` prefix, `mysms.<area>.*` configuration, its own pool, transaction manager, outbox and Flyway history. The areas keep the 22 former module names, so schemas, URLs, operation ids, permission codes and the SDK namespaces are unchanged.
+
+| Module | Product | Areas | Packages |
+|---|---|---|---|
+| platform | kernel | platform, master, org | `com.mysms.platform`, `….platform.master`, `….platform.org` |
+| identity | kernel | iam, people | `com.mysms.identity.iam`, `….identity.people` |
+| privacy | kernel | privacy | `com.mysms.privacy` |
+| comms | kernel | comms | `com.mysms.comms` |
+| hrms | HRMS | hr, payroll | `com.mysms.hrms.hr`, `….hrms.payroll` |
+| students | school | sis, admission, careers | `com.mysms.students.sis`, `….admission`, `….careers` |
+| academics | school | academics, timetable, attendance, assessment | `com.mysms.academics`, `….academics.timetable`, `….attendance`, `….assessment` |
+| finance | school (fees) | finance | `com.mysms.finance` |
+| campus | school | library, transport, frontoffice, facility | `com.mysms.campus.library`, `….transport`, `….frontoffice`, `….facility` |
+| learning | Learning | lms | `com.mysms.learning.lms` |
 | conformance | Build-time rule checks (module boundaries, gRPC, technology) | none |
 
-Each domain module has its own `@SpringBootApplication`, configuration namespace (`mysms.<module>.*`), `ModuleDatabase` (primary pool plus optional replica pool through `RoutingDataSource`), transaction manager and Flyway folder (`database/migrations/<module>`). The build produces a library jar (used by `app`) and an executable service jar per module, so the same code runs as **one monolith** or as **one service per module**; only configuration differs ([DEPLOYMENT.md §5.2, §5.4](DEPLOYMENT.md#5-the-backend)).
+Each domain module has its own `@SpringBootApplication`; each of its areas has its configuration namespace (`mysms.<area>.*`), `ModuleDatabase` (primary pool plus optional replica pool through `RoutingDataSource`), transaction manager and Flyway folder (`database/migrations/<area>`). The build produces a library jar (used by `app`) and an executable service jar per module, so the same code runs as **one monolith** or as **one service per module**; only configuration differs ([DEPLOYMENT.md §5.2, §5.4](DEPLOYMENT.md#5-the-backend)).
 
-**Isolation is structural** (conformance `ModuleBoundaryRule` A1): a domain module depends only on `core`, `auth-client`, `privacy-client` and `messaging` — never on another domain module. `messaging` is runtime-only unless the module uses its event API (`EventEnvelope`, `EventHandler`, `EventSubscriptions`, `RejectedEventException`); no module imports RabbitMQ, Pub/Sub or messaging runtime types. Package layout: JAVA-CODING-RULES §3.
+**Isolation is structural** (conformance `ModuleBoundaryRule` A1): a domain module depends only on `core`, `auth-client`, `privacy-client` and `messaging` — never on another domain module. Inside a module its areas share one process and may read their sibling areas' schemas; between modules the rules below hold unchanged. `messaging` is runtime-only unless the module uses its event API (`EventEnvelope`, `EventHandler`, `EventSubscriptions`, `RejectedEventException`); no module imports RabbitMQ, Pub/Sub or messaging runtime types. Package layout: JAVA-CODING-RULES §3.
 
 **Cross-module rules** (identical in one process or many):
 
@@ -32,6 +47,8 @@ Each domain module has its own `@SpringBootApplication`, configuration namespace
 Diagrams: [system context](docs/diagrams/architecture/system-context.drawio) (product view), [modules and dependencies](docs/diagrams/architecture/modules-and-dependencies.drawio), [deployment](docs/diagrams/architecture/deployment.drawio) — open with draw.io / diagrams.net.
 
 ## 2. Allowed module dependencies
+
+The table is per **area** (the former modules); a module may call what any of its areas may. An area's sibling areas in the same module are always allowed.
 
 A module may call over gRPC (from its `integration` package, with copies of the callees' protos) only the modules in its row. A row lists the modules whose data the module references; the number is the count of reference columns in [`database/logical-references.md`](database/logical-references.md). Tenant references are not dependencies (the tenant comes from the token). Every module also reaches iam through auth-client (role permissions, `IamAuthzService.GetRolePermissions`, and the API-permission catalogue event; JAVA-CODING-RULES §16.2), whatever its row says.
 
@@ -142,7 +159,7 @@ Consumers declare `EventSubscriptions` in their `events` package. The flows:
 | Audit trail | every module's `audit.recorded` → platform (`platform.audit_log`) |
 | Permission catalogue | every module's `<module>.api_permissions.published` → iam (`iam.api_permission`) |
 | Tenant directory | `platform.tenant.*` → iam (`iam.tenant_directory`); `iam.tenant_directory.bootstrapped` → platform (`platform.tenant`) |
-| Local copies | `hr.staff` and `sis.student` → iam (`iam.member_record`); `hr.staff` → payroll (`payroll.staff_member`); `sis.student`, `hr.staff`, `sis.student_guardian` → comms (`comms.student_record`, `comms.staff_record`, `comms.guardian_link`); `sis.student`, `hr.staff` → finance (`finance.student_record`, `finance.staff_record`); `org.institution` → timetable (`timetable.institution_zone`); `comms.message_template` → people (`people.greeting_template`); `people.person`, `sis.student`, `sis.student_guardian` → privacy (`privacy.subject`, `privacy.guardian_link`) |
+| Local copies | `hr.staff` and `sis.student` → iam (`iam.member_record`); `sis.student`, `hr.staff`, `sis.student_guardian` → comms (`comms.student_record`, `comms.staff_record`, `comms.guardian_link`); `sis.student`, `hr.staff` → finance (`finance.student_record`, `finance.staff_record`); `org.institution` → timetable (`timetable.institution_zone`); `comms.message_template` → people (`people.greeting_template`); `people.person`, `sis.student`, `sis.student_guardian` → privacy (`privacy.subject`, `privacy.guardian_link`) |
 | Delivery requests | `people.greeting.requested` → comms (an in-app notification to each account comms knows of the person; people cannot call comms); `comms.greeting_delivery.rejected` → people (a greeting comms could not deliver is taken back) |
 | Imports | `platform.import.batch_requested` → hr, library, org, sis; `<module>.import.batch_applied` → platform |
 
@@ -152,12 +169,12 @@ Outbox and inbox make these reliable, so they are cheap coupling. Diagram: [even
 
 Per module in §2. By owner (forward references): org 133, iam 128, academics 59, platform 55, master 26, sis 22, people 18, hr 17, finance 7, comms 7, facility 2, assessment 2, timetable 1. Nothing references payroll, admission, attendance, lms, library, transport, frontoffice, careers or privacy, except event-only references against the DAG.
 
-## 6. Decided reorganisation: platform kernel and products
+## 6. Reorganisation: platform kernel and products
 
-Approved, not built; scheduled after the privacy work. Full plan, scope and order:
-[docs/design/MODULE-AND-PRODUCT-REORGANISATION.md](docs/design/MODULE-AND-PRODUCT-REORGANISATION.md). Until it lands,
-the rules of [`CLAUDE.md`](CLAUDE.md) and [`JAVA-CODING-RULES.md`](JAVA-CODING-RULES.md) and the modules of §1 stay
-binding.
+Backend module structure built (22 → 10 modules of areas, §1; status and remaining steps in
+[docs/design/MODULE-AND-PRODUCT-REORGANISATION.md](docs/design/MODULE-AND-PRODUCT-REORGANISATION.md) §11). Still
+open there: product entitlements, the HRMS data moves (`staff_attendance`), replacing in-module gRPC
+by direct calls, the client feature packages and the HRMS apps.
 
 Target: 22 → 10 modules — kernel (platform, identity, privacy, comms) and products (hrms; school: students, academics,
 finance, campus; learning). Products depend only on the kernel, except school → hrms by id and events. HRMS and

@@ -25,25 +25,28 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
 /**
  * The gRPC rules, checked over the whole tree:
  * <ul>
- * <li>G1 — each module owns its protos ({@code src/main/resources/proto/mysms/<module>/v1}); a caller keeps a
- * byte-identical copy of the callee's proto, only of a callee it may depend on (or one a proto it carries imports); the
- * shared protos are core's alone. A library's copies (auth-client's of iam, privacy-client's of privacy) are
+ * <li>G1 — each area owns its protos ({@code src/main/resources/proto/mysms/<area>/v1} in its module); a module keeps
+ * a byte-identical copy of a callee's proto, only of a callee one of its areas may depend on (or one a proto it carries
+ * imports); the shared protos are core's alone. A library's copies (auth-client's of iam, privacy-client's of privacy) are
  * byte-identical too.</li>
  * <li>G2 — field numbers are law: every field of every owned message has the number
  * {@code conformance/src/main/resources/field-numbers.lock.json} records, and the lock records every message.</li>
- * <li>G3 — every operation of a module's operation table is an RPC of its own proto, and every RPC an operation.</li>
- * <li>G4 — no class outside {@code <module>/integration} uses another module's gRPC stub.</li>
+ * <li>G3 — every operation of an area's operation table is an RPC of its own proto, and every RPC an operation.</li>
+ * <li>G4 — no class outside an {@code integration} package of its module uses another module's gRPC stub.</li>
  * <li>G5 — every gRPC server implementation is a {@code @GrpcService}.</li>
  * <li>G6 — no REST client between modules (no RestClient, RestTemplate, WebClient, HTTP interface clients).</li>
  * <li>G7 — no {@code Transactions} helper: transactions are {@code AppTransactionManager}'s alone.</li>
- * <li>G8 — every module has its {@code <Module>OpenApiComponentTest} writing {@code target/openapi/api-docs.yml}.</li>
+ * <li>G8 — every area has its {@code <Area>OpenApiComponentTest} writing {@code target/openapi/<area>/api-docs.yml}
+ * from {@code /v3/api-docs.yaml} (the area's group when its module serves several areas).</li>
  * </ul>
  * G9 is {@link ConfigurationRule}'s.
  */
 public final class GrpcGuidelineRule implements ConformanceRule {
 
-    /** Where every OpenAPI component test writes its document. */
-    public static final String OPEN_API_OUTPUT_LOCATION = "target/openapi/api-docs.yml";
+    /** Where an area's OpenAPI component test writes its document, relative to its module. */
+    public static String openApiOutputLocation(String area) {
+        return "target/openapi/" + area + "/api-docs.yml";
+    }
 
     private static final String PROTO_ROOT = "src/main/resources/proto";
     private static final Pattern COMMENT = Pattern.compile("//[^\\n]*");
@@ -68,10 +71,18 @@ public final class GrpcGuidelineRule implements ConformanceRule {
         List<Violation> found = new ArrayList<>();
         Map<String, Set<String>> allowed = allowedDependencies(tree);
         for (String module : tree.domainModules()) {
-            protos(tree, module, allowed.getOrDefault(module, Set.of()), found);
-            operations(tree, module, found);
-            code(tree, module, found);
-            openApiTest(tree, module, found);
+            Set<String> areas = new TreeSet<>();
+            Set<String> callees = new TreeSet<>();
+            for (SourceTree.Area area : tree.areas(module)) {
+                areas.add(area.name());
+                callees.addAll(allowed.getOrDefault(area.name(), Set.of()));
+            }
+            protos(tree, module, areas, callees, found);
+            for (SourceTree.Area area : tree.areas(module)) {
+                operations(tree, area.name(), found);
+                openApiTest(tree, area, found);
+            }
+            code(tree, module, areas, found);
         }
         libraryCopies(tree, found);
         fieldNumbers(tree, found);
@@ -81,12 +92,15 @@ public final class GrpcGuidelineRule implements ConformanceRule {
 
     // ---------------------------------------------------------------- G1 owned protos and verbatim copies
 
-    private static void protos(SourceTree tree, String module, Set<String> callees, List<Violation> found) {
+    private static void protos(SourceTree tree, String module, Set<String> areas, Set<String> callees,
+                               List<Violation> found) {
         Path root = tree.backend().resolve(module).resolve(PROTO_ROOT);
-        Path own = ownProto(tree, module);
-        if (!Files.isRegularFile(own)) {
-            found.add(new Violation("G1", tree.relative(tree.backend().resolve(module)), "has no proto of its own"));
-            return;
+        for (String area : areas) {
+            if (!Files.isRegularFile(ownProto(tree, area))) {
+                found.add(new Violation("G1", tree.relative(tree.backend().resolve(module)),
+                        "has no proto of its area " + area));
+                return;
+            }
         }
         Set<String> carried = new TreeSet<>();
         Set<String> needed = new HashSet<>(callees);
@@ -97,7 +111,7 @@ public final class GrpcGuidelineRule implements ConformanceRule {
                 continue;
             }
             needed.addAll(imports(tree.read(file)));
-            if (owner.equals(module)) {
+            if (areas.contains(owner)) {
                 continue;
             }
             carried.add(owner);
@@ -145,8 +159,8 @@ public final class GrpcGuidelineRule implements ConformanceRule {
         Map<?, ?> lock = new Yaml(new SafeConstructor(options)).load(tree.read(lockFile));
         Set<String> declared = new TreeSet<>();
         List<Path> owned = new ArrayList<>(tree.files(tree.backend().resolve("core").resolve(PROTO_ROOT), ".proto"));
-        for (String module : tree.domainModules()) {
-            owned.add(ownProto(tree, module));
+        for (SourceTree.Area area : tree.areas()) {
+            owned.add(ownProto(tree, area.name()));
         }
         for (Path file : owned) {
             if (!Files.isRegularFile(file)) {
@@ -213,7 +227,7 @@ public final class GrpcGuidelineRule implements ConformanceRule {
         while (rpc.find()) {
             rpcs.add(rpc.group(1));
         }
-        Set<String> operations = ContractOperations.read(tree).stream().filter(op -> op.module().equals(module))
+        Set<String> operations = ContractOperations.read(tree).stream().filter(op -> op.area().equals(module))
                 .map(ContractOperations.Operation::name).collect(Collectors.toCollection(TreeSet::new));
         for (String operation : operations) {
             if (!rpcs.contains(operation)) {
@@ -230,16 +244,15 @@ public final class GrpcGuidelineRule implements ConformanceRule {
 
     // ---------------------------------------------------------------- G4, G5, G6 code
 
-    private static void code(SourceTree tree, String module, List<Violation> found) {
-        String integration = "/com/mysms/" + module + "/integration/";
+    private static void code(SourceTree tree, String module, Set<String> areas, List<Violation> found) {
         for (Path file : tree.java(module, "main")) {
             String path = tree.relative(file);
             String source = tree.read(file);
             Matcher stub = STUB_IMPORT.matcher(source);
             while (stub.find()) {
-                if (!stub.group(1).equals(module) && !path.contains(integration)) {
+                if (!areas.contains(stub.group(1)) && !path.contains("/integration/")) {
                     found.add(new Violation("G4", path, "uses the gRPC stub of " + stub.group(1)
-                            + " outside " + module + "/integration"));
+                            + " outside an integration package of " + module));
                 }
             }
             if (SERVER_IMPL.matcher(source).find() && !source.contains("\n@GrpcService\n")) {
@@ -269,26 +282,32 @@ public final class GrpcGuidelineRule implements ConformanceRule {
 
     // ---------------------------------------------------------------- G8 OpenAPI component test
 
-    private static void openApiTest(SourceTree tree, String module, List<Violation> found) {
-        String name = Character.toUpperCase(module.charAt(0)) + module.substring(1) + "OpenApiComponentTest.java";
-        Path test = tree.java(module, "component-test").stream()
+    private static void openApiTest(SourceTree tree, SourceTree.Area area, List<Violation> found) {
+        String name = Character.toUpperCase(area.name().charAt(0)) + area.name().substring(1)
+                + "OpenApiComponentTest.java";
+        Path test = tree.java(area, "component-test").stream()
                 .filter(file -> SourceTree.fileName(file).equals(name)).findFirst().orElse(null);
         if (test == null) {
-            found.add(new Violation("G8", tree.relative(tree.backend().resolve(module)), "no " + name));
+            found.add(new Violation("G8", tree.relative(tree.base(area, "component-test")), "no " + name));
             return;
         }
         String source = tree.read(test);
-        if (!source.contains("\"" + OPEN_API_OUTPUT_LOCATION + "\"") || !source.contains("/v3/api-docs.yaml")) {
-            found.add(new Violation("G8", tree.relative(test), "does not write /v3/api-docs.yaml to "
-                    + OPEN_API_OUTPUT_LOCATION));
+        String output = openApiOutputLocation(area.name());
+        String document = "/v3/api-docs.yaml/" + area.name() + "\"";
+        if (!source.contains("\"" + output + "\"") || !source.contains(document)) {
+            found.add(new Violation("G8", tree.relative(test), "does not write /v3/api-docs.yaml/" + area.name()
+                    + " to " + output));
         }
     }
 
     // ---------------------------------------------------------------- helpers
 
-    private static Path ownProto(SourceTree tree, String module) {
-        Path base = "common".equals(module) ? tree.backend().resolve("core") : tree.backend().resolve(module);
-        return base.resolve(PROTO_ROOT).resolve("mysms").resolve(module).resolve("v1").resolve(module + ".proto");
+    /** The proto an area owns, in the module that serves it ({@code common}: core's shared protos). */
+    private static Path ownProto(SourceTree tree, String area) {
+        String module = "common".equals(area) ? "core" : tree.areas().stream().filter(a -> a.name().equals(area))
+                .map(SourceTree.Area::module).findFirst().orElse(area);
+        Path base = tree.backend().resolve(module);
+        return base.resolve(PROTO_ROOT).resolve("mysms").resolve(area).resolve("v1").resolve(area + ".proto");
     }
 
     private static String owner(String proto) {
@@ -302,7 +321,7 @@ public final class GrpcGuidelineRule implements ConformanceRule {
         return imported;
     }
 
-    /** Each module's row of ARCHITECTURE.md §2 ("May depend on"). */
+    /** Each area's row of ARCHITECTURE.md §2 ("May depend on"). */
     private static Map<String, Set<String>> allowedDependencies(SourceTree tree) {
         Map<String, Set<String>> rows = new TreeMap<>();
         Matcher row = ROW.matcher(tree.read(tree.repository().resolve("ARCHITECTURE.md")));

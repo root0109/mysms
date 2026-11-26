@@ -17,7 +17,7 @@ import com.mysms.core.paging.PageRequest;
 import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.privacy.api.model.Purpose;
 import com.mysms.privacy.api.model.PurposeUpdate;
 import com.mysms.privacy.config.PrivacyDatabaseConfig;
@@ -48,8 +48,6 @@ public class PurposeService extends AppTransactionManager {
     public static final String AGGREGATE = "privacy.purpose";
     public static final String TENANT_PURPOSE_AGGREGATE = TenantPurposeEntity.TABLE;
     static final String TENANT_PURPOSE_PERMISSION_UPDATE = "privacy.tenant_purpose.update";
-    /** The contract's PurposeUpdate fields, in apply order. */
-    static final List<String> TENANT_PURPOSE_WRITABLE = List.of("enabled", "maxScope", "noticeId");
 
     private static final String ACTIVE = "active";
     private static final String WIDTH = "width";
@@ -107,11 +105,9 @@ public class PurposeService extends AppTransactionManager {
      * version lists it; a width ceiling applies to width purposes only. A written setting has the purpose's consent
      * answers recomputed for every subject in the same transaction ({@link ConsentStateWriter#recomputePurpose}).
      */
-    public Purpose updatePurpose(UUID id, String ifMatch, PurposeUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public Purpose updatePurpose(UUID id, String ifMatch, PurposeUpdate changes, boolean validateOnly) {
         DataScope.current(TENANT_PURPOSE_PERMISSION_UPDATE).requireWritable(Optional.empty());
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, TENANT_PURPOSE_WRITABLE);
         return doInWriteTransaction(() -> {
             PurposeView purpose = loadPurpose(id);
             if (purpose.rowVersion() != expected) {
@@ -119,7 +115,7 @@ public class PurposeService extends AppTransactionManager {
             }
             Optional<TenantPurposeEntity> stored = tenantPurposeRepository.findByPurposeId(id);
             TenantPurposeEntity setting = stored.orElseGet(() -> unsetTenantPurpose(id));
-            applyTenantPurpose(setting, changes, fields);
+            List<String> fields = applyTenantPurpose(setting, changes);
             assertValidTenantPurpose(purpose, setting);
             if (stored.isPresent()) {
                 setting.onUpdatingData(Actor.current(), clock);
@@ -160,17 +156,14 @@ public class PurposeService extends AppTransactionManager {
         return TenantPurposeEntity.builder().purposeId(purposeId).enabled(false).build();
     }
 
-    /** Applies the selected PurposeUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyTenantPurpose(TenantPurposeEntity setting, PurposeUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "enabled" -> setting.setEnabled(changes.getEnabled());
-                case "maxScope" -> setting.setMaxScope(Optional.ofNullable(changes.getMaxScope())
-                        .map(PurposeUpdate.MaxScopeEnum::getValue).orElse(null));
-                case "noticeId" -> setting.setNoticeId(changes.getNoticeId());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyTenantPurpose(TenantPurposeEntity entity, PurposeUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("enabled", changes.getEnabled(), entity::setEnabled);
+        patch.apply("maxScope", changes.getMaxScope(),
+                v -> entity.setMaxScope(Optional.ofNullable(v).map(PurposeUpdate.MaxScopeEnum::getValue).orElse(null)));
+        patch.apply("noticeId", changes.getNoticeId(), entity::setNoticeId);
+        return patch.applied();
     }
 
     /** The merged setting against the catalogue purpose and the tenant's notices (one 422 with every failing field). */

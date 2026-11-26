@@ -67,9 +67,9 @@ public class StorageQuotaController implements StorageQuotaApi {
 
     @Override
     public ResponseEntity<StorageQuota> updateStorageQuota(UUID storageQuotaId, String ifMatch,
-            StorageQuotaUpdate storageQuotaUpdate, String updateMask, Boolean validateOnly) {
+            StorageQuotaUpdate storageQuotaUpdate, Boolean validateOnly) {
         StorageQuota updated =
-                storageQuotaService.updateStorageQuota(storageQuotaId, ifMatch, storageQuotaUpdate, updateMask,
+                storageQuotaService.updateStorageQuota(storageQuotaId, ifMatch, storageQuotaUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

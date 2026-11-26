@@ -63,10 +63,9 @@ public class AcquisitionSourceController implements AcquisitionSourceApi {
 
     @Override
     public ResponseEntity<AcquisitionSource> updateAcquisitionSource(UUID acquisitionSourceId,
-            String ifMatch, AcquisitionSourceUpdate acquisitionSourceUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, AcquisitionSourceUpdate acquisitionSourceUpdate, Boolean validateOnly) {
         AcquisitionSource updated =
                 acquisitionSourceService.updateAcquisitionSource(acquisitionSourceId, ifMatch, acquisitionSourceUpdate,
-                        updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

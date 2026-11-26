@@ -15,7 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * M1: one {@code @MapperConfig} per module, named {@code <Module>MapperConfig}, with
+ * M1: one {@code @MapperConfig} per area, named {@code <Area>MapperConfig}, with
  * {@code unmappedTargetPolicy = ERROR}, used by every {@code @Mapper}; mappers are stateless interfaces (no
  * componentModel, null-value strategies, {@code @MappingTarget} or injected fields); a DTO → entity method ignores the
  * id, the tenant and the audit set, so a client can never set them.
@@ -31,8 +31,9 @@ public final class MapperRule implements ConformanceRule {
     @Override
     public List<Violation> check(SourceTree tree) {
         List<Violation> found = new ArrayList<>();
-        for (String module : tree.domainModules()) {
-            Path base = tree.backend().resolve(module).resolve("src/main/java/com/mysms").resolve(module);
+        for (SourceTree.Area area : tree.areas()) {
+            String module = area.name();
+            Path base = tree.base(area, "main");
             String config = Character.toUpperCase(module.charAt(0)) + module.substring(1) + "MapperConfig";
             List<Path> mappers = tree.files(base.resolve("mapper"), ".java");
             List<Path> configs = mappers.stream().filter(f -> tree.read(f).contains("@MapperConfig")).toList();

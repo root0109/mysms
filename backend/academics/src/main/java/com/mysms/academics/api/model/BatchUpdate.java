@@ -18,32 +18,32 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Batch that can be updated (partial update; see updateMask).
+ * Fields of Batch that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class BatchUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID courseId;
+  private @Nullable Optional<@NotNull UUID> courseId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@NotNull @Size(max = 30) String> code;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private @Nullable LocalDate startDate;
+  private @Nullable Optional<@NotNull @Size(max = 150) String> name;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private @Nullable LocalDate endDate;
+  private @Nullable Optional<@NotNull LocalDate> startDate;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+  private @Nullable Optional<@NotNull LocalDate> endDate;
 
-  public BatchUpdate courseId(@Nullable UUID courseId) {
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable Optional<@NotNull Boolean> isActive;
+
+  public BatchUpdate courseId(@Nullable Optional<UUID> courseId) {
     this.courseId = courseId;
     return this;
   }
@@ -52,18 +52,18 @@ public class BatchUpdate {
    * Course.
    * @return courseId
    */
-  @Valid 
+  
   @JsonProperty("courseId")
-  public @Nullable UUID getCourseId() {
+  public @Nullable Optional<UUID> getCourseId() {
     return courseId;
   }
 
   @JsonProperty("courseId")
-  public void setCourseId(@Nullable UUID courseId) {
+  public void setCourseId(@Nullable Optional<UUID> courseId) {
     this.courseId = courseId;
   }
 
-  public BatchUpdate code(@Nullable String code) {
+  public BatchUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -72,18 +72,18 @@ public class BatchUpdate {
    * Batch code.
    * @return code
    */
-  @Size(max = 30) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 
-  public BatchUpdate name(@Nullable String name) {
+  public BatchUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -92,18 +92,18 @@ public class BatchUpdate {
    * Batch name.
    * @return name
    */
-  @Size(max = 150) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public BatchUpdate startDate(@Nullable LocalDate startDate) {
+  public BatchUpdate startDate(@Nullable Optional<LocalDate> startDate) {
     this.startDate = startDate;
     return this;
   }
@@ -112,18 +112,18 @@ public class BatchUpdate {
    * Start date.
    * @return startDate
    */
-  @Valid 
+  
   @JsonProperty("startDate")
-  public @Nullable LocalDate getStartDate() {
+  public @Nullable Optional<LocalDate> getStartDate() {
     return startDate;
   }
 
   @JsonProperty("startDate")
-  public void setStartDate(@Nullable LocalDate startDate) {
+  public void setStartDate(@Nullable Optional<LocalDate> startDate) {
     this.startDate = startDate;
   }
 
-  public BatchUpdate endDate(@Nullable LocalDate endDate) {
+  public BatchUpdate endDate(@Nullable Optional<LocalDate> endDate) {
     this.endDate = endDate;
     return this;
   }
@@ -132,18 +132,18 @@ public class BatchUpdate {
    * End date.
    * @return endDate
    */
-  @Valid 
+  
   @JsonProperty("endDate")
-  public @Nullable LocalDate getEndDate() {
+  public @Nullable Optional<LocalDate> getEndDate() {
     return endDate;
   }
 
   @JsonProperty("endDate")
-  public void setEndDate(@Nullable LocalDate endDate) {
+  public void setEndDate(@Nullable Optional<LocalDate> endDate) {
     this.endDate = endDate;
   }
 
-  public BatchUpdate isActive(@Nullable Boolean isActive) {
+  public BatchUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -154,12 +154,12 @@ public class BatchUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

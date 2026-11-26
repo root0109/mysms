@@ -60,8 +60,8 @@ public class SubjectController implements SubjectApi {
 
     @Override
     public ResponseEntity<Subject> updateSubject(UUID subjectId, String ifMatch,
-            SubjectUpdate subjectUpdate, String updateMask, Boolean validateOnly) {
-        Subject updated = subjectService.updateSubject(subjectId, ifMatch, subjectUpdate, updateMask,
+            SubjectUpdate subjectUpdate, Boolean validateOnly) {
+        Subject updated = subjectService.updateSubject(subjectId, ifMatch, subjectUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

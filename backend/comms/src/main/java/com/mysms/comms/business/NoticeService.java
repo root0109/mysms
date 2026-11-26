@@ -41,7 +41,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -74,11 +74,6 @@ public class NoticeService extends AppTransactionManager {
     static final String PERMISSION_DEACTIVATE_NOTICE = "comms.notice.deactivate_notice";
     static final String PERMISSION_CLOSE_NOTICE_REPLIES = "comms.notice.close_notice_replies";
     static final String PERMISSION_REACTIVATE_NOTICE = "comms.notice.reactivate_notice";
-    /** The contract's NoticeUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("institutionId", "academicYearId", "audience", "classSectionId", "backgroundId", "title", "body",
-            "attachmentFileId", "publishAt", "expireAt", "cohortId", "showInCalendar", "allowReplies",
-            "discussionTopicId", "isClosed", "isDeactivated", "authorComment");
 
     public static final String NOTICE_AUDIENCE_AGGREGATE = NoticeAudienceEntity.TABLE;
     static final String NOTICE_AUDIENCE_PERMISSION_LIST = "comms.notice_audience.read";
@@ -86,8 +81,6 @@ public class NoticeService extends AppTransactionManager {
     static final String NOTICE_AUDIENCE_PERMISSION_CREATE = "comms.notice_audience.create";
     static final String NOTICE_AUDIENCE_PERMISSION_UPDATE = "comms.notice_audience.update";
     static final String NOTICE_AUDIENCE_PERMISSION_DELETE = "comms.notice_audience.delete";
-    /** The contract's NoticeAudienceUpdate fields, in apply order. */
-    static final List<String> NOTICE_AUDIENCE_WRITABLE = List.of("institutionId", "roleId");
 
     public static final String NOTICE_VERSION_AGGREGATE = NoticeVersionEntity.TABLE;
     static final String NOTICE_VERSION_PERMISSION_LIST = "comms.notice_version.read";
@@ -171,12 +164,11 @@ public class NoticeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
-    public Notice updateNotice(UUID id, String ifMatch, NoticeUpdate changes, String updateMask, boolean validateOnly) {
+    public Notice updateNotice(UUID id, String ifMatch, NoticeUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             NoticeEntity entity = loadVisible(scope, id);
@@ -184,7 +176,7 @@ public class NoticeService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -405,31 +397,27 @@ public class NoticeService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected NoticeUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(NoticeEntity entity, NoticeUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "academicYearId" -> entity.setAcademicYearId(changes.getAcademicYearId());
-                case "audience" -> entity.setAudience(Optional.ofNullable(changes.getAudience()).map(v -> v.getValue())
-                        .orElse(null));
-                case "classSectionId" -> entity.setClassSectionId(changes.getClassSectionId());
-                case "backgroundId" -> entity.setBackgroundId(changes.getBackgroundId());
-                case "title" -> entity.setTitle(changes.getTitle());
-                case "body" -> entity.setBody(changes.getBody());
-                case "attachmentFileId" -> entity.setAttachmentFileId(changes.getAttachmentFileId());
-                case "publishAt" -> entity.setPublishAt(changes.getPublishAt());
-                case "expireAt" -> entity.setExpireAt(changes.getExpireAt());
-                case "cohortId" -> entity.setCohortId(changes.getCohortId());
-                case "showInCalendar" -> entity.setShowInCalendar(changes.getShowInCalendar());
-                case "allowReplies" -> entity.setAllowReplies(changes.getAllowReplies());
-                case "discussionTopicId" -> entity.setDiscussionTopicId(changes.getDiscussionTopicId());
-                case "isClosed" -> entity.setIsClosed(changes.getIsClosed());
-                case "isDeactivated" -> entity.setIsDeactivated(changes.getIsDeactivated());
-                case "authorComment" -> entity.setAuthorComment(changes.getAuthorComment());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(NoticeEntity entity, NoticeUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("academicYearId", changes.getAcademicYearId(), entity::setAcademicYearId);
+        patch.apply("audience", changes.getAudience(), v -> entity.setAudience(v == null ? null : v.getValue()));
+        patch.apply("classSectionId", changes.getClassSectionId(), entity::setClassSectionId);
+        patch.apply("backgroundId", changes.getBackgroundId(), entity::setBackgroundId);
+        patch.apply("title", changes.getTitle(), entity::setTitle);
+        patch.apply("body", changes.getBody(), entity::setBody);
+        patch.apply("attachmentFileId", changes.getAttachmentFileId(), entity::setAttachmentFileId);
+        patch.apply("publishAt", changes.getPublishAt(), entity::setPublishAt);
+        patch.apply("expireAt", changes.getExpireAt(), entity::setExpireAt);
+        patch.apply("cohortId", changes.getCohortId(), entity::setCohortId);
+        patch.apply("showInCalendar", changes.getShowInCalendar(), entity::setShowInCalendar);
+        patch.apply("allowReplies", changes.getAllowReplies(), entity::setAllowReplies);
+        patch.apply("discussionTopicId", changes.getDiscussionTopicId(), entity::setDiscussionTopicId);
+        patch.apply("isClosed", changes.getIsClosed(), entity::setIsClosed);
+        patch.apply("isDeactivated", changes.getIsDeactivated(), entity::setIsDeactivated);
+        patch.apply("authorComment", changes.getAuthorComment(), entity::setAuthorComment);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -519,13 +507,12 @@ public class NoticeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public NoticeAudience updateNoticeAudience(UUID noticeId, UUID id, String ifMatch, NoticeAudienceUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, NOTICE_AUDIENCE_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(NOTICE_AUDIENCE_PERMISSION_UPDATE);
             NoticeAudienceEntity entity = loadVisibleNoticeAudience(scope, noticeId, id);
@@ -533,7 +520,7 @@ public class NoticeService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyNoticeAudience(entity, changes, fields);
+            List<String> fields = applyNoticeAudience(entity, changes);
             validator.validate(noticeAudienceMapper.toDto(entity));
             assertValidNoticeAudience(entity, false);
             scope.requireWritable(institutionOfNoticeAudience(entity));
@@ -588,15 +575,12 @@ public class NoticeService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected NoticeAudienceUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyNoticeAudience(NoticeAudienceEntity entity, NoticeAudienceUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "roleId" -> entity.setRoleId(changes.getRoleId());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyNoticeAudience(NoticeAudienceEntity entity, NoticeAudienceUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("roleId", changes.getRoleId(), entity::setRoleId);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

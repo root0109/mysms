@@ -22,7 +22,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.platform.config.PlatformDatabaseConfig;
 import com.mysms.platform.config.PlatformEventsConfig;
 import com.mysms.platform.domain.SalesEnquiryEntity;
@@ -51,9 +51,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class SalesEnquiryService extends AppTransactionManager {
 
     public static final String AGGREGATE = SalesEnquiryEntity.TABLE;
-    /** The contract's SalesEnquiryUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("contactName", "email", "phone", "organisationName", "designation", "channel", "message", "status");
 
 
     private final SalesEnquiryRepository repository;
@@ -123,13 +120,11 @@ public class SalesEnquiryService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match. A field the request leaves out is kept, a null one is cleared and a
+     * value is set (§7.2). The merged row is validated as a whole, and must stay within the caller's scope.
      */
-    public SalesEnquiry updateSalesEnquiry(UUID id, String ifMatch, SalesEnquiryUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public SalesEnquiry updateSalesEnquiry(UUID id, String ifMatch, SalesEnquiryUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInGlobalWriteTransaction(() -> {
             try (CallContextHolder.Scope global = CallContextHolder.withoutTenant()) {
                 DataScope scope = DataScope.global();
@@ -138,7 +133,7 @@ public class SalesEnquiryService extends AppTransactionManager {
                 if (entity.getRowVersion() != expected) {
                     throw new PreconditionFailedException("If-Match does not match the current ETag.");
                 }
-                apply(entity, changes, fields);
+                List<String> fields = apply(entity, changes);
                 validator.validate(mapper.toDto(entity));
                 assertValid(entity, false);
                 scope.requireWritable(institutionOf(entity));
@@ -221,24 +216,18 @@ public class SalesEnquiryService extends AppTransactionManager {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected SalesEnquiryUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
-    private static void apply(SalesEnquiryEntity entity, SalesEnquiryUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "contactName" -> entity.setContactName(changes.getContactName());
-                case "email" -> entity.setEmail(changes.getEmail());
-                case "phone" -> entity.setPhone(changes.getPhone());
-                case "organisationName" -> entity.setOrganisationName(changes.getOrganisationName());
-                case "designation" -> entity.setDesignation(changes.getDesignation());
-                case "channel" -> entity.setChannel(changes.getChannel());
-                case "message" -> entity.setMessage(changes.getMessage());
-                case "status" -> entity.setStatus(Optional.ofNullable(changes.getStatus()).map(v -> v.getValue())
-                        .orElse(null));
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(SalesEnquiryEntity entity, SalesEnquiryUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("contactName", changes.getContactName(), entity::setContactName);
+        patch.apply("email", changes.getEmail(), entity::setEmail);
+        patch.apply("phone", changes.getPhone(), entity::setPhone);
+        patch.apply("organisationName", changes.getOrganisationName(), entity::setOrganisationName);
+        patch.apply("designation", changes.getDesignation(), entity::setDesignation);
+        patch.apply("channel", changes.getChannel(), entity::setChannel);
+        patch.apply("message", changes.getMessage(), entity::setMessage);
+        patch.apply("status", changes.getStatus(), v -> entity.setStatus(v == null ? null : v.getValue()));
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

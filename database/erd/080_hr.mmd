@@ -31,11 +31,6 @@ erDiagram
         uuid staff_id FK "NN"
         uuid department_id FK "NN · → org.department (logical)"
     }
-    hr__staff_subject["hr.staff_subject"] {
-        uuid id PK
-        uuid staff_id FK "NN"
-        uuid subject_id FK "NN · → academics.subject (logical)"
-    }
     hr__leave_type["hr.leave_type"] {
         uuid id PK
         uuid institution_id FK "NN · → org.institution (logical)"
@@ -127,7 +122,6 @@ erDiagram
     }
     hr__designation |o--o{ hr__staff : "designation_id"
     hr__staff ||--o{ hr__staff_department : "staff_id"
-    hr__staff ||--o{ hr__staff_subject : "staff_id"
     hr__staff ||--o{ hr__leave_application : "staff_id"
     hr__leave_type |o--o{ hr__leave_application : "leave_type_id"
     hr__staff ||--o{ hr__leave_balance : "staff_id"

@@ -23,7 +23,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.finance.api.model.CancelInvoiceRequest;
 import com.mysms.finance.api.model.CreateInvoiceFromDuesRequest;
 import com.mysms.finance.api.model.RaiseChargeInvoiceRequest;
@@ -104,8 +104,6 @@ public class InvoiceService extends AppTransactionManager {
     static final String INVOICE_LINE_PERMISSION_READ = "finance.invoice_line.read";
     /** The event comms delivers a reminder from. */
     public static final String REMINDER_REQUESTED = "finance.fee_reminder.requested";
-    /** The contract's InvoiceUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("institutionId", "billToName", "invoiceDate", "dueDate");
     /** The most dues one invoice bills. */
     static final int MAX_DUES = 200;
     /** The most invoices one reminder run names. */
@@ -226,10 +224,8 @@ public class InvoiceService extends AppTransactionManager {
      * Changes a draft's bill-to and dates under If-Match (a posted invoice never changes: 409). The institution of an
      * invoice with lines stays (409): its lines bill that institution's dues.
      */
-    public Invoice updateInvoice(UUID id, String ifMatch, InvoiceUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public Invoice updateInvoice(UUID id, String ifMatch, InvoiceUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             InvoiceEntity entity = loadVisible(scope, id);
@@ -239,7 +235,7 @@ public class InvoiceService extends AppTransactionManager {
             }
             requireDraft(entity);
             UUID institutionBefore = entity.getInstitutionId();
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             scope.requireWritable(Optional.ofNullable(entity.getInstitutionId()));
             if (!Objects.equals(institutionBefore, entity.getInstitutionId()) && repository.lineCount(id) > 0) {
@@ -783,17 +779,14 @@ public class InvoiceService extends AppTransactionManager {
         return all;
     }
 
-    /** Applies the selected InvoiceUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(InvoiceEntity entity, InvoiceUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "billToName" -> entity.setBillToName(changes.getBillToName());
-                case "invoiceDate" -> entity.setInvoiceDate(changes.getInvoiceDate());
-                case "dueDate" -> entity.setDueDate(changes.getDueDate());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(InvoiceEntity entity, InvoiceUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("billToName", changes.getBillToName(), entity::setBillToName);
+        patch.apply("invoiceDate", changes.getInvoiceDate(), entity::setInvoiceDate);
+        patch.apply("dueDate", changes.getDueDate(), entity::setDueDate);
+        return patch.applied();
     }
 
     private OffsetDateTime now() {

@@ -16,39 +16,39 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Program that can be updated (partial update; see updateMask).
+ * Fields of Program that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class ProgramUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID departmentId;
+  private @Nullable Optional<UUID> departmentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID programLevelId;
+  private @Nullable Optional<@NotNull UUID> programLevelId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@NotNull @Size(max = 30) String> code;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 200) String> name;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String minUnitLoad;
+  private @Nullable Optional<@Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> minUnitLoad;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String maxUnitLoad;
+  private @Nullable Optional<@Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> maxUnitLoad;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID imageFileId;
+  private @Nullable Optional<UUID> imageFileId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public ProgramUpdate institutionId(@Nullable UUID institutionId) {
+  public ProgramUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -57,18 +57,18 @@ public class ProgramUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public ProgramUpdate departmentId(@Nullable UUID departmentId) {
+  public ProgramUpdate departmentId(@Nullable Optional<UUID> departmentId) {
     this.departmentId = departmentId;
     return this;
   }
@@ -77,18 +77,18 @@ public class ProgramUpdate {
    * Owning department.
    * @return departmentId
    */
-  @Valid 
+  
   @JsonProperty("departmentId")
-  public @Nullable UUID getDepartmentId() {
+  public @Nullable Optional<UUID> getDepartmentId() {
     return departmentId;
   }
 
   @JsonProperty("departmentId")
-  public void setDepartmentId(@Nullable UUID departmentId) {
+  public void setDepartmentId(@Nullable Optional<UUID> departmentId) {
     this.departmentId = departmentId;
   }
 
-  public ProgramUpdate programLevelId(@Nullable UUID programLevelId) {
+  public ProgramUpdate programLevelId(@Nullable Optional<UUID> programLevelId) {
     this.programLevelId = programLevelId;
     return this;
   }
@@ -97,18 +97,18 @@ public class ProgramUpdate {
    * Level.
    * @return programLevelId
    */
-  @Valid 
+  
   @JsonProperty("programLevelId")
-  public @Nullable UUID getProgramLevelId() {
+  public @Nullable Optional<UUID> getProgramLevelId() {
     return programLevelId;
   }
 
   @JsonProperty("programLevelId")
-  public void setProgramLevelId(@Nullable UUID programLevelId) {
+  public void setProgramLevelId(@Nullable Optional<UUID> programLevelId) {
     this.programLevelId = programLevelId;
   }
 
-  public ProgramUpdate code(@Nullable String code) {
+  public ProgramUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -117,18 +117,18 @@ public class ProgramUpdate {
    * Program code.
    * @return code
    */
-  @Size(max = 30) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 
-  public ProgramUpdate name(@Nullable String name) {
+  public ProgramUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -137,18 +137,18 @@ public class ProgramUpdate {
    * Program name.
    * @return name
    */
-  @Size(max = 200) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public ProgramUpdate minUnitLoad(@Nullable String minUnitLoad) {
+  public ProgramUpdate minUnitLoad(@Nullable Optional<String> minUnitLoad) {
     this.minUnitLoad = minUnitLoad;
     return this;
   }
@@ -157,18 +157,18 @@ public class ProgramUpdate {
    * Minimum credit load per term.
    * @return minUnitLoad
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("minUnitLoad")
-  public @Nullable String getMinUnitLoad() {
+  public @Nullable Optional<String> getMinUnitLoad() {
     return minUnitLoad;
   }
 
   @JsonProperty("minUnitLoad")
-  public void setMinUnitLoad(@Nullable String minUnitLoad) {
+  public void setMinUnitLoad(@Nullable Optional<String> minUnitLoad) {
     this.minUnitLoad = minUnitLoad;
   }
 
-  public ProgramUpdate maxUnitLoad(@Nullable String maxUnitLoad) {
+  public ProgramUpdate maxUnitLoad(@Nullable Optional<String> maxUnitLoad) {
     this.maxUnitLoad = maxUnitLoad;
     return this;
   }
@@ -177,18 +177,18 @@ public class ProgramUpdate {
    * Maximum credit load per term.
    * @return maxUnitLoad
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("maxUnitLoad")
-  public @Nullable String getMaxUnitLoad() {
+  public @Nullable Optional<String> getMaxUnitLoad() {
     return maxUnitLoad;
   }
 
   @JsonProperty("maxUnitLoad")
-  public void setMaxUnitLoad(@Nullable String maxUnitLoad) {
+  public void setMaxUnitLoad(@Nullable Optional<String> maxUnitLoad) {
     this.maxUnitLoad = maxUnitLoad;
   }
 
-  public ProgramUpdate imageFileId(@Nullable UUID imageFileId) {
+  public ProgramUpdate imageFileId(@Nullable Optional<UUID> imageFileId) {
     this.imageFileId = imageFileId;
     return this;
   }
@@ -197,18 +197,18 @@ public class ProgramUpdate {
    * Program image.
    * @return imageFileId
    */
-  @Valid 
+  
   @JsonProperty("imageFileId")
-  public @Nullable UUID getImageFileId() {
+  public @Nullable Optional<UUID> getImageFileId() {
     return imageFileId;
   }
 
   @JsonProperty("imageFileId")
-  public void setImageFileId(@Nullable UUID imageFileId) {
+  public void setImageFileId(@Nullable Optional<UUID> imageFileId) {
     this.imageFileId = imageFileId;
   }
 
-  public ProgramUpdate isActive(@Nullable Boolean isActive) {
+  public ProgramUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -219,12 +219,12 @@ public class ProgramUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

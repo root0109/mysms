@@ -3,7 +3,7 @@
   Local build cache (see .mvn/extensions.xml). A module is restored only when every input is unchanged: its sources
   and resources (main, test, component-test), its POM and the checksums of its dependencies, including the other MySMS
   modules it builds on. Besides the jar, a hit restores the files later steps read from target/: the OpenAPI document
-  the component test writes (target/openapi/api-docs.yml, input of the clients' TypeScript SDK) and the gRPC
+  the component test writes (target/openapi/<area>/api-docs.yml, input of the clients' TypeScript SDK) and the gRPC
   descriptor set (target/docs/protos).
 -->
 <cache xmlns="http://maven.apache.org/BUILD-CACHE-CONFIG/1.2.0"

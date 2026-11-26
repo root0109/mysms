@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import type { master } from '@mysms/sdk';
 import { CountryApi } from '@mysms/sdk/master/apis/CountryApi';
 import { FIRST_PAGE, nextPage, pageQuery } from '../api/pages';
+import { patchOf } from '../api/patch';
 import { call, callWithEtag, type WithEtag } from '../api/unwrap';
 import { queryKey } from '../query/keys';
 import { STALE_TIME } from '../query/queryClient';
@@ -77,8 +78,7 @@ export function useUpdateCountry() {
         api.get(CountryApi).updateCountryRaw({
           countryId,
           ifMatch: etag,
-          updateMask: Object.keys(changes).join(','),
-          countryUpdate: changes,
+          countryUpdate: patchOf(changes),
         }),
       ),
     onSuccess: (result: WithEtag<Country>, { countryId }) => {

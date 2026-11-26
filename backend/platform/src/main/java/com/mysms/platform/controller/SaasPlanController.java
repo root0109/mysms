@@ -61,8 +61,8 @@ public class SaasPlanController implements SaasPlanApi {
 
     @Override
     public ResponseEntity<SaasPlan> updateSaasPlan(UUID saasPlanId, String ifMatch,
-            SaasPlanUpdate saasPlanUpdate, String updateMask, Boolean validateOnly) {
-        SaasPlan updated = saasPlanService.updateSaasPlan(saasPlanId, ifMatch, saasPlanUpdate, updateMask,
+            SaasPlanUpdate saasPlanUpdate, Boolean validateOnly) {
+        SaasPlan updated = saasPlanService.updateSaasPlan(saasPlanId, ifMatch, saasPlanUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

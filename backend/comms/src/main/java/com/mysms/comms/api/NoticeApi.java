@@ -329,7 +329,7 @@ public interface NoticeApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -365,7 +365,7 @@ public interface NoticeApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -399,7 +399,7 @@ public interface NoticeApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -500,12 +500,11 @@ public interface NoticeApi {
     String PATH_UPDATE_NOTICE = "/v1/comms/notices/{noticeId}";
     /**
      * PATCH /v1/comms/notices/{noticeId} : Update Notice
-     * Partially update a Notice (updateMask). Requires If-Match with the current ETag.
+     * Partially update a Notice (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param noticeId Notice id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param noticeUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -529,7 +528,6 @@ public interface NoticeApi {
          @PathVariable("noticeId") UUID noticeId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody NoticeUpdate noticeUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -537,13 +535,12 @@ public interface NoticeApi {
     String PATH_UPDATE_NOTICE_AUDIENCE = "/v1/comms/notices/{noticeId}/audiences/{noticeAudienceId}";
     /**
      * PATCH /v1/comms/notices/{noticeId}/audiences/{noticeAudienceId} : Update NoticeAudience
-     * Partially update a NoticeAudience (updateMask). Requires If-Match with the current ETag.
+     * Partially update a NoticeAudience (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param noticeId Notice id. (required)
      * @param noticeAudienceId NoticeAudience id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param noticeAudienceUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -568,7 +565,6 @@ public interface NoticeApi {
          @PathVariable("noticeAudienceId") UUID noticeAudienceId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody NoticeAudienceUpdate noticeAudienceUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 

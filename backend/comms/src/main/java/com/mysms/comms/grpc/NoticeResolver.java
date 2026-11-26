@@ -85,8 +85,7 @@ public class NoticeResolver extends NoticeServiceGrpc.NoticeServiceImplBase {
     public void updateNotice(UpdateNoticeRequest request, StreamObserver<UpdateNoticeResponse> out) {
         Notice updated = service.updateNotice(
                 bridge.id(request.getNotice().getId(), "id"), bridge.requiredIfMatch(request.getNotice().getEtag()),
-                bridge.changes(request.getNotice(), request.getUpdateMask(), NoticeUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getNotice(), request.getUpdateMask(), NoticeUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNoticeResponse.newBuilder(), "notice", updated).build());
     }
 
@@ -126,7 +125,7 @@ public class NoticeResolver extends NoticeServiceGrpc.NoticeServiceImplBase {
                 bridge.id(request.getNoticeId(), "noticeId"), bridge.id(request.getNoticeAudience().getId(), "id"),
                 bridge.requiredIfMatch(request.getNoticeAudience().getEtag()),
                 bridge.changes(request.getNoticeAudience(), request.getUpdateMask(), NoticeAudienceUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNoticeAudienceResponse.newBuilder(), "notice_audience", updated).build());
     }
 

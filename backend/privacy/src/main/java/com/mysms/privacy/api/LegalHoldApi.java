@@ -105,7 +105,7 @@ public interface LegalHoldApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -172,12 +172,11 @@ public interface LegalHoldApi {
     String PATH_UPDATE_LEGAL_HOLD = "/v1/privacy/legal-holds/{legalHoldId}";
     /**
      * PATCH /v1/privacy/legal-holds/{legalHoldId} : Update LegalHold
-     * Move an active hold's review date (updateMask); what it holds is fixed once placed. Requires If-Match with the current ETag and a tenant-wide grant. Refused while impersonating.
+     * Move an active hold's review date (absent fields are kept, null clears a field); what it holds is fixed once placed. Requires If-Match with the current ETag and a tenant-wide grant. Refused while impersonating.
      *
      * @param legalHoldId Legal hold id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param legalHoldUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
      *         or Missing or invalid credentials. (status code 401)
@@ -199,7 +198,6 @@ public interface LegalHoldApi {
     ResponseEntity<LegalHold> updateLegalHold(
          @PathVariable("legalHoldId") UUID legalHoldId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
-         @Valid @RequestBody LegalHoldUpdate legalHoldUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask
+         @Valid @RequestBody LegalHoldUpdate legalHoldUpdate
     );
 }

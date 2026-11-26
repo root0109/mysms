@@ -69,9 +69,9 @@ public class SalesEnquiryController implements SalesEnquiryApi {
 
     @Override
     public ResponseEntity<SalesEnquiry> updateSalesEnquiry(UUID salesEnquiryId, String ifMatch,
-            SalesEnquiryUpdate salesEnquiryUpdate, String updateMask, Boolean validateOnly) {
+            SalesEnquiryUpdate salesEnquiryUpdate, Boolean validateOnly) {
         SalesEnquiry updated =
-                salesEnquiryService.updateSalesEnquiry(salesEnquiryId, ifMatch, salesEnquiryUpdate, updateMask,
+                salesEnquiryService.updateSalesEnquiry(salesEnquiryId, ifMatch, salesEnquiryUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

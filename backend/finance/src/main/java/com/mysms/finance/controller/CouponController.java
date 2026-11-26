@@ -94,17 +94,17 @@ public class CouponController implements CouponApi {
 
     @Override
     public ResponseEntity<Coupon> updateCoupon(UUID couponId, String ifMatch, CouponUpdate couponUpdate,
-            String updateMask, Boolean validateOnly) {
-        Coupon updated = couponService.updateCoupon(couponId, ifMatch, couponUpdate, updateMask,
+            Boolean validateOnly) {
+        Coupon updated = couponService.updateCoupon(couponId, ifMatch, couponUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<CouponScope> updateCouponScope(UUID couponId, UUID couponScopeId,
-            String ifMatch, CouponScopeUpdate couponScopeUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, CouponScopeUpdate couponScopeUpdate, Boolean validateOnly) {
         CouponScope updated =
-                couponService.updateCouponScope(couponId, couponScopeId, ifMatch, couponScopeUpdate, updateMask,
+                couponService.updateCouponScope(couponId, couponScopeId, ifMatch, couponScopeUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

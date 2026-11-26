@@ -46,7 +46,7 @@ class CommsCrudComponentTest {
 
     @TestFactory
     List<DynamicNode> standardOperations() {
-        return new CrudContract(TOKENS, () -> port, this::fixtures).tests("crud-spec.json");
+        return new CrudContract(TOKENS, () -> port, this::fixtures).tests("comms/crud-spec.json");
     }
 
     @TestFactory

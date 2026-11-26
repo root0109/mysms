@@ -131,8 +131,8 @@ public class TenantController implements TenantApi {
 
     @Override
     public ResponseEntity<Tenant> updateTenant(UUID tenantId, String ifMatch, TenantUpdate tenantUpdate,
-            String updateMask, Boolean validateOnly) {
-        Tenant updated = tenantService.updateTenant(tenantId, ifMatch, tenantUpdate, updateMask,
+            Boolean validateOnly) {
+        Tenant updated = tenantService.updateTenant(tenantId, ifMatch, tenantUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

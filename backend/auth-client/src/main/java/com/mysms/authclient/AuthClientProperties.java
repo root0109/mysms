@@ -21,6 +21,7 @@ public record AuthClientProperties(String issuer, String jwkSetUri, String publi
 
     /** The springdoc paths {@link #apiDocs} opens: the document and the Swagger UI it feeds. */
     public static final List<String> API_DOC_PATHS = List.of("/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/**",
+            "/v3/api-docs.yaml/**",
             "/swagger-ui.html", "/swagger-ui/**");
 
     public static final String TENANT_AUDIENCE = "mysms";

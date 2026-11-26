@@ -66,7 +66,7 @@ class PlatformFilesComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "platform");
+        DATABASE.register(registry, "platform", "master", "org");
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
         GCS.register(registry);

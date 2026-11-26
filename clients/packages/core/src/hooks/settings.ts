@@ -5,6 +5,7 @@ import { SettingValueApi } from '@mysms/sdk/iam/apis/SettingValueApi';
 import { UserAccountApi } from '@mysms/sdk/iam/apis/UserAccountApi';
 import { useMemo } from 'react';
 import { FIRST_PAGE, allPages, nextPage, pageQuery } from '../api/pages';
+import { patchOf } from '../api/patch';
 import { call, callWithEtag, type WithEtag } from '../api/unwrap';
 import { queryKey } from '../query/keys';
 import { STALE_TIME } from '../query/queryClient';
@@ -131,8 +132,7 @@ export function useUpdateSettingValue() {
         api.get(SettingValueApi).updateSettingValueRaw({
           settingValueId,
           ifMatch: etag,
-          updateMask: Object.keys(changes).join(','),
-          settingValueUpdate: changes,
+          settingValueUpdate: patchOf(changes),
         }),
       ),
     onSuccess: changed,

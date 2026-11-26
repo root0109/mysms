@@ -78,7 +78,7 @@ public interface RetentionPolicyApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -86,12 +86,11 @@ public interface RetentionPolicyApi {
     String PATH_UPDATE_RETENTION_POLICY = "/v1/privacy/retention-policies/{retentionPolicyId}";
     /**
      * PATCH /v1/privacy/retention-policies/{retentionPolicyId} : Update RetentionPolicy
-     * Set the tenant's own period and action of a retention policy (updateMask); a period below the legal floor is refused (422 RETENTION_BELOW_LEGAL_FLOOR). Requires If-Match with the current ETag (0 while never set) and a tenant-wide grant. Refused while impersonating.
+     * Set the tenant's own period and action of a retention policy (absent fields are kept, null clears a field); a period below the legal floor is refused (422 RETENTION_BELOW_LEGAL_FLOOR). Requires If-Match with the current ETag (0 while never set) and a tenant-wide grant. Refused while impersonating.
      *
      * @param retentionPolicyId Retention policy id (the catalogue's). (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param retentionPolicyUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
      *         or Missing or invalid credentials. (status code 401)
@@ -113,7 +112,6 @@ public interface RetentionPolicyApi {
     ResponseEntity<RetentionPolicy> updateRetentionPolicy(
          @PathVariable("retentionPolicyId") UUID retentionPolicyId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
-         @Valid @RequestBody RetentionPolicyUpdate retentionPolicyUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask
+         @Valid @RequestBody RetentionPolicyUpdate retentionPolicyUpdate
     );
 }

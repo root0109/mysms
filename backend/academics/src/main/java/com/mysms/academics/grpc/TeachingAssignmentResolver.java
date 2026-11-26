@@ -64,7 +64,7 @@ public class TeachingAssignmentResolver extends TeachingAssignmentServiceGrpc.Te
         TeachingAssignment updated = service.updateTeachingAssignment(bridge.id(request.getTeachingAssignment().getId(), "id"),
                 bridge.requiredIfMatch(request.getTeachingAssignment().getEtag()),
                 bridge.changes(request.getTeachingAssignment(), request.getUpdateMask(), TeachingAssignmentUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateTeachingAssignmentResponse.newBuilder(), "teaching_assignment", updated).build());
     }

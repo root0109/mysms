@@ -21,7 +21,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.privacy.api.model.LegalHold;
 import com.mysms.privacy.api.model.LegalHoldUpdate;
 import com.mysms.privacy.api.model.ListActiveHoldsResponse;
@@ -70,8 +70,6 @@ public class LegalHoldService extends AppTransactionManager {
     static final String PERMISSION_PLACE = "privacy.legal_hold.place";
     static final String PERMISSION_UPDATE = "privacy.legal_hold.update";
     static final String PERMISSION_RELEASE = "privacy.legal_hold.release";
-    /** The contract's LegalHoldUpdate fields. */
-    static final List<String> WRITABLE = List.of("reviewBy");
 
     /** No institution owns a row of this aggregate. */
     private static final Optional<UUID> TENANT_LEVEL = Optional.empty();
@@ -165,20 +163,19 @@ public class LegalHoldService extends AppTransactionManager {
     }
 
     /** privacy.UpdateLegalHold: an active hold's review date (409 once released), under If-Match. */
-    public LegalHold updateLegalHold(UUID id, String ifMatch, LegalHoldUpdate changes, String updateMask) {
+    public LegalHold updateLegalHold(UUID id, String ifMatch, LegalHoldUpdate changes) {
         requireTenantWide(PERMISSION_UPDATE);
         refuseImpersonation(AuthContext.require());
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             LegalHoldEntity entity = load(id);
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
             requireActive(entity);
-            if (fields.contains("reviewBy")) {
-                entity.setReviewBy(changes.getReviewBy());
-            }
+            Patches patch = new Patches();
+            patch.apply("reviewBy", changes.getReviewBy(), entity::setReviewBy);
+            List<String> fields = patch.applied();
             validator.validate(mapper.toDto(entity));
             reviewByError(entity.getReviewBy()).ifPresent(error -> {
                 throw new ValidationFailedException(List.of(error));

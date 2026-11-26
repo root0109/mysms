@@ -33,7 +33,9 @@ public class AcademicsReferenceCleanup implements EventSubscriptions {
     static final Map<String, List<Step>> STEPS = Map.ofEntries(
         Map.entry("hr.staff.deleted", List.of(
             new Step(ReferenceCleanupRepository.CLEAR_CLASS_SECTION_CLASS_TEACHER_STAFF_ID,
-                    "academics.class_section", "classTeacherStaffId"))),
+                    "academics.class_section", "classTeacherStaffId"),
+            new Step(ReferenceCleanupRepository.ARCHIVE_TEACHER_SUBJECT_STAFF_ID,
+                    "academics.teacher_subject", null))),
         Map.entry("platform.file_object.deleted", List.of(
             new Step(ReferenceCleanupRepository.CLEAR_PROGRAM_IMAGE_FILE_ID,
                     "academics.program", "imageFileId"))));

@@ -263,7 +263,8 @@ describe('payroll writes', () => {
     expect(renamed).toMatchObject({ name: 'Office', isActive: false, etag: '"2"' });
     const patch = api.calls.find((c) => c.method === 'PATCH');
     expect(patch?.headers.get('If-Match')).toBe('"1"');
-    expect(new URLSearchParams(patch?.search).get('updateMask')).toBe('name,isActive');
+    expect(patch?.search).toBe('');
+    expect(JSON.parse(patch?.body ?? '{}')).toEqual({ name: 'Office', isActive: false });
 
     const component = await act(() =>
       result.current.saveComponent.mutateAsync({
@@ -441,25 +442,34 @@ describe('payroll writes', () => {
       accountKey: 'PC',
       accountNumber: '000123456789',
       bankRoutingCode: 'HDFC0000001',
-      branchName: '',
+      branchName: 'Main road',
     };
     const created = await act(() => result.current.save.mutateAsync(draft));
     expect(created.accountNumberMasked).toBe('••••6789');
     expect(created).not.toHaveProperty('accountNumber');
-    await act(() =>
+    expect(created.branchName).toBe('Main road');
+    const edited = await act(() =>
       result.current.save.mutateAsync({
         ...draft,
         id: created.id ?? '',
         etag: created.etag ?? '',
         name: 'Petty cash box',
         accountNumber: '',
+        branchName: ' ',
       }),
     );
     const patch = api.calls.find((c) => c.method === 'PATCH');
-    // an empty number keeps the stored one: it is not sent at all
-    expect(new URLSearchParams(patch?.search).get('updateMask')).toBe(
-      'institutionId,managedByUserId,name,accountKey,bankRoutingCode',
-    );
+    // an empty number keeps the stored one: it is not sent at all; an emptied branch is sent as null and cleared
+    expect(Object.keys(JSON.parse(patch?.body ?? '{}'))).toEqual([
+      'institutionId',
+      'managedByUserId',
+      'name',
+      'accountKey',
+      'bankRoutingCode',
+      'branchName',
+    ]);
+    expect(JSON.parse(patch?.body ?? '{}')).toMatchObject({ branchName: null });
+    expect(edited.branchName ?? null).toBeNull();
     expect(JSON.parse(patch?.body ?? '{}')).not.toHaveProperty('accountNumber');
     // the account is at its second version after the edit
     await act(() => result.current.remove.mutateAsync({ id: created.id ?? '', etag: '"2"' }));

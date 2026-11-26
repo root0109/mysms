@@ -1,0 +1,23 @@
+package com.mysms.campus.facility;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.mysms.core.testkit.ControllerStubs;
+import com.mysms.campus.facility.controller.AssetItemController;
+import com.mysms.campus.facility.controller.FacilityController;
+import com.mysms.campus.facility.controller.RoomController;
+import org.junit.jupiter.api.Test;
+
+/**
+ * The operations facility does not serve yet answer 501 explicitly; a newly served operation changes the count on
+ * purpose.
+ */
+class FacilityControllerStubsTest {
+
+    @Test
+    void unservedOperationsAnswerNotImplemented() {
+        assertThat(ControllerStubs.count(AssetItemController.class)).as("AssetItem").isEqualTo(0);
+        assertThat(ControllerStubs.count(FacilityController.class)).as("Facility").isEqualTo(0);
+        assertThat(ControllerStubs.count(RoomController.class)).as("Room").isEqualTo(0);
+    }
+}

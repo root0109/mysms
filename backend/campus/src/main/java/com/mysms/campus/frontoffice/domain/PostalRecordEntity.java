@@ -1,0 +1,37 @@
+package com.mysms.campus.frontoffice.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.time.LocalDate;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of frontoffice.postal_record. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class PostalRecordEntity extends BaseEntity {
+
+    public static final String TABLE = "frontoffice.postal_record";
+
+    private UUID tenantId;
+    private UUID institutionId;
+    private UUID academicYearId;
+    private String direction;
+    private String postType;
+    private String referenceNumber;
+    private Boolean isConfidential;
+    private String senderName;
+    private String senderAddress;
+    private String receiverName;
+    private String receiverAddress;
+    private LocalDate postalDate;
+    private String description;
+    private UUID attachmentFileId;
+    private UUID loggedByUserId;
+}

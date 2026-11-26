@@ -61,10 +61,9 @@ public class MessageTemplateController implements MessageTemplateApi {
 
     @Override
     public ResponseEntity<MessageTemplate> updateMessageTemplate(UUID messageTemplateId, String ifMatch,
-            MessageTemplateUpdate messageTemplateUpdate, String updateMask, Boolean validateOnly) {
+            MessageTemplateUpdate messageTemplateUpdate, Boolean validateOnly) {
         MessageTemplate updated =
                 messageTemplateService.updateMessageTemplate(messageTemplateId, ifMatch, messageTemplateUpdate,
-                        updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

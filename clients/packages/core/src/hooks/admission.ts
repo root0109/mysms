@@ -6,6 +6,7 @@ import { ApplicationApi } from '@mysms/sdk/admission/apis/ApplicationApi';
 import { newIdempotencyKey } from '../api/ids';
 import { isApiError } from '../api/problem';
 import { allPages, pageQuery } from '../api/pages';
+import { patchOf } from '../api/patch';
 import { call, callWithEtag } from '../api/unwrap';
 import type { PermissionCode } from '../generated/permissions';
 import { queryKey } from '../query/keys';
@@ -409,7 +410,23 @@ export function useStartApplication() {
   });
 }
 
-/** admission.UpdateApplication of the form's fields, under the ETag last read. */
+/**
+ * The PATCH body of an edited application form (JAVA-CODING-RULES §7.2): only the fields that differ from the
+ * application as saved, a field the applicant blanked or removed sent as null so it is cleared.
+ */
+export function applicationChanges(
+  saved: ApplicationForm,
+  form: ApplicationForm,
+): admission.ApplicationUpdate {
+  const changes: Record<string, unknown> = {};
+  const fields = new Set([...Object.keys(saved), ...Object.keys(form)]) as Set<keyof ApplicationForm>;
+  for (const field of fields) {
+    if (form[field] !== saved[field]) changes[field] = form[field];
+  }
+  return patchOf(changes) as admission.ApplicationUpdate;
+}
+
+/** admission.UpdateApplication of the fields the form changed, under the ETag last read. */
 export function useSaveApplication() {
   const { api } = useRuntime();
   const qc = useQueryClient();
@@ -417,16 +434,20 @@ export function useSaveApplication() {
     mutationFn: ({
       applicationId,
       etag,
+      saved,
       form,
     }: {
       applicationId: string;
       etag: string;
+      saved: ApplicationForm;
       form: ApplicationForm;
     }) =>
       callWithEtag(
-        api
-          .get(ApplicationApi)
-          .updateApplicationRaw({ applicationId, ifMatch: etag, applicationUpdate: form }),
+        api.get(ApplicationApi).updateApplicationRaw({
+          applicationId,
+          ifMatch: etag,
+          applicationUpdate: applicationChanges(saved, form),
+        }),
       ),
     onSettled: (_data, _error, variables) => refreshApplications(qc, variables.applicationId),
   });

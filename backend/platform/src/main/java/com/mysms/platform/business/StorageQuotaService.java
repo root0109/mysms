@@ -23,7 +23,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.platform.config.PlatformDatabaseConfig;
 import com.mysms.platform.config.PlatformEventsConfig;
 import com.mysms.platform.domain.StorageQuotaEntity;
@@ -58,8 +58,6 @@ public class StorageQuotaService extends AppTransactionManager {
     /** 409 code of an upload or copy that would exceed the uploader's enforced quota. */
     public static final String QUOTA_EXCEEDED = "QUOTA_EXCEEDED";
     private static final List<String> USED_BYTES = List.of("usedBytes");
-    /** The contract's StorageQuotaUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("userId", "institutionId", "quotaBytes", "usedBytes", "isActive");
 
 
     private final StorageQuotaRepository repository;
@@ -134,16 +132,14 @@ public class StorageQuotaService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match. A field the request leaves out is kept, a null one is cleared and a
+     * value is set (§7.2). The merged row is validated as a whole, and must stay within the caller's scope.
      */
-    public StorageQuota updateStorageQuota(UUID id, String ifMatch, StorageQuotaUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public StorageQuota updateStorageQuota(UUID id, String ifMatch, StorageQuotaUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         List<FieldError> wire = new ArrayList<>();
-        WireValues.checkInt64("quotaBytes", changes.getQuotaBytes(), wire);
-        WireValues.checkInt64("usedBytes", changes.getUsedBytes(), wire);
+        WireValues.checkInt64("quotaBytes", Patches.value(changes.getQuotaBytes()), wire);
+        WireValues.checkInt64("usedBytes", Patches.value(changes.getUsedBytes()), wire);
         if (!wire.isEmpty()) {
             throw new ValidationFailedException(wire);
         }
@@ -154,7 +150,7 @@ public class StorageQuotaService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -254,20 +250,15 @@ public class StorageQuotaService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /**
-     * Applies the selected StorageQuotaUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
-    private static void apply(StorageQuotaEntity entity, StorageQuotaUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "userId" -> entity.setUserId(changes.getUserId());
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "quotaBytes" -> entity.setQuotaBytes(WireValues.int64(changes.getQuotaBytes()));
-                case "usedBytes" -> entity.setUsedBytes(WireValues.int64(changes.getUsedBytes()));
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(StorageQuotaEntity entity, StorageQuotaUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("userId", changes.getUserId(), entity::setUserId);
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("quotaBytes", changes.getQuotaBytes(), v -> entity.setQuotaBytes(WireValues.int64(v)));
+        patch.apply("usedBytes", changes.getUsedBytes(), v -> entity.setUsedBytes(WireValues.int64(v)));
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

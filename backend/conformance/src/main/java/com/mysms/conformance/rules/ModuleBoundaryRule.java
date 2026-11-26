@@ -18,9 +18,11 @@ import java.util.regex.Pattern;
  * <li>A1 — a domain module depends only on core, auth-client, privacy-client and messaging. Messaging is
  * runtime-only, except for a module that uses its event API (EventEnvelope, EventHandler, EventSubscriptions,
  * RejectedEventException); no module imports RabbitMQ, Google Cloud Pub/Sub or messaging adapter/runtime types.</li>
- * <li>§3 — a module's packages are the layer roles only, and SpotBugs analyses every one of them (the parent POM's
- * {@code mysms.spotbugs.onlyAnalyze} names each layer; a domain module does not narrow it).</li>
- * <li>§14 — a module's migrations live in database/migrations/&lt;module&gt; and touch only its own schema.</li>
+ * <li>§3 — an area's packages are the layer roles only (an area named like its module sits in the module's root
+ * package beside its sibling areas' packages), and SpotBugs analyses every one of them: the parent POM's
+ * {@code mysms.spotbugs.onlyAnalyze} names each layer, and a module that sets its own names its root package and every
+ * layer of every area.</li>
+ * <li>§14 — an area's migrations live in database/migrations/&lt;area&gt; and touch only its module's schemas.</li>
  * </ul>
  */
 public final class ModuleBoundaryRule implements ConformanceRule {
@@ -53,7 +55,9 @@ public final class ModuleBoundaryRule implements ConformanceRule {
         for (String module : tree.domainModules()) {
             dependencies(tree, module, found);
             packages(tree, module, found);
-            migrations(tree, module, found);
+            for (SourceTree.Area area : tree.areas(module)) {
+                migrations(tree, area, found);
+            }
         }
         analysedLayers(tree, found);
         return found;
@@ -106,32 +110,66 @@ public final class ModuleBoundaryRule implements ConformanceRule {
         }
         for (String module : tree.domainModules()) {
             Path pom = tree.backend().resolve(module).resolve("pom.xml");
-            if (tree.read(pom).contains("<" + ANALYSED_PROPERTY + ">")) {
-                found.add(new Violation("§3", tree.relative(pom), "narrows the packages SpotBugs analyses"));
+            Matcher own = ANALYSED.matcher(tree.read(pom));
+            if (!own.find()) {
+                if (!tree.areas(module).equals(List.of(new SourceTree.Area(module, module)))) {
+                    found.add(new Violation("§3", tree.relative(pom), "serves several areas and does not name the "
+                            + "packages SpotBugs analyses"));
+                }
+                continue;
+            }
+            Set<String> packages = Set.of(own.group(1).split(","));
+            if (!packages.contains("com.mysms." + module + ".*")) {
+                found.add(new Violation("§3", tree.relative(pom), "SpotBugs does not analyse the root package"));
+            }
+            for (SourceTree.Area area : tree.areas(module)) {
+                for (String layer : LAYERS) {
+                    if (!packages.contains(area.packageName() + "." + layer + ".-")) {
+                        found.add(new Violation("§3", tree.relative(pom), "SpotBugs does not analyse "
+                                + area.packageName() + "." + layer));
+                    }
+                }
             }
         }
     }
 
     private static void packages(SourceTree tree, String module, List<Violation> found) {
-        String marker = "/com/mysms/" + module + "/";
+        List<SourceTree.Area> areas = tree.areas(module);
+        Set<String> nested = new HashSet<>();
+        areas.stream().filter(a -> !a.name().equals(module)).forEach(a -> nested.add(a.name()));
+        String root = "/com/mysms/" + module + "/";
         for (Path file : tree.java(module, "main")) {
             String path = tree.relative(file);
-            String rest = path.substring(path.indexOf(marker) + marker.length());
+            if (!path.contains(root)) {
+                found.add(new Violation("§3", path, "outside the module's package com.mysms." + module));
+                continue;
+            }
+            String rest = path.substring(path.indexOf(root) + root.length());
             int slash = rest.indexOf('/');
+            if (slash >= 0 && nested.contains(rest.substring(0, slash))) {
+                rest = rest.substring(slash + 1);
+                slash = rest.indexOf('/');
+                if (slash < 0) {
+                    found.add(new Violation("§3", path, "a class in an area's root package"));
+                    continue;
+                }
+            }
             if (slash >= 0 && !LAYERS.contains(rest.substring(0, slash))) {
                 found.add(new Violation("§3", path, "package " + rest.substring(0, slash) + " is not a layer role"));
             }
         }
     }
 
-    private static void migrations(SourceTree tree, String module, List<Violation> found) {
-        for (Path file : tree.migrations(module)) {
+    private static void migrations(SourceTree tree, SourceTree.Area area, List<Violation> found) {
+        Set<String> own = new HashSet<>(Set.of("pg_catalog", "public"));
+        tree.areas(area.module()).forEach(a -> own.add(a.name()));
+        for (Path file : tree.migrations(area)) {
             String sql = SQL_STRING.matcher(SQL_COMMENT.matcher(tree.read(file)).replaceAll(""))
                     .replaceAll("''").replace("\"", "");
             Set<String> schemas = new HashSet<>();
             NAMED_SCHEMA.matcher(sql).results().forEach(m -> schemas.add(m.group(1).toLowerCase(Locale.ROOT)));
             SCHEMA_STATEMENT.matcher(sql).results().forEach(m -> schemas.add(m.group(1).toLowerCase(Locale.ROOT)));
-            schemas.removeAll(Set.of(module, "pg_catalog", "public"));
+            schemas.removeAll(own);
             schemas.stream().sorted().forEach(other ->
                     found.add(new Violation("§14", tree.relative(file), "touches schema " + other)));
         }

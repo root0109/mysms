@@ -16,27 +16,27 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of StorageQuota that can be updated (partial update; see updateMask).
+ * Fields of StorageQuota that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class StorageQuotaUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID userId;
+  private @Nullable Optional<UUID> userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String quotaBytes;
+  private @Nullable Optional<@NotNull @Pattern(regexp = "^-?[0-9]+$") String> quotaBytes;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String usedBytes;
+  private @Nullable Optional<@NotNull @Pattern(regexp = "^-?[0-9]+$") String> usedBytes;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public StorageQuotaUpdate userId(@Nullable UUID userId) {
+  public StorageQuotaUpdate userId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
     return this;
   }
@@ -45,18 +45,18 @@ public class StorageQuotaUpdate {
    * User the quota belongs to.
    * @return userId
    */
-  @Valid 
+  
   @JsonProperty("userId")
-  public @Nullable UUID getUserId() {
+  public @Nullable Optional<UUID> getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(@Nullable UUID userId) {
+  public void setUserId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
   }
 
-  public StorageQuotaUpdate institutionId(@Nullable UUID institutionId) {
+  public StorageQuotaUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -65,18 +65,18 @@ public class StorageQuotaUpdate {
    * Institution the quota belongs to (institution-wide pool).
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public StorageQuotaUpdate quotaBytes(@Nullable String quotaBytes) {
+  public StorageQuotaUpdate quotaBytes(@Nullable Optional<String> quotaBytes) {
     this.quotaBytes = quotaBytes;
     return this;
   }
@@ -85,18 +85,18 @@ public class StorageQuotaUpdate {
    * Allowed bytes.
    * @return quotaBytes
    */
-  @Pattern(regexp = "^-?[0-9]+$") 
+  
   @JsonProperty("quotaBytes")
-  public @Nullable String getQuotaBytes() {
+  public @Nullable Optional<String> getQuotaBytes() {
     return quotaBytes;
   }
 
   @JsonProperty("quotaBytes")
-  public void setQuotaBytes(@Nullable String quotaBytes) {
+  public void setQuotaBytes(@Nullable Optional<String> quotaBytes) {
     this.quotaBytes = quotaBytes;
   }
 
-  public StorageQuotaUpdate usedBytes(@Nullable String usedBytes) {
+  public StorageQuotaUpdate usedBytes(@Nullable Optional<String> usedBytes) {
     this.usedBytes = usedBytes;
     return this;
   }
@@ -105,18 +105,18 @@ public class StorageQuotaUpdate {
    * Bytes in use (maintained by the application).
    * @return usedBytes
    */
-  @Pattern(regexp = "^-?[0-9]+$") 
+  
   @JsonProperty("usedBytes")
-  public @Nullable String getUsedBytes() {
+  public @Nullable Optional<String> getUsedBytes() {
     return usedBytes;
   }
 
   @JsonProperty("usedBytes")
-  public void setUsedBytes(@Nullable String usedBytes) {
+  public void setUsedBytes(@Nullable Optional<String> usedBytes) {
     this.usedBytes = usedBytes;
   }
 
-  public StorageQuotaUpdate isActive(@Nullable Boolean isActive) {
+  public StorageQuotaUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -127,12 +127,12 @@ public class StorageQuotaUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

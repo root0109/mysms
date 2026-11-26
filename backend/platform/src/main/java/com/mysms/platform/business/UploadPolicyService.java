@@ -21,7 +21,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.platform.config.PlatformDatabaseConfig;
 import com.mysms.platform.config.PlatformEventsConfig;
 import com.mysms.platform.domain.UploadPolicyEntity;
@@ -50,9 +50,6 @@ public class UploadPolicyService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "platform.upload_policy.create";
     static final String PERMISSION_UPDATE = "platform.upload_policy.update";
     static final String PERMISSION_DELETE = "platform.upload_policy.delete";
-    /** The contract's UploadPolicyUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("roleId", "moduleCode", "operationCode", "maxSizeBytes", "allowedExtensions");
 
 
     private final UploadPolicyRepository repository;
@@ -125,15 +122,13 @@ public class UploadPolicyService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match. A field the request leaves out is kept, a null one is cleared and a
+     * value is set (§7.2). The merged row is validated as a whole, and must stay within the caller's scope.
      */
-    public UploadPolicy updateUploadPolicy(UUID id, String ifMatch, UploadPolicyUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public UploadPolicy updateUploadPolicy(UUID id, String ifMatch, UploadPolicyUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         List<FieldError> wire = new ArrayList<>();
-        WireValues.checkInt64("maxSizeBytes", changes.getMaxSizeBytes(), wire);
+        WireValues.checkInt64("maxSizeBytes", Patches.value(changes.getMaxSizeBytes()), wire);
         if (!wire.isEmpty()) {
             throw new ValidationFailedException(wire);
         }
@@ -144,7 +139,7 @@ public class UploadPolicyService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -205,20 +200,15 @@ public class UploadPolicyService extends AppTransactionManager {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected UploadPolicyUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
-    private static void apply(UploadPolicyEntity entity, UploadPolicyUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "roleId" -> entity.setRoleId(changes.getRoleId());
-                case "moduleCode" -> entity.setModuleCode(changes.getModuleCode());
-                case "operationCode" -> entity.setOperationCode(changes.getOperationCode());
-                case "maxSizeBytes" -> entity.setMaxSizeBytes(WireValues.int64(changes.getMaxSizeBytes()));
-                case "allowedExtensions" -> entity.setAllowedExtensions(changes.getAllowedExtensions());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(UploadPolicyEntity entity, UploadPolicyUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("roleId", changes.getRoleId(), entity::setRoleId);
+        patch.apply("moduleCode", changes.getModuleCode(), entity::setModuleCode);
+        patch.apply("operationCode", changes.getOperationCode(), entity::setOperationCode);
+        patch.apply("maxSizeBytes", changes.getMaxSizeBytes(), v -> entity.setMaxSizeBytes(WireValues.int64(v)));
+        patch.apply("allowedExtensions", changes.getAllowedExtensions(), entity::setAllowedExtensions);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

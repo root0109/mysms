@@ -18,19 +18,19 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of StudentFeeDue that can be updated (partial update; see updateMask).
+ * Fields of StudentFeeDue that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class StudentFeeDueUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private @Nullable LocalDate dueDate;
+  private @Nullable Optional<LocalDate> dueDate;
 
-  public StudentFeeDueUpdate institutionId(@Nullable UUID institutionId) {
+  public StudentFeeDueUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -39,18 +39,18 @@ public class StudentFeeDueUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public StudentFeeDueUpdate dueDate(@Nullable LocalDate dueDate) {
+  public StudentFeeDueUpdate dueDate(@Nullable Optional<LocalDate> dueDate) {
     this.dueDate = dueDate;
     return this;
   }
@@ -59,14 +59,14 @@ public class StudentFeeDueUpdate {
    * Due date.
    * @return dueDate
    */
-  @Valid 
+  
   @JsonProperty("dueDate")
-  public @Nullable LocalDate getDueDate() {
+  public @Nullable Optional<LocalDate> getDueDate() {
     return dueDate;
   }
 
   @JsonProperty("dueDate")
-  public void setDueDate(@Nullable LocalDate dueDate) {
+  public void setDueDate(@Nullable Optional<LocalDate> dueDate) {
     this.dueDate = dueDate;
   }
 

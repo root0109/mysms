@@ -17,13 +17,13 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of MessageTemplate that can be updated (partial update; see updateMask).
+ * Fields of MessageTemplate that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class MessageTemplateUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<UUID> institutionId;
 
   /**
    * Delivery channel.
@@ -65,27 +65,27 @@ public class MessageTemplateUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable ChannelEnum channel;
+  private @Nullable Optional<@NotNull ChannelEnum> channel;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@Size(max = 80) String> code;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 150) String> name;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String subject;
+  private @Nullable Optional<String> subject;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String body;
+  private @Nullable Optional<String> body;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String externalTemplateId;
+  private @Nullable Optional<@Size(max = 80) String> externalTemplateId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public MessageTemplateUpdate institutionId(@Nullable UUID institutionId) {
+  public MessageTemplateUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -94,18 +94,18 @@ public class MessageTemplateUpdate {
    * Institution (NULL = tenant-wide).
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public MessageTemplateUpdate channel(@Nullable ChannelEnum channel) {
+  public MessageTemplateUpdate channel(@Nullable Optional<ChannelEnum> channel) {
     this.channel = channel;
     return this;
   }
@@ -116,16 +116,16 @@ public class MessageTemplateUpdate {
    */
   
   @JsonProperty("channel")
-  public @Nullable ChannelEnum getChannel() {
+  public @Nullable Optional<ChannelEnum> getChannel() {
     return channel;
   }
 
   @JsonProperty("channel")
-  public void setChannel(@Nullable ChannelEnum channel) {
+  public void setChannel(@Nullable Optional<ChannelEnum> channel) {
     this.channel = channel;
   }
 
-  public MessageTemplateUpdate code(@Nullable String code) {
+  public MessageTemplateUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -134,18 +134,18 @@ public class MessageTemplateUpdate {
    * Template key used by the application.
    * @return code
    */
-  @Size(max = 80) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 
-  public MessageTemplateUpdate name(@Nullable String name) {
+  public MessageTemplateUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -154,18 +154,18 @@ public class MessageTemplateUpdate {
    * Template name.
    * @return name
    */
-  @Size(max = 150) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public MessageTemplateUpdate subject(@Nullable String subject) {
+  public MessageTemplateUpdate subject(@Nullable Optional<String> subject) {
     this.subject = subject;
     return this;
   }
@@ -176,16 +176,16 @@ public class MessageTemplateUpdate {
    */
   
   @JsonProperty("subject")
-  public @Nullable String getSubject() {
+  public @Nullable Optional<String> getSubject() {
     return subject;
   }
 
   @JsonProperty("subject")
-  public void setSubject(@Nullable String subject) {
+  public void setSubject(@Nullable Optional<String> subject) {
     this.subject = subject;
   }
 
-  public MessageTemplateUpdate body(@Nullable String body) {
+  public MessageTemplateUpdate body(@Nullable Optional<String> body) {
     this.body = body;
     return this;
   }
@@ -196,16 +196,16 @@ public class MessageTemplateUpdate {
    */
   
   @JsonProperty("body")
-  public @Nullable String getBody() {
+  public @Nullable Optional<String> getBody() {
     return body;
   }
 
   @JsonProperty("body")
-  public void setBody(@Nullable String body) {
+  public void setBody(@Nullable Optional<String> body) {
     this.body = body;
   }
 
-  public MessageTemplateUpdate externalTemplateId(@Nullable String externalTemplateId) {
+  public MessageTemplateUpdate externalTemplateId(@Nullable Optional<String> externalTemplateId) {
     this.externalTemplateId = externalTemplateId;
     return this;
   }
@@ -214,18 +214,18 @@ public class MessageTemplateUpdate {
    * External provider-registered template id (e.g. SMS DLT template id).
    * @return externalTemplateId
    */
-  @Size(max = 80) 
+  
   @JsonProperty("externalTemplateId")
-  public @Nullable String getExternalTemplateId() {
+  public @Nullable Optional<String> getExternalTemplateId() {
     return externalTemplateId;
   }
 
   @JsonProperty("externalTemplateId")
-  public void setExternalTemplateId(@Nullable String externalTemplateId) {
+  public void setExternalTemplateId(@Nullable Optional<String> externalTemplateId) {
     this.externalTemplateId = externalTemplateId;
   }
 
-  public MessageTemplateUpdate isActive(@Nullable Boolean isActive) {
+  public MessageTemplateUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -236,12 +236,12 @@ public class MessageTemplateUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

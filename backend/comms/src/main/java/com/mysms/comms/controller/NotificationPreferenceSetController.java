@@ -113,10 +113,10 @@ public class NotificationPreferenceSetController implements NotificationPreferen
     @Override
     public ResponseEntity<NotificationPreference> updateNotificationPreference(
             UUID notificationPreferenceSetId, UUID notificationPreferenceId, String ifMatch,
-            NotificationPreferenceUpdate notificationPreferenceUpdate, String updateMask, Boolean validateOnly) {
+            NotificationPreferenceUpdate notificationPreferenceUpdate, Boolean validateOnly) {
         NotificationPreference updated =
                 notificationPreferenceSetService.updateNotificationPreference(notificationPreferenceSetId,
-                        notificationPreferenceId, ifMatch, notificationPreferenceUpdate, updateMask,
+                        notificationPreferenceId, ifMatch, notificationPreferenceUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
@@ -124,10 +124,10 @@ public class NotificationPreferenceSetController implements NotificationPreferen
     @Override
     public ResponseEntity<NotificationPreferenceSet> updateNotificationPreferenceSet(
             UUID notificationPreferenceSetId, String ifMatch,
-            NotificationPreferenceSetUpdate notificationPreferenceSetUpdate, String updateMask, Boolean validateOnly) {
+            NotificationPreferenceSetUpdate notificationPreferenceSetUpdate, Boolean validateOnly) {
         NotificationPreferenceSet updated =
                 notificationPreferenceSetService.updateNotificationPreferenceSet(notificationPreferenceSetId, ifMatch,
-                        notificationPreferenceSetUpdate, updateMask,
+                        notificationPreferenceSetUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

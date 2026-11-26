@@ -1,0 +1,38 @@
+package com.mysms.academics.timetable.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of timetable.session. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class SessionEntity extends BaseEntity {
+
+    public static final String TABLE = "timetable.session";
+
+    private UUID tenantId;
+    private UUID institutionId;
+    private UUID periodId;
+    private OffsetDateTime startAt;
+    private OffsetDateTime endAt;
+    private Integer weekday;
+    private UUID classSectionId;
+    private UUID courseId;
+    private UUID batchId;
+    private UUID subjectId;
+    private UUID staffId;
+    private UUID roomId;
+    private String title;
+    private String sessionType;
+    private Integer color;
+    private String status;
+}

@@ -42,7 +42,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,10 +67,6 @@ public class ClassPageService extends AppTransactionManager {
     static final String PERMISSION_UPDATE = "comms.class_page.update";
     static final String PERMISSION_DELETE = "comms.class_page.delete";
     static final String PERMISSION_FOLLOW_CLASS_PAGE = "comms.class_page.follow_class_page";
-    /** The contract's ClassPageUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("institutionId", "academicYearId", "pageCategoryId", "name", "description", "coverImageFileId",
-            "ownerUserId", "isActive");
 
     public static final String CLASS_PAGE_ATTACHMENT_AGGREGATE = ClassPageAttachmentEntity.TABLE;
     static final String CLASS_PAGE_ATTACHMENT_PERMISSION_LIST = "comms.class_page_attachment.read";
@@ -78,8 +74,6 @@ public class ClassPageService extends AppTransactionManager {
     static final String CLASS_PAGE_ATTACHMENT_PERMISSION_CREATE = "comms.class_page_attachment.create";
     static final String CLASS_PAGE_ATTACHMENT_PERMISSION_UPDATE = "comms.class_page_attachment.update";
     static final String CLASS_PAGE_ATTACHMENT_PERMISSION_DELETE = "comms.class_page_attachment.delete";
-    /** The contract's ClassPageAttachmentUpdate fields, in apply order. */
-    static final List<String> CLASS_PAGE_ATTACHMENT_WRITABLE = List.of("fileId", "isActive");
 
     public static final String CLASS_PAGE_MEMBER_AGGREGATE = ClassPageMemberEntity.TABLE;
     static final String CLASS_PAGE_MEMBER_PERMISSION_LIST = "comms.class_page_member.read";
@@ -87,8 +81,6 @@ public class ClassPageService extends AppTransactionManager {
     static final String CLASS_PAGE_MEMBER_PERMISSION_CREATE = "comms.class_page_member.create";
     static final String CLASS_PAGE_MEMBER_PERMISSION_UPDATE = "comms.class_page_member.update";
     static final String CLASS_PAGE_MEMBER_PERMISSION_DELETE = "comms.class_page_member.delete";
-    /** The contract's ClassPageMemberUpdate fields, in apply order. */
-    static final List<String> CLASS_PAGE_MEMBER_WRITABLE = List.of("userId", "isFollowing", "reaction", "isActive");
 
     private final ClassPageRepository repository;
     private final ClassPageMapper mapper;
@@ -168,13 +160,11 @@ public class ClassPageService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
-    public ClassPage updateClassPage(UUID id, String ifMatch, ClassPageUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public ClassPage updateClassPage(UUID id, String ifMatch, ClassPageUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             ClassPageEntity entity = loadVisible(scope, id);
@@ -182,7 +172,7 @@ public class ClassPageService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -280,21 +270,18 @@ public class ClassPageService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected ClassPageUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(ClassPageEntity entity, ClassPageUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "academicYearId" -> entity.setAcademicYearId(changes.getAcademicYearId());
-                case "pageCategoryId" -> entity.setPageCategoryId(changes.getPageCategoryId());
-                case "name" -> entity.setName(changes.getName());
-                case "description" -> entity.setDescription(changes.getDescription());
-                case "coverImageFileId" -> entity.setCoverImageFileId(changes.getCoverImageFileId());
-                case "ownerUserId" -> entity.setOwnerUserId(changes.getOwnerUserId());
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(ClassPageEntity entity, ClassPageUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("academicYearId", changes.getAcademicYearId(), entity::setAcademicYearId);
+        patch.apply("pageCategoryId", changes.getPageCategoryId(), entity::setPageCategoryId);
+        patch.apply("name", changes.getName(), entity::setName);
+        patch.apply("description", changes.getDescription(), entity::setDescription);
+        patch.apply("coverImageFileId", changes.getCoverImageFileId(), entity::setCoverImageFileId);
+        patch.apply("ownerUserId", changes.getOwnerUserId(), entity::setOwnerUserId);
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -383,13 +370,12 @@ public class ClassPageService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public ClassPageAttachment updateClassPageAttachment(UUID classPageId, UUID id, String ifMatch,
-            ClassPageAttachmentUpdate changes, String updateMask, boolean validateOnly) {
+            ClassPageAttachmentUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, CLASS_PAGE_ATTACHMENT_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(CLASS_PAGE_ATTACHMENT_PERMISSION_UPDATE);
             ClassPageAttachmentEntity entity = loadVisibleClassPageAttachment(scope, classPageId, id);
@@ -397,7 +383,7 @@ public class ClassPageService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyClassPageAttachment(entity, changes, fields);
+            List<String> fields = applyClassPageAttachment(entity, changes);
             validator.validate(classPageAttachmentMapper.toDto(entity));
             assertValidClassPageAttachment(entity, false);
             scope.requireWritable(institutionOfClassPageAttachment(entity));
@@ -452,16 +438,12 @@ public class ClassPageService extends AppTransactionManager {
         return classPageAttachmentRepository.institutionOf(entity.getClassPageId());
     }
 
-    /** Applies the selected ClassPageAttachmentUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyClassPageAttachment(ClassPageAttachmentEntity entity, ClassPageAttachmentUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "fileId" -> entity.setFileId(changes.getFileId());
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyClassPageAttachment(ClassPageAttachmentEntity entity, ClassPageAttachmentUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("fileId", changes.getFileId(), entity::setFileId);
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -542,13 +524,12 @@ public class ClassPageService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public ClassPageMember updateClassPageMember(UUID classPageId, UUID id, String ifMatch,
-            ClassPageMemberUpdate changes, String updateMask, boolean validateOnly) {
+            ClassPageMemberUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, CLASS_PAGE_MEMBER_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(CLASS_PAGE_MEMBER_PERMISSION_UPDATE);
             ClassPageMemberEntity entity = loadVisibleClassPageMember(scope, classPageId, id);
@@ -556,7 +537,7 @@ public class ClassPageService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyClassPageMember(entity, changes, fields);
+            List<String> fields = applyClassPageMember(entity, changes);
             validator.validate(classPageMemberMapper.toDto(entity));
             assertValidClassPageMember(entity, false);
             scope.requireWritable(institutionOfClassPageMember(entity));
@@ -611,18 +592,14 @@ public class ClassPageService extends AppTransactionManager {
         return classPageMemberRepository.institutionOf(entity.getClassPageId());
     }
 
-    /** Applies the selected ClassPageMemberUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyClassPageMember(ClassPageMemberEntity entity, ClassPageMemberUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "userId" -> entity.setUserId(changes.getUserId());
-                case "isFollowing" -> entity.setIsFollowing(changes.getIsFollowing());
-                case "reaction" -> entity.setReaction(Optional.ofNullable(changes.getReaction()).map(v -> v.getValue())
-                        .orElse(null));
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyClassPageMember(ClassPageMemberEntity entity, ClassPageMemberUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("userId", changes.getUserId(), entity::setUserId);
+        patch.apply("isFollowing", changes.getIsFollowing(), entity::setIsFollowing);
+        patch.apply("reaction", changes.getReaction(), v -> entity.setReaction(v == null ? null : v.getValue()));
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

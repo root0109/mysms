@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  academics: the Academic Structure microservice, owner of database schema "academics" (JAVA-CODING-RULES §2).
-  Depends on core, auth-client and the messaging runtime; only event consumers compile against the
-  narrow messaging API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
-  Its Flyway migrations are database/migrations/academics, applied to its own schema only.
+  academics: the Academics microservice (docs/design/MODULE-AND-PRODUCT-REORGANISATION.md §3). Its areas "academics", "timetable", "attendance", "assessment" each own
+  their database schema of the same name, contract (com.mysms.<area>.v1, /v1/<area>), operation table and Flyway
+  history (database/migrations/<area>); inside the module they share one process, one jar and one gRPC server.
+  Depends on core, auth-client and the messaging runtime; only event consumers compile against the narrow messaging
+  API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -15,7 +16,12 @@
   </parent>
   <artifactId>academics</artifactId>
   <name>MySMS academics</name>
-  <description>Academic Structure microservice (schema academics)</description>
+  <description>Academics microservice (schemas academics, timetable, attendance, assessment)</description>
+
+  <properties>
+    <!-- SpotBugs analyses the module's own code: its root package and every layer package of each area (§3) -->
+    <mysms.spotbugs.onlyAnalyze>com.mysms.academics.*,com.mysms.academics.api.-,com.mysms.academics.controller.-,com.mysms.academics.grpc.-,com.mysms.academics.integration.-,com.mysms.academics.business.-,com.mysms.academics.repository.-,com.mysms.academics.domain.-,com.mysms.academics.model.-,com.mysms.academics.mapper.-,com.mysms.academics.validation.-,com.mysms.academics.errors.-,com.mysms.academics.events.-,com.mysms.academics.config.-,com.mysms.academics.constants.-,com.mysms.academics.timetable.*,com.mysms.academics.timetable.api.-,com.mysms.academics.timetable.controller.-,com.mysms.academics.timetable.grpc.-,com.mysms.academics.timetable.integration.-,com.mysms.academics.timetable.business.-,com.mysms.academics.timetable.repository.-,com.mysms.academics.timetable.domain.-,com.mysms.academics.timetable.model.-,com.mysms.academics.timetable.mapper.-,com.mysms.academics.timetable.validation.-,com.mysms.academics.timetable.errors.-,com.mysms.academics.timetable.events.-,com.mysms.academics.timetable.config.-,com.mysms.academics.timetable.constants.-,com.mysms.academics.attendance.*,com.mysms.academics.attendance.api.-,com.mysms.academics.attendance.controller.-,com.mysms.academics.attendance.grpc.-,com.mysms.academics.attendance.integration.-,com.mysms.academics.attendance.business.-,com.mysms.academics.attendance.repository.-,com.mysms.academics.attendance.domain.-,com.mysms.academics.attendance.model.-,com.mysms.academics.attendance.mapper.-,com.mysms.academics.attendance.validation.-,com.mysms.academics.attendance.errors.-,com.mysms.academics.attendance.events.-,com.mysms.academics.attendance.config.-,com.mysms.academics.attendance.constants.-,com.mysms.academics.assessment.*,com.mysms.academics.assessment.api.-,com.mysms.academics.assessment.controller.-,com.mysms.academics.assessment.grpc.-,com.mysms.academics.assessment.integration.-,com.mysms.academics.assessment.business.-,com.mysms.academics.assessment.repository.-,com.mysms.academics.assessment.domain.-,com.mysms.academics.assessment.model.-,com.mysms.academics.assessment.mapper.-,com.mysms.academics.assessment.validation.-,com.mysms.academics.assessment.errors.-,com.mysms.academics.assessment.events.-,com.mysms.academics.assessment.config.-,com.mysms.academics.assessment.constants.-</mysms.spotbugs.onlyAnalyze>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -26,7 +32,7 @@
       <groupId>com.mysms</groupId>
       <artifactId>auth-client</artifactId>
     </dependency>
-    <!-- privacy's rights-request tasks and retention runs (PrivacyTaskHandler, design PRIVACY-AND-CONSENT-CENTRE §9.1) -->
+    <!-- privacy's rights-request tasks and retention runs (PrivacyTaskHandler) -->
     <dependency>
       <groupId>com.mysms</groupId>
       <artifactId>privacy-client</artifactId>
@@ -75,14 +81,26 @@
       <resource>
         <directory>src/main/resources</directory>
       </resource>
-      <!-- the module's own migrations, from the single source of truth -->
+      <!-- each area's migrations, from the single source of truth, applied to its own schema only -->
       <resource>
         <directory>${mysms.migrations.dir}/academics</directory>
         <targetPath>db/migration/academics</targetPath>
       </resource>
+      <resource>
+        <directory>${mysms.migrations.dir}/timetable</directory>
+        <targetPath>db/migration/timetable</targetPath>
+      </resource>
+      <resource>
+        <directory>${mysms.migrations.dir}/attendance</directory>
+        <targetPath>db/migration/attendance</targetPath>
+      </resource>
+      <resource>
+        <directory>${mysms.migrations.dir}/assessment</directory>
+        <targetPath>db/migration/assessment</targetPath>
+      </resource>
     </resources>
     <plugins>
-      <!-- its protos (src/main/resources/proto: its own, and copies of the callees' it calls) into its jar -->
+      <!-- its protos (src/main/resources/proto: its areas' own, and copies of the callees' they call) into its jar -->
       <plugin>
         <groupId>org.xolstice.maven.plugins</groupId>
         <artifactId>protobuf-maven-plugin</artifactId>

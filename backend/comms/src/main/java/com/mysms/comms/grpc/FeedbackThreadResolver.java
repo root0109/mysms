@@ -79,7 +79,7 @@ public class FeedbackThreadResolver extends FeedbackThreadServiceGrpc.FeedbackTh
                 bridge.id(request.getFeedbackThread().getId(), "id"),
                 bridge.requiredIfMatch(request.getFeedbackThread().getEtag()),
                 bridge.changes(request.getFeedbackThread(), request.getUpdateMask(), FeedbackThreadUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeedbackThreadResponse.newBuilder(), "feedback_thread", updated).build());
     }
 
@@ -120,7 +120,7 @@ public class FeedbackThreadResolver extends FeedbackThreadServiceGrpc.FeedbackTh
                 bridge.id(request.getFeedbackMessage().getId(), "id"),
                 bridge.requiredIfMatch(request.getFeedbackMessage().getEtag()),
                 bridge.changes(request.getFeedbackMessage(), request.getUpdateMask(), FeedbackMessageUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeedbackMessageResponse.newBuilder(), "feedback_message", updated).build());
     }
 

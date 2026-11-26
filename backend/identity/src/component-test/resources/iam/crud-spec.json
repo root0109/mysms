@@ -1,0 +1,313 @@
+{
+ "module": "iam",
+ "resources": [
+  {
+   "name": "Role",
+   "table": "iam.role",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/iam/roles",
+   "item": "/v1/iam/roles/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C7E62F9F1"
+   },
+   "update": {
+    "displayName": "Updated display_name"
+   },
+   "patch": {
+    "clears": "description",
+    "keeps": "code"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "RolePermission",
+   "table": "iam.role_permission",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/iam/roles/9d92b145-b261-50e9-8451-848dd31ff7b0/permissions",
+   "item": "/v1/iam/roles/9d92b145-b261-50e9-8451-848dd31ff7b0/permissions/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO iam.role (tenant_id, code, row_version, id) VALUES (:tenant, 'C00198BDB', 1, '9d92b145-b261-50e9-8451-848dd31ff7b0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO iam.permission (code, row_version, id) VALUES ('C130BE8A2', 1, 'fed81b04-31d8-5118-8f0b-14b6bad06c27') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "roleId": "9d92b145-b261-50e9-8451-848dd31ff7b0",
+    "permissionId": "fed81b04-31d8-5118-8f0b-14b6bad06c27"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "permissionId"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "UserAccount",
+   "table": "iam.user_account",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/iam/users",
+   "item": "/v1/iam/users/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "username": "api-user"
+   },
+   "update": {
+    "locale": "Updated lo"
+   },
+   "patch": {
+    "clears": "signature",
+    "keeps": "useSignature"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "iam.ActivateUser",
+     "path": "/v1/iam/users/{id}:activate",
+     "permission": "iam.user_account.activate_user",
+     "guard": {
+      "status": [
+       "inactive"
+      ]
+     },
+     "prepare": [
+      "UPDATE iam.user_account SET status = 'inactive' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "active"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "iam.DeactivateUser",
+     "path": "/v1/iam/users/{id}:deactivate",
+     "permission": "iam.user_account.deactivate_user",
+     "guard": {
+      "status": [
+       "active",
+       "locked"
+      ]
+     },
+     "prepare": [
+      "UPDATE iam.user_account SET status = 'active' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "inactive"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "iam.UnlockUser",
+     "path": "/v1/iam/users/{id}:unlock",
+     "permission": "iam.user_account.unlock_user",
+     "guard": {},
+     "prepare": [],
+     "body": {},
+     "sets": {
+      "failedLoginCount": 0
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "UserDepartmentAccess",
+   "table": "iam.user_department_access",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/iam/users/c8ed1e54-05a0-5425-b07c-bddc35ba7f9a/departments",
+   "item": "/v1/iam/users/c8ed1e54-05a0-5425-b07c-bddc35ba7f9a/departments/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO iam.user_account (tenant_id, username, row_version, id) VALUES (:tenant, 'fixture-user', 1, 'c8ed1e54-05a0-5425-b07c-bddc35ba7f9a') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "userId": "c8ed1e54-05a0-5425-b07c-bddc35ba7f9a",
+    "departmentId": "38eadadd-3bf5-588e-9448-273e01c5a4c0"
+   },
+   "update": {
+    "isPrimary": true
+   },
+   "patch": {
+    "keeps": "isPrimary"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "UserDevice",
+   "table": "iam.user_device",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/iam/users/c8ed1e54-05a0-5425-b07c-bddc35ba7f9a/devices",
+   "item": "/v1/iam/users/c8ed1e54-05a0-5425-b07c-bddc35ba7f9a/devices/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO iam.user_account (tenant_id, username, row_version, id) VALUES (:tenant, 'fixture-user', 1, 'c8ed1e54-05a0-5425-b07c-bddc35ba7f9a') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "userId": "c8ed1e54-05a0-5425-b07c-bddc35ba7f9a",
+    "deviceIdentifier": "t-device-identifier-4a145046",
+    "platform": "android"
+   },
+   "update": {
+    "pushToken": "Updated push_token"
+   },
+   "patch": {
+    "clears": "pushToken",
+    "keeps": "deviceIdentifier"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "UserPermission",
+   "table": "iam.user_permission",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/iam/users/c8ed1e54-05a0-5425-b07c-bddc35ba7f9a/permissions",
+   "item": "/v1/iam/users/c8ed1e54-05a0-5425-b07c-bddc35ba7f9a/permissions/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO iam.user_account (tenant_id, username, row_version, id) VALUES (:tenant, 'fixture-user', 1, 'c8ed1e54-05a0-5425-b07c-bddc35ba7f9a') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO iam.permission (code, row_version, id) VALUES ('C130BE8A2', 1, 'fed81b04-31d8-5118-8f0b-14b6bad06c27') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "userId": "c8ed1e54-05a0-5425-b07c-bddc35ba7f9a",
+    "permissionId": "fed81b04-31d8-5118-8f0b-14b6bad06c27"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "effect"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "UserPreference",
+   "table": "iam.user_preference",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/iam/users/c8ed1e54-05a0-5425-b07c-bddc35ba7f9a/preferences",
+   "item": "/v1/iam/users/c8ed1e54-05a0-5425-b07c-bddc35ba7f9a/preferences/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO iam.user_account (tenant_id, username, row_version, id) VALUES (:tenant, 'fixture-user', 1, 'c8ed1e54-05a0-5425-b07c-bddc35ba7f9a') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "userId": "c8ed1e54-05a0-5425-b07c-bddc35ba7f9a",
+    "prefKey": "t-pref-key-ed791697"
+   },
+   "update": {
+    "prefValue": "Updated pref_value"
+   },
+   "patch": {
+    "clears": "prefValue",
+    "keeps": "prefKey"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "UserRole",
+   "table": "iam.user_role",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/iam/users/c8ed1e54-05a0-5425-b07c-bddc35ba7f9a/roles",
+   "item": "/v1/iam/users/c8ed1e54-05a0-5425-b07c-bddc35ba7f9a/roles/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO iam.user_account (tenant_id, username, row_version, id) VALUES (:tenant, 'fixture-user', 1, 'c8ed1e54-05a0-5425-b07c-bddc35ba7f9a') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO iam.role (tenant_id, code, row_version, id) VALUES (:tenant, 'C2A60CC6B', 1, 'b5392c76-e482-51d9-b4fa-2c8719b161f6') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "userId": "c8ed1e54-05a0-5425-b07c-bddc35ba7f9a",
+    "roleId": "b5392c76-e482-51d9-b4fa-2c8719b161f6"
+   },
+   "update": {
+    "isActive": true
+   },
+   "patch": {
+    "keeps": "scopeType",
+    "clears": "validFrom"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "UserSession",
+   "table": "iam.user_session",
+   "ops": [
+    "Delete",
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/iam/users/c8ed1e54-05a0-5425-b07c-bddc35ba7f9a/sessions",
+   "item": "/v1/iam/users/c8ed1e54-05a0-5425-b07c-bddc35ba7f9a/sessions/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO iam.user_account (tenant_id, username, row_version, id) VALUES (:tenant, 'fixture-user', 1, 'c8ed1e54-05a0-5425-b07c-bddc35ba7f9a') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "userId": "c8ed1e54-05a0-5425-b07c-bddc35ba7f9a",
+    "sessionRef": "t-session-ref-e1315e86"
+   },
+   "update": {},
+   "duplicateConflicts": true,
+   "ownerOnly": "c8ed1e54-05a0-5425-b07c-bddc35ba7f9a",
+   "seedId": "225e56f7-13ab-5597-a6ed-58d5330bf040",
+   "seed": [
+    "INSERT INTO iam.user_session (user_id, session_ref, tenant_id, row_version, id) VALUES ('c8ed1e54-05a0-5425-b07c-bddc35ba7f9a', 't-session-ref-e1315e86', :tenant, 1, '225e56f7-13ab-5597-a6ed-58d5330bf040')"
+   ]
+  }
+ ]
+}

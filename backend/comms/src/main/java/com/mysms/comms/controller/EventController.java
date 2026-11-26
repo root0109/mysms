@@ -251,48 +251,46 @@ public class EventController implements EventApi {
 
     @Override
     public ResponseEntity<Event> updateEvent(UUID eventId, String ifMatch, EventUpdate eventUpdate,
-            String updateMask, Boolean validateOnly) {
-        Event updated = eventService.updateEvent(eventId, ifMatch, eventUpdate, updateMask,
+            Boolean validateOnly) {
+        Event updated = eventService.updateEvent(eventId, ifMatch, eventUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<EventAttendee> updateEventAttendee(UUID eventId, UUID eventAttendeeId,
-            String ifMatch, EventAttendeeUpdate eventAttendeeUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, EventAttendeeUpdate eventAttendeeUpdate, Boolean validateOnly) {
         EventAttendee updated =
                 eventService.updateEventAttendee(eventId, eventAttendeeId, ifMatch, eventAttendeeUpdate,
-                        updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<EventGalleryItem> updateEventGalleryItem(UUID eventId, UUID eventGalleryItemId,
-            String ifMatch, EventGalleryItemUpdate eventGalleryItemUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, EventGalleryItemUpdate eventGalleryItemUpdate, Boolean validateOnly) {
         EventGalleryItem updated =
                 eventService.updateEventGalleryItem(eventId, eventGalleryItemId, ifMatch,
-                        eventGalleryItemUpdate, updateMask,
+                        eventGalleryItemUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<EventInstitution> updateEventInstitution(UUID eventId, UUID eventInstitutionId,
-            String ifMatch, EventInstitutionUpdate eventInstitutionUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, EventInstitutionUpdate eventInstitutionUpdate, Boolean validateOnly) {
         EventInstitution updated =
                 eventService.updateEventInstitution(eventId, eventInstitutionId, ifMatch,
-                        eventInstitutionUpdate, updateMask,
+                        eventInstitutionUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<EventOccurrence> updateEventOccurrence(UUID eventId, UUID eventOccurrenceId,
-            String ifMatch, EventOccurrenceUpdate eventOccurrenceUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, EventOccurrenceUpdate eventOccurrenceUpdate, Boolean validateOnly) {
         EventOccurrence updated =
                 eventService.updateEventOccurrence(eventId, eventOccurrenceId, ifMatch, eventOccurrenceUpdate,
-                        updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

@@ -59,8 +59,8 @@ public class BatchController implements BatchApi {
 
     @Override
     public ResponseEntity<Batch> updateBatch(UUID batchId, String ifMatch, BatchUpdate batchUpdate,
-            String updateMask, Boolean validateOnly) {
-        Batch updated = batchService.updateBatch(batchId, ifMatch, batchUpdate, updateMask,
+            Boolean validateOnly) {
+        Batch updated = batchService.updateBatch(batchId, ifMatch, batchUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

@@ -17,23 +17,46 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * The repository as the rules see it: the Maven modules under {@code backend/}, their sources, and the migrations.
- * Files are read once and shared by every rule; paths in violations are relative to the repository root.
+ * The repository as the rules see it: the Maven modules under {@code backend/}, their areas, their sources, and the
+ * migrations. Files are read once and shared by every rule; paths in violations are relative to the repository root.
+ * An area is one schema with its contract (protos, operation table, {@code /v1/<area>}) and its packages; a domain
+ * module serves one or more areas (the migration folders its pom packages).
  */
 public final class SourceTree {
 
-    /** Modules that are libraries, the assembly or a tool (the demo seeder), not one of the 22 domain modules. */
+    /** Modules that are libraries, the assembly or a tool (the demo seeder), not a domain module. */
     public static final Set<String> SHARED =
             Set.of("core", "auth-client", "privacy-client", "messaging", "app", "demo-seed", "conformance");
 
     private static final Pattern CREATE_TABLE =
             Pattern.compile("(?i)CREATE TABLE ([a-z_]+\\.[a-z_]+) \\((.*?)\\n\\)", Pattern.DOTALL);
     private static final Pattern TENANT_COLUMN = Pattern.compile("(?m)^\\s+tenant_id\\s");
+    private static final Pattern MIGRATION_FOLDER = Pattern.compile("\\$\\{mysms\\.migrations\\.dir\\}/([a-z]+)<");
+
+    /**
+     * One area of a domain module.
+     *
+     * @param module the Maven module serving it
+     * @param name   the area: its schema, contract prefix, operation table and proto package
+     */
+    public record Area(String module, String name) {
+
+        /** {@code com.mysms.<module>} for the area named like its module, else {@code com.mysms.<module>.<name>}. */
+        public String packageName() {
+            return module.equals(name) ? "com.mysms." + module : "com.mysms." + module + "." + name;
+        }
+
+        /** The package as a path fragment with slashes on both sides ({@code /com/mysms/hrms/hr/}). */
+        public String marker() {
+            return "/" + packageName().replace('.', '/') + "/";
+        }
+    }
 
     private final Path repository;
     private final Map<Path, String> contents = new ConcurrentHashMap<>();
     private final List<String> modules;
     private final Set<String> tenantTables;
+    private final List<Area> areas;
 
     public SourceTree(Path repository) {
         this.repository = repository.toAbsolutePath().normalize();
@@ -44,6 +67,10 @@ public final class SourceTree {
             throw new UncheckedIOException(e);
         }
         this.tenantTables = readTenantTables();
+        this.areas = domainModules().stream().flatMap(module -> {
+            Matcher folder = MIGRATION_FOLDER.matcher(read(backend().resolve(module).resolve("pom.xml")));
+            return folder.results().map(m -> new Area(module, m.group(1)));
+        }).sorted(java.util.Comparator.comparing(Area::name)).toList();
     }
 
     public Path repository() {
@@ -66,9 +93,45 @@ public final class SourceTree {
         return modules.stream().filter(m -> !"conformance".equals(m)).toList();
     }
 
-    /** The 22 domain modules (one per schema). */
+    /** The domain modules (each serving one or more areas). */
     public List<String> domainModules() {
         return modules.stream().filter(m -> !SHARED.contains(m)).toList();
+    }
+
+    /** Every area of every domain module, sorted by name. */
+    public List<Area> areas() {
+        return Collections.unmodifiableList(areas);
+    }
+
+    /** The areas of one domain module, sorted by name. */
+    public List<Area> areas(String module) {
+        return areas.stream().filter(a -> a.module().equals(module)).toList();
+    }
+
+    /** The area of that name; an {@link IllegalArgumentException} when no module serves it. */
+    public Area area(String name) {
+        return areas.stream().filter(a -> a.name().equals(name)).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("no module serves the area " + name));
+    }
+
+    /** The directory of an area's package in a source root ({@code main}, {@code test} or {@code component-test}). */
+    public Path base(Area area, String root) {
+        return backend().resolve(area.module()).resolve("src").resolve(root).resolve("java")
+                .resolve(area.packageName().replace('.', '/'));
+    }
+
+    /** Java files of an area in a source root, without the packages of its module's other areas, sorted. */
+    public List<Path> java(Area area, String root) {
+        Path own = base(area, root);
+        List<Path> others = areas(area.module()).stream().filter(a -> !a.equals(area)).map(a -> base(a, root))
+                .filter(other -> !own.startsWith(other)).toList();
+        return files(own, ".java").stream().filter(f -> others.stream().noneMatch(f::startsWith))
+                .toList();
+    }
+
+    /** The resources directory of a module ({@code src/main/resources}). */
+    public Path resources(String module) {
+        return backend().resolve(module).resolve("src/main/resources");
     }
 
     /** Java files of a module's source root ({@code main}, {@code test} or {@code component-test}), sorted. */
@@ -89,9 +152,9 @@ public final class SourceTree {
         }
     }
 
-    /** A module's migrations ({@code database/migrations/<module>}). */
-    public List<Path> migrations(String module) {
-        return files(repository.resolve("database").resolve("migrations").resolve(module), ".sql");
+    /** An area's migrations ({@code database/migrations/<area>}). */
+    public List<Path> migrations(Area area) {
+        return files(repository.resolve("database").resolve("migrations").resolve(area.name()), ".sql");
     }
 
     /** Every migration of every module. */

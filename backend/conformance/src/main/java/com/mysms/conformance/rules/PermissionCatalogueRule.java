@@ -26,7 +26,7 @@ public final class PermissionCatalogueRule implements ConformanceRule {
     @Override
     public List<Violation> check(SourceTree tree) {
         Set<String> seeded = new HashSet<>();
-        for (Path migration : tree.migrations("iam")) {
+        for (Path migration : tree.migrations(tree.area("iam"))) {
             SEEDED.matcher(tree.read(migration)).results().forEach(m -> seeded.add(m.group(1)));
         }
         Set<String> missing = new TreeSet<>();

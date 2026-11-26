@@ -1,0 +1,70 @@
+package com.mysms.learning.lms.controller;
+
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.learning.lms.api.LmsAssignmentApi;
+import com.mysms.learning.lms.api.model.LmsAssignment;
+import com.mysms.learning.lms.api.model.LmsAssignmentUpdate;
+import com.mysms.core.web.ReadMask;
+import com.mysms.learning.lms.business.LmsAssignmentService;
+import java.net.URI;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * REST edge of the LmsAssignment operations; authentication and the permission check already ran in the auth-client
+ * filter. Operations not served yet answer 501.
+ */
+@RestController
+public class LmsAssignmentController implements LmsAssignmentApi {
+
+    private final LmsAssignmentService lmsAssignmentService;
+
+    public LmsAssignmentController(LmsAssignmentService lmsAssignmentService) {
+        this.lmsAssignmentService = lmsAssignmentService;
+    }
+
+    @Override
+    public ResponseEntity<LmsAssignment> createLmsAssignment(LmsAssignment lmsAssignment,
+            UUID idempotencyKey, Boolean validateOnly) {
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        LmsAssignment created = lmsAssignmentService.createLmsAssignment(lmsAssignment, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(URI.create("/v1/lms/assignments/" + created.getId())).eTag(created.getEtag())
+                .body(created);
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteLmsAssignment(UUID assignmentId, String ifMatch) {
+        lmsAssignmentService.deleteLmsAssignment(assignmentId, ifMatch);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<LmsAssignment> getLmsAssignment(UUID assignmentId, String fields) {
+        LmsAssignment found = lmsAssignmentService.getLmsAssignment(assignmentId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<LmsAssignment>> listLmsAssignments(Integer page, Integer size, String cursor,
+            String filter, List<String> sort, String fields) {
+        PagingInfo<LmsAssignment> list =
+                PagingUtil.pagingInfo(lmsAssignmentService.listLmsAssignments(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
+    }
+
+    @Override
+    public ResponseEntity<LmsAssignment> updateLmsAssignment(UUID assignmentId, String ifMatch,
+            LmsAssignmentUpdate lmsAssignmentUpdate, Boolean validateOnly) {
+        LmsAssignment updated =
+                lmsAssignmentService.updateLmsAssignment(assignmentId, ifMatch, lmsAssignmentUpdate,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
+    }
+}

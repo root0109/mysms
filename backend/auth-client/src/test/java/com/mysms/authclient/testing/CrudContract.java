@@ -2,9 +2,14 @@ package com.mysms.authclient.testing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.lang.reflect.AnnotatedParameterizedType;
+import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -20,12 +25,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.IntSupplier;
 import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.DynamicTest;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
@@ -63,16 +71,21 @@ public final class CrudContract {
     /** One container of ordered checks per resource in the spec. */
     public List<DynamicNode> tests(String specResource) {
         JsonNode spec = read(specResource);
+        String area = specResource.substring(0, specResource.indexOf('/'));
         List<DynamicNode> containers = new ArrayList<>();
         for (JsonNode resource : spec.path("resources")) {
-            containers.add(DynamicContainer.dynamicContainer(resource.path("name").asString(), checks(resource)));
+            containers.add(DynamicContainer.dynamicContainer(resource.path("name").asString(), checks(area, resource)));
         }
         return containers;
     }
 
-    private List<DynamicTest> checks(JsonNode r) {
+    private List<DynamicTest> checks(String area, JsonNode r) {
         State s = new State(r);
         List<DynamicTest> t = new ArrayList<>();
+        if (s.has("Update")) {
+            t.add(DynamicTest.dynamicTest("the spec names a field to keep and one to clear",
+                    () -> patchEntry(area, r)));
+        }
         t.add(DynamicTest.dynamicTest("fixtures", () -> sql.accept(tenant, strings(r.path("fixtures")))));
         if (s.has("Create") && s.r.path("publicCreate").asBoolean()) {
             t.add(DynamicTest.dynamicTest("anyone may create it (a public form)", () -> createInPublic(s)));
@@ -176,8 +189,7 @@ public final class CrudContract {
         String value = secret.path("rotated").asString();
         int version = s.version();
         ObjectNode body = JSON.createObjectNode().put(field, value);
-        Reply done = call("PATCH", s.item(s.id) + "?updateMask=" + field, admin(s), body.toString(), "If-Match",
-                "\"" + version + "\"");
+        Reply done = call("PATCH", s.item(s.id), admin(s), body.toString(), "If-Match", "\"" + version + "\"");
         assertThat(done.status).as(done.text).isEqualTo(200);
         s.known = version + 1;
         assertThat(done.body.has(field)).as("plaintext of " + field).isFalse();
@@ -377,9 +389,88 @@ public final class CrudContract {
         assertThat(done.etag()).isEqualTo("\"" + (version + 1) + "\"");
         s.known = version + 1;
         assertEchoes(change, done.body);
-        Reply unknown = call("PATCH", s.item(s.id) + "?updateMask=noSuchField", admin(s), body, "If-Match",
-                "\"" + (version + 1) + "\"");
-        assertThat(unknown.status).as(unknown.text).isEqualTo(400);
+        threeStates(s, change, s.r.path("patch"));
+    }
+
+    /**
+     * The crud-spec's {@code patch} entry covers the resource's PATCH body (§7.2): {@code keeps} names a field the
+     * body requires (null is 422) whenever it has one, {@code clears} a field null clears whenever it has one — not
+     * counting the fields {@code fixed} lists, which the service never lets change after create (409). The
+     * body is the area's {@code api.model.<Resource>Update}; a field is required when its {@code Optional}'s type
+     * argument is {@code @NotNull} or {@code @NotBlank}.
+     */
+    private static void patchEntry(String area, JsonNode r) {
+        String resource = r.path("name").asString();
+        JsonNode patch = r.path("patch");
+        assertThat(patch.isObject()).as(resource + ": crud-spec needs a \"patch\" object").isTrue();
+        List<String> fixed = strings(patch.path("fixed"));
+        List<String> required = new ArrayList<>();
+        List<String> clearable = new ArrayList<>();
+        for (Field field : updateBody(area, resource).getDeclaredFields()) {
+            if (field.getType() != Optional.class
+                    || !(field.getAnnotatedType() instanceof AnnotatedParameterizedType optional)) {
+                continue;
+            }
+            AnnotatedType value = optional.getAnnotatedActualTypeArguments()[0];
+            boolean isRequired = value.isAnnotationPresent(NotNull.class) || value.isAnnotationPresent(NotBlank.class);
+            if (!fixed.contains(field.getName())) {
+                (isRequired ? required : clearable).add(field.getName());
+            }
+        }
+        if (!required.isEmpty()) {
+            assertThat(patch.path("keeps").asString(null)).as(resource + ": patch.keeps, one of " + required)
+                    .isIn(required);
+        }
+        if (!clearable.isEmpty()) {
+            assertThat(patch.path("clears").asString(null)).as(resource + ": patch.clears, one of " + clearable)
+                    .isIn(clearable);
+        }
+    }
+
+    /** The area's PATCH body of a resource, found on the classpath: {@code com.mysms.…<area>.api.model.<R>Update}. */
+    private static Class<?> updateBody(String area, String resource) {
+        String suffix = "/" + area + "/api/model/" + resource + "Update.class";
+        try {
+            for (Resource found : new PathMatchingResourcePatternResolver()
+                    .getResources("classpath*:com/mysms/**/api/model/" + resource + "Update.class")) {
+                String url = found.getURL().toString();
+                if (url.endsWith(suffix)) {
+                    String path = url.substring(url.lastIndexOf("com/mysms/"), url.length() - ".class".length());
+                    return Class.forName(path.replace('/', '.'));
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            throw new IllegalStateException("cannot read the PATCH body of " + resource, e);
+        }
+        throw new AssertionError(resource + ": no " + area + " api.model." + resource + "Update on the classpath");
+    }
+
+    /**
+     * The three states of a PATCH body (§7.2): a property left out keeps its value, JSON null clears an optional
+     * field ({@code patch.clears}) and is 422 on a required one ({@code patch.keeps}), which nothing changes.
+     */
+    private void threeStates(State s, JsonNode change, JsonNode patch) {
+        int version = s.version();
+        Reply absent = call("PATCH", s.item(s.id), admin(s), "{}", "If-Match", "\"" + version + "\"");
+        assertThat(absent.status).as(absent.text).isEqualTo(200);
+        s.known = version + 1;
+        assertEchoes(change, absent.body);
+        if (patch.hasNonNull("keeps")) {
+            String required = patch.path("keeps").asString();
+            ObjectNode clear = JSON.createObjectNode().putNull(required);
+            Reply refused = call("PATCH", s.item(s.id), admin(s), clear.toString(), "If-Match", "\"" + s.version() + "\"");
+            assertThat(refused.status).as(required + " is required: " + refused.text).isEqualTo(422);
+            assertThat(s.version()).as("a refused patch changes nothing").isEqualTo(version + 1);
+        }
+        if (patch.hasNonNull("clears")) {
+            String optional = patch.path("clears").asString();
+            ObjectNode clear = JSON.createObjectNode().putNull(optional);
+            Reply cleared = call("PATCH", s.item(s.id), admin(s), clear.toString(), "If-Match", "\"" + s.version() + "\"");
+            assertThat(cleared.status).as(cleared.text).isEqualTo(200);
+            s.known = version + 2;
+            JsonNode actual = cleared.body.path(optional);
+            assertThat(actual.isNull() || actual.isMissingNode()).as(optional + " is cleared").isTrue();
+        }
     }
 
     /**

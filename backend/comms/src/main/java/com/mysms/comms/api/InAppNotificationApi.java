@@ -104,7 +104,7 @@ public interface InAppNotificationApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -133,7 +133,7 @@ public interface InAppNotificationApi {
         consumes = { "application/json" }
     )
     ResponseEntity<Void> markAllNotificationsRead(
-         @Valid @RequestBody Object body,
+         @RequestBody Object body,
          @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey
     );
 
@@ -164,7 +164,7 @@ public interface InAppNotificationApi {
     )
     ResponseEntity<InAppNotification> markNotificationRead(
          @PathVariable("inAppNotificationId") UUID inAppNotificationId,
-         @Valid @RequestBody Object body,
+         @RequestBody Object body,
          @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey
     );
 

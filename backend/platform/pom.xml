@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  platform: the Platform and Tenancy microservice, owner of database schema "platform" (JAVA-CODING-RULES §2).
-  Depends on core, auth-client and the messaging runtime; only event consumers compile against the
-  narrow messaging API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
-  Its Flyway migrations are database/migrations/platform, applied to its own schema only.
+  platform: the Platform microservice (docs/design/MODULE-AND-PRODUCT-REORGANISATION.md §3). Its areas "platform", "master", "org" each own
+  their database schema of the same name, contract (com.mysms.<area>.v1, /v1/<area>), operation table and Flyway
+  history (database/migrations/<area>); inside the module they share one process, one jar and one gRPC server.
+  Depends on core, auth-client and the messaging runtime; only event consumers compile against the narrow messaging
+  API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -15,7 +16,12 @@
   </parent>
   <artifactId>platform</artifactId>
   <name>MySMS platform</name>
-  <description>Platform and Tenancy microservice (schema platform)</description>
+  <description>Platform microservice (schemas platform, master, org)</description>
+
+  <properties>
+    <!-- SpotBugs analyses the module's own code: its root package and every layer package of each area (§3) -->
+    <mysms.spotbugs.onlyAnalyze>com.mysms.platform.*,com.mysms.platform.api.-,com.mysms.platform.controller.-,com.mysms.platform.grpc.-,com.mysms.platform.integration.-,com.mysms.platform.business.-,com.mysms.platform.repository.-,com.mysms.platform.domain.-,com.mysms.platform.model.-,com.mysms.platform.mapper.-,com.mysms.platform.validation.-,com.mysms.platform.errors.-,com.mysms.platform.events.-,com.mysms.platform.config.-,com.mysms.platform.constants.-,com.mysms.platform.master.*,com.mysms.platform.master.api.-,com.mysms.platform.master.controller.-,com.mysms.platform.master.grpc.-,com.mysms.platform.master.integration.-,com.mysms.platform.master.business.-,com.mysms.platform.master.repository.-,com.mysms.platform.master.domain.-,com.mysms.platform.master.model.-,com.mysms.platform.master.mapper.-,com.mysms.platform.master.validation.-,com.mysms.platform.master.errors.-,com.mysms.platform.master.events.-,com.mysms.platform.master.config.-,com.mysms.platform.master.constants.-,com.mysms.platform.org.*,com.mysms.platform.org.api.-,com.mysms.platform.org.controller.-,com.mysms.platform.org.grpc.-,com.mysms.platform.org.integration.-,com.mysms.platform.org.business.-,com.mysms.platform.org.repository.-,com.mysms.platform.org.domain.-,com.mysms.platform.org.model.-,com.mysms.platform.org.mapper.-,com.mysms.platform.org.validation.-,com.mysms.platform.org.errors.-,com.mysms.platform.org.events.-,com.mysms.platform.org.config.-,com.mysms.platform.org.constants.-</mysms.spotbugs.onlyAnalyze>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -26,15 +32,10 @@
       <groupId>com.mysms</groupId>
       <artifactId>auth-client</artifactId>
     </dependency>
-    <!-- privacy's rights-request tasks and retention runs (PrivacyTaskHandler, design PRIVACY-AND-CONSENT-CENTRE §9.1) -->
+    <!-- privacy's rights-request tasks and retention runs (PrivacyTaskHandler) -->
     <dependency>
       <groupId>com.mysms</groupId>
       <artifactId>privacy-client</artifactId>
-    </dependency>
-    <!-- the file store: Google Cloud Storage with V4 signed URLs (business/GcsFileStore) -->
-    <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-storage</artifactId>
     </dependency>
     <dependency>
       <groupId>org.mapstruct</groupId>
@@ -49,6 +50,10 @@
     <dependency>
       <groupId>com.mysms</groupId>
       <artifactId>messaging</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
     </dependency>
     <dependency>
       <groupId>com.mysms</groupId>
@@ -73,7 +78,6 @@
       <artifactId>testcontainers-postgresql</artifactId>
       <scope>test</scope>
     </dependency>
-    <!-- the file store's component tests run against a real GCS emulator (fsouza/fake-gcs-server) -->
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers</artifactId>
@@ -86,14 +90,22 @@
       <resource>
         <directory>src/main/resources</directory>
       </resource>
-      <!-- the module's own migrations, from the single source of truth -->
+      <!-- each area's migrations, from the single source of truth, applied to its own schema only -->
       <resource>
         <directory>${mysms.migrations.dir}/platform</directory>
         <targetPath>db/migration/platform</targetPath>
       </resource>
+      <resource>
+        <directory>${mysms.migrations.dir}/master</directory>
+        <targetPath>db/migration/master</targetPath>
+      </resource>
+      <resource>
+        <directory>${mysms.migrations.dir}/org</directory>
+        <targetPath>db/migration/org</targetPath>
+      </resource>
     </resources>
     <plugins>
-      <!-- its protos (src/main/resources/proto: its own, and copies of the callees' it calls) into its jar -->
+      <!-- its protos (src/main/resources/proto: its areas' own, and copies of the callees' they call) into its jar -->
       <plugin>
         <groupId>org.xolstice.maven.plugins</groupId>
         <artifactId>protobuf-maven-plugin</artifactId>

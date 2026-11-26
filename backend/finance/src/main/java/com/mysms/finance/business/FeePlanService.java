@@ -21,7 +21,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.finance.api.model.FeePlan;
 import com.mysms.finance.api.model.FeePlanInstallment;
 import com.mysms.finance.api.model.FeePlanInstallmentUpdate;
@@ -59,11 +59,6 @@ public class FeePlanService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "finance.fee_plan.create";
     static final String PERMISSION_UPDATE = "finance.fee_plan.update";
     static final String PERMISSION_DELETE = "finance.fee_plan.delete";
-    /** The contract's FeePlanUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("institutionId", "code", "name", "scheduleBasis", "offsetDays", "offsetDirection",
-                    "discountPercent",
-            "notes", "isActive");
 
     public static final String FEE_PLAN_INSTALLMENT_AGGREGATE = FeePlanInstallmentEntity.TABLE;
     static final String FEE_PLAN_INSTALLMENT_PERMISSION_LIST = "finance.fee_plan_installment.read";
@@ -71,8 +66,6 @@ public class FeePlanService extends AppTransactionManager {
     static final String FEE_PLAN_INSTALLMENT_PERMISSION_CREATE = "finance.fee_plan_installment.create";
     static final String FEE_PLAN_INSTALLMENT_PERMISSION_UPDATE = "finance.fee_plan_installment.update";
     static final String FEE_PLAN_INSTALLMENT_PERMISSION_DELETE = "finance.fee_plan_installment.delete";
-    /** The contract's FeePlanInstallmentUpdate fields, in apply order. */
-    static final List<String> FEE_PLAN_INSTALLMENT_WRITABLE = List.of("sequence", "dueDays", "dueDate", "sharePercent");
 
     private final FeePlanRepository repository;
     private final FeePlanMapper mapper;
@@ -146,13 +139,11 @@ public class FeePlanService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set. The merged row is validated as a whole, and must stay within the caller's scope.
      */
-    public FeePlan updateFeePlan(UUID id, String ifMatch, FeePlanUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public FeePlan updateFeePlan(UUID id, String ifMatch, FeePlanUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             FeePlanEntity entity = loadVisible(scope, id);
@@ -160,7 +151,7 @@ public class FeePlanService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -228,24 +219,22 @@ public class FeePlanService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected FeePlanUpdate fields; explicit per field so a mask can clear values (no reflection). */
-    private static void apply(FeePlanEntity entity, FeePlanUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "code" -> entity.setCode(changes.getCode());
-                case "name" -> entity.setName(changes.getName());
-                case "scheduleBasis" -> entity.setScheduleBasis(Optional.ofNullable(changes.getScheduleBasis())
-                        .map(v -> v.getValue()).orElse(null));
-                case "offsetDays" -> entity.setOffsetDays(changes.getOffsetDays());
-                case "offsetDirection" -> entity.setOffsetDirection(Optional.ofNullable(changes.getOffsetDirection())
-                        .map(v -> v.getValue()).orElse(null));
-                case "discountPercent" -> entity.setDiscountPercent(WireValues.decimal(changes.getDiscountPercent()));
-                case "notes" -> entity.setNotes(changes.getNotes());
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(FeePlanEntity entity, FeePlanUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("code", changes.getCode(), entity::setCode);
+        patch.apply("name", changes.getName(), entity::setName);
+        patch.apply("scheduleBasis", changes.getScheduleBasis(),
+                v -> entity.setScheduleBasis(v == null ? null : v.getValue()));
+        patch.apply("offsetDays", changes.getOffsetDays(), entity::setOffsetDays);
+        patch.apply("offsetDirection", changes.getOffsetDirection(),
+                v -> entity.setOffsetDirection(v == null ? null : v.getValue()));
+        patch.apply("discountPercent", changes.getDiscountPercent(),
+                v -> entity.setDiscountPercent(WireValues.decimal(v)));
+        patch.apply("notes", changes.getNotes(), entity::setNotes);
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -334,13 +323,12 @@ public class FeePlanService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set. The merged row is validated as a whole, and must stay within the caller's scope.
      */
     public FeePlanInstallment updateFeePlanInstallment(UUID feePlanId, UUID id, String ifMatch,
-            FeePlanInstallmentUpdate changes, String updateMask, boolean validateOnly) {
+            FeePlanInstallmentUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, FEE_PLAN_INSTALLMENT_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(FEE_PLAN_INSTALLMENT_PERMISSION_UPDATE);
             FeePlanInstallmentEntity entity = loadVisibleFeePlanInstallment(scope, feePlanId, id);
@@ -348,7 +336,7 @@ public class FeePlanService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyFeePlanInstallment(entity, changes, fields);
+            List<String> fields = applyFeePlanInstallment(entity, changes);
             validator.validate(feePlanInstallmentMapper.toDto(entity));
             assertValidFeePlanInstallment(entity, false);
             scope.requireWritable(institutionOfFeePlanInstallment(entity));
@@ -413,21 +401,14 @@ public class FeePlanService extends AppTransactionManager {
         return feePlanInstallmentRepository.institutionOf(entity.getFeePlanId());
     }
 
-    /**
-     * Applies the selected FeePlanInstallmentUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
-    private static void applyFeePlanInstallment(FeePlanInstallmentEntity entity, FeePlanInstallmentUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "sequence" -> entity.setSequence(changes.getSequence());
-                case "dueDays" -> entity.setDueDays(changes.getDueDays());
-                case "dueDate" -> entity.setDueDate(changes.getDueDate());
-                case "sharePercent" -> entity.setSharePercent(WireValues.decimal(changes.getSharePercent()));
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyFeePlanInstallment(FeePlanInstallmentEntity entity, FeePlanInstallmentUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("sequence", changes.getSequence(), entity::setSequence);
+        patch.apply("dueDays", changes.getDueDays(), entity::setDueDays);
+        patch.apply("dueDate", changes.getDueDate(), entity::setDueDate);
+        patch.apply("sharePercent", changes.getSharePercent(), v -> entity.setSharePercent(WireValues.decimal(v)));
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

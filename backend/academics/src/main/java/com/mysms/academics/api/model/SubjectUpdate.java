@@ -17,22 +17,22 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Subject that can be updated (partial update; see updateMask).
+ * Fields of Subject that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class SubjectUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID departmentId;
+  private @Nullable Optional<UUID> departmentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@NotNull @Size(max = 256) String> code;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 150) String> name;
 
   /**
    * Theory / practical.
@@ -74,7 +74,7 @@ public class SubjectUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable DeliveryTypeEnum deliveryType;
+  private @Nullable Optional<@NotNull DeliveryTypeEnum> deliveryType;
 
   /**
    * Default category when offered.
@@ -112,15 +112,15 @@ public class SubjectUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable DefaultCategoryEnum defaultCategory;
+  private @Nullable Optional<@NotNull DefaultCategoryEnum> defaultCategory;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String gradeWeightage;
+  private @Nullable Optional<@Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> gradeWeightage;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public SubjectUpdate institutionId(@Nullable UUID institutionId) {
+  public SubjectUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -129,18 +129,18 @@ public class SubjectUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public SubjectUpdate departmentId(@Nullable UUID departmentId) {
+  public SubjectUpdate departmentId(@Nullable Optional<UUID> departmentId) {
     this.departmentId = departmentId;
     return this;
   }
@@ -149,18 +149,18 @@ public class SubjectUpdate {
    * Owning department.
    * @return departmentId
    */
-  @Valid 
+  
   @JsonProperty("departmentId")
-  public @Nullable UUID getDepartmentId() {
+  public @Nullable Optional<UUID> getDepartmentId() {
     return departmentId;
   }
 
   @JsonProperty("departmentId")
-  public void setDepartmentId(@Nullable UUID departmentId) {
+  public void setDepartmentId(@Nullable Optional<UUID> departmentId) {
     this.departmentId = departmentId;
   }
 
-  public SubjectUpdate code(@Nullable String code) {
+  public SubjectUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -169,18 +169,18 @@ public class SubjectUpdate {
    * Subject code.
    * @return code
    */
-  @Size(max = 256) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 
-  public SubjectUpdate name(@Nullable String name) {
+  public SubjectUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -189,18 +189,18 @@ public class SubjectUpdate {
    * Subject name.
    * @return name
    */
-  @Size(max = 150) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public SubjectUpdate deliveryType(@Nullable DeliveryTypeEnum deliveryType) {
+  public SubjectUpdate deliveryType(@Nullable Optional<DeliveryTypeEnum> deliveryType) {
     this.deliveryType = deliveryType;
     return this;
   }
@@ -211,16 +211,16 @@ public class SubjectUpdate {
    */
   
   @JsonProperty("deliveryType")
-  public @Nullable DeliveryTypeEnum getDeliveryType() {
+  public @Nullable Optional<DeliveryTypeEnum> getDeliveryType() {
     return deliveryType;
   }
 
   @JsonProperty("deliveryType")
-  public void setDeliveryType(@Nullable DeliveryTypeEnum deliveryType) {
+  public void setDeliveryType(@Nullable Optional<DeliveryTypeEnum> deliveryType) {
     this.deliveryType = deliveryType;
   }
 
-  public SubjectUpdate defaultCategory(@Nullable DefaultCategoryEnum defaultCategory) {
+  public SubjectUpdate defaultCategory(@Nullable Optional<DefaultCategoryEnum> defaultCategory) {
     this.defaultCategory = defaultCategory;
     return this;
   }
@@ -231,16 +231,16 @@ public class SubjectUpdate {
    */
   
   @JsonProperty("defaultCategory")
-  public @Nullable DefaultCategoryEnum getDefaultCategory() {
+  public @Nullable Optional<DefaultCategoryEnum> getDefaultCategory() {
     return defaultCategory;
   }
 
   @JsonProperty("defaultCategory")
-  public void setDefaultCategory(@Nullable DefaultCategoryEnum defaultCategory) {
+  public void setDefaultCategory(@Nullable Optional<DefaultCategoryEnum> defaultCategory) {
     this.defaultCategory = defaultCategory;
   }
 
-  public SubjectUpdate gradeWeightage(@Nullable String gradeWeightage) {
+  public SubjectUpdate gradeWeightage(@Nullable Optional<String> gradeWeightage) {
     this.gradeWeightage = gradeWeightage;
     return this;
   }
@@ -249,18 +249,18 @@ public class SubjectUpdate {
    * Weight of the subject in aggregate grades.
    * @return gradeWeightage
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("gradeWeightage")
-  public @Nullable String getGradeWeightage() {
+  public @Nullable Optional<String> getGradeWeightage() {
     return gradeWeightage;
   }
 
   @JsonProperty("gradeWeightage")
-  public void setGradeWeightage(@Nullable String gradeWeightage) {
+  public void setGradeWeightage(@Nullable Optional<String> gradeWeightage) {
     this.gradeWeightage = gradeWeightage;
   }
 
-  public SubjectUpdate isActive(@Nullable Boolean isActive) {
+  public SubjectUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -271,12 +271,12 @@ public class SubjectUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

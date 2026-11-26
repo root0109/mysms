@@ -77,7 +77,10 @@ public final class SqlRule implements ConformanceRule {
         return found;
     }
 
-    /** The layer package of a domain-module class (controller, business, repository…); null for shared modules. */
+    /**
+     * The layer package of a domain-module class (controller, business, repository…), inside its area's package when
+     * the area is not named like its module; null for shared modules.
+     */
     private static String layer(SourceTree tree, String module, Path file) {
         if (SourceTree.SHARED.contains(module)) {
             return null;
@@ -87,6 +90,12 @@ public final class SqlRule implements ConformanceRule {
         int at = path.indexOf(marker);
         String rest = path.substring(at + marker.length());
         int slash = rest.indexOf('/');
+        if (slash >= 0 && tree.areas(module).stream()
+                .anyMatch(a -> !a.name().equals(module) && a.name().equals(rest.substring(0, slash)))) {
+            String inArea = rest.substring(slash + 1);
+            int next = inArea.indexOf('/');
+            return next < 0 ? "" : inArea.substring(0, next);
+        }
         return slash < 0 ? "" : rest.substring(0, slash);
     }
 

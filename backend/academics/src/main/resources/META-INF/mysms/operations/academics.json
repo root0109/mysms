@@ -134,6 +134,15 @@
   "idempotency" : "optional",
   "audience" : "public"
 }, {
+  "operationId" : "academics.CreateTeacherSubject",
+  "method" : "POST",
+  "path" : "/v1/academics/teacher-subjects",
+  "permission" : "academics.teacher_subject.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
   "operationId" : "academics.CreateTeachingAssignment",
   "method" : "POST",
   "path" : "/v1/academics/teaching-assignments",
@@ -243,6 +252,14 @@
   "method" : "DELETE",
   "path" : "/v1/academics/subjects/{subjectId}",
   "permission" : "academics.subject.delete",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "academics.DeleteTeacherSubject",
+  "method" : "DELETE",
+  "path" : "/v1/academics/teacher-subjects/{teacherSubjectId}",
+  "permission" : "academics.teacher_subject.delete",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "audience" : "public"
@@ -359,6 +376,14 @@
   "anonymous" : false,
   "audience" : "public"
 }, {
+  "operationId" : "academics.GetTeacherSubject",
+  "method" : "GET",
+  "path" : "/v1/academics/teacher-subjects/{teacherSubjectId}",
+  "permission" : "academics.teacher_subject.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
   "operationId" : "academics.GetTeachingAssignment",
   "method" : "GET",
   "path" : "/v1/academics/teaching-assignments/{teachingAssignmentId}",
@@ -467,6 +492,14 @@
   "method" : "GET",
   "path" : "/v1/academics/subjects",
   "permission" : "academics.subject.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "academics.ListTeacherSubjects",
+  "method" : "GET",
+  "path" : "/v1/academics/teacher-subjects",
+  "permission" : "academics.teacher_subject.read",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "audience" : "public"
@@ -606,6 +639,14 @@
   "method" : "PATCH",
   "path" : "/v1/academics/subjects/{subjectId}",
   "permission" : "academics.subject.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "academics.UpdateTeacherSubject",
+  "method" : "PATCH",
+  "path" : "/v1/academics/teacher-subjects/{teacherSubjectId}",
+  "permission" : "academics.teacher_subject.update",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "audience" : "public"

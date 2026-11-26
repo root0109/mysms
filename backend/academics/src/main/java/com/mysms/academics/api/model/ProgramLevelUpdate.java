@@ -15,24 +15,24 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of ProgramLevel that can be updated (partial update; see updateMask).
+ * Fields of ProgramLevel that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class ProgramLevelUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@NotNull @Size(max = 40) String> code;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer sortOrder;
+  private @Nullable Optional<@NotNull Integer> sortOrder;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 80) String> name;
 
-  public ProgramLevelUpdate code(@Nullable String code) {
+  public ProgramLevelUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -41,18 +41,18 @@ public class ProgramLevelUpdate {
    * Stable key used by imports, integrations and seed scripts.
    * @return code
    */
-  @Size(max = 40) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 
-  public ProgramLevelUpdate sortOrder(@Nullable Integer sortOrder) {
+  public ProgramLevelUpdate sortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
     return this;
   }
@@ -63,16 +63,16 @@ public class ProgramLevelUpdate {
    */
   
   @JsonProperty("sortOrder")
-  public @Nullable Integer getSortOrder() {
+  public @Nullable Optional<Integer> getSortOrder() {
     return sortOrder;
   }
 
   @JsonProperty("sortOrder")
-  public void setSortOrder(@Nullable Integer sortOrder) {
+  public void setSortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
   }
 
-  public ProgramLevelUpdate isActive(@Nullable Boolean isActive) {
+  public ProgramLevelUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -83,16 +83,16 @@ public class ProgramLevelUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 
-  public ProgramLevelUpdate name(@Nullable String name) {
+  public ProgramLevelUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -101,14 +101,14 @@ public class ProgramLevelUpdate {
    * Level name.
    * @return name
    */
-  @Size(max = 80) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 

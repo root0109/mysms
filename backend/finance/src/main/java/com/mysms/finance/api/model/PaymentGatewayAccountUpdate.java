@@ -16,42 +16,42 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of PaymentGatewayAccount that can be updated (partial update; see updateMask).
+ * Fields of PaymentGatewayAccount that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class PaymentGatewayAccountUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String keySecret;
+  private @Nullable Optional<@NotNull String> keySecret;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String webhookSecret;
+  private @Nullable Optional<@NotNull String> webhookSecret;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String gatewayName;
+  private @Nullable Optional<@NotNull @Size(max = 60) String> gatewayName;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String displayName;
+  private @Nullable Optional<@NotNull @Size(max = 150) String> displayName;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String merchantId;
+  private @Nullable Optional<@Size(max = 120) String> merchantId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String keyId;
+  private @Nullable Optional<@Size(max = 120) String> keyId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID currencyId;
+  private @Nullable Optional<UUID> currencyId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isDefault;
+  private @Nullable Optional<@NotNull Boolean> isDefault;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public PaymentGatewayAccountUpdate keySecret(@Nullable String keySecret) {
+  public PaymentGatewayAccountUpdate keySecret(@Nullable Optional<String> keySecret) {
     this.keySecret = keySecret;
     return this;
   }
@@ -62,16 +62,16 @@ public class PaymentGatewayAccountUpdate {
    */
   
   @JsonProperty("keySecret")
-  public @Nullable String getKeySecret() {
+  public @Nullable Optional<String> getKeySecret() {
     return keySecret;
   }
 
   @JsonProperty("keySecret")
-  public void setKeySecret(@Nullable String keySecret) {
+  public void setKeySecret(@Nullable Optional<String> keySecret) {
     this.keySecret = keySecret;
   }
 
-  public PaymentGatewayAccountUpdate webhookSecret(@Nullable String webhookSecret) {
+  public PaymentGatewayAccountUpdate webhookSecret(@Nullable Optional<String> webhookSecret) {
     this.webhookSecret = webhookSecret;
     return this;
   }
@@ -82,16 +82,16 @@ public class PaymentGatewayAccountUpdate {
    */
   
   @JsonProperty("webhookSecret")
-  public @Nullable String getWebhookSecret() {
+  public @Nullable Optional<String> getWebhookSecret() {
     return webhookSecret;
   }
 
   @JsonProperty("webhookSecret")
-  public void setWebhookSecret(@Nullable String webhookSecret) {
+  public void setWebhookSecret(@Nullable Optional<String> webhookSecret) {
     this.webhookSecret = webhookSecret;
   }
 
-  public PaymentGatewayAccountUpdate institutionId(@Nullable UUID institutionId) {
+  public PaymentGatewayAccountUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -100,18 +100,18 @@ public class PaymentGatewayAccountUpdate {
    * Institution (absent = tenant-wide).
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public PaymentGatewayAccountUpdate gatewayName(@Nullable String gatewayName) {
+  public PaymentGatewayAccountUpdate gatewayName(@Nullable Optional<String> gatewayName) {
     this.gatewayName = gatewayName;
     return this;
   }
@@ -120,18 +120,18 @@ public class PaymentGatewayAccountUpdate {
    * Gateway identifier (razorpay, stripe, payu...).
    * @return gatewayName
    */
-  @Size(max = 60) 
+  
   @JsonProperty("gatewayName")
-  public @Nullable String getGatewayName() {
+  public @Nullable Optional<String> getGatewayName() {
     return gatewayName;
   }
 
   @JsonProperty("gatewayName")
-  public void setGatewayName(@Nullable String gatewayName) {
+  public void setGatewayName(@Nullable Optional<String> gatewayName) {
     this.gatewayName = gatewayName;
   }
 
-  public PaymentGatewayAccountUpdate displayName(@Nullable String displayName) {
+  public PaymentGatewayAccountUpdate displayName(@Nullable Optional<String> displayName) {
     this.displayName = displayName;
     return this;
   }
@@ -140,18 +140,18 @@ public class PaymentGatewayAccountUpdate {
    * Admin-facing name of this account.
    * @return displayName
    */
-  @Size(max = 150) 
+  
   @JsonProperty("displayName")
-  public @Nullable String getDisplayName() {
+  public @Nullable Optional<String> getDisplayName() {
     return displayName;
   }
 
   @JsonProperty("displayName")
-  public void setDisplayName(@Nullable String displayName) {
+  public void setDisplayName(@Nullable Optional<String> displayName) {
     this.displayName = displayName;
   }
 
-  public PaymentGatewayAccountUpdate merchantId(@Nullable String merchantId) {
+  public PaymentGatewayAccountUpdate merchantId(@Nullable Optional<String> merchantId) {
     this.merchantId = merchantId;
     return this;
   }
@@ -160,18 +160,18 @@ public class PaymentGatewayAccountUpdate {
    * Merchant/account id at the gateway.
    * @return merchantId
    */
-  @Size(max = 120) 
+  
   @JsonProperty("merchantId")
-  public @Nullable String getMerchantId() {
+  public @Nullable Optional<String> getMerchantId() {
     return merchantId;
   }
 
   @JsonProperty("merchantId")
-  public void setMerchantId(@Nullable String merchantId) {
+  public void setMerchantId(@Nullable Optional<String> merchantId) {
     this.merchantId = merchantId;
   }
 
-  public PaymentGatewayAccountUpdate keyId(@Nullable String keyId) {
+  public PaymentGatewayAccountUpdate keyId(@Nullable Optional<String> keyId) {
     this.keyId = keyId;
     return this;
   }
@@ -180,18 +180,18 @@ public class PaymentGatewayAccountUpdate {
    * API key id (public part).
    * @return keyId
    */
-  @Size(max = 120) 
+  
   @JsonProperty("keyId")
-  public @Nullable String getKeyId() {
+  public @Nullable Optional<String> getKeyId() {
     return keyId;
   }
 
   @JsonProperty("keyId")
-  public void setKeyId(@Nullable String keyId) {
+  public void setKeyId(@Nullable Optional<String> keyId) {
     this.keyId = keyId;
   }
 
-  public PaymentGatewayAccountUpdate currencyId(@Nullable UUID currencyId) {
+  public PaymentGatewayAccountUpdate currencyId(@Nullable Optional<UUID> currencyId) {
     this.currencyId = currencyId;
     return this;
   }
@@ -200,18 +200,18 @@ public class PaymentGatewayAccountUpdate {
    * Settlement currency.
    * @return currencyId
    */
-  @Valid 
+  
   @JsonProperty("currencyId")
-  public @Nullable UUID getCurrencyId() {
+  public @Nullable Optional<UUID> getCurrencyId() {
     return currencyId;
   }
 
   @JsonProperty("currencyId")
-  public void setCurrencyId(@Nullable UUID currencyId) {
+  public void setCurrencyId(@Nullable Optional<UUID> currencyId) {
     this.currencyId = currencyId;
   }
 
-  public PaymentGatewayAccountUpdate isDefault(@Nullable Boolean isDefault) {
+  public PaymentGatewayAccountUpdate isDefault(@Nullable Optional<Boolean> isDefault) {
     this.isDefault = isDefault;
     return this;
   }
@@ -222,16 +222,16 @@ public class PaymentGatewayAccountUpdate {
    */
   
   @JsonProperty("isDefault")
-  public @Nullable Boolean getIsDefault() {
+  public @Nullable Optional<Boolean> getIsDefault() {
     return isDefault;
   }
 
   @JsonProperty("isDefault")
-  public void setIsDefault(@Nullable Boolean isDefault) {
+  public void setIsDefault(@Nullable Optional<Boolean> isDefault) {
     this.isDefault = isDefault;
   }
 
-  public PaymentGatewayAccountUpdate isActive(@Nullable Boolean isActive) {
+  public PaymentGatewayAccountUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -242,12 +242,12 @@ public class PaymentGatewayAccountUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

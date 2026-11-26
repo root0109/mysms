@@ -19,22 +19,22 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Task that can be updated (partial update; see updateMask).
+ * Fields of Task that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class TaskUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID academicYearId;
+  private @Nullable Optional<UUID> academicYearId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID ownerUserId;
+  private @Nullable Optional<@NotNull UUID> ownerUserId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String title;
+  private @Nullable Optional<@NotNull @Size(max = 255) String> title;
 
   /**
    * Who the task is for.
@@ -80,11 +80,11 @@ public class TaskUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable TaskCategoryEnum taskCategory;
+  private @Nullable Optional<@NotNull TaskCategoryEnum> taskCategory;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime dueAt;
+  private @Nullable Optional<@NotNull OffsetDateTime> dueAt;
 
   /**
    * Reminder rule.
@@ -126,14 +126,14 @@ public class TaskUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable ReminderOptionEnum reminderOption;
+  private @Nullable Optional<@NotNull ReminderOptionEnum> reminderOption;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime reminderAt;
+  private @Nullable Optional<OffsetDateTime> reminderAt;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String checklist;
+  private @Nullable Optional<@NotNull String> checklist;
 
   /**
    * Priority.
@@ -173,7 +173,7 @@ public class TaskUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable PriorityEnum priority;
+  private @Nullable Optional<@NotNull PriorityEnum> priority;
 
   /**
    * Individual, shared or open-to-claim.
@@ -213,9 +213,9 @@ public class TaskUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable AssignmentModeEnum assignmentMode;
+  private @Nullable Optional<@NotNull AssignmentModeEnum> assignmentMode;
 
-  public TaskUpdate institutionId(@Nullable UUID institutionId) {
+  public TaskUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -224,18 +224,18 @@ public class TaskUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public TaskUpdate academicYearId(@Nullable UUID academicYearId) {
+  public TaskUpdate academicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
     return this;
   }
@@ -244,18 +244,18 @@ public class TaskUpdate {
    * Academic year.
    * @return academicYearId
    */
-  @Valid 
+  
   @JsonProperty("academicYearId")
-  public @Nullable UUID getAcademicYearId() {
+  public @Nullable Optional<UUID> getAcademicYearId() {
     return academicYearId;
   }
 
   @JsonProperty("academicYearId")
-  public void setAcademicYearId(@Nullable UUID academicYearId) {
+  public void setAcademicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
   }
 
-  public TaskUpdate ownerUserId(@Nullable UUID ownerUserId) {
+  public TaskUpdate ownerUserId(@Nullable Optional<UUID> ownerUserId) {
     this.ownerUserId = ownerUserId;
     return this;
   }
@@ -264,18 +264,18 @@ public class TaskUpdate {
    * Creator / owner.
    * @return ownerUserId
    */
-  @Valid 
+  
   @JsonProperty("ownerUserId")
-  public @Nullable UUID getOwnerUserId() {
+  public @Nullable Optional<UUID> getOwnerUserId() {
     return ownerUserId;
   }
 
   @JsonProperty("ownerUserId")
-  public void setOwnerUserId(@Nullable UUID ownerUserId) {
+  public void setOwnerUserId(@Nullable Optional<UUID> ownerUserId) {
     this.ownerUserId = ownerUserId;
   }
 
-  public TaskUpdate title(@Nullable String title) {
+  public TaskUpdate title(@Nullable Optional<String> title) {
     this.title = title;
     return this;
   }
@@ -284,18 +284,18 @@ public class TaskUpdate {
    * Title.
    * @return title
    */
-  @Size(max = 255) 
+  
   @JsonProperty("title")
-  public @Nullable String getTitle() {
+  public @Nullable Optional<String> getTitle() {
     return title;
   }
 
   @JsonProperty("title")
-  public void setTitle(@Nullable String title) {
+  public void setTitle(@Nullable Optional<String> title) {
     this.title = title;
   }
 
-  public TaskUpdate taskCategory(@Nullable TaskCategoryEnum taskCategory) {
+  public TaskUpdate taskCategory(@Nullable Optional<TaskCategoryEnum> taskCategory) {
     this.taskCategory = taskCategory;
     return this;
   }
@@ -306,16 +306,16 @@ public class TaskUpdate {
    */
   
   @JsonProperty("taskCategory")
-  public @Nullable TaskCategoryEnum getTaskCategory() {
+  public @Nullable Optional<TaskCategoryEnum> getTaskCategory() {
     return taskCategory;
   }
 
   @JsonProperty("taskCategory")
-  public void setTaskCategory(@Nullable TaskCategoryEnum taskCategory) {
+  public void setTaskCategory(@Nullable Optional<TaskCategoryEnum> taskCategory) {
     this.taskCategory = taskCategory;
   }
 
-  public TaskUpdate dueAt(@Nullable OffsetDateTime dueAt) {
+  public TaskUpdate dueAt(@Nullable Optional<OffsetDateTime> dueAt) {
     this.dueAt = dueAt;
     return this;
   }
@@ -324,18 +324,18 @@ public class TaskUpdate {
    * Due date-time.
    * @return dueAt
    */
-  @Valid 
+  
   @JsonProperty("dueAt")
-  public @Nullable OffsetDateTime getDueAt() {
+  public @Nullable Optional<OffsetDateTime> getDueAt() {
     return dueAt;
   }
 
   @JsonProperty("dueAt")
-  public void setDueAt(@Nullable OffsetDateTime dueAt) {
+  public void setDueAt(@Nullable Optional<OffsetDateTime> dueAt) {
     this.dueAt = dueAt;
   }
 
-  public TaskUpdate reminderOption(@Nullable ReminderOptionEnum reminderOption) {
+  public TaskUpdate reminderOption(@Nullable Optional<ReminderOptionEnum> reminderOption) {
     this.reminderOption = reminderOption;
     return this;
   }
@@ -346,16 +346,16 @@ public class TaskUpdate {
    */
   
   @JsonProperty("reminderOption")
-  public @Nullable ReminderOptionEnum getReminderOption() {
+  public @Nullable Optional<ReminderOptionEnum> getReminderOption() {
     return reminderOption;
   }
 
   @JsonProperty("reminderOption")
-  public void setReminderOption(@Nullable ReminderOptionEnum reminderOption) {
+  public void setReminderOption(@Nullable Optional<ReminderOptionEnum> reminderOption) {
     this.reminderOption = reminderOption;
   }
 
-  public TaskUpdate reminderAt(@Nullable OffsetDateTime reminderAt) {
+  public TaskUpdate reminderAt(@Nullable Optional<OffsetDateTime> reminderAt) {
     this.reminderAt = reminderAt;
     return this;
   }
@@ -364,18 +364,18 @@ public class TaskUpdate {
    * Reminder time.
    * @return reminderAt
    */
-  @Valid 
+  
   @JsonProperty("reminderAt")
-  public @Nullable OffsetDateTime getReminderAt() {
+  public @Nullable Optional<OffsetDateTime> getReminderAt() {
     return reminderAt;
   }
 
   @JsonProperty("reminderAt")
-  public void setReminderAt(@Nullable OffsetDateTime reminderAt) {
+  public void setReminderAt(@Nullable Optional<OffsetDateTime> reminderAt) {
     this.reminderAt = reminderAt;
   }
 
-  public TaskUpdate checklist(@Nullable String checklist) {
+  public TaskUpdate checklist(@Nullable Optional<String> checklist) {
     this.checklist = checklist;
     return this;
   }
@@ -386,16 +386,16 @@ public class TaskUpdate {
    */
   
   @JsonProperty("checklist")
-  public @Nullable String getChecklist() {
+  public @Nullable Optional<String> getChecklist() {
     return checklist;
   }
 
   @JsonProperty("checklist")
-  public void setChecklist(@Nullable String checklist) {
+  public void setChecklist(@Nullable Optional<String> checklist) {
     this.checklist = checklist;
   }
 
-  public TaskUpdate priority(@Nullable PriorityEnum priority) {
+  public TaskUpdate priority(@Nullable Optional<PriorityEnum> priority) {
     this.priority = priority;
     return this;
   }
@@ -406,16 +406,16 @@ public class TaskUpdate {
    */
   
   @JsonProperty("priority")
-  public @Nullable PriorityEnum getPriority() {
+  public @Nullable Optional<PriorityEnum> getPriority() {
     return priority;
   }
 
   @JsonProperty("priority")
-  public void setPriority(@Nullable PriorityEnum priority) {
+  public void setPriority(@Nullable Optional<PriorityEnum> priority) {
     this.priority = priority;
   }
 
-  public TaskUpdate assignmentMode(@Nullable AssignmentModeEnum assignmentMode) {
+  public TaskUpdate assignmentMode(@Nullable Optional<AssignmentModeEnum> assignmentMode) {
     this.assignmentMode = assignmentMode;
     return this;
   }
@@ -426,12 +426,12 @@ public class TaskUpdate {
    */
   
   @JsonProperty("assignmentMode")
-  public @Nullable AssignmentModeEnum getAssignmentMode() {
+  public @Nullable Optional<AssignmentModeEnum> getAssignmentMode() {
     return assignmentMode;
   }
 
   @JsonProperty("assignmentMode")
-  public void setAssignmentMode(@Nullable AssignmentModeEnum assignmentMode) {
+  public void setAssignmentMode(@Nullable Optional<AssignmentModeEnum> assignmentMode) {
     this.assignmentMode = assignmentMode;
   }
 

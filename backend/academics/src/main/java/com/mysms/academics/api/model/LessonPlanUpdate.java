@@ -18,65 +18,65 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of LessonPlan that can be updated (partial update; see updateMask).
+ * Fields of LessonPlan that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class LessonPlanUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID teachingAssignmentId;
+  private @Nullable Optional<@NotNull UUID> teachingAssignmentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID curriculumUnitId;
+  private @Nullable Optional<UUID> curriculumUnitId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String unitNo;
+  private @Nullable Optional<@NotNull @Size(max = 20) String> unitNo;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String unitName;
+  private @Nullable Optional<@NotNull @Size(max = 200) String> unitName;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String title;
+  private @Nullable Optional<@NotNull @Size(max = 200) String> title;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String plannedDurationMinutes;
+  private @Nullable Optional<@NotNull @Pattern(regexp = "^-?\\d+(\\.\\d+)?s$") String> plannedDurationMinutes;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String description;
+  private @Nullable Optional<@NotNull String> description;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String objective;
+  private @Nullable Optional<String> objective;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String materialsRequired;
+  private @Nullable Optional<String> materialsRequired;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String introduction;
+  private @Nullable Optional<String> introduction;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String procedureText;
+  private @Nullable Optional<String> procedureText;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String conclusion;
+  private @Nullable Optional<String> conclusion;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String assessmentText;
+  private @Nullable Optional<String> assessmentText;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String modification;
+  private @Nullable Optional<String> modification;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String notes;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private @Nullable LocalDate startDate;
+  private @Nullable Optional<String> notes;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private @Nullable LocalDate endDate;
+  private @Nullable Optional<LocalDate> startDate;
 
-  public LessonPlanUpdate teachingAssignmentId(@Nullable UUID teachingAssignmentId) {
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+  private @Nullable Optional<LocalDate> endDate;
+
+  public LessonPlanUpdate teachingAssignmentId(@Nullable Optional<UUID> teachingAssignmentId) {
     this.teachingAssignmentId = teachingAssignmentId;
     return this;
   }
@@ -85,18 +85,18 @@ public class LessonPlanUpdate {
    * Teaching assignment it belongs to.
    * @return teachingAssignmentId
    */
-  @Valid 
+  
   @JsonProperty("teachingAssignmentId")
-  public @Nullable UUID getTeachingAssignmentId() {
+  public @Nullable Optional<UUID> getTeachingAssignmentId() {
     return teachingAssignmentId;
   }
 
   @JsonProperty("teachingAssignmentId")
-  public void setTeachingAssignmentId(@Nullable UUID teachingAssignmentId) {
+  public void setTeachingAssignmentId(@Nullable Optional<UUID> teachingAssignmentId) {
     this.teachingAssignmentId = teachingAssignmentId;
   }
 
-  public LessonPlanUpdate curriculumUnitId(@Nullable UUID curriculumUnitId) {
+  public LessonPlanUpdate curriculumUnitId(@Nullable Optional<UUID> curriculumUnitId) {
     this.curriculumUnitId = curriculumUnitId;
     return this;
   }
@@ -105,18 +105,18 @@ public class LessonPlanUpdate {
    * Unit covered (when linked to the syllabus).
    * @return curriculumUnitId
    */
-  @Valid 
+  
   @JsonProperty("curriculumUnitId")
-  public @Nullable UUID getCurriculumUnitId() {
+  public @Nullable Optional<UUID> getCurriculumUnitId() {
     return curriculumUnitId;
   }
 
   @JsonProperty("curriculumUnitId")
-  public void setCurriculumUnitId(@Nullable UUID curriculumUnitId) {
+  public void setCurriculumUnitId(@Nullable Optional<UUID> curriculumUnitId) {
     this.curriculumUnitId = curriculumUnitId;
   }
 
-  public LessonPlanUpdate unitNo(@Nullable String unitNo) {
+  public LessonPlanUpdate unitNo(@Nullable Optional<String> unitNo) {
     this.unitNo = unitNo;
     return this;
   }
@@ -125,18 +125,18 @@ public class LessonPlanUpdate {
    * Unit number.
    * @return unitNo
    */
-  @Size(max = 20) 
+  
   @JsonProperty("unitNo")
-  public @Nullable String getUnitNo() {
+  public @Nullable Optional<String> getUnitNo() {
     return unitNo;
   }
 
   @JsonProperty("unitNo")
-  public void setUnitNo(@Nullable String unitNo) {
+  public void setUnitNo(@Nullable Optional<String> unitNo) {
     this.unitNo = unitNo;
   }
 
-  public LessonPlanUpdate unitName(@Nullable String unitName) {
+  public LessonPlanUpdate unitName(@Nullable Optional<String> unitName) {
     this.unitName = unitName;
     return this;
   }
@@ -145,18 +145,18 @@ public class LessonPlanUpdate {
    * Unit name.
    * @return unitName
    */
-  @Size(max = 200) 
+  
   @JsonProperty("unitName")
-  public @Nullable String getUnitName() {
+  public @Nullable Optional<String> getUnitName() {
     return unitName;
   }
 
   @JsonProperty("unitName")
-  public void setUnitName(@Nullable String unitName) {
+  public void setUnitName(@Nullable Optional<String> unitName) {
     this.unitName = unitName;
   }
 
-  public LessonPlanUpdate title(@Nullable String title) {
+  public LessonPlanUpdate title(@Nullable Optional<String> title) {
     this.title = title;
     return this;
   }
@@ -165,18 +165,18 @@ public class LessonPlanUpdate {
    * Plan title.
    * @return title
    */
-  @Size(max = 200) 
+  
   @JsonProperty("title")
-  public @Nullable String getTitle() {
+  public @Nullable Optional<String> getTitle() {
     return title;
   }
 
   @JsonProperty("title")
-  public void setTitle(@Nullable String title) {
+  public void setTitle(@Nullable Optional<String> title) {
     this.title = title;
   }
 
-  public LessonPlanUpdate plannedDurationMinutes(@Nullable String plannedDurationMinutes) {
+  public LessonPlanUpdate plannedDurationMinutes(@Nullable Optional<String> plannedDurationMinutes) {
     this.plannedDurationMinutes = plannedDurationMinutes;
     return this;
   }
@@ -185,18 +185,18 @@ public class LessonPlanUpdate {
    * Planned teaching time.
    * @return plannedDurationMinutes
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?s$") 
+  
   @JsonProperty("plannedDurationMinutes")
-  public @Nullable String getPlannedDurationMinutes() {
+  public @Nullable Optional<String> getPlannedDurationMinutes() {
     return plannedDurationMinutes;
   }
 
   @JsonProperty("plannedDurationMinutes")
-  public void setPlannedDurationMinutes(@Nullable String plannedDurationMinutes) {
+  public void setPlannedDurationMinutes(@Nullable Optional<String> plannedDurationMinutes) {
     this.plannedDurationMinutes = plannedDurationMinutes;
   }
 
-  public LessonPlanUpdate description(@Nullable String description) {
+  public LessonPlanUpdate description(@Nullable Optional<String> description) {
     this.description = description;
     return this;
   }
@@ -207,16 +207,16 @@ public class LessonPlanUpdate {
    */
   
   @JsonProperty("description")
-  public @Nullable String getDescription() {
+  public @Nullable Optional<String> getDescription() {
     return description;
   }
 
   @JsonProperty("description")
-  public void setDescription(@Nullable String description) {
+  public void setDescription(@Nullable Optional<String> description) {
     this.description = description;
   }
 
-  public LessonPlanUpdate objective(@Nullable String objective) {
+  public LessonPlanUpdate objective(@Nullable Optional<String> objective) {
     this.objective = objective;
     return this;
   }
@@ -227,16 +227,16 @@ public class LessonPlanUpdate {
    */
   
   @JsonProperty("objective")
-  public @Nullable String getObjective() {
+  public @Nullable Optional<String> getObjective() {
     return objective;
   }
 
   @JsonProperty("objective")
-  public void setObjective(@Nullable String objective) {
+  public void setObjective(@Nullable Optional<String> objective) {
     this.objective = objective;
   }
 
-  public LessonPlanUpdate materialsRequired(@Nullable String materialsRequired) {
+  public LessonPlanUpdate materialsRequired(@Nullable Optional<String> materialsRequired) {
     this.materialsRequired = materialsRequired;
     return this;
   }
@@ -247,16 +247,16 @@ public class LessonPlanUpdate {
    */
   
   @JsonProperty("materialsRequired")
-  public @Nullable String getMaterialsRequired() {
+  public @Nullable Optional<String> getMaterialsRequired() {
     return materialsRequired;
   }
 
   @JsonProperty("materialsRequired")
-  public void setMaterialsRequired(@Nullable String materialsRequired) {
+  public void setMaterialsRequired(@Nullable Optional<String> materialsRequired) {
     this.materialsRequired = materialsRequired;
   }
 
-  public LessonPlanUpdate introduction(@Nullable String introduction) {
+  public LessonPlanUpdate introduction(@Nullable Optional<String> introduction) {
     this.introduction = introduction;
     return this;
   }
@@ -267,16 +267,16 @@ public class LessonPlanUpdate {
    */
   
   @JsonProperty("introduction")
-  public @Nullable String getIntroduction() {
+  public @Nullable Optional<String> getIntroduction() {
     return introduction;
   }
 
   @JsonProperty("introduction")
-  public void setIntroduction(@Nullable String introduction) {
+  public void setIntroduction(@Nullable Optional<String> introduction) {
     this.introduction = introduction;
   }
 
-  public LessonPlanUpdate procedureText(@Nullable String procedureText) {
+  public LessonPlanUpdate procedureText(@Nullable Optional<String> procedureText) {
     this.procedureText = procedureText;
     return this;
   }
@@ -287,16 +287,16 @@ public class LessonPlanUpdate {
    */
   
   @JsonProperty("procedureText")
-  public @Nullable String getProcedureText() {
+  public @Nullable Optional<String> getProcedureText() {
     return procedureText;
   }
 
   @JsonProperty("procedureText")
-  public void setProcedureText(@Nullable String procedureText) {
+  public void setProcedureText(@Nullable Optional<String> procedureText) {
     this.procedureText = procedureText;
   }
 
-  public LessonPlanUpdate conclusion(@Nullable String conclusion) {
+  public LessonPlanUpdate conclusion(@Nullable Optional<String> conclusion) {
     this.conclusion = conclusion;
     return this;
   }
@@ -307,16 +307,16 @@ public class LessonPlanUpdate {
    */
   
   @JsonProperty("conclusion")
-  public @Nullable String getConclusion() {
+  public @Nullable Optional<String> getConclusion() {
     return conclusion;
   }
 
   @JsonProperty("conclusion")
-  public void setConclusion(@Nullable String conclusion) {
+  public void setConclusion(@Nullable Optional<String> conclusion) {
     this.conclusion = conclusion;
   }
 
-  public LessonPlanUpdate assessmentText(@Nullable String assessmentText) {
+  public LessonPlanUpdate assessmentText(@Nullable Optional<String> assessmentText) {
     this.assessmentText = assessmentText;
     return this;
   }
@@ -327,16 +327,16 @@ public class LessonPlanUpdate {
    */
   
   @JsonProperty("assessmentText")
-  public @Nullable String getAssessmentText() {
+  public @Nullable Optional<String> getAssessmentText() {
     return assessmentText;
   }
 
   @JsonProperty("assessmentText")
-  public void setAssessmentText(@Nullable String assessmentText) {
+  public void setAssessmentText(@Nullable Optional<String> assessmentText) {
     this.assessmentText = assessmentText;
   }
 
-  public LessonPlanUpdate modification(@Nullable String modification) {
+  public LessonPlanUpdate modification(@Nullable Optional<String> modification) {
     this.modification = modification;
     return this;
   }
@@ -347,16 +347,16 @@ public class LessonPlanUpdate {
    */
   
   @JsonProperty("modification")
-  public @Nullable String getModification() {
+  public @Nullable Optional<String> getModification() {
     return modification;
   }
 
   @JsonProperty("modification")
-  public void setModification(@Nullable String modification) {
+  public void setModification(@Nullable Optional<String> modification) {
     this.modification = modification;
   }
 
-  public LessonPlanUpdate notes(@Nullable String notes) {
+  public LessonPlanUpdate notes(@Nullable Optional<String> notes) {
     this.notes = notes;
     return this;
   }
@@ -367,16 +367,16 @@ public class LessonPlanUpdate {
    */
   
   @JsonProperty("notes")
-  public @Nullable String getNotes() {
+  public @Nullable Optional<String> getNotes() {
     return notes;
   }
 
   @JsonProperty("notes")
-  public void setNotes(@Nullable String notes) {
+  public void setNotes(@Nullable Optional<String> notes) {
     this.notes = notes;
   }
 
-  public LessonPlanUpdate startDate(@Nullable LocalDate startDate) {
+  public LessonPlanUpdate startDate(@Nullable Optional<LocalDate> startDate) {
     this.startDate = startDate;
     return this;
   }
@@ -385,18 +385,18 @@ public class LessonPlanUpdate {
    * Planned start.
    * @return startDate
    */
-  @Valid 
+  
   @JsonProperty("startDate")
-  public @Nullable LocalDate getStartDate() {
+  public @Nullable Optional<LocalDate> getStartDate() {
     return startDate;
   }
 
   @JsonProperty("startDate")
-  public void setStartDate(@Nullable LocalDate startDate) {
+  public void setStartDate(@Nullable Optional<LocalDate> startDate) {
     this.startDate = startDate;
   }
 
-  public LessonPlanUpdate endDate(@Nullable LocalDate endDate) {
+  public LessonPlanUpdate endDate(@Nullable Optional<LocalDate> endDate) {
     this.endDate = endDate;
     return this;
   }
@@ -405,14 +405,14 @@ public class LessonPlanUpdate {
    * Planned end.
    * @return endDate
    */
-  @Valid 
+  
   @JsonProperty("endDate")
-  public @Nullable LocalDate getEndDate() {
+  public @Nullable Optional<LocalDate> getEndDate() {
     return endDate;
   }
 
   @JsonProperty("endDate")
-  public void setEndDate(@Nullable LocalDate endDate) {
+  public void setEndDate(@Nullable Optional<LocalDate> endDate) {
     this.endDate = endDate;
   }
 

@@ -1,0 +1,444 @@
+{
+ "module": "finance",
+ "resources": [
+  {
+   "name": "AcquisitionSource",
+   "table": "finance.acquisition_source",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/acquisition-sources",
+   "item": "/v1/finance/acquisition-sources/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C79C3A29F",
+    "name": "t-name-6f18db07"
+   },
+   "update": {
+    "isActive": true
+   },
+   "patch": {
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Coupon",
+   "table": "finance.coupon",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/coupons",
+   "item": "/v1/finance/coupons/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C1219D37C",
+    "discountType": "percentage",
+    "percentageDiscount": "10"
+   },
+   "update": {
+    "isEnabled": true
+   },
+   "patch": {
+    "clears": "expiresOn",
+    "keeps": "code"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "CouponScope",
+   "table": "finance.coupon_scope",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/coupons/fa5ff850-4b89-5af2-a2b2-84b6b88b8162/scopes",
+   "item": "/v1/finance/coupons/fa5ff850-4b89-5af2-a2b2-84b6b88b8162/scopes/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO finance.coupon (tenant_id, code, discount_type, percentage_discount, row_version, id) VALUES (:tenant, 'CBE656F40', 'percentage', 10, 1, 'fa5ff850-4b89-5af2-a2b2-84b6b88b8162') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "couponId": "fa5ff850-4b89-5af2-a2b2-84b6b88b8162",
+    "lmsCourseId": "0196f000-0000-7000-8000-0000000c0c01"
+   },
+   "update": {},
+   "patch": {
+    "clears": "lmsCohortId"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "FeeConcession",
+   "table": "finance.fee_concession",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/fee-concessions",
+   "item": "/v1/finance/fee-concessions/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "studentId": "ea0c7df6-bd26-5bba-ab85-6956721df14d",
+    "academicYearId": "96f8ca6b-a0ca-5169-aa65-583fb2457173",
+    "concessionType": "percent",
+    "concessionValue": "1"
+   },
+   "update": {
+    "reason": "Updated reason"
+   },
+   "patch": {
+    "clears": "reason",
+    "keeps": "concessionType"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "FeeHead",
+   "table": "finance.fee_head",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/fee-heads",
+   "item": "/v1/finance/fee-heads/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "code": "C27FA6C61",
+    "name": "t-name-c0c27fab"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "clears": "description",
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "FeePlan",
+   "table": "finance.fee_plan",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/fee-plans",
+   "item": "/v1/finance/fee-plans/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "code": "C9BD28AD0",
+    "name": "t-name-99725add"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "clears": "notes",
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "FeePlanInstallment",
+   "table": "finance.fee_plan_installment",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/fee-plans/366b30ab-9302-5faa-9dd4-cd7f55793539/installments",
+   "item": "/v1/finance/fee-plans/366b30ab-9302-5faa-9dd4-cd7f55793539/installments/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO finance.fee_plan (tenant_id, institution_id, code, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C4CB52CFB', 't-name-aecf8e92', 1, '366b30ab-9302-5faa-9dd4-cd7f55793539') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "feePlanId": "366b30ab-9302-5faa-9dd4-cd7f55793539",
+    "sequence": 3,
+    "sharePercent": "1"
+   },
+   "update": {},
+   "patch": {
+    "clears": "dueDate",
+    "keeps": "sharePercent"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "FeePlanInstallmentComponent",
+   "table": "finance.fee_plan_installment_component",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/fee-plan-installment-components",
+   "item": "/v1/finance/fee-plan-installment-components/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO finance.fee_plan (tenant_id, institution_id, code, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C6EF297BE', 't-name-757578e0', 1, '449e97f0-1828-5e53-b5f2-ec26017e82e4') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO finance.fee_plan_installment (tenant_id, fee_plan_id, sequence, share_percent, row_version, id) VALUES (:tenant, '449e97f0-1828-5e53-b5f2-ec26017e82e4', 5, 1, 1, '073f9c0b-c25d-5cfa-aaf0-185e6c0e3b53') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO finance.fee_head (tenant_id, institution_id, code, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C49476FD5', 't-name-52ea3c0b', 1, '4f0cc7b2-3359-57b5-bae4-7123ed10d77f') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "installmentId": "073f9c0b-c25d-5cfa-aaf0-185e6c0e3b53",
+    "feeHeadId": "4f0cc7b2-3359-57b5-bae4-7123ed10d77f",
+    "sharePercent": "1"
+   },
+   "update": {},
+   "patch": {
+    "clears": "sequence",
+    "keeps": "sharePercent"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "FeeStructure",
+   "table": "finance.fee_structure",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/fee-structures",
+   "item": "/v1/finance/fee-structures/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO finance.fee_plan (tenant_id, institution_id, code, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C6EF297BE', 't-name-757578e0', 1, '449e97f0-1828-5e53-b5f2-ec26017e82e4') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "academicYearId": "294b63df-8bf1-5052-a02f-f826fb282223",
+    "feePlanId": "449e97f0-1828-5e53-b5f2-ec26017e82e4",
+    "name": "t-name-ffb78946"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "clears": "programId",
+    "keeps": "name"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "finance.ArchiveFeeStructure",
+     "path": "/v1/finance/fee-structures/{id}:archive",
+     "permission": "finance.fee_structure.archive",
+     "guard": {
+      "status": [
+       "published"
+      ]
+     },
+     "prepare": [
+      "UPDATE finance.fee_structure SET status = 'published' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "archived"
+     },
+     "stamps": [],
+     "etag": false,
+     "ifMatch": true
+    }
+   ]
+  },
+  {
+   "name": "InvoiceLine",
+   "table": "finance.invoice_line",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/finance/invoices/c10434fe-3356-55fa-8059-119de5f7f1cd/lines",
+   "item": "/v1/finance/invoices/c10434fe-3356-55fa-8059-119de5f7f1cd/lines/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO finance.invoice (tenant_id, institution_id, invoice_number, student_id, bill_to_name, invoice_date, currency_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-invoice-number-45d86388', '0196f000-0000-7000-8000-0000000575d1', 't-bill-to-name-024729e0', '2026-01-10', 'a23e81ee-1e35-5366-a247-15511f555eb6', 1, 'c10434fe-3356-55fa-8059-119de5f7f1cd') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "invoiceId": "c10434fe-3356-55fa-8059-119de5f7f1cd",
+    "description": "t-description-e8e631c4",
+    "unitPrice": "1",
+    "lineTotal": "1"
+   },
+   "update": {},
+   "duplicateConflicts": false,
+   "seedId": "080db590-194b-5e45-81dd-10e0c89be3d1",
+   "seed": [
+    "INSERT INTO finance.invoice_line (invoice_id, description, unit_price, line_total, tenant_id, row_version, id) VALUES ('c10434fe-3356-55fa-8059-119de5f7f1cd', 't-description-e8e631c4', '1', '1', :tenant, 1, '080db590-194b-5e45-81dd-10e0c89be3d1')"
+   ]
+  },
+  {
+   "name": "PaymentGatewayAccount",
+   "table": "finance.payment_gateway_account",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/payment-gateway-accounts",
+   "item": "/v1/finance/payment-gateway-accounts/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "keySecret": "Secret-b5480e-00001234",
+    "webhookSecret": "Secret-ba6f1c-00001234",
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "gatewayName": "t-gateway-name-40a824a4",
+    "displayName": "t-display-name-f5eb6eff"
+   },
+   "update": {
+    "merchantId": "Updated merchant_id"
+   },
+   "patch": {
+    "clears": "merchantId",
+    "keeps": "displayName"
+   },
+   "duplicateConflicts": true,
+   "secrets": [
+    {
+     "field": "keySecret",
+     "masked": "keySecretMasked",
+     "mask": "••••1234",
+     "rotated": "Rotated-secret-5678",
+     "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM finance.payment_gateway_account WHERE id = '{id}' AND (key_secret_enc IS NULL OR key_secret_enc NOT LIKE 'v1.%' OR strpos(key_secret_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
+    },
+    {
+     "field": "webhookSecret",
+     "masked": null,
+     "mask": "••••1234",
+     "rotated": "Rotated-secret-5678",
+     "check": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM finance.payment_gateway_account WHERE id = '{id}' AND (webhook_secret_enc IS NULL OR webhook_secret_enc NOT LIKE 'v1.%' OR strpos(webhook_secret_enc, '{plain}') > 0)) THEN RAISE EXCEPTION 'secret stored in clear'; END IF; END $$"
+    }
+   ]
+  },
+  {
+   "name": "Invoice",
+   "table": "finance.invoice",
+   "ops": [
+    "Create",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/invoices",
+   "item": "/v1/finance/invoices/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "studentId": "0196f000-0000-7000-8000-0000000f5001",
+    "billToName": "t-bill-to-3c1f9a20",
+    "invoiceDate": "2026-04-01",
+    "currencyId": "0196f000-0000-7000-8000-0000000fc001"
+   },
+   "update": {
+    "billToName": "Updated bill-to name"
+   },
+   "patch": {
+    "clears": "dueDate",
+    "keeps": "billToName"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "StudentFeeDue",
+   "table": "finance.student_fee_due",
+   "ops": [
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/finance/student-fee-dues",
+   "item": "/v1/finance/student-fee-dues/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "update": {
+    "dueDate": "2026-05-01"
+   },
+   "patch": {
+    "keeps": "institutionId",
+    "clears": "dueDate"
+   },
+   "duplicateConflicts": false,
+   "seedId": "0196f000-0000-7000-8000-0000000fd001",
+   "seed": [
+    "INSERT INTO finance.student_fee_due (id, tenant_id, institution_id, student_id, academic_year_id, due_date, amount, currency_id, discount_amount, net_amount, row_version) VALUES ('0196f000-0000-7000-8000-0000000fd001', :tenant, '0196f000-0000-7000-8000-00000000a001', '0196f000-0000-7000-8000-0000000f5001', '0196f000-0000-7000-8000-0000000fa001', '2026-04-01', 1200.00, '0196f000-0000-7000-8000-0000000fc001', 0, 1200.00, 1)"
+   ]
+  },
+  {
+   "name": "Payment",
+   "table": "finance.payment",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/finance/payments",
+   "item": "/v1/finance/payments/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "duplicateConflicts": false,
+   "seedId": "0196f000-0000-7000-8000-0000000fe001",
+   "seed": [
+    "INSERT INTO finance.payment (id, tenant_id, institution_id, payer_name, purpose, amount, currency_id, billing_name, status, payment_method, received_at, receipt_number, row_version) VALUES ('0196f000-0000-7000-8000-0000000fe001', :tenant, '0196f000-0000-7000-8000-00000000a001', 't-payer-91a2', 'fees', 500.00, '0196f000-0000-7000-8000-0000000fc001', 't-billing-77d1', 'received', 'cash', now(), 'RCT-SEED-1', 1)"
+   ]
+  },
+  {
+   "name": "Refund",
+   "table": "finance.refund",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/finance/refunds",
+   "item": "/v1/finance/refunds/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO finance.payment (id, tenant_id, institution_id, payer_name, purpose, amount, currency_id, billing_name, status, payment_method, received_at, row_version) VALUES ('0196f000-0000-7000-8000-0000000fe002', :tenant, '0196f000-0000-7000-8000-00000000a001', 't-payer-4c19', 'fees', 800.00, '0196f000-0000-7000-8000-0000000fc001', 't-billing-2b0e', 'received', 'cash', now(), 1) ON CONFLICT (id) DO NOTHING"
+   ],
+   "duplicateConflicts": false,
+   "seedId": "0196f000-0000-7000-8000-0000000ff001",
+   "seed": [
+    "INSERT INTO finance.refund (id, tenant_id, payment_id, amount, reason, status, refund_method, refunded_at, row_version) VALUES ('0196f000-0000-7000-8000-0000000ff001', :tenant, '0196f000-0000-7000-8000-0000000fe002', 100.00, 'Seeded refund', 'processed', 'cash', now(), 1)"
+   ]
+  }
+ ]
+}

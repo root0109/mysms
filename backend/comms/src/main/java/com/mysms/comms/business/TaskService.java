@@ -37,7 +37,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -69,11 +69,6 @@ public class TaskService extends AppTransactionManager {
     static final String PERMISSION_REOPEN_TASK = "comms.task.reopen_task";
     static final String PERMISSION_SNOOZE_TASK = "comms.task.snooze_task";
     static final String PERMISSION_CLAIM_TASK = "comms.task.claim_task";
-    /** The contract's TaskUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("institutionId", "academicYearId", "ownerUserId", "title", "taskCategory", "dueAt",
-                    "reminderOption",
-            "reminderAt", "checklist", "priority", "assignmentMode");
 
     public static final String TASK_ASSIGNEE_AGGREGATE = TaskAssigneeEntity.TABLE;
     static final String TASK_ASSIGNEE_PERMISSION_LIST = "comms.task_assignee.read";
@@ -81,9 +76,6 @@ public class TaskService extends AppTransactionManager {
     static final String TASK_ASSIGNEE_PERMISSION_CREATE = "comms.task_assignee.create";
     static final String TASK_ASSIGNEE_PERMISSION_UPDATE = "comms.task_assignee.update";
     static final String TASK_ASSIGNEE_PERMISSION_DELETE = "comms.task_assignee.delete";
-    /** The contract's TaskAssigneeUpdate fields, in apply order. */
-    static final List<String> TASK_ASSIGNEE_WRITABLE =
-            List.of("assigneeType", "userId", "classSectionId", "groupId", "claimedByUserId", "status");
 
     private final TaskRepository repository;
     private final TaskMapper mapper;
@@ -157,12 +149,11 @@ public class TaskService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
-    public Task updateTask(UUID id, String ifMatch, TaskUpdate changes, String updateMask, boolean validateOnly) {
+    public Task updateTask(UUID id, String ifMatch, TaskUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             TaskEntity entity = loadVisible(scope, id);
@@ -170,7 +161,7 @@ public class TaskService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -359,28 +350,23 @@ public class TaskService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected TaskUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(TaskEntity entity, TaskUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "academicYearId" -> entity.setAcademicYearId(changes.getAcademicYearId());
-                case "ownerUserId" -> entity.setOwnerUserId(changes.getOwnerUserId());
-                case "title" -> entity.setTitle(changes.getTitle());
-                case "taskCategory" -> entity.setTaskCategory(Optional.ofNullable(changes.getTaskCategory())
-                        .map(v -> v.getValue()).orElse(null));
-                case "dueAt" -> entity.setDueAt(changes.getDueAt());
-                case "reminderOption" -> entity.setReminderOption(Optional.ofNullable(changes.getReminderOption())
-                        .map(v -> v.getValue()).orElse(null));
-                case "reminderAt" -> entity.setReminderAt(changes.getReminderAt());
-                case "checklist" -> entity.setChecklist(changes.getChecklist());
-                case "priority" -> entity.setPriority(Optional.ofNullable(changes.getPriority()).map(v -> v.getValue())
-                        .orElse(null));
-                case "assignmentMode" -> entity.setAssignmentMode(Optional.ofNullable(changes.getAssignmentMode())
-                        .map(v -> v.getValue()).orElse(null));
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(TaskEntity entity, TaskUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("academicYearId", changes.getAcademicYearId(), entity::setAcademicYearId);
+        patch.apply("ownerUserId", changes.getOwnerUserId(), entity::setOwnerUserId);
+        patch.apply("title", changes.getTitle(), entity::setTitle);
+        patch.apply("taskCategory", changes.getTaskCategory(), v -> entity.setTaskCategory(v == null ? null : v.getValue()));
+        patch.apply("dueAt", changes.getDueAt(), entity::setDueAt);
+        patch.apply("reminderOption", changes.getReminderOption(),
+                v -> entity.setReminderOption(v == null ? null : v.getValue()));
+        patch.apply("reminderAt", changes.getReminderAt(), entity::setReminderAt);
+        patch.apply("checklist", changes.getChecklist(), entity::setChecklist);
+        patch.apply("priority", changes.getPriority(), v -> entity.setPriority(v == null ? null : v.getValue()));
+        patch.apply("assignmentMode", changes.getAssignmentMode(),
+                v -> entity.setAssignmentMode(v == null ? null : v.getValue()));
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -475,13 +461,12 @@ public class TaskService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public TaskAssignee updateTaskAssignee(UUID taskId, UUID id, String ifMatch, TaskAssigneeUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, TASK_ASSIGNEE_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(TASK_ASSIGNEE_PERMISSION_UPDATE);
             TaskAssigneeEntity entity = loadVisibleTaskAssignee(scope, taskId, id);
@@ -489,7 +474,7 @@ public class TaskService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyTaskAssignee(entity, changes, fields);
+            List<String> fields = applyTaskAssignee(entity, changes);
             validator.validate(taskAssigneeMapper.toDto(entity));
             assertValidTaskAssignee(entity, false);
             scope.requireWritable(institutionOfTaskAssignee(entity));
@@ -542,21 +527,16 @@ public class TaskService extends AppTransactionManager {
         return taskAssigneeRepository.institutionOf(entity.getTaskId());
     }
 
-    /** Applies the selected TaskAssigneeUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyTaskAssignee(TaskAssigneeEntity entity, TaskAssigneeUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "assigneeType" -> entity.setAssigneeType(Optional.ofNullable(changes.getAssigneeType())
-                        .map(v -> v.getValue()).orElse(null));
-                case "userId" -> entity.setUserId(changes.getUserId());
-                case "classSectionId" -> entity.setClassSectionId(changes.getClassSectionId());
-                case "groupId" -> entity.setGroupId(changes.getGroupId());
-                case "claimedByUserId" -> entity.setClaimedByUserId(changes.getClaimedByUserId());
-                case "status" -> entity.setStatus(Optional.ofNullable(changes.getStatus()).map(v -> v.getValue())
-                        .orElse(null));
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyTaskAssignee(TaskAssigneeEntity entity, TaskAssigneeUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("assigneeType", changes.getAssigneeType(), v -> entity.setAssigneeType(v == null ? null : v.getValue()));
+        patch.apply("userId", changes.getUserId(), entity::setUserId);
+        patch.apply("classSectionId", changes.getClassSectionId(), entity::setClassSectionId);
+        patch.apply("groupId", changes.getGroupId(), entity::setGroupId);
+        patch.apply("claimedByUserId", changes.getClaimedByUserId(), entity::setClaimedByUserId);
+        patch.apply("status", changes.getStatus(), v -> entity.setStatus(v == null ? null : v.getValue()));
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

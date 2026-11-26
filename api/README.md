@@ -55,7 +55,7 @@ Everything about the API lives in this one folder; paths are relative to it.
 | List | `GET /…/{plural}` | `List<Plural>` | `page` (one-based, default 1), `size` (1-500, default 50), `cursor`, `filter`, `sort`, `fields`; response `PagingInfo` = `data` + `paging` (`NavigationInfo`). gRPC: `pageable` (`PageableRequest`) in, `items` + `pagination` out. |
 | Get | `GET /…/{id}` | `Get<Resource>` | `ETag` response header = row version. |
 | Create | `POST /…/{plural}` → 201 + `Location` | `Create<Resource>` | `Idempotency-Key` header / `request_id`; `validateOnly` (runs every check, persists nothing, answers 200 with the would-be resource). |
-| Update | `PATCH /…/{id}` | `Update<Resource>` | Partial update with `updateMask`; `If-Match` (REST) / `etag` field (gRPC) is mandatory → 412 on a stale version. |
+| Update | `PATCH /…/{id}` | `Update<Resource>` | Partial update: REST sends only the fields to change in the `<Resource>Update` body — absent keeps a field, `null` clears it (422 on a required one), a value sets it (JAVA-CODING-RULES §7.2); gRPC keeps `update_mask`. `If-Match` (REST) / `etag` field (gRPC) is mandatory → 412 on a stale version. |
 | Delete | `DELETE /…/{id}` → 204 | `Delete<Resource>` | Soft delete (sets `deleted_at`); `If-Match` required. |
 
 Output-only fields (`id`, `createTime`, `updateTime`, `createdBy`, `updatedBy`, `etag`, the parent id of a nested child, and workflow-controlled fields) are marked `readOnly` in OpenAPI and "Output only" in proto comments; values sent for them are ignored (ROADMAP DEC-9 decides whether to reject them instead). `tenantId`, `deletedAt` and `rowVersion` are never exposed: tenant comes from the access token and the row version travels as the ETag.

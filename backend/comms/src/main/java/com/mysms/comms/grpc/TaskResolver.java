@@ -79,8 +79,7 @@ public class TaskResolver extends TaskServiceGrpc.TaskServiceImplBase {
     public void updateTask(UpdateTaskRequest request, StreamObserver<UpdateTaskResponse> out) {
         Task updated = service.updateTask(
                 bridge.id(request.getTask().getId(), "id"), bridge.requiredIfMatch(request.getTask().getEtag()),
-                bridge.changes(request.getTask(), request.getUpdateMask(), TaskUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getTask(), request.getUpdateMask(), TaskUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateTaskResponse.newBuilder(), "task", updated).build());
     }
 
@@ -119,7 +118,7 @@ public class TaskResolver extends TaskServiceGrpc.TaskServiceImplBase {
                 bridge.id(request.getTaskId(), "taskId"), bridge.id(request.getTaskAssignee().getId(), "id"),
                 bridge.requiredIfMatch(request.getTaskAssignee().getEtag()),
                 bridge.changes(request.getTaskAssignee(), request.getUpdateMask(), TaskAssigneeUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateTaskAssigneeResponse.newBuilder(), "task_assignee", updated).build());
     }
 

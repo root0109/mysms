@@ -16,27 +16,27 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of UploadPolicy that can be updated (partial update; see updateMask).
+ * Fields of UploadPolicy that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class UploadPolicyUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID roleId;
+  private @Nullable Optional<UUID> roleId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String moduleCode;
+  private @Nullable Optional<@NotNull @Size(max = 60) String> moduleCode;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String operationCode;
+  private @Nullable Optional<@Size(max = 60) String> operationCode;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String maxSizeBytes;
+  private @Nullable Optional<@Pattern(regexp = "^-?[0-9]+$") String> maxSizeBytes;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String allowedExtensions;
+  private @Nullable Optional<@Size(max = 500) String> allowedExtensions;
 
-  public UploadPolicyUpdate roleId(@Nullable UUID roleId) {
+  public UploadPolicyUpdate roleId(@Nullable Optional<UUID> roleId) {
     this.roleId = roleId;
     return this;
   }
@@ -45,18 +45,18 @@ public class UploadPolicyUpdate {
    * Role the limit applies to (NULL = everyone).
    * @return roleId
    */
-  @Valid 
+  
   @JsonProperty("roleId")
-  public @Nullable UUID getRoleId() {
+  public @Nullable Optional<UUID> getRoleId() {
     return roleId;
   }
 
   @JsonProperty("roleId")
-  public void setRoleId(@Nullable UUID roleId) {
+  public void setRoleId(@Nullable Optional<UUID> roleId) {
     this.roleId = roleId;
   }
 
-  public UploadPolicyUpdate moduleCode(@Nullable String moduleCode) {
+  public UploadPolicyUpdate moduleCode(@Nullable Optional<String> moduleCode) {
     this.moduleCode = moduleCode;
     return this;
   }
@@ -65,18 +65,18 @@ public class UploadPolicyUpdate {
    * Feature area (assignments, quiz media, profile picture...).
    * @return moduleCode
    */
-  @Size(max = 60) 
+  
   @JsonProperty("moduleCode")
-  public @Nullable String getModuleCode() {
+  public @Nullable Optional<String> getModuleCode() {
     return moduleCode;
   }
 
   @JsonProperty("moduleCode")
-  public void setModuleCode(@Nullable String moduleCode) {
+  public void setModuleCode(@Nullable Optional<String> moduleCode) {
     this.moduleCode = moduleCode;
   }
 
-  public UploadPolicyUpdate operationCode(@Nullable String operationCode) {
+  public UploadPolicyUpdate operationCode(@Nullable Optional<String> operationCode) {
     this.operationCode = operationCode;
     return this;
   }
@@ -85,18 +85,18 @@ public class UploadPolicyUpdate {
    * Specific operation within the feature (e.g. create_question_image).
    * @return operationCode
    */
-  @Size(max = 60) 
+  
   @JsonProperty("operationCode")
-  public @Nullable String getOperationCode() {
+  public @Nullable Optional<String> getOperationCode() {
     return operationCode;
   }
 
   @JsonProperty("operationCode")
-  public void setOperationCode(@Nullable String operationCode) {
+  public void setOperationCode(@Nullable Optional<String> operationCode) {
     this.operationCode = operationCode;
   }
 
-  public UploadPolicyUpdate maxSizeBytes(@Nullable String maxSizeBytes) {
+  public UploadPolicyUpdate maxSizeBytes(@Nullable Optional<String> maxSizeBytes) {
     this.maxSizeBytes = maxSizeBytes;
     return this;
   }
@@ -105,18 +105,18 @@ public class UploadPolicyUpdate {
    * Maximum file size in bytes (NULL = platform default).
    * @return maxSizeBytes
    */
-  @Pattern(regexp = "^-?[0-9]+$") 
+  
   @JsonProperty("maxSizeBytes")
-  public @Nullable String getMaxSizeBytes() {
+  public @Nullable Optional<String> getMaxSizeBytes() {
     return maxSizeBytes;
   }
 
   @JsonProperty("maxSizeBytes")
-  public void setMaxSizeBytes(@Nullable String maxSizeBytes) {
+  public void setMaxSizeBytes(@Nullable Optional<String> maxSizeBytes) {
     this.maxSizeBytes = maxSizeBytes;
   }
 
-  public UploadPolicyUpdate allowedExtensions(@Nullable String allowedExtensions) {
+  public UploadPolicyUpdate allowedExtensions(@Nullable Optional<String> allowedExtensions) {
     this.allowedExtensions = allowedExtensions;
     return this;
   }
@@ -125,14 +125,14 @@ public class UploadPolicyUpdate {
    * Comma-separated allowed extensions (NULL = platform default list).
    * @return allowedExtensions
    */
-  @Size(max = 500) 
+  
   @JsonProperty("allowedExtensions")
-  public @Nullable String getAllowedExtensions() {
+  public @Nullable Optional<String> getAllowedExtensions() {
     return allowedExtensions;
   }
 
   @JsonProperty("allowedExtensions")
-  public void setAllowedExtensions(@Nullable String allowedExtensions) {
+  public void setAllowedExtensions(@Nullable Optional<String> allowedExtensions) {
     this.allowedExtensions = allowedExtensions;
   }
 

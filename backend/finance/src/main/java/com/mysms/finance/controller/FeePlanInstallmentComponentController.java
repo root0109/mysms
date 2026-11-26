@@ -69,11 +69,10 @@ public class FeePlanInstallmentComponentController implements FeePlanInstallment
     @Override
     public ResponseEntity<FeePlanInstallmentComponent> updateFeePlanInstallmentComponent(
             UUID feePlanInstallmentComponentId, String ifMatch,
-            FeePlanInstallmentComponentUpdate feePlanInstallmentComponentUpdate, String updateMask,
-            Boolean validateOnly) {
+            FeePlanInstallmentComponentUpdate feePlanInstallmentComponentUpdate, Boolean validateOnly) {
         FeePlanInstallmentComponent updated =
                 feePlanInstallmentComponentService.updateFeePlanInstallmentComponent(feePlanInstallmentComponentId,
-                        ifMatch, feePlanInstallmentComponentUpdate, updateMask,
+                        ifMatch, feePlanInstallmentComponentUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

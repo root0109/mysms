@@ -61,7 +61,7 @@ class CommsReferenceCleanupComponentTest {
     @TestFactory
     List<DynamicTest> everyReferenceIsCleanedUpWhenItsOwnerIsDeleted() throws IOException {
         JsonNode spec;
-        try (InputStream in = getClass().getResourceAsStream("/reference-cleanup.json")) {
+        try (InputStream in = getClass().getResourceAsStream("/comms/reference-cleanup.json")) {
             spec = JsonMapper.builder().build().readTree(in);
         }
         List<DynamicTest> tests = new ArrayList<>();

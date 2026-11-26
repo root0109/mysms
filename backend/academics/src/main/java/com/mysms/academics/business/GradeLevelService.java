@@ -28,7 +28,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,8 +51,6 @@ public class GradeLevelService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "academics.grade_level.create";
     static final String PERMISSION_UPDATE = "academics.grade_level.update";
     static final String PERMISSION_DELETE = "academics.grade_level.delete";
-    /** The contract's GradeLevelUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("institutionId", "name", "slug", "sortOrder", "isActive");
 
 
     private final GradeLevelRepository repository;
@@ -120,13 +118,11 @@ public class GradeLevelService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match. A field the request leaves out is kept, a null one is cleared and a
+     * value is set (§7.2). The merged row is validated as a whole, and must stay within the caller's scope.
      */
-    public GradeLevel updateGradeLevel(UUID id, String ifMatch, GradeLevelUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public GradeLevel updateGradeLevel(UUID id, String ifMatch, GradeLevelUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             GradeLevelEntity entity = loadVisible(scope, id);
@@ -134,7 +130,7 @@ public class GradeLevelService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -191,18 +187,15 @@ public class GradeLevelService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected GradeLevelUpdate fields; explicit per field so a mask can clear values (no reflection). */
-    private static void apply(GradeLevelEntity entity, GradeLevelUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "name" -> entity.setName(changes.getName());
-                case "slug" -> entity.setSlug(changes.getSlug());
-                case "sortOrder" -> entity.setSortOrder(changes.getSortOrder());
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(GradeLevelEntity entity, GradeLevelUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("name", changes.getName(), entity::setName);
+        patch.apply("slug", changes.getSlug(), entity::setSlug);
+        patch.apply("sortOrder", changes.getSortOrder(), entity::setSortOrder);
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

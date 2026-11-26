@@ -86,8 +86,7 @@ public class NoticeResolver extends NoticeServiceGrpc.NoticeServiceImplBase {
     public void updateNotice(UpdateNoticeRequest request, StreamObserver<UpdateNoticeResponse> out) {
         Notice updated = service.updateNotice(bridge.id(request.getNotice().getId(), "id"),
                 bridge.requiredIfMatch(request.getNotice().getEtag()),
-                bridge.changes(request.getNotice(), request.getUpdateMask(), NoticeUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getNotice(), request.getUpdateMask(), NoticeUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNoticeResponse.newBuilder(), NOTICE, updated).build());
     }
 
@@ -127,7 +126,7 @@ public class NoticeResolver extends NoticeServiceGrpc.NoticeServiceImplBase {
                 bridge.id(request.getNoticeVersion().getId(), "id"),
                 bridge.requiredIfMatch(request.getNoticeVersion().getEtag()),
                 bridge.changes(request.getNoticeVersion(), request.getUpdateMask(), NoticeVersionUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNoticeVersionResponse.newBuilder(), NOTICE_VERSION, updated).build());
     }
 
@@ -179,7 +178,7 @@ public class NoticeResolver extends NoticeServiceGrpc.NoticeServiceImplBase {
                 bridge.id(request.getNoticeTranslation().getId(), "id"),
                 bridge.requiredIfMatch(request.getNoticeTranslation().getEtag()),
                 bridge.changes(request.getNoticeTranslation(), request.getUpdateMask(), NoticeTranslationUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNoticeTranslationResponse.newBuilder(), NOTICE_TRANSLATION, updated)
                 .build());
     }

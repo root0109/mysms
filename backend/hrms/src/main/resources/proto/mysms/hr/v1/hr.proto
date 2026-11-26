@@ -1,0 +1,813 @@
+// MySMS gRPC contract. Generated from the MySMS API specification; do not edit by hand.
+syntax = "proto3";
+
+package mysms.hr.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "mysms/common/v1/common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "HrProto";
+option java_package = "com.mysms.hr.v1";
+
+// DesignationService: operations on the Designation aggregate.
+service DesignationService {
+  // List Designations.
+  rpc ListDesignations(ListDesignationsRequest) returns (ListDesignationsResponse);
+  // Get Designation.
+  rpc GetDesignation(GetDesignationRequest) returns (GetDesignationResponse);
+  // Create Designation.
+  rpc CreateDesignation(CreateDesignationRequest) returns (CreateDesignationResponse);
+  // Update Designation.
+  rpc UpdateDesignation(UpdateDesignationRequest) returns (UpdateDesignationResponse);
+  // Soft-delete Designation.
+  rpc DeleteDesignation(DeleteDesignationRequest) returns (DeleteDesignationResponse);
+}
+
+// StaffService: operations on the Staff aggregate.
+service StaffService {
+  // List Staff.
+  rpc ListStaff(ListStaffRequest) returns (ListStaffResponse);
+  // Get Staff.
+  rpc GetStaff(GetStaffRequest) returns (GetStaffResponse);
+  // Create Staff.
+  rpc CreateStaff(CreateStaffRequest) returns (CreateStaffResponse);
+  // Update Staff.
+  rpc UpdateStaff(UpdateStaffRequest) returns (UpdateStaffResponse);
+  // Soft-delete Staff.
+  rpc DeleteStaff(DeleteStaffRequest) returns (DeleteStaffResponse);
+  // List StaffDepartments.
+  rpc ListStaffDepartments(ListStaffDepartmentsRequest) returns (ListStaffDepartmentsResponse);
+  // Get StaffDepartment.
+  rpc GetStaffDepartment(GetStaffDepartmentRequest) returns (GetStaffDepartmentResponse);
+  // Create StaffDepartment.
+  rpc CreateStaffDepartment(CreateStaffDepartmentRequest) returns (CreateStaffDepartmentResponse);
+  // Update StaffDepartment.
+  rpc UpdateStaffDepartment(UpdateStaffDepartmentRequest) returns (UpdateStaffDepartmentResponse);
+  // Soft-delete StaffDepartment.
+  rpc DeleteStaffDepartment(DeleteStaffDepartmentRequest) returns (DeleteStaffDepartmentResponse);
+  // Activate, deactivate or exit.
+  rpc ChangeStaffStatus(ChangeStaffStatusRequest) returns (ChangeStaffStatusResponse);
+  // Create the staff login account.
+  rpc CreateStaffPortalAccount(CreateStaffPortalAccountRequest) returns (CreateStaffPortalAccountResponse);
+  // Entitlement, taken, pending and available days per leave type.
+  rpc GetStaffLeaveBalance(GetStaffLeaveBalanceRequest) returns (GetStaffLeaveBalanceResponse);
+}
+
+// LeaveTypeService: operations on the LeaveType aggregate.
+service LeaveTypeService {
+  // List LeaveTypes.
+  rpc ListLeaveTypes(ListLeaveTypesRequest) returns (ListLeaveTypesResponse);
+  // Get LeaveType.
+  rpc GetLeaveType(GetLeaveTypeRequest) returns (GetLeaveTypeResponse);
+  // Create LeaveType.
+  rpc CreateLeaveType(CreateLeaveTypeRequest) returns (CreateLeaveTypeResponse);
+  // Update LeaveType.
+  rpc UpdateLeaveType(UpdateLeaveTypeRequest) returns (UpdateLeaveTypeResponse);
+  // Soft-delete LeaveType.
+  rpc DeleteLeaveType(DeleteLeaveTypeRequest) returns (DeleteLeaveTypeResponse);
+}
+
+// LeaveApplicationService: operations on the LeaveApplication aggregate.
+service LeaveApplicationService {
+  // List LeaveApplications.
+  rpc ListLeaveApplications(ListLeaveApplicationsRequest) returns (ListLeaveApplicationsResponse);
+  // Get LeaveApplication.
+  rpc GetLeaveApplication(GetLeaveApplicationRequest) returns (GetLeaveApplicationResponse);
+  // Create LeaveApplication.
+  rpc CreateLeaveApplication(CreateLeaveApplicationRequest) returns (CreateLeaveApplicationResponse);
+  // Update LeaveApplication.
+  rpc UpdateLeaveApplication(UpdateLeaveApplicationRequest) returns (UpdateLeaveApplicationResponse);
+  // Soft-delete LeaveApplication.
+  rpc DeleteLeaveApplication(DeleteLeaveApplicationRequest) returns (DeleteLeaveApplicationResponse);
+  // Approve.
+  rpc ApproveLeave(ApproveLeaveRequest) returns (ApproveLeaveResponse);
+  // Reject.
+  rpc RejectLeave(RejectLeaveRequest) returns (RejectLeaveResponse);
+  // Withdraw by applicant.
+  rpc CancelLeave(CancelLeaveRequest) returns (CancelLeaveResponse);
+}
+
+message ListDesignationsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListDesignationsResponse {
+  repeated Designation items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetDesignationRequest {
+  // Designation id (UUID).
+  string id = 1;
+}
+message GetDesignationResponse {
+  Designation designation = 1;
+}
+
+message CreateDesignationRequest {
+  Designation designation = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateDesignationResponse {
+  Designation designation = 1;
+}
+
+message UpdateDesignationRequest {
+  // Resource with id and etag set.
+  Designation designation = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateDesignationResponse {
+  Designation designation = 1;
+}
+
+message DeleteDesignationRequest {
+  // Designation id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteDesignationResponse {
+}
+
+message ListStaffRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListStaffResponse {
+  repeated Staff items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetStaffRequest {
+  // Staff id (UUID).
+  string id = 1;
+}
+message GetStaffResponse {
+  Staff staff = 1;
+}
+
+message CreateStaffRequest {
+  Staff staff = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateStaffResponse {
+  Staff staff = 1;
+}
+
+message UpdateStaffRequest {
+  // Resource with id and etag set.
+  Staff staff = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateStaffResponse {
+  Staff staff = 1;
+}
+
+message DeleteStaffRequest {
+  // Staff id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteStaffResponse {
+}
+
+message ListStaffDepartmentsRequest {
+  // Staff id (UUID).
+  string staff_id = 1;
+  // Filter expression (AIP-160 subset).
+  string filter = 4;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 6;
+  // Fields 2 (page_size), 3 (page_token), 5 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 2, 3, 5;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListStaffDepartmentsResponse {
+  repeated StaffDepartment items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetStaffDepartmentRequest {
+  // Staff id (UUID).
+  string staff_id = 1;
+  // StaffDepartment id (UUID).
+  string id = 2;
+}
+message GetStaffDepartmentResponse {
+  StaffDepartment staff_department = 1;
+}
+
+message CreateStaffDepartmentRequest {
+  // Staff id (UUID).
+  string staff_id = 1;
+  StaffDepartment staff_department = 2;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message CreateStaffDepartmentResponse {
+  StaffDepartment staff_department = 1;
+}
+
+message UpdateStaffDepartmentRequest {
+  // Staff id (UUID).
+  string staff_id = 1;
+  // Resource with id and etag set.
+  StaffDepartment staff_department = 2;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 3;
+  // Validate without persisting.
+  bool validate_only = 4;
+}
+message UpdateStaffDepartmentResponse {
+  StaffDepartment staff_department = 1;
+}
+
+message DeleteStaffDepartmentRequest {
+  // Staff id (UUID).
+  string staff_id = 1;
+  // StaffDepartment id (UUID).
+  string id = 2;
+  // ETag from the last read.
+  string etag = 3;
+}
+message DeleteStaffDepartmentResponse {
+}
+
+message ListLeaveTypesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListLeaveTypesResponse {
+  repeated LeaveType items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetLeaveTypeRequest {
+  // LeaveType id (UUID).
+  string id = 1;
+}
+message GetLeaveTypeResponse {
+  LeaveType leave_type = 1;
+}
+
+message CreateLeaveTypeRequest {
+  LeaveType leave_type = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateLeaveTypeResponse {
+  LeaveType leave_type = 1;
+}
+
+message UpdateLeaveTypeRequest {
+  // Resource with id and etag set.
+  LeaveType leave_type = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateLeaveTypeResponse {
+  LeaveType leave_type = 1;
+}
+
+message DeleteLeaveTypeRequest {
+  // LeaveType id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteLeaveTypeResponse {
+}
+
+message ListLeaveApplicationsRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListLeaveApplicationsResponse {
+  repeated LeaveApplication items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetLeaveApplicationRequest {
+  // LeaveApplication id (UUID).
+  string id = 1;
+}
+message GetLeaveApplicationResponse {
+  LeaveApplication leave_application = 1;
+}
+
+message CreateLeaveApplicationRequest {
+  LeaveApplication leave_application = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateLeaveApplicationResponse {
+  LeaveApplication leave_application = 1;
+}
+
+message UpdateLeaveApplicationRequest {
+  // Resource with id and etag set.
+  LeaveApplication leave_application = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateLeaveApplicationResponse {
+  LeaveApplication leave_application = 1;
+}
+
+message DeleteLeaveApplicationRequest {
+  // LeaveApplication id (UUID).
+  string id = 1;
+  // ETag from the last read.
+  string etag = 2;
+}
+message DeleteLeaveApplicationResponse {
+}
+
+message ChangeStaffStatusRequest {
+  // Path parameter staffId.
+  string staff_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // New status. Required.
+  Status status = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "inactive"
+    STATUS_INACTIVE = 2;
+    // "exited"
+    STATUS_EXITED = 3;
+  }
+}
+message ChangeStaffStatusResponse {
+  Staff staff = 1;
+}
+
+message CreateStaffPortalAccountRequest {
+  // Path parameter staffId.
+  string staff_id = 1;
+  // Send invitation.
+  optional bool send_invite = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message CreateStaffPortalAccountResponse {
+  Staff staff = 1;
+}
+
+message GetStaffLeaveBalanceRequest {
+  // Path parameter staffId.
+  string staff_id = 1;
+  // Year (default current).
+  optional string academic_year_id = 2;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 3 (page_size), 4 (page_token) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 3, 4;
+  reserved "page_size", "page_token";
+}
+message GetStaffLeaveBalanceResponse {
+  repeated mysms.common.v1.LeaveBalanceSummary items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 3;
+  // Fields 2 (next_page_token) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2;
+  reserved "next_page_token";
+}
+
+message ApproveLeaveRequest {
+  // Path parameter leaveApplicationId.
+  string leave_application_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message ApproveLeaveResponse {
+  LeaveApplication leave_application = 1;
+}
+
+message RejectLeaveRequest {
+  // Path parameter leaveApplicationId.
+  string leave_application_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message RejectLeaveResponse {
+  LeaveApplication leave_application = 1;
+}
+
+message CancelLeaveRequest {
+  // Path parameter leaveApplicationId.
+  string leave_application_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Reason / comment recorded with the transition.
+  optional string reason = 3;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 4;
+}
+message CancelLeaveResponse {
+  LeaveApplication leave_application = 1;
+}
+
+// Staff designation catalogue (Principal, Teacher, Accountant, Driver...).
+message Designation {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Designation code.
+  string code = 2;
+  // Designation name.
+  string name = 3;
+  // Teaching or non-teaching.
+  StaffCategory staff_category = 4;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 5;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 6;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 7;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 8;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 9;
+  // Allowed values of staff_category; REST/JSON uses the lowercase value shown in each comment.
+  enum StaffCategory {
+    STAFF_CATEGORY_UNSPECIFIED = 0;
+    // "teaching"
+    STAFF_CATEGORY_TEACHING = 1;
+    // "non_teaching"
+    STAFF_CATEGORY_NON_TEACHING = 2;
+  }
+  // Display order.
+  optional int32 sort_order = 10;
+  // Whether offered for new picks.
+  optional bool is_active = 11;
+}
+
+// Employee / faculty member of an institution.
+message Staff {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Person. [UUID]
+  string person_id = 2;
+  // Staff login account. [UUID]
+  optional string user_id = 3;
+  // Employing institution. [UUID]
+  string institution_id = 4;
+  // Employee number.
+  optional string employee_code = 5;
+  // Designation. [UUID]
+  optional string designation_id = 6;
+  // Designation detail.
+  optional string sub_designation = 7;
+  // Employment type.
+  EmploymentType employment_type = 8;
+  // Date of joining. [ISO-8601 date (YYYY-MM-DD)]
+  optional string joining_date = 9;
+  // Line manager (any user account, staff or administrator). [UUID]
+  optional string reporting_to_staff_id = 10;
+  // Main department. [UUID]
+  optional string primary_department_id = 11;
+  // Highest qualification. [UUID]
+  optional string highest_qualification_id = 12;
+  // Qualification detail.
+  optional string qualification_detail = 13;
+  // Specialisation.
+  optional string specialization = 14;
+  // Interests / extra responsibilities.
+  optional string interests = 15;
+  // Teaching-load ceiling in periods.
+  optional int32 max_periods_per_week = 16;
+  // Employment state. Changed only through the workflow operations. Output only.
+  Status status = 17;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 18;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 19;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 20;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 21;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 22;
+  // Allowed values of employment_type; REST/JSON uses the lowercase value shown in each comment.
+  enum EmploymentType {
+    EMPLOYMENT_TYPE_UNSPECIFIED = 0;
+    // "full_time"
+    EMPLOYMENT_TYPE_FULL_TIME = 1;
+    // "part_time"
+    EMPLOYMENT_TYPE_PART_TIME = 2;
+    // "contract"
+    EMPLOYMENT_TYPE_CONTRACT = 3;
+    // "visiting"
+    EMPLOYMENT_TYPE_VISITING = 4;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "active"
+    STATUS_ACTIVE = 1;
+    // "inactive"
+    STATUS_INACTIVE = 2;
+    // "exited"
+    STATUS_EXITED = 3;
+  }
+}
+
+// Departments a staff member may work in.
+message StaffDepartment {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Staff member. [UUID] Set from the parent path on create.
+  string staff_id = 2;
+  // Department. [UUID]
+  string department_id = 3;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 4;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 5;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 6;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 7;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 8;
+}
+
+// Leave category with an annual entitlement.
+message LeaveType {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Year the entitlement applies to (NULL = every year). [UUID]
+  optional string academic_year_id = 3;
+  // Leave type.
+  string name = 4;
+  // Entitlement in days. [Decimal string]
+  string max_days_per_year = 5;
+  // Whether usable.
+  bool is_active = 6;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 7;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 8;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 9;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 10;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 11;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 12;
+  // Display order.
+  optional int32 sort_order = 13;
+}
+
+// Staff leave request and decision.
+message LeaveApplication {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Institution. [UUID]
+  string institution_id = 2;
+  // Academic year. [UUID]
+  string academic_year_id = 3;
+  // Applicant. [UUID]
+  string staff_id = 4;
+  // Leave type. [UUID]
+  optional string leave_type_id = 5;
+  // Reason category. [UUID]
+  optional string absence_reason_id = 6;
+  // Class whose cover is affected. [UUID]
+  optional string class_section_id = 7;
+  // Leave start.
+  google.protobuf.Timestamp from_at = 8;
+  // Leave end.
+  google.protobuf.Timestamp to_at = 9;
+  // Part of day for single-day leave.
+  DayPart day_part = 10;
+  // Applicant remarks.
+  optional string remarks = 11;
+  // Decision state. Changed only through the workflow operations. Output only.
+  Status status = 12;
+  // Approver. [UUID]
+  optional string decided_by_user_id = 13;
+  // Decision date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string decided_on = 14;
+  // Approver comments.
+  optional string decision_comments = 15;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 16;
+  // User account that created the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string created_by = 17;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 18;
+  // User account that last updated the row (audit reference to iam.user_account; not FK-constrained). [UUID] Output only.
+  optional string updated_by = 19;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 20;
+  // Allowed values of day_part; REST/JSON uses the lowercase value shown in each comment.
+  enum DayPart {
+    DAY_PART_UNSPECIFIED = 0;
+    // "full_day"
+    DAY_PART_FULL_DAY = 1;
+    // "forenoon"
+    DAY_PART_FORENOON = 2;
+    // "afternoon"
+    DAY_PART_AFTERNOON = 3;
+  }
+  // Allowed values of status; REST/JSON uses the lowercase value shown in each comment.
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    // "pending"
+    STATUS_PENDING = 1;
+    // "approved"
+    STATUS_APPROVED = 2;
+    // "rejected"
+    STATUS_REJECTED = 3;
+    // "cancelled"
+    STATUS_CANCELLED = 4;
+    // "completed"
+    STATUS_COMPLETED = 5;
+  }
+}
+
+// Leave entitlement and usage for one staff member, leave type and year; updated when applications are approved.
+message LeaveBalance {
+  // Surrogate primary key (UUIDv7 generated by the application; database default is a v4 fallback). [UUID] Output only.
+  string id = 1;
+  // Staff member. [UUID]
+  string staff_id = 2;
+  // Leave type. [UUID]
+  string leave_type_id = 3;
+  // Year the balance is tracked for. [UUID]
+  optional string academic_year_id = 4;
+  // Days granted for the year. [Decimal string]
+  string entitled_days = 5;
+  // Days consumed by approved applications. [Decimal string] Output only.
+  optional string used_days = 6;
+  // Days carried in from the previous year. [Decimal string]
+  optional string carried_forward_days = 7;
+  // Row creation time. Output only.
+  google.protobuf.Timestamp create_time = 8;
+  // User account that created the row (audit reference). [UUID] Output only.
+  optional string created_by = 9;
+  // Last update time. Output only.
+  google.protobuf.Timestamp update_time = 10;
+  // User account that last updated the row (audit reference). [UUID] Output only.
+  optional string updated_by = 11;
+  // Entity tag (row version). Output only on reads; send back on update/delete.
+  string etag = 12;
+}
+
+message ListLeaveBalancesRequest {
+  // Filter expression (AIP-160 subset).
+  string filter = 3;
+  // The page to read: number, size, sort and the cursor of a next page (api/README "Pagination").
+  mysms.common.v1.PageableRequest pageable = 5;
+  // Fields 1 (page_size), 2 (page_token), 4 (order_by) replaced by pageable: one-based pages, repeated sort
+  // criteria and a cursor carried by the response's pagination.
+  reserved 1, 2, 4;
+  reserved "page_size", "page_token", "order_by";
+}
+message ListLeaveBalancesResponse {
+  repeated LeaveBalance items = 1;
+  // Where this page is and how to reach the next one (api/README "Pagination").
+  mysms.common.v1.Pagination pagination = 4;
+  // Fields 2 (next_page_token), 3 (total_size) replaced by pagination; lists no longer count their
+  // rows.
+  reserved 2, 3;
+  reserved "next_page_token", "total_size";
+}
+
+message GetLeaveBalanceRequest {
+  // LeaveBalance id (UUID).
+  string id = 1;
+}
+message GetLeaveBalanceResponse {
+  LeaveBalance leave_balance = 1;
+}
+
+message CreateLeaveBalanceRequest {
+  LeaveBalance leave_balance = 1;
+  // Idempotency key (UUID); retries with the same key return the original result.
+  string request_id = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message CreateLeaveBalanceResponse {
+  LeaveBalance leave_balance = 1;
+}
+
+message UpdateLeaveBalanceRequest {
+  // Resource with id and etag set.
+  LeaveBalance leave_balance = 1;
+  // Fields to update; empty = all fields present.
+  google.protobuf.FieldMask update_mask = 2;
+  // Validate without persisting.
+  bool validate_only = 3;
+}
+message UpdateLeaveBalanceResponse {
+  LeaveBalance leave_balance = 1;
+}
+
+// LeaveBalanceService: operations on the LeaveBalance aggregate.
+service LeaveBalanceService {
+  // List LeaveBalances.
+  rpc ListLeaveBalances(ListLeaveBalancesRequest) returns (ListLeaveBalancesResponse);
+  // Get LeaveBalance.
+  rpc GetLeaveBalance(GetLeaveBalanceRequest) returns (GetLeaveBalanceResponse);
+  // Create LeaveBalance.
+  rpc CreateLeaveBalance(CreateLeaveBalanceRequest) returns (CreateLeaveBalanceResponse);
+  // Update LeaveBalance.
+  rpc UpdateLeaveBalance(UpdateLeaveBalanceRequest) returns (UpdateLeaveBalanceResponse);
+}

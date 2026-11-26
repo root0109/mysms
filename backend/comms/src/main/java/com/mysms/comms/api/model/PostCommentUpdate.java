@@ -16,24 +16,24 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of PostComment that can be updated (partial update; see updateMask).
+ * Fields of PostComment that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class PostCommentUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID parentCommentId;
+  private @Nullable Optional<UUID> parentCommentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String body;
+  private @Nullable Optional<@NotNull String> body;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID attachmentFileId;
+  private @Nullable Optional<UUID> attachmentFileId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public PostCommentUpdate parentCommentId(@Nullable UUID parentCommentId) {
+  public PostCommentUpdate parentCommentId(@Nullable Optional<UUID> parentCommentId) {
     this.parentCommentId = parentCommentId;
     return this;
   }
@@ -42,18 +42,18 @@ public class PostCommentUpdate {
    * Comment replied to.
    * @return parentCommentId
    */
-  @Valid 
+  
   @JsonProperty("parentCommentId")
-  public @Nullable UUID getParentCommentId() {
+  public @Nullable Optional<UUID> getParentCommentId() {
     return parentCommentId;
   }
 
   @JsonProperty("parentCommentId")
-  public void setParentCommentId(@Nullable UUID parentCommentId) {
+  public void setParentCommentId(@Nullable Optional<UUID> parentCommentId) {
     this.parentCommentId = parentCommentId;
   }
 
-  public PostCommentUpdate body(@Nullable String body) {
+  public PostCommentUpdate body(@Nullable Optional<String> body) {
     this.body = body;
     return this;
   }
@@ -64,16 +64,16 @@ public class PostCommentUpdate {
    */
   
   @JsonProperty("body")
-  public @Nullable String getBody() {
+  public @Nullable Optional<String> getBody() {
     return body;
   }
 
   @JsonProperty("body")
-  public void setBody(@Nullable String body) {
+  public void setBody(@Nullable Optional<String> body) {
     this.body = body;
   }
 
-  public PostCommentUpdate attachmentFileId(@Nullable UUID attachmentFileId) {
+  public PostCommentUpdate attachmentFileId(@Nullable Optional<UUID> attachmentFileId) {
     this.attachmentFileId = attachmentFileId;
     return this;
   }
@@ -82,18 +82,18 @@ public class PostCommentUpdate {
    * Attachment.
    * @return attachmentFileId
    */
-  @Valid 
+  
   @JsonProperty("attachmentFileId")
-  public @Nullable UUID getAttachmentFileId() {
+  public @Nullable Optional<UUID> getAttachmentFileId() {
     return attachmentFileId;
   }
 
   @JsonProperty("attachmentFileId")
-  public void setAttachmentFileId(@Nullable UUID attachmentFileId) {
+  public void setAttachmentFileId(@Nullable Optional<UUID> attachmentFileId) {
     this.attachmentFileId = attachmentFileId;
   }
 
-  public PostCommentUpdate isActive(@Nullable Boolean isActive) {
+  public PostCommentUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -104,12 +104,12 @@ public class PostCommentUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

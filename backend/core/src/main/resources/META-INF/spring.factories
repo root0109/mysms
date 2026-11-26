@@ -1,1 +1,2 @@
-org.springframework.boot.EnvironmentPostProcessor=com.mysms.core.config.ModulePropertiesEnvironmentPostProcessor
+org.springframework.boot.EnvironmentPostProcessor=com.mysms.core.config.ModulePropertiesEnvironmentPostProcessor,\
+com.mysms.core.config.OpenApiGroupsEnvironmentPostProcessor

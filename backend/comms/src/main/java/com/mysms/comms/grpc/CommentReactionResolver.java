@@ -62,7 +62,7 @@ public class CommentReactionResolver extends CommentReactionServiceGrpc.CommentR
                 bridge.id(request.getCommentReaction().getId(), "id"),
                 bridge.requiredIfMatch(request.getCommentReaction().getEtag()),
                 bridge.changes(request.getCommentReaction(), request.getUpdateMask(), CommentReactionUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCommentReactionResponse.newBuilder(), "comment_reaction", updated)
                 .build());
     }

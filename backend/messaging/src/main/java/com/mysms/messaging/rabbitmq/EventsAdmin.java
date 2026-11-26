@@ -15,7 +15,8 @@ import java.util.Map;
  * </pre>
  *
  * <ul>
- *   <li>{@code replay-dead <module> [max]}: returns a module's dead-lettered events to its queue.</li>
+ *   <li>{@code replay-dead <area> [max]}: returns a consuming area's dead-lettered events to its queue (one call per
+ *   area of a multi-area module).</li>
  *   <li>{@code replay-unrouted [max]}: publishes again the events no queue was bound to.</li>
  * </ul>
  * The broker user needs the {@code impersonator} tag: replayed events keep their original publisher's {@code user-id}.
@@ -35,7 +36,7 @@ public final class EventsAdmin {
     static int run(String[] args, Map<String, String> environment, PrintStream out, PrintStream err) {
         String uri = environment.getOrDefault("MYSMS_RABBITMQ_URI", "");
         if (args.length == 0 || uri.isBlank()) {
-            err.println("usage: MYSMS_RABBITMQ_URI=amqp(s)://... EventsAdmin replay-dead <module> [max] | "
+            err.println("usage: MYSMS_RABBITMQ_URI=amqp(s)://... EventsAdmin replay-dead <area> [max] | "
                     + "replay-unrouted [max]   (MYSMS_RABBITMQ_EXCHANGE, default mysms.events)");
             return 2;
         }
@@ -45,7 +46,7 @@ public final class EventsAdmin {
             switch (args[0]) {
                 case "replay-dead" -> {
                     if (args.length < 2) {
-                        err.println("replay-dead needs the consuming module");
+                        err.println("replay-dead needs the consuming area");
                         return 2;
                     }
                     out.println("returned " + bus.replayDead(args[1], max(args, 2)) + " events to "

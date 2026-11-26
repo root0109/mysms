@@ -63,8 +63,7 @@ public class LegalHoldResolver extends LegalHoldServiceGrpc.LegalHoldServiceImpl
     public void updateLegalHold(UpdateLegalHoldRequest request, StreamObserver<UpdateLegalHoldResponse> out) {
         LegalHold updated = service.updateLegalHold(bridge.id(request.getLegalHold().getId(), "id"),
                 bridge.requiredIfMatch(request.getLegalHold().getEtag()),
-                bridge.changes(request.getLegalHold(), request.getUpdateMask(), LegalHoldUpdate.class),
-                bridge.updateMask(request.getUpdateMask()));
+                bridge.changes(request.getLegalHold(), request.getUpdateMask(), LegalHoldUpdate.class));
         ProtoBridge.send(out, bridge.reply(UpdateLegalHoldResponse.newBuilder(), LEGAL_HOLD, updated).build());
     }
 

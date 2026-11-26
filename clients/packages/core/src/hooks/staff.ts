@@ -6,13 +6,15 @@ import {
   useQueryClient,
   type QueryClient,
 } from '@tanstack/react-query';
-import type { hr, org } from '@mysms/sdk';
+import type { academics, hr, org } from '@mysms/sdk';
+import { TeacherSubjectApi } from '@mysms/sdk/academics/apis/TeacherSubjectApi';
 import { DesignationApi } from '@mysms/sdk/hr/apis/DesignationApi';
 import { LeaveBalanceApi } from '@mysms/sdk/hr/apis/LeaveBalanceApi';
 import { StaffApi } from '@mysms/sdk/hr/apis/StaffApi';
 import { DepartmentApi } from '@mysms/sdk/org/apis/DepartmentApi';
 import { PersonApi } from '@mysms/sdk/people/apis/PersonApi';
 import { FIRST_PAGE, allPages, nextPage, pageQuery } from '../api/pages';
+import { patchOf } from '../api/patch';
 import { call, callWithEtag } from '../api/unwrap';
 import { queryKey } from '../query/keys';
 import { STALE_TIME } from '../query/queryClient';
@@ -23,7 +25,8 @@ export type Staff = hr.Staff;
 export type StaffStatus = NonNullable<Staff['status']>;
 export type StaffEmploymentType = NonNullable<Staff['employmentType']>;
 export type StaffDepartment = hr.StaffDepartment;
-export type StaffSubject = hr.StaffSubject;
+/** A subject the teacher can teach: academics' teacher profile (academics.teacher_subject, keyed by the staff id). */
+export type StaffSubject = academics.TeacherSubject;
 export type Designation = hr.Designation;
 export type Department = org.Department;
 export type LeaveBalance = hr.LeaveBalance;
@@ -263,8 +266,7 @@ export function useUpdateStaff() {
         api.get(StaffApi).updateStaff({
           staffId,
           ifMatch: etag,
-          updateMask: Object.keys(changes).join(','),
-          staffUpdate: changes,
+          staffUpdate: patchOf(changes),
         }),
       ),
     // also after a refusal (409 / 412): the screen then shows the record as it is now, with its new etag (ui/05 §6)
@@ -324,9 +326,13 @@ export function useCreateStaffPortalAccount() {
 export type StaffAssignmentKind = 'departments' | 'subjects';
 
 const ASSIGNMENTS = (kind: StaffAssignmentKind, staffId: string | null) =>
-  queryKey('hr', `staff-${kind}`, staffId);
+  kind === 'departments'
+    ? queryKey('hr', 'staff-departments', staffId)
+    : queryKey('academics', 'teacher-subjects', staffId);
 
-/** hr.ListStaffDepartments / hr.ListStaffSubjects: the departments or subjects of one staff member, all of them. */
+/**
+ * hr.ListStaffDepartments / academics.ListTeacherSubjects: the departments or subjects of one staff member, all of them.
+ */
 export function useStaffAssignments<K extends StaffAssignmentKind>(
   kind: K,
   staffId: string | null,
@@ -345,7 +351,11 @@ export function useStaffAssignments<K extends StaffAssignmentKind>(
               call(staff.listStaffDepartments({ staffId: id, size: 500, ...pageQuery(page) })),
             )
           : await allPages((page) =>
-              call(staff.listStaffSubjects({ staffId: id, size: 500, ...pageQuery(page) })),
+              call(
+                api
+                  .get(TeacherSubjectApi)
+                  .listTeacherSubjects({ filter: `staffId = "${id}"`, size: 500, ...pageQuery(page) }),
+              ),
             );
       return read.items as (K extends 'departments' ? StaffDepartment : StaffSubject)[];
     },
@@ -354,7 +364,7 @@ export function useStaffAssignments<K extends StaffAssignmentKind>(
 }
 
 /**
- * Adds, changes or removes one department or subject of a staff member (the standard child operations): `add`
+ * Adds, changes or removes one department (hr) or subject (academics' teacher profile) of a staff member: `add`
  * names the department or subject; `change` re-points a row under its etag; `remove` deletes it under its etag.
  * Naming one the staff member already has is 409.
  */
@@ -381,7 +391,6 @@ export function useStaffAssignmentStep(kind: StaffAssignmentKind) {
               staffId,
               staffDepartmentId: step.rowId,
               ifMatch: step.etag,
-              updateMask: 'departmentId',
               staffDepartmentUpdate: { departmentId: step.targetId },
             }),
           );
@@ -391,19 +400,18 @@ export function useStaffAssignmentStep(kind: StaffAssignmentKind) {
           );
         return;
       }
+      const subjects = api.get(TeacherSubjectApi);
       if (step.action === 'add')
-        await call(staff.createStaffSubject({ staffId, staffSubject: { subjectId: step.targetId } }));
+        await call(subjects.createTeacherSubject({ teacherSubject: { staffId, subjectId: step.targetId } }));
       else if (step.action === 'change')
         await call(
-          staff.updateStaffSubject({
-            staffId,
-            staffSubjectId: step.rowId,
+          subjects.updateTeacherSubject({
+            teacherSubjectId: step.rowId,
             ifMatch: step.etag,
-            updateMask: 'subjectId',
-            staffSubjectUpdate: { subjectId: step.targetId },
+            teacherSubjectUpdate: { subjectId: step.targetId },
           }),
         );
-      else await call(staff.deleteStaffSubject({ staffId, staffSubjectId: step.rowId, ifMatch: step.etag }));
+      else await call(subjects.deleteTeacherSubject({ teacherSubjectId: step.rowId, ifMatch: step.etag }));
     },
     onSettled: (_void, _error, { staffId }) => qc.invalidateQueries({ queryKey: ASSIGNMENTS(kind, staffId) }),
   });
@@ -493,7 +501,6 @@ export function useUpdateLeaveBalance() {
         api.get(LeaveBalanceApi).updateLeaveBalance({
           leaveBalanceId,
           ifMatch: etag,
-          updateMask: 'entitledDays,carriedForwardDays',
           // the column is never empty: no days carried forward is zero
           leaveBalanceUpdate: { entitledDays, carriedForwardDays: carriedForwardDays.trim() || '0' },
         }),

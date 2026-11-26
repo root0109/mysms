@@ -19,19 +19,19 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of ContentView that can be updated (partial update; see updateMask).
+ * Fields of ContentView that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class ContentViewUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID studentId;
+  private @Nullable Optional<@NotNull UUID> studentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID viewerUserId;
+  private @Nullable Optional<UUID> viewerUserId;
 
   /**
    * Content type.
@@ -73,16 +73,16 @@ public class ContentViewUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable ContentTypeEnum contentType;
+  private @Nullable Optional<@NotNull ContentTypeEnum> contentType;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID contentId;
+  private @Nullable Optional<@NotNull UUID> contentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime viewedAt;
+  private @Nullable Optional<OffsetDateTime> viewedAt;
 
-  public ContentViewUpdate institutionId(@Nullable UUID institutionId) {
+  public ContentViewUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -91,18 +91,18 @@ public class ContentViewUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public ContentViewUpdate studentId(@Nullable UUID studentId) {
+  public ContentViewUpdate studentId(@Nullable Optional<UUID> studentId) {
     this.studentId = studentId;
     return this;
   }
@@ -111,18 +111,18 @@ public class ContentViewUpdate {
    * Student.
    * @return studentId
    */
-  @Valid 
+  
   @JsonProperty("studentId")
-  public @Nullable UUID getStudentId() {
+  public @Nullable Optional<UUID> getStudentId() {
     return studentId;
   }
 
   @JsonProperty("studentId")
-  public void setStudentId(@Nullable UUID studentId) {
+  public void setStudentId(@Nullable Optional<UUID> studentId) {
     this.studentId = studentId;
   }
 
-  public ContentViewUpdate viewerUserId(@Nullable UUID viewerUserId) {
+  public ContentViewUpdate viewerUserId(@Nullable Optional<UUID> viewerUserId) {
     this.viewerUserId = viewerUserId;
     return this;
   }
@@ -131,18 +131,18 @@ public class ContentViewUpdate {
    * Guardian who viewed.
    * @return viewerUserId
    */
-  @Valid 
+  
   @JsonProperty("viewerUserId")
-  public @Nullable UUID getViewerUserId() {
+  public @Nullable Optional<UUID> getViewerUserId() {
     return viewerUserId;
   }
 
   @JsonProperty("viewerUserId")
-  public void setViewerUserId(@Nullable UUID viewerUserId) {
+  public void setViewerUserId(@Nullable Optional<UUID> viewerUserId) {
     this.viewerUserId = viewerUserId;
   }
 
-  public ContentViewUpdate contentType(@Nullable ContentTypeEnum contentType) {
+  public ContentViewUpdate contentType(@Nullable Optional<ContentTypeEnum> contentType) {
     this.contentType = contentType;
     return this;
   }
@@ -153,16 +153,16 @@ public class ContentViewUpdate {
    */
   
   @JsonProperty("contentType")
-  public @Nullable ContentTypeEnum getContentType() {
+  public @Nullable Optional<ContentTypeEnum> getContentType() {
     return contentType;
   }
 
   @JsonProperty("contentType")
-  public void setContentType(@Nullable ContentTypeEnum contentType) {
+  public void setContentType(@Nullable Optional<ContentTypeEnum> contentType) {
     this.contentType = contentType;
   }
 
-  public ContentViewUpdate contentId(@Nullable UUID contentId) {
+  public ContentViewUpdate contentId(@Nullable Optional<UUID> contentId) {
     this.contentId = contentId;
     return this;
   }
@@ -171,18 +171,18 @@ public class ContentViewUpdate {
    * Polymorphic id of the item viewed (table given by content_type).
    * @return contentId
    */
-  @Valid 
+  
   @JsonProperty("contentId")
-  public @Nullable UUID getContentId() {
+  public @Nullable Optional<UUID> getContentId() {
     return contentId;
   }
 
   @JsonProperty("contentId")
-  public void setContentId(@Nullable UUID contentId) {
+  public void setContentId(@Nullable Optional<UUID> contentId) {
     this.contentId = contentId;
   }
 
-  public ContentViewUpdate viewedAt(@Nullable OffsetDateTime viewedAt) {
+  public ContentViewUpdate viewedAt(@Nullable Optional<OffsetDateTime> viewedAt) {
     this.viewedAt = viewedAt;
     return this;
   }
@@ -191,14 +191,14 @@ public class ContentViewUpdate {
    * When viewed.
    * @return viewedAt
    */
-  @Valid 
+  
   @JsonProperty("viewedAt")
-  public @Nullable OffsetDateTime getViewedAt() {
+  public @Nullable Optional<OffsetDateTime> getViewedAt() {
     return viewedAt;
   }
 
   @JsonProperty("viewedAt")
-  public void setViewedAt(@Nullable OffsetDateTime viewedAt) {
+  public void setViewedAt(@Nullable Optional<OffsetDateTime> viewedAt) {
     this.viewedAt = viewedAt;
   }
 

@@ -16,30 +16,30 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of NotificationRule that can be updated (partial update; see updateMask).
+ * Fields of NotificationRule that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class NotificationRuleUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID roleId;
+  private @Nullable Optional<@NotNull UUID> roleId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID permissionId;
+  private @Nullable Optional<UUID> permissionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isEnabled;
+  private @Nullable Optional<@NotNull Boolean> isEnabled;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String emailSubjectTemplate;
+  private @Nullable Optional<String> emailSubjectTemplate;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String emailBodyTemplate;
+  private @Nullable Optional<String> emailBodyTemplate;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String smsTemplate;
+  private @Nullable Optional<String> smsTemplate;
 
-  public NotificationRuleUpdate roleId(@Nullable UUID roleId) {
+  public NotificationRuleUpdate roleId(@Nullable Optional<UUID> roleId) {
     this.roleId = roleId;
     return this;
   }
@@ -48,18 +48,18 @@ public class NotificationRuleUpdate {
    * Recipient role.
    * @return roleId
    */
-  @Valid 
+  
   @JsonProperty("roleId")
-  public @Nullable UUID getRoleId() {
+  public @Nullable Optional<UUID> getRoleId() {
     return roleId;
   }
 
   @JsonProperty("roleId")
-  public void setRoleId(@Nullable UUID roleId) {
+  public void setRoleId(@Nullable Optional<UUID> roleId) {
     this.roleId = roleId;
   }
 
-  public NotificationRuleUpdate permissionId(@Nullable UUID permissionId) {
+  public NotificationRuleUpdate permissionId(@Nullable Optional<UUID> permissionId) {
     this.permissionId = permissionId;
     return this;
   }
@@ -68,18 +68,18 @@ public class NotificationRuleUpdate {
    * Operation (permission) that triggers it.
    * @return permissionId
    */
-  @Valid 
+  
   @JsonProperty("permissionId")
-  public @Nullable UUID getPermissionId() {
+  public @Nullable Optional<UUID> getPermissionId() {
     return permissionId;
   }
 
   @JsonProperty("permissionId")
-  public void setPermissionId(@Nullable UUID permissionId) {
+  public void setPermissionId(@Nullable Optional<UUID> permissionId) {
     this.permissionId = permissionId;
   }
 
-  public NotificationRuleUpdate isEnabled(@Nullable Boolean isEnabled) {
+  public NotificationRuleUpdate isEnabled(@Nullable Optional<Boolean> isEnabled) {
     this.isEnabled = isEnabled;
     return this;
   }
@@ -90,16 +90,16 @@ public class NotificationRuleUpdate {
    */
   
   @JsonProperty("isEnabled")
-  public @Nullable Boolean getIsEnabled() {
+  public @Nullable Optional<Boolean> getIsEnabled() {
     return isEnabled;
   }
 
   @JsonProperty("isEnabled")
-  public void setIsEnabled(@Nullable Boolean isEnabled) {
+  public void setIsEnabled(@Nullable Optional<Boolean> isEnabled) {
     this.isEnabled = isEnabled;
   }
 
-  public NotificationRuleUpdate emailSubjectTemplate(@Nullable String emailSubjectTemplate) {
+  public NotificationRuleUpdate emailSubjectTemplate(@Nullable Optional<String> emailSubjectTemplate) {
     this.emailSubjectTemplate = emailSubjectTemplate;
     return this;
   }
@@ -110,16 +110,16 @@ public class NotificationRuleUpdate {
    */
   
   @JsonProperty("emailSubjectTemplate")
-  public @Nullable String getEmailSubjectTemplate() {
+  public @Nullable Optional<String> getEmailSubjectTemplate() {
     return emailSubjectTemplate;
   }
 
   @JsonProperty("emailSubjectTemplate")
-  public void setEmailSubjectTemplate(@Nullable String emailSubjectTemplate) {
+  public void setEmailSubjectTemplate(@Nullable Optional<String> emailSubjectTemplate) {
     this.emailSubjectTemplate = emailSubjectTemplate;
   }
 
-  public NotificationRuleUpdate emailBodyTemplate(@Nullable String emailBodyTemplate) {
+  public NotificationRuleUpdate emailBodyTemplate(@Nullable Optional<String> emailBodyTemplate) {
     this.emailBodyTemplate = emailBodyTemplate;
     return this;
   }
@@ -130,16 +130,16 @@ public class NotificationRuleUpdate {
    */
   
   @JsonProperty("emailBodyTemplate")
-  public @Nullable String getEmailBodyTemplate() {
+  public @Nullable Optional<String> getEmailBodyTemplate() {
     return emailBodyTemplate;
   }
 
   @JsonProperty("emailBodyTemplate")
-  public void setEmailBodyTemplate(@Nullable String emailBodyTemplate) {
+  public void setEmailBodyTemplate(@Nullable Optional<String> emailBodyTemplate) {
     this.emailBodyTemplate = emailBodyTemplate;
   }
 
-  public NotificationRuleUpdate smsTemplate(@Nullable String smsTemplate) {
+  public NotificationRuleUpdate smsTemplate(@Nullable Optional<String> smsTemplate) {
     this.smsTemplate = smsTemplate;
     return this;
   }
@@ -150,12 +150,12 @@ public class NotificationRuleUpdate {
    */
   
   @JsonProperty("smsTemplate")
-  public @Nullable String getSmsTemplate() {
+  public @Nullable Optional<String> getSmsTemplate() {
     return smsTemplate;
   }
 
   @JsonProperty("smsTemplate")
-  public void setSmsTemplate(@Nullable String smsTemplate) {
+  public void setSmsTemplate(@Nullable Optional<String> smsTemplate) {
     this.smsTemplate = smsTemplate;
   }
 

@@ -72,8 +72,7 @@ public class CouponResolver extends CouponServiceGrpc.CouponServiceImplBase {
         Coupon updated = service.updateCoupon(
                 bridge.id(request.getCoupon().getId(), "id"),
                 bridge.requiredIfMatch(request.getCoupon().getEtag()),
-                bridge.changes(request.getCoupon(), request.getUpdateMask(), CouponUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getCoupon(), request.getUpdateMask(), CouponUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCouponResponse.newBuilder(), "coupon", updated).build());
     }
 
@@ -112,7 +111,7 @@ public class CouponResolver extends CouponServiceGrpc.CouponServiceImplBase {
                 bridge.id(request.getCouponScope().getId(), "id"),
                 bridge.requiredIfMatch(request.getCouponScope().getEtag()),
                 bridge.changes(request.getCouponScope(), request.getUpdateMask(), CouponScopeUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCouponScopeResponse.newBuilder(), "coupon_scope", updated).build());
     }
 

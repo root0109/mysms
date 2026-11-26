@@ -81,7 +81,7 @@ class AcademicsGrpcParityComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "academics");
+        DATABASE.register(registry, "academics", "timetable", "attendance", "assessment");
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
     }
@@ -157,7 +157,8 @@ class AcademicsGrpcParityComponentTest {
     }
 
     private static JsonNode spec() throws Exception {
-        return JSON.readTree(AcademicsGrpcParityComponentTest.class.getClassLoader().getResourceAsStream("crud-spec.json"));
+        return JSON.readTree(AcademicsGrpcParityComponentTest.class.getClassLoader()
+                .getResourceAsStream("academics/crud-spec.json"));
     }
 
     private static List<String> strings(JsonNode array) {
@@ -181,7 +182,7 @@ class AcademicsGrpcParityComponentTest {
     @TestFactory
     List<DynamicNode> everyStandardRpcAnswersLikeRest() throws Exception {
         List<DynamicNode> tests = new ArrayList<>();
-        for (GrpcParityContract.Resource resource : GrpcParityContract.resources("crud-spec.json")) {
+        for (GrpcParityContract.Resource resource : GrpcParityContract.resources("academics/crud-spec.json")) {
             if (!resource.standardOnly()) {
                 continue;
             }

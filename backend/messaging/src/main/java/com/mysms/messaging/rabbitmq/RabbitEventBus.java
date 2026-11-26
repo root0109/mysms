@@ -1,5 +1,6 @@
 package com.mysms.messaging.rabbitmq;
 
+import com.mysms.messaging.MessagingModules;
 import com.mysms.messaging.events.EventBus;
 import com.mysms.messaging.events.EventEnvelope;
 import com.mysms.messaging.events.EventHandler;
@@ -32,17 +33,18 @@ import org.slf4j.LoggerFactory;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * {@link EventBus} on RabbitMQ. One durable topic exchange carries every event, routed by type; each consuming module
- * has one durable quorum queue, {@code mysms.<module>.events}, shared by its replicas.
+ * {@link EventBus} on RabbitMQ. One durable topic exchange carries every event, routed by type; each consuming
+ * area has one durable quorum queue, {@code mysms.<area>.events}, shared by its module's replicas.
  *
  * <ul>
  *   <li><b>Never lost on the way in.</b> Publishing waits for the broker's confirm. An event no queue is bound to yet
  *   goes through the alternate exchange to {@code <exchange>.unrouted} for {@link #replayUnrouted(int)}.</li>
  *   <li><b>Authentic.</b> The broker verifies each message's AMQP {@code user-id}; a consumer accepts an event only
- *   from the broker user of the module it claims to come from ({@link Settings#publisherUser()}).</li>
+ *   from the broker user of the module serving the area it claims to come from ({@link Settings#publisherUser()},
+ *   {@link MessagingModules#moduleOf(String)}).</li>
  *   <li><b>Retried with a growing delay.</b> Deliveries are acknowledged only after the inbox transaction commits. A
  *   failure returns to the queue after a doubling delay up to {@link Settings#maxRetryDelay()}; past the delivery limit
- *   it goes to {@code mysms.<module>.dead} for {@link #replayDead(String, int)}. An unreadable, unauthentic or
+ *   it goes to {@code mysms.<area>.dead} for {@link #replayDead(String, int)}. An unreadable, unauthentic or
  *   {@link RejectedEventException rejected} event is dead-lettered at once.</li>
  *   <li><b>Self-healing consumers.</b> A consumer the broker cancels, or whose channel failed, subscribes again.</li>
  * </ul>
@@ -54,8 +56,8 @@ public final class RabbitEventBus implements EventBus {
      * @param deliveryLimit returns of one message to its queue before it is dead-lettered (it is delivered once more
      *     than this)
      * @param retryDelay delay before a failed delivery is returned, doubled at each further delivery
-     * @param publisherUser {@code {module}} is replaced by the source module; {@link #SELF} accepts only this bus's own
-     *     user (the monolith)
+     * @param publisherUser {@code {module}} is replaced by the module serving the event's source area;
+     *     {@link #SELF} accepts only this bus's own user (the monolith)
      * @param unroutedRetention how long an event no queue was bound to is kept for replay
      */
     public record Settings(URI uri, String exchange, int deliveryLimit, int prefetch, Duration publishTimeout,
@@ -355,7 +357,7 @@ public final class RabbitEventBus implements EventBus {
             }
             String expected = expectedPublisher(event.module());
             String actual = message.getProperties() == null ? null : message.getProperties().getUserId();
-            if (!expected.equals(actual)) {
+            if (expected == null || !expected.equals(actual)) {
                 LOG.error("consumer {} received event {} claiming module {} from broker user {} (expected {}); it is "
                         + "dead-lettered", consumer, event.id(), event.module(), actual, expected);
                 on.basicReject(delivery, false);
@@ -404,8 +406,21 @@ public final class RabbitEventBus implements EventBus {
         }
     }
 
-    private String expectedPublisher(String module) {
-        return SELF.equals(settings.publisherUser()) ? user : settings.publisherUser().replace("{module}", module);
+    private String expectedPublisher(String area) {
+        return expectedPublisher(settings.publisherUser(), area, user);
+    }
+
+    /**
+     * The broker user an event of {@code area} must come from: this bus's own user under {@link #SELF}, otherwise the
+     * template with {@code {module}} replaced by the module serving the area ({@code payroll} → {@code mysms-hrms}),
+     * {@code null} for an area no module serves.
+     */
+    static String expectedPublisher(String template, String area, String self) {
+        if (SELF.equals(template)) {
+            return self;
+        }
+        String module = MessagingModules.moduleOf(area);
+        return module == null ? null : template.replace("{module}", module);
     }
 
     private long retryDelay(long deliveries) {

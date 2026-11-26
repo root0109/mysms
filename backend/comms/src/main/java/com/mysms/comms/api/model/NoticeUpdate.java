@@ -19,16 +19,16 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Notice that can be updated (partial update; see updateMask).
+ * Fields of Notice that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class NoticeUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID academicYearId;
+  private @Nullable Optional<UUID> academicYearId;
 
   /**
    * Audience.
@@ -72,53 +72,53 @@ public class NoticeUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable AudienceEnum audience;
+  private @Nullable Optional<@NotNull AudienceEnum> audience;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID classSectionId;
+  private @Nullable Optional<UUID> classSectionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID backgroundId;
+  private @Nullable Optional<UUID> backgroundId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String title;
+  private @Nullable Optional<@NotNull @Size(max = 200) String> title;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String body;
+  private @Nullable Optional<@NotNull String> body;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID attachmentFileId;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime publishAt;
+  private @Nullable Optional<UUID> attachmentFileId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime expireAt;
+  private @Nullable Optional<OffsetDateTime> publishAt;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID cohortId;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private @Nullable Optional<OffsetDateTime> expireAt;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean showInCalendar;
+  private @Nullable Optional<UUID> cohortId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean allowReplies;
+  private @Nullable Optional<@NotNull Boolean> showInCalendar;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID discussionTopicId;
+  private @Nullable Optional<@NotNull Boolean> allowReplies;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isClosed;
+  private @Nullable Optional<UUID> discussionTopicId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isDeactivated;
+  private @Nullable Optional<@NotNull Boolean> isClosed;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String authorComment;
+  private @Nullable Optional<@NotNull Boolean> isDeactivated;
 
-  public NoticeUpdate institutionId(@Nullable UUID institutionId) {
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable Optional<String> authorComment;
+
+  public NoticeUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -127,18 +127,18 @@ public class NoticeUpdate {
    * Institution (NULL = tenant-wide; audiences in comms.notice_audience).
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public NoticeUpdate academicYearId(@Nullable UUID academicYearId) {
+  public NoticeUpdate academicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
     return this;
   }
@@ -147,18 +147,18 @@ public class NoticeUpdate {
    * Academic year (NULL = not tied to a year, e.g. cohort or tenant notices).
    * @return academicYearId
    */
-  @Valid 
+  
   @JsonProperty("academicYearId")
-  public @Nullable UUID getAcademicYearId() {
+  public @Nullable Optional<UUID> getAcademicYearId() {
     return academicYearId;
   }
 
   @JsonProperty("academicYearId")
-  public void setAcademicYearId(@Nullable UUID academicYearId) {
+  public void setAcademicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
   }
 
-  public NoticeUpdate audience(@Nullable AudienceEnum audience) {
+  public NoticeUpdate audience(@Nullable Optional<AudienceEnum> audience) {
     this.audience = audience;
     return this;
   }
@@ -169,16 +169,16 @@ public class NoticeUpdate {
    */
   
   @JsonProperty("audience")
-  public @Nullable AudienceEnum getAudience() {
+  public @Nullable Optional<AudienceEnum> getAudience() {
     return audience;
   }
 
   @JsonProperty("audience")
-  public void setAudience(@Nullable AudienceEnum audience) {
+  public void setAudience(@Nullable Optional<AudienceEnum> audience) {
     this.audience = audience;
   }
 
-  public NoticeUpdate classSectionId(@Nullable UUID classSectionId) {
+  public NoticeUpdate classSectionId(@Nullable Optional<UUID> classSectionId) {
     this.classSectionId = classSectionId;
     return this;
   }
@@ -187,18 +187,18 @@ public class NoticeUpdate {
    * Class (audience = class).
    * @return classSectionId
    */
-  @Valid 
+  
   @JsonProperty("classSectionId")
-  public @Nullable UUID getClassSectionId() {
+  public @Nullable Optional<UUID> getClassSectionId() {
     return classSectionId;
   }
 
   @JsonProperty("classSectionId")
-  public void setClassSectionId(@Nullable UUID classSectionId) {
+  public void setClassSectionId(@Nullable Optional<UUID> classSectionId) {
     this.classSectionId = classSectionId;
   }
 
-  public NoticeUpdate backgroundId(@Nullable UUID backgroundId) {
+  public NoticeUpdate backgroundId(@Nullable Optional<UUID> backgroundId) {
     this.backgroundId = backgroundId;
     return this;
   }
@@ -207,18 +207,18 @@ public class NoticeUpdate {
    * Background image.
    * @return backgroundId
    */
-  @Valid 
+  
   @JsonProperty("backgroundId")
-  public @Nullable UUID getBackgroundId() {
+  public @Nullable Optional<UUID> getBackgroundId() {
     return backgroundId;
   }
 
   @JsonProperty("backgroundId")
-  public void setBackgroundId(@Nullable UUID backgroundId) {
+  public void setBackgroundId(@Nullable Optional<UUID> backgroundId) {
     this.backgroundId = backgroundId;
   }
 
-  public NoticeUpdate title(@Nullable String title) {
+  public NoticeUpdate title(@Nullable Optional<String> title) {
     this.title = title;
     return this;
   }
@@ -227,18 +227,18 @@ public class NoticeUpdate {
    * Title.
    * @return title
    */
-  @Size(max = 200) 
+  
   @JsonProperty("title")
-  public @Nullable String getTitle() {
+  public @Nullable Optional<String> getTitle() {
     return title;
   }
 
   @JsonProperty("title")
-  public void setTitle(@Nullable String title) {
+  public void setTitle(@Nullable Optional<String> title) {
     this.title = title;
   }
 
-  public NoticeUpdate body(@Nullable String body) {
+  public NoticeUpdate body(@Nullable Optional<String> body) {
     this.body = body;
     return this;
   }
@@ -249,16 +249,16 @@ public class NoticeUpdate {
    */
   
   @JsonProperty("body")
-  public @Nullable String getBody() {
+  public @Nullable Optional<String> getBody() {
     return body;
   }
 
   @JsonProperty("body")
-  public void setBody(@Nullable String body) {
+  public void setBody(@Nullable Optional<String> body) {
     this.body = body;
   }
 
-  public NoticeUpdate attachmentFileId(@Nullable UUID attachmentFileId) {
+  public NoticeUpdate attachmentFileId(@Nullable Optional<UUID> attachmentFileId) {
     this.attachmentFileId = attachmentFileId;
     return this;
   }
@@ -267,18 +267,18 @@ public class NoticeUpdate {
    * Attachment.
    * @return attachmentFileId
    */
-  @Valid 
+  
   @JsonProperty("attachmentFileId")
-  public @Nullable UUID getAttachmentFileId() {
+  public @Nullable Optional<UUID> getAttachmentFileId() {
     return attachmentFileId;
   }
 
   @JsonProperty("attachmentFileId")
-  public void setAttachmentFileId(@Nullable UUID attachmentFileId) {
+  public void setAttachmentFileId(@Nullable Optional<UUID> attachmentFileId) {
     this.attachmentFileId = attachmentFileId;
   }
 
-  public NoticeUpdate publishAt(@Nullable OffsetDateTime publishAt) {
+  public NoticeUpdate publishAt(@Nullable Optional<OffsetDateTime> publishAt) {
     this.publishAt = publishAt;
     return this;
   }
@@ -287,18 +287,18 @@ public class NoticeUpdate {
    * Publish time.
    * @return publishAt
    */
-  @Valid 
+  
   @JsonProperty("publishAt")
-  public @Nullable OffsetDateTime getPublishAt() {
+  public @Nullable Optional<OffsetDateTime> getPublishAt() {
     return publishAt;
   }
 
   @JsonProperty("publishAt")
-  public void setPublishAt(@Nullable OffsetDateTime publishAt) {
+  public void setPublishAt(@Nullable Optional<OffsetDateTime> publishAt) {
     this.publishAt = publishAt;
   }
 
-  public NoticeUpdate expireAt(@Nullable OffsetDateTime expireAt) {
+  public NoticeUpdate expireAt(@Nullable Optional<OffsetDateTime> expireAt) {
     this.expireAt = expireAt;
     return this;
   }
@@ -307,18 +307,18 @@ public class NoticeUpdate {
    * Expiry time.
    * @return expireAt
    */
-  @Valid 
+  
   @JsonProperty("expireAt")
-  public @Nullable OffsetDateTime getExpireAt() {
+  public @Nullable Optional<OffsetDateTime> getExpireAt() {
     return expireAt;
   }
 
   @JsonProperty("expireAt")
-  public void setExpireAt(@Nullable OffsetDateTime expireAt) {
+  public void setExpireAt(@Nullable Optional<OffsetDateTime> expireAt) {
     this.expireAt = expireAt;
   }
 
-  public NoticeUpdate cohortId(@Nullable UUID cohortId) {
+  public NoticeUpdate cohortId(@Nullable Optional<UUID> cohortId) {
     this.cohortId = cohortId;
     return this;
   }
@@ -327,18 +327,18 @@ public class NoticeUpdate {
    * Cohort the notice is posted to (audience = cohort).
    * @return cohortId
    */
-  @Valid 
+  
   @JsonProperty("cohortId")
-  public @Nullable UUID getCohortId() {
+  public @Nullable Optional<UUID> getCohortId() {
     return cohortId;
   }
 
   @JsonProperty("cohortId")
-  public void setCohortId(@Nullable UUID cohortId) {
+  public void setCohortId(@Nullable Optional<UUID> cohortId) {
     this.cohortId = cohortId;
   }
 
-  public NoticeUpdate showInCalendar(@Nullable Boolean showInCalendar) {
+  public NoticeUpdate showInCalendar(@Nullable Optional<Boolean> showInCalendar) {
     this.showInCalendar = showInCalendar;
     return this;
   }
@@ -349,16 +349,16 @@ public class NoticeUpdate {
    */
   
   @JsonProperty("showInCalendar")
-  public @Nullable Boolean getShowInCalendar() {
+  public @Nullable Optional<Boolean> getShowInCalendar() {
     return showInCalendar;
   }
 
   @JsonProperty("showInCalendar")
-  public void setShowInCalendar(@Nullable Boolean showInCalendar) {
+  public void setShowInCalendar(@Nullable Optional<Boolean> showInCalendar) {
     this.showInCalendar = showInCalendar;
   }
 
-  public NoticeUpdate allowReplies(@Nullable Boolean allowReplies) {
+  public NoticeUpdate allowReplies(@Nullable Optional<Boolean> allowReplies) {
     this.allowReplies = allowReplies;
     return this;
   }
@@ -369,16 +369,16 @@ public class NoticeUpdate {
    */
   
   @JsonProperty("allowReplies")
-  public @Nullable Boolean getAllowReplies() {
+  public @Nullable Optional<Boolean> getAllowReplies() {
     return allowReplies;
   }
 
   @JsonProperty("allowReplies")
-  public void setAllowReplies(@Nullable Boolean allowReplies) {
+  public void setAllowReplies(@Nullable Optional<Boolean> allowReplies) {
     this.allowReplies = allowReplies;
   }
 
-  public NoticeUpdate discussionTopicId(@Nullable UUID discussionTopicId) {
+  public NoticeUpdate discussionTopicId(@Nullable Optional<UUID> discussionTopicId) {
     this.discussionTopicId = discussionTopicId;
     return this;
   }
@@ -387,18 +387,18 @@ public class NoticeUpdate {
    * Discussion topic holding the replies.
    * @return discussionTopicId
    */
-  @Valid 
+  
   @JsonProperty("discussionTopicId")
-  public @Nullable UUID getDiscussionTopicId() {
+  public @Nullable Optional<UUID> getDiscussionTopicId() {
     return discussionTopicId;
   }
 
   @JsonProperty("discussionTopicId")
-  public void setDiscussionTopicId(@Nullable UUID discussionTopicId) {
+  public void setDiscussionTopicId(@Nullable Optional<UUID> discussionTopicId) {
     this.discussionTopicId = discussionTopicId;
   }
 
-  public NoticeUpdate isClosed(@Nullable Boolean isClosed) {
+  public NoticeUpdate isClosed(@Nullable Optional<Boolean> isClosed) {
     this.isClosed = isClosed;
     return this;
   }
@@ -409,16 +409,16 @@ public class NoticeUpdate {
    */
   
   @JsonProperty("isClosed")
-  public @Nullable Boolean getIsClosed() {
+  public @Nullable Optional<Boolean> getIsClosed() {
     return isClosed;
   }
 
   @JsonProperty("isClosed")
-  public void setIsClosed(@Nullable Boolean isClosed) {
+  public void setIsClosed(@Nullable Optional<Boolean> isClosed) {
     this.isClosed = isClosed;
   }
 
-  public NoticeUpdate isDeactivated(@Nullable Boolean isDeactivated) {
+  public NoticeUpdate isDeactivated(@Nullable Optional<Boolean> isDeactivated) {
     this.isDeactivated = isDeactivated;
     return this;
   }
@@ -429,16 +429,16 @@ public class NoticeUpdate {
    */
   
   @JsonProperty("isDeactivated")
-  public @Nullable Boolean getIsDeactivated() {
+  public @Nullable Optional<Boolean> getIsDeactivated() {
     return isDeactivated;
   }
 
   @JsonProperty("isDeactivated")
-  public void setIsDeactivated(@Nullable Boolean isDeactivated) {
+  public void setIsDeactivated(@Nullable Optional<Boolean> isDeactivated) {
     this.isDeactivated = isDeactivated;
   }
 
-  public NoticeUpdate authorComment(@Nullable String authorComment) {
+  public NoticeUpdate authorComment(@Nullable Optional<String> authorComment) {
     this.authorComment = authorComment;
     return this;
   }
@@ -449,12 +449,12 @@ public class NoticeUpdate {
    */
   
   @JsonProperty("authorComment")
-  public @Nullable String getAuthorComment() {
+  public @Nullable Optional<String> getAuthorComment() {
     return authorComment;
   }
 
   @JsonProperty("authorComment")
-  public void setAuthorComment(@Nullable String authorComment) {
+  public void setAuthorComment(@Nullable Optional<String> authorComment) {
     this.authorComment = authorComment;
   }
 

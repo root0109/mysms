@@ -3,33 +3,34 @@ package com.mysms.privacy.api.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.lang.Nullable;
 
 /**
- * Fields of NoticeVersion that can be updated while it is a draft (partial update; see updateMask).
+ * Fields of NoticeVersion that can be updated while it is a draft (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class NoticeVersionUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean requiresReconsent;
+  private @Nullable Optional<@NotNull Boolean> requiresReconsent;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable List<String> purposeCodes;
+  private @Nullable Optional<@NotNull @Size(min = 1) List<String>> purposeCodes;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable GrievanceContact grievanceContact;
+  private @Nullable Optional<@NotNull @Valid GrievanceContact> grievanceContact;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID documentFileId;
+  private @Nullable Optional<UUID> documentFileId;
 
-  public NoticeVersionUpdate requiresReconsent(@Nullable Boolean requiresReconsent) {
+  public NoticeVersionUpdate requiresReconsent(@Nullable Optional<Boolean> requiresReconsent) {
     this.requiresReconsent = requiresReconsent;
     return this;
   }
@@ -38,27 +39,19 @@ public class NoticeVersionUpdate {
    * Whether consents given under earlier versions must be asked for again once this version is published.
    * @return requiresReconsent
    */
-   
+  
   @JsonProperty("requiresReconsent")
-  public @Nullable Boolean getRequiresReconsent() {
+  public @Nullable Optional<Boolean> getRequiresReconsent() {
     return requiresReconsent;
   }
 
   @JsonProperty("requiresReconsent")
-  public void setRequiresReconsent(@Nullable Boolean requiresReconsent) {
+  public void setRequiresReconsent(@Nullable Optional<Boolean> requiresReconsent) {
     this.requiresReconsent = requiresReconsent;
   }
 
-  public NoticeVersionUpdate purposeCodes(@Nullable List<String> purposeCodes) {
+  public NoticeVersionUpdate purposeCodes(@Nullable Optional<List<String>> purposeCodes) {
     this.purposeCodes = purposeCodes;
-    return this;
-  }
-
-  public NoticeVersionUpdate addPurposeCodesItem(String purposeCodesItem) {
-    if (this.purposeCodes == null) {
-      this.purposeCodes = new ArrayList<>();
-    }
-    this.purposeCodes.add(purposeCodesItem);
     return this;
   }
 
@@ -66,18 +59,18 @@ public class NoticeVersionUpdate {
    * Codes of the active catalogue purposes the version asks consent for.
    * @return purposeCodes
    */
-  @Size(min = 1) 
+  
   @JsonProperty("purposeCodes")
-  public @Nullable List<String> getPurposeCodes() {
+  public @Nullable Optional<List<String>> getPurposeCodes() {
     return purposeCodes;
   }
 
   @JsonProperty("purposeCodes")
-  public void setPurposeCodes(@Nullable List<String> purposeCodes) {
+  public void setPurposeCodes(@Nullable Optional<List<String>> purposeCodes) {
     this.purposeCodes = purposeCodes;
   }
 
-  public NoticeVersionUpdate grievanceContact(@Nullable GrievanceContact grievanceContact) {
+  public NoticeVersionUpdate grievanceContact(@Nullable Optional<GrievanceContact> grievanceContact) {
     this.grievanceContact = grievanceContact;
     return this;
   }
@@ -86,18 +79,18 @@ public class NoticeVersionUpdate {
    * The school's grievance officer the version names.
    * @return grievanceContact
    */
-  @Valid 
+  
   @JsonProperty("grievanceContact")
-  public @Nullable GrievanceContact getGrievanceContact() {
+  public @Nullable Optional<GrievanceContact> getGrievanceContact() {
     return grievanceContact;
   }
 
   @JsonProperty("grievanceContact")
-  public void setGrievanceContact(@Nullable GrievanceContact grievanceContact) {
+  public void setGrievanceContact(@Nullable Optional<GrievanceContact> grievanceContact) {
     this.grievanceContact = grievanceContact;
   }
 
-  public NoticeVersionUpdate documentFileId(@Nullable UUID documentFileId) {
+  public NoticeVersionUpdate documentFileId(@Nullable Optional<UUID> documentFileId) {
     this.documentFileId = documentFileId;
     return this;
   }
@@ -106,14 +99,14 @@ public class NoticeVersionUpdate {
    * Optional signed PDF of the version (a platform file).
    * @return documentFileId
    */
-  @Valid 
+  
   @JsonProperty("documentFileId")
-  public @Nullable UUID getDocumentFileId() {
+  public @Nullable Optional<UUID> getDocumentFileId() {
     return documentFileId;
   }
 
   @JsonProperty("documentFileId")
-  public void setDocumentFileId(@Nullable UUID documentFileId) {
+  public void setDocumentFileId(@Nullable Optional<UUID> documentFileId) {
     this.documentFileId = documentFileId;
   }
 

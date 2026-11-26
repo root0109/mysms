@@ -16,27 +16,27 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of CourseSubject that can be updated (partial update; see updateMask).
+ * Fields of CourseSubject that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class CourseSubjectUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer termNumber;
+  private @Nullable Optional<Integer> termNumber;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String credits;
+  private @Nullable Optional<@Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> credits;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String subjectCategory;
+  private @Nullable Optional<@Size(max = 30) String> subjectCategory;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String maxMarks;
+  private @Nullable Optional<@Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> maxMarks;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID subjectId;
+  private @Nullable Optional<@NotNull UUID> subjectId;
 
-  public CourseSubjectUpdate termNumber(@Nullable Integer termNumber) {
+  public CourseSubjectUpdate termNumber(@Nullable Optional<Integer> termNumber) {
     this.termNumber = termNumber;
     return this;
   }
@@ -47,16 +47,16 @@ public class CourseSubjectUpdate {
    */
   
   @JsonProperty("termNumber")
-  public @Nullable Integer getTermNumber() {
+  public @Nullable Optional<Integer> getTermNumber() {
     return termNumber;
   }
 
   @JsonProperty("termNumber")
-  public void setTermNumber(@Nullable Integer termNumber) {
+  public void setTermNumber(@Nullable Optional<Integer> termNumber) {
     this.termNumber = termNumber;
   }
 
-  public CourseSubjectUpdate credits(@Nullable String credits) {
+  public CourseSubjectUpdate credits(@Nullable Optional<String> credits) {
     this.credits = credits;
     return this;
   }
@@ -65,18 +65,18 @@ public class CourseSubjectUpdate {
    * Credit value.
    * @return credits
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("credits")
-  public @Nullable String getCredits() {
+  public @Nullable Optional<String> getCredits() {
     return credits;
   }
 
   @JsonProperty("credits")
-  public void setCredits(@Nullable String credits) {
+  public void setCredits(@Nullable Optional<String> credits) {
     this.credits = credits;
   }
 
-  public CourseSubjectUpdate subjectCategory(@Nullable String subjectCategory) {
+  public CourseSubjectUpdate subjectCategory(@Nullable Optional<String> subjectCategory) {
     this.subjectCategory = subjectCategory;
     return this;
   }
@@ -85,18 +85,18 @@ public class CourseSubjectUpdate {
    * Category in the plan.
    * @return subjectCategory
    */
-  @Size(max = 30) 
+  
   @JsonProperty("subjectCategory")
-  public @Nullable String getSubjectCategory() {
+  public @Nullable Optional<String> getSubjectCategory() {
     return subjectCategory;
   }
 
   @JsonProperty("subjectCategory")
-  public void setSubjectCategory(@Nullable String subjectCategory) {
+  public void setSubjectCategory(@Nullable Optional<String> subjectCategory) {
     this.subjectCategory = subjectCategory;
   }
 
-  public CourseSubjectUpdate maxMarks(@Nullable String maxMarks) {
+  public CourseSubjectUpdate maxMarks(@Nullable Optional<String> maxMarks) {
     this.maxMarks = maxMarks;
     return this;
   }
@@ -105,18 +105,18 @@ public class CourseSubjectUpdate {
    * Maximum marks.
    * @return maxMarks
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("maxMarks")
-  public @Nullable String getMaxMarks() {
+  public @Nullable Optional<String> getMaxMarks() {
     return maxMarks;
   }
 
   @JsonProperty("maxMarks")
-  public void setMaxMarks(@Nullable String maxMarks) {
+  public void setMaxMarks(@Nullable Optional<String> maxMarks) {
     this.maxMarks = maxMarks;
   }
 
-  public CourseSubjectUpdate subjectId(@Nullable UUID subjectId) {
+  public CourseSubjectUpdate subjectId(@Nullable Optional<UUID> subjectId) {
     this.subjectId = subjectId;
     return this;
   }
@@ -125,14 +125,14 @@ public class CourseSubjectUpdate {
    * Subject.
    * @return subjectId
    */
-  @Valid 
+  
   @JsonProperty("subjectId")
-  public @Nullable UUID getSubjectId() {
+  public @Nullable Optional<UUID> getSubjectId() {
     return subjectId;
   }
 
   @JsonProperty("subjectId")
-  public void setSubjectId(@Nullable UUID subjectId) {
+  public void setSubjectId(@Nullable Optional<UUID> subjectId) {
     this.subjectId = subjectId;
   }
 

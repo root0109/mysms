@@ -1,6 +1,7 @@
 import type { platform } from '@mysms/sdk';
 import { json, problem, type Handler } from './fakeApi';
 import { onePage } from './paging';
+import { patched } from './patch';
 
 const id = (suffix: string) => `01960000-0000-7000-8000-${suffix.padStart(12, '0')}`;
 
@@ -96,7 +97,7 @@ export function fakePlatform(): Record<string, Handler> {
       if (!row) return problem(404, 'NOT_FOUND');
       if (req.headers.get('If-Match') !== `"${row.version}"`) return problem(412, 'ETAG_MISMATCH');
       const body = (await req.json()) as platform.ThemeUpdate;
-      return saveTheme({ ...row, ...body, version: row.version + 1 });
+      return saveTheme({ ...patched(row, body), version: row.version + 1 });
     },
     'GET /v1/platform/branding': () =>
       json({

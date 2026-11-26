@@ -116,8 +116,8 @@ public class InvoiceController implements InvoiceApi {
 
     @Override
     public ResponseEntity<Invoice> updateInvoice(UUID invoiceId, String ifMatch, InvoiceUpdate invoiceUpdate,
-            String updateMask, Boolean validateOnly) {
-        Invoice updated = invoiceService.updateInvoice(invoiceId, ifMatch, invoiceUpdate, updateMask,
+            Boolean validateOnly) {
+        Invoice updated = invoiceService.updateInvoice(invoiceId, ifMatch, invoiceUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

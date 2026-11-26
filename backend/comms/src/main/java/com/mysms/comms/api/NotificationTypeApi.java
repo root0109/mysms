@@ -423,7 +423,7 @@ public interface NotificationTypeApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -459,7 +459,7 @@ public interface NotificationTypeApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -495,7 +495,7 @@ public interface NotificationTypeApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -529,7 +529,7 @@ public interface NotificationTypeApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -537,13 +537,12 @@ public interface NotificationTypeApi {
     String PATH_UPDATE_NOTIFICATION_COHORT_SETTING = "/v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId}";
     /**
      * PATCH /v1/comms/notification-types/{notificationTypeId}/cohort-settings/{notificationCohortSettingId} : Update NotificationCohortSetting
-     * Partially update a NotificationCohortSetting (updateMask). Requires If-Match with the current ETag.
+     * Partially update a NotificationCohortSetting (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param notificationTypeId NotificationType id. (required)
      * @param notificationCohortSettingId NotificationCohortSetting id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param notificationCohortSettingUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -568,7 +567,6 @@ public interface NotificationTypeApi {
          @PathVariable("notificationCohortSettingId") UUID notificationCohortSettingId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody NotificationCohortSettingUpdate notificationCohortSettingUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -576,13 +574,12 @@ public interface NotificationTypeApi {
     String PATH_UPDATE_NOTIFICATION_RULE = "/v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId}";
     /**
      * PATCH /v1/comms/notification-types/{notificationTypeId}/rules/{notificationRuleId} : Update NotificationRule
-     * Partially update a NotificationRule (updateMask). Requires If-Match with the current ETag.
+     * Partially update a NotificationRule (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param notificationTypeId NotificationType id. (required)
      * @param notificationRuleId NotificationRule id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param notificationRuleUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -607,7 +604,6 @@ public interface NotificationTypeApi {
          @PathVariable("notificationRuleId") UUID notificationRuleId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody NotificationRuleUpdate notificationRuleUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -615,12 +611,11 @@ public interface NotificationTypeApi {
     String PATH_UPDATE_NOTIFICATION_TYPE = "/v1/comms/notification-types/{notificationTypeId}";
     /**
      * PATCH /v1/comms/notification-types/{notificationTypeId} : Update NotificationType
-     * Partially update a NotificationType (updateMask). Requires If-Match with the current ETag.
+     * Partially update a NotificationType (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param notificationTypeId NotificationType id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param notificationTypeUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -644,7 +639,6 @@ public interface NotificationTypeApi {
          @PathVariable("notificationTypeId") UUID notificationTypeId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody NotificationTypeUpdate notificationTypeUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -652,13 +646,12 @@ public interface NotificationTypeApi {
     String PATH_UPDATE_NOTIFICATION_TYPE_PROPERTY = "/v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId}";
     /**
      * PATCH /v1/comms/notification-types/{notificationTypeId}/properties/{notificationTypePropertyId} : Update NotificationTypeProperty
-     * Partially update a NotificationTypeProperty (updateMask). Requires If-Match with the current ETag.
+     * Partially update a NotificationTypeProperty (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param notificationTypeId NotificationType id. (required)
      * @param notificationTypePropertyId NotificationTypeProperty id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param notificationTypePropertyUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -683,7 +676,6 @@ public interface NotificationTypeApi {
          @PathVariable("notificationTypePropertyId") UUID notificationTypePropertyId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody NotificationTypePropertyUpdate notificationTypePropertyUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 

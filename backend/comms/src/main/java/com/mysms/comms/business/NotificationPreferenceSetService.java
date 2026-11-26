@@ -32,7 +32,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,8 +56,6 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "comms.notification_preference_set.create";
     static final String PERMISSION_UPDATE = "comms.notification_preference_set.update";
     static final String PERMISSION_DELETE = "comms.notification_preference_set.delete";
-    /** The contract's NotificationPreferenceSetUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("userId", "roleId");
 
     public static final String NOTIFICATION_PREFERENCE_AGGREGATE = NotificationPreferenceEntity.TABLE;
     static final String NOTIFICATION_PREFERENCE_PERMISSION_LIST = "comms.notification_preference.read";
@@ -65,8 +63,6 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
     static final String NOTIFICATION_PREFERENCE_PERMISSION_CREATE = "comms.notification_preference.create";
     static final String NOTIFICATION_PREFERENCE_PERMISSION_UPDATE = "comms.notification_preference.update";
     static final String NOTIFICATION_PREFERENCE_PERMISSION_DELETE = "comms.notification_preference.delete";
-    /** The contract's NotificationPreferenceUpdate fields, in apply order. */
-    static final List<String> NOTIFICATION_PREFERENCE_WRITABLE = List.of("notificationTypeId", "propertyName", "propertyValue");
 
     private final NotificationPreferenceSetRepository repository;
     private final NotificationPreferenceSetMapper mapper;
@@ -149,13 +145,12 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public NotificationPreferenceSet updateNotificationPreferenceSet(UUID id, String ifMatch,
-            NotificationPreferenceSetUpdate changes, String updateMask, boolean validateOnly) {
+            NotificationPreferenceSetUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             NotificationPreferenceSetEntity entity = loadVisible(scope, id);
@@ -163,7 +158,7 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
             rules.beforeUpdate(entity);
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             rules.beforeWrite(entity);
@@ -220,16 +215,12 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
         return Optional.empty();
     }
 
-    /** Applies the selected NotificationPreferenceSetUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(NotificationPreferenceSetEntity entity, NotificationPreferenceSetUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "userId" -> entity.setUserId(changes.getUserId());
-                case "roleId" -> entity.setRoleId(changes.getRoleId());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(NotificationPreferenceSetEntity entity, NotificationPreferenceSetUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("userId", changes.getUserId(), entity::setUserId);
+        patch.apply("roleId", changes.getRoleId(), entity::setRoleId);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -302,13 +293,12 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public NotificationPreference updateNotificationPreference(UUID preferenceSetId, UUID id, String ifMatch,
-            NotificationPreferenceUpdate changes, String updateMask, boolean validateOnly) {
+            NotificationPreferenceUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, NOTIFICATION_PREFERENCE_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(NOTIFICATION_PREFERENCE_PERMISSION_UPDATE);
             NotificationPreferenceEntity entity = loadVisibleNotificationPreference(scope, preferenceSetId, id);
@@ -316,7 +306,7 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
             notificationPreferenceRules.beforeUpdate(entity);
-            applyNotificationPreference(entity, changes, fields);
+            List<String> fields = applyNotificationPreference(entity, changes);
             validator.validate(notificationPreferenceMapper.toDto(entity));
             assertValidNotificationPreference(entity, false);
             notificationPreferenceRules.beforeWrite(entity);
@@ -373,17 +363,14 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
         return Optional.empty();
     }
 
-    /** Applies the selected NotificationPreferenceUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyNotificationPreference(NotificationPreferenceEntity entity, NotificationPreferenceUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "notificationTypeId" -> entity.setNotificationTypeId(changes.getNotificationTypeId());
-                case "propertyName" -> entity.setPropertyName(changes.getPropertyName());
-                case "propertyValue" -> entity.setPropertyValue(changes.getPropertyValue());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyNotificationPreference(NotificationPreferenceEntity entity,
+            NotificationPreferenceUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("notificationTypeId", changes.getNotificationTypeId(), entity::setNotificationTypeId);
+        patch.apply("propertyName", changes.getPropertyName(), entity::setPropertyName);
+        patch.apply("propertyValue", changes.getPropertyValue(), entity::setPropertyValue);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

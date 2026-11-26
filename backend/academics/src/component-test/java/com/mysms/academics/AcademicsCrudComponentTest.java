@@ -39,14 +39,14 @@ class AcademicsCrudComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "academics");
+        DATABASE.register(registry, "academics", "timetable", "attendance", "assessment");
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
     }
 
     @TestFactory
     List<DynamicNode> standardOperations() {
-        return new CrudContract(TOKENS, () -> port, this::fixtures).tests("crud-spec.json");
+        return new CrudContract(TOKENS, () -> port, this::fixtures).tests("academics/crud-spec.json");
     }
 
     /** Fixture rows, inserted as the application role inside a transaction bound to the tenant. */

@@ -42,9 +42,9 @@ public class RetentionPolicyController implements RetentionPolicyApi {
 
     @Override
     public ResponseEntity<RetentionPolicy> updateRetentionPolicy(UUID retentionPolicyId, String ifMatch,
-            RetentionPolicyUpdate retentionPolicyUpdate, String updateMask) {
+            RetentionPolicyUpdate retentionPolicyUpdate) {
         RetentionPolicy updated = retentionPolicyService.updateRetentionPolicy(retentionPolicyId, ifMatch,
-                retentionPolicyUpdate, updateMask);
+                retentionPolicyUpdate);
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 }

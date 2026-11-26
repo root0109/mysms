@@ -136,8 +136,8 @@ public class NoticeController implements NoticeApi {
 
     @Override
     public ResponseEntity<Notice> updateNotice(UUID noticeId, String ifMatch, NoticeUpdate noticeUpdate,
-            String updateMask, Boolean validateOnly) {
-        Notice updated = noticeService.updateNotice(noticeId, ifMatch, noticeUpdate, updateMask,
+            Boolean validateOnly) {
+        Notice updated = noticeService.updateNotice(noticeId, ifMatch, noticeUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
@@ -145,17 +145,17 @@ public class NoticeController implements NoticeApi {
     @Override
     public ResponseEntity<NoticeTranslation> updateNoticeTranslation(UUID noticeId, UUID noticeVersionId,
             UUID noticeTranslationId, String ifMatch, NoticeTranslationUpdate noticeTranslationUpdate,
-            String updateMask, Boolean validateOnly) {
+            Boolean validateOnly) {
         NoticeTranslation updated = noticeService.updateNoticeTranslation(noticeId, noticeVersionId,
-                noticeTranslationId, ifMatch, noticeTranslationUpdate, updateMask, Boolean.TRUE.equals(validateOnly));
+                noticeTranslationId, ifMatch, noticeTranslationUpdate, Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<NoticeVersion> updateNoticeVersion(UUID noticeId, UUID noticeVersionId, String ifMatch,
-            NoticeVersionUpdate noticeVersionUpdate, String updateMask, Boolean validateOnly) {
+            NoticeVersionUpdate noticeVersionUpdate, Boolean validateOnly) {
         NoticeVersion updated = noticeService.updateNoticeVersion(noticeId, noticeVersionId, ifMatch,
-                noticeVersionUpdate, updateMask, Boolean.TRUE.equals(validateOnly));
+                noticeVersionUpdate, Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 }

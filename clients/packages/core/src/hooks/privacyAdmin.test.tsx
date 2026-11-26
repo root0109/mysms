@@ -106,7 +106,8 @@ describe('privacy administration (ADM-17, ADM-18)', () => {
       }),
     );
     const lastPatch = () => api.calls.filter((c) => c.method === 'PATCH').at(-1);
-    expect(new URLSearchParams(lastPatch()?.search).get('updateMask')).toBe('requiresReconsent');
+    expect(lastPatch()?.search).toBe('');
+    expect(JSON.parse(lastPatch()?.body ?? '')).toEqual({ requiresReconsent: true });
     rerender({ noticeId, versionId });
     await waitFor(() => expect(result.current.versions.data?.items[0]?.requiresReconsent).toBe(true));
 
@@ -127,9 +128,11 @@ describe('privacy administration (ADM-17, ADM-18)', () => {
         changes: { bodyMarkdown: 'Changed.', summaryForChildren: undefined },
       }),
     );
-    expect(new URLSearchParams(lastPatch()?.search).get('updateMask')).toBe(
-      'bodyMarkdown,summaryForChildren',
-    );
+    // a field the change names without a value is sent as null, which clears it
+    expect(JSON.parse(lastPatch()?.body ?? '')).toEqual({
+      bodyMarkdown: 'Changed.',
+      summaryForChildren: null,
+    });
     const published = await act(() =>
       result.current.publish.mutateAsync({ noticeId, noticeVersionId: versionId, etag: edited.etag }),
     );

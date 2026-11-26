@@ -61,7 +61,7 @@ public class EntityNoteResolver extends EntityNoteServiceGrpc.EntityNoteServiceI
                 bridge.id(request.getEntityNote().getId(), "id"),
                 bridge.requiredIfMatch(request.getEntityNote().getEtag()),
                 bridge.changes(request.getEntityNote(), request.getUpdateMask(), EntityNoteUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEntityNoteResponse.newBuilder(), "entity_note", updated).build());
     }
 

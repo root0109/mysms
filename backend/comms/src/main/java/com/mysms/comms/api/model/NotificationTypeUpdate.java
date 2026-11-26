@@ -15,36 +15,36 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of NotificationType that can be updated (partial update; see updateMask).
+ * Fields of NotificationType that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class NotificationTypeUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@NotNull @Size(max = 80) String> code;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String description;
+  private @Nullable Optional<@NotNull String> description;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String moduleCode;
+  private @Nullable Optional<@NotNull @Size(max = 60) String> moduleCode;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String roleCode;
+  private @Nullable Optional<@Size(max = 80) String> roleCode;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isEnabled;
+  private @Nullable Optional<@NotNull Boolean> isEnabled;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean popupEnabled;
+  private @Nullable Optional<@NotNull Boolean> popupEnabled;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean teacherPopupEnabled;
+  private @Nullable Optional<@NotNull Boolean> teacherPopupEnabled;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String validParameters;
+  private @Nullable Optional<@Size(max = 500) String> validParameters;
 
-  public NotificationTypeUpdate code(@Nullable String code) {
+  public NotificationTypeUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -53,18 +53,18 @@ public class NotificationTypeUpdate {
    * Notification code.
    * @return code
    */
-  @Size(max = 80) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 
-  public NotificationTypeUpdate description(@Nullable String description) {
+  public NotificationTypeUpdate description(@Nullable Optional<String> description) {
     this.description = description;
     return this;
   }
@@ -75,16 +75,16 @@ public class NotificationTypeUpdate {
    */
   
   @JsonProperty("description")
-  public @Nullable String getDescription() {
+  public @Nullable Optional<String> getDescription() {
     return description;
   }
 
   @JsonProperty("description")
-  public void setDescription(@Nullable String description) {
+  public void setDescription(@Nullable Optional<String> description) {
     this.description = description;
   }
 
-  public NotificationTypeUpdate moduleCode(@Nullable String moduleCode) {
+  public NotificationTypeUpdate moduleCode(@Nullable Optional<String> moduleCode) {
     this.moduleCode = moduleCode;
     return this;
   }
@@ -93,18 +93,18 @@ public class NotificationTypeUpdate {
    * Module raising it (see iam.app_module).
    * @return moduleCode
    */
-  @Size(max = 60) 
+  
   @JsonProperty("moduleCode")
-  public @Nullable String getModuleCode() {
+  public @Nullable Optional<String> getModuleCode() {
     return moduleCode;
   }
 
   @JsonProperty("moduleCode")
-  public void setModuleCode(@Nullable String moduleCode) {
+  public void setModuleCode(@Nullable Optional<String> moduleCode) {
     this.moduleCode = moduleCode;
   }
 
-  public NotificationTypeUpdate roleCode(@Nullable String roleCode) {
+  public NotificationTypeUpdate roleCode(@Nullable Optional<String> roleCode) {
     this.roleCode = roleCode;
     return this;
   }
@@ -113,18 +113,18 @@ public class NotificationTypeUpdate {
    * Platform role code it is addressed to by default (resolved to each tenant's role with that code).
    * @return roleCode
    */
-  @Size(max = 80) 
+  
   @JsonProperty("roleCode")
-  public @Nullable String getRoleCode() {
+  public @Nullable Optional<String> getRoleCode() {
     return roleCode;
   }
 
   @JsonProperty("roleCode")
-  public void setRoleCode(@Nullable String roleCode) {
+  public void setRoleCode(@Nullable Optional<String> roleCode) {
     this.roleCode = roleCode;
   }
 
-  public NotificationTypeUpdate isEnabled(@Nullable Boolean isEnabled) {
+  public NotificationTypeUpdate isEnabled(@Nullable Optional<Boolean> isEnabled) {
     this.isEnabled = isEnabled;
     return this;
   }
@@ -135,16 +135,16 @@ public class NotificationTypeUpdate {
    */
   
   @JsonProperty("isEnabled")
-  public @Nullable Boolean getIsEnabled() {
+  public @Nullable Optional<Boolean> getIsEnabled() {
     return isEnabled;
   }
 
   @JsonProperty("isEnabled")
-  public void setIsEnabled(@Nullable Boolean isEnabled) {
+  public void setIsEnabled(@Nullable Optional<Boolean> isEnabled) {
     this.isEnabled = isEnabled;
   }
 
-  public NotificationTypeUpdate popupEnabled(@Nullable Boolean popupEnabled) {
+  public NotificationTypeUpdate popupEnabled(@Nullable Optional<Boolean> popupEnabled) {
     this.popupEnabled = popupEnabled;
     return this;
   }
@@ -155,16 +155,16 @@ public class NotificationTypeUpdate {
    */
   
   @JsonProperty("popupEnabled")
-  public @Nullable Boolean getPopupEnabled() {
+  public @Nullable Optional<Boolean> getPopupEnabled() {
     return popupEnabled;
   }
 
   @JsonProperty("popupEnabled")
-  public void setPopupEnabled(@Nullable Boolean popupEnabled) {
+  public void setPopupEnabled(@Nullable Optional<Boolean> popupEnabled) {
     this.popupEnabled = popupEnabled;
   }
 
-  public NotificationTypeUpdate teacherPopupEnabled(@Nullable Boolean teacherPopupEnabled) {
+  public NotificationTypeUpdate teacherPopupEnabled(@Nullable Optional<Boolean> teacherPopupEnabled) {
     this.teacherPopupEnabled = teacherPopupEnabled;
     return this;
   }
@@ -175,16 +175,16 @@ public class NotificationTypeUpdate {
    */
   
   @JsonProperty("teacherPopupEnabled")
-  public @Nullable Boolean getTeacherPopupEnabled() {
+  public @Nullable Optional<Boolean> getTeacherPopupEnabled() {
     return teacherPopupEnabled;
   }
 
   @JsonProperty("teacherPopupEnabled")
-  public void setTeacherPopupEnabled(@Nullable Boolean teacherPopupEnabled) {
+  public void setTeacherPopupEnabled(@Nullable Optional<Boolean> teacherPopupEnabled) {
     this.teacherPopupEnabled = teacherPopupEnabled;
   }
 
-  public NotificationTypeUpdate validParameters(@Nullable String validParameters) {
+  public NotificationTypeUpdate validParameters(@Nullable Optional<String> validParameters) {
     this.validParameters = validParameters;
     return this;
   }
@@ -193,14 +193,14 @@ public class NotificationTypeUpdate {
    * Placeholders the message may use.
    * @return validParameters
    */
-  @Size(max = 500) 
+  
   @JsonProperty("validParameters")
-  public @Nullable String getValidParameters() {
+  public @Nullable Optional<String> getValidParameters() {
     return validParameters;
   }
 
   @JsonProperty("validParameters")
-  public void setValidParameters(@Nullable String validParameters) {
+  public void setValidParameters(@Nullable Optional<String> validParameters) {
     this.validParameters = validParameters;
   }
 

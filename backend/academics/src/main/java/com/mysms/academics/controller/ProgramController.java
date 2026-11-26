@@ -60,8 +60,8 @@ public class ProgramController implements ProgramApi {
 
     @Override
     public ResponseEntity<Program> updateProgram(UUID programId, String ifMatch,
-            ProgramUpdate programUpdate, String updateMask, Boolean validateOnly) {
-        Program updated = programService.updateProgram(programId, ifMatch, programUpdate, updateMask,
+            ProgramUpdate programUpdate, Boolean validateOnly) {
+        Program updated = programService.updateProgram(programId, ifMatch, programUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

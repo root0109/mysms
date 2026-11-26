@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  privacy: the Privacy and Consent Centre microservice, owner of database schema "privacy" (JAVA-CODING-RULES §2).
-  Depends on core, auth-client and the messaging runtime; only event consumers compile against the
-  narrow messaging API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
-  Its Flyway migrations are database/migrations/privacy, applied to its own schema only.
+  privacy: the Privacy microservice (docs/design/MODULE-AND-PRODUCT-REORGANISATION.md §3). Its areas "privacy" each own
+  their database schema of the same name, contract (com.mysms.<area>.v1, /v1/<area>), operation table and Flyway
+  history (database/migrations/<area>); inside the module they share one process, one jar and one gRPC server.
+  Depends on core, auth-client and the messaging runtime; only event consumers compile against the narrow messaging
+  API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -15,7 +16,12 @@
   </parent>
   <artifactId>privacy</artifactId>
   <name>MySMS privacy</name>
-  <description>Privacy and Consent Centre microservice (schema privacy)</description>
+  <description>Privacy microservice (schemas privacy)</description>
+
+  <properties>
+    <!-- SpotBugs analyses the module's own code: its root package and every layer package of each area (§3) -->
+    <mysms.spotbugs.onlyAnalyze>com.mysms.privacy.*,com.mysms.privacy.api.-,com.mysms.privacy.controller.-,com.mysms.privacy.grpc.-,com.mysms.privacy.integration.-,com.mysms.privacy.business.-,com.mysms.privacy.repository.-,com.mysms.privacy.domain.-,com.mysms.privacy.model.-,com.mysms.privacy.mapper.-,com.mysms.privacy.validation.-,com.mysms.privacy.errors.-,com.mysms.privacy.events.-,com.mysms.privacy.config.-,com.mysms.privacy.constants.-</mysms.spotbugs.onlyAnalyze>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -64,14 +70,14 @@
       <resource>
         <directory>src/main/resources</directory>
       </resource>
-      <!-- the module's own migrations, from the single source of truth -->
+      <!-- each area's migrations, from the single source of truth, applied to its own schema only -->
       <resource>
         <directory>${mysms.migrations.dir}/privacy</directory>
         <targetPath>db/migration/privacy</targetPath>
       </resource>
     </resources>
     <plugins>
-      <!-- its protos (src/main/resources/proto: its own, and copies of the callees' it calls) into its jar -->
+      <!-- its protos (src/main/resources/proto: its areas' own, and copies of the callees' they call) into its jar -->
       <plugin>
         <groupId>org.xolstice.maven.plugins</groupId>
         <artifactId>protobuf-maven-plugin</artifactId>

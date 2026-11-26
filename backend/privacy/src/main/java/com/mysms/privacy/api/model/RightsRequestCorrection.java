@@ -112,9 +112,9 @@ public class RightsRequestCorrection {
    * The fields to correct (1 to 20).
    * @return fields
    */
-  @NotNull @Valid @Size(min = 1, max = 20) 
+  @NotNull @Size(min = 1, max = 20) 
   @JsonProperty("fields")
-  public List<RightsRequestCorrectionField> getFields() {
+  public List<@Valid RightsRequestCorrectionField> getFields() {
     return fields;
   }
 

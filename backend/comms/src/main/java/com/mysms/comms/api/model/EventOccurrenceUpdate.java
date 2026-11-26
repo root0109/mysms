@@ -19,36 +19,36 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of EventOccurrence that can be updated (partial update; see updateMask).
+ * Fields of EventOccurrence that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class EventOccurrenceUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID userId;
+  private @Nullable Optional<@NotNull UUID> userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID cohortId;
+  private @Nullable Optional<UUID> cohortId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String title;
+  private @Nullable Optional<@NotNull @Size(max = 200) String> title;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String color;
+  private @Nullable Optional<@Size(max = 20) String> color;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String description;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime startAt;
+  private @Nullable Optional<String> description;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime endAt;
+  private @Nullable Optional<@NotNull OffsetDateTime> startAt;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isCancelled;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private @Nullable Optional<OffsetDateTime> endAt;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable Optional<@NotNull Boolean> isCancelled;
 
   /**
    * Attendee's response, or completed for a personal to-do event.
@@ -92,7 +92,7 @@ public class EventOccurrenceUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable ResponseStatusEnum responseStatus;
+  private @Nullable Optional<ResponseStatusEnum> responseStatus;
 
   /**
    * Importance (personal events).
@@ -132,9 +132,9 @@ public class EventOccurrenceUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable ImportanceEnum importance;
+  private @Nullable Optional<ImportanceEnum> importance;
 
-  public EventOccurrenceUpdate userId(@Nullable UUID userId) {
+  public EventOccurrenceUpdate userId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
     return this;
   }
@@ -143,18 +143,18 @@ public class EventOccurrenceUpdate {
    * Attendee whose personal copy this is (personal events shared with several users).
    * @return userId
    */
-  @Valid 
+  
   @JsonProperty("userId")
-  public @Nullable UUID getUserId() {
+  public @Nullable Optional<UUID> getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(@Nullable UUID userId) {
+  public void setUserId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
   }
 
-  public EventOccurrenceUpdate cohortId(@Nullable UUID cohortId) {
+  public EventOccurrenceUpdate cohortId(@Nullable Optional<UUID> cohortId) {
     this.cohortId = cohortId;
     return this;
   }
@@ -163,18 +163,18 @@ public class EventOccurrenceUpdate {
    * Cohort of a cohort event.
    * @return cohortId
    */
-  @Valid 
+  
   @JsonProperty("cohortId")
-  public @Nullable UUID getCohortId() {
+  public @Nullable Optional<UUID> getCohortId() {
     return cohortId;
   }
 
   @JsonProperty("cohortId")
-  public void setCohortId(@Nullable UUID cohortId) {
+  public void setCohortId(@Nullable Optional<UUID> cohortId) {
     this.cohortId = cohortId;
   }
 
-  public EventOccurrenceUpdate title(@Nullable String title) {
+  public EventOccurrenceUpdate title(@Nullable Optional<String> title) {
     this.title = title;
     return this;
   }
@@ -183,18 +183,18 @@ public class EventOccurrenceUpdate {
    * Title override.
    * @return title
    */
-  @Size(max = 200) 
+  
   @JsonProperty("title")
-  public @Nullable String getTitle() {
+  public @Nullable Optional<String> getTitle() {
     return title;
   }
 
   @JsonProperty("title")
-  public void setTitle(@Nullable String title) {
+  public void setTitle(@Nullable Optional<String> title) {
     this.title = title;
   }
 
-  public EventOccurrenceUpdate color(@Nullable String color) {
+  public EventOccurrenceUpdate color(@Nullable Optional<String> color) {
     this.color = color;
     return this;
   }
@@ -203,18 +203,18 @@ public class EventOccurrenceUpdate {
    * Colour override.
    * @return color
    */
-  @Size(max = 20) 
+  
   @JsonProperty("color")
-  public @Nullable String getColor() {
+  public @Nullable Optional<String> getColor() {
     return color;
   }
 
   @JsonProperty("color")
-  public void setColor(@Nullable String color) {
+  public void setColor(@Nullable Optional<String> color) {
     this.color = color;
   }
 
-  public EventOccurrenceUpdate description(@Nullable String description) {
+  public EventOccurrenceUpdate description(@Nullable Optional<String> description) {
     this.description = description;
     return this;
   }
@@ -225,16 +225,16 @@ public class EventOccurrenceUpdate {
    */
   
   @JsonProperty("description")
-  public @Nullable String getDescription() {
+  public @Nullable Optional<String> getDescription() {
     return description;
   }
 
   @JsonProperty("description")
-  public void setDescription(@Nullable String description) {
+  public void setDescription(@Nullable Optional<String> description) {
     this.description = description;
   }
 
-  public EventOccurrenceUpdate startAt(@Nullable OffsetDateTime startAt) {
+  public EventOccurrenceUpdate startAt(@Nullable Optional<OffsetDateTime> startAt) {
     this.startAt = startAt;
     return this;
   }
@@ -243,18 +243,18 @@ public class EventOccurrenceUpdate {
    * Start.
    * @return startAt
    */
-  @Valid 
+  
   @JsonProperty("startAt")
-  public @Nullable OffsetDateTime getStartAt() {
+  public @Nullable Optional<OffsetDateTime> getStartAt() {
     return startAt;
   }
 
   @JsonProperty("startAt")
-  public void setStartAt(@Nullable OffsetDateTime startAt) {
+  public void setStartAt(@Nullable Optional<OffsetDateTime> startAt) {
     this.startAt = startAt;
   }
 
-  public EventOccurrenceUpdate endAt(@Nullable OffsetDateTime endAt) {
+  public EventOccurrenceUpdate endAt(@Nullable Optional<OffsetDateTime> endAt) {
     this.endAt = endAt;
     return this;
   }
@@ -263,18 +263,18 @@ public class EventOccurrenceUpdate {
    * End.
    * @return endAt
    */
-  @Valid 
+  
   @JsonProperty("endAt")
-  public @Nullable OffsetDateTime getEndAt() {
+  public @Nullable Optional<OffsetDateTime> getEndAt() {
     return endAt;
   }
 
   @JsonProperty("endAt")
-  public void setEndAt(@Nullable OffsetDateTime endAt) {
+  public void setEndAt(@Nullable Optional<OffsetDateTime> endAt) {
     this.endAt = endAt;
   }
 
-  public EventOccurrenceUpdate isCancelled(@Nullable Boolean isCancelled) {
+  public EventOccurrenceUpdate isCancelled(@Nullable Optional<Boolean> isCancelled) {
     this.isCancelled = isCancelled;
     return this;
   }
@@ -285,16 +285,16 @@ public class EventOccurrenceUpdate {
    */
   
   @JsonProperty("isCancelled")
-  public @Nullable Boolean getIsCancelled() {
+  public @Nullable Optional<Boolean> getIsCancelled() {
     return isCancelled;
   }
 
   @JsonProperty("isCancelled")
-  public void setIsCancelled(@Nullable Boolean isCancelled) {
+  public void setIsCancelled(@Nullable Optional<Boolean> isCancelled) {
     this.isCancelled = isCancelled;
   }
 
-  public EventOccurrenceUpdate responseStatus(@Nullable ResponseStatusEnum responseStatus) {
+  public EventOccurrenceUpdate responseStatus(@Nullable Optional<ResponseStatusEnum> responseStatus) {
     this.responseStatus = responseStatus;
     return this;
   }
@@ -305,16 +305,16 @@ public class EventOccurrenceUpdate {
    */
   
   @JsonProperty("responseStatus")
-  public @Nullable ResponseStatusEnum getResponseStatus() {
+  public @Nullable Optional<ResponseStatusEnum> getResponseStatus() {
     return responseStatus;
   }
 
   @JsonProperty("responseStatus")
-  public void setResponseStatus(@Nullable ResponseStatusEnum responseStatus) {
+  public void setResponseStatus(@Nullable Optional<ResponseStatusEnum> responseStatus) {
     this.responseStatus = responseStatus;
   }
 
-  public EventOccurrenceUpdate importance(@Nullable ImportanceEnum importance) {
+  public EventOccurrenceUpdate importance(@Nullable Optional<ImportanceEnum> importance) {
     this.importance = importance;
     return this;
   }
@@ -325,12 +325,12 @@ public class EventOccurrenceUpdate {
    */
   
   @JsonProperty("importance")
-  public @Nullable ImportanceEnum getImportance() {
+  public @Nullable Optional<ImportanceEnum> getImportance() {
     return importance;
   }
 
   @JsonProperty("importance")
-  public void setImportance(@Nullable ImportanceEnum importance) {
+  public void setImportance(@Nullable Optional<ImportanceEnum> importance) {
     this.importance = importance;
   }
 

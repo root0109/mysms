@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  learning: the Learning microservice (docs/design/MODULE-AND-PRODUCT-REORGANISATION.md §3). Its areas "lms" each own
+  their database schema of the same name, contract (com.mysms.<area>.v1, /v1/<area>), operation table and Flyway
+  history (database/migrations/<area>); inside the module they share one process, one jar and one gRPC server.
+  Depends on core, auth-client and the messaging runtime; only event consumers compile against the narrow messaging
+  API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.mysms</groupId>
+    <artifactId>mysms</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>learning</artifactId>
+  <name>MySMS learning</name>
+  <description>Learning microservice (schemas lms)</description>
+
+  <properties>
+    <!-- SpotBugs analyses the module's own code: its root package and every layer package of each area (§3) -->
+    <mysms.spotbugs.onlyAnalyze>com.mysms.learning.*,com.mysms.learning.lms.*,com.mysms.learning.lms.api.-,com.mysms.learning.lms.controller.-,com.mysms.learning.lms.grpc.-,com.mysms.learning.lms.integration.-,com.mysms.learning.lms.business.-,com.mysms.learning.lms.repository.-,com.mysms.learning.lms.domain.-,com.mysms.learning.lms.model.-,com.mysms.learning.lms.mapper.-,com.mysms.learning.lms.validation.-,com.mysms.learning.lms.errors.-,com.mysms.learning.lms.events.-,com.mysms.learning.lms.config.-,com.mysms.learning.lms.constants.-</mysms.spotbugs.onlyAnalyze>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>auth-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <!-- messaging runtime relay; event consumers compile against its narrow API -->
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>messaging</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-mail</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.icegreen</groupId>
+      <artifactId>greenmail</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>auth-client</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <!-- each area's migrations, from the single source of truth, applied to its own schema only -->
+      <resource>
+        <directory>${mysms.migrations.dir}/lms</directory>
+        <targetPath>db/migration/lms</targetPath>
+      </resource>
+    </resources>
+    <plugins>
+      <!-- its protos (src/main/resources/proto: its areas' own, and copies of the callees' they call) into its jar -->
+      <plugin>
+        <groupId>org.xolstice.maven.plugins</groupId>
+        <artifactId>protobuf-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <mainClass>com.mysms.learning.LearningApplication</mainClass>
+          <classifier>exec</classifier>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

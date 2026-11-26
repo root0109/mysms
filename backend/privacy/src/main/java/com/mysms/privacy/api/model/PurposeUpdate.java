@@ -5,13 +5,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.Valid;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.lang.Nullable;
 
 /**
- * The tenant's setting of a purpose that can be updated (partial update; see updateMask). Tenant administrators only.
+ * The tenant's setting of a purpose that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it). Tenant administrators only.
  */
 
 public class PurposeUpdate {
@@ -56,15 +58,15 @@ public class PurposeUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean enabled;
+  private @Nullable Optional<@NotNull Boolean> enabled;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable MaxScopeEnum maxScope;
+  private @Nullable Optional<MaxScopeEnum> maxScope;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID noticeId;
+  private @Nullable Optional<UUID> noticeId;
 
-  public PurposeUpdate enabled(@Nullable Boolean enabled) {
+  public PurposeUpdate enabled(@Nullable Optional<Boolean> enabled) {
     this.enabled = enabled;
     return this;
   }
@@ -73,18 +75,18 @@ public class PurposeUpdate {
    * Whether the tenant processes data for the purpose; switching it on needs a notice whose active version lists it.
    * @return enabled
    */
-   
+  
   @JsonProperty("enabled")
-  public @Nullable Boolean getEnabled() {
+  public @Nullable Optional<Boolean> getEnabled() {
     return enabled;
   }
 
   @JsonProperty("enabled")
-  public void setEnabled(@Nullable Boolean enabled) {
+  public void setEnabled(@Nullable Optional<Boolean> enabled) {
     this.enabled = enabled;
   }
 
-  public PurposeUpdate maxScope(@Nullable MaxScopeEnum maxScope) {
+  public PurposeUpdate maxScope(@Nullable Optional<MaxScopeEnum> maxScope) {
     this.maxScope = maxScope;
     return this;
   }
@@ -93,18 +95,18 @@ public class PurposeUpdate {
    * The widest width the tenant allows for a width purpose; absent = no ceiling.
    * @return maxScope
    */
-   
+  
   @JsonProperty("maxScope")
-  public @Nullable MaxScopeEnum getMaxScope() {
+  public @Nullable Optional<MaxScopeEnum> getMaxScope() {
     return maxScope;
   }
 
   @JsonProperty("maxScope")
-  public void setMaxScope(@Nullable MaxScopeEnum maxScope) {
+  public void setMaxScope(@Nullable Optional<MaxScopeEnum> maxScope) {
     this.maxScope = maxScope;
   }
 
-  public PurposeUpdate noticeId(@Nullable UUID noticeId) {
+  public PurposeUpdate noticeId(@Nullable Optional<UUID> noticeId) {
     this.noticeId = noticeId;
     return this;
   }
@@ -113,14 +115,14 @@ public class PurposeUpdate {
    * The notice shown when asking for consent to the purpose.
    * @return noticeId
    */
-  @Valid 
+  
   @JsonProperty("noticeId")
-  public @Nullable UUID getNoticeId() {
+  public @Nullable Optional<UUID> getNoticeId() {
     return noticeId;
   }
 
   @JsonProperty("noticeId")
-  public void setNoticeId(@Nullable UUID noticeId) {
+  public void setNoticeId(@Nullable Optional<UUID> noticeId) {
     this.noticeId = noticeId;
   }
 

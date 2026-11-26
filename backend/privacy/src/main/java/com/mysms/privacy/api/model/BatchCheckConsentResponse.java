@@ -39,9 +39,9 @@ public class BatchCheckConsentResponse {
    * The decisions, in the order of the request's subjects.
    * @return decisions
    */
-  @Valid 
+  
   @JsonProperty("decisions")
-  public List<ConsentDecision> getDecisions() {
+  public List<@Valid ConsentDecision> getDecisions() {
     return decisions;
   }
 

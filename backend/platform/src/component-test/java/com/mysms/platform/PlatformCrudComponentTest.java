@@ -39,14 +39,14 @@ class PlatformCrudComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "platform");
+        DATABASE.register(registry, "platform", "master", "org");
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
     }
 
     @TestFactory
     List<DynamicNode> standardOperations() {
-        return new CrudContract(TOKENS, () -> port, this::fixtures).tests("crud-spec.json");
+        return new CrudContract(TOKENS, () -> port, this::fixtures).tests("platform/crud-spec.json");
     }
 
     @TestFactory

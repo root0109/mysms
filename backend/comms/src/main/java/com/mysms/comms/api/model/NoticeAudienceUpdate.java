@@ -16,18 +16,18 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of NoticeAudience that can be updated (partial update; see updateMask).
+ * Fields of NoticeAudience that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class NoticeAudienceUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID roleId;
+  private @Nullable Optional<UUID> roleId;
 
-  public NoticeAudienceUpdate institutionId(@Nullable UUID institutionId) {
+  public NoticeAudienceUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -36,18 +36,18 @@ public class NoticeAudienceUpdate {
    * Institution (NULL = all institutions of the tenant).
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public NoticeAudienceUpdate roleId(@Nullable UUID roleId) {
+  public NoticeAudienceUpdate roleId(@Nullable Optional<UUID> roleId) {
     this.roleId = roleId;
     return this;
   }
@@ -56,14 +56,14 @@ public class NoticeAudienceUpdate {
    * Role (NULL = every role).
    * @return roleId
    */
-  @Valid 
+  
   @JsonProperty("roleId")
-  public @Nullable UUID getRoleId() {
+  public @Nullable Optional<UUID> getRoleId() {
     return roleId;
   }
 
   @JsonProperty("roleId")
-  public void setRoleId(@Nullable UUID roleId) {
+  public void setRoleId(@Nullable Optional<UUID> roleId) {
     this.roleId = roleId;
   }
 

@@ -26,7 +26,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,9 +49,6 @@ public class ContentViewService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "comms.content_view.create";
     static final String PERMISSION_UPDATE = "comms.content_view.update";
     static final String PERMISSION_DELETE = "comms.content_view.delete";
-    /** The contract's ContentViewUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("institutionId", "studentId", "viewerUserId", "contentType", "contentId", "viewedAt");
 
 
     private final ContentViewRepository repository;
@@ -119,13 +116,11 @@ public class ContentViewService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
-    public ContentView updateContentView(UUID id, String ifMatch, ContentViewUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public ContentView updateContentView(UUID id, String ifMatch, ContentViewUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             ContentViewEntity entity = loadVisible(scope, id);
@@ -133,7 +128,7 @@ public class ContentViewService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -186,20 +181,16 @@ public class ContentViewService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected ContentViewUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(ContentViewEntity entity, ContentViewUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "studentId" -> entity.setStudentId(changes.getStudentId());
-                case "viewerUserId" -> entity.setViewerUserId(changes.getViewerUserId());
-                case "contentType" -> entity.setContentType(Optional.ofNullable(changes.getContentType())
-                        .map(v -> v.getValue()).orElse(null));
-                case "contentId" -> entity.setContentId(changes.getContentId());
-                case "viewedAt" -> entity.setViewedAt(changes.getViewedAt());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(ContentViewEntity entity, ContentViewUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("studentId", changes.getStudentId(), entity::setStudentId);
+        patch.apply("viewerUserId", changes.getViewerUserId(), entity::setViewerUserId);
+        patch.apply("contentType", changes.getContentType(), v -> entity.setContentType(v == null ? null : v.getValue()));
+        patch.apply("contentId", changes.getContentId(), entity::setContentId);
+        patch.apply("viewedAt", changes.getViewedAt(), entity::setViewedAt);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

@@ -1,0 +1,29 @@
+package com.mysms.hrms.payroll.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.math.BigDecimal;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of payroll.payslip_line. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class PayslipLineEntity extends BaseEntity {
+
+    public static final String TABLE = "payroll.payslip_line";
+
+    private UUID tenantId;
+    private String componentCode;
+    private String componentName;
+    private String componentType;
+    private UUID payslipId;
+    private UUID staffSalaryComponentId;
+    private BigDecimal amount;
+}

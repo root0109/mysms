@@ -23,27 +23,12 @@
   <dependencies>
     <dependency>
       <groupId>com.mysms</groupId>
-      <artifactId>master</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
       <artifactId>platform</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.mysms</groupId>
-      <artifactId>iam</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>org</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>people</artifactId>
+      <artifactId>identity</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -53,47 +38,17 @@
     </dependency>
     <dependency>
       <groupId>com.mysms</groupId>
-      <artifactId>sis</artifactId>
+      <artifactId>students</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.mysms</groupId>
-      <artifactId>hr</artifactId>
+      <artifactId>hrms</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.mysms</groupId>
-      <artifactId>payroll</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>admission</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>attendance</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>facility</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>timetable</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>assessment</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>lms</artifactId>
+      <artifactId>learning</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -103,27 +58,12 @@
     </dependency>
     <dependency>
       <groupId>com.mysms</groupId>
-      <artifactId>library</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>transport</artifactId>
+      <artifactId>campus</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.mysms</groupId>
       <artifactId>comms</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>frontoffice</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mysms</groupId>
-      <artifactId>careers</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

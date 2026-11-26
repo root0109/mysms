@@ -1,0 +1,31 @@
+package com.mysms.identity.iam.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of iam.user_session. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class UserSessionEntity extends BaseEntity {
+
+    public static final String TABLE = "iam.user_session";
+
+    private UUID tenantId;
+    private UUID userId;
+    private String sessionRef;
+    private UUID deviceId;
+    private String ipAddress;
+    private String userAgent;
+    private OffsetDateTime startedAt;
+    private OffsetDateTime lastSeenAt;
+    private OffsetDateTime endedAt;
+}

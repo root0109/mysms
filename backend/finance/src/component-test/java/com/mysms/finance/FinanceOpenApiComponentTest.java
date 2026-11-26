@@ -27,7 +27,7 @@ import org.springframework.test.context.DynamicPropertySource;
 class FinanceOpenApiComponentTest {
 
     /** Where the document is written, relative to the module. */
-    private static final String OPEN_API_OUTPUT_LOCATION = "target/openapi/api-docs.yml";
+    private static final String OPEN_API_OUTPUT_LOCATION = "target/openapi/finance/api-docs.yml";
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
     private static final TestTokens TOKENS = new TestTokens();
 
@@ -44,7 +44,7 @@ class FinanceOpenApiComponentTest {
 
     @Test
     void writesItsOpenApiDocumentFromTheCode() throws Exception {
-        HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/v3/api-docs.yaml"))
+        HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/v3/api-docs.yaml/finance"))
                 .header("Accept", "application/vnd.oai.openapi")
                 .header("Authorization", "Bearer " + TOKENS.tenantUser(UUID.randomUUID(), UUID.randomUUID()))
                 .GET().build();

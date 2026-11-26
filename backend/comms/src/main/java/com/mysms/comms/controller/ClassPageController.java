@@ -147,8 +147,8 @@ public class ClassPageController implements ClassPageApi {
 
     @Override
     public ResponseEntity<ClassPage> updateClassPage(UUID classPageId, String ifMatch,
-            ClassPageUpdate classPageUpdate, String updateMask, Boolean validateOnly) {
-        ClassPage updated = classPageService.updateClassPage(classPageId, ifMatch, classPageUpdate, updateMask,
+            ClassPageUpdate classPageUpdate, Boolean validateOnly) {
+        ClassPage updated = classPageService.updateClassPage(classPageId, ifMatch, classPageUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
@@ -156,20 +156,20 @@ public class ClassPageController implements ClassPageApi {
     @Override
     public ResponseEntity<ClassPageAttachment> updateClassPageAttachment(UUID classPageId,
             UUID classPageAttachmentId, String ifMatch, ClassPageAttachmentUpdate classPageAttachmentUpdate,
-            String updateMask, Boolean validateOnly) {
+            Boolean validateOnly) {
         ClassPageAttachment updated =
                 classPageService.updateClassPageAttachment(classPageId, classPageAttachmentId, ifMatch,
-                        classPageAttachmentUpdate, updateMask,
+                        classPageAttachmentUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<ClassPageMember> updateClassPageMember(UUID classPageId, UUID classPageMemberId,
-            String ifMatch, ClassPageMemberUpdate classPageMemberUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, ClassPageMemberUpdate classPageMemberUpdate, Boolean validateOnly) {
         ClassPageMember updated =
                 classPageService.updateClassPageMember(classPageId, classPageMemberId, ifMatch,
-                        classPageMemberUpdate, updateMask,
+                        classPageMemberUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

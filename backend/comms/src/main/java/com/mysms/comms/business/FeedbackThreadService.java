@@ -38,7 +38,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -72,8 +72,6 @@ public class FeedbackThreadService extends AppTransactionManager {
     static final String PERMISSION_DELETE = "comms.feedback_thread.delete";
     static final String PERMISSION_CLOSE_FEEDBACK_THREAD = "comms.feedback_thread.close_feedback_thread";
     static final String PERMISSION_REOPEN_FEEDBACK_THREAD = "comms.feedback_thread.reopen_feedback_thread";
-    /** The contract's FeedbackThreadUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("institutionId", "guardianId", "studentId", "assignedToUserId");
 
     public static final String FEEDBACK_MESSAGE_AGGREGATE = FeedbackMessageEntity.TABLE;
     static final String FEEDBACK_MESSAGE_PERMISSION_LIST = "comms.feedback_message.read";
@@ -86,9 +84,6 @@ public class FeedbackThreadService extends AppTransactionManager {
     static final String PERMISSION_SCHOOL_SIDE = PERMISSION_MARK_FEEDBACK_MESSAGE;
     /** The handling states in order: a message's state only moves forward. */
     static final List<String> REVIEW_ORDER = List.of("new", "seen", "action_taken");
-    /** The contract's FeedbackMessageUpdate fields, in apply order; the sender is the caller, from the token. */
-    static final List<String> FEEDBACK_MESSAGE_WRITABLE =
-            List.of("category", "message", "attachmentFileId", "reviewStatus", "deletedBySender", "deletedByReceiver");
     /** The fields only the school side (anyone but the sender) changes; the rest are the sender's own. */
     static final Set<String> FEEDBACK_MESSAGE_RECEIVER_FIELDS = Set.of("reviewStatus", "deletedByReceiver");
 
@@ -171,13 +166,11 @@ public class FeedbackThreadService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
-    public FeedbackThread updateFeedbackThread(UUID id, String ifMatch, FeedbackThreadUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public FeedbackThread updateFeedbackThread(UUID id, String ifMatch, FeedbackThreadUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             FeedbackThreadEntity entity = loadVisible(scope, id);
@@ -185,7 +178,7 @@ public class FeedbackThreadService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -342,17 +335,14 @@ public class FeedbackThreadService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected FeedbackThreadUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(FeedbackThreadEntity entity, FeedbackThreadUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "guardianId" -> entity.setGuardianId(changes.getGuardianId());
-                case "studentId" -> entity.setStudentId(changes.getStudentId());
-                case "assignedToUserId" -> entity.setAssignedToUserId(changes.getAssignedToUserId());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(FeedbackThreadEntity entity, FeedbackThreadUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("guardianId", changes.getGuardianId(), entity::setGuardianId);
+        patch.apply("studentId", changes.getStudentId(), entity::setStudentId);
+        patch.apply("assignedToUserId", changes.getAssignedToUserId(), entity::setAssignedToUserId);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -436,25 +426,24 @@ public class FeedbackThreadService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope. The message's own fields
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope. The message's own fields
      * change only by its sender (404 to anyone else); the handling state and the receiver's hiding only by the school
      * side (403 for the sender), the state never moving back (409).
      */
     public FeedbackMessage updateFeedbackMessage(UUID threadId, UUID id, String ifMatch, FeedbackMessageUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, FEEDBACK_MESSAGE_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(FEEDBACK_MESSAGE_PERMISSION_UPDATE);
             FeedbackMessageEntity entity = loadVisibleFeedbackMessage(scope, threadId, id);
+            String reviewed = entity.getReviewStatus();
+            List<String> fields = applyFeedbackMessage(entity, changes); // in memory: who may change what comes first
             requireFieldsOwnedFeedbackMessage(entity, fields);
             scope.requireWritable(institutionOfFeedbackMessage(entity));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            String reviewed = entity.getReviewStatus();
-            applyFeedbackMessage(entity, changes, fields);
             validator.validate(feedbackMessageMapper.toDto(entity));
             assertValidFeedbackMessage(entity, false);
             if (REVIEW_ORDER.indexOf(entity.getReviewStatus()) < REVIEW_ORDER.indexOf(reviewed)) {
@@ -570,21 +559,16 @@ public class FeedbackThreadService extends AppTransactionManager {
         return feedbackMessageRepository.institutionOf(entity.getThreadId());
     }
 
-    /** Applies the selected FeedbackMessageUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyFeedbackMessage(FeedbackMessageEntity entity, FeedbackMessageUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "category" -> entity.setCategory(Optional.ofNullable(changes.getCategory()).map(v -> v.getValue())
-                        .orElse(null));
-                case "message" -> entity.setMessage(changes.getMessage());
-                case "attachmentFileId" -> entity.setAttachmentFileId(changes.getAttachmentFileId());
-                case "reviewStatus" -> entity.setReviewStatus(Optional.ofNullable(changes.getReviewStatus())
-                        .map(v -> v.getValue()).orElse(null));
-                case "deletedBySender" -> entity.setDeletedBySender(changes.getDeletedBySender());
-                case "deletedByReceiver" -> entity.setDeletedByReceiver(changes.getDeletedByReceiver());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyFeedbackMessage(FeedbackMessageEntity entity, FeedbackMessageUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("category", changes.getCategory(), v -> entity.setCategory(v == null ? null : v.getValue()));
+        patch.apply("message", changes.getMessage(), entity::setMessage);
+        patch.apply("attachmentFileId", changes.getAttachmentFileId(), entity::setAttachmentFileId);
+        patch.apply("reviewStatus", changes.getReviewStatus(), v -> entity.setReviewStatus(v == null ? null : v.getValue()));
+        patch.apply("deletedBySender", changes.getDeletedBySender(), entity::setDeletedBySender);
+        patch.apply("deletedByReceiver", changes.getDeletedByReceiver(), entity::setDeletedByReceiver);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

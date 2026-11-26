@@ -22,7 +22,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.finance.config.FinanceDatabaseConfig;
 import com.mysms.finance.config.FinanceEventsConfig;
 import com.mysms.finance.domain.AcquisitionSourceEntity;
@@ -51,8 +51,6 @@ public class AcquisitionSourceService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "finance.acquisition_source.create";
     static final String PERMISSION_UPDATE = "finance.acquisition_source.update";
     static final String PERMISSION_DELETE = "finance.acquisition_source.delete";
-    /** The contract's AcquisitionSourceUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("code", "sortOrder", "isActive", "name");
 
 
     private final AcquisitionSourceRepository repository;
@@ -121,13 +119,12 @@ public class AcquisitionSourceService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set. The merged row is validated as a whole, and must stay within the caller's scope.
      */
     public AcquisitionSource updateAcquisitionSource(UUID id, String ifMatch, AcquisitionSourceUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             AcquisitionSourceEntity entity = loadVisible(scope, id);
@@ -135,7 +132,7 @@ public class AcquisitionSourceService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -192,20 +189,14 @@ public class AcquisitionSourceService extends AppTransactionManager {
         return Optional.empty();
     }
 
-    /**
-     * Applies the selected AcquisitionSourceUpdate fields; explicit per field so a mask can clear values (no
-     * reflection).
-     */
-    private static void apply(AcquisitionSourceEntity entity, AcquisitionSourceUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "code" -> entity.setCode(changes.getCode());
-                case "sortOrder" -> entity.setSortOrder(changes.getSortOrder());
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                case "name" -> entity.setName(changes.getName());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(AcquisitionSourceEntity entity, AcquisitionSourceUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("code", changes.getCode(), entity::setCode);
+        patch.apply("sortOrder", changes.getSortOrder(), entity::setSortOrder);
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        patch.apply("name", changes.getName(), entity::setName);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

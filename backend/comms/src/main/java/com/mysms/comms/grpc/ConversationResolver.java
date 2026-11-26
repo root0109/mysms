@@ -88,7 +88,7 @@ public class ConversationResolver extends ConversationServiceGrpc.ConversationSe
         Conversation updated = service.updateConversation(
                 bridge.id(request.getConversation().getId(), "id"), bridge.requiredIfMatch(request.getConversation().getEtag()),
                 bridge.changes(request.getConversation(), request.getUpdateMask(), ConversationUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateConversationResponse.newBuilder(), "conversation", updated).build());
     }
 
@@ -135,7 +135,7 @@ public class ConversationResolver extends ConversationServiceGrpc.ConversationSe
                 bridge.id(request.getConversationParticipant().getId(), "id"),
                 bridge.requiredIfMatch(request.getConversationParticipant().getEtag()),
                 bridge.changes(request.getConversationParticipant(), request.getUpdateMask(),
-                ConversationParticipantUpdate.class), bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                ConversationParticipantUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateConversationParticipantResponse.newBuilder(), "conversation_participant", updated).build());
     }
@@ -185,7 +185,7 @@ public class ConversationResolver extends ConversationServiceGrpc.ConversationSe
                 bridge.id(request.getConversationMessage().getId(), "id"),
                 bridge.requiredIfMatch(request.getConversationMessage().getEtag()),
                 bridge.changes(request.getConversationMessage(), request.getUpdateMask(), ConversationMessageUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateConversationMessageResponse.newBuilder(), "conversation_message", updated).build());
     }

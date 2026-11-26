@@ -54,7 +54,7 @@ class AcademicsReferenceCleanupComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "academics");
+        DATABASE.register(registry, "academics", "timetable", "attendance", "assessment");
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
     }
@@ -62,7 +62,7 @@ class AcademicsReferenceCleanupComponentTest {
     @TestFactory
     List<DynamicTest> everyReferenceIsCleanedUpWhenItsOwnerIsDeleted() throws IOException {
         JsonNode spec;
-        try (InputStream in = getClass().getResourceAsStream("/reference-cleanup.json")) {
+        try (InputStream in = getClass().getResourceAsStream("/academics/reference-cleanup.json")) {
             spec = JsonMapper.builder().build().readTree(in);
         }
         List<DynamicTest> tests = new ArrayList<>();

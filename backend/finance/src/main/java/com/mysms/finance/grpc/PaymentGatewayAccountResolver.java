@@ -69,8 +69,7 @@ public class PaymentGatewayAccountResolver
                 bridge.id(request.getPaymentGatewayAccount().getId(), "id"),
                 bridge.requiredIfMatch(request.getPaymentGatewayAccount().getEtag()),
                 bridge.changes(request.getPaymentGatewayAccount(), request.getUpdateMask(),
-                        PaymentGatewayAccountUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                        PaymentGatewayAccountUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePaymentGatewayAccountResponse.newBuilder(), "payment_gateway_account",
                 updated).build());
     }

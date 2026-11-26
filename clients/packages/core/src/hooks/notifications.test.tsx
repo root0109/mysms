@@ -103,7 +103,7 @@ describe('notification preferences (ACC-10)', () => {
     expect(new URLSearchParams(firstList?.search).get('size')).toBe('500');
   });
 
-  it('updates one preference under its ETag with an update mask, then refreshes the set', async () => {
+  it('updates one preference under its ETag with only the changed field, then refreshes the set', async () => {
     const { api, runtime, wrapper } = setup();
     await runtime.session.signIn({ tenantCode: 'demo', identifier: 'asha', password: 'pw' });
     const { result } = renderHook(
@@ -122,7 +122,8 @@ describe('notification preferences (ACC-10)', () => {
     );
     expect(saved.etag).toBe('"2"');
     const patch = api.calls.find((c) => c.method === 'PATCH');
-    expect(new URLSearchParams(patch?.search).get('updateMask')).toBe('propertyValue');
+    expect(patch?.search).toBe('');
+    expect(JSON.parse(patch?.body ?? '')).toEqual({ propertyValue: 'off' });
     expect(patch?.headers.get('If-Match')).toBe('"1"');
     await waitFor(() => expect(result.current.preferences.data?.items[0]?.propertyValue).toBe('off'));
 

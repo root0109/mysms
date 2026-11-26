@@ -17,19 +17,19 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Tenant that can be updated (partial update; see updateMask).
+ * Fields of Tenant that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class TenantUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@NotNull @Size(max = 50) String> code;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 200) String> name;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String legalName;
+  private @Nullable Optional<@Size(max = 200) String> legalName;
 
   /**
    * Tenant lifecycle state.
@@ -69,27 +69,27 @@ public class TenantUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable StatusEnum status;
+  private @Nullable Optional<@NotNull StatusEnum> status;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String primaryEmail;
+  private @Nullable Optional<@Size(max = 320) String> primaryEmail;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String primaryPhone;
+  private @Nullable Optional<@Size(max = 20) String> primaryPhone;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID countryId;
+  private @Nullable Optional<UUID> countryId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID defaultCurrencyId;
+  private @Nullable Optional<UUID> defaultCurrencyId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String timezone;
+  private @Nullable Optional<@NotNull @Size(max = 64) String> timezone;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String locale;
+  private @Nullable Optional<@NotNull @Size(max = 10) String> locale;
 
-  public TenantUpdate code(@Nullable String code) {
+  public TenantUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -98,18 +98,18 @@ public class TenantUpdate {
    * Short unique tenant code used in URLs and logins.
    * @return code
    */
-  @Size(max = 50) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 
-  public TenantUpdate name(@Nullable String name) {
+  public TenantUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -118,18 +118,18 @@ public class TenantUpdate {
    * Display name.
    * @return name
    */
-  @Size(max = 200) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public TenantUpdate legalName(@Nullable String legalName) {
+  public TenantUpdate legalName(@Nullable Optional<String> legalName) {
     this.legalName = legalName;
     return this;
   }
@@ -138,18 +138,18 @@ public class TenantUpdate {
    * Registered legal name.
    * @return legalName
    */
-  @Size(max = 200) 
+  
   @JsonProperty("legalName")
-  public @Nullable String getLegalName() {
+  public @Nullable Optional<String> getLegalName() {
     return legalName;
   }
 
   @JsonProperty("legalName")
-  public void setLegalName(@Nullable String legalName) {
+  public void setLegalName(@Nullable Optional<String> legalName) {
     this.legalName = legalName;
   }
 
-  public TenantUpdate status(@Nullable StatusEnum status) {
+  public TenantUpdate status(@Nullable Optional<StatusEnum> status) {
     this.status = status;
     return this;
   }
@@ -160,16 +160,16 @@ public class TenantUpdate {
    */
   
   @JsonProperty("status")
-  public @Nullable StatusEnum getStatus() {
+  public @Nullable Optional<StatusEnum> getStatus() {
     return status;
   }
 
   @JsonProperty("status")
-  public void setStatus(@Nullable StatusEnum status) {
+  public void setStatus(@Nullable Optional<StatusEnum> status) {
     this.status = status;
   }
 
-  public TenantUpdate primaryEmail(@Nullable String primaryEmail) {
+  public TenantUpdate primaryEmail(@Nullable Optional<String> primaryEmail) {
     this.primaryEmail = primaryEmail;
     return this;
   }
@@ -178,18 +178,18 @@ public class TenantUpdate {
    * Main contact e-mail.
    * @return primaryEmail
    */
-  @Size(max = 320) 
+  
   @JsonProperty("primaryEmail")
-  public @Nullable String getPrimaryEmail() {
+  public @Nullable Optional<String> getPrimaryEmail() {
     return primaryEmail;
   }
 
   @JsonProperty("primaryEmail")
-  public void setPrimaryEmail(@Nullable String primaryEmail) {
+  public void setPrimaryEmail(@Nullable Optional<String> primaryEmail) {
     this.primaryEmail = primaryEmail;
   }
 
-  public TenantUpdate primaryPhone(@Nullable String primaryPhone) {
+  public TenantUpdate primaryPhone(@Nullable Optional<String> primaryPhone) {
     this.primaryPhone = primaryPhone;
     return this;
   }
@@ -198,18 +198,18 @@ public class TenantUpdate {
    * Main contact phone.
    * @return primaryPhone
    */
-  @Size(max = 20) 
+  
   @JsonProperty("primaryPhone")
-  public @Nullable String getPrimaryPhone() {
+  public @Nullable Optional<String> getPrimaryPhone() {
     return primaryPhone;
   }
 
   @JsonProperty("primaryPhone")
-  public void setPrimaryPhone(@Nullable String primaryPhone) {
+  public void setPrimaryPhone(@Nullable Optional<String> primaryPhone) {
     this.primaryPhone = primaryPhone;
   }
 
-  public TenantUpdate countryId(@Nullable UUID countryId) {
+  public TenantUpdate countryId(@Nullable Optional<UUID> countryId) {
     this.countryId = countryId;
     return this;
   }
@@ -218,18 +218,18 @@ public class TenantUpdate {
    * Country of registration.
    * @return countryId
    */
-  @Valid 
+  
   @JsonProperty("countryId")
-  public @Nullable UUID getCountryId() {
+  public @Nullable Optional<UUID> getCountryId() {
     return countryId;
   }
 
   @JsonProperty("countryId")
-  public void setCountryId(@Nullable UUID countryId) {
+  public void setCountryId(@Nullable Optional<UUID> countryId) {
     this.countryId = countryId;
   }
 
-  public TenantUpdate defaultCurrencyId(@Nullable UUID defaultCurrencyId) {
+  public TenantUpdate defaultCurrencyId(@Nullable Optional<UUID> defaultCurrencyId) {
     this.defaultCurrencyId = defaultCurrencyId;
     return this;
   }
@@ -238,18 +238,18 @@ public class TenantUpdate {
    * Default currency for fees and payments.
    * @return defaultCurrencyId
    */
-  @Valid 
+  
   @JsonProperty("defaultCurrencyId")
-  public @Nullable UUID getDefaultCurrencyId() {
+  public @Nullable Optional<UUID> getDefaultCurrencyId() {
     return defaultCurrencyId;
   }
 
   @JsonProperty("defaultCurrencyId")
-  public void setDefaultCurrencyId(@Nullable UUID defaultCurrencyId) {
+  public void setDefaultCurrencyId(@Nullable Optional<UUID> defaultCurrencyId) {
     this.defaultCurrencyId = defaultCurrencyId;
   }
 
-  public TenantUpdate timezone(@Nullable String timezone) {
+  public TenantUpdate timezone(@Nullable Optional<String> timezone) {
     this.timezone = timezone;
     return this;
   }
@@ -258,18 +258,18 @@ public class TenantUpdate {
    * IANA time zone, e.g. Asia/Kolkata.
    * @return timezone
    */
-  @Size(max = 64) 
+  
   @JsonProperty("timezone")
-  public @Nullable String getTimezone() {
+  public @Nullable Optional<String> getTimezone() {
     return timezone;
   }
 
   @JsonProperty("timezone")
-  public void setTimezone(@Nullable String timezone) {
+  public void setTimezone(@Nullable Optional<String> timezone) {
     this.timezone = timezone;
   }
 
-  public TenantUpdate locale(@Nullable String locale) {
+  public TenantUpdate locale(@Nullable Optional<String> locale) {
     this.locale = locale;
     return this;
   }
@@ -278,14 +278,14 @@ public class TenantUpdate {
    * Default locale.
    * @return locale
    */
-  @Size(max = 10) 
+  
   @JsonProperty("locale")
-  public @Nullable String getLocale() {
+  public @Nullable Optional<String> getLocale() {
     return locale;
   }
 
   @JsonProperty("locale")
-  public void setLocale(@Nullable String locale) {
+  public void setLocale(@Nullable Optional<String> locale) {
     this.locale = locale;
   }
 

@@ -82,7 +82,7 @@ public class LessonPlanResolver extends LessonPlanServiceGrpc.LessonPlanServiceI
         LessonPlan updated = service.updateLessonPlan(bridge.id(request.getLessonPlan().getId(), "id"),
                 bridge.requiredIfMatch(request.getLessonPlan().getEtag()),
                 bridge.changes(request.getLessonPlan(), request.getUpdateMask(), LessonPlanUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLessonPlanResponse.newBuilder(), "lesson_plan", updated).build());
     }
 
@@ -124,7 +124,7 @@ public class LessonPlanResolver extends LessonPlanServiceGrpc.LessonPlanServiceI
                 bridge.id(request.getLessonPlanApproval().getId(), "id"),
                 bridge.requiredIfMatch(request.getLessonPlanApproval().getEtag()),
                 bridge.changes(request.getLessonPlanApproval(), request.getUpdateMask(), LessonPlanApprovalUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateLessonPlanApprovalResponse.newBuilder(), "lesson_plan_approval", updated).build());
     }

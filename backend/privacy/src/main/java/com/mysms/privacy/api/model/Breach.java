@@ -535,9 +535,9 @@ public class Breach {
    * The notices recorded about the breach, in the order they were sent. Output only.
    * @return notifications
    */
-  @Valid 
+  
   @JsonProperty("notifications")
-  public @Nullable List<BreachNotification> getNotifications() {
+  public @Nullable List<@Valid BreachNotification> getNotifications() {
     return notifications;
   }
 

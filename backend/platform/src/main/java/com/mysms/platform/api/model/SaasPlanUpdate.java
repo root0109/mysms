@@ -16,57 +16,57 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of SaasPlan that can be updated (partial update; see updateMask).
+ * Fields of SaasPlan that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class SaasPlanUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@NotNull @Size(max = 50) String> code;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String displayName;
+  private @Nullable Optional<@NotNull @Size(max = 120) String> displayName;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer billingCycleMonths;
+  private @Nullable Optional<@NotNull Integer> billingCycleMonths;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String price;
+  private @Nullable Optional<@NotNull @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> price;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID currencyId;
+  private @Nullable Optional<UUID> currencyId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer sortOrder;
+  private @Nullable Optional<@NotNull Integer> sortOrder;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer maxMembers;
+  private @Nullable Optional<Integer> maxMembers;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer maxEvents;
+  private @Nullable Optional<Integer> maxEvents;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer maxFolders;
+  private @Nullable Optional<Integer> maxFolders;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer maxFiles;
+  private @Nullable Optional<Integer> maxFiles;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer maxVideos;
+  private @Nullable Optional<Integer> maxVideos;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer maxAudios;
+  private @Nullable Optional<Integer> maxAudios;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer maxBulletins;
+  private @Nullable Optional<Integer> maxBulletins;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer maxGroups;
+  private @Nullable Optional<Integer> maxGroups;
 
-  public SaasPlanUpdate code(@Nullable String code) {
+  public SaasPlanUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -75,18 +75,18 @@ public class SaasPlanUpdate {
    * Unique plan code.
    * @return code
    */
-  @Size(max = 50) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 
-  public SaasPlanUpdate displayName(@Nullable String displayName) {
+  public SaasPlanUpdate displayName(@Nullable Optional<String> displayName) {
     this.displayName = displayName;
     return this;
   }
@@ -95,18 +95,18 @@ public class SaasPlanUpdate {
    * Plan name shown to customers.
    * @return displayName
    */
-  @Size(max = 120) 
+  
   @JsonProperty("displayName")
-  public @Nullable String getDisplayName() {
+  public @Nullable Optional<String> getDisplayName() {
     return displayName;
   }
 
   @JsonProperty("displayName")
-  public void setDisplayName(@Nullable String displayName) {
+  public void setDisplayName(@Nullable Optional<String> displayName) {
     this.displayName = displayName;
   }
 
-  public SaasPlanUpdate billingCycleMonths(@Nullable Integer billingCycleMonths) {
+  public SaasPlanUpdate billingCycleMonths(@Nullable Optional<Integer> billingCycleMonths) {
     this.billingCycleMonths = billingCycleMonths;
     return this;
   }
@@ -117,16 +117,16 @@ public class SaasPlanUpdate {
    */
   
   @JsonProperty("billingCycleMonths")
-  public @Nullable Integer getBillingCycleMonths() {
+  public @Nullable Optional<Integer> getBillingCycleMonths() {
     return billingCycleMonths;
   }
 
   @JsonProperty("billingCycleMonths")
-  public void setBillingCycleMonths(@Nullable Integer billingCycleMonths) {
+  public void setBillingCycleMonths(@Nullable Optional<Integer> billingCycleMonths) {
     this.billingCycleMonths = billingCycleMonths;
   }
 
-  public SaasPlanUpdate price(@Nullable String price) {
+  public SaasPlanUpdate price(@Nullable Optional<String> price) {
     this.price = price;
     return this;
   }
@@ -135,18 +135,18 @@ public class SaasPlanUpdate {
    * Price per billing cycle.
    * @return price
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("price")
-  public @Nullable String getPrice() {
+  public @Nullable Optional<String> getPrice() {
     return price;
   }
 
   @JsonProperty("price")
-  public void setPrice(@Nullable String price) {
+  public void setPrice(@Nullable Optional<String> price) {
     this.price = price;
   }
 
-  public SaasPlanUpdate currencyId(@Nullable UUID currencyId) {
+  public SaasPlanUpdate currencyId(@Nullable Optional<UUID> currencyId) {
     this.currencyId = currencyId;
     return this;
   }
@@ -155,18 +155,18 @@ public class SaasPlanUpdate {
    * Currency of the price.
    * @return currencyId
    */
-  @Valid 
+  
   @JsonProperty("currencyId")
-  public @Nullable UUID getCurrencyId() {
+  public @Nullable Optional<UUID> getCurrencyId() {
     return currencyId;
   }
 
   @JsonProperty("currencyId")
-  public void setCurrencyId(@Nullable UUID currencyId) {
+  public void setCurrencyId(@Nullable Optional<UUID> currencyId) {
     this.currencyId = currencyId;
   }
 
-  public SaasPlanUpdate sortOrder(@Nullable Integer sortOrder) {
+  public SaasPlanUpdate sortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
     return this;
   }
@@ -177,16 +177,16 @@ public class SaasPlanUpdate {
    */
   
   @JsonProperty("sortOrder")
-  public @Nullable Integer getSortOrder() {
+  public @Nullable Optional<Integer> getSortOrder() {
     return sortOrder;
   }
 
   @JsonProperty("sortOrder")
-  public void setSortOrder(@Nullable Integer sortOrder) {
+  public void setSortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
   }
 
-  public SaasPlanUpdate isActive(@Nullable Boolean isActive) {
+  public SaasPlanUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -197,16 +197,16 @@ public class SaasPlanUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 
-  public SaasPlanUpdate maxMembers(@Nullable Integer maxMembers) {
+  public SaasPlanUpdate maxMembers(@Nullable Optional<Integer> maxMembers) {
     this.maxMembers = maxMembers;
     return this;
   }
@@ -217,16 +217,16 @@ public class SaasPlanUpdate {
    */
   
   @JsonProperty("maxMembers")
-  public @Nullable Integer getMaxMembers() {
+  public @Nullable Optional<Integer> getMaxMembers() {
     return maxMembers;
   }
 
   @JsonProperty("maxMembers")
-  public void setMaxMembers(@Nullable Integer maxMembers) {
+  public void setMaxMembers(@Nullable Optional<Integer> maxMembers) {
     this.maxMembers = maxMembers;
   }
 
-  public SaasPlanUpdate maxEvents(@Nullable Integer maxEvents) {
+  public SaasPlanUpdate maxEvents(@Nullable Optional<Integer> maxEvents) {
     this.maxEvents = maxEvents;
     return this;
   }
@@ -237,16 +237,16 @@ public class SaasPlanUpdate {
    */
   
   @JsonProperty("maxEvents")
-  public @Nullable Integer getMaxEvents() {
+  public @Nullable Optional<Integer> getMaxEvents() {
     return maxEvents;
   }
 
   @JsonProperty("maxEvents")
-  public void setMaxEvents(@Nullable Integer maxEvents) {
+  public void setMaxEvents(@Nullable Optional<Integer> maxEvents) {
     this.maxEvents = maxEvents;
   }
 
-  public SaasPlanUpdate maxFolders(@Nullable Integer maxFolders) {
+  public SaasPlanUpdate maxFolders(@Nullable Optional<Integer> maxFolders) {
     this.maxFolders = maxFolders;
     return this;
   }
@@ -257,16 +257,16 @@ public class SaasPlanUpdate {
    */
   
   @JsonProperty("maxFolders")
-  public @Nullable Integer getMaxFolders() {
+  public @Nullable Optional<Integer> getMaxFolders() {
     return maxFolders;
   }
 
   @JsonProperty("maxFolders")
-  public void setMaxFolders(@Nullable Integer maxFolders) {
+  public void setMaxFolders(@Nullable Optional<Integer> maxFolders) {
     this.maxFolders = maxFolders;
   }
 
-  public SaasPlanUpdate maxFiles(@Nullable Integer maxFiles) {
+  public SaasPlanUpdate maxFiles(@Nullable Optional<Integer> maxFiles) {
     this.maxFiles = maxFiles;
     return this;
   }
@@ -277,16 +277,16 @@ public class SaasPlanUpdate {
    */
   
   @JsonProperty("maxFiles")
-  public @Nullable Integer getMaxFiles() {
+  public @Nullable Optional<Integer> getMaxFiles() {
     return maxFiles;
   }
 
   @JsonProperty("maxFiles")
-  public void setMaxFiles(@Nullable Integer maxFiles) {
+  public void setMaxFiles(@Nullable Optional<Integer> maxFiles) {
     this.maxFiles = maxFiles;
   }
 
-  public SaasPlanUpdate maxVideos(@Nullable Integer maxVideos) {
+  public SaasPlanUpdate maxVideos(@Nullable Optional<Integer> maxVideos) {
     this.maxVideos = maxVideos;
     return this;
   }
@@ -297,16 +297,16 @@ public class SaasPlanUpdate {
    */
   
   @JsonProperty("maxVideos")
-  public @Nullable Integer getMaxVideos() {
+  public @Nullable Optional<Integer> getMaxVideos() {
     return maxVideos;
   }
 
   @JsonProperty("maxVideos")
-  public void setMaxVideos(@Nullable Integer maxVideos) {
+  public void setMaxVideos(@Nullable Optional<Integer> maxVideos) {
     this.maxVideos = maxVideos;
   }
 
-  public SaasPlanUpdate maxAudios(@Nullable Integer maxAudios) {
+  public SaasPlanUpdate maxAudios(@Nullable Optional<Integer> maxAudios) {
     this.maxAudios = maxAudios;
     return this;
   }
@@ -317,16 +317,16 @@ public class SaasPlanUpdate {
    */
   
   @JsonProperty("maxAudios")
-  public @Nullable Integer getMaxAudios() {
+  public @Nullable Optional<Integer> getMaxAudios() {
     return maxAudios;
   }
 
   @JsonProperty("maxAudios")
-  public void setMaxAudios(@Nullable Integer maxAudios) {
+  public void setMaxAudios(@Nullable Optional<Integer> maxAudios) {
     this.maxAudios = maxAudios;
   }
 
-  public SaasPlanUpdate maxBulletins(@Nullable Integer maxBulletins) {
+  public SaasPlanUpdate maxBulletins(@Nullable Optional<Integer> maxBulletins) {
     this.maxBulletins = maxBulletins;
     return this;
   }
@@ -337,16 +337,16 @@ public class SaasPlanUpdate {
    */
   
   @JsonProperty("maxBulletins")
-  public @Nullable Integer getMaxBulletins() {
+  public @Nullable Optional<Integer> getMaxBulletins() {
     return maxBulletins;
   }
 
   @JsonProperty("maxBulletins")
-  public void setMaxBulletins(@Nullable Integer maxBulletins) {
+  public void setMaxBulletins(@Nullable Optional<Integer> maxBulletins) {
     this.maxBulletins = maxBulletins;
   }
 
-  public SaasPlanUpdate maxGroups(@Nullable Integer maxGroups) {
+  public SaasPlanUpdate maxGroups(@Nullable Optional<Integer> maxGroups) {
     this.maxGroups = maxGroups;
     return this;
   }
@@ -357,12 +357,12 @@ public class SaasPlanUpdate {
    */
   
   @JsonProperty("maxGroups")
-  public @Nullable Integer getMaxGroups() {
+  public @Nullable Optional<Integer> getMaxGroups() {
     return maxGroups;
   }
 
   @JsonProperty("maxGroups")
-  public void setMaxGroups(@Nullable Integer maxGroups) {
+  public void setMaxGroups(@Nullable Optional<Integer> maxGroups) {
     this.maxGroups = maxGroups;
   }
 

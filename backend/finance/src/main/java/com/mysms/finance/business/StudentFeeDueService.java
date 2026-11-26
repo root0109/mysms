@@ -21,7 +21,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.finance.api.model.GenerateFeeDuesRequest;
 import com.mysms.finance.api.model.Operation;
 import com.mysms.finance.api.model.StudentFeeDue;
@@ -78,8 +78,6 @@ public class StudentFeeDueService extends AppTransactionManager {
     static final String PERMISSION_GENERATE = "finance.student_fee_due.generate_fee_dues";
     /** The operation kind of a fee run started directly. */
     public static final String KIND_GENERATE = "finance.GenerateFeeDues";
-    /** The contract's StudentFeeDueUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("institutionId", "dueDate");
     /** The most students one fee run names directly (a class or a structure brings its own roster). */
     static final int MAX_NAMED = 500;
     /** How many skipped students the operation's outcome lists. */
@@ -163,10 +161,8 @@ public class StudentFeeDueService extends AppTransactionManager {
      * Moves a due's date or institution under If-Match while it is unbilled (409 otherwise); the institution of a due
      * a payment settles stays (409). The due is locked first, as RecordPayment locks it.
      */
-    public StudentFeeDue updateStudentFeeDue(UUID id, String ifMatch, StudentFeeDueUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public StudentFeeDue updateStudentFeeDue(UUID id, String ifMatch, StudentFeeDueUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             StudentFeeDueEntity entity = repository.lock(List.of(id)).stream()
@@ -180,7 +176,7 @@ public class StudentFeeDueService extends AppTransactionManager {
                 throw new InvalidStateException("A due billed on an invoice, or cancelled, does not change.");
             }
             UUID institutionBefore = entity.getInstitutionId();
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             if (entity.getInstitutionId() == null) {
                 throw new ValidationFailedException(List.of(new FieldError("institutionId", "must not be null",
                         "NotNull")));
@@ -399,15 +395,12 @@ public class StudentFeeDueService extends AppTransactionManager {
         return entity;
     }
 
-    /** Applies the selected StudentFeeDueUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(StudentFeeDueEntity entity, StudentFeeDueUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "dueDate" -> entity.setDueDate(changes.getDueDate());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(StudentFeeDueEntity entity, StudentFeeDueUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("dueDate", changes.getDueDate(), entity::setDueDate);
+        return patch.applied();
     }
 
     private OffsetDateTime now() {

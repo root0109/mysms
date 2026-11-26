@@ -79,8 +79,7 @@ public class InvoiceResolver extends InvoiceServiceGrpc.InvoiceServiceImplBase {
         Invoice updated = service.updateInvoice(
                 bridge.id(request.getInvoice().getId(), "id"),
                 bridge.requiredIfMatch(request.getInvoice().getEtag()),
-                bridge.changes(request.getInvoice(), request.getUpdateMask(), InvoiceUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getInvoice(), request.getUpdateMask(), InvoiceUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateInvoiceResponse.newBuilder(), "invoice", updated).build());
     }
 

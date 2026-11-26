@@ -19,7 +19,7 @@ import com.mysms.core.paging.PageRequest;
 import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.privacy.api.model.RetentionPolicy;
 import com.mysms.privacy.api.model.RetentionPolicyUpdate;
 import com.mysms.privacy.config.PrivacyDatabaseConfig;
@@ -56,8 +56,6 @@ public class RetentionPolicyService extends AppTransactionManager {
     public static final String AGGREGATE = "privacy.retention_policy";
     public static final String TENANT_AGGREGATE = TenantRetentionPolicyEntity.TABLE;
     static final String PERMISSION_UPDATE = "privacy.retention_policy.update";
-    /** The contract's RetentionPolicyUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("periodDays", "action");
 
     private final RetentionPolicyRepository repository;
     private final TenantRetentionPolicyRepository settings;
@@ -103,14 +101,12 @@ public class RetentionPolicyService extends AppTransactionManager {
      * privacy.UpdateRetentionPolicy: the tenant's own period and action of the policy, never below its legal floor
      * (422), under If-Match ("0" while the tenant has never set it: the first write inserts the setting).
      */
-    public RetentionPolicy updateRetentionPolicy(UUID id, String ifMatch, RetentionPolicyUpdate changes,
-            String updateMask) {
+    public RetentionPolicy updateRetentionPolicy(UUID id, String ifMatch, RetentionPolicyUpdate changes) {
         DataScope.current(PERMISSION_UPDATE).requireWritable(Optional.empty());
         if (AuthContext.require().impersonatorId().isPresent()) {
             throw new PermissionDeniedException("Retention policies cannot be set while acting as another user.");
         }
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             RetentionPolicyView policy = load(id);
             if (policy.rowVersion() != expected) {
@@ -119,7 +115,7 @@ public class RetentionPolicyService extends AppTransactionManager {
             Optional<TenantRetentionPolicyEntity> stored = settings.findByPolicyId(id);
             TenantRetentionPolicyEntity setting = stored.orElseGet(() -> TenantRetentionPolicyEntity.builder()
                     .policyId(id).periodDays(policy.periodDays()).action(policy.action()).build());
-            apply(setting, changes, fields);
+            List<String> fields = apply(setting, changes);
             requireValid(policy, setting);
             if (stored.isPresent()) {
                 setting.onUpdatingData(Actor.current(), clock);
@@ -147,19 +143,12 @@ public class RetentionPolicyService extends AppTransactionManager {
         });
     }
 
-    /** Applies the selected RetentionPolicyUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(TenantRetentionPolicyEntity setting, RetentionPolicyUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "periodDays" -> setting.setPeriodDays(changes.getPeriodDays());
-                case "action" -> {
-                    RetentionPolicyUpdate.ActionEnum action = changes.getAction();
-                    setting.setAction(action == null ? null : action.getValue());
-                }
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(TenantRetentionPolicyEntity setting, RetentionPolicyUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("periodDays", changes.getPeriodDays(), setting::setPeriodDays);
+        patch.apply("action", changes.getAction(), v -> setting.setAction(v == null ? null : v.getValue()));
+        return patch.applied();
     }
 
     /** The merged setting against the policy (one 422 with every failing field): set, and never below the floor. */

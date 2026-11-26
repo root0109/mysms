@@ -1,0 +1,103 @@
+// Owned API contract of lms.
+package com.mysms.learning.lms.api.model;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.mysms.learning.lms.api.model.AnswerGrade;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.springframework.lang.Nullable;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+
+
+import java.util.*;
+
+/**
+ * GradeQuizAnswersRequest
+ */
+
+public class GradeQuizAnswersRequest {
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private List<@Valid AnswerGrade> answers = new ArrayList<>();
+
+  public GradeQuizAnswersRequest() {
+    super();
+  }
+
+  /**
+   * Constructor with only required parameters
+   */
+  public GradeQuizAnswersRequest(List<@Valid AnswerGrade> answers) {
+    this.answers = answers;
+  }
+
+  public GradeQuizAnswersRequest answers(List<@Valid AnswerGrade> answers) {
+    this.answers = answers;
+    return this;
+  }
+
+  public GradeQuizAnswersRequest addAnswersItem(AnswerGrade answersItem) {
+    if (this.answers == null) {
+      this.answers = new ArrayList<>();
+    }
+    this.answers.add(answersItem);
+    return this;
+  }
+
+  /**
+   * Marks and feedback per question.
+   * @return answers
+   */
+  @NotNull 
+  @JsonProperty("answers")
+  public List<@Valid AnswerGrade> getAnswers() {
+    return answers;
+  }
+
+  @JsonProperty("answers")
+  public void setAnswers(List<@Valid AnswerGrade> answers) {
+    this.answers = answers;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    GradeQuizAnswersRequest gradeQuizAnswersRequest = (GradeQuizAnswersRequest) o;
+    return Objects.equals(this.answers, gradeQuizAnswersRequest.answers);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(answers);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("class GradeQuizAnswersRequest {\n");
+    sb.append("    answers: ").append(toIndentedString(answers)).append("\n");
+    sb.append("}");
+    return sb.toString();
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(@Nullable Object o) {
+    return o == null ? "null" : o.toString().replace("\n", "\n    ");
+  }
+}
+

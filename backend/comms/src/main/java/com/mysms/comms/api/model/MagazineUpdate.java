@@ -16,30 +16,30 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Magazine that can be updated (partial update; see updateMask).
+ * Fields of Magazine that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class MagazineUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID academicYearId;
+  private @Nullable Optional<@NotNull UUID> academicYearId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String title;
+  private @Nullable Optional<@Size(max = 200) String> title;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer publicationYear;
+  private @Nullable Optional<Integer> publicationYear;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID coverImageFileId;
+  private @Nullable Optional<UUID> coverImageFileId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID documentFileId;
+  private @Nullable Optional<UUID> documentFileId;
 
-  public MagazineUpdate institutionId(@Nullable UUID institutionId) {
+  public MagazineUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -48,18 +48,18 @@ public class MagazineUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public MagazineUpdate academicYearId(@Nullable UUID academicYearId) {
+  public MagazineUpdate academicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
     return this;
   }
@@ -68,18 +68,18 @@ public class MagazineUpdate {
    * Academic year.
    * @return academicYearId
    */
-  @Valid 
+  
   @JsonProperty("academicYearId")
-  public @Nullable UUID getAcademicYearId() {
+  public @Nullable Optional<UUID> getAcademicYearId() {
     return academicYearId;
   }
 
   @JsonProperty("academicYearId")
-  public void setAcademicYearId(@Nullable UUID academicYearId) {
+  public void setAcademicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
   }
 
-  public MagazineUpdate title(@Nullable String title) {
+  public MagazineUpdate title(@Nullable Optional<String> title) {
     this.title = title;
     return this;
   }
@@ -88,18 +88,18 @@ public class MagazineUpdate {
    * Title.
    * @return title
    */
-  @Size(max = 200) 
+  
   @JsonProperty("title")
-  public @Nullable String getTitle() {
+  public @Nullable Optional<String> getTitle() {
     return title;
   }
 
   @JsonProperty("title")
-  public void setTitle(@Nullable String title) {
+  public void setTitle(@Nullable Optional<String> title) {
     this.title = title;
   }
 
-  public MagazineUpdate publicationYear(@Nullable Integer publicationYear) {
+  public MagazineUpdate publicationYear(@Nullable Optional<Integer> publicationYear) {
     this.publicationYear = publicationYear;
     return this;
   }
@@ -110,16 +110,16 @@ public class MagazineUpdate {
    */
   
   @JsonProperty("publicationYear")
-  public @Nullable Integer getPublicationYear() {
+  public @Nullable Optional<Integer> getPublicationYear() {
     return publicationYear;
   }
 
   @JsonProperty("publicationYear")
-  public void setPublicationYear(@Nullable Integer publicationYear) {
+  public void setPublicationYear(@Nullable Optional<Integer> publicationYear) {
     this.publicationYear = publicationYear;
   }
 
-  public MagazineUpdate coverImageFileId(@Nullable UUID coverImageFileId) {
+  public MagazineUpdate coverImageFileId(@Nullable Optional<UUID> coverImageFileId) {
     this.coverImageFileId = coverImageFileId;
     return this;
   }
@@ -128,18 +128,18 @@ public class MagazineUpdate {
    * Cover.
    * @return coverImageFileId
    */
-  @Valid 
+  
   @JsonProperty("coverImageFileId")
-  public @Nullable UUID getCoverImageFileId() {
+  public @Nullable Optional<UUID> getCoverImageFileId() {
     return coverImageFileId;
   }
 
   @JsonProperty("coverImageFileId")
-  public void setCoverImageFileId(@Nullable UUID coverImageFileId) {
+  public void setCoverImageFileId(@Nullable Optional<UUID> coverImageFileId) {
     this.coverImageFileId = coverImageFileId;
   }
 
-  public MagazineUpdate documentFileId(@Nullable UUID documentFileId) {
+  public MagazineUpdate documentFileId(@Nullable Optional<UUID> documentFileId) {
     this.documentFileId = documentFileId;
     return this;
   }
@@ -148,14 +148,14 @@ public class MagazineUpdate {
    * Magazine file.
    * @return documentFileId
    */
-  @Valid 
+  
   @JsonProperty("documentFileId")
-  public @Nullable UUID getDocumentFileId() {
+  public @Nullable Optional<UUID> getDocumentFileId() {
     return documentFileId;
   }
 
   @JsonProperty("documentFileId")
-  public void setDocumentFileId(@Nullable UUID documentFileId) {
+  public void setDocumentFileId(@Nullable Optional<UUID> documentFileId) {
     this.documentFileId = documentFileId;
   }
 

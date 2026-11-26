@@ -58,8 +58,7 @@ public class SubjectResolver extends SubjectServiceGrpc.SubjectServiceImplBase {
     public void updateSubject(UpdateSubjectRequest request, StreamObserver<UpdateSubjectResponse> out) {
         Subject updated = service.updateSubject(bridge.id(request.getSubject().getId(), "id"),
                 bridge.requiredIfMatch(request.getSubject().getEtag()),
-                bridge.changes(request.getSubject(), request.getUpdateMask(), SubjectUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getSubject(), request.getUpdateMask(), SubjectUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSubjectResponse.newBuilder(), "subject", updated).build());
     }
 

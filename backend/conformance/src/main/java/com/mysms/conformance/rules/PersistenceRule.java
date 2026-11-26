@@ -52,10 +52,10 @@ public final class PersistenceRule implements ConformanceRule {
                 }
             }
         }
-        for (String module : tree.domainModules()) {
-            Path base = tree.backend().resolve(module).resolve("src/main/java/com/mysms").resolve(module);
+        for (SourceTree.Area area : tree.areas()) {
+            Path base = tree.base(area, "main");
             for (Path file : tree.files(base.resolve("domain"), ".java")) {
-                entity(tree, module, file, found);
+                entity(tree, area.name(), file, found);
             }
             for (Path file : tree.files(base.resolve("repository"), ".java")) {
                 repository(tree, file, found);
@@ -84,14 +84,14 @@ public final class PersistenceRule implements ConformanceRule {
         }
     }
 
-    private static void entity(SourceTree tree, String module, Path file, List<Violation> found) {
+    private static void entity(SourceTree tree, String schema, Path file, List<Violation> found) {
         String source = tree.read(file);
         String path = tree.relative(file);
         if (!ENTITY_CLASS.matcher(source).find()) {
             found.add(new Violation("N1", path, "not an entity: a projection is a record in repository/ (§5.4)"));
             return;
         }
-        if (SourceTree.fileName(file).endsWith("Entity.java") && !source.contains("TABLE = \"" + module + ".")) {
+        if (SourceTree.fileName(file).endsWith("Entity.java") && !source.contains("TABLE = \"" + schema + ".")) {
             found.add(new Violation("§5", path, "entity names no TABLE of its schema"));
         }
         String head = source.substring(0, source.indexOf("public class"));

@@ -44,7 +44,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,9 +69,6 @@ public class ConversationService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "comms.conversation.create";
     static final String PERMISSION_UPDATE = "comms.conversation.update";
     static final String PERMISSION_DELETE = "comms.conversation.delete";
-    /** The contract's ConversationUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("institutionId", "conversationType", "title", "lastMessageAt", "isActive");
 
     public static final String CONVERSATION_MESSAGE_AGGREGATE = ConversationMessageEntity.TABLE;
     static final String CONVERSATION_MESSAGE_PERMISSION_LIST = "comms.conversation_message.read";
@@ -81,8 +78,6 @@ public class ConversationService extends AppTransactionManager {
     static final String CONVERSATION_MESSAGE_PERMISSION_CREATE = "comms.conversation_message.create";
     static final String CONVERSATION_MESSAGE_PERMISSION_UPDATE = "comms.conversation_message.update";
     static final String CONVERSATION_MESSAGE_PERMISSION_DELETE = "comms.conversation_message.delete";
-    /** The contract's ConversationMessageUpdate fields, in apply order; the sender is the caller, from the token. */
-    static final List<String> CONVERSATION_MESSAGE_WRITABLE = List.of("body", "deletedBySender");
 
     public static final String CONVERSATION_PARTICIPANT_AGGREGATE = ConversationParticipantEntity.TABLE;
     static final String CONVERSATION_PARTICIPANT_PERMISSION_LIST = "comms.conversation_participant.read";
@@ -90,8 +85,6 @@ public class ConversationService extends AppTransactionManager {
     static final String CONVERSATION_PARTICIPANT_PERMISSION_CREATE = "comms.conversation_participant.create";
     static final String CONVERSATION_PARTICIPANT_PERMISSION_UPDATE = "comms.conversation_participant.update";
     static final String CONVERSATION_PARTICIPANT_PERMISSION_DELETE = "comms.conversation_participant.delete";
-    /** The contract's ConversationParticipantUpdate fields, in apply order. */
-    static final List<String> CONVERSATION_PARTICIPANT_WRITABLE = List.of("userId", "lastReadAt");
 
     private final ConversationRepository repository;
     private final ConversationMapper mapper;
@@ -177,14 +170,11 @@ public class ConversationService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match by the conversation's opener (403 for another participant): an updateMask sets the
-     * listed fields (clearing absent ones), otherwise the non-null fields apply; the merged row must validate and stay
-     * in the caller's scope.
+     * Partial update under If-Match by the conversation's opener (403 for another participant) (§7.2: a field left out
+     * is kept, a null one cleared, a value set); the merged row must validate and stay in the caller's scope.
      */
-    public Conversation updateConversation(UUID id, String ifMatch, ConversationUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public Conversation updateConversation(UUID id, String ifMatch, ConversationUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             ConversationEntity entity = loadVisible(scope, id);
@@ -193,7 +183,7 @@ public class ConversationService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -354,19 +344,16 @@ public class ConversationService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected ConversationUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(ConversationEntity entity, ConversationUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "conversationType" -> entity.setConversationType(
-                        Optional.ofNullable(changes.getConversationType()).map(v -> v.getValue()).orElse(null));
-                case "title" -> entity.setTitle(changes.getTitle());
-                case "lastMessageAt" -> entity.setLastMessageAt(changes.getLastMessageAt());
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(ConversationEntity entity, ConversationUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("conversationType", changes.getConversationType(),
+                v -> entity.setConversationType(v == null ? null : v.getValue()));
+        patch.apply("title", changes.getTitle(), entity::setTitle);
+        patch.apply("lastMessageAt", changes.getLastMessageAt(), entity::setLastMessageAt);
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -450,14 +437,12 @@ public class ConversationService extends AppTransactionManager {
     }
 
     /**
-     * Partial update of the caller's own message under If-Match (anyone else's is 404): an updateMask sets the listed
-     * fields (clearing absent ones), otherwise the non-null fields apply; the merged row must validate and stay in the
-     * caller's scope.
+     * Partial update of the caller's own message under If-Match (anyone else's is 404) (§7.2: a field left out is kept,
+     * a null one cleared, a value set); the merged row must validate and stay in the caller's scope.
      */
     public ConversationMessage updateConversationMessage(UUID conversationId, UUID id, String ifMatch,
-            ConversationMessageUpdate changes, String updateMask, boolean validateOnly) {
+            ConversationMessageUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, CONVERSATION_MESSAGE_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(CONVERSATION_MESSAGE_PERMISSION_UPDATE);
             ConversationMessageEntity entity = loadVisibleConversationMessage(scope, conversationId, id);
@@ -466,7 +451,7 @@ public class ConversationService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyConversationMessage(entity, changes, fields);
+            List<String> fields = applyConversationMessage(entity, changes);
             validator.validate(conversationMessageMapper.toDto(entity));
             assertValidConversationMessage(entity, false);
             scope.requireWritable(institutionOfConversationMessage(entity));
@@ -531,16 +516,12 @@ public class ConversationService extends AppTransactionManager {
         return conversationMessageRepository.institutionOf(entity.getConversationId());
     }
 
-    /** Applies the selected ConversationMessageUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyConversationMessage(ConversationMessageEntity entity, ConversationMessageUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "body" -> entity.setBody(changes.getBody());
-                case "deletedBySender" -> entity.setDeletedBySender(changes.getDeletedBySender());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyConversationMessage(ConversationMessageEntity entity, ConversationMessageUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("body", changes.getBody(), entity::setBody);
+        patch.apply("deletedBySender", changes.getDeletedBySender(), entity::setDeletedBySender);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -642,9 +623,8 @@ public class ConversationService extends AppTransactionManager {
      * names never changes (422).
      */
     public ConversationParticipant updateConversationParticipant(UUID conversationId, UUID id, String ifMatch,
-            ConversationParticipantUpdate changes, String updateMask, boolean validateOnly) {
+            ConversationParticipantUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, CONVERSATION_PARTICIPANT_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(CONVERSATION_PARTICIPANT_PERMISSION_UPDATE);
             ConversationParticipantEntity entity = loadVisibleConversationParticipant(scope, conversationId, id);
@@ -654,7 +634,7 @@ public class ConversationService extends AppTransactionManager {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
             UUID account = entity.getUserId();
-            applyConversationParticipant(entity, changes, fields);
+            List<String> fields = applyConversationParticipant(entity, changes);
             if (!account.equals(entity.getUserId())) {
                 throw new ValidationFailedException(List.of(new FieldError("userId",
                         "a participant's account never changes; add the other person instead", "IMMUTABLE")));
@@ -719,16 +699,13 @@ public class ConversationService extends AppTransactionManager {
         return conversationParticipantRepository.institutionOf(entity.getConversationId());
     }
 
-    /** Applies the selected ConversationParticipantUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyConversationParticipant(ConversationParticipantEntity entity, ConversationParticipantUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "userId" -> entity.setUserId(changes.getUserId());
-                case "lastReadAt" -> entity.setLastReadAt(changes.getLastReadAt());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyConversationParticipant(ConversationParticipantEntity entity,
+            ConversationParticipantUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("userId", changes.getUserId(), entity::setUserId);
+        patch.apply("lastReadAt", changes.getLastReadAt(), entity::setLastReadAt);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

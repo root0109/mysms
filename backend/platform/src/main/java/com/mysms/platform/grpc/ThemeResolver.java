@@ -60,8 +60,7 @@ public class ThemeResolver extends ThemeServiceGrpc.ThemeServiceImplBase {
         Theme updated = service.updateTheme(
                 bridge.id(request.getTheme().getId(), "id"),
                 bridge.requiredIfMatch(request.getTheme().getEtag()),
-                bridge.changes(request.getTheme(), request.getUpdateMask(), ThemeUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getTheme(), request.getUpdateMask(), ThemeUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateThemeResponse.newBuilder(), "theme", updated).build());
     }
 

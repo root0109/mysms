@@ -16,30 +16,30 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of TeachingAssignment that can be updated (partial update; see updateMask).
+ * Fields of TeachingAssignment that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class TeachingAssignmentUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID classSubjectId;
+  private @Nullable Optional<@NotNull UUID> classSubjectId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID staffId;
+  private @Nullable Optional<@NotNull UUID> staffId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer periodsPerWeek;
+  private @Nullable Optional<Integer> periodsPerWeek;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer periodsRemaining;
+  private @Nullable Optional<Integer> periodsRemaining;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String teacherRole;
+  private @Nullable Optional<@Size(max = 40) String> teacherRole;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public TeachingAssignmentUpdate classSubjectId(@Nullable UUID classSubjectId) {
+  public TeachingAssignmentUpdate classSubjectId(@Nullable Optional<UUID> classSubjectId) {
     this.classSubjectId = classSubjectId;
     return this;
   }
@@ -48,18 +48,18 @@ public class TeachingAssignmentUpdate {
    * Class subject taught.
    * @return classSubjectId
    */
-  @Valid 
+  
   @JsonProperty("classSubjectId")
-  public @Nullable UUID getClassSubjectId() {
+  public @Nullable Optional<UUID> getClassSubjectId() {
     return classSubjectId;
   }
 
   @JsonProperty("classSubjectId")
-  public void setClassSubjectId(@Nullable UUID classSubjectId) {
+  public void setClassSubjectId(@Nullable Optional<UUID> classSubjectId) {
     this.classSubjectId = classSubjectId;
   }
 
-  public TeachingAssignmentUpdate staffId(@Nullable UUID staffId) {
+  public TeachingAssignmentUpdate staffId(@Nullable Optional<UUID> staffId) {
     this.staffId = staffId;
     return this;
   }
@@ -68,18 +68,18 @@ public class TeachingAssignmentUpdate {
    * Teacher.
    * @return staffId
    */
-  @Valid 
+  
   @JsonProperty("staffId")
-  public @Nullable UUID getStaffId() {
+  public @Nullable Optional<UUID> getStaffId() {
     return staffId;
   }
 
   @JsonProperty("staffId")
-  public void setStaffId(@Nullable UUID staffId) {
+  public void setStaffId(@Nullable Optional<UUID> staffId) {
     this.staffId = staffId;
   }
 
-  public TeachingAssignmentUpdate periodsPerWeek(@Nullable Integer periodsPerWeek) {
+  public TeachingAssignmentUpdate periodsPerWeek(@Nullable Optional<Integer> periodsPerWeek) {
     this.periodsPerWeek = periodsPerWeek;
     return this;
   }
@@ -90,16 +90,16 @@ public class TeachingAssignmentUpdate {
    */
   
   @JsonProperty("periodsPerWeek")
-  public @Nullable Integer getPeriodsPerWeek() {
+  public @Nullable Optional<Integer> getPeriodsPerWeek() {
     return periodsPerWeek;
   }
 
   @JsonProperty("periodsPerWeek")
-  public void setPeriodsPerWeek(@Nullable Integer periodsPerWeek) {
+  public void setPeriodsPerWeek(@Nullable Optional<Integer> periodsPerWeek) {
     this.periodsPerWeek = periodsPerWeek;
   }
 
-  public TeachingAssignmentUpdate periodsRemaining(@Nullable Integer periodsRemaining) {
+  public TeachingAssignmentUpdate periodsRemaining(@Nullable Optional<Integer> periodsRemaining) {
     this.periodsRemaining = periodsRemaining;
     return this;
   }
@@ -110,16 +110,16 @@ public class TeachingAssignmentUpdate {
    */
   
   @JsonProperty("periodsRemaining")
-  public @Nullable Integer getPeriodsRemaining() {
+  public @Nullable Optional<Integer> getPeriodsRemaining() {
     return periodsRemaining;
   }
 
   @JsonProperty("periodsRemaining")
-  public void setPeriodsRemaining(@Nullable Integer periodsRemaining) {
+  public void setPeriodsRemaining(@Nullable Optional<Integer> periodsRemaining) {
     this.periodsRemaining = periodsRemaining;
   }
 
-  public TeachingAssignmentUpdate teacherRole(@Nullable String teacherRole) {
+  public TeachingAssignmentUpdate teacherRole(@Nullable Optional<String> teacherRole) {
     this.teacherRole = teacherRole;
     return this;
   }
@@ -128,18 +128,18 @@ public class TeachingAssignmentUpdate {
    * Role on the subject (main, assistant, lab).
    * @return teacherRole
    */
-  @Size(max = 40) 
+  
   @JsonProperty("teacherRole")
-  public @Nullable String getTeacherRole() {
+  public @Nullable Optional<String> getTeacherRole() {
     return teacherRole;
   }
 
   @JsonProperty("teacherRole")
-  public void setTeacherRole(@Nullable String teacherRole) {
+  public void setTeacherRole(@Nullable Optional<String> teacherRole) {
     this.teacherRole = teacherRole;
   }
 
-  public TeachingAssignmentUpdate isActive(@Nullable Boolean isActive) {
+  public TeachingAssignmentUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -150,12 +150,12 @@ public class TeachingAssignmentUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

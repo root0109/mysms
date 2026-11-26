@@ -15,30 +15,30 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of SystemSetting that can be updated (partial update; see updateMask).
+ * Fields of SystemSetting that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class SystemSettingUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String settingKey;
+  private @Nullable Optional<@NotNull @Size(max = 120) String> settingKey;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 150) String> name;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String description;
+  private @Nullable Optional<String> description;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String value;
+  private @Nullable Optional<String> value;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String inputType;
+  private @Nullable Optional<@NotNull @Size(max = 50) String> inputType;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public SystemSettingUpdate settingKey(@Nullable String settingKey) {
+  public SystemSettingUpdate settingKey(@Nullable Optional<String> settingKey) {
     this.settingKey = settingKey;
     return this;
   }
@@ -47,18 +47,18 @@ public class SystemSettingUpdate {
    * Unique key.
    * @return settingKey
    */
-  @Size(max = 120) 
+  
   @JsonProperty("settingKey")
-  public @Nullable String getSettingKey() {
+  public @Nullable Optional<String> getSettingKey() {
     return settingKey;
   }
 
   @JsonProperty("settingKey")
-  public void setSettingKey(@Nullable String settingKey) {
+  public void setSettingKey(@Nullable Optional<String> settingKey) {
     this.settingKey = settingKey;
   }
 
-  public SystemSettingUpdate name(@Nullable String name) {
+  public SystemSettingUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -67,18 +67,18 @@ public class SystemSettingUpdate {
    * Display name.
    * @return name
    */
-  @Size(max = 150) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public SystemSettingUpdate description(@Nullable String description) {
+  public SystemSettingUpdate description(@Nullable Optional<String> description) {
     this.description = description;
     return this;
   }
@@ -89,16 +89,16 @@ public class SystemSettingUpdate {
    */
   
   @JsonProperty("description")
-  public @Nullable String getDescription() {
+  public @Nullable Optional<String> getDescription() {
     return description;
   }
 
   @JsonProperty("description")
-  public void setDescription(@Nullable String description) {
+  public void setDescription(@Nullable Optional<String> description) {
     this.description = description;
   }
 
-  public SystemSettingUpdate value(@Nullable String value) {
+  public SystemSettingUpdate value(@Nullable Optional<String> value) {
     this.value = value;
     return this;
   }
@@ -109,16 +109,16 @@ public class SystemSettingUpdate {
    */
   
   @JsonProperty("value")
-  public @Nullable String getValue() {
+  public @Nullable Optional<String> getValue() {
     return value;
   }
 
   @JsonProperty("value")
-  public void setValue(@Nullable String value) {
+  public void setValue(@Nullable Optional<String> value) {
     this.value = value;
   }
 
-  public SystemSettingUpdate inputType(@Nullable String inputType) {
+  public SystemSettingUpdate inputType(@Nullable Optional<String> inputType) {
     this.inputType = inputType;
     return this;
   }
@@ -127,18 +127,18 @@ public class SystemSettingUpdate {
    * Editor control used for the value (text, bool, select, json).
    * @return inputType
    */
-  @Size(max = 50) 
+  
   @JsonProperty("inputType")
-  public @Nullable String getInputType() {
+  public @Nullable Optional<String> getInputType() {
     return inputType;
   }
 
   @JsonProperty("inputType")
-  public void setInputType(@Nullable String inputType) {
+  public void setInputType(@Nullable Optional<String> inputType) {
     this.inputType = inputType;
   }
 
-  public SystemSettingUpdate isActive(@Nullable Boolean isActive) {
+  public SystemSettingUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -149,12 +149,12 @@ public class SystemSettingUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

@@ -1,0 +1,93 @@
+package com.mysms.students.admission.events;
+
+import com.mysms.messaging.events.EventEnvelope;
+import com.mysms.messaging.events.EventHandler;
+import com.mysms.messaging.events.EventSubscriptions;
+import com.mysms.core.outbox.AuditWriter;
+import com.mysms.core.outbox.OutboxWriter;
+import com.mysms.students.admission.config.AdmissionEventsConfig;
+import com.mysms.students.admission.repository.ReferenceCleanupRepository;
+import java.time.Clock;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+/**
+ * Keeps admission's logical references consistent when their owners are deleted (references are not checked when
+ * written). For each owner's {@code .deleted} event it clears the referencing column or soft-deletes the referencing
+ * row, audited and announced on the outbox, inside the event's tenant; the inbox delivers each event exactly once.
+ */
+@Component
+public class AdmissionReferenceCleanup implements EventSubscriptions {
+
+    /** One action: the statement, the entity it changes, and the cleared field (null = the row is archived). */
+    record Step(String statement, String entity, String field) {
+    }
+
+    static final Map<String, List<Step>> STEPS = Map.ofEntries(
+        Map.entry("finance.fee_plan.deleted", List.of(
+            new Step(ReferenceCleanupRepository.CLEAR_APPLICATION_FEE_PLAN_ID,
+                    "admission.application", "feePlanId"))),
+        Map.entry("people.honorific.deleted", List.of(
+            new Step(ReferenceCleanupRepository.CLEAR_APPLICATION_HONORIFIC_ID,
+                    "admission.application", "honorificId"))),
+        Map.entry("people.person.deleted", List.of(
+            new Step(ReferenceCleanupRepository.CLEAR_APPLICATION_APPLICANT_PERSON_ID,
+                    "admission.application", "applicantPersonId"))),
+        Map.entry("platform.file_object.deleted", List.of(
+            new Step(ReferenceCleanupRepository.CLEAR_APPLICATION_PHOTO_FILE_ID,
+                    "admission.application", "photoFileId"),
+            new Step(ReferenceCleanupRepository.CLEAR_APPLICATION_GUARDIAN_PHOTO_FILE_ID,
+                    "admission.application_guardian", "photoFileId"))),
+        Map.entry("sis.student.deleted", List.of(
+            new Step(ReferenceCleanupRepository.CLEAR_APPLICATION_STUDENT_ID,
+                    "admission.application", "studentId"))));
+
+    private final ReferenceCleanupRepository repository;
+    private final OutboxWriter outbox;
+    private final AuditWriter audit;
+    private final Clock clock;
+
+    public AdmissionReferenceCleanup(ReferenceCleanupRepository repository,
+            @Qualifier(AdmissionEventsConfig.OUTBOX) OutboxWriter outbox,
+            @Qualifier(AdmissionEventsConfig.AUDIT) AuditWriter audit, Clock clock) {
+        this.repository = repository;
+        this.outbox = outbox;
+        this.audit = audit;
+        this.clock = clock;
+    }
+
+    @Override
+    public String module() {
+        return "admission";
+    }
+
+    @Override
+    public Map<String, EventHandler> handlers() {
+        return STEPS.keySet().stream().collect(Collectors.toMap(type -> type, type -> (EventHandler) this::handle));
+    }
+
+    /** Applies every step of the deleted owner; returns how many rows changed. */
+    public int handle(EventEnvelope event) {
+        OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC);
+        int changed = 0;
+        for (Step step : STEPS.getOrDefault(event.type(), List.of())) {
+            for (UUID id : repository.apply(step.statement(), event.aggregateId(), now)) {
+                if (step.field() == null) {
+                    audit.recordDelete(step.entity(), id);
+                    outbox.publish(step.entity() + AdmissionEvents.DELETED, step.entity(), id, AdmissionEvents.payload(id));
+                } else {
+                    audit.recordUpdate(step.entity(), id, List.of(step.field()));
+                    outbox.publish(step.entity() + AdmissionEvents.UPDATED, step.entity(), id, AdmissionEvents.payload(id));
+                }
+                changed++;
+            }
+        }
+        return changed;
+    }
+}

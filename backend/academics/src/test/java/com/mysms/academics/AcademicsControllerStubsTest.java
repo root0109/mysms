@@ -13,6 +13,7 @@ import com.mysms.academics.controller.ProgramController;
 import com.mysms.academics.controller.ProgramLevelController;
 import com.mysms.academics.controller.SectionController;
 import com.mysms.academics.controller.SubjectController;
+import com.mysms.academics.controller.TeacherSubjectController;
 import com.mysms.academics.controller.TeachingAssignmentController;
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +35,7 @@ class AcademicsControllerStubsTest {
         assertThat(ControllerStubs.count(ProgramLevelController.class)).as("ProgramLevel").isEqualTo(0);
         assertThat(ControllerStubs.count(SectionController.class)).as("Section").isEqualTo(0);
         assertThat(ControllerStubs.count(SubjectController.class)).as("Subject").isEqualTo(0);
+        assertThat(ControllerStubs.count(TeacherSubjectController.class)).as("TeacherSubject").isEqualTo(0);
         assertThat(ControllerStubs.count(TeachingAssignmentController.class)).as("TeachingAssignment").isEqualTo(0);
     }
 }

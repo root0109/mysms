@@ -59,9 +59,8 @@ public class ThemeController implements ThemeApi {
     }
 
     @Override
-    public ResponseEntity<Theme> updateTheme(UUID themeId, String ifMatch, ThemeUpdate themeUpdate, String updateMask,
-            Boolean validateOnly) {
-        Theme updated = themeService.updateTheme(themeId, ifMatch, themeUpdate, updateMask,
+    public ResponseEntity<Theme> updateTheme(UUID themeId, String ifMatch, ThemeUpdate themeUpdate, Boolean validateOnly) {
+        Theme updated = themeService.updateTheme(themeId, ifMatch, themeUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

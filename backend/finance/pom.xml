@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  finance: the Fees and Payments microservice, owner of database schema "finance" (JAVA-CODING-RULES §2).
-  Depends on core, auth-client and the messaging runtime; only event consumers compile against the
-  narrow messaging API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
-  Its Flyway migrations are database/migrations/finance, applied to its own schema only.
+  finance: the Finance microservice (docs/design/MODULE-AND-PRODUCT-REORGANISATION.md §3). Its areas "finance" each own
+  their database schema of the same name, contract (com.mysms.<area>.v1, /v1/<area>), operation table and Flyway
+  history (database/migrations/<area>); inside the module they share one process, one jar and one gRPC server.
+  Depends on core, auth-client and the messaging runtime; only event consumers compile against the narrow messaging
+  API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -15,7 +16,12 @@
   </parent>
   <artifactId>finance</artifactId>
   <name>MySMS finance</name>
-  <description>Fees and Payments microservice (schema finance)</description>
+  <description>Finance microservice (schemas finance)</description>
+
+  <properties>
+    <!-- SpotBugs analyses the module's own code: its root package and every layer package of each area (§3) -->
+    <mysms.spotbugs.onlyAnalyze>com.mysms.finance.*,com.mysms.finance.api.-,com.mysms.finance.controller.-,com.mysms.finance.grpc.-,com.mysms.finance.integration.-,com.mysms.finance.business.-,com.mysms.finance.repository.-,com.mysms.finance.domain.-,com.mysms.finance.model.-,com.mysms.finance.mapper.-,com.mysms.finance.validation.-,com.mysms.finance.errors.-,com.mysms.finance.events.-,com.mysms.finance.config.-,com.mysms.finance.constants.-</mysms.spotbugs.onlyAnalyze>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -26,7 +32,7 @@
       <groupId>com.mysms</groupId>
       <artifactId>auth-client</artifactId>
     </dependency>
-    <!-- privacy's rights-request tasks and retention runs (PrivacyTaskHandler, design PRIVACY-AND-CONSENT-CENTRE §9.1) -->
+    <!-- privacy's rights-request tasks and retention runs (PrivacyTaskHandler) -->
     <dependency>
       <groupId>com.mysms</groupId>
       <artifactId>privacy-client</artifactId>
@@ -75,14 +81,14 @@
       <resource>
         <directory>src/main/resources</directory>
       </resource>
-      <!-- the module's own migrations, from the single source of truth -->
+      <!-- each area's migrations, from the single source of truth, applied to its own schema only -->
       <resource>
         <directory>${mysms.migrations.dir}/finance</directory>
         <targetPath>db/migration/finance</targetPath>
       </resource>
     </resources>
     <plugins>
-      <!-- its protos (src/main/resources/proto: its own, and copies of the callees' it calls) into its jar -->
+      <!-- its protos (src/main/resources/proto: its areas' own, and copies of the callees' they call) into its jar -->
       <plugin>
         <groupId>org.xolstice.maven.plugins</groupId>
         <artifactId>protobuf-maven-plugin</artifactId>

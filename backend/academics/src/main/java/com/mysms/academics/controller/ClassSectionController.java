@@ -100,19 +100,18 @@ public class ClassSectionController implements ClassSectionApi {
 
     @Override
     public ResponseEntity<ClassSection> updateClassSection(UUID classSectionId, String ifMatch,
-            ClassSectionUpdate classSectionUpdate, String updateMask, Boolean validateOnly) {
+            ClassSectionUpdate classSectionUpdate, Boolean validateOnly) {
         ClassSection updated =
-                classSectionService.updateClassSection(classSectionId, ifMatch, classSectionUpdate, updateMask,
+                classSectionService.updateClassSection(classSectionId, ifMatch, classSectionUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<ClassSubject> updateClassSubject(UUID classSectionId, UUID classSubjectId,
-            String ifMatch, ClassSubjectUpdate classSubjectUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, ClassSubjectUpdate classSubjectUpdate, Boolean validateOnly) {
         ClassSubject updated =
                 classSectionService.updateClassSubject(classSectionId, classSubjectId, ifMatch, classSubjectUpdate,
-                        updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

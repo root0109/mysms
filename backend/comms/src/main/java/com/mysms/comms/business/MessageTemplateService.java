@@ -27,7 +27,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,9 +50,6 @@ public class MessageTemplateService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "comms.message_template.create";
     static final String PERMISSION_UPDATE = "comms.message_template.update";
     static final String PERMISSION_DELETE = "comms.message_template.delete";
-    /** The contract's MessageTemplateUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("institutionId", "channel", "code", "name", "subject", "body", "externalTemplateId", "isActive");
 
 
     private final MessageTemplateRepository repository;
@@ -122,13 +119,12 @@ public class MessageTemplateService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public MessageTemplate updateMessageTemplate(UUID id, String ifMatch, MessageTemplateUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             MessageTemplateEntity entity = loadVisible(scope, id);
@@ -136,7 +132,7 @@ public class MessageTemplateService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -195,22 +191,18 @@ public class MessageTemplateService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected MessageTemplateUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(MessageTemplateEntity entity, MessageTemplateUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "channel" -> entity.setChannel(Optional.ofNullable(changes.getChannel()).map(v -> v.getValue())
-                        .orElse(null));
-                case "code" -> entity.setCode(changes.getCode());
-                case "name" -> entity.setName(changes.getName());
-                case "subject" -> entity.setSubject(changes.getSubject());
-                case "body" -> entity.setBody(changes.getBody());
-                case "externalTemplateId" -> entity.setExternalTemplateId(changes.getExternalTemplateId());
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(MessageTemplateEntity entity, MessageTemplateUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("channel", changes.getChannel(), v -> entity.setChannel(v == null ? null : v.getValue()));
+        patch.apply("code", changes.getCode(), entity::setCode);
+        patch.apply("name", changes.getName(), entity::setName);
+        patch.apply("subject", changes.getSubject(), entity::setSubject);
+        patch.apply("body", changes.getBody(), entity::setBody);
+        patch.apply("externalTemplateId", changes.getExternalTemplateId(), entity::setExternalTemplateId);
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

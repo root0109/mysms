@@ -267,7 +267,7 @@ class FinanceGrpcParityComponentTest {
     }
 
     private static JsonNode spec() {
-        return JSON.readTree(FinanceGrpcParityComponentTest.class.getClassLoader().getResourceAsStream("crud-spec.json"));
+        return JSON.readTree(FinanceGrpcParityComponentTest.class.getClassLoader().getResourceAsStream("finance/crud-spec.json"));
     }
 
     /** The same page over both transports: the same rows in the same order, each the same resource. */
@@ -291,7 +291,7 @@ class FinanceGrpcParityComponentTest {
     @TestFactory
     List<DynamicNode> everyStandardRpcAnswersLikeRest() throws Exception {
         List<DynamicNode> tests = new ArrayList<>();
-        for (GrpcParityContract.Resource resource : GrpcParityContract.resources("crud-spec.json")) {
+        for (GrpcParityContract.Resource resource : GrpcParityContract.resources("finance/crud-spec.json")) {
             if (!resource.standardOnly()) {
                 continue; // seeded or partly served: theOtherResourcesAnswerLikeRest
             }

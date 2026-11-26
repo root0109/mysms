@@ -152,9 +152,9 @@ public class ConsentCoverageScope {
    * Subjects denied for another reason, one entry per reason (zero included).
    * @return denied
    */
-  @NotNull @Valid 
+  @NotNull 
   @JsonProperty("denied")
-  public List<ConsentCoverageDenial> getDenied() {
+  public List<@Valid ConsentCoverageDenial> getDenied() {
     return denied;
   }
 

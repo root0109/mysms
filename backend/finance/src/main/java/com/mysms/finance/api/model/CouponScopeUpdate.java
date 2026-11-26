@@ -16,18 +16,18 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of CouponScope that can be updated (partial update; see updateMask).
+ * Fields of CouponScope that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class CouponScopeUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID lmsCourseId;
+  private @Nullable Optional<UUID> lmsCourseId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID lmsCohortId;
+  private @Nullable Optional<UUID> lmsCohortId;
 
-  public CouponScopeUpdate lmsCourseId(@Nullable UUID lmsCourseId) {
+  public CouponScopeUpdate lmsCourseId(@Nullable Optional<UUID> lmsCourseId) {
     this.lmsCourseId = lmsCourseId;
     return this;
   }
@@ -36,18 +36,18 @@ public class CouponScopeUpdate {
    * Course.
    * @return lmsCourseId
    */
-  @Valid 
+  
   @JsonProperty("lmsCourseId")
-  public @Nullable UUID getLmsCourseId() {
+  public @Nullable Optional<UUID> getLmsCourseId() {
     return lmsCourseId;
   }
 
   @JsonProperty("lmsCourseId")
-  public void setLmsCourseId(@Nullable UUID lmsCourseId) {
+  public void setLmsCourseId(@Nullable Optional<UUID> lmsCourseId) {
     this.lmsCourseId = lmsCourseId;
   }
 
-  public CouponScopeUpdate lmsCohortId(@Nullable UUID lmsCohortId) {
+  public CouponScopeUpdate lmsCohortId(@Nullable Optional<UUID> lmsCohortId) {
     this.lmsCohortId = lmsCohortId;
     return this;
   }
@@ -56,14 +56,14 @@ public class CouponScopeUpdate {
    * Cohort.
    * @return lmsCohortId
    */
-  @Valid 
+  
   @JsonProperty("lmsCohortId")
-  public @Nullable UUID getLmsCohortId() {
+  public @Nullable Optional<UUID> getLmsCohortId() {
     return lmsCohortId;
   }
 
   @JsonProperty("lmsCohortId")
-  public void setLmsCohortId(@Nullable UUID lmsCohortId) {
+  public void setLmsCohortId(@Nullable Optional<UUID> lmsCohortId) {
     this.lmsCohortId = lmsCohortId;
   }
 

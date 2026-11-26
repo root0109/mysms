@@ -72,8 +72,7 @@ public class FeePlanResolver extends FeePlanServiceGrpc.FeePlanServiceImplBase {
         FeePlan updated = service.updateFeePlan(
                 bridge.id(request.getFeePlan().getId(), "id"),
                 bridge.requiredIfMatch(request.getFeePlan().getEtag()),
-                bridge.changes(request.getFeePlan(), request.getUpdateMask(), FeePlanUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getFeePlan(), request.getUpdateMask(), FeePlanUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeePlanResponse.newBuilder(), "fee_plan", updated).build());
     }
 
@@ -118,8 +117,7 @@ public class FeePlanResolver extends FeePlanServiceGrpc.FeePlanServiceImplBase {
                 bridge.id(request.getFeePlanInstallment().getId(), "id"),
                 bridge.requiredIfMatch(request.getFeePlanInstallment().getEtag()),
                 bridge.changes(request.getFeePlanInstallment(), request.getUpdateMask(),
-                        FeePlanInstallmentUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                        FeePlanInstallmentUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeePlanInstallmentResponse.newBuilder(), "fee_plan_installment",
                 updated).build());
     }

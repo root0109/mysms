@@ -1,0 +1,167 @@
+package com.mysms.learning.lms.controller;
+
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.learning.lms.api.QuizApi;
+import com.mysms.learning.lms.api.model.AnswerCheck;
+import com.mysms.learning.lms.api.model.CheckQuizAnswerRequest;
+import com.mysms.learning.lms.api.model.Quiz;
+import com.mysms.learning.lms.api.model.QuizAttempt;
+import com.mysms.learning.lms.api.model.QuizQuestion;
+import com.mysms.learning.lms.api.model.QuizQuestionHistory;
+import com.mysms.learning.lms.api.model.QuizQuestionList;
+import com.mysms.learning.lms.api.model.QuizQuestionUpdate;
+import com.mysms.learning.lms.api.model.QuizSubmission;
+import com.mysms.learning.lms.api.model.QuizUpdate;
+import com.mysms.learning.lms.api.model.SetQuizQuestionsRequest;
+import com.mysms.learning.lms.api.model.SubmitQuizRequest;
+import com.mysms.core.web.ReadMask;
+import com.mysms.learning.lms.business.QuizAttemptService;
+import com.mysms.learning.lms.business.QuizService;
+import com.mysms.learning.lms.business.QuizWorkflowService;
+import java.net.URI;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * REST edge of the Quiz operations; authentication and the permission check already ran in the auth-client filter.
+ * Operations not served yet answer 501.
+ */
+@RestController
+public class QuizController implements QuizApi {
+
+    private final QuizService quizService;
+    private final QuizWorkflowService quizWorkflowService;
+    private final QuizAttemptService quizAttemptService;
+
+    public QuizController(QuizService quizService, QuizWorkflowService quizWorkflowService,
+            QuizAttemptService quizAttemptService) {
+        this.quizService = quizService;
+        this.quizWorkflowService = quizWorkflowService;
+        this.quizAttemptService = quizAttemptService;
+    }
+
+    @Override
+    public ResponseEntity<AnswerCheck> checkQuizAnswer(UUID quizId,
+            CheckQuizAnswerRequest checkQuizAnswerRequest, UUID idempotencyKey) {
+        return ResponseEntity.ok(quizWorkflowService.checkQuizAnswer(quizId, checkQuizAnswerRequest));
+    }
+
+    @Override
+    public ResponseEntity<Quiz> createQuiz(Quiz quiz, UUID idempotencyKey, Boolean validateOnly) {
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        Quiz created = quizService.createQuiz(quiz, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(URI.create("/v1/lms/quizzes/" + created.getId())).eTag(created.getEtag())
+                .body(created);
+    }
+
+    @Override
+    public ResponseEntity<QuizQuestion> createQuizQuestion(UUID quizId, QuizQuestion quizQuestion,
+            UUID idempotencyKey, Boolean validateOnly) {
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        QuizQuestion created = quizService.createQuizQuestion(quizId, quizQuestion, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(URI.create("/v1/lms/quizzes/" + quizId + "/questions/" + created.getId()))
+                .eTag(created.getEtag()).body(created);
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteQuiz(UUID quizId, String ifMatch) {
+        quizService.deleteQuiz(quizId, ifMatch);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteQuizQuestion(UUID quizId, UUID quizQuestionId, String ifMatch) {
+        quizService.deleteQuizQuestion(quizId, quizQuestionId, ifMatch);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<Quiz> getQuiz(UUID quizId, String fields) {
+        Quiz found = quizService.getQuiz(quizId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
+    }
+
+    @Override
+    public ResponseEntity<QuizQuestion> getQuizQuestion(UUID quizId, UUID quizQuestionId, String fields) {
+        QuizQuestion found = quizService.getQuizQuestion(quizId, quizQuestionId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
+    }
+
+    @Override
+    public ResponseEntity<QuizQuestionHistory> getQuizQuestionHistory(UUID quizId,
+            UUID quizQuestionHistoryId, String fields) {
+        QuizQuestionHistory found = quizService.getQuizQuestionHistory(quizId, quizQuestionHistoryId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<QuizQuestionHistory>> listQuizQuestionHistory(UUID quizId, Integer page,
+            Integer size, String cursor, String filter, List<String> sort, String fields) {
+        PagingInfo<QuizQuestionHistory> list =
+                PagingUtil.pagingInfo(quizService.listQuizQuestionHistorys(quizId, page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<QuizQuestion>> listQuizQuestions(UUID quizId, Integer page, Integer size,
+            String cursor, String filter, List<String> sort, String fields) {
+        PagingInfo<QuizQuestion> list =
+                PagingUtil.pagingInfo(quizService.listQuizQuestions(quizId, page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<Quiz>> listQuizzes(Integer page, Integer size, String cursor, String filter,
+            List<String> sort, String fields) {
+        PagingInfo<Quiz> list = PagingUtil.pagingInfo(quizService.listQuizs(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
+    }
+
+    @Override
+    public ResponseEntity<QuizQuestionList> setQuizQuestions(UUID quizId,
+            SetQuizQuestionsRequest setQuizQuestionsRequest, UUID idempotencyKey) {
+        return ResponseEntity.ok(quizWorkflowService.setQuizQuestions(quizId, setQuizQuestionsRequest));
+    }
+
+    @Override
+    public ResponseEntity<QuizAttempt> startQuizAttempt(UUID contentItemId, Object body,
+            UUID idempotencyKey) {
+        return ResponseEntity.ok(quizService.startQuizAttempt(contentItemId));
+    }
+
+    @Override
+    public ResponseEntity<QuizSubmission> submitQuiz(UUID quizSubmissionId,
+            SubmitQuizRequest submitQuizRequest, UUID idempotencyKey) {
+        QuizSubmission submitted = quizAttemptService.submitQuiz(quizSubmissionId, submitQuizRequest);
+        return ResponseEntity.ok().eTag(submitted.getEtag()).body(submitted);
+    }
+
+    @Override
+    public ResponseEntity<Quiz> updateQuiz(UUID quizId, String ifMatch, QuizUpdate quizUpdate,
+            Boolean validateOnly) {
+        Quiz updated = quizService.updateQuiz(quizId, ifMatch, quizUpdate,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
+    }
+
+    @Override
+    public ResponseEntity<QuizQuestion> updateQuizQuestion(UUID quizId, UUID quizQuestionId,
+            String ifMatch, QuizQuestionUpdate quizQuestionUpdate, Boolean validateOnly) {
+        QuizQuestion updated =
+                quizService.updateQuizQuestion(quizId, quizQuestionId, ifMatch, quizQuestionUpdate,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
+    }
+}

@@ -63,7 +63,7 @@ public class SalesEnquiryResolver extends SalesEnquiryServiceGrpc.SalesEnquirySe
                 bridge.id(request.getSalesEnquiry().getId(), "id"),
                 bridge.requiredIfMatch(request.getSalesEnquiry().getEtag()),
                 bridge.changes(request.getSalesEnquiry(), request.getUpdateMask(), SalesEnquiryUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSalesEnquiryResponse.newBuilder(), "sales_enquiry", updated).build());
     }
 

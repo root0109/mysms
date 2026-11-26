@@ -1,0 +1,29 @@
+package com.mysms.learning.lms.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of lms.bookmark. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class BookmarkEntity extends BaseEntity {
+
+    public static final String TABLE = "lms.bookmark";
+
+    private UUID tenantId;
+    private UUID userId;
+    private String title;
+    private String url;
+    private String moduleCode;
+    private UUID cohortId;
+    private OffsetDateTime savedAt;
+}

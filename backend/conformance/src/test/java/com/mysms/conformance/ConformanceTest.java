@@ -16,7 +16,11 @@ class ConformanceTest {
 
         List<Violation> violations = new Conformance().check(tree);
 
-        assertThat(tree.domainModules()).hasSize(22);
+        assertThat(tree.domainModules()).hasSize(10);
+        assertThat(tree.areas()).hasSize(22);
+        assertThat(tree.area("payroll").module()).isEqualTo("hrms");
+        assertThat(tree.area("finance").packageName()).isEqualTo("com.mysms.finance");
+        assertThat(tree.area("lms").packageName()).isEqualTo("com.mysms.learning.lms");
         assertThat(tree.tenantTables()).contains("sis.student", "iam.user_account").doesNotContain("master.country");
         assertThat(violations)
                 .as("%d violation(s):%n%s", violations.size(),

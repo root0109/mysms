@@ -65,7 +65,7 @@ public class ReservedKeywordResolver extends ReservedKeywordServiceGrpc.Reserved
                 bridge.id(request.getReservedKeyword().getId(), "id"),
                 bridge.requiredIfMatch(request.getReservedKeyword().getEtag()),
                 bridge.changes(request.getReservedKeyword(), request.getUpdateMask(), ReservedKeywordUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateReservedKeywordResponse.newBuilder(), "reserved_keyword",
                 updated).build());
     }

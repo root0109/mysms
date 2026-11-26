@@ -60,13 +60,6 @@ class MasksTest {
     }
 
     @Test
-    void updateMaskSelectsFieldsToApply() {
-        assertThat(UpdateMask.fields(null, dto(), "name", "code", "sortOrder")).containsExactly("name", "code");
-        assertThat(UpdateMask.fields("sortOrder,name", dto(), "name", "code", "sortOrder")).containsExactly("name", "sortOrder");
-        assertThatThrownBy(() -> UpdateMask.fields("id", dto(), "name")).isInstanceOf(InvalidArgumentException.class);
-    }
-
-    @Test
     void actorIsTheCaller() {
         assertThat(Actor.current()).isEmpty();
         UUID user = UUID.randomUUID();

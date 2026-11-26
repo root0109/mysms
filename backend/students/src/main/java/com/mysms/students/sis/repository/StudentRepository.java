@@ -1,0 +1,448 @@
+package com.mysms.students.sis.repository;
+import com.mysms.authclient.DataScope;
+import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.paging.FieldSpec;
+import com.mysms.core.paging.Page;
+import com.mysms.core.paging.PageRequest;
+import com.mysms.core.paging.SortSpec;
+import com.mysms.core.paging.SqlFragment;
+import com.mysms.core.paging.ValueType;
+import com.mysms.students.sis.config.SisDatabaseConfig;
+import com.mysms.students.sis.domain.StudentEntity;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Repository;
+/**
+ * Plain-JDBC access to sis.student: live rows only, keyset paging over an allowlisted order and the row_version guard
+ * on every update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
+ */
+@Repository
+public class StudentRepository {
+
+    /** Fields clients may filter on (contract names → columns). */
+    public static final Map<String, FieldSpec> FILTER_FIELDS = fields(
+            field("id", "r.id", ValueType.UUID),
+            field("personId", "r.person_id", ValueType.UUID),
+            field("userId", "r.user_id", ValueType.UUID),
+            field("institutionId", "r.institution_id", ValueType.UUID),
+            field("admissionNumber", "r.admission_number", ValueType.STRING),
+            field("admissionDate", "r.admission_date", ValueType.DATE),
+            field("joiningDate", "r.joining_date", ValueType.DATE),
+            field("studentCategoryId", "r.student_category_id", ValueType.UUID),
+            field("governmentStudentId", "r.government_student_id", ValueType.STRING),
+            field("bonafideCertificateNumber", "r.bonafide_certificate_number", ValueType.STRING),
+            field("status", "r.status", ValueType.STRING),
+            field("exitDate", "r.exit_date", ValueType.DATE),
+            field("exitReason", "r.exit_reason", ValueType.STRING),
+            field("createTime", "r.created_at", ValueType.TIMESTAMP),
+            field("updateTime", "r.updated_at", ValueType.TIMESTAMP));
+
+    /** Fields clients may order by; NOT NULL expressions, so keyset paging can compare them. */
+    public static final Map<String, FieldSpec> SORT_FIELDS = fields(
+            field("createTime", "r.created_at", ValueType.TIMESTAMP),
+            field("updateTime", "r.updated_at", ValueType.TIMESTAMP));
+
+    public static final String DEFAULT_ORDER = "createTime";
+    public static final String ID_COLUMN = "r.id";
+
+    private static final Map<String, Function<StudentEntity, Object>> SORT_VALUES = Map.ofEntries(
+            Map.entry("createTime", StudentEntity::getCreatedAt),
+            Map.entry("updateTime", StudentEntity::getUpdatedAt));
+
+    private static final String SELECT_LIVE = """
+            SELECT r.id, r.tenant_id, r.person_id, r.user_id, r.institution_id, r.admission_number, r.admission_date,
+                   r.joining_date, r.student_category_id, r.government_student_id, r.bonafide_certificate_number,
+                   r.status, r.exit_date, r.exit_reason, r.created_at, r.created_by, r.updated_at, r.updated_by,
+                   r.deleted_at, r.row_version
+              FROM sis.student r
+             WHERE r.tenant_id = :tenantId
+               AND r.deleted_at IS NULL
+            """;
+    private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String INSERT = """
+            INSERT INTO sis.student
+            (id, tenant_id, person_id, user_id, institution_id, admission_number, admission_date, joining_date,
+             student_category_id, government_student_id, bonafide_certificate_number, exit_date, exit_reason,
+             created_at, created_by, updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :personId, :userId, :institutionId, :admissionNumber, :admissionDate,
+                    :joiningDate, :studentCategoryId, :governmentStudentId, :bonafideCertificateNumber, :exitDate,
+                    :exitReason, :createdAt, :createdBy, :updatedAt, :updatedBy, :rowVersion)
+            RETURNING id, tenant_id, person_id, user_id, institution_id, admission_number, admission_date, joining_date,
+                      student_category_id, government_student_id, bonafide_certificate_number, status, exit_date,
+                      exit_reason, created_at, created_by, updated_at, updated_by, deleted_at, row_version
+            """;
+    private static final String SOFT_DELETE = """
+            UPDATE sis.student
+               SET deleted_at = :deletedAt,
+                   updated_at = :updatedAt,
+                   updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String UPDATE = """
+            UPDATE sis.student
+               SET person_id = :personId,
+                   user_id = :userId,
+                   institution_id = :institutionId,
+                   admission_number = :admissionNumber,
+                   admission_date = :admissionDate,
+                   joining_date = :joiningDate,
+                   student_category_id = :studentCategoryId,
+                   government_student_id = :governmentStudentId,
+                   bonafide_certificate_number = :bonafideCertificateNumber,
+                   exit_date = :exitDate,
+                   exit_reason = :exitReason,
+                   updated_at = :updatedAt,
+                   updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String UQ_STUDENT_1_TAKEN = """
+            SELECT EXISTS (SELECT 1 FROM sis.student
+                            WHERE tenant_id = :tenantId
+                              AND institution_id = :institutionId AND person_id = :personId AND id <> :id AND
+                                  ((deleted_at IS NULL)))
+            """;
+    private static final String UQ_STUDENT_2_TAKEN = """
+            SELECT EXISTS (SELECT 1 FROM sis.student
+                            WHERE tenant_id = :tenantId
+                              AND institution_id = :institutionId AND user_id = :userId AND id <> :id AND ((deleted_at
+                                  IS NULL)))
+            """;
+    private static final String EXISTS_STUDENT_CATEGORY_ID = """
+            SELECT EXISTS (SELECT 1 FROM sis.student_category WHERE tenant_id = :tenantId
+                AND id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_DISCIPLINE_INCIDENT_STUDENT_ID = """
+            SELECT EXISTS (SELECT 1 FROM sis.discipline_incident WHERE tenant_id = :tenantId
+                AND student_id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_PROGRAM_ENROLLMENT_STUDENT_ID = """
+            SELECT EXISTS (SELECT 1 FROM sis.program_enrollment WHERE tenant_id = :tenantId
+                AND student_id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_PROMOTION_STUDENT_ID = """
+            SELECT EXISTS (SELECT 1 FROM sis.promotion WHERE tenant_id = :tenantId
+                AND student_id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_STUDENT_ACTIVITY_STUDENT_ID = """
+            SELECT EXISTS (SELECT 1 FROM sis.student_activity WHERE tenant_id = :tenantId
+                AND student_id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_STUDENT_ENROLLMENT_STUDENT_ID = """
+            SELECT EXISTS (SELECT 1 FROM sis.student_enrollment WHERE tenant_id = :tenantId
+                AND student_id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_STUDENT_GUARDIAN_STUDENT_ID = """
+            SELECT EXISTS (SELECT 1 FROM sis.student_guardian WHERE tenant_id = :tenantId
+                AND student_id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_STUDENT_HEALTH_RECORD_STUDENT_ID = """
+            SELECT EXISTS (SELECT 1 FROM sis.student_health_record WHERE tenant_id = :tenantId
+                AND student_id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_STUDENT_LEAVE_REQUEST_STUDENT_ID = """
+            SELECT EXISTS (SELECT 1 FROM sis.student_leave_request WHERE tenant_id = :tenantId
+                AND student_id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_STUDENT_SIBLING_SIBLING_STUDENT_ID = """
+            SELECT EXISTS (SELECT 1 FROM sis.student_sibling WHERE tenant_id = :tenantId
+                AND sibling_student_id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_STUDENT_SIBLING_STUDENT_ID = """
+            SELECT EXISTS (SELECT 1 FROM sis.student_sibling WHERE tenant_id = :tenantId
+                AND student_id = :id AND deleted_at IS NULL)
+            """;
+    private static final String REFERENCED_BY_SUBJECT_REGISTRATION_STUDENT_ID = """
+            SELECT EXISTS (SELECT 1 FROM sis.subject_registration WHERE tenant_id = :tenantId
+                AND student_id = :id AND deleted_at IS NULL)
+            """;
+
+    /** sis.ChangeStudentStatus: the status with its exit details, under the version the service read. */
+    private static final String TRANSITION_CHANGE_STATUS = """
+            UPDATE sis.student
+               SET status = :status,
+                   exit_date = :exitDate,
+                   exit_reason = :exitReason,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+
+    /** sis.CreateStudentPortalAccount: links the login account, only while the student has none. */
+    private static final String LINK_ACCOUNT = """
+            UPDATE sis.student
+               SET user_id = :userId,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND user_id IS NULL AND deleted_at IS NULL
+            """;
+
+    /** sis.IssueBonafideCertificate: records the number of the certificate just issued. */
+    private static final String RECORD_BONAFIDE_CERTIFICATE = """
+            UPDATE sis.student
+               SET bonafide_certificate_number = :number,
+                   updated_at = :now,
+                   updated_by = :actor,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String SCOPE = """
+             (:scopeAll OR r.institution_id = ANY(:scopeIds))
+            """;
+
+    private final JdbcClient jdbc;
+
+    public StudentRepository(@Qualifier(SisDatabaseConfig.DATABASE) ModuleDatabase database) {
+        this.jdbc = database.jdbc();
+    }
+
+    public Optional<StudentEntity> findById(UUID id) {
+        return jdbc.sql(FIND_BY_ID).param("id", id).query(StudentRepository::map).optional();
+    }
+
+    public Page<StudentEntity> list(PageRequest page, SqlFragment filter) {
+        SqlFragment where = filter.and(page.keysetPredicate());
+        String sql = SELECT_LIVE + " AND (" + where.sql() + ") ORDER BY " + page.orderByClause() + page.limitClause();
+        List<StudentEntity> rows = jdbc.sql(sql).params(where.params()).params(page.limitParams())
+                .query(StudentRepository::map).list();
+        return page.toPage(rows, e -> sortValues(page.sort(), e), StudentEntity::getId);
+    }
+
+    /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
+    public StudentEntity insert(StudentEntity e) {
+        return jdbc.sql(INSERT)
+                .param("id", e.getId())
+                .param("tenantId", e.getTenantId())
+                .param("personId", e.getPersonId())
+                .param("userId", e.getUserId())
+                .param("institutionId", e.getInstitutionId())
+                .param("admissionNumber", e.getAdmissionNumber())
+                .param("admissionDate", e.getAdmissionDate())
+                .param("joiningDate", e.getJoiningDate())
+                .param("studentCategoryId", e.getStudentCategoryId())
+                .param("governmentStudentId", e.getGovernmentStudentId())
+                .param("bonafideCertificateNumber", e.getBonafideCertificateNumber())
+                .param("exitDate", e.getExitDate())
+                .param("exitReason", e.getExitReason())
+                .param("createdAt", e.getCreatedAt())
+                .param("createdBy", e.getCreatedBy())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("rowVersion", e.getRowVersion())
+                .query(StudentRepository::map).single();
+    }
+
+    /** Updates under the ETag guard; 0 rows means the row changed (or vanished) since it was read. */
+    public int update(StudentEntity e, int expectedVersion) {
+        return jdbc.sql(UPDATE)
+                .param("id", e.getId())
+                .param("personId", e.getPersonId())
+                .param("userId", e.getUserId())
+                .param("institutionId", e.getInstitutionId())
+                .param("admissionNumber", e.getAdmissionNumber())
+                .param("admissionDate", e.getAdmissionDate())
+                .param("joiningDate", e.getJoiningDate())
+                .param("studentCategoryId", e.getStudentCategoryId())
+                .param("governmentStudentId", e.getGovernmentStudentId())
+                .param("bonafideCertificateNumber", e.getBonafideCertificateNumber())
+                .param("exitDate", e.getExitDate())
+                .param("exitReason", e.getExitReason())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("expected", expectedVersion)
+                .update();
+    }
+
+    public int softDelete(StudentEntity e, int expectedVersion) {
+        return jdbc.sql(SOFT_DELETE)
+                .param("id", e.getId())
+                .param("deletedAt", e.getDeletedAt())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("expected", expectedVersion)
+                .update();
+    }
+
+    /** uq_student_1: institution_id, person_id where (deleted_at IS NULL). */
+    public boolean takenInstitutionIdPersonId1(StudentEntity e) {
+        return Boolean.TRUE.equals(jdbc.sql(UQ_STUDENT_1_TAKEN)
+                .param("institutionId", e.getInstitutionId())
+                .param("personId", e.getPersonId())
+               .param("id", e.getId())
+                .query(Boolean.class).single());
+    }
+
+    /** uq_student_2: institution_id, user_id where (deleted_at IS NULL). */
+    public boolean takenInstitutionIdUserId2(StudentEntity e) {
+        return Boolean.TRUE.equals(jdbc.sql(UQ_STUDENT_2_TAKEN)
+                .param("institutionId", e.getInstitutionId())
+                .param("userId", e.getUserId())
+               .param("id", e.getId())
+                .query(Boolean.class).single());
+    }
+
+    /** Whether the referenced sis.student_category row exists (live). */
+    public boolean existsStudentCategoryId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(EXISTS_STUDENT_CATEGORY_ID).param("id", id).query(Boolean.class).single());
+    }
+
+    /** Whether live sis.discipline_incident rows still reference the row. */
+    public boolean referencedByDisciplineIncidentStudentId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_DISCIPLINE_INCIDENT_STUDENT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Whether live sis.program_enrollment rows still reference the row. */
+    public boolean referencedByProgramEnrollmentStudentId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_PROGRAM_ENROLLMENT_STUDENT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Whether live sis.promotion rows still reference the row. */
+    public boolean referencedByPromotionStudentId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_PROMOTION_STUDENT_ID).param("id", id).query(Boolean.class)
+                .single());
+    }
+
+    /** Whether live sis.student_activity rows still reference the row. */
+    public boolean referencedByStudentActivityStudentId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_STUDENT_ACTIVITY_STUDENT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Whether live sis.student_enrollment rows still reference the row. */
+    public boolean referencedByStudentEnrollmentStudentId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_STUDENT_ENROLLMENT_STUDENT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Whether live sis.student_guardian rows still reference the row. */
+    public boolean referencedByStudentGuardianStudentId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_STUDENT_GUARDIAN_STUDENT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Whether live sis.student_health_record rows still reference the row. */
+    public boolean referencedByStudentHealthRecordStudentId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_STUDENT_HEALTH_RECORD_STUDENT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Whether live sis.student_leave_request rows still reference the row. */
+    public boolean referencedByStudentLeaveRequestStudentId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_STUDENT_LEAVE_REQUEST_STUDENT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Whether live sis.student_sibling rows still reference the row. */
+    public boolean referencedByStudentSiblingSiblingStudentId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_STUDENT_SIBLING_SIBLING_STUDENT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Whether live sis.student_sibling rows still reference the row. */
+    public boolean referencedByStudentSiblingStudentId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_STUDENT_SIBLING_STUDENT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Whether live sis.subject_registration rows still reference the row. */
+    public boolean referencedBySubjectRegistrationStudentId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_SUBJECT_REGISTRATION_STUDENT_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** sis.ChangeStudentStatus; 0 rows means the row changed (or vanished) since it was read. */
+    public int changeStatus(UUID id, int expected, String status, LocalDate exitDate, String exitReason,
+            OffsetDateTime now, UUID actor) {
+        return jdbc.sql(TRANSITION_CHANGE_STATUS)
+                .param("id", id)
+                .param("expected", expected)
+                .param("status", status)
+                .param("exitDate", exitDate)
+                .param("exitReason", exitReason)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Links the login account; 0 rows means the row changed, or got an account, since it was read. */
+    public int linkAccount(UUID id, int expected, UUID userId, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(LINK_ACCOUNT)
+                .param("id", id)
+                .param("expected", expected)
+                .param("userId", userId)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Records the certificate number; 0 rows means the row changed (or vanished) since it was read. */
+    public int recordBonafideCertificate(UUID id, int expected, String number, OffsetDateTime now, UUID actor) {
+        return jdbc.sql(RECORD_BONAFIDE_CERTIFICATE)
+                .param("id", id)
+                .param("expected", expected)
+                .param("number", number)
+                .param("now", now)
+                .param("actor", actor).update();
+    }
+
+    /** Rows of the caller's institutions only. */
+    public static SqlFragment scope(DataScope scope) {
+        return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    private static List<Object> sortValues(SortSpec sort, StudentEntity e) {
+        return sort.orders().stream().map(o -> SORT_VALUES.get(o.field().name()).apply(e)).toList();
+    }
+
+    private static StudentEntity map(ResultSet rs, int row) throws SQLException {
+        return StudentEntity.builder()
+                .id(rs.getObject("id", UUID.class))
+                .tenantId(rs.getObject("tenant_id", UUID.class))
+                .personId(rs.getObject("person_id", UUID.class))
+                .userId(rs.getObject("user_id", UUID.class))
+                .institutionId(rs.getObject("institution_id", UUID.class))
+                .admissionNumber(rs.getString("admission_number"))
+                .admissionDate(rs.getObject("admission_date", LocalDate.class))
+                .joiningDate(rs.getObject("joining_date", LocalDate.class))
+                .studentCategoryId(rs.getObject("student_category_id", UUID.class))
+                .governmentStudentId(rs.getString("government_student_id"))
+                .bonafideCertificateNumber(rs.getString("bonafide_certificate_number"))
+                .status(rs.getString("status"))
+                .exitDate(rs.getObject("exit_date", LocalDate.class))
+                .exitReason(rs.getString("exit_reason"))
+                .createdAt(rs.getObject("created_at", OffsetDateTime.class))
+                .createdBy(rs.getObject("created_by", UUID.class))
+                .updatedAt(rs.getObject("updated_at", OffsetDateTime.class))
+                .updatedBy(rs.getObject("updated_by", UUID.class))
+                .deletedAt(rs.getObject("deleted_at", OffsetDateTime.class))
+                .rowVersion(rs.getInt("row_version"))
+                .build();
+    }
+
+    private static FieldSpec field(String name, String column, ValueType type) {
+        return new FieldSpec(name, column, type);
+    }
+
+    private static Map<String, FieldSpec> fields(FieldSpec... specs) {
+        return Arrays.stream(specs).collect(Collectors.toUnmodifiableMap(FieldSpec::name, s -> s));
+    }
+}

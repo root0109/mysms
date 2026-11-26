@@ -58,8 +58,7 @@ public class RetentionResolver extends RetentionServiceGrpc.RetentionServiceImpl
             StreamObserver<UpdateRetentionPolicyResponse> out) {
         RetentionPolicy updated = policies.updateRetentionPolicy(bridge.id(request.getRetentionPolicy().getId(), "id"),
                 bridge.requiredIfMatch(request.getRetentionPolicy().getEtag()),
-                bridge.changes(request.getRetentionPolicy(), request.getUpdateMask(), RetentionPolicyUpdate.class),
-                bridge.updateMask(request.getUpdateMask()));
+                bridge.changes(request.getRetentionPolicy(), request.getUpdateMask(), RetentionPolicyUpdate.class));
         ProtoBridge.send(out, bridge.reply(UpdateRetentionPolicyResponse.newBuilder(), RETENTION_POLICY, updated)
                 .build());
     }

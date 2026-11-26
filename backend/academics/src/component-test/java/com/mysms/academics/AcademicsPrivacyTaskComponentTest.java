@@ -58,7 +58,7 @@ class AcademicsPrivacyTaskComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "academics");
+        DATABASE.register(registry, "academics", "timetable", "attendance", "assessment");
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
     }

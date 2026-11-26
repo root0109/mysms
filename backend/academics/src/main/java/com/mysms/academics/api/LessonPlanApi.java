@@ -300,7 +300,7 @@ public interface LessonPlanApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -334,7 +334,7 @@ public interface LessonPlanApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -435,12 +435,11 @@ public interface LessonPlanApi {
     String PATH_UPDATE_LESSON_PLAN = "/v1/academics/lesson-plans/{lessonPlanId}";
     /**
      * PATCH /v1/academics/lesson-plans/{lessonPlanId} : Update LessonPlan
-     * Partially update a LessonPlan (updateMask). Requires If-Match with the current ETag.
+     * Partially update a LessonPlan (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param lessonPlanId LessonPlan id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param lessonPlanUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -464,7 +463,6 @@ public interface LessonPlanApi {
          @PathVariable("lessonPlanId") UUID lessonPlanId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody LessonPlanUpdate lessonPlanUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -472,13 +470,12 @@ public interface LessonPlanApi {
     String PATH_UPDATE_LESSON_PLAN_APPROVAL = "/v1/academics/lesson-plans/{lessonPlanId}/approvals/{lessonPlanApprovalId}";
     /**
      * PATCH /v1/academics/lesson-plans/{lessonPlanId}/approvals/{lessonPlanApprovalId} : Update LessonPlanApproval
-     * Partially update a LessonPlanApproval (updateMask). Requires If-Match with the current ETag.
+     * Partially update a LessonPlanApproval (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param lessonPlanId LessonPlan id. (required)
      * @param lessonPlanApprovalId LessonPlanApproval id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param lessonPlanApprovalUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -503,7 +500,6 @@ public interface LessonPlanApi {
          @PathVariable("lessonPlanApprovalId") UUID lessonPlanApprovalId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody LessonPlanApprovalUpdate lessonPlanApprovalUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 

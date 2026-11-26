@@ -46,10 +46,10 @@ export const HR_OFFICER = [
   'hr.staff_department.create',
   'hr.staff_department.update',
   'hr.staff_department.delete',
-  'hr.staff_subject.read',
-  'hr.staff_subject.create',
-  'hr.staff_subject.update',
-  'hr.staff_subject.delete',
+  'academics.teacher_subject.read',
+  'academics.teacher_subject.create',
+  'academics.teacher_subject.update',
+  'academics.teacher_subject.delete',
   'hr.designation.read',
   'hr.leave_type.read',
   'hr.leave_balance.read',
@@ -180,6 +180,50 @@ export function fakeStaff(options: { accountUnavailable?: boolean } = {}): Recor
     };
   };
 
+  /** academics' teacher profile (academics.teacher_subject): a staff member's subjects, filtered by staffId. */
+  const teacherSubjectRoutes = (): Record<string, Handler> => {
+    const rows = children.subjects;
+    const taken = (staffId: string, targetId: string, except?: string) =>
+      [...rows.values()].some((r) => r.staffId === staffId && r.targetId === targetId && r.id !== except);
+    return {
+      'GET /v1/academics/teacher-subjects': (req) => {
+        const staffIds = valuesOf(filterOf(req), 'staffId');
+        return onePage(
+          req,
+          [...rows.values()].filter((r) => staffIds.includes(r.staffId)).map((r) => childOut('subjects', r)),
+        );
+      },
+      'POST /v1/academics/teacher-subjects': async (req) => {
+        const body = (await req.json()) as Record<string, string>;
+        const staffId = body.staffId ?? '';
+        const targetId = body.subjectId;
+        if (!staffId || !targetId) return problem(422, 'VALIDATION_FAILED');
+        if (taken(staffId, targetId)) return problem(409, 'DUPLICATE_RESOURCE', 'Conflict');
+        const row: ChildRow = { id: id(`ea${++sequence}`), staffId, targetId, version: 1 };
+        rows.set(row.id, row);
+        return json(childOut('subjects', row), { status: 201 });
+      },
+      'PATCH /v1/academics/teacher-subjects/{teacherSubjectId}': async (req, params) => {
+        const row = rows.get(params.teacherSubjectId ?? '');
+        if (!row) return problem(404, 'NOT_FOUND');
+        if (!ifMatches(req, row.version)) return problem(412, 'PRECONDITION_FAILED');
+        const targetId = ((await req.json()) as Record<string, string>).subjectId;
+        if (!targetId) return problem(422, 'VALIDATION_FAILED');
+        if (taken(row.staffId, targetId, row.id)) return problem(409, 'DUPLICATE_RESOURCE', 'Conflict');
+        row.targetId = targetId;
+        row.version += 1;
+        return json(childOut('subjects', row));
+      },
+      'DELETE /v1/academics/teacher-subjects/{teacherSubjectId}': (req, params) => {
+        const row = rows.get(params.teacherSubjectId ?? '');
+        if (!row) return problem(404, 'NOT_FOUND');
+        if (!ifMatches(req, row.version)) return problem(412, 'PRECONDITION_FAILED');
+        rows.delete(row.id);
+        return new Response(null, { status: 204 });
+      },
+    };
+  };
+
   const moves: Record<string, readonly string[]> = {
     active: ['inactive', 'exited'],
     inactive: ['active', 'exited'],
@@ -249,8 +293,11 @@ export function fakeStaff(options: { accountUnavailable?: boolean } = {}): Recor
       if (!req.headers.get('If-Match')) return problem(428, 'PRECONDITION_REQUIRED');
       if (!ifMatches(req, row.version)) return problem(412, 'PRECONDITION_FAILED');
       const body = (await req.json()) as Record<string, unknown>;
-      const mask = new URL(req.url).searchParams.get('updateMask')?.split(',') ?? Object.keys(body);
-      for (const field of mask) (row as Record<string, unknown>)[field] = body[field];
+      // a PATCH sets the fields its body names; null clears one (JAVA-CODING-RULES §7.2)
+      for (const [field, value] of Object.entries(body)) {
+        if (value === null) delete (row as Record<string, unknown>)[field];
+        else (row as Record<string, unknown>)[field] = value;
+      }
       row.version += 1;
       return json(out(row));
     },
@@ -293,7 +340,7 @@ export function fakeStaff(options: { accountUnavailable?: boolean } = {}): Recor
       return json(out(row));
     },
     ...childRoutes('departments', 'staffDepartmentId'),
-    ...childRoutes('subjects', 'staffSubjectId'),
+    ...teacherSubjectRoutes(),
     'GET /v1/hr/designations': (req) =>
       onePage(req, [
         {

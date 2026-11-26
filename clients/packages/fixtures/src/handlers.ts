@@ -11,6 +11,7 @@ import {
 } from './data';
 import { json, problem, type Handler } from './fakeApi';
 import { pageOf } from './paging';
+import { patched } from './patch';
 
 type Country = master.Country;
 type Operation = platform.Operation;
@@ -275,7 +276,7 @@ export function fakeBackend(options: FakeBackendOptions = {}): Record<string, Ha
         return invalid('websiteUrl', 'Must be an http or https address');
       if (changes.primaryEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(changes.primaryEmail))
         return invalid('primaryEmail', 'Must be an e-mail address');
-      person = { row: { ...person.row, ...changes }, version: person.version + 1 };
+      person = { row: patched(person.row, changes), version: person.version + 1 };
       return json(
         { ...person.row, etag: etagOf(person.version) },
         { headers: { ETag: etagOf(person.version) } },
@@ -315,7 +316,7 @@ export function fakeBackend(options: FakeBackendOptions = {}): Record<string, Ha
       const precondition = ifMatch(req, found.version);
       if (precondition) return precondition;
       const changes = (await req.json()) as master.CountryUpdate;
-      found.row = { ...found.row, ...changes };
+      found.row = patched(found.row, changes);
       found.version += 1;
       return withEtag(found.row, found.version);
     },

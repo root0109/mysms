@@ -55,7 +55,7 @@ public class StudentFeeDueResolver extends StudentFeeDueServiceGrpc.StudentFeeDu
                 bridge.id(request.getStudentFeeDue().getId(), "id"),
                 bridge.requiredIfMatch(request.getStudentFeeDue().getEtag()),
                 bridge.changes(request.getStudentFeeDue(), request.getUpdateMask(), StudentFeeDueUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStudentFeeDueResponse.newBuilder(), "student_fee_due",
                 updated).build());
     }

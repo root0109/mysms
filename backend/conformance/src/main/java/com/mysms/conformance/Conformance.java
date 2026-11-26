@@ -35,14 +35,14 @@ import java.util.List;
  * M1   one MapperConfig, stateless mappers, audit set ignored            MapperRule
  * X1   tokens verified only in auth-client; passwords hashed only in iam ApiLayerRule, SecurityBoundaryRule
  * P1   every tenant permission is seeded in iam's catalogue               PermissionCatalogueRule
- * G1   protos owned by their module; callee copies byte-identical         GrpcGuidelineRule
+ * G1   protos owned by their area; callee copies byte-identical           GrpcGuidelineRule
  * G2   field numbers match conformance/src/main/resources/field-numbers.lock.json
- * G3   operation table = the module's RPCs
- * G4   other modules' gRPC stubs only in <module>/integration
+ * G3   operation table = the area's RPCs
+ * G4   other modules' gRPC stubs only in an integration package
  * G5   every gRPC server implementation is a @GrpcService
  * G6   no REST client between modules
  * G7   no Transactions helper (AppTransactionManager only)
- * G8   every module's OpenApiComponentTest writes target/openapi/api-docs.yml
+ * G8   every area's OpenApiComponentTest writes target/openapi/<area>/api-docs.yml
  * G9   every module's application.properties; the monolith's combines them ConfigurationRule
  * </pre>
  */

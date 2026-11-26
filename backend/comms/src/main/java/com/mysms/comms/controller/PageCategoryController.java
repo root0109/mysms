@@ -61,9 +61,9 @@ public class PageCategoryController implements PageCategoryApi {
 
     @Override
     public ResponseEntity<PageCategory> updatePageCategory(UUID pageCategoryId, String ifMatch,
-            PageCategoryUpdate pageCategoryUpdate, String updateMask, Boolean validateOnly) {
+            PageCategoryUpdate pageCategoryUpdate, Boolean validateOnly) {
         PageCategory updated =
-                pageCategoryService.updatePageCategory(pageCategoryId, ifMatch, pageCategoryUpdate, updateMask,
+                pageCategoryService.updatePageCategory(pageCategoryId, ifMatch, pageCategoryUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

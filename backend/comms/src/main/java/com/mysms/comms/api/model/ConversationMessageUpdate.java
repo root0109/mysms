@@ -16,18 +16,18 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of ConversationMessage that can be updated (partial update; see updateMask).
+ * Fields of ConversationMessage that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class ConversationMessageUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String body;
+  private @Nullable Optional<@NotNull String> body;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean deletedBySender;
+  private @Nullable Optional<@NotNull Boolean> deletedBySender;
 
-  public ConversationMessageUpdate body(@Nullable String body) {
+  public ConversationMessageUpdate body(@Nullable Optional<String> body) {
     this.body = body;
     return this;
   }
@@ -38,16 +38,16 @@ public class ConversationMessageUpdate {
    */
   
   @JsonProperty("body")
-  public @Nullable String getBody() {
+  public @Nullable Optional<String> getBody() {
     return body;
   }
 
   @JsonProperty("body")
-  public void setBody(@Nullable String body) {
+  public void setBody(@Nullable Optional<String> body) {
     this.body = body;
   }
 
-  public ConversationMessageUpdate deletedBySender(@Nullable Boolean deletedBySender) {
+  public ConversationMessageUpdate deletedBySender(@Nullable Optional<Boolean> deletedBySender) {
     this.deletedBySender = deletedBySender;
     return this;
   }
@@ -58,12 +58,12 @@ public class ConversationMessageUpdate {
    */
   
   @JsonProperty("deletedBySender")
-  public @Nullable Boolean getDeletedBySender() {
+  public @Nullable Optional<Boolean> getDeletedBySender() {
     return deletedBySender;
   }
 
   @JsonProperty("deletedBySender")
-  public void setDeletedBySender(@Nullable Boolean deletedBySender) {
+  public void setDeletedBySender(@Nullable Optional<Boolean> deletedBySender) {
     this.deletedBySender = deletedBySender;
   }
 

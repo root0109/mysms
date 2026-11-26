@@ -16,36 +16,36 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of FeeHead that can be updated (partial update; see updateMask).
+ * Fields of FeeHead that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class FeeHeadUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@NotNull @Size(max = 40) String> code;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 150) String> name;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String description;
+  private @Nullable Optional<String> description;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String defaultAmount;
+  private @Nullable Optional<@Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> defaultAmount;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID currencyId;
+  private @Nullable Optional<UUID> currencyId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String ledgerAccountCode;
+  private @Nullable Optional<@Size(max = 40) String> ledgerAccountCode;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public FeeHeadUpdate institutionId(@Nullable UUID institutionId) {
+  public FeeHeadUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -54,18 +54,18 @@ public class FeeHeadUpdate {
    * Institution (NULL = tenant-wide).
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public FeeHeadUpdate code(@Nullable String code) {
+  public FeeHeadUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -74,18 +74,18 @@ public class FeeHeadUpdate {
    * Fee head code.
    * @return code
    */
-  @Size(max = 40) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 
-  public FeeHeadUpdate name(@Nullable String name) {
+  public FeeHeadUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -94,18 +94,18 @@ public class FeeHeadUpdate {
    * Fee head name.
    * @return name
    */
-  @Size(max = 150) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public FeeHeadUpdate description(@Nullable String description) {
+  public FeeHeadUpdate description(@Nullable Optional<String> description) {
     this.description = description;
     return this;
   }
@@ -116,16 +116,16 @@ public class FeeHeadUpdate {
    */
   
   @JsonProperty("description")
-  public @Nullable String getDescription() {
+  public @Nullable Optional<String> getDescription() {
     return description;
   }
 
   @JsonProperty("description")
-  public void setDescription(@Nullable String description) {
+  public void setDescription(@Nullable Optional<String> description) {
     this.description = description;
   }
 
-  public FeeHeadUpdate defaultAmount(@Nullable String defaultAmount) {
+  public FeeHeadUpdate defaultAmount(@Nullable Optional<String> defaultAmount) {
     this.defaultAmount = defaultAmount;
     return this;
   }
@@ -134,18 +134,18 @@ public class FeeHeadUpdate {
    * Default amount.
    * @return defaultAmount
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("defaultAmount")
-  public @Nullable String getDefaultAmount() {
+  public @Nullable Optional<String> getDefaultAmount() {
     return defaultAmount;
   }
 
   @JsonProperty("defaultAmount")
-  public void setDefaultAmount(@Nullable String defaultAmount) {
+  public void setDefaultAmount(@Nullable Optional<String> defaultAmount) {
     this.defaultAmount = defaultAmount;
   }
 
-  public FeeHeadUpdate currencyId(@Nullable UUID currencyId) {
+  public FeeHeadUpdate currencyId(@Nullable Optional<UUID> currencyId) {
     this.currencyId = currencyId;
     return this;
   }
@@ -154,18 +154,18 @@ public class FeeHeadUpdate {
    * Currency.
    * @return currencyId
    */
-  @Valid 
+  
   @JsonProperty("currencyId")
-  public @Nullable UUID getCurrencyId() {
+  public @Nullable Optional<UUID> getCurrencyId() {
     return currencyId;
   }
 
   @JsonProperty("currencyId")
-  public void setCurrencyId(@Nullable UUID currencyId) {
+  public void setCurrencyId(@Nullable Optional<UUID> currencyId) {
     this.currencyId = currencyId;
   }
 
-  public FeeHeadUpdate ledgerAccountCode(@Nullable String ledgerAccountCode) {
+  public FeeHeadUpdate ledgerAccountCode(@Nullable Optional<String> ledgerAccountCode) {
     this.ledgerAccountCode = ledgerAccountCode;
     return this;
   }
@@ -174,18 +174,18 @@ public class FeeHeadUpdate {
    * General-ledger account code for accounting export.
    * @return ledgerAccountCode
    */
-  @Size(max = 40) 
+  
   @JsonProperty("ledgerAccountCode")
-  public @Nullable String getLedgerAccountCode() {
+  public @Nullable Optional<String> getLedgerAccountCode() {
     return ledgerAccountCode;
   }
 
   @JsonProperty("ledgerAccountCode")
-  public void setLedgerAccountCode(@Nullable String ledgerAccountCode) {
+  public void setLedgerAccountCode(@Nullable Optional<String> ledgerAccountCode) {
     this.ledgerAccountCode = ledgerAccountCode;
   }
 
-  public FeeHeadUpdate isActive(@Nullable Boolean isActive) {
+  public FeeHeadUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -196,12 +196,12 @@ public class FeeHeadUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

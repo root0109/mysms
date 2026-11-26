@@ -40,9 +40,9 @@ public class ListActiveHoldsResponse {
    * The holds, oldest first.
    * @return holds
    */
-  @NotNull @Valid 
+  @NotNull 
   @JsonProperty("holds")
-  public List<ActiveLegalHold> getHolds() {
+  public List<@Valid ActiveLegalHold> getHolds() {
     return holds;
   }
 

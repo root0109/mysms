@@ -103,8 +103,8 @@ Each module jar carries its own `application.properties` (JAVA-CODING-RULES §2.
 | `MYSMS_DB_RELAY_USER`, `MYSMS_DB_RELAY_PASSWORD` | in production | the relay role (`mysms_relay`); without it the relay runs only when the application role bypasses RLS (a local superuser), otherwise it logs an ERROR and events stay in the outbox |
 | `MYSMS_DB_REPLICA_URL` (with `_USER`, `_PASSWORD`) | no | a streaming replica that read-only transactions use (pool `<module>-replica`); writes and reads inside writes stay on the primary. User and password default to the application role's. A stale read cannot overwrite newer data: updates carry the ETag (412). Never migrated; health component `replica` |
 | `MYSMS_DB_SLOW_STATEMENT` | no | statements slower than this are logged (text with placeholders, never values); default `200ms`, `0` = off |
-| `MYSMS_<MODULE>_DB_URL`, `_DB_USER`, `_DB_PASSWORD`, `_DB_MIGRATE_USER`, `_DB_MIGRATE_PASSWORD`, `_DB_RELAY_USER`, `_DB_RELAY_PASSWORD`, `_DB_REPLICA_URL`, `_DB_REPLICA_USER`, `_DB_REPLICA_PASSWORD`, `_DB_SLOW_STATEMENT` | no | per-module override of the shared value (e.g. `MYSMS_FINANCE_DB_URL`) |
-| `MYSMS_<MODULE>_DB_POOL_SIZE` | no | pool size per module, default 10. The monolith opens one pool per module (and one per replica): 22 × pool size must stay below `max_connections` |
+| `MYSMS_<MODULE>_DB_URL`, `_DB_USER`, `_DB_PASSWORD`, `_DB_MIGRATE_USER`, `_DB_MIGRATE_PASSWORD`, `_DB_RELAY_USER`, `_DB_RELAY_PASSWORD`, `_DB_REPLICA_URL`, `_DB_REPLICA_USER`, `_DB_REPLICA_PASSWORD`, `_DB_SLOW_STATEMENT` | no | per-area override of the shared value (e.g. `MYSMS_FINANCE_DB_URL`); the areas of one module read each other's schemas (payroll reads `hr.staff`), so keep their URL and application user equal |
+| `MYSMS_<AREA>_DB_POOL_SIZE` | no | pool size per area, default 10. Every process opens one pool per area it serves (and one per replica); the monolith 22: 22 × pool size must stay below `max_connections` |
 
 **Authentication and service identity**
 
@@ -129,8 +129,8 @@ Each module jar carries its own `application.properties` (JAVA-CODING-RULES §2.
 | `PORT` | no | HTTP port, default 8080 |
 | `MYSMS_GRPC_SERVER_PORT` | no | gRPC port (§5.8), default `9112`; one server per process |
 | `MYSMS_NAMESPACE` | no | Kubernetes namespace of the service DNS names (`<module>-service.<namespace>.svc.cluster.local`), default `mysms` |
-| `MYSMS_<MODULE>_SERVICE_PORT_RPC` | no | gRPC port of a called `<module>` service, default `9112` (Kubernetes sets it for a port named `rpc`) |
-| `MYSMS_<MODULE>_GRPC_ADDRESS` | no | full target of a called service (e.g. `static://10.0.0.5:9112`), overriding the two above; monolith default: the in-process server |
+| `MYSMS_<MODULE>_SERVICE_PORT_RPC` | no | gRPC port of a called `<module>` service (the module serving the called area, ARCHITECTURE §1), default `9112` (Kubernetes sets it for a port named `rpc`) |
+| `MYSMS_<AREA>_GRPC_ADDRESS` | no | full target of a called area's service (e.g. `static://10.0.0.5:9112`), overriding the two above; monolith default: the in-process server |
 | `MYSMS_GRPC_CLIENT_DEADLINE` | no | deadline of a call whose stub sets none, default `10s` |
 | `MYSMS_GRPC_REFLECTION` | no | `true` serves gRPC server reflection; off by default |
 
@@ -140,7 +140,7 @@ Each module jar carries its own `application.properties` (JAVA-CODING-RULES §2.
 |---|---|---|
 | `MYSMS_EVENTS_BUS` | no | `rabbitmq` (default), `google-pubsub`, `in-process` (one JVM) or `none` (tests only: nothing relayed or consumed) |
 | `MYSMS_RABBITMQ_URI` | with RabbitMQ | **secret**, `amqps://<user>:<password>@<host>:5671/<vhost>`; a service refuses to start without it |
-| `MYSMS_RABBITMQ_PUBLISHER_USER` | no | broker user a module's events must come from (`{module}` = source module): default `mysms-{module}` for a service, `self` for the monolith |
+| `MYSMS_RABBITMQ_PUBLISHER_USER` | no | broker user a module's events must come from (`{module}` = the module serving the event's source area, `payroll` → `hrms`): default `mysms-{module}` for a service, `self` for the monolith |
 | `MYSMS_EVENTS_GCP_PROJECT_ID` | with Pub/Sub | Google Cloud project; falls back to `GOOGLE_CLOUD_PROJECT` |
 | `PUBSUB_EMULATOR_HOST` | no | Pub/Sub emulator, e.g. `localhost:8085` (no credentials, resource creation on) |
 | `MYSMS_EVENTS_GOOGLE_PUBSUB_CREATE_RESOURCES` | no | create topics and subscriptions at startup; default `false`, `true` with the emulator |
@@ -239,11 +239,11 @@ An unconfigured provider never breaks a service: the operations that need it ans
 
 ### 5.1 Build
 
-`mvn verify` in `backend/` ([`BUILD-AND-RUN.md`](BUILD-AND-RUN.md) §3); `mvn -pl app -am package -DskipTests` builds just the jars. Outputs: `app/target/app-0.1.0-SNAPSHOT-exec.jar` (monolith), `<module>/target/<module>-0.1.0-SNAPSHOT-exec.jar` (one service per module), each module's OpenAPI document `<module>/target/openapi/api-docs.yml` and gRPC descriptor set `<module>/target/docs/protos/grpc.protobin`.
+`mvn verify` in `backend/` ([`BUILD-AND-RUN.md`](BUILD-AND-RUN.md) §3); `mvn -pl app -am package -DskipTests` builds just the jars. Outputs: `app/target/app-0.1.0-SNAPSHOT-exec.jar` (monolith), `<module>/target/<module>-0.1.0-SNAPSHOT-exec.jar` (one service per module), each area's OpenAPI document `<module>/target/openapi/<area>/api-docs.yml` and gRPC descriptor set `<module>/target/docs/protos/grpc.protobin`.
 
 ### 5.2 Run as one monolith (recommended start)
 
-All 22 modules in one process, each with its own pool and Flyway history; module-to-module gRPC stays in-process.
+All 10 modules (22 areas) in one process, each area with its own pool and Flyway history; gRPC between areas stays in-process.
 
 ```bash
 export MYSMS_DB_URL=jdbc:postgresql://db:5432/mysms
@@ -282,15 +282,15 @@ curl -s http://localhost:8080/v1/iam/me -H "Authorization: Bearer <accessToken>"
 
 ### 5.4 Run as one service per module
 
-Each module jar is a service that owns one schema and serves `/v1/<module>/…`. Give each the variables of §4.1 and its own `PORT`; iam also those of §4.2. Every service verifies tokens itself against iam's `/oauth2/jwks`, so start iam first.
+Each module jar is a service that owns its areas' schemas and serves `/v1/<area>/…` for each of its areas (ARCHITECTURE §1). Give each the variables of §4.1 for every area it serves and its own `PORT`; identity (iam) also those of §4.2. Every service verifies tokens itself against iam's `/oauth2/jwks`, so start identity first.
 
 ```bash
-PORT=8101 java -jar backend/iam/target/iam-0.1.0-SNAPSHOT-exec.jar
-PORT=8102 java -jar backend/people/target/people-0.1.0-SNAPSHOT-exec.jar
-# … one per module
+PORT=8101 java -jar backend/identity/target/identity-0.1.0-SNAPSHOT-exec.jar
+PORT=8102 java -jar backend/platform/target/platform-0.1.0-SNAPSHOT-exec.jar
+# … one per module (10)
 ```
 
-The gateway routes by the first path segment after `/v1/` and routes `/oauth2/jwks` to iam; `MYSMS_AUTH_ISSUER` is the same public URL in every service. Do **not** route `/oauth2/token` from the internet. gRPC: each service listens on `MYSMS_GRPC_SERVER_PORT` (9112); route `mysms.<module>.v1.*` to that module, HTTP/2 end to end.
+The gateway routes by the first path segment after `/v1/` (the area) to the module serving it and routes `/oauth2/jwks` to identity; `MYSMS_AUTH_ISSUER` is the same public URL in every service. Do **not** route `/oauth2/token` from the internet. gRPC: each service listens on `MYSMS_GRPC_SERVER_PORT` (9112); route `mysms.<area>.v1.*` to the module serving the area, HTTP/2 end to end.
 
 ### 5.5 Edge behaviour you can rely on
 
@@ -320,23 +320,36 @@ Services declare what they need at startup:
 | Object | Kind | Purpose |
 |---|---|---|
 | `mysms.events` | topic exchange, durable | every event, routed by type (`hr.staff.deleted`); alternate exchange `mysms.events.unrouted` |
-| `mysms.<module>.events` | quorum queue | the events a module consumes; its replicas share it |
+| `mysms.<area>.events` | quorum queue | the events an area consumes; its module's replicas share it |
 | `mysms.events.unrouted` | fanout exchange + quorum queue | events no queue was bound to, kept 3 days for `replay-unrouted` |
 | `mysms.events.dead` | direct exchange | where failing events go |
-| `mysms.<module>.dead` | quorum queue | events that failed every delivery (first plus 5 returns), or were unreadable, unauthentic or rejected |
+| `mysms.<area>.dead` | quorum queue | events that failed every delivery (first plus 5 returns), or were unreadable, unauthentic or rejected |
 
 A failed handling is returned after 1 s, 2 s, 4 s … up to 60 s. Change `delivery-limit` or dead-letter settings of an existing queue with a RabbitMQ policy, or drain, delete and let the service declare it again; a service started with other arguments stops with `its queue … exists with other arguments`.
 
-**One broker user per service.** RabbitMQ verifies each message's AMQP `user-id`; a consumer accepts an event only from its source module's user (`mysms-<module>`), and topic permissions let each user publish only its module's event types and `audit.recorded`. For each module (`hr` below), vhost `mysms`:
+**One broker user per service.** RabbitMQ verifies each message's AMQP `user-id`. An event names its source *area* (`payroll.payslip.issued`); a consumer accepts it only from the user of the module serving that area (`mysms-hrms`; the area → module table is `MessagingModules` in `backend/messaging`), and topic permissions let each user publish only its areas' event types and `audit.recorded`. Each area keeps its own queues (`mysms.<area>.events`, `mysms.<area>.dead`). For each module (`hrms` below, areas `hr` and `payroll`), vhost `mysms`:
 
 ```bash
 rabbitmqctl add_vhost mysms
-rabbitmqctl add_user mysms-hr '<hr-rabbit-password>'
-P='^mysms\.(events(\.dead|\.unrouted)?|hr\.(events|dead))$'
-rabbitmqctl set_permissions -p mysms mysms-hr "$P" "$P" "$P"
-rabbitmqctl set_topic_permissions -p mysms mysms-hr mysms.events '^(hr\..+|audit\.recorded)$' '.*'
-# hr service: MYSMS_RABBITMQ_URI='amqps://mysms-hr:<hr-rabbit-password>@broker:5671/mysms'
+rabbitmqctl add_user mysms-hrms '<hrms-rabbit-password>'
+P='^mysms\.(events(\.dead|\.unrouted)?|(hr|payroll)\.(events|dead))$'
+rabbitmqctl set_permissions -p mysms mysms-hrms "$P" "$P" "$P"
+rabbitmqctl set_topic_permissions -p mysms mysms-hrms mysms.events '^((hr|payroll)\..+|audit\.recorded)$' '.*'
+# hrms service: MYSMS_RABBITMQ_URI='amqps://mysms-hrms:<hrms-rabbit-password>@broker:5671/mysms'
 ```
+
+| Module (user `mysms-<module>`) | Areas in its two regexes |
+|---|---|
+| `platform` | `platform`, `master`, `org` |
+| `identity` | `iam`, `people` |
+| `privacy` | `privacy` |
+| `comms` | `comms` |
+| `hrms` | `hr`, `payroll` |
+| `students` | `sis`, `admission`, `careers` |
+| `academics` | `academics`, `timetable`, `attendance`, `assessment` |
+| `finance` | `finance` |
+| `campus` | `library`, `transport`, `frontoffice`, `facility` |
+| `learning` | `lms` |
 
 The monolith publishes for every module over one connection: give its user `'.*' '.*' '.*'` on the vhost and keep `MYSMS_RABBITMQ_PUBLISHER_USER=self`. Operators replay with their own user tagged `impersonator` (replayed events keep the original `user-id`):
 
@@ -350,7 +363,7 @@ java -cp academics-0.1.0-SNAPSHOT-exec.jar -Dloader.main=com.mysms.messaging.rab
   org.springframework.boot.loader.launch.PropertiesLauncher replay-unrouted
 ```
 
-`replay-dead` returns a module's parked events to its queue (the failure reason is in its `inbox_event.processing_error` and log); `replay-unrouted` publishes waiting events again. A local broker: `docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:4.1-management-alpine`, then one user with `'.*'` permissions and `amqp://` in `MYSMS_RABBITMQ_URI` (`amqps://` in production).
+`replay-dead <area>` returns a consuming area's parked events to its queue (one call per area of a multi-area module) (the failure reason is in its `inbox_event.processing_error` and log); `replay-unrouted` publishes waiting events again. A local broker: `docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:4.1-management-alpine`, then one user with `'.*'` permissions and `amqp://` in `MYSMS_RABBITMQ_URI` (`amqps://` in production).
 
 #### Google Cloud Pub/Sub
 
@@ -358,7 +371,7 @@ java -cp academics-0.1.0-SNAPSHOT-exec.jar -Dloader.main=com.mysms.messaging.rab
 
 | Resource | Name | IAM |
 |---|---|---|
-| Source topic | `mysms-events-<source>` | producer: `roles/pubsub.publisher` on its own topic |
+| Source topic | `mysms-events-<source>` | producer: `roles/pubsub.publisher` on the topic of each of its areas (`<source>` is the source area) |
 | Subscription | `mysms-<consumer>-from-<source>` | consumer: `roles/pubsub.subscriber` on its subscriptions |
 | Dead-letter topic / subscription | `mysms-events-<consumer>-dead` / `mysms-<consumer>-dead` | consumer: publisher on its dead-letter topic; Pub/Sub service agent: publisher on dead-letter topics, subscriber on source subscriptions |
 
@@ -413,7 +426,7 @@ Rotation: set the new secret on the module and the new hash at iam, restart both
 
 ### 5.10 Permissions: catalogues and the role cache
 
-Every module publishes its API-permission catalogue (its operation table) to iam as `<module>.api_permissions.published` at startup and every `MYSMS_CATALOGUE_INTERVAL`. iam keeps it in `iam.api_permission` (`iam.ListApiPermissions`), adds new tenant-user permission codes, and retires (never deletes) an operation no module has published for `MYSMS_IAM_API_PERMISSION_RETIRE_AFTER`. On Pub/Sub keep iam's source modules at the default (every module).
+Every module publishes its API-permission catalogue (its operation table) to iam as `<module>.api_permissions.published` at startup and every `MYSMS_CATALOGUE_INTERVAL`. iam keeps it in `iam.api_permission` (`iam.ListApiPermissions`), adds new tenant-user permission codes, and retires (never deletes) an operation no module has published for `MYSMS_IAM_API_PERMISSION_RETIRE_AFTER`. On Pub/Sub keep iam's source areas (`mysms.events.google-pubsub.source-modules`) at the default (every area).
 
 Each module's edge decides every call itself. A person's token names role grants (`rgr`), direct grants and denies and the tenant's authorisation version (`azv`); the filter resolves permissions through a per-process cache of each role's codes, filled from iam's `IamAuthzService.GetRolePermissions` (in iam and the monolith, directly). A cached role older than the token's `azv` is fetched again; other changes show within `MYSMS_ROLE_CACHE_TTL`. When iam cannot answer what the cache lacks the call is refused with 503 `UNAVAILABLE`, never admitted: **run iam with at least two replicas and a rolling update.**
 
@@ -497,7 +510,7 @@ Suites, gates and commands: [`BUILD-AND-RUN.md`](BUILD-AND-RUN.md) §3.
 | `module … has no relay-username …` | Set `MYSMS_DB_RELAY_USER` / `_PASSWORD` (§2.1); pending events go out as soon as the relay runs. |
 | `the relay role must be a role of its own` | The relay user is the application or migration user; create `mysms_relay`. |
 | `set outbox row … aside, it is not published` | The row was not that module's event or was unreadable (`publish_error` says why); fix it and set `publish_error` to NULL. |
-| Messages in `mysms.<module>.dead` | The handler failed every delivery (`inbox_event.processing_error`, WARN log), or the event was unreadable, from the wrong broker user (ERROR `claiming module … from broker user …`) or rejected. Fix, then `replay-dead <module>`. |
+| Messages in `mysms.<area>.dead` | The handler failed every delivery (`inbox_event.processing_error`, WARN log), or the event was unreadable, from the wrong broker user (ERROR `claiming module … from broker user …`) or rejected. Fix, then `replay-dead <area>`. |
 | Messages in `mysms.events.unrouted` | No queue was bound for that type: start the consumer, then `replay-unrouted`. |
 | `ACCESS_REFUSED - write access to topic '…'` | A service published another module's event type: a bug; the event stays in its outbox. |
 | `its queue … exists with other arguments` / `inequivalent arg` | §5.7, queue settings. |

@@ -66,7 +66,7 @@ public class FeeStructureResolver extends FeeStructureServiceGrpc.FeeStructureSe
                 bridge.id(request.getFeeStructure().getId(), "id"),
                 bridge.requiredIfMatch(request.getFeeStructure().getEtag()),
                 bridge.changes(request.getFeeStructure(), request.getUpdateMask(), FeeStructureUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeeStructureResponse.newBuilder(), "fee_structure", updated).build());
     }
 

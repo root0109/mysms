@@ -691,7 +691,7 @@ public interface EventApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -727,7 +727,7 @@ public interface EventApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -763,7 +763,7 @@ public interface EventApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -799,7 +799,7 @@ public interface EventApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -833,7 +833,7 @@ public interface EventApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -841,12 +841,11 @@ public interface EventApi {
     String PATH_UPDATE_EVENT = "/v1/comms/events/{eventId}";
     /**
      * PATCH /v1/comms/events/{eventId} : Update Event
-     * Partially update a Event (updateMask). Requires If-Match with the current ETag.
+     * Partially update a Event (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param eventId Event id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param eventUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -870,7 +869,6 @@ public interface EventApi {
          @PathVariable("eventId") UUID eventId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody EventUpdate eventUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -878,13 +876,12 @@ public interface EventApi {
     String PATH_UPDATE_EVENT_ATTENDEE = "/v1/comms/events/{eventId}/attendees/{eventAttendeeId}";
     /**
      * PATCH /v1/comms/events/{eventId}/attendees/{eventAttendeeId} : Update EventAttendee
-     * Partially update a EventAttendee (updateMask). Requires If-Match with the current ETag.
+     * Partially update a EventAttendee (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param eventId Event id. (required)
      * @param eventAttendeeId EventAttendee id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param eventAttendeeUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -909,7 +906,6 @@ public interface EventApi {
          @PathVariable("eventAttendeeId") UUID eventAttendeeId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody EventAttendeeUpdate eventAttendeeUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -917,13 +913,12 @@ public interface EventApi {
     String PATH_UPDATE_EVENT_GALLERY_ITEM = "/v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId}";
     /**
      * PATCH /v1/comms/events/{eventId}/gallery-items/{eventGalleryItemId} : Update EventGalleryItem
-     * Partially update a EventGalleryItem (updateMask). Requires If-Match with the current ETag.
+     * Partially update a EventGalleryItem (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param eventId Event id. (required)
      * @param eventGalleryItemId EventGalleryItem id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param eventGalleryItemUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -948,7 +943,6 @@ public interface EventApi {
          @PathVariable("eventGalleryItemId") UUID eventGalleryItemId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody EventGalleryItemUpdate eventGalleryItemUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -956,13 +950,12 @@ public interface EventApi {
     String PATH_UPDATE_EVENT_INSTITUTION = "/v1/comms/events/{eventId}/institutions/{eventInstitutionId}";
     /**
      * PATCH /v1/comms/events/{eventId}/institutions/{eventInstitutionId} : Update EventInstitution
-     * Partially update a EventInstitution (updateMask). Requires If-Match with the current ETag.
+     * Partially update a EventInstitution (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param eventId Event id. (required)
      * @param eventInstitutionId EventInstitution id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param eventInstitutionUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -987,7 +980,6 @@ public interface EventApi {
          @PathVariable("eventInstitutionId") UUID eventInstitutionId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody EventInstitutionUpdate eventInstitutionUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -995,13 +987,12 @@ public interface EventApi {
     String PATH_UPDATE_EVENT_OCCURRENCE = "/v1/comms/events/{eventId}/occurrences/{eventOccurrenceId}";
     /**
      * PATCH /v1/comms/events/{eventId}/occurrences/{eventOccurrenceId} : Update EventOccurrence
-     * Partially update a EventOccurrence (updateMask). Requires If-Match with the current ETag.
+     * Partially update a EventOccurrence (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param eventId Event id. (required)
      * @param eventOccurrenceId EventOccurrence id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param eventOccurrenceUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -1026,7 +1017,6 @@ public interface EventApi {
          @PathVariable("eventOccurrenceId") UUID eventOccurrenceId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody EventOccurrenceUpdate eventOccurrenceUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 

@@ -101,8 +101,7 @@ public class TenantResolver extends TenantServiceGrpc.TenantServiceImplBase {
         Tenant updated = tenantService.updateTenant(
                 bridge.id(request.getTenant().getId(), "id"),
                 bridge.requiredIfMatch(request.getTenant().getEtag()),
-                bridge.changes(request.getTenant(), request.getUpdateMask(), TenantUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getTenant(), request.getUpdateMask(), TenantUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateTenantResponse.newBuilder(), "tenant", updated).build());
     }
 

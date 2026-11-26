@@ -60,8 +60,7 @@ public class TagResolver extends TagServiceGrpc.TagServiceImplBase {
         Tag updated = service.updateTag(
                 bridge.id(request.getTag().getId(), "id"),
                 bridge.requiredIfMatch(request.getTag().getEtag()),
-                bridge.changes(request.getTag(), request.getUpdateMask(), TagUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getTag(), request.getUpdateMask(), TagUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateTagResponse.newBuilder(), "tag", updated).build());
     }
 

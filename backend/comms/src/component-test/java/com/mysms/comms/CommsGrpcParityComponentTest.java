@@ -171,7 +171,7 @@ class CommsGrpcParityComponentTest {
     }
 
     private static JsonNode spec() throws Exception {
-        return JSON.readTree(CommsGrpcParityComponentTest.class.getClassLoader().getResourceAsStream("crud-spec.json"));
+        return JSON.readTree(CommsGrpcParityComponentTest.class.getClassLoader().getResourceAsStream("comms/crud-spec.json"));
     }
 
     private static List<String> ids(JsonNode items, String field) {
@@ -225,7 +225,7 @@ class CommsGrpcParityComponentTest {
     @TestFactory
     List<DynamicNode> everyStandardRpcAnswersLikeRest() throws Exception {
         List<DynamicNode> tests = new ArrayList<>();
-        for (GrpcParityContract.Resource resource : GrpcParityContract.resources("crud-spec.json")) {
+        for (GrpcParityContract.Resource resource : GrpcParityContract.resources("comms/crud-spec.json")) {
             tests.add(DynamicTest.dynamicTest(resource.name(), () -> {
                 sql(TENANT, resource.fixtures());
                 sql(TENANT, resource.seed());

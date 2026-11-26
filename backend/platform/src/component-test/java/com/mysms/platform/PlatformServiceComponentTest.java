@@ -46,7 +46,7 @@ class PlatformServiceComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "platform");
+        DATABASE.register(registry, "platform", "master", "org");
         registry.add("mysms.auth.api-docs", () -> true);
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
@@ -68,8 +68,8 @@ class PlatformServiceComponentTest {
                 .query(Integer.class).single();
         assertThat(tables).isEqualTo(TABLES);
         Integer moduleSchemas = database.jdbc().sql("SELECT count(*) FROM pg_namespace WHERE nspname = ANY(:modules)")
-                .param("modules", ModuleChecks.MODULES.toArray(String[]::new)).query(Integer.class).single();
-        assertThat(moduleSchemas).as("only its own schema exists in its database").isEqualTo(1);
+                .param("modules", ModuleChecks.SCHEMAS.toArray(String[]::new)).query(Integer.class).single();
+        assertThat(moduleSchemas).as("only its module's schemas exist in its database").isEqualTo(3);
         Boolean ownsSchema = database.jdbc().sql(
                 "SELECT pg_get_userbyid(nspowner) = current_user FROM pg_namespace WHERE nspname = 'platform'")
                 .query(Boolean.class).single();

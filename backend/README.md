@@ -1,7 +1,7 @@
 # MySMS backend
 
-Java 17 · Spring Boot 4.1 · plain Spring JDBC · Flyway · PostgreSQL 16. 22 domain modules, one per schema; each
-builds to its own service and all assemble into one monolith (`app`). Rules: [JAVA-CODING-RULES.md](../JAVA-CODING-RULES.md).
+Java 17 · Spring Boot 4.1 · plain Spring JDBC · Flyway · PostgreSQL 16. 10 domain modules serving 22 areas (one
+schema each, ARCHITECTURE §1); each module builds to its own service and all assemble into one monolith (`app`). Rules: [JAVA-CODING-RULES.md](../JAVA-CODING-RULES.md).
 Module graph and allowed calls: [ARCHITECTURE.md](../ARCHITECTURE.md). Build and run: [BUILD-AND-RUN.md](../BUILD-AND-RUN.md).
 Configuration and production: [DEPLOYMENT.md](../DEPLOYMENT.md). Served vs 501 per operation:
 [api/operations-status.md](../api/operations-status.md). Open work: [ROADMAP.md](../ROADMAP.md).
@@ -17,7 +17,7 @@ Jars: `<module>/target/<module>-0.1.0-SNAPSHOT-exec.jar` (one service, `mvn -pl 
 | `auth-client` | Token verification, `AuthContext`, permission checks at the HTTP and gRPC edge (`GrpcAuthInterceptor`), service tokens (`ServiceTokenProvider`), role→permission cache. Test-jar: `TestTokens` |
 | `messaging` | `EventBus` with RabbitMQ (default), Google Pub/Sub and in-process adapters; outbox relay, exactly-once inbox, dead-letter and replay (`EventsAdmin`) |
 | `privacy-client` | Consent checker other modules call (`CachingConsentChecker`): gRPC to `privacy` as the caller's service principal, TTL cache, fails closed; `PrivacyTaskHandler`, the base of a module's erasure/export tasks and retention sweeps (legal holds asked through `ListActiveHolds`, fail closed) |
-| 22 domain modules | `master`, `platform`, `iam` (also the OAuth 2.0 / OIDC issuer), `org`, `people`, `academics`, `sis`, `hr`, `payroll`, `admission`, `attendance`, `facility`, `timetable`, `assessment`, `lms`, `finance`, `library`, `transport`, `comms`, `frontoffice`, `careers`, `privacy`. Each owns schema `<module>` (migrations in `database/migrations/<module>`), its contract package `com.mysms.<module>.api`, its protos and its operation table `META-INF/mysms/operations/<module>.json` |
+| 10 domain modules | `platform` (areas platform, master, org), `identity` (iam — also the OAuth 2.0 / OIDC issuer —, people), `privacy`, `comms`, `hrms` (hr, payroll), `students` (sis, admission, careers), `academics` (academics, timetable, attendance, assessment), `finance`, `campus` (library, transport, frontoffice, facility), `learning` (lms). Each area owns schema `<area>` (migrations in `database/migrations/<area>`), its contract package `com.mysms.<module>[.<area>].api`, its protos and its operation table `META-INF/mysms/operations/<area>.json` (JAVA-CODING-RULES §2.2) |
 | `app` | Assembly only: all domain modules in one process, each with its own pool and Flyway history |
 | `conformance` | Last in the reactor: checks the mechanical design rules over the whole repository and writes the generated reports (`OperationStatusReportTest`) |
 

@@ -61,7 +61,7 @@ public class UploadPolicyResolver extends UploadPolicyServiceGrpc.UploadPolicySe
                 bridge.id(request.getUploadPolicy().getId(), "id"),
                 bridge.requiredIfMatch(request.getUploadPolicy().getEtag()),
                 bridge.changes(request.getUploadPolicy(), request.getUpdateMask(), UploadPolicyUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateUploadPolicyResponse.newBuilder(), "upload_policy", updated).build());
     }
 

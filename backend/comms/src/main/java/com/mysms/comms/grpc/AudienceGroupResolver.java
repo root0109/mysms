@@ -75,7 +75,7 @@ public class AudienceGroupResolver extends AudienceGroupServiceGrpc.AudienceGrou
         AudienceGroup updated = service.updateAudienceGroup(
                 bridge.id(request.getAudienceGroup().getId(), "id"), bridge.requiredIfMatch(request.getAudienceGroup().getEtag()),
                 bridge.changes(request.getAudienceGroup(), request.getUpdateMask(), AudienceGroupUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAudienceGroupResponse.newBuilder(), "audience_group", updated).build());
     }
 
@@ -121,7 +121,7 @@ public class AudienceGroupResolver extends AudienceGroupServiceGrpc.AudienceGrou
                 bridge.id(request.getAudienceGroupMember().getId(), "id"),
                 bridge.requiredIfMatch(request.getAudienceGroupMember().getEtag()),
                 bridge.changes(request.getAudienceGroupMember(), request.getUpdateMask(), AudienceGroupMemberUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateAudienceGroupMemberResponse.newBuilder(), "audience_group_member", updated).build());
     }

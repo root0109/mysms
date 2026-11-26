@@ -127,20 +127,19 @@ public class FeedbackThreadController implements FeedbackThreadApi {
 
     @Override
     public ResponseEntity<FeedbackMessage> updateFeedbackMessage(UUID feedbackThreadId,
-            UUID feedbackMessageId, String ifMatch, FeedbackMessageUpdate feedbackMessageUpdate, String updateMask,
-            Boolean validateOnly) {
+            UUID feedbackMessageId, String ifMatch, FeedbackMessageUpdate feedbackMessageUpdate, Boolean validateOnly) {
         FeedbackMessage updated =
                 feedbackThreadService.updateFeedbackMessage(feedbackThreadId, feedbackMessageId, ifMatch,
-                        feedbackMessageUpdate, updateMask,
+                        feedbackMessageUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<FeedbackThread> updateFeedbackThread(UUID feedbackThreadId, String ifMatch,
-            FeedbackThreadUpdate feedbackThreadUpdate, String updateMask, Boolean validateOnly) {
+            FeedbackThreadUpdate feedbackThreadUpdate, Boolean validateOnly) {
         FeedbackThread updated =
-                feedbackThreadService.updateFeedbackThread(feedbackThreadId, ifMatch, feedbackThreadUpdate, updateMask,
+                feedbackThreadService.updateFeedbackThread(feedbackThreadId, ifMatch, feedbackThreadUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

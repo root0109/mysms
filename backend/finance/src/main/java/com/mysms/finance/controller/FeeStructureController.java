@@ -73,9 +73,9 @@ public class FeeStructureController implements FeeStructureApi {
 
     @Override
     public ResponseEntity<FeeStructure> updateFeeStructure(UUID feeStructureId, String ifMatch,
-            FeeStructureUpdate feeStructureUpdate, String updateMask, Boolean validateOnly) {
+            FeeStructureUpdate feeStructureUpdate, Boolean validateOnly) {
         FeeStructure updated =
-                feeStructureService.updateFeeStructure(feeStructureId, ifMatch, feeStructureUpdate, updateMask,
+                feeStructureService.updateFeeStructure(feeStructureId, ifMatch, feeStructureUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

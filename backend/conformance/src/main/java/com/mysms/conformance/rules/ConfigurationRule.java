@@ -22,16 +22,18 @@ import java.util.regex.Pattern;
  * G9: every domain module is configured by its own {@code src/main/resources/application.properties}, and the monolith
  * combines them.
  * <ul>
- * <li>each domain module has the file; it names the module ({@code spring.application.name},
- * {@code mysms.auth.modules[0]}) and configures a gRPC client for every service its {@code integration} package
- * calls;</li>
- * <li>{@code app}'s file names every module ({@code mysms.auth.modules[i]}) and points a client at the in-process
- * server for every module's service;</li>
+ * <li>each domain module has the file; it names the module ({@code spring.application.name}) and its areas
+ * ({@code mysms.auth.modules[i]}), and configures a gRPC client for every service its {@code integration} packages
+ * call;</li>
+ * <li>{@code app}'s file names every area ({@code mysms.auth.modules[i]}, sorted) and points a client at the
+ * in-process server for every area's service;</li>
  * <li>a key two module files set to different values is set in {@code app}'s file, so the order in which the monolith
  * combines the module files never decides a value;</li>
  * <li>the libraries (core, auth-client, privacy-client, messaging, conformance) ship no
  * {@code application.properties}, which would shadow or join a service's;</li>
- * <li>the test kit's list of services ({@code TestDatabase.SERVICES}) is the domain modules.</li>
+ * <li>the test kit's list of services ({@code TestDatabase.SERVICES}) is the areas;</li>
+ * <li>messaging's area → module table ({@code MessagingModules}, which names the broker user an event must come
+ * from) is each module's areas.</li>
  * </ul>
  */
 public final class ConfigurationRule implements ConformanceRule {
@@ -41,6 +43,7 @@ public final class ConfigurationRule implements ConformanceRule {
     private static final Pattern SERVICE_KEY = Pattern.compile("SERVICE_KEY = \"([a-z]+)-service\"");
     private static final Pattern SERVICES = Pattern.compile("SERVICES = List\\.of\\(([^;]*)\\);");
     private static final Pattern NAME = Pattern.compile("\"([a-z]+)\"");
+    private static final Pattern SERVE = Pattern.compile("serve\\(areas, \"([a-z]+)\"((?:, \"[a-z]+\")+)\\);");
 
     @Override
     public List<Violation> check(SourceTree tree) {
@@ -74,6 +77,7 @@ public final class ConfigurationRule implements ConformanceRule {
             }
         }
         testKitServices(tree, found);
+        messagingModules(tree, found);
         return found;
     }
 
@@ -83,11 +87,17 @@ public final class ConfigurationRule implements ConformanceRule {
         if (!module.equals(properties.getProperty("spring.application.name"))) {
             found.add(new Violation("G9", where, "spring.application.name is not " + module));
         }
-        if (!module.equals(properties.getProperty("mysms.auth.modules[0]"))) {
-            found.add(new Violation("G9", where, "mysms.auth.modules[0] is not " + module));
+        Set<String> listed = new TreeSet<>();
+        for (int i = 0; properties.containsKey("mysms.auth.modules[" + i + "]"); i++) {
+            listed.add(properties.getProperty("mysms.auth.modules[" + i + "]"));
+        }
+        Set<String> areas = new TreeSet<>();
+        tree.areas(module).forEach(area -> areas.add(area.name()));
+        if (!listed.equals(areas)) {
+            found.add(new Violation("G9", where, "mysms.auth.modules " + listed + " is not its areas " + areas));
         }
         for (Path source : tree.java(module, "main")) {
-            if (!tree.relative(source).contains("/com/mysms/" + module + "/integration/")) {
+            if (!tree.relative(source).contains("/integration/")) {
                 continue;
             }
             Matcher key = SERVICE_KEY.matcher(tree.read(source));
@@ -102,7 +112,7 @@ public final class ConfigurationRule implements ConformanceRule {
 
     private static void appFile(SourceTree tree, Path app, Properties monolith, List<Violation> found) {
         String where = tree.relative(app);
-        List<String> modules = tree.domainModules();
+        List<String> modules = tree.areas().stream().map(SourceTree.Area::name).toList();
         for (int i = 0; i < modules.size(); i++) {
             if (!modules.get(i).equals(monolith.getProperty("mysms.auth.modules[" + i + "]"))) {
                 found.add(new Violation("G9", where, "mysms.auth.modules[" + i + "] is not " + modules.get(i)));
@@ -126,8 +136,28 @@ public final class ConfigurationRule implements ConformanceRule {
                 services.add(name.group(1));
             }
         }
-        if (!services.equals(new TreeSet<>(tree.domainModules()))) {
-            found.add(new Violation("G9", tree.relative(kit), "SERVICES " + services + " is not the domain modules"));
+        Set<String> areas = new TreeSet<>();
+        tree.areas().forEach(area -> areas.add(area.name()));
+        if (!services.equals(areas)) {
+            found.add(new Violation("G9", tree.relative(kit), "SERVICES " + services + " is not the areas"));
+        }
+    }
+
+    private static void messagingModules(SourceTree tree, List<Violation> found) {
+        Path table = tree.backend().resolve("messaging/src/main/java/com/mysms/messaging/MessagingModules.java");
+        Set<String> served = new TreeSet<>();
+        Matcher serve = SERVE.matcher(tree.read(table));
+        while (serve.find()) {
+            Matcher name = NAME.matcher(serve.group(2));
+            while (name.find()) {
+                served.add(serve.group(1) + "/" + name.group(1));
+            }
+        }
+        Set<String> areas = new TreeSet<>();
+        tree.areas().forEach(area -> areas.add(area.module() + "/" + area.name()));
+        if (!served.equals(areas)) {
+            found.add(new Violation("G9", tree.relative(table), "module/area table " + served + " is not the modules' "
+                    + "areas " + areas));
         }
     }
 

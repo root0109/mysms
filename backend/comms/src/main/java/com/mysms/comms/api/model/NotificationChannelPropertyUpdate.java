@@ -15,27 +15,27 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of NotificationChannelProperty that can be updated (partial update; see updateMask).
+ * Fields of NotificationChannelProperty that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class NotificationChannelPropertyUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String propertyKey;
+  private @Nullable Optional<@NotNull @Size(max = 100) String> propertyKey;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String propertyValue;
+  private @Nullable Optional<String> propertyValue;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String secretValue;
+  private @Nullable Optional<@NotNull String> secretValue;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer sortOrder;
+  private @Nullable Optional<@NotNull Integer> sortOrder;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isMandatory;
+  private @Nullable Optional<@NotNull Boolean> isMandatory;
 
-  public NotificationChannelPropertyUpdate propertyKey(@Nullable String propertyKey) {
+  public NotificationChannelPropertyUpdate propertyKey(@Nullable Optional<String> propertyKey) {
     this.propertyKey = propertyKey;
     return this;
   }
@@ -44,18 +44,18 @@ public class NotificationChannelPropertyUpdate {
    * Property key.
    * @return propertyKey
    */
-  @Size(max = 100) 
+  
   @JsonProperty("propertyKey")
-  public @Nullable String getPropertyKey() {
+  public @Nullable Optional<String> getPropertyKey() {
     return propertyKey;
   }
 
   @JsonProperty("propertyKey")
-  public void setPropertyKey(@Nullable String propertyKey) {
+  public void setPropertyKey(@Nullable Optional<String> propertyKey) {
     this.propertyKey = propertyKey;
   }
 
-  public NotificationChannelPropertyUpdate propertyValue(@Nullable String propertyValue) {
+  public NotificationChannelPropertyUpdate propertyValue(@Nullable Optional<String> propertyValue) {
     this.propertyValue = propertyValue;
     return this;
   }
@@ -66,16 +66,16 @@ public class NotificationChannelPropertyUpdate {
    */
   
   @JsonProperty("propertyValue")
-  public @Nullable String getPropertyValue() {
+  public @Nullable Optional<String> getPropertyValue() {
     return propertyValue;
   }
 
   @JsonProperty("propertyValue")
-  public void setPropertyValue(@Nullable String propertyValue) {
+  public void setPropertyValue(@Nullable Optional<String> propertyValue) {
     this.propertyValue = propertyValue;
   }
 
-  public NotificationChannelPropertyUpdate secretValue(@Nullable String secretValue) {
+  public NotificationChannelPropertyUpdate secretValue(@Nullable Optional<String> secretValue) {
     this.secretValue = secretValue;
     return this;
   }
@@ -86,16 +86,16 @@ public class NotificationChannelPropertyUpdate {
    */
   
   @JsonProperty("secretValue")
-  public @Nullable String getSecretValue() {
+  public @Nullable Optional<String> getSecretValue() {
     return secretValue;
   }
 
   @JsonProperty("secretValue")
-  public void setSecretValue(@Nullable String secretValue) {
+  public void setSecretValue(@Nullable Optional<String> secretValue) {
     this.secretValue = secretValue;
   }
 
-  public NotificationChannelPropertyUpdate sortOrder(@Nullable Integer sortOrder) {
+  public NotificationChannelPropertyUpdate sortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
     return this;
   }
@@ -106,16 +106,16 @@ public class NotificationChannelPropertyUpdate {
    */
   
   @JsonProperty("sortOrder")
-  public @Nullable Integer getSortOrder() {
+  public @Nullable Optional<Integer> getSortOrder() {
     return sortOrder;
   }
 
   @JsonProperty("sortOrder")
-  public void setSortOrder(@Nullable Integer sortOrder) {
+  public void setSortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
   }
 
-  public NotificationChannelPropertyUpdate isMandatory(@Nullable Boolean isMandatory) {
+  public NotificationChannelPropertyUpdate isMandatory(@Nullable Optional<Boolean> isMandatory) {
     this.isMandatory = isMandatory;
     return this;
   }
@@ -126,12 +126,12 @@ public class NotificationChannelPropertyUpdate {
    */
   
   @JsonProperty("isMandatory")
-  public @Nullable Boolean getIsMandatory() {
+  public @Nullable Optional<Boolean> getIsMandatory() {
     return isMandatory;
   }
 
   @JsonProperty("isMandatory")
-  public void setIsMandatory(@Nullable Boolean isMandatory) {
+  public void setIsMandatory(@Nullable Optional<Boolean> isMandatory) {
     this.isMandatory = isMandatory;
   }
 

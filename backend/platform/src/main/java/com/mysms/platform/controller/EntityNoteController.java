@@ -61,8 +61,8 @@ public class EntityNoteController implements EntityNoteApi {
 
     @Override
     public ResponseEntity<EntityNote> updateEntityNote(UUID entityNoteId, String ifMatch,
-            EntityNoteUpdate entityNoteUpdate, String updateMask, Boolean validateOnly) {
-        EntityNote updated = entityNoteService.updateEntityNote(entityNoteId, ifMatch, entityNoteUpdate, updateMask,
+            EntityNoteUpdate entityNoteUpdate, Boolean validateOnly) {
+        EntityNote updated = entityNoteService.updateEntityNote(entityNoteId, ifMatch, entityNoteUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

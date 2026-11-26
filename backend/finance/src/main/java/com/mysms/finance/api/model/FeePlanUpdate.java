@@ -17,19 +17,19 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of FeePlan that can be updated (partial update; see updateMask).
+ * Fields of FeePlan that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class FeePlanUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@NotNull @Size(max = 40) String> code;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 150) String> name;
 
   /**
    * Installments due after N days or on fixed dates.
@@ -67,10 +67,10 @@ public class FeePlanUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable ScheduleBasisEnum scheduleBasis;
+  private @Nullable Optional<@NotNull ScheduleBasisEnum> scheduleBasis;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer offsetDays;
+  private @Nullable Optional<Integer> offsetDays;
 
   /**
    * Before or after the reference date.
@@ -108,18 +108,18 @@ public class FeePlanUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable OffsetDirectionEnum offsetDirection;
+  private @Nullable Optional<OffsetDirectionEnum> offsetDirection;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String discountPercent;
+  private @Nullable Optional<@Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> discountPercent;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String notes;
+  private @Nullable Optional<String> notes;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public FeePlanUpdate institutionId(@Nullable UUID institutionId) {
+  public FeePlanUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -128,18 +128,18 @@ public class FeePlanUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public FeePlanUpdate code(@Nullable String code) {
+  public FeePlanUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -148,18 +148,18 @@ public class FeePlanUpdate {
    * Plan code.
    * @return code
    */
-  @Size(max = 40) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 
-  public FeePlanUpdate name(@Nullable String name) {
+  public FeePlanUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -168,18 +168,18 @@ public class FeePlanUpdate {
    * Plan name.
    * @return name
    */
-  @Size(max = 150) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public FeePlanUpdate scheduleBasis(@Nullable ScheduleBasisEnum scheduleBasis) {
+  public FeePlanUpdate scheduleBasis(@Nullable Optional<ScheduleBasisEnum> scheduleBasis) {
     this.scheduleBasis = scheduleBasis;
     return this;
   }
@@ -190,16 +190,16 @@ public class FeePlanUpdate {
    */
   
   @JsonProperty("scheduleBasis")
-  public @Nullable ScheduleBasisEnum getScheduleBasis() {
+  public @Nullable Optional<ScheduleBasisEnum> getScheduleBasis() {
     return scheduleBasis;
   }
 
   @JsonProperty("scheduleBasis")
-  public void setScheduleBasis(@Nullable ScheduleBasisEnum scheduleBasis) {
+  public void setScheduleBasis(@Nullable Optional<ScheduleBasisEnum> scheduleBasis) {
     this.scheduleBasis = scheduleBasis;
   }
 
-  public FeePlanUpdate offsetDays(@Nullable Integer offsetDays) {
+  public FeePlanUpdate offsetDays(@Nullable Optional<Integer> offsetDays) {
     this.offsetDays = offsetDays;
     return this;
   }
@@ -210,16 +210,16 @@ public class FeePlanUpdate {
    */
   
   @JsonProperty("offsetDays")
-  public @Nullable Integer getOffsetDays() {
+  public @Nullable Optional<Integer> getOffsetDays() {
     return offsetDays;
   }
 
   @JsonProperty("offsetDays")
-  public void setOffsetDays(@Nullable Integer offsetDays) {
+  public void setOffsetDays(@Nullable Optional<Integer> offsetDays) {
     this.offsetDays = offsetDays;
   }
 
-  public FeePlanUpdate offsetDirection(@Nullable OffsetDirectionEnum offsetDirection) {
+  public FeePlanUpdate offsetDirection(@Nullable Optional<OffsetDirectionEnum> offsetDirection) {
     this.offsetDirection = offsetDirection;
     return this;
   }
@@ -230,16 +230,16 @@ public class FeePlanUpdate {
    */
   
   @JsonProperty("offsetDirection")
-  public @Nullable OffsetDirectionEnum getOffsetDirection() {
+  public @Nullable Optional<OffsetDirectionEnum> getOffsetDirection() {
     return offsetDirection;
   }
 
   @JsonProperty("offsetDirection")
-  public void setOffsetDirection(@Nullable OffsetDirectionEnum offsetDirection) {
+  public void setOffsetDirection(@Nullable Optional<OffsetDirectionEnum> offsetDirection) {
     this.offsetDirection = offsetDirection;
   }
 
-  public FeePlanUpdate discountPercent(@Nullable String discountPercent) {
+  public FeePlanUpdate discountPercent(@Nullable Optional<String> discountPercent) {
     this.discountPercent = discountPercent;
     return this;
   }
@@ -248,18 +248,18 @@ public class FeePlanUpdate {
    * Plan-level discount.
    * @return discountPercent
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("discountPercent")
-  public @Nullable String getDiscountPercent() {
+  public @Nullable Optional<String> getDiscountPercent() {
     return discountPercent;
   }
 
   @JsonProperty("discountPercent")
-  public void setDiscountPercent(@Nullable String discountPercent) {
+  public void setDiscountPercent(@Nullable Optional<String> discountPercent) {
     this.discountPercent = discountPercent;
   }
 
-  public FeePlanUpdate notes(@Nullable String notes) {
+  public FeePlanUpdate notes(@Nullable Optional<String> notes) {
     this.notes = notes;
     return this;
   }
@@ -270,16 +270,16 @@ public class FeePlanUpdate {
    */
   
   @JsonProperty("notes")
-  public @Nullable String getNotes() {
+  public @Nullable Optional<String> getNotes() {
     return notes;
   }
 
   @JsonProperty("notes")
-  public void setNotes(@Nullable String notes) {
+  public void setNotes(@Nullable Optional<String> notes) {
     this.notes = notes;
   }
 
-  public FeePlanUpdate isActive(@Nullable Boolean isActive) {
+  public FeePlanUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -290,12 +290,12 @@ public class FeePlanUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

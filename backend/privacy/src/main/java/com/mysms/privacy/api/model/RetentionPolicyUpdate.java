@@ -5,8 +5,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;
 import java.util.Objects;
+import java.util.Optional;
 import org.springframework.lang.Nullable;
 
 /**
@@ -53,16 +55,16 @@ public class RetentionPolicyUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer periodDays;
+  private @Nullable Optional<@NotNull @Min(value = 1) Integer> periodDays;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable ActionEnum action;
+  private @Nullable Optional<@NotNull ActionEnum> action;
 
   public RetentionPolicyUpdate() {
     super();
   }
 
-  public RetentionPolicyUpdate periodDays(@Nullable Integer periodDays) {
+  public RetentionPolicyUpdate periodDays(@Nullable Optional<Integer> periodDays) {
     this.periodDays = periodDays;
     return this;
   }
@@ -71,18 +73,18 @@ public class RetentionPolicyUpdate {
    * How many days the data is kept after the trigger; at least the policy's minimumPeriodDays.
    * @return periodDays
    */
-  @Min(value = 1) 
+  
   @JsonProperty("periodDays")
-  public @Nullable Integer getPeriodDays() {
+  public @Nullable Optional<Integer> getPeriodDays() {
     return periodDays;
   }
 
   @JsonProperty("periodDays")
-  public void setPeriodDays(@Nullable Integer periodDays) {
+  public void setPeriodDays(@Nullable Optional<Integer> periodDays) {
     this.periodDays = periodDays;
   }
 
-  public RetentionPolicyUpdate action(@Nullable ActionEnum action) {
+  public RetentionPolicyUpdate action(@Nullable Optional<ActionEnum> action) {
     this.action = action;
     return this;
   }
@@ -91,14 +93,14 @@ public class RetentionPolicyUpdate {
    * What happens to data past the period.
    * @return action
    */
-   
+  
   @JsonProperty("action")
-  public @Nullable ActionEnum getAction() {
+  public @Nullable Optional<ActionEnum> getAction() {
     return action;
   }
 
   @JsonProperty("action")
-  public void setAction(@Nullable ActionEnum action) {
+  public void setAction(@Nullable Optional<ActionEnum> action) {
     this.action = action;
   }
 

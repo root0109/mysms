@@ -469,35 +469,6 @@ COMMENT ON COLUMN payroll.staff_bank_account.row_version IS 'Optimistic-lock ver
 CREATE UNIQUE INDEX uq_staff_bank_account_primary ON payroll.staff_bank_account (staff_id) WHERE is_primary AND deleted_at IS NULL;
 CREATE UNIQUE INDEX uq_payslip_period ON payroll.payslip (tenant_id, staff_id, period_start, period_end) WHERE deleted_at IS NULL AND status <> 'cancelled';
 
--- === Staff records of login accounts (owner-only payslips), kept from hr.staff events ===
-
-CREATE TABLE payroll.staff_member (
-    tenant_id uuid NOT NULL,
-    staff_id uuid NOT NULL,
-    user_id uuid,
-    person_id uuid,
-    is_deleted boolean NOT NULL DEFAULT false,
-    source_version integer NOT NULL,
-    synced_at timestamptz NOT NULL,
-    CONSTRAINT pk_payroll_staff_member PRIMARY KEY (tenant_id, staff_id),
-    CONSTRAINT ck_staff_member_source_version CHECK (source_version >= 1)
-);
-COMMENT ON TABLE payroll.staff_member IS 'Login account and person of each staff record, kept from hr.staff created/updated/deleted events (payroll never reads hr''s schema), so a staff member who is not a payroll officer reads only the payslips of their own staff records, and privacy''s tasks find a person''s payroll records.';
-COMMENT ON COLUMN payroll.staff_member.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
-COMMENT ON COLUMN payroll.staff_member.staff_id IS 'hr.staff.id (logical, maintained from its events).';
-COMMENT ON COLUMN payroll.staff_member.user_id IS 'Login account of the staff record (iam.user_account.id); NULL when it has none.';
-COMMENT ON COLUMN payroll.staff_member.person_id IS 'Person of the staff record (people.person.id), the data principal privacy''s tasks name; NULL until an event carrying it arrives.';
-COMMENT ON COLUMN payroll.staff_member.is_deleted IS 'The staff record was deleted in hr; kept so a late event cannot restore it.';
-COMMENT ON COLUMN payroll.staff_member.source_version IS 'Row version of the hr.staff row this entry reflects; an event with an older or equal version is ignored.';
-COMMENT ON COLUMN payroll.staff_member.synced_at IS 'When the row was last changed by an event.';
-CREATE INDEX ix_staff_member_user ON payroll.staff_member (tenant_id, user_id) WHERE NOT is_deleted AND user_id IS NOT NULL;
-COMMENT ON INDEX payroll.ix_staff_member_user IS 'Owner-only payslip reads: the staff records of the signed-in account.';
-CREATE INDEX ix_staff_member_person ON payroll.staff_member (tenant_id, person_id) WHERE person_id IS NOT NULL;
-COMMENT ON INDEX payroll.ix_staff_member_person IS 'Privacy tasks: the staff records of the data principal.';
-ALTER TABLE payroll.staff_member ENABLE ROW LEVEL SECURITY;
-ALTER TABLE payroll.staff_member FORCE ROW LEVEL SECURITY;
-CREATE POLICY tenant_isolation ON payroll.staff_member USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
-
 -- === P1-13: transactional outbox / inbox ===
 
 CREATE TABLE payroll.outbox_event (

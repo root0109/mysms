@@ -1,0 +1,277 @@
+package com.mysms.academics.attendance.repository;
+import com.mysms.academics.attendance.config.AttendanceDatabaseConfig;
+import com.mysms.academics.attendance.domain.AttendanceRegisterEntity;
+import com.mysms.authclient.DataScope;
+import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.paging.FieldSpec;
+import com.mysms.core.paging.Page;
+import com.mysms.core.paging.PageRequest;
+import com.mysms.core.paging.SortSpec;
+import com.mysms.core.paging.SqlFragment;
+import com.mysms.core.paging.ValueType;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Repository;
+/**
+ * Plain-JDBC access to attendance.attendance_register: live rows only, keyset paging, and the row_version guard on
+ * every update and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
+ */
+@Repository
+public class AttendanceRegisterRepository {
+
+    /** Fields clients may filter on (contract names → columns). */
+    public static final Map<String, FieldSpec> FILTER_FIELDS = fields(
+            field("id", "r.id", ValueType.UUID),
+            field("institutionId", "r.institution_id", ValueType.UUID),
+            field("code", "r.code", ValueType.STRING),
+            field("name", "r.name", ValueType.STRING),
+            field("registerScope", "r.register_scope", ValueType.STRING),
+            field("classSectionId", "r.class_section_id", ValueType.UUID),
+            field("courseId", "r.course_id", ValueType.UUID),
+            field("batchId", "r.batch_id", ValueType.UUID),
+            field("subjectId", "r.subject_id", ValueType.UUID),
+            field("isActive", "r.is_active", ValueType.BOOLEAN),
+            field("createTime", "r.created_at", ValueType.TIMESTAMP),
+            field("updateTime", "r.updated_at", ValueType.TIMESTAMP));
+
+    /** Fields clients may order by; NOT NULL expressions, so keyset paging can compare them. */
+    public static final Map<String, FieldSpec> SORT_FIELDS = fields(
+            field("createTime", "r.created_at", ValueType.TIMESTAMP),
+            field("updateTime", "r.updated_at", ValueType.TIMESTAMP),
+            field("code", "r.code", ValueType.STRING),
+            field("name", "r.name", ValueType.STRING));
+
+    public static final String DEFAULT_ORDER = "createTime";
+    public static final String ID_COLUMN = "r.id";
+
+    private static final Map<String, Function<AttendanceRegisterEntity, Object>> SORT_VALUES = Map.ofEntries(
+            Map.entry("createTime", AttendanceRegisterEntity::getCreatedAt),
+            Map.entry("updateTime", AttendanceRegisterEntity::getUpdatedAt),
+            Map.entry("code", AttendanceRegisterEntity::getCode),
+            Map.entry("name", AttendanceRegisterEntity::getName));
+
+    private static final String SELECT_LIVE = """
+            SELECT r.id, r.tenant_id, r.institution_id, r.code, r.name, r.register_scope, r.class_section_id,
+                   r.course_id, r.batch_id, r.subject_id, r.is_active, r.created_at, r.created_by, r.updated_at,
+                   r.updated_by, r.deleted_at, r.row_version
+              FROM attendance.attendance_register r
+             WHERE r.tenant_id = :tenantId
+               AND r.deleted_at IS NULL
+            """;
+    private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String INSERT = """
+            INSERT INTO attendance.attendance_register
+            (id, tenant_id, institution_id, code, name, register_scope, class_section_id, course_id, batch_id,
+             subject_id, is_active, created_at, created_by, updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :institutionId, :code, :name, :registerScope, :classSectionId, :courseId,
+                    :batchId, :subjectId, COALESCE(:isActive, true), :createdAt, :createdBy, :updatedAt, :updatedBy,
+                    :rowVersion)
+            RETURNING id, tenant_id, institution_id, code, name, register_scope, class_section_id, course_id, batch_id,
+                      subject_id, is_active, created_at, created_by, updated_at, updated_by, deleted_at, row_version
+            """;
+    private static final String SOFT_DELETE = """
+            UPDATE attendance.attendance_register
+               SET deleted_at = :deletedAt,
+                   updated_at = :updatedAt,
+                   updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String UPDATE = """
+            UPDATE attendance.attendance_register
+               SET institution_id = :institutionId,
+                   code = :code,
+                   name = :name,
+                   register_scope = :registerScope,
+                   class_section_id = :classSectionId,
+                   course_id = :courseId,
+                   batch_id = :batchId,
+                   subject_id = :subjectId,
+                   is_active = :isActive,
+                   updated_at = :updatedAt,
+                   updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String UQ_ATTENDANCE_REGISTER_1_TAKEN = """
+            SELECT EXISTS (SELECT 1 FROM attendance.attendance_register
+                            WHERE tenant_id = :tenantId
+                              AND institution_id = :institutionId AND code = :code AND id <> :id AND ((deleted_at IS
+                                  NULL)))
+            """;
+    private static final String REFERENCED_BY_ATTENDANCE_SHEET_REGISTER_ID = """
+            SELECT EXISTS (SELECT 1 FROM attendance.attendance_sheet WHERE tenant_id = :tenantId
+                AND register_id = :id AND deleted_at IS NULL)
+            """;
+    private static final String SCOPE = """
+             (:scopeAll OR r.institution_id = ANY(:scopeIds))
+            """;
+
+    /**
+     * The active register a timetable session's attendance belongs to, locked so two callers opening the same
+     * session create one sheet: the most specific register wins — the subject's, then the course batch's, then the
+     * class section's (period attendance before daily attendance).
+     */
+    private static final String FIND_FOR_SESSION = """
+            SELECT r.id
+              FROM attendance.attendance_register r
+             WHERE r.tenant_id = :tenantId
+               AND r.deleted_at IS NULL
+               AND r.is_active
+               AND r.institution_id = :institutionId
+               AND ((r.register_scope = 'subject' AND r.subject_id = :subjectId)
+                 OR (r.register_scope = 'course_batch' AND r.course_id = :courseId AND r.batch_id = :batchId)
+                 OR (r.register_scope = 'class_section' AND r.class_section_id = :classSectionId))
+             ORDER BY CASE r.register_scope WHEN 'subject' THEN 0 WHEN 'course_batch' THEN 1 ELSE 2 END,
+                      r.created_at, r.id
+             LIMIT 1
+               FOR NO KEY UPDATE
+            """;
+
+    private final JdbcClient jdbc;
+
+    public AttendanceRegisterRepository(@Qualifier(AttendanceDatabaseConfig.DATABASE) ModuleDatabase database) {
+        this.jdbc = database.jdbc();
+    }
+
+    public Optional<AttendanceRegisterEntity> findById(UUID id) {
+        return jdbc.sql(FIND_BY_ID).param("id", id).query(AttendanceRegisterRepository::map).optional();
+    }
+
+    /** The register for a session of this institution with these targets (any of them may be null), locked. */
+    public Optional<UUID> findForSession(UUID institutionId, UUID subjectId, UUID courseId, UUID batchId,
+            UUID classSectionId) {
+        return jdbc.sql(FIND_FOR_SESSION)
+                .param("institutionId", institutionId)
+                .param("subjectId", subjectId, java.sql.Types.OTHER)
+                .param("courseId", courseId, java.sql.Types.OTHER)
+                .param("batchId", batchId, java.sql.Types.OTHER)
+                .param("classSectionId", classSectionId, java.sql.Types.OTHER)
+                .query(UUID.class).optional();
+    }
+
+    public Page<AttendanceRegisterEntity> list(PageRequest page, SqlFragment filter) {
+        SqlFragment where = filter.and(page.keysetPredicate());
+        String sql = SELECT_LIVE + " AND (" + where.sql() + ") ORDER BY " + page.orderByClause() + page.limitClause();
+        List<AttendanceRegisterEntity> rows = jdbc.sql(sql).params(where.params()).params(page.limitParams())
+                .query(AttendanceRegisterRepository::map).list();
+        return page.toPage(rows, e -> sortValues(page.sort(), e), AttendanceRegisterEntity::getId);
+    }
+
+    /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
+    public AttendanceRegisterEntity insert(AttendanceRegisterEntity e) {
+        return jdbc.sql(INSERT)
+                .param("id", e.getId())
+                .param("tenantId", e.getTenantId())
+                .param("institutionId", e.getInstitutionId())
+                .param("code", e.getCode())
+                .param("name", e.getName())
+                .param("registerScope", e.getRegisterScope())
+                .param("classSectionId", e.getClassSectionId())
+                .param("courseId", e.getCourseId())
+                .param("batchId", e.getBatchId())
+                .param("subjectId", e.getSubjectId())
+                .param("isActive", e.getIsActive())
+                .param("createdAt", e.getCreatedAt())
+                .param("createdBy", e.getCreatedBy())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("rowVersion", e.getRowVersion())
+                .query(AttendanceRegisterRepository::map).single();
+    }
+
+    /** Updates under the ETag guard; 0 rows means the row changed (or vanished) since it was read. */
+    public int update(AttendanceRegisterEntity e, int expectedVersion) {
+        return jdbc.sql(UPDATE)
+                .param("id", e.getId())
+                .param("institutionId", e.getInstitutionId())
+                .param("code", e.getCode())
+                .param("name", e.getName())
+                .param("registerScope", e.getRegisterScope())
+                .param("classSectionId", e.getClassSectionId())
+                .param("courseId", e.getCourseId())
+                .param("batchId", e.getBatchId())
+                .param("subjectId", e.getSubjectId())
+                .param("isActive", e.getIsActive())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("expected", expectedVersion)
+                .update();
+    }
+
+    public int softDelete(AttendanceRegisterEntity e, int expectedVersion) {
+        return jdbc.sql(SOFT_DELETE)
+                .param("id", e.getId())
+                .param("deletedAt", e.getDeletedAt())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("expected", expectedVersion)
+                .update();
+    }
+
+    /** uq_attendance_register_1: institution_id, code where (deleted_at IS NULL). */
+    public boolean takenInstitutionIdCode1(AttendanceRegisterEntity e) {
+        return Boolean.TRUE.equals(jdbc.sql(UQ_ATTENDANCE_REGISTER_1_TAKEN)
+                .param("institutionId", e.getInstitutionId())
+                .param("code", e.getCode())
+               .param("id", e.getId())
+                .query(Boolean.class).single());
+    }
+
+    /** Whether live attendance.attendance_sheet rows still reference the row. */
+    public boolean referencedByAttendanceSheetRegisterId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(REFERENCED_BY_ATTENDANCE_SHEET_REGISTER_ID).param("id", id)
+                .query(Boolean.class).single());
+    }
+
+    /** Rows of the caller's institutions only. */
+    public static SqlFragment scope(DataScope scope) {
+        return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    private static List<Object> sortValues(SortSpec sort, AttendanceRegisterEntity e) {
+        return sort.orders().stream().map(o -> SORT_VALUES.get(o.field().name()).apply(e)).toList();
+    }
+
+    private static AttendanceRegisterEntity map(ResultSet rs, int row) throws SQLException {
+        return AttendanceRegisterEntity.builder()
+                .id(rs.getObject("id", UUID.class))
+                .tenantId(rs.getObject("tenant_id", UUID.class))
+                .institutionId(rs.getObject("institution_id", UUID.class))
+                .code(rs.getString("code"))
+                .name(rs.getString("name"))
+                .registerScope(rs.getString("register_scope"))
+                .classSectionId(rs.getObject("class_section_id", UUID.class))
+                .courseId(rs.getObject("course_id", UUID.class))
+                .batchId(rs.getObject("batch_id", UUID.class))
+                .subjectId(rs.getObject("subject_id", UUID.class))
+                .isActive(rs.getObject("is_active", Boolean.class))
+                .createdAt(rs.getObject("created_at", OffsetDateTime.class))
+                .createdBy(rs.getObject("created_by", UUID.class))
+                .updatedAt(rs.getObject("updated_at", OffsetDateTime.class))
+                .updatedBy(rs.getObject("updated_by", UUID.class))
+                .deletedAt(rs.getObject("deleted_at", OffsetDateTime.class))
+                .rowVersion(rs.getInt("row_version"))
+                .build();
+    }
+
+    private static FieldSpec field(String name, String column, ValueType type) {
+        return new FieldSpec(name, column, type);
+    }
+
+    private static Map<String, FieldSpec> fields(FieldSpec... specs) {
+        return Arrays.stream(specs).collect(Collectors.toUnmodifiableMap(FieldSpec::name, s -> s));
+    }
+}

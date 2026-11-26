@@ -18,26 +18,26 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Invoice that can be updated (partial update; see updateMask).
+ * Fields of Invoice that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class InvoiceUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String billToName;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private @Nullable LocalDate invoiceDate;
+  private @Nullable Optional<@NotNull @Size(max = 200) String> billToName;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private @Nullable LocalDate dueDate;
+  private @Nullable Optional<@NotNull LocalDate> invoiceDate;
 
-  public InvoiceUpdate institutionId(@Nullable UUID institutionId) {
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+  private @Nullable Optional<LocalDate> dueDate;
+
+  public InvoiceUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -46,18 +46,18 @@ public class InvoiceUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public InvoiceUpdate billToName(@Nullable String billToName) {
+  public InvoiceUpdate billToName(@Nullable Optional<String> billToName) {
     this.billToName = billToName;
     return this;
   }
@@ -66,18 +66,18 @@ public class InvoiceUpdate {
    * Name on the invoice.
    * @return billToName
    */
-  @Size(max = 200) 
+  
   @JsonProperty("billToName")
-  public @Nullable String getBillToName() {
+  public @Nullable Optional<String> getBillToName() {
     return billToName;
   }
 
   @JsonProperty("billToName")
-  public void setBillToName(@Nullable String billToName) {
+  public void setBillToName(@Nullable Optional<String> billToName) {
     this.billToName = billToName;
   }
 
-  public InvoiceUpdate invoiceDate(@Nullable LocalDate invoiceDate) {
+  public InvoiceUpdate invoiceDate(@Nullable Optional<LocalDate> invoiceDate) {
     this.invoiceDate = invoiceDate;
     return this;
   }
@@ -86,18 +86,18 @@ public class InvoiceUpdate {
    * Invoice date.
    * @return invoiceDate
    */
-  @Valid 
+  
   @JsonProperty("invoiceDate")
-  public @Nullable LocalDate getInvoiceDate() {
+  public @Nullable Optional<LocalDate> getInvoiceDate() {
     return invoiceDate;
   }
 
   @JsonProperty("invoiceDate")
-  public void setInvoiceDate(@Nullable LocalDate invoiceDate) {
+  public void setInvoiceDate(@Nullable Optional<LocalDate> invoiceDate) {
     this.invoiceDate = invoiceDate;
   }
 
-  public InvoiceUpdate dueDate(@Nullable LocalDate dueDate) {
+  public InvoiceUpdate dueDate(@Nullable Optional<LocalDate> dueDate) {
     this.dueDate = dueDate;
     return this;
   }
@@ -106,14 +106,14 @@ public class InvoiceUpdate {
    * Due date.
    * @return dueDate
    */
-  @Valid 
+  
   @JsonProperty("dueDate")
-  public @Nullable LocalDate getDueDate() {
+  public @Nullable Optional<LocalDate> getDueDate() {
     return dueDate;
   }
 
   @JsonProperty("dueDate")
-  public void setDueDate(@Nullable LocalDate dueDate) {
+  public void setDueDate(@Nullable Optional<LocalDate> dueDate) {
     this.dueDate = dueDate;
   }
 

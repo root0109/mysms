@@ -3,6 +3,7 @@ import type { privacy } from '@mysms/sdk';
 import { NoticeApi } from '@mysms/sdk/privacy/apis/NoticeApi';
 import { PurposeApi } from '@mysms/sdk/privacy/apis/PurposeApi';
 import { allPages, pageQuery } from '../api/pages';
+import { patchOf } from '../api/patch';
 import { call } from '../api/unwrap';
 import { queryKey } from '../query/keys';
 import { STALE_TIME } from '../query/queryClient';
@@ -21,9 +22,6 @@ const PURPOSES = queryKey('privacy', 'purposes');
 const NOTICES = queryKey('privacy', 'notices');
 const VERSIONS = (noticeId: string) => queryKey('privacy', 'notice-versions', noticeId);
 const TRANSLATIONS = (noticeVersionId: string) => queryKey('privacy', 'notice-translations', noticeVersionId);
-
-/** The fields a partial update names: those present in the change, in the request's update mask. */
-const maskOf = (changes: object) => Object.keys(changes).join(',');
 
 /**
  * A change of the school's settings changes what families are asked: the purposes, and the consent centre's rows
@@ -58,11 +56,7 @@ export function useUpdatePurpose() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ purposeId, etag, changes }: { purposeId: string; etag: string; changes: PurposeUpdate }) =>
-      call(
-        api
-          .get(PurposeApi)
-          .updatePurpose({ purposeId, ifMatch: etag, purposeUpdate: changes, updateMask: maskOf(changes) }),
-      ),
+      call(api.get(PurposeApi).updatePurpose({ purposeId, ifMatch: etag, purposeUpdate: patchOf(changes) })),
     onSettled: () => refreshPurposes(qc),
   });
 }
@@ -97,11 +91,7 @@ export function useUpdateNotice() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ noticeId, etag, title }: { noticeId: string; etag: string; title: string }) =>
-      call(
-        api
-          .get(NoticeApi)
-          .updateNotice({ noticeId, ifMatch: etag, noticeUpdate: { title }, updateMask: 'title' }),
-      ),
+      call(api.get(NoticeApi).updateNotice({ noticeId, ifMatch: etag, noticeUpdate: { title } })),
     onSettled: () => void qc.invalidateQueries({ queryKey: NOTICES }),
   });
 }
@@ -177,8 +167,7 @@ export function useUpdateNoticeVersion() {
           noticeId,
           noticeVersionId,
           ifMatch: etag,
-          noticeVersionUpdate: changes,
-          updateMask: maskOf(changes),
+          noticeVersionUpdate: patchOf(changes),
         }),
       ),
     onSettled: (_data, _error, { noticeId }) => void qc.invalidateQueries({ queryKey: VERSIONS(noticeId) }),
@@ -278,8 +267,7 @@ export function useUpdateNoticeTranslation() {
           noticeVersionId,
           noticeTranslationId,
           ifMatch: etag,
-          noticeTranslationUpdate: changes,
-          updateMask: maskOf(changes),
+          noticeTranslationUpdate: patchOf(changes),
         }),
       ),
     onSettled: (_data, _error, { noticeVersionId }) =>

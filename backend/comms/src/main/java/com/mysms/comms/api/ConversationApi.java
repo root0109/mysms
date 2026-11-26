@@ -323,7 +323,7 @@ public interface ConversationApi {
     )
     ResponseEntity<Void> hideMessageForMe(
          @PathVariable("messageId") UUID messageId,
-         @Valid @RequestBody Object body,
+         @RequestBody Object body,
          @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey
     );
 
@@ -359,7 +359,7 @@ public interface ConversationApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -395,7 +395,7 @@ public interface ConversationApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -429,7 +429,7 @@ public interface ConversationApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -460,7 +460,7 @@ public interface ConversationApi {
     )
     ResponseEntity<Void> markConversationRead(
          @PathVariable("conversationId") UUID conversationId,
-         @Valid @RequestBody Object body,
+         @RequestBody Object body,
          @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey
     );
 
@@ -468,12 +468,11 @@ public interface ConversationApi {
     String PATH_UPDATE_CONVERSATION = "/v1/comms/conversations/{conversationId}";
     /**
      * PATCH /v1/comms/conversations/{conversationId} : Update Conversation
-     * Partially update a Conversation (updateMask). Requires If-Match with the current ETag.
+     * Partially update a Conversation (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param conversationId Conversation id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param conversationUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -497,7 +496,6 @@ public interface ConversationApi {
          @PathVariable("conversationId") UUID conversationId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody ConversationUpdate conversationUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -505,13 +503,12 @@ public interface ConversationApi {
     String PATH_UPDATE_CONVERSATION_MESSAGE = "/v1/comms/conversations/{conversationId}/messages/{conversationMessageId}";
     /**
      * PATCH /v1/comms/conversations/{conversationId}/messages/{conversationMessageId} : Update ConversationMessage
-     * Partially update a ConversationMessage (updateMask). Requires If-Match with the current ETag.
+     * Partially update a ConversationMessage (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param conversationId Conversation id. (required)
      * @param conversationMessageId ConversationMessage id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param conversationMessageUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -536,7 +533,6 @@ public interface ConversationApi {
          @PathVariable("conversationMessageId") UUID conversationMessageId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody ConversationMessageUpdate conversationMessageUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -544,13 +540,12 @@ public interface ConversationApi {
     String PATH_UPDATE_CONVERSATION_PARTICIPANT = "/v1/comms/conversations/{conversationId}/participants/{conversationParticipantId}";
     /**
      * PATCH /v1/comms/conversations/{conversationId}/participants/{conversationParticipantId} : Update ConversationParticipant
-     * Partially update a ConversationParticipant (updateMask). Requires If-Match with the current ETag.
+     * Partially update a ConversationParticipant (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param conversationId Conversation id. (required)
      * @param conversationParticipantId ConversationParticipant id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param conversationParticipantUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -575,7 +570,6 @@ public interface ConversationApi {
          @PathVariable("conversationParticipantId") UUID conversationParticipantId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody ConversationParticipantUpdate conversationParticipantUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 

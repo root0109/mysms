@@ -125,8 +125,7 @@ public class EventResolver extends EventServiceGrpc.EventServiceImplBase {
     public void updateEvent(UpdateEventRequest request, StreamObserver<UpdateEventResponse> out) {
         Event updated = service.updateEvent(
                 bridge.id(request.getEvent().getId(), "id"), bridge.requiredIfMatch(request.getEvent().getEtag()),
-                bridge.changes(request.getEvent(), request.getUpdateMask(), EventUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getEvent(), request.getUpdateMask(), EventUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEventResponse.newBuilder(), "event", updated).build());
     }
 
@@ -168,7 +167,7 @@ public class EventResolver extends EventServiceGrpc.EventServiceImplBase {
                 bridge.id(request.getEventId(), "eventId"), bridge.id(request.getEventGalleryItem().getId(), "id"),
                 bridge.requiredIfMatch(request.getEventGalleryItem().getEtag()),
                 bridge.changes(request.getEventGalleryItem(), request.getUpdateMask(), EventGalleryItemUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEventGalleryItemResponse.newBuilder(), "event_gallery_item", updated).build());
     }
 
@@ -213,7 +212,7 @@ public class EventResolver extends EventServiceGrpc.EventServiceImplBase {
                 bridge.id(request.getEventId(), "eventId"), bridge.id(request.getEventInstitution().getId(), "id"),
                 bridge.requiredIfMatch(request.getEventInstitution().getEtag()),
                 bridge.changes(request.getEventInstitution(), request.getUpdateMask(), EventInstitutionUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEventInstitutionResponse.newBuilder(), "event_institution", updated).build());
     }
 
@@ -256,7 +255,7 @@ public class EventResolver extends EventServiceGrpc.EventServiceImplBase {
                 bridge.id(request.getEventId(), "eventId"), bridge.id(request.getEventOccurrence().getId(), "id"),
                 bridge.requiredIfMatch(request.getEventOccurrence().getEtag()),
                 bridge.changes(request.getEventOccurrence(), request.getUpdateMask(), EventOccurrenceUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEventOccurrenceResponse.newBuilder(), "event_occurrence", updated).build());
     }
 
@@ -298,7 +297,7 @@ public class EventResolver extends EventServiceGrpc.EventServiceImplBase {
                 bridge.id(request.getEventId(), "eventId"), bridge.id(request.getEventAttendee().getId(), "id"),
                 bridge.requiredIfMatch(request.getEventAttendee().getEtag()),
                 bridge.changes(request.getEventAttendee(), request.getUpdateMask(), EventAttendeeUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEventAttendeeResponse.newBuilder(), "event_attendee", updated).build());
     }
 

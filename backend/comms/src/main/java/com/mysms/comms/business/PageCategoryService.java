@@ -28,7 +28,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,9 +51,6 @@ public class PageCategoryService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "comms.page_category.create";
     static final String PERMISSION_UPDATE = "comms.page_category.update";
     static final String PERMISSION_DELETE = "comms.page_category.delete";
-    /** The contract's PageCategoryUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("code", "sortOrder", "institutionId", "academicYearId", "name", "isActive");
 
 
     private final PageCategoryRepository repository;
@@ -122,13 +119,11 @@ public class PageCategoryService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
-    public PageCategory updatePageCategory(UUID id, String ifMatch, PageCategoryUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public PageCategory updatePageCategory(UUID id, String ifMatch, PageCategoryUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             PageCategoryEntity entity = loadVisible(scope, id);
@@ -136,7 +131,7 @@ public class PageCategoryService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -193,19 +188,16 @@ public class PageCategoryService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected PageCategoryUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(PageCategoryEntity entity, PageCategoryUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "code" -> entity.setCode(changes.getCode());
-                case "sortOrder" -> entity.setSortOrder(changes.getSortOrder());
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "academicYearId" -> entity.setAcademicYearId(changes.getAcademicYearId());
-                case "name" -> entity.setName(changes.getName());
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(PageCategoryEntity entity, PageCategoryUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("code", changes.getCode(), entity::setCode);
+        patch.apply("sortOrder", changes.getSortOrder(), entity::setSortOrder);
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("academicYearId", changes.getAcademicYearId(), entity::setAcademicYearId);
+        patch.apply("name", changes.getName(), entity::setName);
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

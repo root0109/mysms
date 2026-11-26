@@ -60,8 +60,8 @@ public class SectionController implements SectionApi {
 
     @Override
     public ResponseEntity<Section> updateSection(UUID sectionId, String ifMatch,
-            SectionUpdate sectionUpdate, String updateMask, Boolean validateOnly) {
-        Section updated = sectionService.updateSection(sectionId, ifMatch, sectionUpdate, updateMask,
+            SectionUpdate sectionUpdate, Boolean validateOnly) {
+        Section updated = sectionService.updateSection(sectionId, ifMatch, sectionUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

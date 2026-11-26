@@ -4,16 +4,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mysms.core.testkit.ModuleChecks;
 import java.nio.file.Path;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-/** The module boundary rules as plain unit tests. */
+/** The module boundary rules as plain unit tests, over every area of the module. */
 class ModuleBoundaryTest {
 
     private static final Path SOURCES = Path.of("src/main/java");
+    private static final Set<String> AREAS = ModuleChecks.moduleSchemas(Path.of("pom.xml"));
 
     @Test
-    void sqlReferencesOnlyTheOwnSchema() {
-        assertThat(ModuleChecks.foreignSchemaReferences("comms", SOURCES)).isEmpty();
+    void sqlReferencesOnlyTheModulesOwnSchemas() {
+        assertThat(ModuleChecks.foreignSchemaReferences(AREAS, SOURCES)).isEmpty();
     }
 
     @Test
@@ -24,6 +26,6 @@ class ModuleBoundaryTest {
     @Test
     void grpcClientsStayWithinTheAllowedDependencies() {
         Path architecture = Path.of("..", "..", "ARCHITECTURE.md");
-        assertThat(ModuleChecks.grpcImportsOutsideAllowlist("comms", SOURCES, architecture)).isEmpty();
+        assertThat(ModuleChecks.grpcImportsOutsideAllowlist(AREAS, SOURCES, architecture)).isEmpty();
     }
 }

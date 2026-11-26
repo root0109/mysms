@@ -780,9 +780,9 @@ public class RightsRequest {
    * The modules' tasks of an erasure or export request once its fulfilment started, wave by wave; empty for any other request. Output only.
    * @return tasks
    */
-  @Valid 
+  
   @JsonProperty("tasks")
-  public @Nullable List<RightsRequestTask> getTasks() {
+  public @Nullable List<@Valid RightsRequestTask> getTasks() {
     return tasks;
   }
 

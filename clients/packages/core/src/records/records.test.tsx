@@ -13,6 +13,7 @@ import {
   getRecord,
   listRecords,
   runAction,
+  toPatch,
   toPayload,
   updateRecord,
 } from './api';
@@ -94,19 +95,20 @@ describe('generic record operations', () => {
     expect(categories?.fields.find((f) => f.name === 'name')).toMatchObject({ kind: 'text', required: true });
   });
 
-  it('sends only what a create or update may carry', () => {
+  it('sends only what a create may carry, and a patch only the fields passed', () => {
     const values = { personId: PARENT, title: 'T', pages: '7', pinned: 'true', status: 'open', extra: 1 };
-    expect(toPayload(NOTES, values, 'create')).toEqual({
+    expect(toPayload(NOTES, values)).toEqual({
       personId: PARENT,
       title: 'T',
       pages: 7,
       pinned: true,
     });
-    expect(toPayload(NOTES, { ...values, pages: '', pinned: false }, 'update')).toEqual({
+    expect(toPatch(NOTES, { ...values, pages: '', pinned: false })).toEqual({
       title: 'T',
+      pages: null,
       pinned: false,
     });
-    expect(toPayload(NOTES, { title: 'T', pages: '7.5' }, 'create')).toEqual({ title: 'T', pages: '7.5' });
+    expect(toPayload(NOTES, { title: 'T', pages: '7.5' })).toEqual({ title: 'T', pages: '7.5' });
   });
 
   it('offers a state transition only in the states its guard allows', () => {
@@ -172,21 +174,22 @@ describe('generic record operations', () => {
     expect(created).toMatchObject({ title: 'Second', personId: PARENT });
     const updated = await updateRecord(client, NOTES, 'n1', '"1"', { title: 'Renamed', pages: 4 }, PARENT);
     expect(updated).toMatchObject({ title: 'Renamed', pages: 4, etag: '"2"' });
-    // an untouched secret stays out of the mask (empty means keep); a typed one replaces it
-    const masks = () =>
-      api.calls
-        .filter((c) => c.method === 'PATCH')
-        .map((c) => new URLSearchParams(c.search).get('updateMask'));
-    expect(masks()[0]).toBe('title,pages,pinned');
-    await updateRecord(client, NOTES, 'n1', '"2"', { title: 'Renamed', pin: '4321' }, PARENT);
-    expect(masks()[1]).toBe('title,pages,pinned,pin');
+    // only the fields passed are sent: a value sets, an empty one clears (null), a left-out one is kept; an
+    // untouched secret is left out (empty means keep), a typed one replaces it
+    const patches = () =>
+      api.calls.filter((c) => c.method === 'PATCH').map((c) => ({ search: c.search, body: c.body }));
+    expect(patches()[0]?.search).toBe('');
+    await updateRecord(client, NOTES, 'n1', '"2"', { title: 'Renamed', pages: '', pin: '' }, PARENT);
+    expect(JSON.parse(String(patches()[1]?.body))).toEqual({ title: 'Renamed', pages: null });
+    await updateRecord(client, NOTES, 'n1', '"3"', { title: 'Renamed', pin: '4321' }, PARENT);
+    expect(JSON.parse(String(patches()[2]?.body))).toEqual({ title: 'Renamed', pin: '4321' });
     await expect(updateRecord(client, NOTES, 'n1', '"1"', { title: 'x' }, PARENT)).rejects.toSatisfy(
       (e: unknown) => isApiError(e) && e.status === 412,
     );
     await expect(createRecord(client, NOTES, {}, PARENT)).rejects.toSatisfy(
       (e: unknown) => isApiError(e) && e.status === 422 && e.errors[0]?.field === 'title',
     );
-    await deleteRecord(client, NOTES, 'n1', '"3"', PARENT);
+    await deleteRecord(client, NOTES, 'n1', '"4"', PARENT);
     await expect(getRecord(client, NOTES, 'n1', PARENT)).rejects.toSatisfy(
       (e: unknown) => isApiError(e) && e.status === 404,
     );

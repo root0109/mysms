@@ -19,7 +19,7 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of LessonPlanApproval that can be updated (partial update; see updateMask).
+ * Fields of LessonPlanApproval that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class LessonPlanApprovalUpdate {
@@ -62,19 +62,19 @@ public class LessonPlanApprovalUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable DecisionEnum decision;
+  private @Nullable Optional<@NotNull DecisionEnum> decision;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String comments;
+  private @Nullable Optional<@NotNull String> comments;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID decidedByUserId;
+  private @Nullable Optional<UUID> decidedByUserId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private @Nullable OffsetDateTime decidedAt;
+  private @Nullable Optional<OffsetDateTime> decidedAt;
 
-  public LessonPlanApprovalUpdate decision(@Nullable DecisionEnum decision) {
+  public LessonPlanApprovalUpdate decision(@Nullable Optional<DecisionEnum> decision) {
     this.decision = decision;
     return this;
   }
@@ -85,16 +85,16 @@ public class LessonPlanApprovalUpdate {
    */
   
   @JsonProperty("decision")
-  public @Nullable DecisionEnum getDecision() {
+  public @Nullable Optional<DecisionEnum> getDecision() {
     return decision;
   }
 
   @JsonProperty("decision")
-  public void setDecision(@Nullable DecisionEnum decision) {
+  public void setDecision(@Nullable Optional<DecisionEnum> decision) {
     this.decision = decision;
   }
 
-  public LessonPlanApprovalUpdate comments(@Nullable String comments) {
+  public LessonPlanApprovalUpdate comments(@Nullable Optional<String> comments) {
     this.comments = comments;
     return this;
   }
@@ -105,16 +105,16 @@ public class LessonPlanApprovalUpdate {
    */
   
   @JsonProperty("comments")
-  public @Nullable String getComments() {
+  public @Nullable Optional<String> getComments() {
     return comments;
   }
 
   @JsonProperty("comments")
-  public void setComments(@Nullable String comments) {
+  public void setComments(@Nullable Optional<String> comments) {
     this.comments = comments;
   }
 
-  public LessonPlanApprovalUpdate decidedByUserId(@Nullable UUID decidedByUserId) {
+  public LessonPlanApprovalUpdate decidedByUserId(@Nullable Optional<UUID> decidedByUserId) {
     this.decidedByUserId = decidedByUserId;
     return this;
   }
@@ -123,18 +123,18 @@ public class LessonPlanApprovalUpdate {
    * Reviewer.
    * @return decidedByUserId
    */
-  @Valid 
+  
   @JsonProperty("decidedByUserId")
-  public @Nullable UUID getDecidedByUserId() {
+  public @Nullable Optional<UUID> getDecidedByUserId() {
     return decidedByUserId;
   }
 
   @JsonProperty("decidedByUserId")
-  public void setDecidedByUserId(@Nullable UUID decidedByUserId) {
+  public void setDecidedByUserId(@Nullable Optional<UUID> decidedByUserId) {
     this.decidedByUserId = decidedByUserId;
   }
 
-  public LessonPlanApprovalUpdate decidedAt(@Nullable OffsetDateTime decidedAt) {
+  public LessonPlanApprovalUpdate decidedAt(@Nullable Optional<OffsetDateTime> decidedAt) {
     this.decidedAt = decidedAt;
     return this;
   }
@@ -143,14 +143,14 @@ public class LessonPlanApprovalUpdate {
    * Decision time.
    * @return decidedAt
    */
-  @Valid 
+  
   @JsonProperty("decidedAt")
-  public @Nullable OffsetDateTime getDecidedAt() {
+  public @Nullable Optional<OffsetDateTime> getDecidedAt() {
     return decidedAt;
   }
 
   @JsonProperty("decidedAt")
-  public void setDecidedAt(@Nullable OffsetDateTime decidedAt) {
+  public void setDecidedAt(@Nullable Optional<OffsetDateTime> decidedAt) {
     this.decidedAt = decidedAt;
   }
 

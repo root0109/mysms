@@ -16,18 +16,18 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of ClassPageAttachment that can be updated (partial update; see updateMask).
+ * Fields of ClassPageAttachment that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class ClassPageAttachmentUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID fileId;
+  private @Nullable Optional<@NotNull UUID> fileId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public ClassPageAttachmentUpdate fileId(@Nullable UUID fileId) {
+  public ClassPageAttachmentUpdate fileId(@Nullable Optional<UUID> fileId) {
     this.fileId = fileId;
     return this;
   }
@@ -36,18 +36,18 @@ public class ClassPageAttachmentUpdate {
    * File.
    * @return fileId
    */
-  @Valid 
+  
   @JsonProperty("fileId")
-  public @Nullable UUID getFileId() {
+  public @Nullable Optional<UUID> getFileId() {
     return fileId;
   }
 
   @JsonProperty("fileId")
-  public void setFileId(@Nullable UUID fileId) {
+  public void setFileId(@Nullable Optional<UUID> fileId) {
     this.fileId = fileId;
   }
 
-  public ClassPageAttachmentUpdate isActive(@Nullable Boolean isActive) {
+  public ClassPageAttachmentUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -58,12 +58,12 @@ public class ClassPageAttachmentUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

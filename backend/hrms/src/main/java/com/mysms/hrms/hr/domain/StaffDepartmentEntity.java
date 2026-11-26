@@ -1,0 +1,24 @@
+package com.mysms.hrms.hr.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of hr.staff_department. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class StaffDepartmentEntity extends BaseEntity {
+
+    public static final String TABLE = "hr.staff_department";
+
+    private UUID tenantId;
+    private UUID staffId;
+    private UUID departmentId;
+}

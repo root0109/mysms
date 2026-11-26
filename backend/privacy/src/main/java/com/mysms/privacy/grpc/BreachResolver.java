@@ -72,8 +72,7 @@ public class BreachResolver extends BreachServiceGrpc.BreachServiceImplBase {
     public void updateBreach(UpdateBreachRequest request, StreamObserver<UpdateBreachResponse> out) {
         Breach updated = service.updateBreach(bridge.id(request.getBreach().getId(), "id"),
                 bridge.requiredIfMatch(request.getBreach().getEtag()),
-                bridge.changes(request.getBreach(), request.getUpdateMask(), BreachUpdate.class),
-                bridge.updateMask(request.getUpdateMask()));
+                bridge.changes(request.getBreach(), request.getUpdateMask(), BreachUpdate.class));
         ProtoBridge.send(out, bridge.reply(UpdateBreachResponse.newBuilder(), BREACH, updated).build());
     }
 

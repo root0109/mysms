@@ -17,7 +17,7 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of FeedbackMessage that can be updated (partial update; see updateMask).
+ * Fields of FeedbackMessage that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class FeedbackMessageUpdate {
@@ -64,13 +64,13 @@ public class FeedbackMessageUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable CategoryEnum category;
+  private @Nullable Optional<@NotNull CategoryEnum> category;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String message;
+  private @Nullable Optional<@NotNull String> message;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID attachmentFileId;
+  private @Nullable Optional<UUID> attachmentFileId;
 
   /**
    * Handling state.
@@ -110,15 +110,15 @@ public class FeedbackMessageUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable ReviewStatusEnum reviewStatus;
+  private @Nullable Optional<@NotNull ReviewStatusEnum> reviewStatus;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean deletedBySender;
+  private @Nullable Optional<@NotNull Boolean> deletedBySender;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean deletedByReceiver;
+  private @Nullable Optional<@NotNull Boolean> deletedByReceiver;
 
-  public FeedbackMessageUpdate category(@Nullable CategoryEnum category) {
+  public FeedbackMessageUpdate category(@Nullable Optional<CategoryEnum> category) {
     this.category = category;
     return this;
   }
@@ -129,16 +129,16 @@ public class FeedbackMessageUpdate {
    */
   
   @JsonProperty("category")
-  public @Nullable CategoryEnum getCategory() {
+  public @Nullable Optional<CategoryEnum> getCategory() {
     return category;
   }
 
   @JsonProperty("category")
-  public void setCategory(@Nullable CategoryEnum category) {
+  public void setCategory(@Nullable Optional<CategoryEnum> category) {
     this.category = category;
   }
 
-  public FeedbackMessageUpdate message(@Nullable String message) {
+  public FeedbackMessageUpdate message(@Nullable Optional<String> message) {
     this.message = message;
     return this;
   }
@@ -149,16 +149,16 @@ public class FeedbackMessageUpdate {
    */
   
   @JsonProperty("message")
-  public @Nullable String getMessage() {
+  public @Nullable Optional<String> getMessage() {
     return message;
   }
 
   @JsonProperty("message")
-  public void setMessage(@Nullable String message) {
+  public void setMessage(@Nullable Optional<String> message) {
     this.message = message;
   }
 
-  public FeedbackMessageUpdate attachmentFileId(@Nullable UUID attachmentFileId) {
+  public FeedbackMessageUpdate attachmentFileId(@Nullable Optional<UUID> attachmentFileId) {
     this.attachmentFileId = attachmentFileId;
     return this;
   }
@@ -167,18 +167,18 @@ public class FeedbackMessageUpdate {
    * Attachment.
    * @return attachmentFileId
    */
-  @Valid 
+  
   @JsonProperty("attachmentFileId")
-  public @Nullable UUID getAttachmentFileId() {
+  public @Nullable Optional<UUID> getAttachmentFileId() {
     return attachmentFileId;
   }
 
   @JsonProperty("attachmentFileId")
-  public void setAttachmentFileId(@Nullable UUID attachmentFileId) {
+  public void setAttachmentFileId(@Nullable Optional<UUID> attachmentFileId) {
     this.attachmentFileId = attachmentFileId;
   }
 
-  public FeedbackMessageUpdate reviewStatus(@Nullable ReviewStatusEnum reviewStatus) {
+  public FeedbackMessageUpdate reviewStatus(@Nullable Optional<ReviewStatusEnum> reviewStatus) {
     this.reviewStatus = reviewStatus;
     return this;
   }
@@ -189,16 +189,16 @@ public class FeedbackMessageUpdate {
    */
   
   @JsonProperty("reviewStatus")
-  public @Nullable ReviewStatusEnum getReviewStatus() {
+  public @Nullable Optional<ReviewStatusEnum> getReviewStatus() {
     return reviewStatus;
   }
 
   @JsonProperty("reviewStatus")
-  public void setReviewStatus(@Nullable ReviewStatusEnum reviewStatus) {
+  public void setReviewStatus(@Nullable Optional<ReviewStatusEnum> reviewStatus) {
     this.reviewStatus = reviewStatus;
   }
 
-  public FeedbackMessageUpdate deletedBySender(@Nullable Boolean deletedBySender) {
+  public FeedbackMessageUpdate deletedBySender(@Nullable Optional<Boolean> deletedBySender) {
     this.deletedBySender = deletedBySender;
     return this;
   }
@@ -209,16 +209,16 @@ public class FeedbackMessageUpdate {
    */
   
   @JsonProperty("deletedBySender")
-  public @Nullable Boolean getDeletedBySender() {
+  public @Nullable Optional<Boolean> getDeletedBySender() {
     return deletedBySender;
   }
 
   @JsonProperty("deletedBySender")
-  public void setDeletedBySender(@Nullable Boolean deletedBySender) {
+  public void setDeletedBySender(@Nullable Optional<Boolean> deletedBySender) {
     this.deletedBySender = deletedBySender;
   }
 
-  public FeedbackMessageUpdate deletedByReceiver(@Nullable Boolean deletedByReceiver) {
+  public FeedbackMessageUpdate deletedByReceiver(@Nullable Optional<Boolean> deletedByReceiver) {
     this.deletedByReceiver = deletedByReceiver;
     return this;
   }
@@ -229,12 +229,12 @@ public class FeedbackMessageUpdate {
    */
   
   @JsonProperty("deletedByReceiver")
-  public @Nullable Boolean getDeletedByReceiver() {
+  public @Nullable Optional<Boolean> getDeletedByReceiver() {
     return deletedByReceiver;
   }
 
   @JsonProperty("deletedByReceiver")
-  public void setDeletedByReceiver(@Nullable Boolean deletedByReceiver) {
+  public void setDeletedByReceiver(@Nullable Optional<Boolean> deletedByReceiver) {
     this.deletedByReceiver = deletedByReceiver;
   }
 

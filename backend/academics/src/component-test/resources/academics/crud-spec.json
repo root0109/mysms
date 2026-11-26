@@ -1,0 +1,570 @@
+{
+ "module": "academics",
+ "resources": [
+  {
+   "name": "Batch",
+   "table": "academics.batch",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/batches",
+   "item": "/v1/academics/batches/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO academics.course (tenant_id, institution_id, code, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C4F4EF967', 't-name-4108f2dc', 1, 'efebeac5-6da0-5174-8eec-906562d607b0') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "courseId": "efebeac5-6da0-5174-8eec-906562d607b0",
+    "code": "C57C18369",
+    "name": "t-name-52d20d49",
+    "startDate": "2026-01-10",
+    "endDate": "2026-01-20"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "ClassSection",
+   "table": "academics.class_section",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/class-sections",
+   "item": "/v1/academics/class-sections/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO academics.grade_level (tenant_id, institution_id, name, slug, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-cb1a20dc', 't-slug-98ea05e5', 1, '7559edb7-f83f-5dff-8755-f19a49a08887') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.section (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-c8c39972', 1, 'C449487F0', '1fd3de96-50bd-5fe7-af73-5e4d63f161be') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "academicYearId": "2b3d7908-f90f-5800-bf92-8ff6831c6573",
+    "gradeLevelId": "7559edb7-f83f-5dff-8755-f19a49a08887",
+    "sectionId": "1fd3de96-50bd-5fe7-af73-5e4d63f161be"
+   },
+   "update": {
+    "stream": "Updated stream"
+   },
+   "patch": {
+    "clears": "stream",
+    "keeps": "isActive"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "ClassSubject",
+   "table": "academics.class_subject",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/class-sections/de0bc4ec-d61d-588f-b97d-e152772d9d84/subjects",
+   "item": "/v1/academics/class-sections/de0bc4ec-d61d-588f-b97d-e152772d9d84/subjects/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO academics.grade_level (tenant_id, institution_id, name, slug, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-45279694', 't-slug-f6edcbee', 1, 'dfed4eca-e255-5aff-80eb-9b1a5b6475d0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.section (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-9f9ae37a', 1, 'C0A7B1C81', '80aeda47-ae55-554e-a134-d2ce7d9053b1') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.class_section (tenant_id, institution_id, academic_year_id, grade_level_id, section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '85722fdf-6e6a-5fdf-9bad-1bdf4663ba36', 'dfed4eca-e255-5aff-80eb-9b1a5b6475d0', '80aeda47-ae55-554e-a134-d2ce7d9053b1', 1, 'de0bc4ec-d61d-588f-b97d-e152772d9d84') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.subject (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-160494ef', 1, '4c339d15-e675-5990-89c3-69760c1e2280') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "classSectionId": "de0bc4ec-d61d-588f-b97d-e152772d9d84",
+    "subjectId": "4c339d15-e675-5990-89c3-69760c1e2280"
+   },
+   "update": {
+    "isActive": true
+   },
+   "patch": {
+    "keeps": "offeringType"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Course",
+   "table": "academics.course",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/courses",
+   "item": "/v1/academics/courses/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "code": "CF41C8012",
+    "name": "t-name-b4da0822"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "clears": "minUnitLoad",
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "CourseSubject",
+   "table": "academics.course_subject",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/courses/efebeac5-6da0-5174-8eec-906562d607b0/subjects",
+   "item": "/v1/academics/courses/efebeac5-6da0-5174-8eec-906562d607b0/subjects/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO academics.course (tenant_id, institution_id, code, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'C4F4EF967', 't-name-4108f2dc', 1, 'efebeac5-6da0-5174-8eec-906562d607b0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.subject (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-377341c5', 1, 'a687666a-b518-5681-b378-982712b60645') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "courseId": "efebeac5-6da0-5174-8eec-906562d607b0",
+    "subjectId": "a687666a-b518-5681-b378-982712b60645"
+   },
+   "update": {
+    "subjectCategory": "Updated subject_category"
+   },
+   "patch": {
+    "clears": "credits",
+    "keeps": "subjectId"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "CurriculumUnit",
+   "table": "academics.curriculum_unit",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/curriculum-units",
+   "item": "/v1/academics/curriculum-units/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO academics.grade_level (tenant_id, institution_id, name, slug, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-45279694', 't-slug-f6edcbee', 1, 'dfed4eca-e255-5aff-80eb-9b1a5b6475d0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.section (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-9f9ae37a', 1, 'C0A7B1C81', '80aeda47-ae55-554e-a134-d2ce7d9053b1') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.class_section (tenant_id, institution_id, academic_year_id, grade_level_id, section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '85722fdf-6e6a-5fdf-9bad-1bdf4663ba36', 'dfed4eca-e255-5aff-80eb-9b1a5b6475d0', '80aeda47-ae55-554e-a134-d2ce7d9053b1', 1, 'de0bc4ec-d61d-588f-b97d-e152772d9d84') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.subject (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-377341c5', 1, 'a687666a-b518-5681-b378-982712b60645') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.class_subject (tenant_id, class_section_id, subject_id, row_version, id) VALUES (:tenant, 'de0bc4ec-d61d-588f-b97d-e152772d9d84', 'a687666a-b518-5681-b378-982712b60645', 1, '5519de7f-12a1-5d8e-aebb-822bce47ea16') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "classSubjectId": "5519de7f-12a1-5d8e-aebb-822bce47ea16",
+    "name": "t-name-36d3e875"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "keeps": "name",
+    "clears": "sequence"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "GradeLevel",
+   "table": "academics.grade_level",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/grade-levels",
+   "item": "/v1/academics/grade-levels/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-3ad9d55c",
+    "slug": "t-slug-48c7c756"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "keeps": "name",
+    "clears": "sortOrder"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "LessonPlan",
+   "table": "academics.lesson_plan",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/lesson-plans",
+   "item": "/v1/academics/lesson-plans/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO academics.grade_level (tenant_id, institution_id, name, slug, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-45279694', 't-slug-f6edcbee', 1, 'dfed4eca-e255-5aff-80eb-9b1a5b6475d0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.section (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-9f9ae37a', 1, 'C0A7B1C81', '80aeda47-ae55-554e-a134-d2ce7d9053b1') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.class_section (tenant_id, institution_id, academic_year_id, grade_level_id, section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '85722fdf-6e6a-5fdf-9bad-1bdf4663ba36', 'dfed4eca-e255-5aff-80eb-9b1a5b6475d0', '80aeda47-ae55-554e-a134-d2ce7d9053b1', 1, 'de0bc4ec-d61d-588f-b97d-e152772d9d84') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.subject (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-377341c5', 1, 'a687666a-b518-5681-b378-982712b60645') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.class_subject (tenant_id, class_section_id, subject_id, row_version, id) VALUES (:tenant, 'de0bc4ec-d61d-588f-b97d-e152772d9d84', 'a687666a-b518-5681-b378-982712b60645', 1, '5519de7f-12a1-5d8e-aebb-822bce47ea16') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.teaching_assignment (tenant_id, class_subject_id, staff_id, row_version, id) VALUES (:tenant, '5519de7f-12a1-5d8e-aebb-822bce47ea16', '729b2944-2c6b-5239-9a94-f617ff0c2e6f', 1, 'd20b87ba-d3da-5ea9-90bc-fa5c0a1e6f9d') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "teachingAssignmentId": "d20b87ba-d3da-5ea9-90bc-fa5c0a1e6f9d",
+    "unitNo": "t-unit-no-fb2aa355",
+    "unitName": "t-unit-name-92b29995",
+    "title": "t-title-2cdb1d58",
+    "plannedDurationMinutes": "60s",
+    "description": "t-description-1cfa94cf"
+   },
+   "update": {
+    "unitNo": "Updated unit_no"
+   },
+   "patch": {
+    "clears": "notes",
+    "keeps": "title"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "academics.SubmitLessonPlan",
+     "path": "/v1/academics/lesson-plans/{id}:submit",
+     "permission": "academics.lesson_plan.submit_lesson_plan",
+     "guard": {
+      "status": [
+       "draft"
+      ]
+     },
+     "prepare": [
+      "UPDATE academics.lesson_plan SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "pending"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "academics.ApproveLessonPlan",
+     "path": "/v1/academics/lesson-plans/{id}:approve",
+     "permission": "academics.lesson_plan.approve_lesson_plan",
+     "guard": {
+      "status": [
+       "pending"
+      ]
+     },
+     "prepare": [
+      "UPDATE academics.lesson_plan SET status = 'pending' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "approved"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "academics.RejectLessonPlan",
+     "path": "/v1/academics/lesson-plans/{id}:reject",
+     "permission": "academics.lesson_plan.reject_lesson_plan",
+     "guard": {
+      "status": [
+       "pending"
+      ]
+     },
+     "prepare": [
+      "UPDATE academics.lesson_plan SET status = 'pending' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "rejected"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "academics.PublishLessonPlan",
+     "path": "/v1/academics/lesson-plans/{id}:publish",
+     "permission": "academics.lesson_plan.publish_lesson_plan",
+     "guard": {
+      "status": [
+       "approved"
+      ],
+      "isPublished": [
+       false
+      ]
+     },
+     "prepare": [
+      "UPDATE academics.lesson_plan SET status = 'approved', is_published = false WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "isPublished": true
+     },
+     "stamps": [
+      "publishedAt"
+     ],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "academics.ArchiveLessonPlan",
+     "path": "/v1/academics/lesson-plans/{id}:archive",
+     "permission": "academics.lesson_plan.archive_lesson_plan",
+     "guard": {
+      "status": [
+       "approved",
+       "rejected",
+       "cancelled"
+      ]
+     },
+     "prepare": [
+      "UPDATE academics.lesson_plan SET status = 'approved' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "archived"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ],
+   "beforeDelete": [
+    "UPDATE academics.lesson_plan_approval SET deleted_at = now() WHERE lesson_plan_id = '{id}'"
+   ]
+  },
+  {
+   "name": "LessonPlanApproval",
+   "table": "academics.lesson_plan_approval",
+   "ops": [
+    "Get",
+    "List"
+   ],
+   "collection": "/v1/academics/lesson-plans/ced3a14a-5c52-5dcb-8d11-abfed1170060/approvals",
+   "item": "/v1/academics/lesson-plans/ced3a14a-5c52-5dcb-8d11-abfed1170060/approvals/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO academics.grade_level (tenant_id, institution_id, name, slug, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-45279694', 't-slug-f6edcbee', 1, 'dfed4eca-e255-5aff-80eb-9b1a5b6475d0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.section (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-9f9ae37a', 1, 'C0A7B1C81', '80aeda47-ae55-554e-a134-d2ce7d9053b1') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.class_section (tenant_id, institution_id, academic_year_id, grade_level_id, section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '85722fdf-6e6a-5fdf-9bad-1bdf4663ba36', 'dfed4eca-e255-5aff-80eb-9b1a5b6475d0', '80aeda47-ae55-554e-a134-d2ce7d9053b1', 1, 'de0bc4ec-d61d-588f-b97d-e152772d9d84') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.subject (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-377341c5', 1, 'a687666a-b518-5681-b378-982712b60645') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.class_subject (tenant_id, class_section_id, subject_id, row_version, id) VALUES (:tenant, 'de0bc4ec-d61d-588f-b97d-e152772d9d84', 'a687666a-b518-5681-b378-982712b60645', 1, '5519de7f-12a1-5d8e-aebb-822bce47ea16') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.teaching_assignment (tenant_id, class_subject_id, staff_id, row_version, id) VALUES (:tenant, '5519de7f-12a1-5d8e-aebb-822bce47ea16', '729b2944-2c6b-5239-9a94-f617ff0c2e6f', 1, 'd20b87ba-d3da-5ea9-90bc-fa5c0a1e6f9d') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.lesson_plan (tenant_id, teaching_assignment_id, unit_no, unit_name, title, planned_duration_minutes, description, row_version, id) VALUES (:tenant, 'd20b87ba-d3da-5ea9-90bc-fa5c0a1e6f9d', 't-unit-no-ba545081', 't-unit-name-23e8204c', 't-title-f323d36a', 1, 't-description-81bdc38b', 1, 'ced3a14a-5c52-5dcb-8d11-abfed1170060') ON CONFLICT (id) DO NOTHING"
+   ],
+   "duplicateConflicts": false,
+   "seedId": "0196f000-0000-7000-8000-0000000ac0df",
+   "seed": [
+    "INSERT INTO academics.lesson_plan_approval (lesson_plan_id, decision, comments, tenant_id, row_version, id) VALUES ('ced3a14a-5c52-5dcb-8d11-abfed1170060', 'approved', 'Seeded review', :tenant, 1, '0196f000-0000-7000-8000-0000000ac0df')"
+   ]
+  },
+  {
+   "name": "Program",
+   "table": "academics.program",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/programs",
+   "item": "/v1/academics/programs/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO academics.program_level (tenant_id, name, row_version, code, id) VALUES (:tenant, 't-name-1eec8dd1', 1, 'C95AB62AB', '339a61f2-d37f-566a-9eca-117a1cdb3870') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "programLevelId": "339a61f2-d37f-566a-9eca-117a1cdb3870",
+    "code": "CF2DF8B19",
+    "name": "t-name-21166f30"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "clears": "minUnitLoad",
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "ProgramLevel",
+   "table": "academics.program_level",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/program-levels",
+   "item": "/v1/academics/program-levels/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C0D7118E9",
+    "name": "t-name-b546ee95"
+   },
+   "update": {
+    "isActive": true
+   },
+   "patch": {
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Section",
+   "table": "academics.section",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/sections",
+   "item": "/v1/academics/sections/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "code": "CFB5DFAF1",
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-8fc3d6c7"
+   },
+   "update": {
+    "isActive": true
+   },
+   "patch": {
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Subject",
+   "table": "academics.subject",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/subjects",
+   "item": "/v1/academics/subjects/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-a5ff3d99"
+   },
+   "update": {
+    "code": "Updated code"
+   },
+   "patch": {
+    "clears": "gradeWeightage",
+    "keeps": "name"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "TeacherSubject",
+   "table": "academics.teacher_subject",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/teacher-subjects",
+   "item": "/v1/academics/teacher-subjects/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO academics.subject (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-teacher-subject', 1, 'daefbb48-0a32-5c38-bd58-5a9b038af93b') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.subject (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-teacher-subject-2', 1, 'a0f413d4-dee3-5f95-ab38-03f1645e7eea') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "staffId": "c5951d87-a921-5801-bce3-4c4d4bb30640",
+    "subjectId": "daefbb48-0a32-5c38-bd58-5a9b038af93b"
+   },
+   "update": {
+    "subjectId": "a0f413d4-dee3-5f95-ab38-03f1645e7eea"
+   },
+   "patch": {
+    "keeps": "subjectId"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "TeachingAssignment",
+   "table": "academics.teaching_assignment",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/academics/teaching-assignments",
+   "item": "/v1/academics/teaching-assignments/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO academics.grade_level (tenant_id, institution_id, name, slug, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-45279694', 't-slug-f6edcbee', 1, 'dfed4eca-e255-5aff-80eb-9b1a5b6475d0') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.section (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-9f9ae37a', 1, 'C0A7B1C81', '80aeda47-ae55-554e-a134-d2ce7d9053b1') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.class_section (tenant_id, institution_id, academic_year_id, grade_level_id, section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '85722fdf-6e6a-5fdf-9bad-1bdf4663ba36', 'dfed4eca-e255-5aff-80eb-9b1a5b6475d0', '80aeda47-ae55-554e-a134-d2ce7d9053b1', 1, 'de0bc4ec-d61d-588f-b97d-e152772d9d84') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.subject (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-377341c5', 1, 'a687666a-b518-5681-b378-982712b60645') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.class_subject (tenant_id, class_section_id, subject_id, row_version, id) VALUES (:tenant, 'de0bc4ec-d61d-588f-b97d-e152772d9d84', 'a687666a-b518-5681-b378-982712b60645', 1, '5519de7f-12a1-5d8e-aebb-822bce47ea16') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "classSubjectId": "5519de7f-12a1-5d8e-aebb-822bce47ea16",
+    "staffId": "de6a11c0-0a70-5f2c-a048-84a1ba2cfba7"
+   },
+   "update": {
+    "teacherRole": "Updated teacher_role"
+   },
+   "patch": {
+    "clears": "teacherRole",
+    "keeps": "isActive"
+   },
+   "duplicateConflicts": true
+  }
+ ]
+}

@@ -18,13 +18,13 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Coupon that can be updated (partial update; see updateMask).
+ * Fields of Coupon that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class CouponUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@NotNull @Size(max = 40) String> code;
 
   /**
    * Discount type.
@@ -62,28 +62,28 @@ public class CouponUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable DiscountTypeEnum discountType;
+  private @Nullable Optional<@NotNull DiscountTypeEnum> discountType;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String percentageDiscount;
+  private @Nullable Optional<@Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> percentageDiscount;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String fixedDiscount;
+  private @Nullable Optional<@Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> fixedDiscount;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private @Nullable LocalDate expiresOn;
+  private @Nullable Optional<LocalDate> expiresOn;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer usageLimit;
+  private @Nullable Optional<Integer> usageLimit;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer redemptionCount;
+  private @Nullable Optional<@NotNull Integer> redemptionCount;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isEnabled;
+  private @Nullable Optional<@NotNull Boolean> isEnabled;
 
-  public CouponUpdate code(@Nullable String code) {
+  public CouponUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -92,18 +92,18 @@ public class CouponUpdate {
    * Coupon code.
    * @return code
    */
-  @Size(max = 40) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 
-  public CouponUpdate discountType(@Nullable DiscountTypeEnum discountType) {
+  public CouponUpdate discountType(@Nullable Optional<DiscountTypeEnum> discountType) {
     this.discountType = discountType;
     return this;
   }
@@ -114,16 +114,16 @@ public class CouponUpdate {
    */
   
   @JsonProperty("discountType")
-  public @Nullable DiscountTypeEnum getDiscountType() {
+  public @Nullable Optional<DiscountTypeEnum> getDiscountType() {
     return discountType;
   }
 
   @JsonProperty("discountType")
-  public void setDiscountType(@Nullable DiscountTypeEnum discountType) {
+  public void setDiscountType(@Nullable Optional<DiscountTypeEnum> discountType) {
     this.discountType = discountType;
   }
 
-  public CouponUpdate percentageDiscount(@Nullable String percentageDiscount) {
+  public CouponUpdate percentageDiscount(@Nullable Optional<String> percentageDiscount) {
     this.percentageDiscount = percentageDiscount;
     return this;
   }
@@ -132,18 +132,18 @@ public class CouponUpdate {
    * Percentage off.
    * @return percentageDiscount
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("percentageDiscount")
-  public @Nullable String getPercentageDiscount() {
+  public @Nullable Optional<String> getPercentageDiscount() {
     return percentageDiscount;
   }
 
   @JsonProperty("percentageDiscount")
-  public void setPercentageDiscount(@Nullable String percentageDiscount) {
+  public void setPercentageDiscount(@Nullable Optional<String> percentageDiscount) {
     this.percentageDiscount = percentageDiscount;
   }
 
-  public CouponUpdate fixedDiscount(@Nullable String fixedDiscount) {
+  public CouponUpdate fixedDiscount(@Nullable Optional<String> fixedDiscount) {
     this.fixedDiscount = fixedDiscount;
     return this;
   }
@@ -152,18 +152,18 @@ public class CouponUpdate {
    * Amount off.
    * @return fixedDiscount
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("fixedDiscount")
-  public @Nullable String getFixedDiscount() {
+  public @Nullable Optional<String> getFixedDiscount() {
     return fixedDiscount;
   }
 
   @JsonProperty("fixedDiscount")
-  public void setFixedDiscount(@Nullable String fixedDiscount) {
+  public void setFixedDiscount(@Nullable Optional<String> fixedDiscount) {
     this.fixedDiscount = fixedDiscount;
   }
 
-  public CouponUpdate expiresOn(@Nullable LocalDate expiresOn) {
+  public CouponUpdate expiresOn(@Nullable Optional<LocalDate> expiresOn) {
     this.expiresOn = expiresOn;
     return this;
   }
@@ -172,18 +172,18 @@ public class CouponUpdate {
    * Expiry.
    * @return expiresOn
    */
-  @Valid 
+  
   @JsonProperty("expiresOn")
-  public @Nullable LocalDate getExpiresOn() {
+  public @Nullable Optional<LocalDate> getExpiresOn() {
     return expiresOn;
   }
 
   @JsonProperty("expiresOn")
-  public void setExpiresOn(@Nullable LocalDate expiresOn) {
+  public void setExpiresOn(@Nullable Optional<LocalDate> expiresOn) {
     this.expiresOn = expiresOn;
   }
 
-  public CouponUpdate usageLimit(@Nullable Integer usageLimit) {
+  public CouponUpdate usageLimit(@Nullable Optional<Integer> usageLimit) {
     this.usageLimit = usageLimit;
     return this;
   }
@@ -194,16 +194,16 @@ public class CouponUpdate {
    */
   
   @JsonProperty("usageLimit")
-  public @Nullable Integer getUsageLimit() {
+  public @Nullable Optional<Integer> getUsageLimit() {
     return usageLimit;
   }
 
   @JsonProperty("usageLimit")
-  public void setUsageLimit(@Nullable Integer usageLimit) {
+  public void setUsageLimit(@Nullable Optional<Integer> usageLimit) {
     this.usageLimit = usageLimit;
   }
 
-  public CouponUpdate redemptionCount(@Nullable Integer redemptionCount) {
+  public CouponUpdate redemptionCount(@Nullable Optional<Integer> redemptionCount) {
     this.redemptionCount = redemptionCount;
     return this;
   }
@@ -214,16 +214,16 @@ public class CouponUpdate {
    */
   
   @JsonProperty("redemptionCount")
-  public @Nullable Integer getRedemptionCount() {
+  public @Nullable Optional<Integer> getRedemptionCount() {
     return redemptionCount;
   }
 
   @JsonProperty("redemptionCount")
-  public void setRedemptionCount(@Nullable Integer redemptionCount) {
+  public void setRedemptionCount(@Nullable Optional<Integer> redemptionCount) {
     this.redemptionCount = redemptionCount;
   }
 
-  public CouponUpdate isEnabled(@Nullable Boolean isEnabled) {
+  public CouponUpdate isEnabled(@Nullable Optional<Boolean> isEnabled) {
     this.isEnabled = isEnabled;
     return this;
   }
@@ -234,12 +234,12 @@ public class CouponUpdate {
    */
   
   @JsonProperty("isEnabled")
-  public @Nullable Boolean getIsEnabled() {
+  public @Nullable Optional<Boolean> getIsEnabled() {
     return isEnabled;
   }
 
   @JsonProperty("isEnabled")
-  public void setIsEnabled(@Nullable Boolean isEnabled) {
+  public void setIsEnabled(@Nullable Optional<Boolean> isEnabled) {
     this.isEnabled = isEnabled;
   }
 

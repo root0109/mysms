@@ -15,13 +15,14 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
- * The module boundary checks every module runs as a unit test: its SQL names no other module's schema, and it imports
- * only the gRPC contracts of modules in its row of ARCHITECTURE.md's allowed-dependency table.
+ * The module boundary checks every module runs as a unit test: its SQL names no schema but its areas' own, and it
+ * imports only the gRPC contracts of its areas and of the areas in their rows of ARCHITECTURE.md's allowed-dependency
+ * table. An area is one schema with its contract; a module serves one or more areas (its pom's migration folders).
  */
 public final class ModuleChecks {
 
-    /** The 22 module schemas. */
-    public static final Set<String> MODULES = Set.of("master", "platform", "iam", "org", "people", "academics", "sis",
+    /** The 22 area schemas. */
+    public static final Set<String> SCHEMAS = Set.of("master", "platform", "iam", "org", "people", "academics", "sis",
             "hr", "payroll", "admission", "attendance", "facility", "timetable", "assessment", "lms", "finance",
             "library", "transport", "comms", "frontoffice", "careers", "privacy");
 
@@ -41,22 +42,36 @@ public final class ModuleChecks {
             Pattern.compile("^import\\s+(?:static\\s+)?com\\.mysms\\.([a-z]+)\\.v1\\.", Pattern.MULTILINE);
     private static final Pattern ROW = Pattern.compile("^\\| `([a-z]+)` \\| (.*) \\|$", Pattern.MULTILINE);
     private static final Pattern CELL = Pattern.compile("`([a-z]+)`");
+    private static final Pattern MIGRATIONS = Pattern.compile("\\$\\{mysms\\.migrations\\.dir\\}/([a-z]+)<");
 
     private ModuleChecks() {
     }
 
+    /** The schemas (areas) of a module: the migration folders its pom packages ({@code ${mysms.migrations.dir}/x}). */
+    public static Set<String> moduleSchemas(Path pom) {
+        Set<String> schemas = new TreeSet<>();
+        Matcher folders = MIGRATIONS.matcher(read(pom));
+        while (folders.find()) {
+            schemas.add(folders.group(1));
+        }
+        if (schemas.isEmpty()) {
+            throw new IllegalArgumentException(pom + " packages no migrations");
+        }
+        return schemas;
+    }
+
     /**
-     * Violations of the own-schema rule: "File: other.table" for every SQL text naming another module's schema, in Java
-     * string literals and text blocks and in .sql resources.
+     * Violations of the own-schema rule: "File: other.table" for every SQL text naming a schema outside the module's
+     * own, in Java string literals and text blocks and in .sql resources.
      */
-    public static List<String> foreignSchemaReferences(String module, Path sourceRoot) {
+    public static List<String> foreignSchemaReferences(Set<String> ownSchemas, Path sourceRoot) {
         List<String> violations = new ArrayList<>();
         for (Path file : sqlSources(sourceRoot)) {
             for (String sql : sqlTexts(file)) {
                 Matcher qualified = QUALIFIED.matcher(sql);
                 while (qualified.find()) {
                     String schema = qualified.group(1);
-                    if (MODULES.contains(schema) && !schema.equals(module)) {
+                    if (SCHEMAS.contains(schema) && !ownSchemas.contains(schema)) {
                         violations.add(file.getFileName() + ": " + qualified.group());
                     }
                 }
@@ -116,12 +131,14 @@ public final class ModuleChecks {
     }
 
     /**
-     * Violations of the gRPC allowlist: "File.java imports the gRPC contract of x" for every import of another module's
-     * {@code com.mysms.<x>.v1} outside the module's row (its own and the shared {@code common} are always allowed).
+     * Violations of the gRPC allowlist: "File.java imports the gRPC contract of x" for every import of
+     * {@code com.mysms.<x>.v1} outside the module's areas and their rows (the shared {@code common} is always allowed).
      */
-    public static List<String> grpcImportsOutsideAllowlist(String module, Path sourceRoot, Path architectureMd) {
-        Set<String> allowed = new TreeSet<>(allowedDependencies(module, architectureMd));
-        allowed.add(module);
+    public static List<String> grpcImportsOutsideAllowlist(Set<String> areas, Path sourceRoot, Path architectureMd) {
+        Set<String> allowed = new TreeSet<>(areas);
+        for (String area : areas) {
+            allowed.addAll(allowedDependencies(area, architectureMd));
+        }
         allowed.add("common");
         List<String> violations = new ArrayList<>();
         for (Path file : javaFiles(sourceRoot)) {
@@ -135,11 +152,11 @@ public final class ModuleChecks {
         return violations;
     }
 
-    /** The module's row of the "May depend on" table in ARCHITECTURE.md. */
-    public static Set<String> allowedDependencies(String module, Path architectureMd) {
+    /** The area's row of the "May depend on" table in ARCHITECTURE.md. */
+    public static Set<String> allowedDependencies(String area, Path architectureMd) {
         Matcher rows = ROW.matcher(read(architectureMd));
         while (rows.find()) {
-            if (rows.group(1).equals(module)) {
+            if (rows.group(1).equals(area)) {
                 Set<String> allowed = new TreeSet<>();
                 Matcher cells = CELL.matcher(rows.group(2));
                 while (cells.find()) {
@@ -148,7 +165,7 @@ public final class ModuleChecks {
                 return allowed;
             }
         }
-        throw new IllegalArgumentException("module " + module + " has no row in " + architectureMd);
+        throw new IllegalArgumentException("area " + area + " has no row in " + architectureMd);
     }
 
     private static List<String> literals(String source) {

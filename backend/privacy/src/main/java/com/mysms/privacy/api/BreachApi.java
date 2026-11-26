@@ -145,7 +145,7 @@ public interface BreachApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -276,12 +276,11 @@ public interface BreachApi {
     String PATH_UPDATE_BREACH = "/v1/privacy/breaches/{breachId}";
     /**
      * PATCH /v1/privacy/breaches/{breachId} : Update Breach
-     * Partially update what is known of an open breach (updateMask); its times and the Board's clock are fixed once reported. Requires If-Match with the current ETag and a tenant-wide grant. Refused while impersonating.
+     * Partially update what is known of an open breach (absent fields are kept, null clears a field); its times and the Board's clock are fixed once reported. Requires If-Match with the current ETag and a tenant-wide grant. Refused while impersonating.
      *
      * @param breachId Breach id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param breachUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
      *         or Missing or invalid credentials. (status code 401)
@@ -303,7 +302,6 @@ public interface BreachApi {
     ResponseEntity<Breach> updateBreach(
          @PathVariable("breachId") UUID breachId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
-         @Valid @RequestBody BreachUpdate breachUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask
+         @Valid @RequestBody BreachUpdate breachUpdate
     );
 }

@@ -78,7 +78,7 @@ public interface PurposeApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -86,13 +86,12 @@ public interface PurposeApi {
     String PATH_UPDATE_PURPOSE = "/v1/privacy/purposes/{purposeId}";
     /**
      * PATCH /v1/privacy/purposes/{purposeId} : Update Purpose
-     * Partially update the tenant's setting of a purpose (updateMask). Requires If-Match with the current ETag ("0" while
+     * Partially update the tenant's setting of a purpose (absent fields are kept, null clears a field). Requires If-Match with the current ETag ("0" while
      * the tenant has never set the purpose). Switching a purpose on needs a notice whose active version lists it.
      *
      * @param purposeId Purpose id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param purposeUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -115,7 +114,6 @@ public interface PurposeApi {
          @PathVariable("purposeId") UUID purposeId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody PurposeUpdate purposeUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 

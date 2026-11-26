@@ -231,7 +231,7 @@ public interface ClassSectionApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -267,7 +267,7 @@ public interface ClassSectionApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -275,12 +275,11 @@ public interface ClassSectionApi {
     String PATH_UPDATE_CLASS_SECTION = "/v1/academics/class-sections/{classSectionId}";
     /**
      * PATCH /v1/academics/class-sections/{classSectionId} : Update ClassSection
-     * Partially update a ClassSection (updateMask). Requires If-Match with the current ETag.
+     * Partially update a ClassSection (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param classSectionId ClassSection id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param classSectionUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -304,7 +303,6 @@ public interface ClassSectionApi {
          @PathVariable("classSectionId") UUID classSectionId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody ClassSectionUpdate classSectionUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -312,13 +310,12 @@ public interface ClassSectionApi {
     String PATH_UPDATE_CLASS_SUBJECT = "/v1/academics/class-sections/{classSectionId}/subjects/{classSubjectId}";
     /**
      * PATCH /v1/academics/class-sections/{classSectionId}/subjects/{classSubjectId} : Update ClassSubject
-     * Partially update a ClassSubject (updateMask). Requires If-Match with the current ETag.
+     * Partially update a ClassSubject (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param classSectionId ClassSection id. (required)
      * @param classSubjectId ClassSubject id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param classSubjectUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -343,7 +340,6 @@ public interface ClassSectionApi {
          @PathVariable("classSubjectId") UUID classSubjectId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody ClassSubjectUpdate classSubjectUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 

@@ -141,8 +141,8 @@ public class LessonPlanController implements LessonPlanApi {
 
     @Override
     public ResponseEntity<LessonPlan> updateLessonPlan(UUID lessonPlanId, String ifMatch,
-            LessonPlanUpdate lessonPlanUpdate, String updateMask, Boolean validateOnly) {
-        LessonPlan updated = lessonPlanService.updateLessonPlan(lessonPlanId, ifMatch, lessonPlanUpdate, updateMask,
+            LessonPlanUpdate lessonPlanUpdate, Boolean validateOnly) {
+        LessonPlan updated = lessonPlanService.updateLessonPlan(lessonPlanId, ifMatch, lessonPlanUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
@@ -150,10 +150,10 @@ public class LessonPlanController implements LessonPlanApi {
     @Override
     public ResponseEntity<LessonPlanApproval> updateLessonPlanApproval(UUID lessonPlanId,
             UUID lessonPlanApprovalId, String ifMatch, LessonPlanApprovalUpdate lessonPlanApprovalUpdate,
-            String updateMask, Boolean validateOnly) {
+            Boolean validateOnly) {
         LessonPlanApproval updated =
                 lessonPlanService.updateLessonPlanApproval(lessonPlanId, lessonPlanApprovalId, ifMatch,
-                        lessonPlanApprovalUpdate, updateMask,
+                        lessonPlanApprovalUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

@@ -35,7 +35,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,8 +65,6 @@ public class NotificationChannelService extends AppTransactionManager implements
     /** The text of a test message: nothing personal, nothing from the request. */
     static final String TEST_SUBJECT = "MySMS test message";
     static final String TEST_BODY = "This is a test message from your school's MySMS notification settings.";
-    /** The contract's NotificationChannelUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("code", "description", "isEnabled", "sortOrder");
 
     public static final String NOTIFICATION_CHANNEL_PROPERTY_AGGREGATE = NotificationChannelPropertyEntity.TABLE;
     static final String NOTIFICATION_CHANNEL_PROPERTY_PERMISSION_LIST = "comms.notification_channel_property.read";
@@ -74,9 +72,6 @@ public class NotificationChannelService extends AppTransactionManager implements
     static final String NOTIFICATION_CHANNEL_PROPERTY_PERMISSION_CREATE = "comms.notification_channel_property.create";
     static final String NOTIFICATION_CHANNEL_PROPERTY_PERMISSION_UPDATE = "comms.notification_channel_property.update";
     static final String NOTIFICATION_CHANNEL_PROPERTY_PERMISSION_DELETE = "comms.notification_channel_property.delete";
-    /** The contract's NotificationChannelPropertyUpdate fields, in apply order. */
-    static final List<String> NOTIFICATION_CHANNEL_PROPERTY_WRITABLE =
-            List.of("propertyKey", "propertyValue", "secretValue", "sortOrder", "isMandatory");
 
     /** The write-only secrets: never in a response, so not validated on the merged model. */
     private static final Set<String> NOTIFICATION_CHANNEL_PROPERTY_SECRETS = Set.of("secretValue");
@@ -195,13 +190,12 @@ public class NotificationChannelService extends AppTransactionManager implements
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public NotificationChannel updateNotificationChannel(UUID id, String ifMatch, NotificationChannelUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             NotificationChannelEntity entity = loadVisible(scope, id);
@@ -209,7 +203,7 @@ public class NotificationChannelService extends AppTransactionManager implements
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -267,18 +261,14 @@ public class NotificationChannelService extends AppTransactionManager implements
         return Optional.empty();
     }
 
-    /** Applies the selected NotificationChannelUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(NotificationChannelEntity entity, NotificationChannelUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "code" -> entity.setCode(changes.getCode());
-                case "description" -> entity.setDescription(changes.getDescription());
-                case "isEnabled" -> entity.setIsEnabled(changes.getIsEnabled());
-                case "sortOrder" -> entity.setSortOrder(changes.getSortOrder());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(NotificationChannelEntity entity, NotificationChannelUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("code", changes.getCode(), entity::setCode);
+        patch.apply("description", changes.getDescription(), entity::setDescription);
+        patch.apply("isEnabled", changes.getIsEnabled(), entity::setIsEnabled);
+        patch.apply("sortOrder", changes.getSortOrder(), entity::setSortOrder);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -362,13 +352,12 @@ public class NotificationChannelService extends AppTransactionManager implements
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public NotificationChannelProperty updateNotificationChannelProperty(UUID notificationChannelId, UUID id,
-            String ifMatch, NotificationChannelPropertyUpdate changes, String updateMask, boolean validateOnly) {
+            String ifMatch, NotificationChannelPropertyUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, NOTIFICATION_CHANNEL_PROPERTY_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(NOTIFICATION_CHANNEL_PROPERTY_PERMISSION_UPDATE);
             NotificationChannelPropertyEntity entity = loadVisibleNotificationChannelProperty(scope, notificationChannelId, id);
@@ -376,7 +365,7 @@ public class NotificationChannelService extends AppTransactionManager implements
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyNotificationChannelProperty(entity, changes, fields);
+            List<String> fields = applyNotificationChannelProperty(entity, changes);
             validator.validateExcept(dtoNotificationChannelProperty(entity), NOTIFICATION_CHANNEL_PROPERTY_SECRETS);
             assertValidNotificationChannelProperty(entity, false);
             scope.requireWritable(institutionOfNotificationChannelProperty(entity));
@@ -448,20 +437,16 @@ public class NotificationChannelService extends AppTransactionManager implements
         return Optional.empty();
     }
 
-    /** Applies the selected NotificationChannelPropertyUpdate fields; explicit per field so a mask can clear values. */
-    private void applyNotificationChannelProperty(NotificationChannelPropertyEntity entity,
-            NotificationChannelPropertyUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "propertyKey" -> entity.setPropertyKey(changes.getPropertyKey());
-                case "propertyValue" -> entity.setPropertyValue(changes.getPropertyValue());
-                case "secretValue" -> sealSecretValueNotificationChannelProperty(entity, changes.getSecretValue());
-                case "sortOrder" -> entity.setSortOrder(changes.getSortOrder());
-                case "isMandatory" -> entity.setIsMandatory(changes.getIsMandatory());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private List<String> applyNotificationChannelProperty(NotificationChannelPropertyEntity entity,
+            NotificationChannelPropertyUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("propertyKey", changes.getPropertyKey(), entity::setPropertyKey);
+        patch.apply("propertyValue", changes.getPropertyValue(), entity::setPropertyValue);
+        patch.apply("secretValue", changes.getSecretValue(), v -> sealSecretValueNotificationChannelProperty(entity, v));
+        patch.apply("sortOrder", changes.getSortOrder(), entity::setSortOrder);
+        patch.apply("isMandatory", changes.getIsMandatory(), entity::setIsMandatory);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

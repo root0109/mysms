@@ -43,7 +43,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -79,9 +79,6 @@ public class PostService extends AppTransactionManager {
     static final String PERMISSION_CANCEL_POST = "comms.post.cancel_post";
     static final String PERMISSION_SUBMIT_POST = "comms.post.submit_post";
     static final String PERMISSION_GET_FEED = "comms.post.get_feed";
-    /** The contract's PostUpdate fields, in apply order; the author is the caller, from the token. */
-    static final List<String> WRITABLE =
-            List.of("institutionId", "academicYearId", "classPageId", "body", "visibility", "scheduledFor");
 
     public static final String POST_AUDIENCE_CLASS_AGGREGATE = PostAudienceClassEntity.TABLE;
     static final String POST_AUDIENCE_CLASS_PERMISSION_LIST = "comms.post_audience_class.read";
@@ -89,8 +86,6 @@ public class PostService extends AppTransactionManager {
     static final String POST_AUDIENCE_CLASS_PERMISSION_CREATE = "comms.post_audience_class.create";
     static final String POST_AUDIENCE_CLASS_PERMISSION_UPDATE = "comms.post_audience_class.update";
     static final String POST_AUDIENCE_CLASS_PERMISSION_DELETE = "comms.post_audience_class.delete";
-    /** The contract's PostAudienceClassUpdate fields, in apply order. */
-    static final List<String> POST_AUDIENCE_CLASS_WRITABLE = List.of("classSectionId");
 
     public static final String POST_COMMENT_AGGREGATE = PostCommentEntity.TABLE;
     static final String POST_COMMENT_PERMISSION_LIST = "comms.post_comment.read";
@@ -98,8 +93,6 @@ public class PostService extends AppTransactionManager {
     static final String POST_COMMENT_PERMISSION_CREATE = "comms.post_comment.create";
     static final String POST_COMMENT_PERMISSION_UPDATE = "comms.post_comment.update";
     static final String POST_COMMENT_PERMISSION_DELETE = "comms.post_comment.delete";
-    /** The contract's PostCommentUpdate fields, in apply order; the author is the caller, from the token. */
-    static final List<String> POST_COMMENT_WRITABLE = List.of("parentCommentId", "body", "attachmentFileId", "isActive");
 
     private final PostRepository repository;
     private final PostMapper mapper;
@@ -188,13 +181,12 @@ public class PostService extends AppTransactionManager {
     }
 
     /**
-     * Partial update of the caller's own post under If-Match (anyone else's is 404): an updateMask sets the listed
-     * fields (clearing absent ones), otherwise the non-null fields apply; the merged row must validate, stay in the
-     * caller's scope, and move only to a class page the caller is a member of.
+     * Partial update of the caller's own post under If-Match (anyone else's is 404) (§7.2: a field left out is kept, a
+     * null one cleared, a value set); the merged row must validate, stay in the caller's scope, and move only to a
+     * class page the caller is a member of.
      */
-    public Post updatePost(UUID id, String ifMatch, PostUpdate changes, String updateMask, boolean validateOnly) {
+    public Post updatePost(UUID id, String ifMatch, PostUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         UUID caller = OwnRows.caller();
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
@@ -205,7 +197,7 @@ public class PostService extends AppTransactionManager {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
             UUID page = entity.getClassPageId();
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -445,20 +437,16 @@ public class PostService extends AppTransactionManager {
         }
     }
 
-    /** Applies the selected PostUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(PostEntity entity, PostUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "academicYearId" -> entity.setAcademicYearId(changes.getAcademicYearId());
-                case "classPageId" -> entity.setClassPageId(changes.getClassPageId());
-                case "body" -> entity.setBody(changes.getBody());
-                case "visibility" -> entity.setVisibility(Optional.ofNullable(changes.getVisibility())
-                        .map(v -> v.getValue()).orElse(null));
-                case "scheduledFor" -> entity.setScheduledFor(changes.getScheduledFor());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(PostEntity entity, PostUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("academicYearId", changes.getAcademicYearId(), entity::setAcademicYearId);
+        patch.apply("classPageId", changes.getClassPageId(), entity::setClassPageId);
+        patch.apply("body", changes.getBody(), entity::setBody);
+        patch.apply("visibility", changes.getVisibility(), v -> entity.setVisibility(v == null ? null : v.getValue()));
+        patch.apply("scheduledFor", changes.getScheduledFor(), entity::setScheduledFor);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -553,14 +541,13 @@ public class PostService extends AppTransactionManager {
     }
 
     /**
-     * Partial update of an audience class of the caller's own post under If-Match (404 on another author's post): an
-     * updateMask sets the listed fields (clearing absent ones), otherwise the non-null fields apply; the merged row
-     * must validate and stay in the caller's scope.
+     * Partial update of an audience class of the caller's own post under If-Match (404 on another author's post) (§7.2:
+     * a field left out is kept, a null one cleared, a value set); the merged row must validate and stay in the caller's
+     * scope.
      */
     public PostAudienceClass updatePostAudienceClass(UUID postId, UUID id, String ifMatch,
-            PostAudienceClassUpdate changes, String updateMask, boolean validateOnly) {
+            PostAudienceClassUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, POST_AUDIENCE_CLASS_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(POST_AUDIENCE_CLASS_PERMISSION_UPDATE);
             PostAudienceClassEntity entity = loadVisiblePostAudienceClass(scope, postId, id);
@@ -569,7 +556,7 @@ public class PostService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyPostAudienceClass(entity, changes, fields);
+            List<String> fields = applyPostAudienceClass(entity, changes);
             validator.validate(postAudienceClassMapper.toDto(entity));
             assertValidPostAudienceClass(entity, false);
             scope.requireWritable(institutionOfPostAudienceClass(entity));
@@ -625,15 +612,11 @@ public class PostService extends AppTransactionManager {
         return postAudienceClassRepository.institutionOf(entity.getPostId());
     }
 
-    /** Applies the selected PostAudienceClassUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyPostAudienceClass(PostAudienceClassEntity entity, PostAudienceClassUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "classSectionId" -> entity.setClassSectionId(changes.getClassSectionId());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyPostAudienceClass(PostAudienceClassEntity entity, PostAudienceClassUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("classSectionId", changes.getClassSectionId(), entity::setClassSectionId);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -725,14 +708,12 @@ public class PostService extends AppTransactionManager {
     }
 
     /**
-     * Partial update of the caller's own comment under If-Match (anyone else's is 404): an updateMask sets the listed
-     * fields (clearing absent ones), otherwise the non-null fields apply; the merged row must validate and stay in the
-     * caller's scope.
+     * Partial update of the caller's own comment under If-Match (anyone else's is 404) (§7.2: a field left out is kept,
+     * a null one cleared, a value set); the merged row must validate and stay in the caller's scope.
      */
     public PostComment updatePostComment(UUID postId, UUID id, String ifMatch, PostCommentUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, POST_COMMENT_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(POST_COMMENT_PERMISSION_UPDATE);
             PostCommentEntity entity = loadVisiblePostComment(scope, postId, id);
@@ -741,7 +722,7 @@ public class PostService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyPostComment(entity, changes, fields);
+            List<String> fields = applyPostComment(entity, changes);
             validator.validate(postCommentMapper.toDto(entity));
             assertValidPostComment(entity, false);
             scope.requireWritable(institutionOfPostComment(entity));
@@ -809,17 +790,14 @@ public class PostService extends AppTransactionManager {
         return postCommentRepository.institutionOf(entity.getPostId());
     }
 
-    /** Applies the selected PostCommentUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyPostComment(PostCommentEntity entity, PostCommentUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "parentCommentId" -> entity.setParentCommentId(changes.getParentCommentId());
-                case "body" -> entity.setBody(changes.getBody());
-                case "attachmentFileId" -> entity.setAttachmentFileId(changes.getAttachmentFileId());
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyPostComment(PostCommentEntity entity, PostCommentUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("parentCommentId", changes.getParentCommentId(), entity::setParentCommentId);
+        patch.apply("body", changes.getBody(), entity::setBody);
+        patch.apply("attachmentFileId", changes.getAttachmentFileId(), entity::setAttachmentFileId);
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

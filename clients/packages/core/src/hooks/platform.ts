@@ -15,6 +15,7 @@ import { ThemeApi } from '@mysms/sdk/platform/apis/ThemeApi';
 import type { ApiClient } from '../api/client';
 import { newIdempotencyKey } from '../api/ids';
 import { allPages, pageQuery, type PageParam } from '../api/pages';
+import { patchOf } from '../api/patch';
 import { call } from '../api/unwrap';
 import { queryKey } from '../query/keys';
 import { STALE_TIME } from '../query/queryClient';
@@ -219,8 +220,7 @@ export function useSaveTheme() {
         themes.updateTheme({
           themeId: draft.id,
           ifMatch: draft.etag,
-          updateMask: 'name,description,logoFileId,isDefault,tokens',
-          themeUpdate: fields,
+          themeUpdate: patchOf(fields),
         }),
       );
     },

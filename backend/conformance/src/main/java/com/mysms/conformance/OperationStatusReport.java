@@ -37,7 +37,7 @@ public final class OperationStatusReport {
     }
 
     private static boolean isServed(Map<String, Map<String, Boolean>> served, ContractOperations.Operation operation) {
-        return served.getOrDefault(operation.module(), Map.of()).getOrDefault(operation.javaMethod(), false);
+        return served.getOrDefault(operation.area(), Map.of()).getOrDefault(operation.javaMethod(), false);
     }
 
     /** The report as it follows from the contracts and the controllers in the tree. */
@@ -51,10 +51,10 @@ public final class OperationStatusReport {
             String why = isServed ? "" : STANDARD.matcher(name).find()
                     ? "standard operation not built yet (public, platform-staff or extra-parameter variant)"
                     : "workflow / custom operation";
-            rows.computeIfAbsent(operation.module(), m -> new ArrayList<>()).add(String.format(
+            rows.computeIfAbsent(operation.area(), m -> new ArrayList<>()).add(String.format(
                     "| `%s` | %s | `%s` | `%s` | %s | %s |", operation.operationId(), operation.method(),
                     operation.path(), operation.permission(), isServed ? "served" : "501", why));
-            int[] counts = totals.computeIfAbsent(operation.module(), m -> new int[2]);
+            int[] counts = totals.computeIfAbsent(operation.area(), m -> new int[2]);
             counts[0]++;
             counts[1] += isServed ? 1 : 0;
         }
@@ -87,12 +87,12 @@ public final class OperationStatusReport {
         return out.toString().replace("\r\n", "\n");
     }
 
-    /** {module: {controller method: served}} from every controller of the domain modules. */
+    /** {area: {controller method: served}} from every controller of the domain modules' areas. */
     private static Map<String, Map<String, Boolean>> servedMethods(SourceTree tree) {
         Map<String, Map<String, Boolean>> served = new HashMap<>();
-        for (String module : tree.domainModules()) {
-            Path controllers = tree.backend().resolve(module).resolve("src/main/java/com/mysms").resolve(module)
-                    .resolve("controller");
+        for (SourceTree.Area area : tree.areas()) {
+            String module = area.name();
+            Path controllers = tree.base(area, "main").resolve("controller");
             for (Path file : tree.files(controllers, "Controller.java")) {
                 String source = tree.read(file).replace("\r\n", "\n").replace('\r', '\n');
                 Matcher method = CONTROLLER_METHOD.matcher(source);

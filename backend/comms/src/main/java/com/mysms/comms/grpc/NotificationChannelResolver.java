@@ -80,7 +80,7 @@ public class NotificationChannelResolver extends NotificationChannelServiceGrpc.
                 bridge.id(request.getNotificationChannel().getId(), "id"),
                 bridge.requiredIfMatch(request.getNotificationChannel().getEtag()),
                 bridge.changes(request.getNotificationChannel(), request.getUpdateMask(), NotificationChannelUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateNotificationChannelResponse.newBuilder(), "notification_channel", updated).build());
     }
@@ -132,7 +132,7 @@ public class NotificationChannelResolver extends NotificationChannelServiceGrpc.
                 bridge.id(request.getNotificationChannelProperty().getId(), "id"),
                 bridge.requiredIfMatch(request.getNotificationChannelProperty().getEtag()),
                 bridge.changes(request.getNotificationChannelProperty(), request.getUpdateMask(),
-                NotificationChannelPropertyUpdate.class), bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                NotificationChannelPropertyUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateNotificationChannelPropertyResponse.newBuilder(), "notification_channel_property",
                 updated).build());

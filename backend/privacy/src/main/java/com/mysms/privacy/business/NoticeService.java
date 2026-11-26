@@ -20,7 +20,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.privacy.api.model.MyNotice;
 import com.mysms.privacy.api.model.Notice;
 import com.mysms.privacy.api.model.NoticeTranslation;
@@ -68,23 +68,16 @@ public class NoticeService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "privacy.notice.create";
     static final String PERMISSION_UPDATE = "privacy.notice.update";
     static final String PERMISSION_DELETE = "privacy.notice.delete";
-    /** The contract's NoticeUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("title");
 
     public static final String NOTICE_VERSION_AGGREGATE = NoticeVersionEntity.TABLE;
     static final String NOTICE_VERSION_PERMISSION_CREATE = "privacy.notice_version.create";
     static final String NOTICE_VERSION_PERMISSION_UPDATE = "privacy.notice_version.update";
     static final String NOTICE_VERSION_PERMISSION_PUBLISH = "privacy.notice_version.publish";
-    /** The contract's NoticeVersionUpdate fields, in apply order. */
-    static final List<String> NOTICE_VERSION_WRITABLE =
-            List.of("requiresReconsent", "purposeCodes", "grievanceContact", "documentFileId");
 
     public static final String NOTICE_TRANSLATION_AGGREGATE = NoticeTranslationEntity.TABLE;
     static final String NOTICE_TRANSLATION_PERMISSION_CREATE = "privacy.notice_translation.create";
     static final String NOTICE_TRANSLATION_PERMISSION_UPDATE = "privacy.notice_translation.update";
     static final String NOTICE_TRANSLATION_PERMISSION_DELETE = "privacy.notice_translation.delete";
-    /** The contract's NoticeTranslationUpdate fields, in apply order. */
-    static final List<String> NOTICE_TRANSLATION_WRITABLE = List.of("language", "bodyMarkdown", "summaryForChildren");
 
     /** No institution owns a row of this aggregate. */
     private static final Optional<UUID> TENANT_LEVEL = Optional.empty();
@@ -165,14 +158,13 @@ public class NoticeService extends AppTransactionManager {
     }
 
     /** Partial update under If-Match; the code is set at creation and never changes. */
-    public Notice updateNotice(UUID id, String ifMatch, NoticeUpdate changes, String updateMask, boolean validateOnly) {
+    public Notice updateNotice(UUID id, String ifMatch, NoticeUpdate changes, boolean validateOnly) {
         requireTenantWide(PERMISSION_UPDATE);
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             NoticeEntity entity = loadNotice(id);
             requireCurrent(entity.getRowVersion(), expected);
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
@@ -219,14 +211,11 @@ public class NoticeService extends AppTransactionManager {
         return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
     }
 
-    /** Applies the selected NoticeUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(NoticeEntity entity, NoticeUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "title" -> entity.setTitle(changes.getTitle());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(NoticeEntity entity, NoticeUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("title", changes.getTitle(), entity::setTitle);
+        return patch.applied();
     }
 
     private void assertUnique(NoticeEntity entity) {
@@ -313,15 +302,14 @@ public class NoticeService extends AppTransactionManager {
 
     /** Partial update of a draft under If-Match; a published version never changes (409). */
     public NoticeVersion updateNoticeVersion(UUID noticeId, UUID id, String ifMatch, NoticeVersionUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         requireTenantWide(NOTICE_VERSION_PERMISSION_UPDATE);
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, NOTICE_VERSION_WRITABLE);
         return doInWriteTransaction(() -> {
             NoticeVersionEntity entity = loadNoticeVersion(noticeId, id);
             requireCurrent(entity.getRowVersion(), expected);
             requireDraftNoticeVersion(entity);
-            applyNoticeVersion(entity, changes, fields);
+            List<String> fields = applyNoticeVersion(entity, changes);
             validator.validate(noticeVersionMapper.toDto(entity));
             assertValidNoticeVersion(entity);
             entity.onUpdatingData(Actor.current(), clock);
@@ -410,18 +398,15 @@ public class NoticeService extends AppTransactionManager {
         }
     }
 
-    /** Applies the selected NoticeVersionUpdate fields; explicit per field so a mask can clear values. */
-    private void applyNoticeVersion(NoticeVersionEntity entity, NoticeVersionUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "requiresReconsent" -> entity.setRequiresReconsent(changes.getRequiresReconsent());
-                case "purposeCodes" -> entity.setPurposeCodes(changes.getPurposeCodes());
-                case "grievanceContact" ->
-                        entity.setGrievanceContact(noticeVersionMapper.toOfficer(changes.getGrievanceContact()));
-                case "documentFileId" -> entity.setDocumentFileId(changes.getDocumentFileId());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private List<String> applyNoticeVersion(NoticeVersionEntity entity, NoticeVersionUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("requiresReconsent", changes.getRequiresReconsent(), entity::setRequiresReconsent);
+        patch.apply("purposeCodes", changes.getPurposeCodes(), entity::setPurposeCodes);
+        patch.apply("grievanceContact", changes.getGrievanceContact(),
+                v -> entity.setGrievanceContact(noticeVersionMapper.toOfficer(v)));
+        patch.apply("documentFileId", changes.getDocumentFileId(), entity::setDocumentFileId);
+        return patch.applied();
     }
 
     /** Every purpose code names an active catalogue purpose (422 per failing code). */
@@ -490,16 +475,15 @@ public class NoticeService extends AppTransactionManager {
 
     /** Partial update under If-Match while the version is a draft; the content hash follows the new wording. */
     public NoticeTranslation updateNoticeTranslation(UUID noticeId, UUID noticeVersionId, UUID id, String ifMatch,
-            NoticeTranslationUpdate changes, String updateMask, boolean validateOnly) {
+            NoticeTranslationUpdate changes, boolean validateOnly) {
         requireTenantWide(NOTICE_TRANSLATION_PERMISSION_UPDATE);
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, NOTICE_TRANSLATION_WRITABLE);
         return doInWriteTransaction(() -> {
             NoticeVersionEntity version = loadNoticeVersion(noticeId, noticeVersionId);
             NoticeTranslationEntity entity = loadNoticeTranslation(version, id);
             requireCurrent(entity.getRowVersion(), expected);
             requireDraftNoticeVersion(version);
-            applyNoticeTranslation(entity, changes, fields);
+            List<String> fields = applyNoticeTranslation(entity, changes);
             validator.validate(noticeTranslationMapper.toDto(entity));
             entity.setContentSha256(hashNoticeTranslation(entity));
             assertUniqueNoticeTranslation(entity);
@@ -547,17 +531,13 @@ public class NoticeService extends AppTransactionManager {
         return entity;
     }
 
-    /** Applies the selected NoticeTranslationUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyNoticeTranslation(NoticeTranslationEntity entity, NoticeTranslationUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "language" -> entity.setLanguage(changes.getLanguage());
-                case "bodyMarkdown" -> entity.setBodyMarkdown(changes.getBodyMarkdown());
-                case "summaryForChildren" -> entity.setSummaryForChildren(changes.getSummaryForChildren());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyNoticeTranslation(NoticeTranslationEntity entity, NoticeTranslationUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("language", changes.getLanguage(), entity::setLanguage);
+        patch.apply("bodyMarkdown", changes.getBodyMarkdown(), entity::setBodyMarkdown);
+        patch.apply("summaryForChildren", changes.getSummaryForChildren(), entity::setSummaryForChildren);
+        return patch.applied();
     }
 
     private void assertUniqueNoticeTranslation(NoticeTranslationEntity entity) {

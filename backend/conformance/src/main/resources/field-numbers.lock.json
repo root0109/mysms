@@ -197,6 +197,14 @@
 "academics.CreateSubjectResponse": {
 "subject": 1
 },
+"academics.CreateTeacherSubjectRequest": {
+"request_id": 2,
+"teacher_subject": 1,
+"validate_only": 3
+},
+"academics.CreateTeacherSubjectResponse": {
+"teacher_subject": 1
+},
 "academics.CreateTeachingAssignmentRequest": {
 "request_id": 2,
 "teaching_assignment": 1,
@@ -285,6 +293,11 @@
 "id": 1
 },
 "academics.DeleteSubjectResponse": {},
+"academics.DeleteTeacherSubjectRequest": {
+"etag": 2,
+"id": 1
+},
+"academics.DeleteTeacherSubjectResponse": {},
 "academics.DeleteTeachingAssignmentRequest": {
 "etag": 2,
 "id": 1
@@ -370,6 +383,12 @@
 },
 "academics.GetSubjectResponse": {
 "subject": 1
+},
+"academics.GetTeacherSubjectRequest": {
+"id": 1
+},
+"academics.GetTeacherSubjectResponse": {
+"teacher_subject": 1
 },
 "academics.GetTeachingAssignmentRequest": {
 "id": 1
@@ -538,6 +557,14 @@
 "items": 1,
 "pagination": 4
 },
+"academics.ListTeacherSubjectsRequest": {
+"filter": 1,
+"pageable": 2
+},
+"academics.ListTeacherSubjectsResponse": {
+"items": 1,
+"pagination": 2
+},
 "academics.ListTeachingAssignmentsRequest": {
 "filter": 3,
 "pageable": 5
@@ -628,6 +655,16 @@
 },
 "academics.SubmitLessonPlanResponse": {
 "lesson_plan": 1
+},
+"academics.TeacherSubject": {
+"create_time": 4,
+"created_by": 5,
+"etag": 8,
+"id": 1,
+"staff_id": 2,
+"subject_id": 3,
+"update_time": 6,
+"updated_by": 7
 },
 "academics.TeachingAssignment": {
 "class_subject_id": 2,
@@ -749,6 +786,14 @@
 },
 "academics.UpdateSubjectResponse": {
 "subject": 1
+},
+"academics.UpdateTeacherSubjectRequest": {
+"teacher_subject": 1,
+"update_mask": 2,
+"validate_only": 3
+},
+"academics.UpdateTeacherSubjectResponse": {
+"teacher_subject": 1
 },
 "academics.UpdateTeachingAssignmentRequest": {
 "teaching_assignment": 1,
@@ -7627,15 +7672,6 @@
 "hr.CreateStaffResponse": {
 "staff": 1
 },
-"hr.CreateStaffSubjectRequest": {
-"request_id": 3,
-"staff_id": 1,
-"staff_subject": 2,
-"validate_only": 4
-},
-"hr.CreateStaffSubjectResponse": {
-"staff_subject": 1
-},
 "hr.DeleteDesignationRequest": {
 "etag": 2,
 "id": 1
@@ -7662,12 +7698,6 @@
 "id": 1
 },
 "hr.DeleteStaffResponse": {},
-"hr.DeleteStaffSubjectRequest": {
-"etag": 3,
-"id": 2,
-"staff_id": 1
-},
-"hr.DeleteStaffSubjectResponse": {},
 "hr.Designation": {
 "code": 2,
 "create_time": 5,
@@ -7726,13 +7756,6 @@
 },
 "hr.GetStaffResponse": {
 "staff": 1
-},
-"hr.GetStaffSubjectRequest": {
-"id": 2,
-"staff_id": 1
-},
-"hr.GetStaffSubjectResponse": {
-"staff_subject": 1
 },
 "hr.LeaveApplication": {
 "absence_reason_id": 6,
@@ -7834,15 +7857,6 @@
 "items": 1,
 "pagination": 4
 },
-"hr.ListStaffSubjectsRequest": {
-"filter": 4,
-"pageable": 6,
-"staff_id": 1
-},
-"hr.ListStaffSubjectsResponse": {
-"items": 1,
-"pagination": 4
-},
 "hr.RejectLeaveRequest": {
 "etag": 2,
 "leave_application_id": 1,
@@ -7883,16 +7897,6 @@
 "etag": 8,
 "id": 1,
 "staff_id": 2,
-"update_time": 6,
-"updated_by": 7
-},
-"hr.StaffSubject": {
-"create_time": 4,
-"created_by": 5,
-"etag": 8,
-"id": 1,
-"staff_id": 2,
-"subject_id": 3,
 "update_time": 6,
 "updated_by": 7
 },
@@ -7944,15 +7948,6 @@
 },
 "hr.UpdateStaffResponse": {
 "staff": 1
-},
-"hr.UpdateStaffSubjectRequest": {
-"staff_id": 1,
-"staff_subject": 2,
-"update_mask": 3,
-"validate_only": 4
-},
-"hr.UpdateStaffSubjectResponse": {
-"staff_subject": 1
 },
 "iam.AcceptTermsRequest": {
 "request_id": 2,
@@ -8418,6 +8413,12 @@
 "items": 1,
 "pagination": 4
 },
+"iam.ListSignUpInstitutionsRequest": {
+"tenant_code": 1
+},
+"iam.ListSignUpInstitutionsResponse": {
+"items": 1
+},
 "iam.ListUserAccountsRequest": {
 "filter": 3,
 "pageable": 5
@@ -8570,12 +8571,6 @@
 "token": 1
 },
 "iam.ResetPasswordResponse": {},
-"iam.ListSignUpInstitutionsRequest": {
-"tenant_code": 1
-},
-"iam.ListSignUpInstitutionsResponse": {
-"items": 1
-},
 "iam.ResolveTenantCodeRequest": {
 "tenant_code": 1
 },
@@ -18134,6 +18129,14 @@
 "items": 1,
 "pagination": 4
 },
+"org.ListActiveInstitutionsRequest": {
+"filter": 1,
+"pageable": 2
+},
+"org.ListActiveInstitutionsResponse": {
+"items": 1,
+"pagination": 2
+},
 "org.ListAttributeDefinitionsRequest": {
 "filter": 3,
 "pageable": 5
@@ -18183,14 +18186,6 @@
 "org.ListInstitutionTypesResponse": {
 "items": 1,
 "pagination": 4
-},
-"org.ListActiveInstitutionsRequest": {
-"filter": 1,
-"pageable": 2
-},
-"org.ListActiveInstitutionsResponse": {
-"items": 1,
-"pagination": 2
 },
 "org.ListInstitutionsRequest": {
 "filter": 3,

@@ -58,8 +58,7 @@ public class ProgramResolver extends ProgramServiceGrpc.ProgramServiceImplBase {
     public void updateProgram(UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> out) {
         Program updated = service.updateProgram(bridge.id(request.getProgram().getId(), "id"),
                 bridge.requiredIfMatch(request.getProgram().getEtag()),
-                bridge.changes(request.getProgram(), request.getUpdateMask(), ProgramUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                bridge.changes(request.getProgram(), request.getUpdateMask(), ProgramUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateProgramResponse.newBuilder(), "program", updated).build());
     }
 

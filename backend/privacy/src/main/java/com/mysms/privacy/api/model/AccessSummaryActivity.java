@@ -221,9 +221,9 @@ public class AccessSummaryActivity {
    * Who receives the data, as the register names them; empty while none is named.
    * @return recipients
    */
-  @Valid 
+  
   @JsonProperty("recipients")
-  public List<AccessSummaryRecipient> getRecipients() {
+  public List<@Valid AccessSummaryRecipient> getRecipients() {
     return recipients;
   }
 

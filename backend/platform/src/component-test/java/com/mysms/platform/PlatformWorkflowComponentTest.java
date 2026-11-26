@@ -62,7 +62,7 @@ class PlatformWorkflowComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "platform");
+        DATABASE.register(registry, "platform", "master", "org");
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
         registry.add("mysms.platform.razorpay.url", () -> CLOSED);
@@ -312,7 +312,7 @@ class PlatformWorkflowComponentTest {
                 + "{\"color.primary\":\"#2563eb\",\"color.primary.dark\":\"#93C5FD\",\"radius.step\":\"1\"}}");
         assertThat(theme.status()).as(theme.text()).isEqualTo(201);
         String id = theme.body().path("id").asString();
-        Reply cleared = http.call("PATCH", "/v1/platform/themes/" + id + "?updateMask=tokens", admin, "{}",
+        Reply cleared = http.call("PATCH", "/v1/platform/themes/" + id, admin, "{\"tokens\":null}",
                 "If-Match", "\"1\"");
         assertThat(cleared.status()).as(cleared.text()).isEqualTo(200);
         assertThat(cleared.body().path("tokens").size()).isZero();

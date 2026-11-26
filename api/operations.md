@@ -396,169 +396,169 @@ All 2123 operations. REST path parameters are UUIDs unless noted. "Public" opera
 | 363 | `GET /v1/academics/class-sections/{classSectionId}/subjects/{classSubjectId}` | `ClassSectionService/GetClassSubject` | `academics.class_subject.read` |  | Get ClassSubject. |
 | 364 | `PATCH /v1/academics/class-sections/{classSectionId}/subjects/{classSubjectId}` | `ClassSectionService/UpdateClassSubject` | `academics.class_subject.update` |  | Update ClassSubject. |
 | 365 | `DELETE /v1/academics/class-sections/{classSectionId}/subjects/{classSubjectId}` | `ClassSectionService/DeleteClassSubject` | `academics.class_subject.delete` |  | Delete ClassSubject. |
-| 366 | `GET /v1/academics/teaching-assignments` | `TeachingAssignmentService/ListTeachingAssignments` | `academics.teaching_assignment.read` |  | List TeachingAssignments. |
-| 367 | `POST /v1/academics/teaching-assignments` | `TeachingAssignmentService/CreateTeachingAssignment` | `academics.teaching_assignment.create` |  | Create TeachingAssignment. |
-| 368 | `GET /v1/academics/teaching-assignments/{teachingAssignmentId}` | `TeachingAssignmentService/GetTeachingAssignment` | `academics.teaching_assignment.read` |  | Get TeachingAssignment. |
-| 369 | `PATCH /v1/academics/teaching-assignments/{teachingAssignmentId}` | `TeachingAssignmentService/UpdateTeachingAssignment` | `academics.teaching_assignment.update` |  | Update TeachingAssignment. |
-| 370 | `DELETE /v1/academics/teaching-assignments/{teachingAssignmentId}` | `TeachingAssignmentService/DeleteTeachingAssignment` | `academics.teaching_assignment.delete` |  | Delete TeachingAssignment. |
-| 371 | `GET /v1/academics/curriculum-units` | `CurriculumUnitService/ListCurriculumUnits` | `academics.curriculum_unit.read` |  | List CurriculumUnits. |
-| 372 | `POST /v1/academics/curriculum-units` | `CurriculumUnitService/CreateCurriculumUnit` | `academics.curriculum_unit.create` |  | Create CurriculumUnit. |
-| 373 | `GET /v1/academics/curriculum-units/{curriculumUnitId}` | `CurriculumUnitService/GetCurriculumUnit` | `academics.curriculum_unit.read` |  | Get CurriculumUnit. |
-| 374 | `PATCH /v1/academics/curriculum-units/{curriculumUnitId}` | `CurriculumUnitService/UpdateCurriculumUnit` | `academics.curriculum_unit.update` |  | Update CurriculumUnit. |
-| 375 | `DELETE /v1/academics/curriculum-units/{curriculumUnitId}` | `CurriculumUnitService/DeleteCurriculumUnit` | `academics.curriculum_unit.delete` |  | Delete CurriculumUnit. |
-| 376 | `GET /v1/academics/lesson-plans` | `LessonPlanService/ListLessonPlans` | `academics.lesson_plan.read` |  | List LessonPlans. |
-| 377 | `POST /v1/academics/lesson-plans` | `LessonPlanService/CreateLessonPlan` | `academics.lesson_plan.create` |  | Create LessonPlan. |
-| 378 | `GET /v1/academics/lesson-plans/{lessonPlanId}` | `LessonPlanService/GetLessonPlan` | `academics.lesson_plan.read` |  | Get LessonPlan. |
-| 379 | `PATCH /v1/academics/lesson-plans/{lessonPlanId}` | `LessonPlanService/UpdateLessonPlan` | `academics.lesson_plan.update` |  | Update LessonPlan. |
-| 380 | `DELETE /v1/academics/lesson-plans/{lessonPlanId}` | `LessonPlanService/DeleteLessonPlan` | `academics.lesson_plan.delete` |  | Delete LessonPlan. |
-| 381 | `GET /v1/academics/lesson-plans/{lessonPlanId}/approvals` | `LessonPlanService/ListLessonPlanApprovals` | `academics.lesson_plan_approval.read` |  | List LessonPlanApprovals. |
-| 382 | `POST /v1/academics/lesson-plans/{lessonPlanId}/approvals` | `LessonPlanService/CreateLessonPlanApproval` | `academics.lesson_plan_approval.create` |  | Create LessonPlanApproval. |
-| 383 | `GET /v1/academics/lesson-plans/{lessonPlanId}/approvals/{lessonPlanApprovalId}` | `LessonPlanService/GetLessonPlanApproval` | `academics.lesson_plan_approval.read` |  | Get LessonPlanApproval. |
-| 384 | `PATCH /v1/academics/lesson-plans/{lessonPlanId}/approvals/{lessonPlanApprovalId}` | `LessonPlanService/UpdateLessonPlanApproval` | `academics.lesson_plan_approval.update` |  | Update LessonPlanApproval. |
-| 385 | `DELETE /v1/academics/lesson-plans/{lessonPlanId}/approvals/{lessonPlanApprovalId}` | `LessonPlanService/DeleteLessonPlanApproval` | `academics.lesson_plan_approval.delete` |  | Delete LessonPlanApproval. |
-| 386 | `POST /v1/academics/lesson-plans/{lessonPlanId}:submit` | `LessonPlanService/SubmitLessonPlan` | `academics.lesson_plan.submit_lesson_plan` |  | Submit for approval. |
-| 387 | `POST /v1/academics/lesson-plans/{lessonPlanId}:approve` | `LessonPlanService/ApproveLessonPlan` | `academics.lesson_plan.approve_lesson_plan` |  | Approve (records an approval). |
-| 388 | `POST /v1/academics/lesson-plans/{lessonPlanId}:reject` | `LessonPlanService/RejectLessonPlan` | `academics.lesson_plan.reject_lesson_plan` |  | Reject. |
-| 389 | `POST /v1/academics/lesson-plans/{lessonPlanId}:publish` | `LessonPlanService/PublishLessonPlan` | `academics.lesson_plan.publish_lesson_plan` |  | Publish to students / guardians. |
-| 390 | `POST /v1/academics/lesson-plans/{lessonPlanId}:archive` | `LessonPlanService/ArchiveLessonPlan` | `academics.lesson_plan.archive_lesson_plan` |  | Archive. |
+| 366 | `GET /v1/academics/teacher-subjects` | `TeacherSubjectService/ListTeacherSubjects` | `academics.teacher_subject.read` |  | List TeacherSubjects. |
+| 367 | `POST /v1/academics/teacher-subjects` | `TeacherSubjectService/CreateTeacherSubject` | `academics.teacher_subject.create` |  | Create TeacherSubject. |
+| 368 | `GET /v1/academics/teacher-subjects/{teacherSubjectId}` | `TeacherSubjectService/GetTeacherSubject` | `academics.teacher_subject.read` |  | Get TeacherSubject. |
+| 369 | `PATCH /v1/academics/teacher-subjects/{teacherSubjectId}` | `TeacherSubjectService/UpdateTeacherSubject` | `academics.teacher_subject.update` |  | Update TeacherSubject. |
+| 370 | `DELETE /v1/academics/teacher-subjects/{teacherSubjectId}` | `TeacherSubjectService/DeleteTeacherSubject` | `academics.teacher_subject.delete` |  | Delete TeacherSubject. |
+| 371 | `GET /v1/academics/teaching-assignments` | `TeachingAssignmentService/ListTeachingAssignments` | `academics.teaching_assignment.read` |  | List TeachingAssignments. |
+| 372 | `POST /v1/academics/teaching-assignments` | `TeachingAssignmentService/CreateTeachingAssignment` | `academics.teaching_assignment.create` |  | Create TeachingAssignment. |
+| 373 | `GET /v1/academics/teaching-assignments/{teachingAssignmentId}` | `TeachingAssignmentService/GetTeachingAssignment` | `academics.teaching_assignment.read` |  | Get TeachingAssignment. |
+| 374 | `PATCH /v1/academics/teaching-assignments/{teachingAssignmentId}` | `TeachingAssignmentService/UpdateTeachingAssignment` | `academics.teaching_assignment.update` |  | Update TeachingAssignment. |
+| 375 | `DELETE /v1/academics/teaching-assignments/{teachingAssignmentId}` | `TeachingAssignmentService/DeleteTeachingAssignment` | `academics.teaching_assignment.delete` |  | Delete TeachingAssignment. |
+| 376 | `GET /v1/academics/curriculum-units` | `CurriculumUnitService/ListCurriculumUnits` | `academics.curriculum_unit.read` |  | List CurriculumUnits. |
+| 377 | `POST /v1/academics/curriculum-units` | `CurriculumUnitService/CreateCurriculumUnit` | `academics.curriculum_unit.create` |  | Create CurriculumUnit. |
+| 378 | `GET /v1/academics/curriculum-units/{curriculumUnitId}` | `CurriculumUnitService/GetCurriculumUnit` | `academics.curriculum_unit.read` |  | Get CurriculumUnit. |
+| 379 | `PATCH /v1/academics/curriculum-units/{curriculumUnitId}` | `CurriculumUnitService/UpdateCurriculumUnit` | `academics.curriculum_unit.update` |  | Update CurriculumUnit. |
+| 380 | `DELETE /v1/academics/curriculum-units/{curriculumUnitId}` | `CurriculumUnitService/DeleteCurriculumUnit` | `academics.curriculum_unit.delete` |  | Delete CurriculumUnit. |
+| 381 | `GET /v1/academics/lesson-plans` | `LessonPlanService/ListLessonPlans` | `academics.lesson_plan.read` |  | List LessonPlans. |
+| 382 | `POST /v1/academics/lesson-plans` | `LessonPlanService/CreateLessonPlan` | `academics.lesson_plan.create` |  | Create LessonPlan. |
+| 383 | `GET /v1/academics/lesson-plans/{lessonPlanId}` | `LessonPlanService/GetLessonPlan` | `academics.lesson_plan.read` |  | Get LessonPlan. |
+| 384 | `PATCH /v1/academics/lesson-plans/{lessonPlanId}` | `LessonPlanService/UpdateLessonPlan` | `academics.lesson_plan.update` |  | Update LessonPlan. |
+| 385 | `DELETE /v1/academics/lesson-plans/{lessonPlanId}` | `LessonPlanService/DeleteLessonPlan` | `academics.lesson_plan.delete` |  | Delete LessonPlan. |
+| 386 | `GET /v1/academics/lesson-plans/{lessonPlanId}/approvals` | `LessonPlanService/ListLessonPlanApprovals` | `academics.lesson_plan_approval.read` |  | List LessonPlanApprovals. |
+| 387 | `POST /v1/academics/lesson-plans/{lessonPlanId}/approvals` | `LessonPlanService/CreateLessonPlanApproval` | `academics.lesson_plan_approval.create` |  | Create LessonPlanApproval. |
+| 388 | `GET /v1/academics/lesson-plans/{lessonPlanId}/approvals/{lessonPlanApprovalId}` | `LessonPlanService/GetLessonPlanApproval` | `academics.lesson_plan_approval.read` |  | Get LessonPlanApproval. |
+| 389 | `PATCH /v1/academics/lesson-plans/{lessonPlanId}/approvals/{lessonPlanApprovalId}` | `LessonPlanService/UpdateLessonPlanApproval` | `academics.lesson_plan_approval.update` |  | Update LessonPlanApproval. |
+| 390 | `DELETE /v1/academics/lesson-plans/{lessonPlanId}/approvals/{lessonPlanApprovalId}` | `LessonPlanService/DeleteLessonPlanApproval` | `academics.lesson_plan_approval.delete` |  | Delete LessonPlanApproval. |
+| 391 | `POST /v1/academics/lesson-plans/{lessonPlanId}:submit` | `LessonPlanService/SubmitLessonPlan` | `academics.lesson_plan.submit_lesson_plan` |  | Submit for approval. |
+| 392 | `POST /v1/academics/lesson-plans/{lessonPlanId}:approve` | `LessonPlanService/ApproveLessonPlan` | `academics.lesson_plan.approve_lesson_plan` |  | Approve (records an approval). |
+| 393 | `POST /v1/academics/lesson-plans/{lessonPlanId}:reject` | `LessonPlanService/RejectLessonPlan` | `academics.lesson_plan.reject_lesson_plan` |  | Reject. |
+| 394 | `POST /v1/academics/lesson-plans/{lessonPlanId}:publish` | `LessonPlanService/PublishLessonPlan` | `academics.lesson_plan.publish_lesson_plan` |  | Publish to students / guardians. |
+| 395 | `POST /v1/academics/lesson-plans/{lessonPlanId}:archive` | `LessonPlanService/ArchiveLessonPlan` | `academics.lesson_plan.archive_lesson_plan` |  | Archive. |
 
 ## Student Information (`sis`)
 
 | # | REST | gRPC | Permission | Public | Description |
 |---|---|---|---|---|---|
-| 391 | `GET /v1/sis/student-categories` | `StudentCategoryService/ListStudentCategories` | `sis.student_category.read` |  | List StudentCategories. |
-| 392 | `POST /v1/sis/student-categories` | `StudentCategoryService/CreateStudentCategory` | `sis.student_category.create` |  | Create StudentCategory. |
-| 393 | `GET /v1/sis/student-categories/{studentCategoryId}` | `StudentCategoryService/GetStudentCategory` | `sis.student_category.read` |  | Get StudentCategory. |
-| 394 | `PATCH /v1/sis/student-categories/{studentCategoryId}` | `StudentCategoryService/UpdateStudentCategory` | `sis.student_category.update` |  | Update StudentCategory. |
-| 395 | `DELETE /v1/sis/student-categories/{studentCategoryId}` | `StudentCategoryService/DeleteStudentCategory` | `sis.student_category.delete` |  | Delete StudentCategory. |
-| 396 | `GET /v1/sis/students` | `StudentService/ListStudents` | `sis.student.read` |  | List Students. |
-| 397 | `POST /v1/sis/students` | `StudentService/CreateStudent` | `sis.student.create` |  | Create Student. |
-| 398 | `GET /v1/sis/students/{studentId}` | `StudentService/GetStudent` | `sis.student.read` |  | Get Student. |
-| 399 | `PATCH /v1/sis/students/{studentId}` | `StudentService/UpdateStudent` | `sis.student.update` |  | Update Student. |
-| 400 | `DELETE /v1/sis/students/{studentId}` | `StudentService/DeleteStudent` | `sis.student.delete` |  | Delete Student. |
-| 401 | `GET /v1/sis/guardians` | `GuardianService/ListGuardians` | `sis.guardian.read` |  | List Guardians. |
-| 402 | `POST /v1/sis/guardians` | `GuardianService/CreateGuardian` | `sis.guardian.create` |  | Create Guardian. |
-| 403 | `GET /v1/sis/guardians/{guardianId}` | `GuardianService/GetGuardian` | `sis.guardian.read` |  | Get Guardian. |
-| 404 | `PATCH /v1/sis/guardians/{guardianId}` | `GuardianService/UpdateGuardian` | `sis.guardian.update` |  | Update Guardian. |
-| 405 | `DELETE /v1/sis/guardians/{guardianId}` | `GuardianService/DeleteGuardian` | `sis.guardian.delete` |  | Delete Guardian. |
-| 406 | `GET /v1/sis/relationship-types` | `RelationshipTypeService/ListRelationshipTypes` | `sis.relationship_type.read` |  | List RelationshipTypes. |
-| 407 | `POST /v1/sis/relationship-types` | `RelationshipTypeService/CreateRelationshipType` | `sis.relationship_type.create` |  | Create RelationshipType. |
-| 408 | `GET /v1/sis/relationship-types/{relationshipTypeId}` | `RelationshipTypeService/GetRelationshipType` | `sis.relationship_type.read` |  | Get RelationshipType. |
-| 409 | `PATCH /v1/sis/relationship-types/{relationshipTypeId}` | `RelationshipTypeService/UpdateRelationshipType` | `sis.relationship_type.update` |  | Update RelationshipType. |
-| 410 | `DELETE /v1/sis/relationship-types/{relationshipTypeId}` | `RelationshipTypeService/DeleteRelationshipType` | `sis.relationship_type.delete` |  | Delete RelationshipType. |
-| 411 | `GET /v1/sis/students/{studentId}/guardians` | `StudentService/ListStudentGuardians` | `sis.student_guardian.read` |  | List StudentGuardians. |
-| 412 | `POST /v1/sis/students/{studentId}/guardians` | `StudentService/CreateStudentGuardian` | `sis.student_guardian.create` |  | Create StudentGuardian. |
-| 413 | `GET /v1/sis/students/{studentId}/guardians/{studentGuardianId}` | `StudentService/GetStudentGuardian` | `sis.student_guardian.read` |  | Get StudentGuardian. |
-| 414 | `PATCH /v1/sis/students/{studentId}/guardians/{studentGuardianId}` | `StudentService/UpdateStudentGuardian` | `sis.student_guardian.update` |  | Update StudentGuardian. |
-| 415 | `DELETE /v1/sis/students/{studentId}/guardians/{studentGuardianId}` | `StudentService/DeleteStudentGuardian` | `sis.student_guardian.delete` |  | Delete StudentGuardian. |
-| 416 | `GET /v1/sis/students/{studentId}/siblings` | `StudentService/ListStudentSiblings` | `sis.student_sibling.read` |  | List StudentSiblings. |
-| 417 | `POST /v1/sis/students/{studentId}/siblings` | `StudentService/CreateStudentSibling` | `sis.student_sibling.create` |  | Create StudentSibling. |
-| 418 | `GET /v1/sis/students/{studentId}/siblings/{studentSiblingId}` | `StudentService/GetStudentSibling` | `sis.student_sibling.read` |  | Get StudentSibling. |
-| 419 | `PATCH /v1/sis/students/{studentId}/siblings/{studentSiblingId}` | `StudentService/UpdateStudentSibling` | `sis.student_sibling.update` |  | Update StudentSibling. |
-| 420 | `DELETE /v1/sis/students/{studentId}/siblings/{studentSiblingId}` | `StudentService/DeleteStudentSibling` | `sis.student_sibling.delete` |  | Delete StudentSibling. |
-| 421 | `GET /v1/sis/student-enrollments` | `StudentEnrollmentService/ListStudentEnrollments` | `sis.student_enrollment.read` |  | List StudentEnrollments. |
-| 422 | `POST /v1/sis/student-enrollments` | `StudentEnrollmentService/CreateStudentEnrollment` | `sis.student_enrollment.create` |  | Create StudentEnrollment. |
-| 423 | `GET /v1/sis/student-enrollments/{studentEnrollmentId}` | `StudentEnrollmentService/GetStudentEnrollment` | `sis.student_enrollment.read` |  | Get StudentEnrollment. |
-| 424 | `PATCH /v1/sis/student-enrollments/{studentEnrollmentId}` | `StudentEnrollmentService/UpdateStudentEnrollment` | `sis.student_enrollment.update` |  | Update StudentEnrollment. |
-| 425 | `DELETE /v1/sis/student-enrollments/{studentEnrollmentId}` | `StudentEnrollmentService/DeleteStudentEnrollment` | `sis.student_enrollment.delete` |  | Delete StudentEnrollment. |
-| 426 | `GET /v1/sis/program-enrollments` | `ProgramEnrollmentService/ListProgramEnrollments` | `sis.program_enrollment.read` |  | List ProgramEnrollments. |
-| 427 | `POST /v1/sis/program-enrollments` | `ProgramEnrollmentService/CreateProgramEnrollment` | `sis.program_enrollment.create` |  | Create ProgramEnrollment. |
-| 428 | `GET /v1/sis/program-enrollments/{programEnrollmentId}` | `ProgramEnrollmentService/GetProgramEnrollment` | `sis.program_enrollment.read` |  | Get ProgramEnrollment. |
-| 429 | `PATCH /v1/sis/program-enrollments/{programEnrollmentId}` | `ProgramEnrollmentService/UpdateProgramEnrollment` | `sis.program_enrollment.update` |  | Update ProgramEnrollment. |
-| 430 | `DELETE /v1/sis/program-enrollments/{programEnrollmentId}` | `ProgramEnrollmentService/DeleteProgramEnrollment` | `sis.program_enrollment.delete` |  | Delete ProgramEnrollment. |
-| 431 | `GET /v1/sis/program-enrollments/{programEnrollmentId}/subjects` | `ProgramEnrollmentService/ListProgramEnrollmentSubjects` | `sis.program_enrollment_subject.read` |  | List ProgramEnrollmentSubjects. |
-| 432 | `POST /v1/sis/program-enrollments/{programEnrollmentId}/subjects` | `ProgramEnrollmentService/CreateProgramEnrollmentSubject` | `sis.program_enrollment_subject.create` |  | Create ProgramEnrollmentSubject. |
-| 433 | `GET /v1/sis/program-enrollments/{programEnrollmentId}/subjects/{programEnrollmentSubjectId}` | `ProgramEnrollmentService/GetProgramEnrollmentSubject` | `sis.program_enrollment_subject.read` |  | Get ProgramEnrollmentSubject. |
-| 434 | `PATCH /v1/sis/program-enrollments/{programEnrollmentId}/subjects/{programEnrollmentSubjectId}` | `ProgramEnrollmentService/UpdateProgramEnrollmentSubject` | `sis.program_enrollment_subject.update` |  | Update ProgramEnrollmentSubject. |
-| 435 | `DELETE /v1/sis/program-enrollments/{programEnrollmentId}/subjects/{programEnrollmentSubjectId}` | `ProgramEnrollmentService/DeleteProgramEnrollmentSubject` | `sis.program_enrollment_subject.delete` |  | Delete ProgramEnrollmentSubject. |
-| 436 | `GET /v1/sis/subject-registrations` | `SubjectRegistrationService/ListSubjectRegistrations` | `sis.subject_registration.read` |  | List SubjectRegistrations. |
-| 437 | `POST /v1/sis/subject-registrations` | `SubjectRegistrationService/CreateSubjectRegistration` | `sis.subject_registration.create` |  | Create SubjectRegistration. |
-| 438 | `GET /v1/sis/subject-registrations/{subjectRegistrationId}` | `SubjectRegistrationService/GetSubjectRegistration` | `sis.subject_registration.read` |  | Get SubjectRegistration. |
-| 439 | `PATCH /v1/sis/subject-registrations/{subjectRegistrationId}` | `SubjectRegistrationService/UpdateSubjectRegistration` | `sis.subject_registration.update` |  | Update SubjectRegistration. |
-| 440 | `DELETE /v1/sis/subject-registrations/{subjectRegistrationId}` | `SubjectRegistrationService/DeleteSubjectRegistration` | `sis.subject_registration.delete` |  | Delete SubjectRegistration. |
-| 441 | `GET /v1/sis/subject-registrations/{subjectRegistrationId}/lines` | `SubjectRegistrationService/ListSubjectRegistrationLines` | `sis.subject_registration_line.read` |  | List SubjectRegistrationLines. |
-| 442 | `POST /v1/sis/subject-registrations/{subjectRegistrationId}/lines` | `SubjectRegistrationService/CreateSubjectRegistrationLine` | `sis.subject_registration_line.create` |  | Create SubjectRegistrationLine. |
-| 443 | `GET /v1/sis/subject-registrations/{subjectRegistrationId}/lines/{subjectRegistrationLineId}` | `SubjectRegistrationService/GetSubjectRegistrationLine` | `sis.subject_registration_line.read` |  | Get SubjectRegistrationLine. |
-| 444 | `PATCH /v1/sis/subject-registrations/{subjectRegistrationId}/lines/{subjectRegistrationLineId}` | `SubjectRegistrationService/UpdateSubjectRegistrationLine` | `sis.subject_registration_line.update` |  | Update SubjectRegistrationLine. |
-| 445 | `DELETE /v1/sis/subject-registrations/{subjectRegistrationId}/lines/{subjectRegistrationLineId}` | `SubjectRegistrationService/DeleteSubjectRegistrationLine` | `sis.subject_registration_line.delete` |  | Delete SubjectRegistrationLine. |
-| 446 | `GET /v1/sis/promotions` | `PromotionService/ListPromotions` | `sis.promotion.read` |  | List Promotions. |
-| 447 | `POST /v1/sis/promotions` | `PromotionService/CreatePromotion` | `sis.promotion.create` |  | Create Promotion. |
-| 448 | `GET /v1/sis/promotions/{promotionId}` | `PromotionService/GetPromotion` | `sis.promotion.read` |  | Get Promotion. |
-| 449 | `PATCH /v1/sis/promotions/{promotionId}` | `PromotionService/UpdatePromotion` | `sis.promotion.update` |  | Update Promotion. |
-| 450 | `DELETE /v1/sis/promotions/{promotionId}` | `PromotionService/DeletePromotion` | `sis.promotion.delete` |  | Delete Promotion. |
-| 451 | `GET /v1/sis/student-health-records` | `StudentHealthRecordService/ListStudentHealthRecords` | `sis.student_health_record.read` |  | List StudentHealthRecords. |
-| 452 | `POST /v1/sis/student-health-records` | `StudentHealthRecordService/CreateStudentHealthRecord` | `sis.student_health_record.create` |  | Create StudentHealthRecord. |
-| 453 | `GET /v1/sis/student-health-records/{studentHealthRecordId}` | `StudentHealthRecordService/GetStudentHealthRecord` | `sis.student_health_record.read` |  | Get StudentHealthRecord. |
-| 454 | `PATCH /v1/sis/student-health-records/{studentHealthRecordId}` | `StudentHealthRecordService/UpdateStudentHealthRecord` | `sis.student_health_record.update` |  | Update StudentHealthRecord. |
-| 455 | `DELETE /v1/sis/student-health-records/{studentHealthRecordId}` | `StudentHealthRecordService/DeleteStudentHealthRecord` | `sis.student_health_record.delete` |  | Delete StudentHealthRecord. |
-| 456 | `GET /v1/sis/discipline-incidents` | `DisciplineIncidentService/ListDisciplineIncidents` | `sis.discipline_incident.read` |  | List DisciplineIncidents. |
-| 457 | `POST /v1/sis/discipline-incidents` | `DisciplineIncidentService/CreateDisciplineIncident` | `sis.discipline_incident.create` |  | Create DisciplineIncident. |
-| 458 | `GET /v1/sis/discipline-incidents/{disciplineIncidentId}` | `DisciplineIncidentService/GetDisciplineIncident` | `sis.discipline_incident.read` |  | Get DisciplineIncident. |
-| 459 | `PATCH /v1/sis/discipline-incidents/{disciplineIncidentId}` | `DisciplineIncidentService/UpdateDisciplineIncident` | `sis.discipline_incident.update` |  | Update DisciplineIncident. |
-| 460 | `DELETE /v1/sis/discipline-incidents/{disciplineIncidentId}` | `DisciplineIncidentService/DeleteDisciplineIncident` | `sis.discipline_incident.delete` |  | Delete DisciplineIncident. |
-| 461 | `GET /v1/sis/activity-types` | `ActivityTypeService/ListActivityTypes` | `sis.activity_type.read` |  | List ActivityTypes. |
-| 462 | `POST /v1/sis/activity-types` | `ActivityTypeService/CreateActivityType` | `sis.activity_type.create` |  | Create ActivityType. |
-| 463 | `GET /v1/sis/activity-types/{activityTypeId}` | `ActivityTypeService/GetActivityType` | `sis.activity_type.read` |  | Get ActivityType. |
-| 464 | `PATCH /v1/sis/activity-types/{activityTypeId}` | `ActivityTypeService/UpdateActivityType` | `sis.activity_type.update` |  | Update ActivityType. |
-| 465 | `DELETE /v1/sis/activity-types/{activityTypeId}` | `ActivityTypeService/DeleteActivityType` | `sis.activity_type.delete` |  | Delete ActivityType. |
-| 466 | `GET /v1/sis/student-activities` | `StudentActivityService/ListStudentActivities` | `sis.student_activity.read` |  | List StudentActivities. |
-| 467 | `POST /v1/sis/student-activities` | `StudentActivityService/CreateStudentActivity` | `sis.student_activity.create` |  | Create StudentActivity. |
-| 468 | `GET /v1/sis/student-activities/{studentActivityId}` | `StudentActivityService/GetStudentActivity` | `sis.student_activity.read` |  | Get StudentActivity. |
-| 469 | `PATCH /v1/sis/student-activities/{studentActivityId}` | `StudentActivityService/UpdateStudentActivity` | `sis.student_activity.update` |  | Update StudentActivity. |
-| 470 | `DELETE /v1/sis/student-activities/{studentActivityId}` | `StudentActivityService/DeleteStudentActivity` | `sis.student_activity.delete` |  | Delete StudentActivity. |
-| 471 | `POST /v1/sis/students/{studentId}:changeStatus` | `StudentService/ChangeStudentStatus` | `sis.student.change_student_status` |  | Change status (active, inactive, withdrawn, transferred, alumni, graduated) with exit details. |
-| 472 | `GET /v1/sis/students/{studentId}:summary` | `StudentService/GetStudentSummary` | `sis.student.get_student_summary` |  | Student 360 overview. |
-| 473 | `POST /v1/sis/students/{studentId}:issueBonafideCertificate` | `StudentService/IssueBonafideCertificate` | `sis.student.issue_bonafide_certificate` |  | Generate a bonafide certificate PDF and record its number. |
-| 474 | `POST /v1/sis/students/{studentId}:createPortalAccount` | `StudentService/CreateStudentPortalAccount` | `sis.student.create_student_portal_account` |  | Create the student login account and grant the student role. |
-| 475 | `POST /v1/sis/guardians/{guardianId}:createPortalAccount` | `GuardianService/CreatePortalAccount` | `sis.guardian.create_portal_account` |  | Create the guardian's login account and grant the guardian role scoped to their children. |
-| 476 | `GET /v1/sis/me/children` | `GuardianService/ListMyChildren` | `sis.guardian.list_my_children` |  | Children of the calling guardian. |
-| 477 | `POST /v1/sis/promotions:propose` | `PromotionService/ProposePromotions` | `sis.promotion.propose_promotions` |  | Create proposed promotions for a class. |
-| 478 | `POST /v1/sis/promotions/{promotionId}:approve` | `PromotionService/ApprovePromotion` | `sis.promotion.approve_promotion` |  | Approve. |
-| 479 | `POST /v1/sis/promotions/{promotionId}:reject` | `PromotionService/RejectPromotion` | `sis.promotion.reject_promotion` |  | Reject (student detained). |
-| 480 | `POST /v1/sis/promotions:apply` | `PromotionService/ApplyPromotions` | `sis.promotion.apply_promotions` |  | Create next-year enrolments for approved promotions and close the current ones. |
-| 481 | `POST /v1/sis/subject-registrations/{subjectRegistrationId}:submit` | `SubjectRegistrationService/SubmitSubjectRegistration` | `sis.subject_registration.submit_subject_registration` |  | Submit for approval. |
-| 482 | `POST /v1/sis/subject-registrations/{subjectRegistrationId}:approve` | `SubjectRegistrationService/ApproveSubjectRegistration` | `sis.subject_registration.approve_subject_registration` |  | Approve; subjects are added to the registration. |
-| 483 | `POST /v1/sis/subject-registrations/{subjectRegistrationId}:reject` | `SubjectRegistrationService/RejectSubjectRegistration` | `sis.subject_registration.reject_subject_registration` |  | Reject. |
-| 484 | `POST /v1/sis/subject-registrations/{subjectRegistrationId}:resetToDraft` | `SubjectRegistrationService/ResetSubjectRegistration` | `sis.subject_registration.reset_subject_registration` |  | Back to draft. |
-| 485 | `POST /v1/sis/subject-registrations/{subjectRegistrationId}:loadCourseSubjects` | `SubjectRegistrationService/LoadCourseSubjects` | `sis.subject_registration.load_course_subjects` |  | Pre-fill compulsory/elective lines from the course subjects. |
-| 486 | `POST /v1/sis/discipline-incidents/{disciplineIncidentId}:markActionTaken` | `DisciplineIncidentService/MarkIncidentActionTaken` | `sis.discipline_incident.mark_incident_action_taken` |  | Record that action was taken. |
-| 487 | `POST /v1/sis/discipline-incidents/{disciplineIncidentId}:markSeen` | `DisciplineIncidentService/MarkIncidentSeen` | `sis.discipline_incident.mark_incident_seen` |  | Guardian acknowledges the incident. |
-| 488 | `GET /v1/sis/class-sections/{classSectionId}:roster` | `StudentEnrollmentService/ListClassRoster` | `sis.student_enrollment.list_class_roster` |  | Students placed in the class. |
-| 489 | `GET /v1/sis/student-leave-requests` | `StudentLeaveRequestService/ListStudentLeaveRequests` | `sis.student_leave_request.read` |  | List StudentLeaveRequests. |
-| 490 | `POST /v1/sis/student-leave-requests` | `StudentLeaveRequestService/CreateStudentLeaveRequest` | `sis.student_leave_request.create` |  | Create StudentLeaveRequest. |
-| 491 | `GET /v1/sis/student-leave-requests/{studentLeaveRequestId}` | `StudentLeaveRequestService/GetStudentLeaveRequest` | `sis.student_leave_request.read` |  | Get StudentLeaveRequest. |
-| 492 | `PATCH /v1/sis/student-leave-requests/{studentLeaveRequestId}` | `StudentLeaveRequestService/UpdateStudentLeaveRequest` | `sis.student_leave_request.update` |  | Update StudentLeaveRequest. |
-| 493 | `DELETE /v1/sis/student-leave-requests/{studentLeaveRequestId}` | `StudentLeaveRequestService/DeleteStudentLeaveRequest` | `sis.student_leave_request.delete` |  | Delete StudentLeaveRequest. |
-| 494 | `POST /v1/sis/student-leave-requests/{studentLeaveRequestId}:approve` | `StudentLeaveRequestService/ApproveStudentLeaveRequest` | `sis.student_leave_request.approve` |  | Approve a student leave request. |
-| 495 | `POST /v1/sis/student-leave-requests/{studentLeaveRequestId}:reject` | `StudentLeaveRequestService/RejectStudentLeaveRequest` | `sis.student_leave_request.reject` |  | Reject a student leave request. |
-| 496 | `GET /v1/sis/operations` | `OperationService/ListOperations` | `sis.operation.read` |  | Long-running operations of this module started by the caller. |
-| 497 | `GET /v1/sis/operations/{operationId}` | `OperationService/GetOperation` | `sis.operation.read` |  | Status of a long-running operation started in this module. |
-| 498 | `POST /v1/sis/operations/{operationId}:cancel` | `OperationService/CancelOperation` | `sis.operation.cancel_operation` |  | Request cancellation of a running operation. |
+| 396 | `GET /v1/sis/student-categories` | `StudentCategoryService/ListStudentCategories` | `sis.student_category.read` |  | List StudentCategories. |
+| 397 | `POST /v1/sis/student-categories` | `StudentCategoryService/CreateStudentCategory` | `sis.student_category.create` |  | Create StudentCategory. |
+| 398 | `GET /v1/sis/student-categories/{studentCategoryId}` | `StudentCategoryService/GetStudentCategory` | `sis.student_category.read` |  | Get StudentCategory. |
+| 399 | `PATCH /v1/sis/student-categories/{studentCategoryId}` | `StudentCategoryService/UpdateStudentCategory` | `sis.student_category.update` |  | Update StudentCategory. |
+| 400 | `DELETE /v1/sis/student-categories/{studentCategoryId}` | `StudentCategoryService/DeleteStudentCategory` | `sis.student_category.delete` |  | Delete StudentCategory. |
+| 401 | `GET /v1/sis/students` | `StudentService/ListStudents` | `sis.student.read` |  | List Students. |
+| 402 | `POST /v1/sis/students` | `StudentService/CreateStudent` | `sis.student.create` |  | Create Student. |
+| 403 | `GET /v1/sis/students/{studentId}` | `StudentService/GetStudent` | `sis.student.read` |  | Get Student. |
+| 404 | `PATCH /v1/sis/students/{studentId}` | `StudentService/UpdateStudent` | `sis.student.update` |  | Update Student. |
+| 405 | `DELETE /v1/sis/students/{studentId}` | `StudentService/DeleteStudent` | `sis.student.delete` |  | Delete Student. |
+| 406 | `GET /v1/sis/guardians` | `GuardianService/ListGuardians` | `sis.guardian.read` |  | List Guardians. |
+| 407 | `POST /v1/sis/guardians` | `GuardianService/CreateGuardian` | `sis.guardian.create` |  | Create Guardian. |
+| 408 | `GET /v1/sis/guardians/{guardianId}` | `GuardianService/GetGuardian` | `sis.guardian.read` |  | Get Guardian. |
+| 409 | `PATCH /v1/sis/guardians/{guardianId}` | `GuardianService/UpdateGuardian` | `sis.guardian.update` |  | Update Guardian. |
+| 410 | `DELETE /v1/sis/guardians/{guardianId}` | `GuardianService/DeleteGuardian` | `sis.guardian.delete` |  | Delete Guardian. |
+| 411 | `GET /v1/sis/relationship-types` | `RelationshipTypeService/ListRelationshipTypes` | `sis.relationship_type.read` |  | List RelationshipTypes. |
+| 412 | `POST /v1/sis/relationship-types` | `RelationshipTypeService/CreateRelationshipType` | `sis.relationship_type.create` |  | Create RelationshipType. |
+| 413 | `GET /v1/sis/relationship-types/{relationshipTypeId}` | `RelationshipTypeService/GetRelationshipType` | `sis.relationship_type.read` |  | Get RelationshipType. |
+| 414 | `PATCH /v1/sis/relationship-types/{relationshipTypeId}` | `RelationshipTypeService/UpdateRelationshipType` | `sis.relationship_type.update` |  | Update RelationshipType. |
+| 415 | `DELETE /v1/sis/relationship-types/{relationshipTypeId}` | `RelationshipTypeService/DeleteRelationshipType` | `sis.relationship_type.delete` |  | Delete RelationshipType. |
+| 416 | `GET /v1/sis/students/{studentId}/guardians` | `StudentService/ListStudentGuardians` | `sis.student_guardian.read` |  | List StudentGuardians. |
+| 417 | `POST /v1/sis/students/{studentId}/guardians` | `StudentService/CreateStudentGuardian` | `sis.student_guardian.create` |  | Create StudentGuardian. |
+| 418 | `GET /v1/sis/students/{studentId}/guardians/{studentGuardianId}` | `StudentService/GetStudentGuardian` | `sis.student_guardian.read` |  | Get StudentGuardian. |
+| 419 | `PATCH /v1/sis/students/{studentId}/guardians/{studentGuardianId}` | `StudentService/UpdateStudentGuardian` | `sis.student_guardian.update` |  | Update StudentGuardian. |
+| 420 | `DELETE /v1/sis/students/{studentId}/guardians/{studentGuardianId}` | `StudentService/DeleteStudentGuardian` | `sis.student_guardian.delete` |  | Delete StudentGuardian. |
+| 421 | `GET /v1/sis/students/{studentId}/siblings` | `StudentService/ListStudentSiblings` | `sis.student_sibling.read` |  | List StudentSiblings. |
+| 422 | `POST /v1/sis/students/{studentId}/siblings` | `StudentService/CreateStudentSibling` | `sis.student_sibling.create` |  | Create StudentSibling. |
+| 423 | `GET /v1/sis/students/{studentId}/siblings/{studentSiblingId}` | `StudentService/GetStudentSibling` | `sis.student_sibling.read` |  | Get StudentSibling. |
+| 424 | `PATCH /v1/sis/students/{studentId}/siblings/{studentSiblingId}` | `StudentService/UpdateStudentSibling` | `sis.student_sibling.update` |  | Update StudentSibling. |
+| 425 | `DELETE /v1/sis/students/{studentId}/siblings/{studentSiblingId}` | `StudentService/DeleteStudentSibling` | `sis.student_sibling.delete` |  | Delete StudentSibling. |
+| 426 | `GET /v1/sis/student-enrollments` | `StudentEnrollmentService/ListStudentEnrollments` | `sis.student_enrollment.read` |  | List StudentEnrollments. |
+| 427 | `POST /v1/sis/student-enrollments` | `StudentEnrollmentService/CreateStudentEnrollment` | `sis.student_enrollment.create` |  | Create StudentEnrollment. |
+| 428 | `GET /v1/sis/student-enrollments/{studentEnrollmentId}` | `StudentEnrollmentService/GetStudentEnrollment` | `sis.student_enrollment.read` |  | Get StudentEnrollment. |
+| 429 | `PATCH /v1/sis/student-enrollments/{studentEnrollmentId}` | `StudentEnrollmentService/UpdateStudentEnrollment` | `sis.student_enrollment.update` |  | Update StudentEnrollment. |
+| 430 | `DELETE /v1/sis/student-enrollments/{studentEnrollmentId}` | `StudentEnrollmentService/DeleteStudentEnrollment` | `sis.student_enrollment.delete` |  | Delete StudentEnrollment. |
+| 431 | `GET /v1/sis/program-enrollments` | `ProgramEnrollmentService/ListProgramEnrollments` | `sis.program_enrollment.read` |  | List ProgramEnrollments. |
+| 432 | `POST /v1/sis/program-enrollments` | `ProgramEnrollmentService/CreateProgramEnrollment` | `sis.program_enrollment.create` |  | Create ProgramEnrollment. |
+| 433 | `GET /v1/sis/program-enrollments/{programEnrollmentId}` | `ProgramEnrollmentService/GetProgramEnrollment` | `sis.program_enrollment.read` |  | Get ProgramEnrollment. |
+| 434 | `PATCH /v1/sis/program-enrollments/{programEnrollmentId}` | `ProgramEnrollmentService/UpdateProgramEnrollment` | `sis.program_enrollment.update` |  | Update ProgramEnrollment. |
+| 435 | `DELETE /v1/sis/program-enrollments/{programEnrollmentId}` | `ProgramEnrollmentService/DeleteProgramEnrollment` | `sis.program_enrollment.delete` |  | Delete ProgramEnrollment. |
+| 436 | `GET /v1/sis/program-enrollments/{programEnrollmentId}/subjects` | `ProgramEnrollmentService/ListProgramEnrollmentSubjects` | `sis.program_enrollment_subject.read` |  | List ProgramEnrollmentSubjects. |
+| 437 | `POST /v1/sis/program-enrollments/{programEnrollmentId}/subjects` | `ProgramEnrollmentService/CreateProgramEnrollmentSubject` | `sis.program_enrollment_subject.create` |  | Create ProgramEnrollmentSubject. |
+| 438 | `GET /v1/sis/program-enrollments/{programEnrollmentId}/subjects/{programEnrollmentSubjectId}` | `ProgramEnrollmentService/GetProgramEnrollmentSubject` | `sis.program_enrollment_subject.read` |  | Get ProgramEnrollmentSubject. |
+| 439 | `PATCH /v1/sis/program-enrollments/{programEnrollmentId}/subjects/{programEnrollmentSubjectId}` | `ProgramEnrollmentService/UpdateProgramEnrollmentSubject` | `sis.program_enrollment_subject.update` |  | Update ProgramEnrollmentSubject. |
+| 440 | `DELETE /v1/sis/program-enrollments/{programEnrollmentId}/subjects/{programEnrollmentSubjectId}` | `ProgramEnrollmentService/DeleteProgramEnrollmentSubject` | `sis.program_enrollment_subject.delete` |  | Delete ProgramEnrollmentSubject. |
+| 441 | `GET /v1/sis/subject-registrations` | `SubjectRegistrationService/ListSubjectRegistrations` | `sis.subject_registration.read` |  | List SubjectRegistrations. |
+| 442 | `POST /v1/sis/subject-registrations` | `SubjectRegistrationService/CreateSubjectRegistration` | `sis.subject_registration.create` |  | Create SubjectRegistration. |
+| 443 | `GET /v1/sis/subject-registrations/{subjectRegistrationId}` | `SubjectRegistrationService/GetSubjectRegistration` | `sis.subject_registration.read` |  | Get SubjectRegistration. |
+| 444 | `PATCH /v1/sis/subject-registrations/{subjectRegistrationId}` | `SubjectRegistrationService/UpdateSubjectRegistration` | `sis.subject_registration.update` |  | Update SubjectRegistration. |
+| 445 | `DELETE /v1/sis/subject-registrations/{subjectRegistrationId}` | `SubjectRegistrationService/DeleteSubjectRegistration` | `sis.subject_registration.delete` |  | Delete SubjectRegistration. |
+| 446 | `GET /v1/sis/subject-registrations/{subjectRegistrationId}/lines` | `SubjectRegistrationService/ListSubjectRegistrationLines` | `sis.subject_registration_line.read` |  | List SubjectRegistrationLines. |
+| 447 | `POST /v1/sis/subject-registrations/{subjectRegistrationId}/lines` | `SubjectRegistrationService/CreateSubjectRegistrationLine` | `sis.subject_registration_line.create` |  | Create SubjectRegistrationLine. |
+| 448 | `GET /v1/sis/subject-registrations/{subjectRegistrationId}/lines/{subjectRegistrationLineId}` | `SubjectRegistrationService/GetSubjectRegistrationLine` | `sis.subject_registration_line.read` |  | Get SubjectRegistrationLine. |
+| 449 | `PATCH /v1/sis/subject-registrations/{subjectRegistrationId}/lines/{subjectRegistrationLineId}` | `SubjectRegistrationService/UpdateSubjectRegistrationLine` | `sis.subject_registration_line.update` |  | Update SubjectRegistrationLine. |
+| 450 | `DELETE /v1/sis/subject-registrations/{subjectRegistrationId}/lines/{subjectRegistrationLineId}` | `SubjectRegistrationService/DeleteSubjectRegistrationLine` | `sis.subject_registration_line.delete` |  | Delete SubjectRegistrationLine. |
+| 451 | `GET /v1/sis/promotions` | `PromotionService/ListPromotions` | `sis.promotion.read` |  | List Promotions. |
+| 452 | `POST /v1/sis/promotions` | `PromotionService/CreatePromotion` | `sis.promotion.create` |  | Create Promotion. |
+| 453 | `GET /v1/sis/promotions/{promotionId}` | `PromotionService/GetPromotion` | `sis.promotion.read` |  | Get Promotion. |
+| 454 | `PATCH /v1/sis/promotions/{promotionId}` | `PromotionService/UpdatePromotion` | `sis.promotion.update` |  | Update Promotion. |
+| 455 | `DELETE /v1/sis/promotions/{promotionId}` | `PromotionService/DeletePromotion` | `sis.promotion.delete` |  | Delete Promotion. |
+| 456 | `GET /v1/sis/student-health-records` | `StudentHealthRecordService/ListStudentHealthRecords` | `sis.student_health_record.read` |  | List StudentHealthRecords. |
+| 457 | `POST /v1/sis/student-health-records` | `StudentHealthRecordService/CreateStudentHealthRecord` | `sis.student_health_record.create` |  | Create StudentHealthRecord. |
+| 458 | `GET /v1/sis/student-health-records/{studentHealthRecordId}` | `StudentHealthRecordService/GetStudentHealthRecord` | `sis.student_health_record.read` |  | Get StudentHealthRecord. |
+| 459 | `PATCH /v1/sis/student-health-records/{studentHealthRecordId}` | `StudentHealthRecordService/UpdateStudentHealthRecord` | `sis.student_health_record.update` |  | Update StudentHealthRecord. |
+| 460 | `DELETE /v1/sis/student-health-records/{studentHealthRecordId}` | `StudentHealthRecordService/DeleteStudentHealthRecord` | `sis.student_health_record.delete` |  | Delete StudentHealthRecord. |
+| 461 | `GET /v1/sis/discipline-incidents` | `DisciplineIncidentService/ListDisciplineIncidents` | `sis.discipline_incident.read` |  | List DisciplineIncidents. |
+| 462 | `POST /v1/sis/discipline-incidents` | `DisciplineIncidentService/CreateDisciplineIncident` | `sis.discipline_incident.create` |  | Create DisciplineIncident. |
+| 463 | `GET /v1/sis/discipline-incidents/{disciplineIncidentId}` | `DisciplineIncidentService/GetDisciplineIncident` | `sis.discipline_incident.read` |  | Get DisciplineIncident. |
+| 464 | `PATCH /v1/sis/discipline-incidents/{disciplineIncidentId}` | `DisciplineIncidentService/UpdateDisciplineIncident` | `sis.discipline_incident.update` |  | Update DisciplineIncident. |
+| 465 | `DELETE /v1/sis/discipline-incidents/{disciplineIncidentId}` | `DisciplineIncidentService/DeleteDisciplineIncident` | `sis.discipline_incident.delete` |  | Delete DisciplineIncident. |
+| 466 | `GET /v1/sis/activity-types` | `ActivityTypeService/ListActivityTypes` | `sis.activity_type.read` |  | List ActivityTypes. |
+| 467 | `POST /v1/sis/activity-types` | `ActivityTypeService/CreateActivityType` | `sis.activity_type.create` |  | Create ActivityType. |
+| 468 | `GET /v1/sis/activity-types/{activityTypeId}` | `ActivityTypeService/GetActivityType` | `sis.activity_type.read` |  | Get ActivityType. |
+| 469 | `PATCH /v1/sis/activity-types/{activityTypeId}` | `ActivityTypeService/UpdateActivityType` | `sis.activity_type.update` |  | Update ActivityType. |
+| 470 | `DELETE /v1/sis/activity-types/{activityTypeId}` | `ActivityTypeService/DeleteActivityType` | `sis.activity_type.delete` |  | Delete ActivityType. |
+| 471 | `GET /v1/sis/student-activities` | `StudentActivityService/ListStudentActivities` | `sis.student_activity.read` |  | List StudentActivities. |
+| 472 | `POST /v1/sis/student-activities` | `StudentActivityService/CreateStudentActivity` | `sis.student_activity.create` |  | Create StudentActivity. |
+| 473 | `GET /v1/sis/student-activities/{studentActivityId}` | `StudentActivityService/GetStudentActivity` | `sis.student_activity.read` |  | Get StudentActivity. |
+| 474 | `PATCH /v1/sis/student-activities/{studentActivityId}` | `StudentActivityService/UpdateStudentActivity` | `sis.student_activity.update` |  | Update StudentActivity. |
+| 475 | `DELETE /v1/sis/student-activities/{studentActivityId}` | `StudentActivityService/DeleteStudentActivity` | `sis.student_activity.delete` |  | Delete StudentActivity. |
+| 476 | `POST /v1/sis/students/{studentId}:changeStatus` | `StudentService/ChangeStudentStatus` | `sis.student.change_student_status` |  | Change status (active, inactive, withdrawn, transferred, alumni, graduated) with exit details. |
+| 477 | `GET /v1/sis/students/{studentId}:summary` | `StudentService/GetStudentSummary` | `sis.student.get_student_summary` |  | Student 360 overview. |
+| 478 | `POST /v1/sis/students/{studentId}:issueBonafideCertificate` | `StudentService/IssueBonafideCertificate` | `sis.student.issue_bonafide_certificate` |  | Generate a bonafide certificate PDF and record its number. |
+| 479 | `POST /v1/sis/students/{studentId}:createPortalAccount` | `StudentService/CreateStudentPortalAccount` | `sis.student.create_student_portal_account` |  | Create the student login account and grant the student role. |
+| 480 | `POST /v1/sis/guardians/{guardianId}:createPortalAccount` | `GuardianService/CreatePortalAccount` | `sis.guardian.create_portal_account` |  | Create the guardian's login account and grant the guardian role scoped to their children. |
+| 481 | `GET /v1/sis/me/children` | `GuardianService/ListMyChildren` | `sis.guardian.list_my_children` |  | Children of the calling guardian. |
+| 482 | `POST /v1/sis/promotions:propose` | `PromotionService/ProposePromotions` | `sis.promotion.propose_promotions` |  | Create proposed promotions for a class. |
+| 483 | `POST /v1/sis/promotions/{promotionId}:approve` | `PromotionService/ApprovePromotion` | `sis.promotion.approve_promotion` |  | Approve. |
+| 484 | `POST /v1/sis/promotions/{promotionId}:reject` | `PromotionService/RejectPromotion` | `sis.promotion.reject_promotion` |  | Reject (student detained). |
+| 485 | `POST /v1/sis/promotions:apply` | `PromotionService/ApplyPromotions` | `sis.promotion.apply_promotions` |  | Create next-year enrolments for approved promotions and close the current ones. |
+| 486 | `POST /v1/sis/subject-registrations/{subjectRegistrationId}:submit` | `SubjectRegistrationService/SubmitSubjectRegistration` | `sis.subject_registration.submit_subject_registration` |  | Submit for approval. |
+| 487 | `POST /v1/sis/subject-registrations/{subjectRegistrationId}:approve` | `SubjectRegistrationService/ApproveSubjectRegistration` | `sis.subject_registration.approve_subject_registration` |  | Approve; subjects are added to the registration. |
+| 488 | `POST /v1/sis/subject-registrations/{subjectRegistrationId}:reject` | `SubjectRegistrationService/RejectSubjectRegistration` | `sis.subject_registration.reject_subject_registration` |  | Reject. |
+| 489 | `POST /v1/sis/subject-registrations/{subjectRegistrationId}:resetToDraft` | `SubjectRegistrationService/ResetSubjectRegistration` | `sis.subject_registration.reset_subject_registration` |  | Back to draft. |
+| 490 | `POST /v1/sis/subject-registrations/{subjectRegistrationId}:loadCourseSubjects` | `SubjectRegistrationService/LoadCourseSubjects` | `sis.subject_registration.load_course_subjects` |  | Pre-fill compulsory/elective lines from the course subjects. |
+| 491 | `POST /v1/sis/discipline-incidents/{disciplineIncidentId}:markActionTaken` | `DisciplineIncidentService/MarkIncidentActionTaken` | `sis.discipline_incident.mark_incident_action_taken` |  | Record that action was taken. |
+| 492 | `POST /v1/sis/discipline-incidents/{disciplineIncidentId}:markSeen` | `DisciplineIncidentService/MarkIncidentSeen` | `sis.discipline_incident.mark_incident_seen` |  | Guardian acknowledges the incident. |
+| 493 | `GET /v1/sis/class-sections/{classSectionId}:roster` | `StudentEnrollmentService/ListClassRoster` | `sis.student_enrollment.list_class_roster` |  | Students placed in the class. |
+| 494 | `GET /v1/sis/student-leave-requests` | `StudentLeaveRequestService/ListStudentLeaveRequests` | `sis.student_leave_request.read` |  | List StudentLeaveRequests. |
+| 495 | `POST /v1/sis/student-leave-requests` | `StudentLeaveRequestService/CreateStudentLeaveRequest` | `sis.student_leave_request.create` |  | Create StudentLeaveRequest. |
+| 496 | `GET /v1/sis/student-leave-requests/{studentLeaveRequestId}` | `StudentLeaveRequestService/GetStudentLeaveRequest` | `sis.student_leave_request.read` |  | Get StudentLeaveRequest. |
+| 497 | `PATCH /v1/sis/student-leave-requests/{studentLeaveRequestId}` | `StudentLeaveRequestService/UpdateStudentLeaveRequest` | `sis.student_leave_request.update` |  | Update StudentLeaveRequest. |
+| 498 | `DELETE /v1/sis/student-leave-requests/{studentLeaveRequestId}` | `StudentLeaveRequestService/DeleteStudentLeaveRequest` | `sis.student_leave_request.delete` |  | Delete StudentLeaveRequest. |
+| 499 | `POST /v1/sis/student-leave-requests/{studentLeaveRequestId}:approve` | `StudentLeaveRequestService/ApproveStudentLeaveRequest` | `sis.student_leave_request.approve` |  | Approve a student leave request. |
+| 500 | `POST /v1/sis/student-leave-requests/{studentLeaveRequestId}:reject` | `StudentLeaveRequestService/RejectStudentLeaveRequest` | `sis.student_leave_request.reject` |  | Reject a student leave request. |
+| 501 | `GET /v1/sis/operations` | `OperationService/ListOperations` | `sis.operation.read` |  | Long-running operations of this module started by the caller. |
+| 502 | `GET /v1/sis/operations/{operationId}` | `OperationService/GetOperation` | `sis.operation.read` |  | Status of a long-running operation started in this module. |
+| 503 | `POST /v1/sis/operations/{operationId}:cancel` | `OperationService/CancelOperation` | `sis.operation.cancel_operation` |  | Request cancellation of a running operation. |
 
 ## Workforce / HR (`hr`)
 
 | # | REST | gRPC | Permission | Public | Description |
 |---|---|---|---|---|---|
-| 499 | `GET /v1/hr/designations` | `DesignationService/ListDesignations` | `hr.designation.read` |  | List Designations. |
-| 500 | `POST /v1/hr/designations` | `DesignationService/CreateDesignation` | `hr.designation.create` |  | Create Designation. |
-| 501 | `GET /v1/hr/designations/{designationId}` | `DesignationService/GetDesignation` | `hr.designation.read` |  | Get Designation. |
-| 502 | `PATCH /v1/hr/designations/{designationId}` | `DesignationService/UpdateDesignation` | `hr.designation.update` |  | Update Designation. |
-| 503 | `DELETE /v1/hr/designations/{designationId}` | `DesignationService/DeleteDesignation` | `hr.designation.delete` |  | Delete Designation. |
-| 504 | `GET /v1/hr/staff` | `StaffService/ListStaff` | `hr.staff.read` |  | List Staff. |
-| 505 | `POST /v1/hr/staff` | `StaffService/CreateStaff` | `hr.staff.create` |  | Create Staff. |
-| 506 | `GET /v1/hr/staff/{staffId}` | `StaffService/GetStaff` | `hr.staff.read` |  | Get Staff. |
-| 507 | `PATCH /v1/hr/staff/{staffId}` | `StaffService/UpdateStaff` | `hr.staff.update` |  | Update Staff. |
-| 508 | `DELETE /v1/hr/staff/{staffId}` | `StaffService/DeleteStaff` | `hr.staff.delete` |  | Delete Staff. |
-| 509 | `GET /v1/hr/staff/{staffId}/departments` | `StaffService/ListStaffDepartments` | `hr.staff_department.read` |  | List StaffDepartments. |
-| 510 | `POST /v1/hr/staff/{staffId}/departments` | `StaffService/CreateStaffDepartment` | `hr.staff_department.create` |  | Create StaffDepartment. |
-| 511 | `GET /v1/hr/staff/{staffId}/departments/{staffDepartmentId}` | `StaffService/GetStaffDepartment` | `hr.staff_department.read` |  | Get StaffDepartment. |
-| 512 | `PATCH /v1/hr/staff/{staffId}/departments/{staffDepartmentId}` | `StaffService/UpdateStaffDepartment` | `hr.staff_department.update` |  | Update StaffDepartment. |
-| 513 | `DELETE /v1/hr/staff/{staffId}/departments/{staffDepartmentId}` | `StaffService/DeleteStaffDepartment` | `hr.staff_department.delete` |  | Delete StaffDepartment. |
-| 514 | `GET /v1/hr/staff/{staffId}/subjects` | `StaffService/ListStaffSubjects` | `hr.staff_subject.read` |  | List StaffSubjects. |
-| 515 | `POST /v1/hr/staff/{staffId}/subjects` | `StaffService/CreateStaffSubject` | `hr.staff_subject.create` |  | Create StaffSubject. |
-| 516 | `GET /v1/hr/staff/{staffId}/subjects/{staffSubjectId}` | `StaffService/GetStaffSubject` | `hr.staff_subject.read` |  | Get StaffSubject. |
-| 517 | `PATCH /v1/hr/staff/{staffId}/subjects/{staffSubjectId}` | `StaffService/UpdateStaffSubject` | `hr.staff_subject.update` |  | Update StaffSubject. |
-| 518 | `DELETE /v1/hr/staff/{staffId}/subjects/{staffSubjectId}` | `StaffService/DeleteStaffSubject` | `hr.staff_subject.delete` |  | Delete StaffSubject. |
+| 504 | `GET /v1/hr/designations` | `DesignationService/ListDesignations` | `hr.designation.read` |  | List Designations. |
+| 505 | `POST /v1/hr/designations` | `DesignationService/CreateDesignation` | `hr.designation.create` |  | Create Designation. |
+| 506 | `GET /v1/hr/designations/{designationId}` | `DesignationService/GetDesignation` | `hr.designation.read` |  | Get Designation. |
+| 507 | `PATCH /v1/hr/designations/{designationId}` | `DesignationService/UpdateDesignation` | `hr.designation.update` |  | Update Designation. |
+| 508 | `DELETE /v1/hr/designations/{designationId}` | `DesignationService/DeleteDesignation` | `hr.designation.delete` |  | Delete Designation. |
+| 509 | `GET /v1/hr/staff` | `StaffService/ListStaff` | `hr.staff.read` |  | List Staff. |
+| 510 | `POST /v1/hr/staff` | `StaffService/CreateStaff` | `hr.staff.create` |  | Create Staff. |
+| 511 | `GET /v1/hr/staff/{staffId}` | `StaffService/GetStaff` | `hr.staff.read` |  | Get Staff. |
+| 512 | `PATCH /v1/hr/staff/{staffId}` | `StaffService/UpdateStaff` | `hr.staff.update` |  | Update Staff. |
+| 513 | `DELETE /v1/hr/staff/{staffId}` | `StaffService/DeleteStaff` | `hr.staff.delete` |  | Delete Staff. |
+| 514 | `GET /v1/hr/staff/{staffId}/departments` | `StaffService/ListStaffDepartments` | `hr.staff_department.read` |  | List StaffDepartments. |
+| 515 | `POST /v1/hr/staff/{staffId}/departments` | `StaffService/CreateStaffDepartment` | `hr.staff_department.create` |  | Create StaffDepartment. |
+| 516 | `GET /v1/hr/staff/{staffId}/departments/{staffDepartmentId}` | `StaffService/GetStaffDepartment` | `hr.staff_department.read` |  | Get StaffDepartment. |
+| 517 | `PATCH /v1/hr/staff/{staffId}/departments/{staffDepartmentId}` | `StaffService/UpdateStaffDepartment` | `hr.staff_department.update` |  | Update StaffDepartment. |
+| 518 | `DELETE /v1/hr/staff/{staffId}/departments/{staffDepartmentId}` | `StaffService/DeleteStaffDepartment` | `hr.staff_department.delete` |  | Delete StaffDepartment. |
 | 519 | `GET /v1/hr/leave-types` | `LeaveTypeService/ListLeaveTypes` | `hr.leave_type.read` |  | List LeaveTypes. |
 | 520 | `POST /v1/hr/leave-types` | `LeaveTypeService/CreateLeaveType` | `hr.leave_type.create` |  | Create LeaveType. |
 | 521 | `GET /v1/hr/leave-types/{leaveTypeId}` | `LeaveTypeService/GetLeaveType` | `hr.leave_type.read` |  | Get LeaveType. |

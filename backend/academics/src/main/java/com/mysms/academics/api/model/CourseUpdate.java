@@ -17,28 +17,28 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of Course that can be updated (partial update; see updateMask).
+ * Fields of Course that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class CourseUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID programId;
+  private @Nullable Optional<UUID> programId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID departmentId;
+  private @Nullable Optional<UUID> departmentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID parentCourseId;
+  private @Nullable Optional<UUID> parentCourseId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@NotNull @Size(max = 30) String> code;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 200) String> name;
 
   /**
    * Evaluation scheme.
@@ -80,18 +80,18 @@ public class CourseUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable EvaluationTypeEnum evaluationType;
+  private @Nullable Optional<@NotNull EvaluationTypeEnum> evaluationType;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String minUnitLoad;
+  private @Nullable Optional<@Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> minUnitLoad;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String maxUnitLoad;
+  private @Nullable Optional<@Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> maxUnitLoad;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public CourseUpdate institutionId(@Nullable UUID institutionId) {
+  public CourseUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -100,18 +100,18 @@ public class CourseUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public CourseUpdate programId(@Nullable UUID programId) {
+  public CourseUpdate programId(@Nullable Optional<UUID> programId) {
     this.programId = programId;
     return this;
   }
@@ -120,18 +120,18 @@ public class CourseUpdate {
    * Program.
    * @return programId
    */
-  @Valid 
+  
   @JsonProperty("programId")
-  public @Nullable UUID getProgramId() {
+  public @Nullable Optional<UUID> getProgramId() {
     return programId;
   }
 
   @JsonProperty("programId")
-  public void setProgramId(@Nullable UUID programId) {
+  public void setProgramId(@Nullable Optional<UUID> programId) {
     this.programId = programId;
   }
 
-  public CourseUpdate departmentId(@Nullable UUID departmentId) {
+  public CourseUpdate departmentId(@Nullable Optional<UUID> departmentId) {
     this.departmentId = departmentId;
     return this;
   }
@@ -140,18 +140,18 @@ public class CourseUpdate {
    * Department.
    * @return departmentId
    */
-  @Valid 
+  
   @JsonProperty("departmentId")
-  public @Nullable UUID getDepartmentId() {
+  public @Nullable Optional<UUID> getDepartmentId() {
     return departmentId;
   }
 
   @JsonProperty("departmentId")
-  public void setDepartmentId(@Nullable UUID departmentId) {
+  public void setDepartmentId(@Nullable Optional<UUID> departmentId) {
     this.departmentId = departmentId;
   }
 
-  public CourseUpdate parentCourseId(@Nullable UUID parentCourseId) {
+  public CourseUpdate parentCourseId(@Nullable Optional<UUID> parentCourseId) {
     this.parentCourseId = parentCourseId;
     return this;
   }
@@ -160,18 +160,18 @@ public class CourseUpdate {
    * Parent course.
    * @return parentCourseId
    */
-  @Valid 
+  
   @JsonProperty("parentCourseId")
-  public @Nullable UUID getParentCourseId() {
+  public @Nullable Optional<UUID> getParentCourseId() {
     return parentCourseId;
   }
 
   @JsonProperty("parentCourseId")
-  public void setParentCourseId(@Nullable UUID parentCourseId) {
+  public void setParentCourseId(@Nullable Optional<UUID> parentCourseId) {
     this.parentCourseId = parentCourseId;
   }
 
-  public CourseUpdate code(@Nullable String code) {
+  public CourseUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -180,18 +180,18 @@ public class CourseUpdate {
    * Course code.
    * @return code
    */
-  @Size(max = 30) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 
-  public CourseUpdate name(@Nullable String name) {
+  public CourseUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -200,18 +200,18 @@ public class CourseUpdate {
    * Course name.
    * @return name
    */
-  @Size(max = 200) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public CourseUpdate evaluationType(@Nullable EvaluationTypeEnum evaluationType) {
+  public CourseUpdate evaluationType(@Nullable Optional<EvaluationTypeEnum> evaluationType) {
     this.evaluationType = evaluationType;
     return this;
   }
@@ -222,16 +222,16 @@ public class CourseUpdate {
    */
   
   @JsonProperty("evaluationType")
-  public @Nullable EvaluationTypeEnum getEvaluationType() {
+  public @Nullable Optional<EvaluationTypeEnum> getEvaluationType() {
     return evaluationType;
   }
 
   @JsonProperty("evaluationType")
-  public void setEvaluationType(@Nullable EvaluationTypeEnum evaluationType) {
+  public void setEvaluationType(@Nullable Optional<EvaluationTypeEnum> evaluationType) {
     this.evaluationType = evaluationType;
   }
 
-  public CourseUpdate minUnitLoad(@Nullable String minUnitLoad) {
+  public CourseUpdate minUnitLoad(@Nullable Optional<String> minUnitLoad) {
     this.minUnitLoad = minUnitLoad;
     return this;
   }
@@ -240,18 +240,18 @@ public class CourseUpdate {
    * Minimum credit load.
    * @return minUnitLoad
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("minUnitLoad")
-  public @Nullable String getMinUnitLoad() {
+  public @Nullable Optional<String> getMinUnitLoad() {
     return minUnitLoad;
   }
 
   @JsonProperty("minUnitLoad")
-  public void setMinUnitLoad(@Nullable String minUnitLoad) {
+  public void setMinUnitLoad(@Nullable Optional<String> minUnitLoad) {
     this.minUnitLoad = minUnitLoad;
   }
 
-  public CourseUpdate maxUnitLoad(@Nullable String maxUnitLoad) {
+  public CourseUpdate maxUnitLoad(@Nullable Optional<String> maxUnitLoad) {
     this.maxUnitLoad = maxUnitLoad;
     return this;
   }
@@ -260,18 +260,18 @@ public class CourseUpdate {
    * Maximum credit load.
    * @return maxUnitLoad
    */
-  @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") 
+  
   @JsonProperty("maxUnitLoad")
-  public @Nullable String getMaxUnitLoad() {
+  public @Nullable Optional<String> getMaxUnitLoad() {
     return maxUnitLoad;
   }
 
   @JsonProperty("maxUnitLoad")
-  public void setMaxUnitLoad(@Nullable String maxUnitLoad) {
+  public void setMaxUnitLoad(@Nullable Optional<String> maxUnitLoad) {
     this.maxUnitLoad = maxUnitLoad;
   }
 
-  public CourseUpdate isActive(@Nullable Boolean isActive) {
+  public CourseUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -282,12 +282,12 @@ public class CourseUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

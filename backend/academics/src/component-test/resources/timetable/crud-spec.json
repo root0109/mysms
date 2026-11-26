@@ -1,0 +1,173 @@
+{
+ "module": "timetable",
+ "resources": [
+  {
+   "name": "Period",
+   "table": "timetable.period",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/timetable/periods",
+   "item": "/v1/timetable/periods/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-f2dc1378",
+    "startTime": "09:00"
+   },
+   "update": {},
+   "patch": {
+    "clears": "durationMinutes",
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Session",
+   "table": "timetable.session",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/timetable/sessions",
+   "item": "/v1/timetable/sessions/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "startAt": "2026-01-10T09:00:00Z",
+    "endAt": "2026-01-10T10:00:00Z",
+    "classSectionId": "0196f000-0000-7000-8000-0000000c5e01",
+    "subjectId": "fe67310c-63f7-5cae-8904-804c3c8e8333",
+    "staffId": "3f49cfcd-45d9-5bf9-8bb9-ec070e85077e"
+   },
+   "update": {
+    "title": "Updated title"
+   },
+   "patch": {
+    "clears": "title",
+    "keeps": "startAt"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "timetable.ConfirmSession",
+     "path": "/v1/timetable/sessions/{id}:confirm",
+     "permission": "timetable.session.confirm_session",
+     "guard": {
+      "status": [
+       "draft"
+      ]
+     },
+     "prepare": [
+      "UPDATE timetable.session SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "confirmed"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "timetable.CompleteSession",
+     "path": "/v1/timetable/sessions/{id}:complete",
+     "permission": "timetable.session.complete_session",
+     "guard": {
+      "status": [
+       "confirmed"
+      ]
+     },
+     "prepare": [
+      "UPDATE timetable.session SET status = 'confirmed' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "done"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "timetable.CancelSession",
+     "path": "/v1/timetable/sessions/{id}:cancel",
+     "permission": "timetable.session.cancel_session",
+     "guard": {
+      "status": [
+       "draft",
+       "confirmed"
+      ]
+     },
+     "prepare": [
+      "UPDATE timetable.session SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "cancelled"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "timetable.ResetSession",
+     "path": "/v1/timetable/sessions/{id}:resetToDraft",
+     "permission": "timetable.session.reset_session",
+     "guard": {
+      "status": [
+       "cancelled"
+      ]
+     },
+     "prepare": [
+      "UPDATE timetable.session SET status = 'cancelled' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "draft"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "SessionStudent",
+   "table": "timetable.session_student",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/timetable/sessions/45d5d7cd-9c8e-5c86-9d7b-01c09fcd429d/students",
+   "item": "/v1/timetable/sessions/45d5d7cd-9c8e-5c86-9d7b-01c09fcd429d/students/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO timetable.session (tenant_id, institution_id, start_at, end_at, class_section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '2026-01-10T09:00:00Z', '2026-01-10T10:00:00Z', '0196f000-0000-7000-8000-0000000c5e01', 1, '45d5d7cd-9c8e-5c86-9d7b-01c09fcd429d') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "sessionId": "45d5d7cd-9c8e-5c86-9d7b-01c09fcd429d",
+    "studentId": "0cad88ca-ed22-56b7-af9d-2c91c38124b7"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "studentId"
+   },
+   "duplicateConflicts": true
+  }
+ ]
+}

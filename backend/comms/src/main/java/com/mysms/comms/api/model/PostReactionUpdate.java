@@ -17,7 +17,7 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of PostReaction that can be updated (partial update; see updateMask).
+ * Fields of PostReaction that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class PostReactionUpdate {
@@ -58,15 +58,15 @@ public class PostReactionUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable ReactionEnum reaction;
+  private @Nullable Optional<ReactionEnum> reaction;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isSaved;
+  private @Nullable Optional<Boolean> isSaved;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<Boolean> isActive;
 
-  public PostReactionUpdate reaction(@Nullable ReactionEnum reaction) {
+  public PostReactionUpdate reaction(@Nullable Optional<ReactionEnum> reaction) {
     this.reaction = reaction;
     return this;
   }
@@ -77,16 +77,16 @@ public class PostReactionUpdate {
    */
   
   @JsonProperty("reaction")
-  public @Nullable ReactionEnum getReaction() {
+  public @Nullable Optional<ReactionEnum> getReaction() {
     return reaction;
   }
 
   @JsonProperty("reaction")
-  public void setReaction(@Nullable ReactionEnum reaction) {
+  public void setReaction(@Nullable Optional<ReactionEnum> reaction) {
     this.reaction = reaction;
   }
 
-  public PostReactionUpdate isSaved(@Nullable Boolean isSaved) {
+  public PostReactionUpdate isSaved(@Nullable Optional<Boolean> isSaved) {
     this.isSaved = isSaved;
     return this;
   }
@@ -97,16 +97,16 @@ public class PostReactionUpdate {
    */
   
   @JsonProperty("isSaved")
-  public @Nullable Boolean getIsSaved() {
+  public @Nullable Optional<Boolean> getIsSaved() {
     return isSaved;
   }
 
   @JsonProperty("isSaved")
-  public void setIsSaved(@Nullable Boolean isSaved) {
+  public void setIsSaved(@Nullable Optional<Boolean> isSaved) {
     this.isSaved = isSaved;
   }
 
-  public PostReactionUpdate isActive(@Nullable Boolean isActive) {
+  public PostReactionUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -117,12 +117,12 @@ public class PostReactionUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

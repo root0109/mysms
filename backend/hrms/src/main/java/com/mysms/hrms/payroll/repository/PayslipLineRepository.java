@@ -1,0 +1,254 @@
+package com.mysms.hrms.payroll.repository;
+import com.mysms.authclient.DataScope;
+import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.paging.FieldSpec;
+import com.mysms.core.paging.Page;
+import com.mysms.core.paging.PageRequest;
+import com.mysms.core.paging.SortSpec;
+import com.mysms.core.paging.SqlFragment;
+import com.mysms.core.paging.ValueType;
+import com.mysms.hrms.payroll.config.PayrollDatabaseConfig;
+import com.mysms.hrms.payroll.domain.PayslipLineEntity;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Repository;
+/**
+ * Plain-JDBC access to payroll.payslip_line: live rows only, keyset paging, and the row_version guard on every update
+ * and delete. Every statement filters the caller's tenant itself; row-level security is the backstop.
+ */
+@Repository
+public class PayslipLineRepository {
+
+    /** Fields clients may filter on (contract names → columns). */
+    public static final Map<String, FieldSpec> FILTER_FIELDS = fields(
+            field("id", "r.id", ValueType.UUID),
+            field("componentCode", "r.component_code", ValueType.STRING),
+            field("componentName", "r.component_name", ValueType.STRING),
+            field("componentType", "r.component_type", ValueType.STRING),
+            field("payslipId", "r.payslip_id", ValueType.UUID),
+            field("staffSalaryComponentId", "r.staff_salary_component_id", ValueType.UUID),
+            field("amount", "r.amount", ValueType.DECIMAL),
+            field("createTime", "r.created_at", ValueType.TIMESTAMP),
+            field("updateTime", "r.updated_at", ValueType.TIMESTAMP));
+
+    /** Fields clients may order by; NOT NULL expressions, so keyset paging can compare them. */
+    public static final Map<String, FieldSpec> SORT_FIELDS = fields(
+            field("createTime", "r.created_at", ValueType.TIMESTAMP),
+            field("updateTime", "r.updated_at", ValueType.TIMESTAMP));
+
+    public static final String DEFAULT_ORDER = "createTime";
+    public static final String ID_COLUMN = "r.id";
+
+    private static final Map<String, Function<PayslipLineEntity, Object>> SORT_VALUES = Map.ofEntries(
+            Map.entry("createTime", PayslipLineEntity::getCreatedAt),
+            Map.entry("updateTime", PayslipLineEntity::getUpdatedAt));
+
+    private static final String SELECT_LIVE = """
+            SELECT r.id, r.tenant_id, r.component_code, r.component_name, r.component_type, r.payslip_id,
+                   r.staff_salary_component_id, r.amount, r.created_at, r.created_by, r.updated_at, r.updated_by,
+                   r.deleted_at, r.row_version
+              FROM payroll.payslip_line r
+             WHERE r.tenant_id = :tenantId
+               AND r.deleted_at IS NULL
+            """;
+    private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String INSERT = """
+            INSERT INTO payroll.payslip_line
+            (id, tenant_id, payslip_id, staff_salary_component_id, amount, created_at, created_by, updated_at,
+             updated_by, row_version)
+            VALUES (:id, :tenantId, :payslipId, :staffSalaryComponentId, :amount, :createdAt, :createdBy, :updatedAt,
+                    :updatedBy, :rowVersion)
+            RETURNING id, tenant_id, component_code, component_name, component_type, payslip_id,
+                      staff_salary_component_id, amount, created_at, created_by, updated_at, updated_by, deleted_at,
+                      row_version
+            """;
+    private static final String SOFT_DELETE = """
+            UPDATE payroll.payslip_line
+               SET deleted_at = :deletedAt,
+                   updated_at = :updatedAt,
+                   updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String UPDATE = """
+            UPDATE payroll.payslip_line
+               SET updated_at = :updatedAt,
+                   updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String UQ_PAYSLIP_LINE_1_TAKEN = """
+            SELECT EXISTS (SELECT 1 FROM payroll.payslip_line
+                            WHERE tenant_id = :tenantId
+                              AND payslip_id = :payslipId AND staff_salary_component_id = :staffSalaryComponentId AND id
+                                  <> :id AND ((deleted_at IS NULL)))
+            """;
+    private static final String EXISTS_PAYSLIP_ID = """
+            SELECT EXISTS (SELECT 1 FROM payroll.payslip WHERE tenant_id = :tenantId
+                AND id = :id AND deleted_at IS NULL)
+            """;
+    private static final String EXISTS_STAFF_SALARY_COMPONENT_ID = """
+            SELECT EXISTS (SELECT 1 FROM payroll.staff_salary_component WHERE tenant_id = :tenantId
+                AND id = :id AND deleted_at IS NULL)
+            """;
+    private static final String INSTITUTION_OF = """
+            SELECT p0.institution_id FROM payroll.payslip p0 WHERE p0.tenant_id = :tenantId AND p0.id = :ref
+            """;
+    private static final String SCOPE = """
+             (:scopeAll OR r.payslip_id IN (SELECT p0.id FROM payroll.payslip p0 WHERE p0.tenant_id = :tenantId
+                 AND (p0.institution_id =
+             ANY(:scopeIds))))
+            """;
+
+    /** Owner-only reads: the lines of the payslips the reader may read (PayslipRepository#readableBy). */
+    private static final String READABLE_BY = """
+             (r.payslip_id IN (SELECT p1.id FROM payroll.payslip p1 WHERE p1.tenant_id = :tenantId
+                 AND (:officerAll OR p1.institution_id = ANY(:officerIds) OR p1.staff_id IN (SELECT m.id
+                 FROM hr.staff m WHERE m.tenant_id = :tenantId AND m.deleted_at IS NULL
+                  AND m.user_id = :reader))))
+            """;
+
+    private final JdbcClient jdbc;
+
+    public PayslipLineRepository(@Qualifier(PayrollDatabaseConfig.DATABASE) ModuleDatabase database) {
+        this.jdbc = database.jdbc();
+    }
+
+    public Optional<PayslipLineEntity> findById(UUID id) {
+        return jdbc.sql(FIND_BY_ID).param("id", id).query(PayslipLineRepository::map).optional();
+    }
+
+    public Page<PayslipLineEntity> list(PageRequest page, SqlFragment filter) {
+        SqlFragment where = filter.and(page.keysetPredicate());
+        String sql = SELECT_LIVE + " AND (" + where.sql() + ") ORDER BY " + page.orderByClause() + page.limitClause();
+        List<PayslipLineEntity> rows = jdbc.sql(sql).params(where.params()).params(page.limitParams())
+                .query(PayslipLineRepository::map).list();
+        return page.toPage(rows, e -> sortValues(page.sort(), e), PayslipLineEntity::getId);
+    }
+
+    /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
+    public PayslipLineEntity insert(PayslipLineEntity e) {
+        return jdbc.sql(INSERT)
+                .param("id", e.getId())
+                .param("tenantId", e.getTenantId())
+                .param("payslipId", e.getPayslipId())
+                .param("staffSalaryComponentId", e.getStaffSalaryComponentId())
+                .param("amount", e.getAmount())
+                .param("createdAt", e.getCreatedAt())
+                .param("createdBy", e.getCreatedBy())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("rowVersion", e.getRowVersion())
+                .query(PayslipLineRepository::map).single();
+    }
+
+    /** Updates under the ETag guard; 0 rows means the row changed (or vanished) since it was read. */
+    public int update(PayslipLineEntity e, int expectedVersion) {
+        return jdbc.sql(UPDATE)
+                .param("id", e.getId())
+
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("expected", expectedVersion)
+                .update();
+    }
+
+    public int softDelete(PayslipLineEntity e, int expectedVersion) {
+        return jdbc.sql(SOFT_DELETE)
+                .param("id", e.getId())
+                .param("deletedAt", e.getDeletedAt())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("expected", expectedVersion)
+                .update();
+    }
+
+    /** uq_payslip_line_1: payslip_id, staff_salary_component_id where (deleted_at IS NULL). */
+    public boolean takenPayslipIdStaffSalaryComponentId1(PayslipLineEntity e) {
+        return Boolean.TRUE.equals(jdbc.sql(UQ_PAYSLIP_LINE_1_TAKEN)
+                .param("payslipId", e.getPayslipId())
+                .param("staffSalaryComponentId", e.getStaffSalaryComponentId())
+               .param("id", e.getId())
+                .query(Boolean.class).single());
+    }
+
+    /** Whether the referenced payroll.payslip row exists (live). */
+    public boolean existsPayslipId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(EXISTS_PAYSLIP_ID).param("id", id).query(Boolean.class).single());
+    }
+
+    /** Whether the referenced payroll.staff_salary_component row exists (live). */
+    public boolean existsStaffSalaryComponentId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(EXISTS_STAFF_SALARY_COMPONENT_ID).param("id", id).query(Boolean.class)
+                .single());
+    }
+
+    /** The institution owning the row reached through payslip_id (empty: a tenant-level row, or none). */
+    public Optional<UUID> institutionOf(UUID ref) {
+        if (ref == null) {
+            return Optional.empty();
+        }
+        return jdbc.sql(INSTITUTION_OF).param("ref", ref)
+                .query((rs, row) -> Optional.ofNullable(rs.getObject(1, UUID.class)))
+                .optional().flatMap(found -> found);
+    }
+
+    /** Rows of the caller's institutions only. */
+    /** The lines the reader may read; {@code officer} is where the reader is a payroll officer. */
+    public static SqlFragment readableBy(DataScope officer, UUID reader) {
+        return new SqlFragment(READABLE_BY, Map.of("officerAll", officer.all(), "officerIds", officer.institutionArray(),
+                "reader", reader));
+    }
+
+    public static SqlFragment scope(DataScope scope) {
+        return new SqlFragment(SCOPE, Map.of("scopeAll", scope.all(), "scopeIds", scope.institutionArray()));
+    }
+
+    /** Children of the path's parent row. */
+    public static SqlFragment ofParent(UUID parentId) {
+        return new SqlFragment("r.payslip_id = :parentId", Map.of("parentId", parentId));
+    }
+
+    private static List<Object> sortValues(SortSpec sort, PayslipLineEntity e) {
+        return sort.orders().stream().map(o -> SORT_VALUES.get(o.field().name()).apply(e)).toList();
+    }
+
+    private static PayslipLineEntity map(ResultSet rs, int row) throws SQLException {
+        return PayslipLineEntity.builder()
+                .id(rs.getObject("id", UUID.class))
+                .tenantId(rs.getObject("tenant_id", UUID.class))
+                .componentCode(rs.getString("component_code"))
+                .componentName(rs.getString("component_name"))
+                .componentType(rs.getString("component_type"))
+                .payslipId(rs.getObject("payslip_id", UUID.class))
+                .staffSalaryComponentId(rs.getObject("staff_salary_component_id", UUID.class))
+                .amount(rs.getBigDecimal("amount"))
+                .createdAt(rs.getObject("created_at", OffsetDateTime.class))
+                .createdBy(rs.getObject("created_by", UUID.class))
+                .updatedAt(rs.getObject("updated_at", OffsetDateTime.class))
+                .updatedBy(rs.getObject("updated_by", UUID.class))
+                .deletedAt(rs.getObject("deleted_at", OffsetDateTime.class))
+                .rowVersion(rs.getInt("row_version"))
+                .build();
+    }
+
+    private static FieldSpec field(String name, String column, ValueType type) {
+        return new FieldSpec(name, column, type);
+    }
+
+    private static Map<String, FieldSpec> fields(FieldSpec... specs) {
+        return Arrays.stream(specs).collect(Collectors.toUnmodifiableMap(FieldSpec::name, s -> s));
+    }
+}

@@ -16,30 +16,30 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of FeeStructure that can be updated (partial update; see updateMask).
+ * Fields of FeeStructure that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class FeeStructureUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID academicYearId;
+  private @Nullable Optional<@NotNull UUID> academicYearId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID gradeLevelId;
+  private @Nullable Optional<UUID> gradeLevelId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID programId;
+  private @Nullable Optional<UUID> programId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID feePlanId;
+  private @Nullable Optional<@NotNull UUID> feePlanId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 150) String> name;
 
-  public FeeStructureUpdate institutionId(@Nullable UUID institutionId) {
+  public FeeStructureUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -48,18 +48,18 @@ public class FeeStructureUpdate {
    * Institution (NULL = tenant-wide).
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public FeeStructureUpdate academicYearId(@Nullable UUID academicYearId) {
+  public FeeStructureUpdate academicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
     return this;
   }
@@ -68,18 +68,18 @@ public class FeeStructureUpdate {
    * Academic year the structure prices.
    * @return academicYearId
    */
-  @Valid 
+  
   @JsonProperty("academicYearId")
-  public @Nullable UUID getAcademicYearId() {
+  public @Nullable Optional<UUID> getAcademicYearId() {
     return academicYearId;
   }
 
   @JsonProperty("academicYearId")
-  public void setAcademicYearId(@Nullable UUID academicYearId) {
+  public void setAcademicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
   }
 
-  public FeeStructureUpdate gradeLevelId(@Nullable UUID gradeLevelId) {
+  public FeeStructureUpdate gradeLevelId(@Nullable Optional<UUID> gradeLevelId) {
     this.gradeLevelId = gradeLevelId;
     return this;
   }
@@ -88,18 +88,18 @@ public class FeeStructureUpdate {
    * K-12 grade level (class) the structure applies to.
    * @return gradeLevelId
    */
-  @Valid 
+  
   @JsonProperty("gradeLevelId")
-  public @Nullable UUID getGradeLevelId() {
+  public @Nullable Optional<UUID> getGradeLevelId() {
     return gradeLevelId;
   }
 
   @JsonProperty("gradeLevelId")
-  public void setGradeLevelId(@Nullable UUID gradeLevelId) {
+  public void setGradeLevelId(@Nullable Optional<UUID> gradeLevelId) {
     this.gradeLevelId = gradeLevelId;
   }
 
-  public FeeStructureUpdate programId(@Nullable UUID programId) {
+  public FeeStructureUpdate programId(@Nullable Optional<UUID> programId) {
     this.programId = programId;
     return this;
   }
@@ -108,18 +108,18 @@ public class FeeStructureUpdate {
    * Higher-ed program the structure applies to.
    * @return programId
    */
-  @Valid 
+  
   @JsonProperty("programId")
-  public @Nullable UUID getProgramId() {
+  public @Nullable Optional<UUID> getProgramId() {
     return programId;
   }
 
   @JsonProperty("programId")
-  public void setProgramId(@Nullable UUID programId) {
+  public void setProgramId(@Nullable Optional<UUID> programId) {
     this.programId = programId;
   }
 
-  public FeeStructureUpdate feePlanId(@Nullable UUID feePlanId) {
+  public FeeStructureUpdate feePlanId(@Nullable Optional<UUID> feePlanId) {
     this.feePlanId = feePlanId;
     return this;
   }
@@ -128,18 +128,18 @@ public class FeeStructureUpdate {
    * Fee plan (heads + installments) charged.
    * @return feePlanId
    */
-  @Valid 
+  
   @JsonProperty("feePlanId")
-  public @Nullable UUID getFeePlanId() {
+  public @Nullable Optional<UUID> getFeePlanId() {
     return feePlanId;
   }
 
   @JsonProperty("feePlanId")
-  public void setFeePlanId(@Nullable UUID feePlanId) {
+  public void setFeePlanId(@Nullable Optional<UUID> feePlanId) {
     this.feePlanId = feePlanId;
   }
 
-  public FeeStructureUpdate name(@Nullable String name) {
+  public FeeStructureUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -148,14 +148,14 @@ public class FeeStructureUpdate {
    * Admin-facing name.
    * @return name
    */
-  @Size(max = 150) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 

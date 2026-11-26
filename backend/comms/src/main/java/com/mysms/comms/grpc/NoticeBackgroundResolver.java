@@ -63,7 +63,7 @@ public class NoticeBackgroundResolver extends NoticeBackgroundServiceGrpc.Notice
                 bridge.id(request.getNoticeBackground().getId(), "id"),
                 bridge.requiredIfMatch(request.getNoticeBackground().getEtag()),
                 bridge.changes(request.getNoticeBackground(), request.getUpdateMask(), NoticeBackgroundUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNoticeBackgroundResponse.newBuilder(), "notice_background", updated).build());
     }
 

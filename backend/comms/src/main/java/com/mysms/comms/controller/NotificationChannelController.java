@@ -117,11 +117,10 @@ public class NotificationChannelController implements NotificationChannelApi {
 
     @Override
     public ResponseEntity<NotificationChannel> updateNotificationChannel(UUID notificationChannelId,
-            String ifMatch, NotificationChannelUpdate notificationChannelUpdate, String updateMask,
-            Boolean validateOnly) {
+            String ifMatch, NotificationChannelUpdate notificationChannelUpdate, Boolean validateOnly) {
         NotificationChannel updated =
                 notificationChannelService.updateNotificationChannel(notificationChannelId, ifMatch,
-                        notificationChannelUpdate, updateMask,
+                        notificationChannelUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
@@ -129,11 +128,10 @@ public class NotificationChannelController implements NotificationChannelApi {
     @Override
     public ResponseEntity<NotificationChannelProperty> updateNotificationChannelProperty(
             UUID notificationChannelId, UUID notificationChannelPropertyId, String ifMatch,
-            NotificationChannelPropertyUpdate notificationChannelPropertyUpdate, String updateMask,
-            Boolean validateOnly) {
+            NotificationChannelPropertyUpdate notificationChannelPropertyUpdate, Boolean validateOnly) {
         NotificationChannelProperty updated =
                 notificationChannelService.updateNotificationChannelProperty(notificationChannelId,
-                        notificationChannelPropertyId, ifMatch, notificationChannelPropertyUpdate, updateMask,
+                        notificationChannelPropertyId, ifMatch, notificationChannelPropertyUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

@@ -21,7 +21,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.finance.api.model.Coupon;
 import com.mysms.finance.api.model.CouponScope;
 import com.mysms.finance.api.model.CouponScopeUpdate;
@@ -59,11 +59,6 @@ public class CouponService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "finance.coupon.create";
     static final String PERMISSION_UPDATE = "finance.coupon.update";
     static final String PERMISSION_DELETE = "finance.coupon.delete";
-    /** The contract's CouponUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("code", "discountType", "percentageDiscount", "fixedDiscount", "expiresOn", "usageLimit",
-                    "redemptionCount",
-            "isEnabled");
 
     public static final String COUPON_SCOPE_AGGREGATE = CouponScopeEntity.TABLE;
     static final String COUPON_SCOPE_PERMISSION_LIST = "finance.coupon_scope.read";
@@ -71,8 +66,6 @@ public class CouponService extends AppTransactionManager {
     static final String COUPON_SCOPE_PERMISSION_CREATE = "finance.coupon_scope.create";
     static final String COUPON_SCOPE_PERMISSION_UPDATE = "finance.coupon_scope.update";
     static final String COUPON_SCOPE_PERMISSION_DELETE = "finance.coupon_scope.delete";
-    /** The contract's CouponScopeUpdate fields, in apply order. */
-    static final List<String> COUPON_SCOPE_WRITABLE = List.of("lmsCourseId", "lmsCohortId");
 
     private final CouponRepository repository;
     private final CouponMapper mapper;
@@ -145,12 +138,11 @@ public class CouponService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set. The merged row is validated as a whole, and must stay within the caller's scope.
      */
-    public Coupon updateCoupon(UUID id, String ifMatch, CouponUpdate changes, String updateMask, boolean validateOnly) {
+    public Coupon updateCoupon(UUID id, String ifMatch, CouponUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             CouponEntity entity = loadVisible(scope, id);
@@ -158,7 +150,7 @@ public class CouponService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -218,23 +210,20 @@ public class CouponService extends AppTransactionManager {
         return Optional.empty();
     }
 
-    /** Applies the selected CouponUpdate fields; explicit per field so a mask can clear values (no reflection). */
-    private static void apply(CouponEntity entity, CouponUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "code" -> entity.setCode(changes.getCode());
-                case "discountType" -> entity.setDiscountType(Optional.ofNullable(changes.getDiscountType())
-                        .map(v -> v.getValue()).orElse(null));
-                case "percentageDiscount" -> entity.setPercentageDiscount(
-                        WireValues.decimal(changes.getPercentageDiscount()));
-                case "fixedDiscount" -> entity.setFixedDiscount(WireValues.decimal(changes.getFixedDiscount()));
-                case "expiresOn" -> entity.setExpiresOn(changes.getExpiresOn());
-                case "usageLimit" -> entity.setUsageLimit(changes.getUsageLimit());
-                case "redemptionCount" -> entity.setRedemptionCount(changes.getRedemptionCount());
-                case "isEnabled" -> entity.setIsEnabled(changes.getIsEnabled());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(CouponEntity entity, CouponUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("code", changes.getCode(), entity::setCode);
+        patch.apply("discountType", changes.getDiscountType(),
+                v -> entity.setDiscountType(v == null ? null : v.getValue()));
+        patch.apply("percentageDiscount", changes.getPercentageDiscount(),
+                v -> entity.setPercentageDiscount(WireValues.decimal(v)));
+        patch.apply("fixedDiscount", changes.getFixedDiscount(), v -> entity.setFixedDiscount(WireValues.decimal(v)));
+        patch.apply("expiresOn", changes.getExpiresOn(), entity::setExpiresOn);
+        patch.apply("usageLimit", changes.getUsageLimit(), entity::setUsageLimit);
+        patch.apply("redemptionCount", changes.getRedemptionCount(), entity::setRedemptionCount);
+        patch.apply("isEnabled", changes.getIsEnabled(), entity::setIsEnabled);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -313,13 +302,12 @@ public class CouponService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set. The merged row is validated as a whole, and must stay within the caller's scope.
      */
     public CouponScope updateCouponScope(UUID couponId, UUID id, String ifMatch, CouponScopeUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, COUPON_SCOPE_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(COUPON_SCOPE_PERMISSION_UPDATE);
             CouponScopeEntity entity = loadVisibleCouponScope(scope, couponId, id);
@@ -327,7 +315,7 @@ public class CouponService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyCouponScope(entity, changes, fields);
+            List<String> fields = applyCouponScope(entity, changes);
             validator.validate(couponScopeMapper.toDto(entity));
             assertValidCouponScope(entity, false);
             scope.requireWritable(institutionOfCouponScope(entity));
@@ -380,15 +368,12 @@ public class CouponService extends AppTransactionManager {
         return Optional.empty();
     }
 
-    /** Applies the selected CouponScopeUpdate fields; explicit per field so a mask can clear values (no reflection). */
-    private static void applyCouponScope(CouponScopeEntity entity, CouponScopeUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "lmsCourseId" -> entity.setLmsCourseId(changes.getLmsCourseId());
-                case "lmsCohortId" -> entity.setLmsCohortId(changes.getLmsCohortId());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyCouponScope(CouponScopeEntity entity, CouponScopeUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("lmsCourseId", changes.getLmsCourseId(), entity::setLmsCourseId);
+        patch.apply("lmsCohortId", changes.getLmsCohortId(), entity::setLmsCohortId);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

@@ -61,9 +61,9 @@ public class ContentViewController implements ContentViewApi {
 
     @Override
     public ResponseEntity<ContentView> updateContentView(UUID contentViewId, String ifMatch,
-            ContentViewUpdate contentViewUpdate, String updateMask, Boolean validateOnly) {
+            ContentViewUpdate contentViewUpdate, Boolean validateOnly) {
         ContentView updated =
-                contentViewService.updateContentView(contentViewId, ifMatch, contentViewUpdate, updateMask,
+                contentViewService.updateContentView(contentViewId, ifMatch, contentViewUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

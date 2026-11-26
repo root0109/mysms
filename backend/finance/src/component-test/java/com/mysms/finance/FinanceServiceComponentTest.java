@@ -68,8 +68,8 @@ class FinanceServiceComponentTest {
                 .query(Integer.class).single();
         assertThat(tables).isEqualTo(TABLES);
         Integer moduleSchemas = database.jdbc().sql("SELECT count(*) FROM pg_namespace WHERE nspname = ANY(:modules)")
-                .param("modules", ModuleChecks.MODULES.toArray(String[]::new)).query(Integer.class).single();
-        assertThat(moduleSchemas).as("only its own schema exists in its database").isEqualTo(1);
+                .param("modules", ModuleChecks.SCHEMAS.toArray(String[]::new)).query(Integer.class).single();
+        assertThat(moduleSchemas).as("only its module's schemas exist in its database").isEqualTo(1);
         Boolean ownsSchema = database.jdbc().sql(
                 "SELECT pg_get_userbyid(nspowner) = current_user FROM pg_namespace WHERE nspname = 'finance'")
                 .query(Boolean.class).single();

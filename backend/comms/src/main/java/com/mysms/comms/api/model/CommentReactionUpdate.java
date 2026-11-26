@@ -17,7 +17,7 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of CommentReaction that can be updated (partial update; see updateMask).
+ * Fields of CommentReaction that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class CommentReactionUpdate {
@@ -58,12 +58,12 @@ public class CommentReactionUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable ReactionEnum reaction;
+  private @Nullable Optional<ReactionEnum> reaction;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<Boolean> isActive;
 
-  public CommentReactionUpdate reaction(@Nullable ReactionEnum reaction) {
+  public CommentReactionUpdate reaction(@Nullable Optional<ReactionEnum> reaction) {
     this.reaction = reaction;
     return this;
   }
@@ -74,16 +74,16 @@ public class CommentReactionUpdate {
    */
   
   @JsonProperty("reaction")
-  public @Nullable ReactionEnum getReaction() {
+  public @Nullable Optional<ReactionEnum> getReaction() {
     return reaction;
   }
 
   @JsonProperty("reaction")
-  public void setReaction(@Nullable ReactionEnum reaction) {
+  public void setReaction(@Nullable Optional<ReactionEnum> reaction) {
     this.reaction = reaction;
   }
 
-  public CommentReactionUpdate isActive(@Nullable Boolean isActive) {
+  public CommentReactionUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -94,12 +94,12 @@ public class CommentReactionUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

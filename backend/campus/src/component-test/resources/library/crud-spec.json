@@ -1,0 +1,582 @@
+{
+ "module": "library",
+ "resources": [
+  {
+   "name": "Author",
+   "table": "library.author",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/authors",
+   "item": "/v1/library/authors/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "name": "t-name-0a080922"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "keeps": "name"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "LibraryCard",
+   "table": "library.library_card",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/library-cards",
+   "item": "/v1/library/library-cards/{id}",
+   "scope": "direct",
+   "fixtures": [
+    "INSERT INTO library.library_card_type (tenant_id, name, max_items, loan_days, row_version, code, id) VALUES (:tenant, 't-name-d7cda5ef', 2, 1, 1, 'C393E21F1', 'c910a63a-1027-563d-b337-bb88f6c03820') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "cardNumber": "t-card-number-1764a6b0",
+    "cardTypeId": "c910a63a-1027-563d-b337-bb88f6c03820",
+    "holderType": "student",
+    "personId": "274db0f1-9d76-55eb-ad00-758b64bd0fb2",
+    "studentId": "0196f000-0000-7000-8000-0000000575d1",
+    "issueDate": "2026-01-10"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "cardNumber",
+    "clears": "maxItemsOverride"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "LibraryCardType",
+   "table": "library.library_card_type",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/library-card-types",
+   "item": "/v1/library/library-card-types/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "CCB85817E",
+    "name": "t-name-a43c973b",
+    "maxItems": 2,
+    "loanDays": 1
+   },
+   "update": {
+    "isActive": true
+   },
+   "patch": {
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Loan",
+   "table": "library.loan",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/loans",
+   "item": "/v1/library/loans/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO library.media (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-a78ea14b', 1, '76365677-5d4d-5773-881d-664515802a12') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO library.media_unit (tenant_id, media_id, accession_number, row_version, id) VALUES (:tenant, '76365677-5d4d-5773-881d-664515802a12', 't-accession-number-1ac5c932', 1, '9296635a-1006-54e9-994e-3bde65283766') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO library.library_card_type (tenant_id, name, max_items, loan_days, row_version, code, id) VALUES (:tenant, 't-name-d7cda5ef', 2, 1, 1, 'C393E21F1', 'c910a63a-1027-563d-b337-bb88f6c03820') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO library.library_card (tenant_id, institution_id, card_number, card_type_id, holder_type, person_id, student_id, issue_date, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-card-number-7bce1338', 'c910a63a-1027-563d-b337-bb88f6c03820', 'student', '6aed5493-5efd-5361-9f85-439765c65d02', '0196f000-0000-7000-8000-0000000575d1', '2026-01-10', 1, '699996c4-194d-52b8-9f30-397018b35638') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "mediaUnitId": "9296635a-1006-54e9-994e-3bde65283766",
+    "mediaId": "76365677-5d4d-5773-881d-664515802a12",
+    "libraryCardId": "699996c4-194d-52b8-9f30-397018b35638",
+    "borrowerUserId": "0196f000-0000-7000-8000-00000000c0c2",
+    "issuedOn": "2026-01-10"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "fineAmount",
+    "clears": "returnedOn"
+   },
+   "duplicateConflicts": false,
+   "ownerOnly": "0196f000-0000-7000-8000-00000000c0c2"
+  },
+  {
+   "name": "Media",
+   "table": "library.media",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/media",
+   "item": "/v1/library/media/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "title": "t-title-358bc821"
+   },
+   "update": {
+    "title": "Updated title"
+   },
+   "patch": {
+    "clears": "description",
+    "keeps": "title"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "MediaAuthor",
+   "table": "library.media_author",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/media/76365677-5d4d-5773-881d-664515802a12/authors",
+   "item": "/v1/library/media/76365677-5d4d-5773-881d-664515802a12/authors/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO library.media (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-a78ea14b', 1, '76365677-5d4d-5773-881d-664515802a12') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO library.author (tenant_id, name, row_version, id) VALUES (:tenant, 't-name-16049c94', 1, '9cd0bde9-25f0-5c4a-95d0-b34c323aedb5') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "mediaId": "76365677-5d4d-5773-881d-664515802a12",
+    "authorId": "9cd0bde9-25f0-5c4a-95d0-b34c323aedb5"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "sortOrder"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "MediaCategory",
+   "table": "library.media_category",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/media-categories",
+   "item": "/v1/library/media-categories/{id}",
+   "scope": "direct",
+   "fixtures": [],
+   "create": {
+    "code": "CC000F056",
+    "institutionId": "0196f000-0000-7000-8000-00000000a001",
+    "name": "t-name-90767a37"
+   },
+   "update": {
+    "isActive": true
+   },
+   "patch": {
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "MediaCourse",
+   "table": "library.media_course",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/media/76365677-5d4d-5773-881d-664515802a12/courses",
+   "item": "/v1/library/media/76365677-5d4d-5773-881d-664515802a12/courses/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO library.media (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-a78ea14b', 1, '76365677-5d4d-5773-881d-664515802a12') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "mediaId": "76365677-5d4d-5773-881d-664515802a12",
+    "courseId": "9c893b3d-d87a-545f-bc0e-5eca6f1d2538"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "courseId"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "MediaPublisher",
+   "table": "library.media_publisher",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/media/76365677-5d4d-5773-881d-664515802a12/publishers",
+   "item": "/v1/library/media/76365677-5d4d-5773-881d-664515802a12/publishers/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO library.media (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-a78ea14b', 1, '76365677-5d4d-5773-881d-664515802a12') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO library.publisher (tenant_id, name, row_version, id) VALUES (:tenant, 't-name-6ea0f44f', 1, 'a1672fa6-8411-560d-91ce-a8c587976f4e') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "mediaId": "76365677-5d4d-5773-881d-664515802a12",
+    "publisherId": "a1672fa6-8411-560d-91ce-a8c587976f4e"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "publisherId"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "MediaSubject",
+   "table": "library.media_subject",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/media/76365677-5d4d-5773-881d-664515802a12/subjects",
+   "item": "/v1/library/media/76365677-5d4d-5773-881d-664515802a12/subjects/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO library.media (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-a78ea14b', 1, '76365677-5d4d-5773-881d-664515802a12') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "mediaId": "76365677-5d4d-5773-881d-664515802a12",
+    "subjectId": "46168871-8e64-5f06-a647-7dea46a65217"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "subjectId"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "MediaType",
+   "table": "library.media_type",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/media-types",
+   "item": "/v1/library/media-types/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "code": "C106B9E0A",
+    "name": "t-name-694df643"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "keeps": "name"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "MediaUnit",
+   "table": "library.media_unit",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/media/76365677-5d4d-5773-881d-664515802a12/units",
+   "item": "/v1/library/media/76365677-5d4d-5773-881d-664515802a12/units/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO library.media (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-a78ea14b', 1, '76365677-5d4d-5773-881d-664515802a12') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "mediaId": "76365677-5d4d-5773-881d-664515802a12",
+    "accessionNumber": "t-accession-number-3a263f7b"
+   },
+   "update": {
+    "barcode": "Updated barcode"
+   },
+   "patch": {
+    "clears": "barcode",
+    "keeps": "accessionNumber"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Publisher",
+   "table": "library.publisher",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/publishers",
+   "item": "/v1/library/publishers/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "name": "t-name-5ff791e1"
+   },
+   "update": {
+    "name": "Updated name"
+   },
+   "patch": {
+    "keeps": "name"
+   },
+   "duplicateConflicts": false
+  },
+  {
+   "name": "PurchaseRequest",
+   "table": "library.purchase_request",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/purchase-requests",
+   "item": "/v1/library/purchase-requests/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "title": "t-title-8a06fb79",
+    "authorText": "t-author-text-94e9b6d6"
+   },
+   "update": {
+    "requestNumber": "Updated request_number"
+   },
+   "patch": {
+    "clears": "requestNumber",
+    "keeps": "title"
+   },
+   "duplicateConflicts": false,
+   "transitions": [
+    {
+     "operation": "library.SubmitPurchaseRequest",
+     "path": "/v1/library/purchase-requests/{id}:submit",
+     "permission": "library.purchase_request.submit_purchase_request",
+     "guard": {
+      "status": [
+       "draft"
+      ]
+     },
+     "prepare": [
+      "UPDATE library.purchase_request SET status = 'draft' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "requested"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "library.AcceptPurchaseRequest",
+     "path": "/v1/library/purchase-requests/{id}:accept",
+     "permission": "library.purchase_request.accept_purchase_request",
+     "guard": {
+      "status": [
+       "requested"
+      ]
+     },
+     "prepare": [
+      "UPDATE library.purchase_request SET status = 'requested' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "accepted"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "library.RejectPurchaseRequest",
+     "path": "/v1/library/purchase-requests/{id}:reject",
+     "permission": "library.purchase_request.reject_purchase_request",
+     "guard": {
+      "status": [
+       "requested"
+      ]
+     },
+     "prepare": [
+      "UPDATE library.purchase_request SET status = 'requested' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "rejected"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  },
+  {
+   "name": "PurchaseRequestCourse",
+   "table": "library.purchase_request_course",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/purchase-requests/a8cafca6-d152-5f7d-82dc-9c6671f3df2a/courses",
+   "item": "/v1/library/purchase-requests/a8cafca6-d152-5f7d-82dc-9c6671f3df2a/courses/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO library.purchase_request (tenant_id, title, author_text, row_version, id) VALUES (:tenant, 't-title-1affb22f', 't-author-text-d26005af', 1, 'a8cafca6-d152-5f7d-82dc-9c6671f3df2a') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "purchaseRequestId": "a8cafca6-d152-5f7d-82dc-9c6671f3df2a",
+    "courseId": "29664d4c-2c42-5c7e-9b11-e2f649ba3494"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "courseId"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "PurchaseRequestSubject",
+   "table": "library.purchase_request_subject",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/purchase-requests/a8cafca6-d152-5f7d-82dc-9c6671f3df2a/subjects",
+   "item": "/v1/library/purchase-requests/a8cafca6-d152-5f7d-82dc-9c6671f3df2a/subjects/{id}",
+   "scope": "tenant",
+   "fixtures": [
+    "INSERT INTO library.purchase_request (tenant_id, title, author_text, row_version, id) VALUES (:tenant, 't-title-1affb22f', 't-author-text-d26005af', 1, 'a8cafca6-d152-5f7d-82dc-9c6671f3df2a') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "purchaseRequestId": "a8cafca6-d152-5f7d-82dc-9c6671f3df2a",
+    "subjectId": "d2b4999f-1674-5c6b-9145-77fb6ee1c073"
+   },
+   "update": {},
+   "patch": {
+    "keeps": "subjectId"
+   },
+   "duplicateConflicts": true
+  },
+  {
+   "name": "Reservation",
+   "table": "library.reservation",
+   "ops": [
+    "Create",
+    "Delete",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/library/reservations",
+   "item": "/v1/library/reservations/{id}",
+   "scope": "chain",
+   "fixtures": [
+    "INSERT INTO library.media (tenant_id, institution_id, title, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-a78ea14b', 1, '76365677-5d4d-5773-881d-664515802a12') ON CONFLICT (id) DO NOTHING"
+   ],
+   "create": {
+    "mediaId": "76365677-5d4d-5773-881d-664515802a12",
+    "dateFrom": "2026-01-10",
+    "dateTo": "2026-01-20"
+   },
+   "update": {
+    "reference": "Updated reference"
+   },
+   "patch": {
+    "clears": "reference",
+    "keeps": "dateFrom"
+   },
+   "duplicateConflicts": false,
+   "ownerOnly": "0196f000-0000-7000-8000-00000000c0c1",
+   "transitions": [
+    {
+     "operation": "library.AcceptReservation",
+     "path": "/v1/library/reservations/{id}:accept",
+     "permission": "library.reservation.accept_reservation",
+     "guard": {
+      "status": [
+       "requested"
+      ]
+     },
+     "prepare": [
+      "UPDATE library.reservation SET status = 'requested' WHERE id = '{id}'"
+     ],
+     "body": {},
+     "sets": {
+      "status": "accepted"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    },
+    {
+     "operation": "library.RejectReservation",
+     "path": "/v1/library/reservations/{id}:reject",
+     "permission": "library.reservation.reject_reservation",
+     "guard": {
+      "status": [
+       "requested"
+      ]
+     },
+     "prepare": [
+      "UPDATE library.reservation SET status = 'requested' WHERE id = '{id}'"
+     ],
+     "body": {
+      "reason": "Contract test reason"
+     },
+     "sets": {
+      "status": "rejected"
+     },
+     "stamps": [],
+     "etag": true,
+     "ifMatch": false
+    }
+   ]
+  }
+ ]
+}

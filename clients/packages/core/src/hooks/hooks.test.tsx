@@ -172,20 +172,27 @@ describe('master data hooks (PLT-07)', () => {
     expect(new URLSearchParams(reads[1]?.search).get('cursor')).toBe('2:1');
   });
 
-  it('sends the update mask', async () => {
+  it('sends only the changed fields, null to clear, and no update mask', async () => {
     let query = '';
+    let body: unknown;
     const { runtime, wrapper } = setup({
-      'PATCH /v1/master/countries/{countryId}': (req) => {
+      'PATCH /v1/master/countries/{countryId}': async (req) => {
         query = new URL(req.url).search;
+        body = await req.json();
         return json(COUNTRY, { headers: { ETag: '"9"' } });
       },
     });
     await signIn(runtime);
     const { result } = renderHook(() => useUpdateCountry(), { wrapper });
     await act(() =>
-      result.current.mutateAsync({ countryId: 'c1', etag: '"8"', changes: { name: 'X', shortName: 'Y' } }),
+      result.current.mutateAsync({
+        countryId: 'c1',
+        etag: '"8"',
+        changes: { name: 'X', shortName: undefined },
+      }),
     );
-    expect(decodeURIComponent(query)).toBe('?updateMask=name,shortName');
+    expect(query).toBe('');
+    expect(body).toEqual({ name: 'X', shortName: null });
   });
 });
 

@@ -16,36 +16,36 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of ClassPage that can be updated (partial update; see updateMask).
+ * Fields of ClassPage that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class ClassPageUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID academicYearId;
+  private @Nullable Optional<UUID> academicYearId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID pageCategoryId;
+  private @Nullable Optional<@NotNull UUID> pageCategoryId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String name;
+  private @Nullable Optional<@NotNull @Size(max = 150) String> name;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String description;
+  private @Nullable Optional<@NotNull String> description;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID coverImageFileId;
+  private @Nullable Optional<UUID> coverImageFileId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID ownerUserId;
+  private @Nullable Optional<UUID> ownerUserId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isActive;
+  private @Nullable Optional<@NotNull Boolean> isActive;
 
-  public ClassPageUpdate institutionId(@Nullable UUID institutionId) {
+  public ClassPageUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -54,18 +54,18 @@ public class ClassPageUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public ClassPageUpdate academicYearId(@Nullable UUID academicYearId) {
+  public ClassPageUpdate academicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
     return this;
   }
@@ -74,18 +74,18 @@ public class ClassPageUpdate {
    * Academic year.
    * @return academicYearId
    */
-  @Valid 
+  
   @JsonProperty("academicYearId")
-  public @Nullable UUID getAcademicYearId() {
+  public @Nullable Optional<UUID> getAcademicYearId() {
     return academicYearId;
   }
 
   @JsonProperty("academicYearId")
-  public void setAcademicYearId(@Nullable UUID academicYearId) {
+  public void setAcademicYearId(@Nullable Optional<UUID> academicYearId) {
     this.academicYearId = academicYearId;
   }
 
-  public ClassPageUpdate pageCategoryId(@Nullable UUID pageCategoryId) {
+  public ClassPageUpdate pageCategoryId(@Nullable Optional<UUID> pageCategoryId) {
     this.pageCategoryId = pageCategoryId;
     return this;
   }
@@ -94,18 +94,18 @@ public class ClassPageUpdate {
    * Category.
    * @return pageCategoryId
    */
-  @Valid 
+  
   @JsonProperty("pageCategoryId")
-  public @Nullable UUID getPageCategoryId() {
+  public @Nullable Optional<UUID> getPageCategoryId() {
     return pageCategoryId;
   }
 
   @JsonProperty("pageCategoryId")
-  public void setPageCategoryId(@Nullable UUID pageCategoryId) {
+  public void setPageCategoryId(@Nullable Optional<UUID> pageCategoryId) {
     this.pageCategoryId = pageCategoryId;
   }
 
-  public ClassPageUpdate name(@Nullable String name) {
+  public ClassPageUpdate name(@Nullable Optional<String> name) {
     this.name = name;
     return this;
   }
@@ -114,18 +114,18 @@ public class ClassPageUpdate {
    * Page name.
    * @return name
    */
-  @Size(max = 150) 
+  
   @JsonProperty("name")
-  public @Nullable String getName() {
+  public @Nullable Optional<String> getName() {
     return name;
   }
 
   @JsonProperty("name")
-  public void setName(@Nullable String name) {
+  public void setName(@Nullable Optional<String> name) {
     this.name = name;
   }
 
-  public ClassPageUpdate description(@Nullable String description) {
+  public ClassPageUpdate description(@Nullable Optional<String> description) {
     this.description = description;
     return this;
   }
@@ -136,16 +136,16 @@ public class ClassPageUpdate {
    */
   
   @JsonProperty("description")
-  public @Nullable String getDescription() {
+  public @Nullable Optional<String> getDescription() {
     return description;
   }
 
   @JsonProperty("description")
-  public void setDescription(@Nullable String description) {
+  public void setDescription(@Nullable Optional<String> description) {
     this.description = description;
   }
 
-  public ClassPageUpdate coverImageFileId(@Nullable UUID coverImageFileId) {
+  public ClassPageUpdate coverImageFileId(@Nullable Optional<UUID> coverImageFileId) {
     this.coverImageFileId = coverImageFileId;
     return this;
   }
@@ -154,18 +154,18 @@ public class ClassPageUpdate {
    * Cover image.
    * @return coverImageFileId
    */
-  @Valid 
+  
   @JsonProperty("coverImageFileId")
-  public @Nullable UUID getCoverImageFileId() {
+  public @Nullable Optional<UUID> getCoverImageFileId() {
     return coverImageFileId;
   }
 
   @JsonProperty("coverImageFileId")
-  public void setCoverImageFileId(@Nullable UUID coverImageFileId) {
+  public void setCoverImageFileId(@Nullable Optional<UUID> coverImageFileId) {
     this.coverImageFileId = coverImageFileId;
   }
 
-  public ClassPageUpdate ownerUserId(@Nullable UUID ownerUserId) {
+  public ClassPageUpdate ownerUserId(@Nullable Optional<UUID> ownerUserId) {
     this.ownerUserId = ownerUserId;
     return this;
   }
@@ -174,18 +174,18 @@ public class ClassPageUpdate {
    * Page owner.
    * @return ownerUserId
    */
-  @Valid 
+  
   @JsonProperty("ownerUserId")
-  public @Nullable UUID getOwnerUserId() {
+  public @Nullable Optional<UUID> getOwnerUserId() {
     return ownerUserId;
   }
 
   @JsonProperty("ownerUserId")
-  public void setOwnerUserId(@Nullable UUID ownerUserId) {
+  public void setOwnerUserId(@Nullable Optional<UUID> ownerUserId) {
     this.ownerUserId = ownerUserId;
   }
 
-  public ClassPageUpdate isActive(@Nullable Boolean isActive) {
+  public ClassPageUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
   }
@@ -196,12 +196,12 @@ public class ClassPageUpdate {
    */
   
   @JsonProperty("isActive")
-  public @Nullable Boolean getIsActive() {
+  public @Nullable Optional<Boolean> getIsActive() {
     return isActive;
   }
 
   @JsonProperty("isActive")
-  public void setIsActive(@Nullable Boolean isActive) {
+  public void setIsActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
   }
 

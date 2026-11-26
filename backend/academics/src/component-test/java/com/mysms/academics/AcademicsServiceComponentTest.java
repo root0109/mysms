@@ -32,7 +32,7 @@ import tools.jackson.databind.json.JsonMapper;
 class AcademicsServiceComponentTest {
 
     /** CREATE TABLE statements in database/migrations/academics (partitions included). */
-    private static final int TABLES = 21;
+    private static final int TABLES = 22;
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
     private static final TestTokens TOKENS = new TestTokens();
     private static final HttpClient HTTP = HttpClient.newHttpClient();
@@ -46,7 +46,7 @@ class AcademicsServiceComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "academics");
+        DATABASE.register(registry, "academics", "timetable", "attendance", "assessment");
         registry.add("mysms.auth.api-docs", () -> true);
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
@@ -68,8 +68,8 @@ class AcademicsServiceComponentTest {
                 .query(Integer.class).single();
         assertThat(tables).isEqualTo(TABLES);
         Integer moduleSchemas = database.jdbc().sql("SELECT count(*) FROM pg_namespace WHERE nspname = ANY(:modules)")
-                .param("modules", ModuleChecks.MODULES.toArray(String[]::new)).query(Integer.class).single();
-        assertThat(moduleSchemas).as("only its own schema exists in its database").isEqualTo(1);
+                .param("modules", ModuleChecks.SCHEMAS.toArray(String[]::new)).query(Integer.class).single();
+        assertThat(moduleSchemas).as("only its module's schemas exist in its database").isEqualTo(4);
         Boolean ownsSchema = database.jdbc().sql(
                 "SELECT pg_get_userbyid(nspowner) = current_user FROM pg_namespace WHERE nspname = 'academics'")
                 .query(Boolean.class).single();

@@ -268,6 +268,22 @@
     },
     {
       "module": "academics",
+      "resource": "TeacherSubject",
+      "parent": null,
+      "scope": "chain",
+      "operations": {
+        "Create": "academics.CreateTeacherSubject",
+        "Delete": "academics.DeleteTeacherSubject",
+        "Get": "academics.GetTeacherSubject",
+        "List": "academics.ListTeacherSubjects",
+        "Update": "academics.UpdateTeacherSubject"
+      },
+      "partition": null,
+      "booleanDefaults": {},
+      "transitions": []
+    },
+    {
+      "module": "academics",
       "resource": "TeachingAssignment",
       "parent": null,
       "scope": "chain",
@@ -2513,22 +2529,6 @@
         "Get": "hr.GetStaffDepartment",
         "List": "hr.ListStaffDepartments",
         "Update": "hr.UpdateStaffDepartment"
-      },
-      "partition": null,
-      "booleanDefaults": {},
-      "transitions": []
-    },
-    {
-      "module": "hr",
-      "resource": "StaffSubject",
-      "parent": "staffId",
-      "scope": "chain",
-      "operations": {
-        "Create": "hr.CreateStaffSubject",
-        "Delete": "hr.DeleteStaffSubject",
-        "Get": "hr.GetStaffSubject",
-        "List": "hr.ListStaffSubjects",
-        "Update": "hr.UpdateStaffSubject"
       },
       "partition": null,
       "booleanDefaults": {},

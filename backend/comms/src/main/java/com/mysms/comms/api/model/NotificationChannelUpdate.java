@@ -15,24 +15,24 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of NotificationChannel that can be updated (partial update; see updateMask).
+ * Fields of NotificationChannel that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class NotificationChannelUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String code;
+  private @Nullable Optional<@NotNull @Size(max = 60) String> code;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String description;
+  private @Nullable Optional<@Size(max = 200) String> description;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Boolean isEnabled;
+  private @Nullable Optional<@NotNull Boolean> isEnabled;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Integer sortOrder;
+  private @Nullable Optional<@NotNull Integer> sortOrder;
 
-  public NotificationChannelUpdate code(@Nullable String code) {
+  public NotificationChannelUpdate code(@Nullable Optional<String> code) {
     this.code = code;
     return this;
   }
@@ -41,18 +41,18 @@ public class NotificationChannelUpdate {
    * Channel code (notification.email, notification.sms, notification.popup).
    * @return code
    */
-  @Size(max = 60) 
+  
   @JsonProperty("code")
-  public @Nullable String getCode() {
+  public @Nullable Optional<String> getCode() {
     return code;
   }
 
   @JsonProperty("code")
-  public void setCode(@Nullable String code) {
+  public void setCode(@Nullable Optional<String> code) {
     this.code = code;
   }
 
-  public NotificationChannelUpdate description(@Nullable String description) {
+  public NotificationChannelUpdate description(@Nullable Optional<String> description) {
     this.description = description;
     return this;
   }
@@ -61,18 +61,18 @@ public class NotificationChannelUpdate {
    * Description.
    * @return description
    */
-  @Size(max = 200) 
+  
   @JsonProperty("description")
-  public @Nullable String getDescription() {
+  public @Nullable Optional<String> getDescription() {
     return description;
   }
 
   @JsonProperty("description")
-  public void setDescription(@Nullable String description) {
+  public void setDescription(@Nullable Optional<String> description) {
     this.description = description;
   }
 
-  public NotificationChannelUpdate isEnabled(@Nullable Boolean isEnabled) {
+  public NotificationChannelUpdate isEnabled(@Nullable Optional<Boolean> isEnabled) {
     this.isEnabled = isEnabled;
     return this;
   }
@@ -83,16 +83,16 @@ public class NotificationChannelUpdate {
    */
   
   @JsonProperty("isEnabled")
-  public @Nullable Boolean getIsEnabled() {
+  public @Nullable Optional<Boolean> getIsEnabled() {
     return isEnabled;
   }
 
   @JsonProperty("isEnabled")
-  public void setIsEnabled(@Nullable Boolean isEnabled) {
+  public void setIsEnabled(@Nullable Optional<Boolean> isEnabled) {
     this.isEnabled = isEnabled;
   }
 
-  public NotificationChannelUpdate sortOrder(@Nullable Integer sortOrder) {
+  public NotificationChannelUpdate sortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
     return this;
   }
@@ -103,12 +103,12 @@ public class NotificationChannelUpdate {
    */
   
   @JsonProperty("sortOrder")
-  public @Nullable Integer getSortOrder() {
+  public @Nullable Optional<Integer> getSortOrder() {
     return sortOrder;
   }
 
   @JsonProperty("sortOrder")
-  public void setSortOrder(@Nullable Integer sortOrder) {
+  public void setSortOrder(@Nullable Optional<Integer> sortOrder) {
     this.sortOrder = sortOrder;
   }
 

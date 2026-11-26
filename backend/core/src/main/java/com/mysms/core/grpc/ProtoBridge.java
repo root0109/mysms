@@ -8,7 +8,6 @@ import com.google.protobuf.FieldMask;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
-import com.google.protobuf.util.FieldMaskUtil;
 import com.google.protobuf.util.JsonFormat;
 import com.mysms.core.error.InvalidArgumentException;
 import com.mysms.core.error.PreconditionRequiredException;
@@ -26,6 +25,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.util.ReflectionUtils;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -44,9 +44,11 @@ import tools.jackson.databind.node.ObjectNode;
  * "not set";</li>
  * <li>proto3 defaults: a field without presence that holds its default is "not sent", like an absent JSON property —
  * except a bool or number named in an update mask, which is sent as {@code false} / {@code 0};</li>
+ * <li>updates: the update mask decides the three states of REST's {@code <Resource>Update} — masked and held is the
+ * value, masked and not held is null (cleared), unmasked is absent (unchanged);</li>
  * <li>paging: {@code pageable} ({@code page}, {@code size}, {@code sort}, {@code cursor}) ↔ the list arguments, and a
  * {@link Page} ↔ {@code items} + {@code pagination};</li>
- * <li>{@code etag} ↔ If-Match, {@code update_mask} ↔ updateMask, path ids ↔ UUIDs;</li>
+ * <li>{@code etag} ↔ If-Match, path ids ↔ UUIDs;</li>
  * <li>an empty repeated field of a request body is {@code []} where the DTO requires the list (proto3 cannot tell an
  * empty list from an absent one, and a required list is never absent).</li>
  * </ul>
@@ -129,21 +131,41 @@ public final class ProtoBridge {
     }
 
     /**
-     * The changes of an update: the resource message as the REST update DTO. With a mask, a masked bool or number
-     * that holds its default is sent as that value (false, 0), so a mask can switch a flag off; every other default
-     * is "not sent", which with a mask clears the field and without one leaves it unchanged — REST's rules.
+     * The changes of an update as the REST {@code <Resource>Update} (§7.2): a masked field the message holds is its
+     * value; a masked field it does not hold is JSON null, which clears it (and is refused where the field is
+     * required, a list included) — except a masked bool or number, which is sent as its default (false, 0) so a mask
+     * can switch a flag off; an unmasked field is absent, which leaves it unchanged. Without a mask, the fields the
+     * message holds apply. Mask names may be proto or JSON names; one that is not a field of {@code type} is 400.
      */
     public <T> T changes(MessageOrBuilder resource, FieldMask mask, Class<T> type) {
         Set<String> masked = new HashSet<>();
         for (String path : mask.getPathsList()) {
             masked.add(path.split("\\.", 2)[0]);
         }
-        return validated(toRestTree(resource, masked), type);
-    }
-
-    /** REST's {@code updateMask} (comma-separated lowerCamelCase names), or null for an empty mask. */
-    public String updateMask(FieldMask mask) {
-        return mask.getPathsCount() == 0 ? null : FieldMaskUtil.toJsonString(mask);
+        ObjectNode tree = toRestTree(resource, masked);
+        if (masked.isEmpty()) {
+            return validated(tree, type);
+        }
+        Set<String> known = new HashSet<>();
+        for (FieldDescriptor field : resource.getDescriptorForType().getFields()) {
+            String name = field.getJsonName();
+            boolean listed = masked.contains(field.getName()) || masked.contains(name);
+            if (listed && ReflectionUtils.findField(type, name) != null) {
+                known.add(field.getName());
+                known.add(name);
+                if (!tree.has(name)) {
+                    tree.putNull(name); // a required list too: proto3 cannot say "empty", and null is refused
+                }
+            } else {
+                tree.remove(name);
+            }
+        }
+        for (String path : masked) {
+            if (!known.contains(path)) {
+                throw new InvalidArgumentException("update_mask: '" + path + "' is not an updatable field.");
+            }
+        }
+        return validated(tree, type);
     }
 
     /** A path id: a UUID, or 400 like REST's path binding. */
@@ -256,7 +278,8 @@ public final class ProtoBridge {
             throw new InvalidArgumentException(NOT_READABLE);
         }
         for (FieldDescriptor field : message.getDescriptorForType().getFields()) {
-            if (masked.contains(field.getName()) && !field.hasPresence() && !field.isRepeated()
+            boolean listed = masked.contains(field.getName()) || masked.contains(field.getJsonName());
+            if (listed && !field.hasPresence() && !field.isRepeated()
                     && SCALARS_SENT_WHEN_MASKED.contains(field.getJavaType()) && !tree.has(field.getJsonName())) {
                 tree.set(field.getJsonName(), json.valueToTree(message.getField(field)));
             }

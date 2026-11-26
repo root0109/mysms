@@ -34,12 +34,12 @@ const KIND: Readonly<Record<StaffAssignmentKind, KindText>> = {
     title: 'hr.staff.assign.subjects',
     none: 'hr.staff.assign.noneSubjects',
     add: 'hr.staff.assign.addSubject',
-    permission: (verb) => `hr.staff_subject.${verb}`,
+    permission: (verb) => `academics.teacher_subject.${verb}`,
   },
 };
 
 /**
- * One list of a staff member's departments or subjects (hr.staff_department / hr.staff_subject): each row can be
+ * One list of a staff member's departments or subjects (hr.staff_department / academics.teacher_subject): each row can be
  * re-pointed or removed under its etag, and one more added; every step is offered only with its permission. Names
  * come from the modules that own the departments (org) and subjects (academics).
  */
@@ -190,7 +190,7 @@ function AssignmentList({
  */
 export function StaffAssignmentsTab({ staffId, institutionId }: { staffId: string; institutionId: string }) {
   const mayDepartments = useCan('hr.staff_department.read');
-  const maySubjects = useCan('hr.staff_subject.read');
+  const maySubjects = useCan('academics.teacher_subject.read');
   const mayDepartmentNames = useCan('org.department.read');
   const maySubjectNames = useCan('academics.subject.read');
   const departments = useDepartments(mayDepartments && mayDepartmentNames);

@@ -16,24 +16,24 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of FeedbackThread that can be updated (partial update; see updateMask).
+ * Fields of FeedbackThread that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class FeedbackThreadUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID institutionId;
+  private @Nullable Optional<@NotNull UUID> institutionId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID guardianId;
+  private @Nullable Optional<@NotNull UUID> guardianId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID studentId;
+  private @Nullable Optional<@NotNull UUID> studentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID assignedToUserId;
+  private @Nullable Optional<@NotNull UUID> assignedToUserId;
 
-  public FeedbackThreadUpdate institutionId(@Nullable UUID institutionId) {
+  public FeedbackThreadUpdate institutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
     return this;
   }
@@ -42,18 +42,18 @@ public class FeedbackThreadUpdate {
    * Institution.
    * @return institutionId
    */
-  @Valid 
+  
   @JsonProperty("institutionId")
-  public @Nullable UUID getInstitutionId() {
+  public @Nullable Optional<UUID> getInstitutionId() {
     return institutionId;
   }
 
   @JsonProperty("institutionId")
-  public void setInstitutionId(@Nullable UUID institutionId) {
+  public void setInstitutionId(@Nullable Optional<UUID> institutionId) {
     this.institutionId = institutionId;
   }
 
-  public FeedbackThreadUpdate guardianId(@Nullable UUID guardianId) {
+  public FeedbackThreadUpdate guardianId(@Nullable Optional<UUID> guardianId) {
     this.guardianId = guardianId;
     return this;
   }
@@ -62,18 +62,18 @@ public class FeedbackThreadUpdate {
    * Guardian.
    * @return guardianId
    */
-  @Valid 
+  
   @JsonProperty("guardianId")
-  public @Nullable UUID getGuardianId() {
+  public @Nullable Optional<UUID> getGuardianId() {
     return guardianId;
   }
 
   @JsonProperty("guardianId")
-  public void setGuardianId(@Nullable UUID guardianId) {
+  public void setGuardianId(@Nullable Optional<UUID> guardianId) {
     this.guardianId = guardianId;
   }
 
-  public FeedbackThreadUpdate studentId(@Nullable UUID studentId) {
+  public FeedbackThreadUpdate studentId(@Nullable Optional<UUID> studentId) {
     this.studentId = studentId;
     return this;
   }
@@ -82,18 +82,18 @@ public class FeedbackThreadUpdate {
    * Student concerned.
    * @return studentId
    */
-  @Valid 
+  
   @JsonProperty("studentId")
-  public @Nullable UUID getStudentId() {
+  public @Nullable Optional<UUID> getStudentId() {
     return studentId;
   }
 
   @JsonProperty("studentId")
-  public void setStudentId(@Nullable UUID studentId) {
+  public void setStudentId(@Nullable Optional<UUID> studentId) {
     this.studentId = studentId;
   }
 
-  public FeedbackThreadUpdate assignedToUserId(@Nullable UUID assignedToUserId) {
+  public FeedbackThreadUpdate assignedToUserId(@Nullable Optional<UUID> assignedToUserId) {
     this.assignedToUserId = assignedToUserId;
     return this;
   }
@@ -102,14 +102,14 @@ public class FeedbackThreadUpdate {
    * Staff handling it.
    * @return assignedToUserId
    */
-  @Valid 
+  
   @JsonProperty("assignedToUserId")
-  public @Nullable UUID getAssignedToUserId() {
+  public @Nullable Optional<UUID> getAssignedToUserId() {
     return assignedToUserId;
   }
 
   @JsonProperty("assignedToUserId")
-  public void setAssignedToUserId(@Nullable UUID assignedToUserId) {
+  public void setAssignedToUserId(@Nullable Optional<UUID> assignedToUserId) {
     this.assignedToUserId = assignedToUserId;
   }
 

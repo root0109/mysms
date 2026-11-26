@@ -57,9 +57,8 @@ public class TagController implements TagApi {
     }
 
     @Override
-    public ResponseEntity<Tag> updateTag(UUID tagId, String ifMatch, TagUpdate tagUpdate, String updateMask,
-            Boolean validateOnly) {
-        Tag updated = tagService.updateTag(tagId, ifMatch, tagUpdate, updateMask, Boolean.TRUE.equals(validateOnly));
+    public ResponseEntity<Tag> updateTag(UUID tagId, String ifMatch, TagUpdate tagUpdate, Boolean validateOnly) {
+        Tag updated = tagService.updateTag(tagId, ifMatch, tagUpdate, Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 }

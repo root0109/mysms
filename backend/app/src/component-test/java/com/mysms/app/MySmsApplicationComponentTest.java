@@ -248,7 +248,7 @@ class MySmsApplicationComponentTest {
         UUID tenant = UUID.randomUUID();
         JsonNode entry = null;
         for (JsonNode e : JSON.readTree(Files.readString(
-                Path.of("../academics/src/component-test/resources/reference-cleanup.json"))).path("cleanup")) {
+                Path.of("../academics/src/component-test/resources/academics/reference-cleanup.json"))).path("cleanup")) {
             if ("class_teacher_staff_id".equals(e.path("column").asString())) {
                 entry = e;
             }
@@ -347,7 +347,7 @@ class MySmsApplicationComponentTest {
     void everyFilterReadsIamsRoleDataInProcess() {
         assertThat(roleData).isInstanceOfSatisfying(com.mysms.authclient.testing.TestRoleData.class, test ->
                 assertThat(test.iam()).as("behind the component tests' role fixtures")
-                        .isInstanceOf(com.mysms.iam.business.LocalRolePermissions.class));
+                        .isInstanceOf(com.mysms.identity.iam.business.LocalRolePermissions.class));
     }
 
     @Test
@@ -358,7 +358,7 @@ class MySmsApplicationComponentTest {
                 "SELECT count(*) FROM information_schema.tables WHERE table_name <> 'flyway_schema_history'"
                         + " AND table_schema = ANY(:schemas)")
                 .param("schemas", MODULES).query(Integer.class).single();
-        assertThat(tables).as("every CREATE TABLE of database/migrations").isEqualTo(743);
+        assertThat(tables).as("every CREATE TABLE of database/migrations").isEqualTo(742);
         Integer histories = any.jdbc().sql(
                 // the catalog, not information_schema: the application role has no privilege on the Flyway history
                 "SELECT count(*) FROM pg_catalog.pg_class WHERE relname = 'flyway_schema_history' AND relkind = 'r'")

@@ -69,8 +69,7 @@ public class FeePlanInstallmentComponentResolver
                 bridge.id(request.getFeePlanInstallmentComponent().getId(), "id"),
                 bridge.requiredIfMatch(request.getFeePlanInstallmentComponent().getEtag()),
                 bridge.changes(request.getFeePlanInstallmentComponent(), request.getUpdateMask(),
-                        FeePlanInstallmentComponentUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                        FeePlanInstallmentComponentUpdate.class), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeePlanInstallmentComponentResponse.newBuilder(),
                 "fee_plan_installment_component", updated).build());
     }

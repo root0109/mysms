@@ -38,7 +38,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -76,11 +76,6 @@ public class LessonPlanService extends AppTransactionManager {
     static final int MAX_REASON = 4000;
     static final String PERMISSION_PUBLISH_LESSON_PLAN = "academics.lesson_plan.publish_lesson_plan";
     static final String PERMISSION_ARCHIVE_LESSON_PLAN = "academics.lesson_plan.archive_lesson_plan";
-    /** The contract's LessonPlanUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("teachingAssignmentId", "curriculumUnitId", "unitNo", "unitName", "title", "plannedDurationMinutes",
-            "description", "objective", "materialsRequired", "introduction", "procedureText", "conclusion",
-            "assessmentText", "modification", "notes", "startDate", "endDate");
 
     public static final String LESSON_PLAN_APPROVAL_AGGREGATE = LessonPlanApprovalEntity.TABLE;
     static final String LESSON_PLAN_APPROVAL_PERMISSION_LIST = "academics.lesson_plan_approval.read";
@@ -163,15 +158,13 @@ public class LessonPlanService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match. A field the request leaves out is kept, a null one is cleared and a
+     * value is set (§7.2). The merged row is validated as a whole, and must stay within the caller's scope.
      */
-    public LessonPlan updateLessonPlan(UUID id, String ifMatch, LessonPlanUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public LessonPlan updateLessonPlan(UUID id, String ifMatch, LessonPlanUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         List<FieldError> wire = new ArrayList<>();
-        WireValues.checkDuration("plannedDurationMinutes", changes.getPlannedDurationMinutes(), 60, wire);
+        WireValues.checkDuration("plannedDurationMinutes", Patches.value(changes.getPlannedDurationMinutes()), 60, wire);
         if (!wire.isEmpty()) {
             throw new ValidationFailedException(wire);
         }
@@ -182,7 +175,7 @@ public class LessonPlanService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -436,31 +429,28 @@ public class LessonPlanService extends AppTransactionManager {
         return repository.institutionOf(entity.getTeachingAssignmentId());
     }
 
-    /** Applies the selected LessonPlanUpdate fields; explicit per field so a mask can clear values (no reflection). */
-    private static void apply(LessonPlanEntity entity, LessonPlanUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "teachingAssignmentId" -> entity.setTeachingAssignmentId(changes.getTeachingAssignmentId());
-                case "curriculumUnitId" -> entity.setCurriculumUnitId(changes.getCurriculumUnitId());
-                case "unitNo" -> entity.setUnitNo(changes.getUnitNo());
-                case "unitName" -> entity.setUnitName(changes.getUnitName());
-                case "title" -> entity.setTitle(changes.getTitle());
-                case "plannedDurationMinutes" -> entity.setPlannedDurationMinutes(
-                        WireValues.duration(changes.getPlannedDurationMinutes(), 60));
-                case "description" -> entity.setDescription(changes.getDescription());
-                case "objective" -> entity.setObjective(changes.getObjective());
-                case "materialsRequired" -> entity.setMaterialsRequired(changes.getMaterialsRequired());
-                case "introduction" -> entity.setIntroduction(changes.getIntroduction());
-                case "procedureText" -> entity.setProcedureText(changes.getProcedureText());
-                case "conclusion" -> entity.setConclusion(changes.getConclusion());
-                case "assessmentText" -> entity.setAssessmentText(changes.getAssessmentText());
-                case "modification" -> entity.setModification(changes.getModification());
-                case "notes" -> entity.setNotes(changes.getNotes());
-                case "startDate" -> entity.setStartDate(changes.getStartDate());
-                case "endDate" -> entity.setEndDate(changes.getEndDate());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(LessonPlanEntity entity, LessonPlanUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("teachingAssignmentId", changes.getTeachingAssignmentId(), entity::setTeachingAssignmentId);
+        patch.apply("curriculumUnitId", changes.getCurriculumUnitId(), entity::setCurriculumUnitId);
+        patch.apply("unitNo", changes.getUnitNo(), entity::setUnitNo);
+        patch.apply("unitName", changes.getUnitName(), entity::setUnitName);
+        patch.apply("title", changes.getTitle(), entity::setTitle);
+        patch.apply("plannedDurationMinutes", changes.getPlannedDurationMinutes(),
+                v -> entity.setPlannedDurationMinutes(WireValues.duration(v, 60)));
+        patch.apply("description", changes.getDescription(), entity::setDescription);
+        patch.apply("objective", changes.getObjective(), entity::setObjective);
+        patch.apply("materialsRequired", changes.getMaterialsRequired(), entity::setMaterialsRequired);
+        patch.apply("introduction", changes.getIntroduction(), entity::setIntroduction);
+        patch.apply("procedureText", changes.getProcedureText(), entity::setProcedureText);
+        patch.apply("conclusion", changes.getConclusion(), entity::setConclusion);
+        patch.apply("assessmentText", changes.getAssessmentText(), entity::setAssessmentText);
+        patch.apply("modification", changes.getModification(), entity::setModification);
+        patch.apply("notes", changes.getNotes(), entity::setNotes);
+        patch.apply("startDate", changes.getStartDate(), entity::setStartDate);
+        patch.apply("endDate", changes.getEndDate(), entity::setEndDate);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -538,7 +528,7 @@ public class LessonPlanService extends AppTransactionManager {
 
     /** Refused for the same reason as create: the decision, who took it and when are set by approve and reject. */
     public LessonPlanApproval updateLessonPlanApproval(UUID lessonPlanId, UUID id, String ifMatch,
-            LessonPlanApprovalUpdate changes, String updateMask, boolean validateOnly) {
+            LessonPlanApprovalUpdate changes, boolean validateOnly) {
         throw writtenByTheReview();
     }
 

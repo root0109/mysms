@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -125,18 +126,101 @@ class ProtoBridgeTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    /** A PATCH body (§7.2): Optional properties, never initialised; null = unchanged, empty = cleared. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static final class WidgetUpdate {
+        private Optional<@NotNull @Size(max = 10) String> name;
+        private Optional<Boolean> isActive;
+        private Optional<Integer> sortOrder;
+        private Optional<List<String>> history;
+        private Optional<String> startDate;
+
+        public Optional<String> getName() {
+            return name;
+        }
+
+        public void setName(Optional<String> name) {
+            this.name = name;
+        }
+
+        public Optional<Boolean> getIsActive() {
+            return isActive;
+        }
+
+        public void setIsActive(Optional<Boolean> isActive) {
+            this.isActive = isActive;
+        }
+
+        public Optional<Integer> getSortOrder() {
+            return sortOrder;
+        }
+
+        public void setSortOrder(Optional<Integer> sortOrder) {
+            this.sortOrder = sortOrder;
+        }
+
+        public Optional<List<String>> getHistory() {
+            return history;
+        }
+
+        public void setHistory(Optional<List<String>> history) {
+            this.history = history;
+        }
+
+        public Optional<String> getStartDate() {
+            return startDate;
+        }
+
+        public void setStartDate(Optional<String> startDate) {
+            this.startDate = startDate;
+        }
+    }
+
+    /** A PATCH body whose list may change but never be cleared. */
+    public static final class RequiredHistoryUpdate {
+        private Optional<@NotNull List<String>> history;
+
+        public Optional<List<String>> getHistory() {
+            return history;
+        }
+
+        public void setHistory(Optional<List<String>> history) {
+            this.history = history;
+        }
+    }
+
     @Test
-    void anUpdateMaskSendsTheDefaultsOfTheFlagsAndNumbersItNames() {
-        DynamicMessage changes = DynamicMessage.newBuilder(W).setField(f(W, "is_active"), false).build();
-        FieldMask mask = FieldMask.newBuilder().addPaths("is_active").addPaths("sort_order").addPaths("name").build();
-        WidgetDto masked = bridge.changes(changes, mask, WidgetDto.class);
-        assertThat(masked.isActive()).isFalse();
-        assertThat(masked.sortOrder()).isZero();
-        assertThat(masked.name()).as("absent: the mask clears it").isNull();
-        assertThat(bridge.updateMask(mask)).isEqualTo("isActive,sortOrder,name");
-        WidgetDto unmasked = bridge.changes(changes, FieldMask.getDefaultInstance(), WidgetDto.class);
-        assertThat(unmasked.isActive()).as("without a mask a default is not sent").isNull();
-        assertThat(bridge.updateMask(FieldMask.getDefaultInstance())).isNull();
+    void anUpdateMaskDecidesTheThreeStatesOfTheUpdateDto() {
+        DynamicMessage changes = DynamicMessage.newBuilder(W).setField(f(W, "is_active"), false)
+                .setField(f(W, "name"), "Pump").setField(f(W, "start_date"), "2026-01-05").build();
+        FieldMask mask = FieldMask.newBuilder().addPaths("isActive").addPaths("sort_order").addPaths("name")
+                .addPaths("history").build();
+        WidgetUpdate masked = bridge.changes(changes, mask, WidgetUpdate.class);
+        assertThat(masked.getIsActive()).as("a masked flag (by its JSON name) is sent as its default").contains(false);
+        assertThat(masked.getSortOrder()).as("a masked number is sent as its default").contains(0);
+        assertThat(masked.getName()).as("masked and held: set").contains("Pump");
+        assertThat(masked.getHistory()).as("masked, not held, not required: cleared").isEmpty();
+        assertThat(masked.getStartDate()).as("held but unmasked: unchanged, never replaced").isNull();
+
+        WidgetUpdate unmasked = bridge.changes(changes, FieldMask.getDefaultInstance(), WidgetUpdate.class);
+        assertThat(unmasked.getIsActive()).as("without a mask a default is not sent").isNull();
+        assertThat(unmasked.getName()).contains("Pump");
+        assertThat(unmasked.getHistory()).isNull();
+        assertThat(unmasked.getStartDate()).contains("2026-01-05");
+    }
+
+    @Test
+    void aMaskMayNotClearARequiredFieldNorNameAFieldTheUpdateLacks() {
+        DynamicMessage none = DynamicMessage.newBuilder(W).build();
+        assertThatThrownBy(() -> bridge.changes(none, FieldMask.newBuilder().addPaths("name").build(),
+                WidgetUpdate.class)).as("clearing a required field").isInstanceOf(ValidationFailedException.class);
+        assertThatThrownBy(() -> bridge.changes(none, FieldMask.newBuilder().addPaths("history").build(),
+                RequiredHistoryUpdate.class)).as("a required list masked but empty is refused, never made up")
+                .isInstanceOf(ValidationFailedException.class);
+        assertThatThrownBy(() -> bridge.changes(none, FieldMask.newBuilder().addPaths("etag").build(),
+                WidgetUpdate.class)).isInstanceOf(InvalidArgumentException.class).hasMessageContaining("etag");
+        assertThatThrownBy(() -> bridge.changes(none, FieldMask.newBuilder().addPaths("nope").build(),
+                WidgetUpdate.class)).isInstanceOf(InvalidArgumentException.class);
     }
 
     @Test

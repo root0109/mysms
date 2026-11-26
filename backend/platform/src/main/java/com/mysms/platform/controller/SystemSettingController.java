@@ -61,9 +61,9 @@ public class SystemSettingController implements SystemSettingApi {
 
     @Override
     public ResponseEntity<SystemSetting> updateSystemSetting(UUID systemSettingId, String ifMatch,
-            SystemSettingUpdate systemSettingUpdate, String updateMask, Boolean validateOnly) {
+            SystemSettingUpdate systemSettingUpdate, Boolean validateOnly) {
         SystemSetting updated =
-                systemSettingService.updateSystemSetting(systemSettingId, ifMatch, systemSettingUpdate, updateMask,
+                systemSettingService.updateSystemSetting(systemSettingId, ifMatch, systemSettingUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

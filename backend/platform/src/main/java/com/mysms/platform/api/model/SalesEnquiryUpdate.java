@@ -16,31 +16,31 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of SalesEnquiry that can be updated (partial update; see updateMask).
+ * Fields of SalesEnquiry that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class SalesEnquiryUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String contactName;
+  private @Nullable Optional<@NotNull @Size(max = 150) String> contactName;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String email;
+  private @Nullable Optional<@NotNull @Size(max = 320) String> email;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String phone;
+  private @Nullable Optional<@NotNull @Size(max = 20) String> phone;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String organisationName;
+  private @Nullable Optional<@NotNull @Size(max = 200) String> organisationName;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String designation;
+  private @Nullable Optional<@NotNull @Size(max = 120) String> designation;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String channel;
+  private @Nullable Optional<@Size(max = 60) String> channel;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String message;
+  private @Nullable Optional<String> message;
 
   /**
    * Sales follow-up state.
@@ -84,9 +84,9 @@ public class SalesEnquiryUpdate {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable StatusEnum status;
+  private @Nullable Optional<@NotNull StatusEnum> status;
 
-  public SalesEnquiryUpdate contactName(@Nullable String contactName) {
+  public SalesEnquiryUpdate contactName(@Nullable Optional<String> contactName) {
     this.contactName = contactName;
     return this;
   }
@@ -95,18 +95,18 @@ public class SalesEnquiryUpdate {
    * Person making the enquiry.
    * @return contactName
    */
-  @Size(max = 150) 
+  
   @JsonProperty("contactName")
-  public @Nullable String getContactName() {
+  public @Nullable Optional<String> getContactName() {
     return contactName;
   }
 
   @JsonProperty("contactName")
-  public void setContactName(@Nullable String contactName) {
+  public void setContactName(@Nullable Optional<String> contactName) {
     this.contactName = contactName;
   }
 
-  public SalesEnquiryUpdate email(@Nullable String email) {
+  public SalesEnquiryUpdate email(@Nullable Optional<String> email) {
     this.email = email;
     return this;
   }
@@ -115,18 +115,18 @@ public class SalesEnquiryUpdate {
    * Contact e-mail.
    * @return email
    */
-  @Size(max = 320) 
+  
   @JsonProperty("email")
-  public @Nullable String getEmail() {
+  public @Nullable Optional<String> getEmail() {
     return email;
   }
 
   @JsonProperty("email")
-  public void setEmail(@Nullable String email) {
+  public void setEmail(@Nullable Optional<String> email) {
     this.email = email;
   }
 
-  public SalesEnquiryUpdate phone(@Nullable String phone) {
+  public SalesEnquiryUpdate phone(@Nullable Optional<String> phone) {
     this.phone = phone;
     return this;
   }
@@ -135,18 +135,18 @@ public class SalesEnquiryUpdate {
    * Contact phone.
    * @return phone
    */
-  @Size(max = 20) 
+  
   @JsonProperty("phone")
-  public @Nullable String getPhone() {
+  public @Nullable Optional<String> getPhone() {
     return phone;
   }
 
   @JsonProperty("phone")
-  public void setPhone(@Nullable String phone) {
+  public void setPhone(@Nullable Optional<String> phone) {
     this.phone = phone;
   }
 
-  public SalesEnquiryUpdate organisationName(@Nullable String organisationName) {
+  public SalesEnquiryUpdate organisationName(@Nullable Optional<String> organisationName) {
     this.organisationName = organisationName;
     return this;
   }
@@ -155,18 +155,18 @@ public class SalesEnquiryUpdate {
    * School / organisation name.
    * @return organisationName
    */
-  @Size(max = 200) 
+  
   @JsonProperty("organisationName")
-  public @Nullable String getOrganisationName() {
+  public @Nullable Optional<String> getOrganisationName() {
     return organisationName;
   }
 
   @JsonProperty("organisationName")
-  public void setOrganisationName(@Nullable String organisationName) {
+  public void setOrganisationName(@Nullable Optional<String> organisationName) {
     this.organisationName = organisationName;
   }
 
-  public SalesEnquiryUpdate designation(@Nullable String designation) {
+  public SalesEnquiryUpdate designation(@Nullable Optional<String> designation) {
     this.designation = designation;
     return this;
   }
@@ -175,18 +175,18 @@ public class SalesEnquiryUpdate {
    * Contact's role.
    * @return designation
    */
-  @Size(max = 120) 
+  
   @JsonProperty("designation")
-  public @Nullable String getDesignation() {
+  public @Nullable Optional<String> getDesignation() {
     return designation;
   }
 
   @JsonProperty("designation")
-  public void setDesignation(@Nullable String designation) {
+  public void setDesignation(@Nullable Optional<String> designation) {
     this.designation = designation;
   }
 
-  public SalesEnquiryUpdate channel(@Nullable String channel) {
+  public SalesEnquiryUpdate channel(@Nullable Optional<String> channel) {
     this.channel = channel;
     return this;
   }
@@ -195,18 +195,18 @@ public class SalesEnquiryUpdate {
    * How the enquiry arrived (web, phone, event).
    * @return channel
    */
-  @Size(max = 60) 
+  
   @JsonProperty("channel")
-  public @Nullable String getChannel() {
+  public @Nullable Optional<String> getChannel() {
     return channel;
   }
 
   @JsonProperty("channel")
-  public void setChannel(@Nullable String channel) {
+  public void setChannel(@Nullable Optional<String> channel) {
     this.channel = channel;
   }
 
-  public SalesEnquiryUpdate message(@Nullable String message) {
+  public SalesEnquiryUpdate message(@Nullable Optional<String> message) {
     this.message = message;
     return this;
   }
@@ -217,16 +217,16 @@ public class SalesEnquiryUpdate {
    */
   
   @JsonProperty("message")
-  public @Nullable String getMessage() {
+  public @Nullable Optional<String> getMessage() {
     return message;
   }
 
   @JsonProperty("message")
-  public void setMessage(@Nullable String message) {
+  public void setMessage(@Nullable Optional<String> message) {
     this.message = message;
   }
 
-  public SalesEnquiryUpdate status(@Nullable StatusEnum status) {
+  public SalesEnquiryUpdate status(@Nullable Optional<StatusEnum> status) {
     this.status = status;
     return this;
   }
@@ -237,12 +237,12 @@ public class SalesEnquiryUpdate {
    */
   
   @JsonProperty("status")
-  public @Nullable StatusEnum getStatus() {
+  public @Nullable Optional<StatusEnum> getStatus() {
     return status;
   }
 
   @JsonProperty("status")
-  public void setStatus(@Nullable StatusEnum status) {
+  public void setStatus(@Nullable Optional<StatusEnum> status) {
     this.status = status;
   }
 

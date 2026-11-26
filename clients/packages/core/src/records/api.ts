@@ -61,14 +61,31 @@ function op(def: ResourceDef, kind: keyof ResourceDef['ops']) {
   return ref;
 }
 
-/** Only the fields a create or update may carry, with empty inputs left out (the server keeps its defaults). */
-export function toPayload(def: ResourceDef, values: Record<string, unknown>, mode: 'create' | 'update') {
+/** Only the fields a create may carry, with empty inputs left out (the server keeps its defaults). */
+export function toPayload(def: ResourceDef, values: Record<string, unknown>) {
   const out: Record<string, unknown> = {};
   for (const field of def.fields) {
-    if (field.readOnly || (mode === 'update' && !field.writable)) continue;
+    if (field.readOnly) continue;
     const value = values[field.name];
     if (value === undefined || value === null || value === '') continue;
     out[field.name] = coerce(field, value);
+  }
+  return out;
+}
+
+/**
+ * A PATCH body (JAVA-CODING-RULES §7.2): only the fields the caller passes are sent — a value sets the field, an empty
+ * one is sent as null and clears it — and a field left out keeps its value on the server. A secret is never returned,
+ * so an empty one means "keep it" and is left out too.
+ */
+export function toPatch(def: ResourceDef, values: Record<string, unknown>) {
+  const out: Record<string, unknown> = {};
+  for (const field of def.fields) {
+    if (field.readOnly || !field.writable || !(field.name in values)) continue;
+    const value = values[field.name];
+    const empty = value === undefined || value === null || value === '';
+    if (empty && field.writeOnly) continue;
+    out[field.name] = empty ? null : coerce(field, value);
   }
   return out;
 }
@@ -141,7 +158,7 @@ export async function createRecord(
   values: Record<string, unknown>,
   parentId?: string,
 ) {
-  const body = toPayload(def, values, 'create');
+  const body = toPayload(def, values);
   if (def.parent && parentId) body[def.parent] = parentId;
   const response = await send(api, 'POST', path(op(def, 'Create').path, parentId), body);
   return (await response.json()) as RecordRow;
@@ -155,13 +172,9 @@ export async function updateRecord(
   values: Record<string, unknown>,
   parentId?: string,
 ) {
-  const body = toPayload(def, values, 'update');
-  // a secret is never returned, so an empty input means "keep it": it joins the mask only when a new value is typed
-  const mask = def.fields
-    .filter((f) => f.writable && !f.readOnly && (!f.writeOnly || f.name in body))
-    .map((f) => f.name);
-  const url = `${path(op(def, 'Update').path, parentId, id)}?updateMask=${encodeURIComponent(mask.join(','))}`;
-  const response = await send(api, 'PATCH', url, body, { 'If-Match': etag });
+  const item = path(op(def, 'Update').path, parentId, id);
+  const body = toPatch(def, values);
+  const response = await send(api, 'PATCH', item, body, { 'If-Match': etag });
   return (await response.json()) as RecordRow;
 }
 

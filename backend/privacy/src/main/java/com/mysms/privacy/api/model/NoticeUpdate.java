@@ -3,20 +3,22 @@ package com.mysms.privacy.api.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.Objects;
+import java.util.Optional;
 import org.springframework.lang.Nullable;
 
 /**
- * Fields of Notice that can be updated (partial update; see updateMask). The code never changes.
+ * Fields of Notice that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it). The code never changes.
  */
 
 public class NoticeUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String title;
+  private @Nullable Optional<@NotNull @Size(max = 200) String> title;
 
-  public NoticeUpdate title(@Nullable String title) {
+  public NoticeUpdate title(@Nullable Optional<String> title) {
     this.title = title;
     return this;
   }
@@ -25,14 +27,14 @@ public class NoticeUpdate {
    * Title shown to tenant administrators.
    * @return title
    */
-  @Size(max = 200) 
+  
   @JsonProperty("title")
-  public @Nullable String getTitle() {
+  public @Nullable Optional<String> getTitle() {
     return title;
   }
 
   @JsonProperty("title")
-  public void setTitle(@Nullable String title) {
+  public void setTitle(@Nullable Optional<String> title) {
     this.title = title;
   }
 

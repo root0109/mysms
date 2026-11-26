@@ -128,7 +128,8 @@ describe('staff directory and detail', () => {
     );
     const patch = api.calls.find((c) => c.method === 'PATCH');
     expect(patch?.headers.get('If-Match')).toBe('"1"');
-    expect(new URLSearchParams(patch?.search).get('updateMask')).toBe('specialization');
+    expect(patch?.search).toBe('');
+    expect(JSON.parse(patch?.body ?? '{}')).toEqual({ specialization: 'Accounts' });
     await waitFor(() => expect(result.current.staff.data?.data.specialization).toBe('Accounts'));
     const stale = await result.current.update
       .mutateAsync({ staffId: fx.colleagueId, etag: '"1"', changes: { specialization: 'x' } })
@@ -150,7 +151,7 @@ describe('staff directory and detail', () => {
     await waitFor(() => expect(result.current.staff.data?.etag).toBe('"1"'));
     // another user changes the record meanwhile
     await api.fetch(
-      new Request(`https://school.example.com/v1/hr/staff/${fx.colleagueId}?updateMask=specialization`, {
+      new Request(`https://school.example.com/v1/hr/staff/${fx.colleagueId}`, {
         method: 'PATCH',
         headers: { 'If-Match': '"1"', 'Content-Type': 'application/json' },
         body: JSON.stringify({ specialization: 'Accounts' }),

@@ -273,9 +273,12 @@ export function fakePayroll(options: { generateFails?: boolean } = {}): Record<s
       if (!row) return problem(404, 'NOT_FOUND');
       const refused = precondition(req, row);
       if (refused) return refused;
-      const mask = (new URL(req.url).searchParams.get('updateMask') ?? '').split(',').filter(Boolean);
       const body = (await req.json()) as Record<string, unknown>;
-      for (const field of mask) (row as Record<string, unknown>)[field] = body[field];
+      // a PATCH sets the fields its body names; null clears one (JAVA-CODING-RULES §7.2)
+      for (const [field, value] of Object.entries(body)) {
+        if (value === null) delete (row as Record<string, unknown>)[field];
+        else (row as Record<string, unknown>)[field] = value;
+      }
       row.version += 1;
       return json(c.out(row));
     };

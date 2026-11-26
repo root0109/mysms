@@ -46,9 +46,9 @@ public class StudentFeeDueController implements StudentFeeDueApi {
 
     @Override
     public ResponseEntity<StudentFeeDue> updateStudentFeeDue(UUID studentFeeDueId, String ifMatch,
-            StudentFeeDueUpdate studentFeeDueUpdate, String updateMask, Boolean validateOnly) {
+            StudentFeeDueUpdate studentFeeDueUpdate, Boolean validateOnly) {
         StudentFeeDue updated = studentFeeDueService.updateStudentFeeDue(studentFeeDueId, ifMatch,
-                studentFeeDueUpdate, updateMask, Boolean.TRUE.equals(validateOnly));
+                studentFeeDueUpdate, Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 }

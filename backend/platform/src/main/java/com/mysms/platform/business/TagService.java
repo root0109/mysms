@@ -20,7 +20,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.platform.api.model.Tag;
 import com.mysms.platform.api.model.TagUpdate;
 import com.mysms.platform.config.PlatformDatabaseConfig;
@@ -53,8 +53,6 @@ public class TagService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "platform.tag.create";
     static final String PERMISSION_UPDATE = "platform.tag.update";
     static final String PERMISSION_DELETE = "platform.tag.delete";
-    /** The contract's TagUpdate fields that have a column, in apply order ({@code translations} has none). */
-    static final List<String> WRITABLE = List.of("tagType", "name", "slug", "sortOrder", "code");
     /** A URL-safe key: lower-case letters and digits in words joined by single hyphens. */
     private static final Pattern SLUG = Pattern.compile("[a-z0-9]+(?:-[a-z0-9]+)*");
 
@@ -117,13 +115,12 @@ public class TagService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole.
+     * Partial update under If-Match. A field the request leaves out is kept, a null one is cleared and a
+     * value is set (§7.2). The merged row is validated as a whole.
      */
-    public Tag updateTag(UUID id, String ifMatch, TagUpdate changes, String updateMask, boolean validateOnly) {
+    public Tag updateTag(UUID id, String ifMatch, TagUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
-        refuseTranslations(changes.getTranslations());
+        refuseTranslations(Patches.value(changes.getTranslations()));
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             TagEntity entity = loadVisible(scope, id);
@@ -131,7 +128,7 @@ public class TagService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity);
             assertUnique(entity);
@@ -181,18 +178,15 @@ public class TagService extends AppTransactionManager {
         return entity;
     }
 
-    /** Applies the selected TagUpdate fields; explicit per field so a mask can clear values (no reflection). */
-    private static void apply(TagEntity entity, TagUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "tagType" -> entity.setTagType(changes.getTagType());
-                case "name" -> entity.setName(changes.getName());
-                case "slug" -> entity.setSlug(changes.getSlug());
-                case "sortOrder" -> entity.setSortOrder(changes.getSortOrder());
-                case "code" -> entity.setCode(changes.getCode());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(TagEntity entity, TagUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("tagType", changes.getTagType(), entity::setTagType);
+        patch.apply("name", changes.getName(), entity::setName);
+        patch.apply("slug", changes.getSlug(), entity::setSlug);
+        patch.apply("sortOrder", changes.getSortOrder(), entity::setSortOrder);
+        patch.apply("code", changes.getCode(), entity::setCode);
+        return patch.applied();
     }
 
     /** Localised names have no storage yet (platform.tag has no column for them): a value is refused, never lost. */

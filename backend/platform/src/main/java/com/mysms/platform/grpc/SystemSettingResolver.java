@@ -64,7 +64,7 @@ public class SystemSettingResolver extends SystemSettingServiceGrpc.SystemSettin
                 bridge.id(request.getSystemSetting().getId(), "id"),
                 bridge.requiredIfMatch(request.getSystemSetting().getEtag()),
                 bridge.changes(request.getSystemSetting(), request.getUpdateMask(), SystemSettingUpdate.class),
-                bridge.updateMask(request.getUpdateMask()), request.getValidateOnly());
+                request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSystemSettingResponse.newBuilder(), "system_setting",
                 updated).build());
     }

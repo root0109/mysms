@@ -200,8 +200,8 @@ public class PostController implements PostApi {
 
     @Override
     public ResponseEntity<Post> updatePost(UUID postId, String ifMatch, PostUpdate postUpdate,
-            String updateMask, Boolean validateOnly) {
-        Post updated = postService.updatePost(postId, ifMatch, postUpdate, updateMask,
+            Boolean validateOnly) {
+        Post updated = postService.updatePost(postId, ifMatch, postUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
@@ -209,28 +209,28 @@ public class PostController implements PostApi {
     @Override
     public ResponseEntity<PostAudienceClass> updatePostAudienceClass(UUID postId,
             UUID postAudienceClassId, String ifMatch, PostAudienceClassUpdate postAudienceClassUpdate,
-            String updateMask, Boolean validateOnly) {
+            Boolean validateOnly) {
         PostAudienceClass updated =
                 postService.updatePostAudienceClass(postId, postAudienceClassId, ifMatch,
-                        postAudienceClassUpdate, updateMask,
+                        postAudienceClassUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<PostComment> updatePostComment(UUID postId, UUID postCommentId, String ifMatch,
-            PostCommentUpdate postCommentUpdate, String updateMask, Boolean validateOnly) {
+            PostCommentUpdate postCommentUpdate, Boolean validateOnly) {
         PostComment updated =
-                postService.updatePostComment(postId, postCommentId, ifMatch, postCommentUpdate, updateMask,
+                postService.updatePostComment(postId, postCommentId, ifMatch, postCommentUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<PostReaction> updatePostReaction(UUID postId, UUID postReactionId,
-            String ifMatch, PostReactionUpdate postReactionUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, PostReactionUpdate postReactionUpdate, Boolean validateOnly) {
         PostReaction updated = reactionService.updatePostReaction(postId, postReactionId, ifMatch, postReactionUpdate,
-                updateMask, Boolean.TRUE.equals(validateOnly));
+                Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 }

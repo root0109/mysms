@@ -111,9 +111,9 @@ public class ConsentCoverage {
    * The counts per width the purpose takes (or the one asked for), narrowest first.
    * @return scopes
    */
-  @NotNull @Valid 
+  @NotNull 
   @JsonProperty("scopes")
-  public List<ConsentCoverageScope> getScopes() {
+  public List<@Valid ConsentCoverageScope> getScopes() {
     return scopes;
   }
 

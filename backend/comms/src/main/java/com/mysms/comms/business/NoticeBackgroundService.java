@@ -27,7 +27,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,8 +50,6 @@ public class NoticeBackgroundService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "comms.notice_background.create";
     static final String PERMISSION_UPDATE = "comms.notice_background.update";
     static final String PERMISSION_DELETE = "comms.notice_background.delete";
-    /** The contract's NoticeBackgroundUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("institutionId", "usage", "imageFileId");
 
 
     private final NoticeBackgroundRepository repository;
@@ -121,13 +119,12 @@ public class NoticeBackgroundService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public NoticeBackground updateNoticeBackground(UUID id, String ifMatch, NoticeBackgroundUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             NoticeBackgroundEntity entity = loadVisible(scope, id);
@@ -135,7 +132,7 @@ public class NoticeBackgroundService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -192,17 +189,13 @@ public class NoticeBackgroundService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected NoticeBackgroundUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(NoticeBackgroundEntity entity, NoticeBackgroundUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "usage" -> entity.setUsage(Optional.ofNullable(changes.getUsage()).map(v -> v.getValue())
-                        .orElse(null));
-                case "imageFileId" -> entity.setImageFileId(changes.getImageFileId());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(NoticeBackgroundEntity entity, NoticeBackgroundUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("usage", changes.getUsage(), v -> entity.setUsage(v == null ? null : v.getValue()));
+        patch.apply("imageFileId", changes.getImageFileId(), entity::setImageFileId);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

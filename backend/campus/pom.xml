@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  campus: the Campus microservice (docs/design/MODULE-AND-PRODUCT-REORGANISATION.md §3). Its areas "library", "transport", "frontoffice", "facility" each own
+  their database schema of the same name, contract (com.mysms.<area>.v1, /v1/<area>), operation table and Flyway
+  history (database/migrations/<area>); inside the module they share one process, one jar and one gRPC server.
+  Depends on core, auth-client and the messaging runtime; only event consumers compile against the narrow messaging
+  API. Produces a plain jar (assembled by `app`) and an executable microservice jar (classifier exec).
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.mysms</groupId>
+    <artifactId>mysms</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>campus</artifactId>
+  <name>MySMS campus</name>
+  <description>Campus microservice (schemas library, transport, frontoffice, facility)</description>
+
+  <properties>
+    <!-- SpotBugs analyses the module's own code: its root package and every layer package of each area (§3) -->
+    <mysms.spotbugs.onlyAnalyze>com.mysms.campus.*,com.mysms.campus.library.*,com.mysms.campus.library.api.-,com.mysms.campus.library.controller.-,com.mysms.campus.library.grpc.-,com.mysms.campus.library.integration.-,com.mysms.campus.library.business.-,com.mysms.campus.library.repository.-,com.mysms.campus.library.domain.-,com.mysms.campus.library.model.-,com.mysms.campus.library.mapper.-,com.mysms.campus.library.validation.-,com.mysms.campus.library.errors.-,com.mysms.campus.library.events.-,com.mysms.campus.library.config.-,com.mysms.campus.library.constants.-,com.mysms.campus.transport.*,com.mysms.campus.transport.api.-,com.mysms.campus.transport.controller.-,com.mysms.campus.transport.grpc.-,com.mysms.campus.transport.integration.-,com.mysms.campus.transport.business.-,com.mysms.campus.transport.repository.-,com.mysms.campus.transport.domain.-,com.mysms.campus.transport.model.-,com.mysms.campus.transport.mapper.-,com.mysms.campus.transport.validation.-,com.mysms.campus.transport.errors.-,com.mysms.campus.transport.events.-,com.mysms.campus.transport.config.-,com.mysms.campus.transport.constants.-,com.mysms.campus.frontoffice.*,com.mysms.campus.frontoffice.api.-,com.mysms.campus.frontoffice.controller.-,com.mysms.campus.frontoffice.grpc.-,com.mysms.campus.frontoffice.integration.-,com.mysms.campus.frontoffice.business.-,com.mysms.campus.frontoffice.repository.-,com.mysms.campus.frontoffice.domain.-,com.mysms.campus.frontoffice.model.-,com.mysms.campus.frontoffice.mapper.-,com.mysms.campus.frontoffice.validation.-,com.mysms.campus.frontoffice.errors.-,com.mysms.campus.frontoffice.events.-,com.mysms.campus.frontoffice.config.-,com.mysms.campus.frontoffice.constants.-,com.mysms.campus.facility.*,com.mysms.campus.facility.api.-,com.mysms.campus.facility.controller.-,com.mysms.campus.facility.grpc.-,com.mysms.campus.facility.integration.-,com.mysms.campus.facility.business.-,com.mysms.campus.facility.repository.-,com.mysms.campus.facility.domain.-,com.mysms.campus.facility.model.-,com.mysms.campus.facility.mapper.-,com.mysms.campus.facility.validation.-,com.mysms.campus.facility.errors.-,com.mysms.campus.facility.events.-,com.mysms.campus.facility.config.-,com.mysms.campus.facility.constants.-</mysms.spotbugs.onlyAnalyze>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>auth-client</artifactId>
+    </dependency>
+    <!-- privacy's rights-request tasks and retention runs (PrivacyTaskHandler) -->
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>privacy-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <!-- messaging runtime relay; event consumers compile against its narrow API -->
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>messaging</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>auth-client</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.mysms</groupId>
+      <artifactId>privacy-client</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <!-- each area's migrations, from the single source of truth, applied to its own schema only -->
+      <resource>
+        <directory>${mysms.migrations.dir}/library</directory>
+        <targetPath>db/migration/library</targetPath>
+      </resource>
+      <resource>
+        <directory>${mysms.migrations.dir}/transport</directory>
+        <targetPath>db/migration/transport</targetPath>
+      </resource>
+      <resource>
+        <directory>${mysms.migrations.dir}/frontoffice</directory>
+        <targetPath>db/migration/frontoffice</targetPath>
+      </resource>
+      <resource>
+        <directory>${mysms.migrations.dir}/facility</directory>
+        <targetPath>db/migration/facility</targetPath>
+      </resource>
+    </resources>
+    <plugins>
+      <!-- its protos (src/main/resources/proto: its areas' own, and copies of the callees' they call) into its jar -->
+      <plugin>
+        <groupId>org.xolstice.maven.plugins</groupId>
+        <artifactId>protobuf-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <mainClass>com.mysms.campus.CampusApplication</mainClass>
+          <classifier>exec</classifier>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

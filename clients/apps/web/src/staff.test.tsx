@@ -156,7 +156,8 @@ describe('HR-02 Staff detail', () => {
     expect(await screen.findByText('The staff record is saved.')).toBeInTheDocument();
     const patch = api.calls.find((c) => c.method === 'PATCH');
     expect(patch?.headers.get('If-Match')).toBe('"1"');
-    expect(new URLSearchParams(patch?.search).get('updateMask')).toBe('specialization');
+    expect(patch?.search).toBe('');
+    expect(JSON.parse(patch?.body ?? '{}')).toMatchObject({ specialization: 'Optics' });
     expect(await screen.findByText('Optics')).toBeInTheDocument();
   });
 

@@ -15,18 +15,18 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of NotificationTypeProperty that can be updated (partial update; see updateMask).
+ * Fields of NotificationTypeProperty that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class NotificationTypePropertyUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String moduleCode;
+  private @Nullable Optional<@NotNull @Size(max = 60) String> moduleCode;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String propertyValue;
+  private @Nullable Optional<@NotNull @Size(max = 500) String> propertyValue;
 
-  public NotificationTypePropertyUpdate moduleCode(@Nullable String moduleCode) {
+  public NotificationTypePropertyUpdate moduleCode(@Nullable Optional<String> moduleCode) {
     this.moduleCode = moduleCode;
     return this;
   }
@@ -35,18 +35,18 @@ public class NotificationTypePropertyUpdate {
    * Module.
    * @return moduleCode
    */
-  @Size(max = 60) 
+  
   @JsonProperty("moduleCode")
-  public @Nullable String getModuleCode() {
+  public @Nullable Optional<String> getModuleCode() {
     return moduleCode;
   }
 
   @JsonProperty("moduleCode")
-  public void setModuleCode(@Nullable String moduleCode) {
+  public void setModuleCode(@Nullable Optional<String> moduleCode) {
     this.moduleCode = moduleCode;
   }
 
-  public NotificationTypePropertyUpdate propertyValue(@Nullable String propertyValue) {
+  public NotificationTypePropertyUpdate propertyValue(@Nullable Optional<String> propertyValue) {
     this.propertyValue = propertyValue;
     return this;
   }
@@ -55,14 +55,14 @@ public class NotificationTypePropertyUpdate {
    * Property value.
    * @return propertyValue
    */
-  @Size(max = 500) 
+  
   @JsonProperty("propertyValue")
-  public @Nullable String getPropertyValue() {
+  public @Nullable Optional<String> getPropertyValue() {
     return propertyValue;
   }
 
   @JsonProperty("propertyValue")
-  public void setPropertyValue(@Nullable String propertyValue) {
+  public void setPropertyValue(@Nullable Optional<String> propertyValue) {
     this.propertyValue = propertyValue;
   }
 

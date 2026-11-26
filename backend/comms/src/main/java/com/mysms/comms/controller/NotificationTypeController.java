@@ -192,31 +192,29 @@ public class NotificationTypeController implements NotificationTypeApi {
     @Override
     public ResponseEntity<NotificationCohortSetting> updateNotificationCohortSetting(
             UUID notificationTypeId, UUID notificationCohortSettingId, String ifMatch,
-            NotificationCohortSettingUpdate notificationCohortSettingUpdate, String updateMask, Boolean validateOnly) {
+            NotificationCohortSettingUpdate notificationCohortSettingUpdate, Boolean validateOnly) {
         NotificationCohortSetting updated =
                 notificationTypeService.updateNotificationCohortSetting(notificationTypeId,
-                        notificationCohortSettingId, ifMatch, notificationCohortSettingUpdate, updateMask,
+                        notificationCohortSettingId, ifMatch, notificationCohortSettingUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<NotificationRule> updateNotificationRule(UUID notificationTypeId,
-            UUID notificationRuleId, String ifMatch, NotificationRuleUpdate notificationRuleUpdate, String updateMask,
-            Boolean validateOnly) {
+            UUID notificationRuleId, String ifMatch, NotificationRuleUpdate notificationRuleUpdate, Boolean validateOnly) {
         NotificationRule updated =
                 notificationTypeService.updateNotificationRule(notificationTypeId, notificationRuleId, ifMatch,
-                        notificationRuleUpdate, updateMask,
+                        notificationRuleUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
 
     @Override
     public ResponseEntity<NotificationType> updateNotificationType(UUID notificationTypeId,
-            String ifMatch, NotificationTypeUpdate notificationTypeUpdate, String updateMask, Boolean validateOnly) {
+            String ifMatch, NotificationTypeUpdate notificationTypeUpdate, Boolean validateOnly) {
         NotificationType updated =
                 notificationTypeService.updateNotificationType(notificationTypeId, ifMatch, notificationTypeUpdate,
-                        updateMask,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }
@@ -224,10 +222,10 @@ public class NotificationTypeController implements NotificationTypeApi {
     @Override
     public ResponseEntity<NotificationTypeProperty> updateNotificationTypeProperty(
             UUID notificationTypeId, UUID notificationTypePropertyId, String ifMatch,
-            NotificationTypePropertyUpdate notificationTypePropertyUpdate, String updateMask, Boolean validateOnly) {
+            NotificationTypePropertyUpdate notificationTypePropertyUpdate, Boolean validateOnly) {
         NotificationTypeProperty updated =
                 notificationTypeService.updateNotificationTypeProperty(notificationTypeId,
-                        notificationTypePropertyId, ifMatch, notificationTypePropertyUpdate, updateMask,
+                        notificationTypePropertyId, ifMatch, notificationTypePropertyUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

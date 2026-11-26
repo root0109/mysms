@@ -16,21 +16,21 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of NotificationPreference that can be updated (partial update; see updateMask).
+ * Fields of NotificationPreference that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class NotificationPreferenceUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID notificationTypeId;
+  private @Nullable Optional<UUID> notificationTypeId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String propertyName;
+  private @Nullable Optional<@NotNull @Size(max = 100) String> propertyName;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable String propertyValue;
+  private @Nullable Optional<@Size(max = 200) String> propertyValue;
 
-  public NotificationPreferenceUpdate notificationTypeId(@Nullable UUID notificationTypeId) {
+  public NotificationPreferenceUpdate notificationTypeId(@Nullable Optional<UUID> notificationTypeId) {
     this.notificationTypeId = notificationTypeId;
     return this;
   }
@@ -39,18 +39,18 @@ public class NotificationPreferenceUpdate {
    * Notification type (NULL = all types).
    * @return notificationTypeId
    */
-  @Valid 
+  
   @JsonProperty("notificationTypeId")
-  public @Nullable UUID getNotificationTypeId() {
+  public @Nullable Optional<UUID> getNotificationTypeId() {
     return notificationTypeId;
   }
 
   @JsonProperty("notificationTypeId")
-  public void setNotificationTypeId(@Nullable UUID notificationTypeId) {
+  public void setNotificationTypeId(@Nullable Optional<UUID> notificationTypeId) {
     this.notificationTypeId = notificationTypeId;
   }
 
-  public NotificationPreferenceUpdate propertyName(@Nullable String propertyName) {
+  public NotificationPreferenceUpdate propertyName(@Nullable Optional<String> propertyName) {
     this.propertyName = propertyName;
     return this;
   }
@@ -59,18 +59,18 @@ public class NotificationPreferenceUpdate {
    * Property (e.g. notification.email.frequency).
    * @return propertyName
    */
-  @Size(max = 100) 
+  
   @JsonProperty("propertyName")
-  public @Nullable String getPropertyName() {
+  public @Nullable Optional<String> getPropertyName() {
     return propertyName;
   }
 
   @JsonProperty("propertyName")
-  public void setPropertyName(@Nullable String propertyName) {
+  public void setPropertyName(@Nullable Optional<String> propertyName) {
     this.propertyName = propertyName;
   }
 
-  public NotificationPreferenceUpdate propertyValue(@Nullable String propertyValue) {
+  public NotificationPreferenceUpdate propertyValue(@Nullable Optional<String> propertyValue) {
     this.propertyValue = propertyValue;
     return this;
   }
@@ -79,14 +79,14 @@ public class NotificationPreferenceUpdate {
    * Value.
    * @return propertyValue
    */
-  @Size(max = 200) 
+  
   @JsonProperty("propertyValue")
-  public @Nullable String getPropertyValue() {
+  public @Nullable Optional<String> getPropertyValue() {
     return propertyValue;
   }
 
   @JsonProperty("propertyValue")
-  public void setPropertyValue(@Nullable String propertyValue) {
+  public void setPropertyValue(@Nullable Optional<String> propertyValue) {
     this.propertyValue = propertyValue;
   }
 

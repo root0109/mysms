@@ -23,7 +23,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.platform.config.PlatformDatabaseConfig;
 import com.mysms.platform.config.PlatformEventsConfig;
 import com.mysms.platform.domain.SaasPlanEntity;
@@ -49,11 +49,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class SaasPlanService extends AppTransactionManager {
 
     public static final String AGGREGATE = SaasPlanEntity.TABLE;
-    /** The contract's SaasPlanUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("code", "displayName", "billingCycleMonths", "price", "currencyId", "sortOrder", "isActive",
-                    "maxMembers",
-            "maxEvents", "maxFolders", "maxFiles", "maxVideos", "maxAudios", "maxBulletins", "maxGroups");
 
 
     private final SaasPlanRepository repository;
@@ -122,13 +117,11 @@ public class SaasPlanService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match. A field the request leaves out is kept, a null one is cleared and a
+     * value is set (§7.2). The merged row is validated as a whole, and must stay within the caller's scope.
      */
-    public SaasPlan updateSaasPlan(UUID id, String ifMatch, SaasPlanUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public SaasPlan updateSaasPlan(UUID id, String ifMatch, SaasPlanUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInGlobalWriteTransaction(() -> {
             try (CallContextHolder.Scope global = CallContextHolder.withoutTenant()) {
                 DataScope scope = DataScope.global();
@@ -137,7 +130,7 @@ public class SaasPlanService extends AppTransactionManager {
                 if (entity.getRowVersion() != expected) {
                     throw new PreconditionFailedException("If-Match does not match the current ETag.");
                 }
-                apply(entity, changes, fields);
+                List<String> fields = apply(entity, changes);
                 validator.validate(mapper.toDto(entity));
                 assertValid(entity, false);
                 scope.requireWritable(institutionOf(entity));
@@ -193,28 +186,25 @@ public class SaasPlanService extends AppTransactionManager {
         return Optional.empty();
     }
 
-    /** Applies the selected SaasPlanUpdate fields; explicit per field so a mask can clear values (no reflection). */
-    private static void apply(SaasPlanEntity entity, SaasPlanUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "code" -> entity.setCode(changes.getCode());
-                case "displayName" -> entity.setDisplayName(changes.getDisplayName());
-                case "billingCycleMonths" -> entity.setBillingCycleMonths(changes.getBillingCycleMonths());
-                case "price" -> entity.setPrice(WireValues.decimal(changes.getPrice()));
-                case "currencyId" -> entity.setCurrencyId(changes.getCurrencyId());
-                case "sortOrder" -> entity.setSortOrder(changes.getSortOrder());
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                case "maxMembers" -> entity.setMaxMembers(changes.getMaxMembers());
-                case "maxEvents" -> entity.setMaxEvents(changes.getMaxEvents());
-                case "maxFolders" -> entity.setMaxFolders(changes.getMaxFolders());
-                case "maxFiles" -> entity.setMaxFiles(changes.getMaxFiles());
-                case "maxVideos" -> entity.setMaxVideos(changes.getMaxVideos());
-                case "maxAudios" -> entity.setMaxAudios(changes.getMaxAudios());
-                case "maxBulletins" -> entity.setMaxBulletins(changes.getMaxBulletins());
-                case "maxGroups" -> entity.setMaxGroups(changes.getMaxGroups());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(SaasPlanEntity entity, SaasPlanUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("code", changes.getCode(), entity::setCode);
+        patch.apply("displayName", changes.getDisplayName(), entity::setDisplayName);
+        patch.apply("billingCycleMonths", changes.getBillingCycleMonths(), entity::setBillingCycleMonths);
+        patch.apply("price", changes.getPrice(), v -> entity.setPrice(WireValues.decimal(v)));
+        patch.apply("currencyId", changes.getCurrencyId(), entity::setCurrencyId);
+        patch.apply("sortOrder", changes.getSortOrder(), entity::setSortOrder);
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        patch.apply("maxMembers", changes.getMaxMembers(), entity::setMaxMembers);
+        patch.apply("maxEvents", changes.getMaxEvents(), entity::setMaxEvents);
+        patch.apply("maxFolders", changes.getMaxFolders(), entity::setMaxFolders);
+        patch.apply("maxFiles", changes.getMaxFiles(), entity::setMaxFiles);
+        patch.apply("maxVideos", changes.getMaxVideos(), entity::setMaxVideos);
+        patch.apply("maxAudios", changes.getMaxAudios(), entity::setMaxAudios);
+        patch.apply("maxBulletins", changes.getMaxBulletins(), entity::setMaxBulletins);
+        patch.apply("maxGroups", changes.getMaxGroups(), entity::setMaxGroups);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

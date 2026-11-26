@@ -1,0 +1,31 @@
+package com.mysms.platform.org.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.time.LocalDate;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of org.academic_year. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class AcademicYearEntity extends BaseEntity {
+
+    public static final String TABLE = "org.academic_year";
+
+    private UUID tenantId;
+    private UUID institutionId;
+    private String name;
+    private String description;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String termStructure;
+    private String status;
+    private Boolean isCurrent;
+}

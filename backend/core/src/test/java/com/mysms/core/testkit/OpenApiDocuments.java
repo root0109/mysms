@@ -12,7 +12,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Checks the OpenAPI document a module's {@code <Module>OpenApiComponentTest} fetched from its running service before
- * the test writes it to {@code target/openapi/api-docs.yml}.
+ * the test writes it to {@code target/openapi/<area>/api-docs.yml}.
  */
 public final class OpenApiDocuments {
 

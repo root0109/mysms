@@ -233,7 +233,7 @@ public interface FeePlanApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -267,7 +267,7 @@ public interface FeePlanApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -275,12 +275,11 @@ public interface FeePlanApi {
     String PATH_UPDATE_FEE_PLAN = "/v1/finance/fee-plans/{feePlanId}";
     /**
      * PATCH /v1/finance/fee-plans/{feePlanId} : Update FeePlan
-     * Partially update a FeePlan (updateMask). Requires If-Match with the current ETag.
+     * Partially update a FeePlan (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param feePlanId FeePlan id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param feePlanUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -304,7 +303,6 @@ public interface FeePlanApi {
          @PathVariable("feePlanId") UUID feePlanId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody FeePlanUpdate feePlanUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 
@@ -312,13 +310,12 @@ public interface FeePlanApi {
     String PATH_UPDATE_FEE_PLAN_INSTALLMENT = "/v1/finance/fee-plans/{feePlanId}/installments/{feePlanInstallmentId}";
     /**
      * PATCH /v1/finance/fee-plans/{feePlanId}/installments/{feePlanInstallmentId} : Update FeePlanInstallment
-     * Partially update a FeePlanInstallment (updateMask). Requires If-Match with the current ETag.
+     * Partially update a FeePlanInstallment (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param feePlanId FeePlan id. (required)
      * @param feePlanInstallmentId FeePlanInstallment id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param feePlanInstallmentUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -343,7 +340,6 @@ public interface FeePlanApi {
          @PathVariable("feePlanInstallmentId") UUID feePlanInstallmentId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody FeePlanInstallmentUpdate feePlanInstallmentUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 

@@ -34,7 +34,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,10 +59,6 @@ public class CourseService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "academics.course.create";
     static final String PERMISSION_UPDATE = "academics.course.update";
     static final String PERMISSION_DELETE = "academics.course.delete";
-    /** The contract's CourseUpdate fields, in apply order. */
-    static final List<String> WRITABLE =
-            List.of("institutionId", "programId", "departmentId", "parentCourseId", "code", "name", "evaluationType",
-            "minUnitLoad", "maxUnitLoad", "isActive");
 
     public static final String COURSE_SUBJECT_AGGREGATE = CourseSubjectEntity.TABLE;
     static final String COURSE_SUBJECT_PERMISSION_LIST = "academics.course_subject.read";
@@ -70,9 +66,6 @@ public class CourseService extends AppTransactionManager {
     static final String COURSE_SUBJECT_PERMISSION_CREATE = "academics.course_subject.create";
     static final String COURSE_SUBJECT_PERMISSION_UPDATE = "academics.course_subject.update";
     static final String COURSE_SUBJECT_PERMISSION_DELETE = "academics.course_subject.delete";
-    /** The contract's CourseSubjectUpdate fields, in apply order. */
-    static final List<String> COURSE_SUBJECT_WRITABLE = List.of("termNumber", "credits", "subjectCategory", "maxMarks",
-            "subjectId");
 
     private final CourseRepository repository;
     private final CourseMapper mapper;
@@ -146,12 +139,11 @@ public class CourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match. A field the request leaves out is kept, a null one is cleared and a
+     * value is set (§7.2). The merged row is validated as a whole, and must stay within the caller's scope.
      */
-    public Course updateCourse(UUID id, String ifMatch, CourseUpdate changes, String updateMask, boolean validateOnly) {
+    public Course updateCourse(UUID id, String ifMatch, CourseUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             CourseEntity entity = loadVisible(scope, id);
@@ -159,7 +151,7 @@ public class CourseService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -223,24 +215,21 @@ public class CourseService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected CourseUpdate fields; explicit per field so a mask can clear values (no reflection). */
-    private static void apply(CourseEntity entity, CourseUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "programId" -> entity.setProgramId(changes.getProgramId());
-                case "departmentId" -> entity.setDepartmentId(changes.getDepartmentId());
-                case "parentCourseId" -> entity.setParentCourseId(changes.getParentCourseId());
-                case "code" -> entity.setCode(changes.getCode());
-                case "name" -> entity.setName(changes.getName());
-                case "evaluationType" -> entity.setEvaluationType(Optional.ofNullable(changes.getEvaluationType())
-                        .map(v -> v.getValue()).orElse(null));
-                case "minUnitLoad" -> entity.setMinUnitLoad(WireValues.decimal(changes.getMinUnitLoad()));
-                case "maxUnitLoad" -> entity.setMaxUnitLoad(WireValues.decimal(changes.getMaxUnitLoad()));
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(CourseEntity entity, CourseUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("programId", changes.getProgramId(), entity::setProgramId);
+        patch.apply("departmentId", changes.getDepartmentId(), entity::setDepartmentId);
+        patch.apply("parentCourseId", changes.getParentCourseId(), entity::setParentCourseId);
+        patch.apply("code", changes.getCode(), entity::setCode);
+        patch.apply("name", changes.getName(), entity::setName);
+        patch.apply("evaluationType", changes.getEvaluationType(),
+                v -> entity.setEvaluationType(v == null ? null : v.getValue()));
+        patch.apply("minUnitLoad", changes.getMinUnitLoad(), v -> entity.setMinUnitLoad(WireValues.decimal(v)));
+        patch.apply("maxUnitLoad", changes.getMaxUnitLoad(), v -> entity.setMaxUnitLoad(WireValues.decimal(v)));
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -334,13 +323,12 @@ public class CourseService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared); without one,
-     * the non-null body fields apply. The merged row is validated as a whole, and must stay within the caller's scope.
+     * Partial update under If-Match. A field the request leaves out is kept, a null one is cleared and a
+     * value is set (§7.2). The merged row is validated as a whole, and must stay within the caller's scope.
      */
     public CourseSubject updateCourseSubject(UUID courseId, UUID id, String ifMatch, CourseSubjectUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, COURSE_SUBJECT_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(COURSE_SUBJECT_PERMISSION_UPDATE);
             CourseSubjectEntity entity = loadVisibleCourseSubject(scope, courseId, id);
@@ -348,7 +336,7 @@ public class CourseService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyCourseSubject(entity, changes, fields);
+            List<String> fields = applyCourseSubject(entity, changes);
             validator.validate(courseSubjectMapper.toDto(entity));
             assertValidCourseSubject(entity, false);
             scope.requireWritable(institutionOfCourseSubject(entity));
@@ -403,20 +391,15 @@ public class CourseService extends AppTransactionManager {
         return courseSubjectRepository.institutionOf(entity.getCourseId());
     }
 
-    /**
-     * Applies the selected CourseSubjectUpdate fields; explicit per field so a mask can clear values (no reflection).
-     */
-    private static void applyCourseSubject(CourseSubjectEntity entity, CourseSubjectUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "termNumber" -> entity.setTermNumber(changes.getTermNumber());
-                case "credits" -> entity.setCredits(WireValues.decimal(changes.getCredits()));
-                case "subjectCategory" -> entity.setSubjectCategory(changes.getSubjectCategory());
-                case "maxMarks" -> entity.setMaxMarks(WireValues.decimal(changes.getMaxMarks()));
-                case "subjectId" -> entity.setSubjectId(changes.getSubjectId());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyCourseSubject(CourseSubjectEntity entity, CourseSubjectUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("termNumber", changes.getTermNumber(), entity::setTermNumber);
+        patch.apply("credits", changes.getCredits(), v -> entity.setCredits(WireValues.decimal(v)));
+        patch.apply("subjectCategory", changes.getSubjectCategory(), entity::setSubjectCategory);
+        patch.apply("maxMarks", changes.getMaxMarks(), v -> entity.setMaxMarks(WireValues.decimal(v)));
+        patch.apply("subjectId", changes.getSubjectId(), entity::setSubjectId);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

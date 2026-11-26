@@ -101,7 +101,7 @@ All 469 foreign-key relationships — every one inside a single module schema; t
 | 88 | `sis.student_enrollment.previous_enrollment_id` | `sis.student_enrollment` | N:1 (optional) | SET NULL | yes | intra-module |
 | 89 | `hr.staff.designation_id` | `hr.designation` | N:1 (optional) | RESTRICT | yes | intra-module |
 | 90 | `hr.staff_department.staff_id` | `hr.staff` | N:1 (mandatory) | CASCADE | yes | intra-module |
-| 91 | `hr.staff_subject.staff_id` | `hr.staff` | N:1 (mandatory) | CASCADE | yes | intra-module |
+| 91 | `academics.teacher_subject.subject_id` | `academics.subject` | N:1 (mandatory) | RESTRICT | yes | intra-module |
 | 92 | `hr.leave_application.staff_id` | `hr.staff` | N:1 (mandatory) | RESTRICT | yes | intra-module |
 | 93 | `hr.leave_application.leave_type_id` | `hr.leave_type` | N:1 (optional) | RESTRICT | yes | intra-module |
 | 94 | `hr.leave_balance.staff_id` | `hr.staff` | N:1 (mandatory) | CASCADE | yes | intra-module |

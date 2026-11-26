@@ -30,12 +30,11 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -54,10 +53,6 @@ public class ReactionService extends AppTransactionManager {
     static final String POST_PERMISSION_CREATE = "comms.post_reaction.create";
     static final String COMMENT_PERMISSION_READ = "comms.comment_reaction.read";
     static final String COMMENT_PERMISSION_CREATE = "comms.comment_reaction.create";
-    /** The contract's PostReactionUpdate fields, in apply order. */
-    static final List<String> POST_WRITABLE = List.of("reaction", "isSaved", "isActive");
-    /** The contract's CommentReactionUpdate fields, in apply order. */
-    static final List<String> COMMENT_WRITABLE = List.of("reaction", "isActive");
 
     private final ReactionRepository repository;
     private final PostRepository posts;
@@ -128,19 +123,16 @@ public class ReactionService extends AppTransactionManager {
     }
 
     public PostReaction updatePostReaction(UUID postId, UUID id, String ifMatch, PostReactionUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, POST_WRITABLE);
         return doInWriteTransaction(() -> {
             ReactionEntity entity = ownOnPost(postId, id);
-            return postMapper.toDto(updated(entity, expected, fields, validateOnly, field -> {
-                switch (field) {
-                    case "reaction" -> entity.setReaction(Optional.ofNullable(changes.getReaction())
-                            .map(reaction -> reaction.getValue()).orElse(null));
-                    case "isSaved" -> entity.setIsSaved(changes.getIsSaved());
-                    case "isActive" -> entity.setIsActive(changes.getIsActive());
-                    default -> throw new IllegalStateException("unhandled writable field " + field);
-                }
+            return postMapper.toDto(updated(entity, expected, validateOnly, () -> {
+                Patches patch = new Patches();
+                patch.apply("reaction", changes.getReaction(), v -> entity.setReaction(v == null ? null : v.getValue()));
+                patch.apply("isSaved", changes.getIsSaved(), entity::setIsSaved);
+                patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+                return patch.applied();
             }, () -> validator.validate(postMapper.toDto(entity))));
         });
     }
@@ -193,18 +185,15 @@ public class ReactionService extends AppTransactionManager {
     }
 
     public CommentReaction updateCommentReaction(UUID id, String ifMatch, CommentReactionUpdate changes,
-            String updateMask, boolean validateOnly) {
+            boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, COMMENT_WRITABLE);
         return doInWriteTransaction(() -> {
             ReactionEntity entity = ownOnComment(id);
-            return commentMapper.toDto(updated(entity, expected, fields, validateOnly, field -> {
-                switch (field) {
-                    case "reaction" -> entity.setReaction(Optional.ofNullable(changes.getReaction())
-                            .map(reaction -> reaction.getValue()).orElse(null));
-                    case "isActive" -> entity.setIsActive(changes.getIsActive());
-                    default -> throw new IllegalStateException("unhandled writable field " + field);
-                }
+            return commentMapper.toDto(updated(entity, expected, validateOnly, () -> {
+                Patches patch = new Patches();
+                patch.apply("reaction", changes.getReaction(), v -> entity.setReaction(v == null ? null : v.getValue()));
+                patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+                return patch.applied();
             }, () -> validator.validate(commentMapper.toDto(entity))));
         });
     }
@@ -223,13 +212,16 @@ public class ReactionService extends AppTransactionManager {
         return stored;
     }
 
-    /** Applies the fields under If-Match, re-validates the merged row, and writes it unless only validating. */
-    private ReactionEntity updated(ReactionEntity entity, int expected, List<String> fields, boolean validateOnly,
-            Consumer<String> apply, Runnable revalidate) {
+    /**
+     * Applies the request's fields under If-Match ({@code apply} answers their names, §7.2), re-validates the merged
+     * row, and writes it unless only validating.
+     */
+    private ReactionEntity updated(ReactionEntity entity, int expected, boolean validateOnly,
+            Supplier<List<String>> apply, Runnable revalidate) {
         if (entity.getRowVersion() != expected) {
             throw new PreconditionFailedException("If-Match does not match the current ETag.");
         }
-        fields.forEach(apply);
+        List<String> fields = apply.get();
         revalidate.run();
         entity.onUpdatingData(Actor.current(), clock);
         if (validateOnly) {

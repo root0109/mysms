@@ -65,11 +65,10 @@ public class PaymentGatewayAccountController implements PaymentGatewayAccountApi
 
     @Override
     public ResponseEntity<PaymentGatewayAccount> updatePaymentGatewayAccount(UUID paymentGatewayAccountId,
-            String ifMatch, PaymentGatewayAccountUpdate paymentGatewayAccountUpdate, String updateMask,
-            Boolean validateOnly) {
+            String ifMatch, PaymentGatewayAccountUpdate paymentGatewayAccountUpdate, Boolean validateOnly) {
         PaymentGatewayAccount updated =
                 paymentGatewayAccountService.updatePaymentGatewayAccount(paymentGatewayAccountId, ifMatch,
-                        paymentGatewayAccountUpdate, updateMask,
+                        paymentGatewayAccountUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

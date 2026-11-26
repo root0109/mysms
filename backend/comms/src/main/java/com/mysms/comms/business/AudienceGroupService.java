@@ -37,7 +37,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,8 +64,6 @@ public class AudienceGroupService extends AppTransactionManager {
     static final String PERMISSION_ADD_GROUP_MEMBERS = "comms.audience_group.add_group_members";
     /** The most users one AddGroupMembers call takes. */
     static final int MAX_ADDED = 500;
-    /** The contract's AudienceGroupUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("institutionId", "classSectionId", "name", "groupScope", "isActive");
 
     public static final String AUDIENCE_GROUP_MEMBER_AGGREGATE = AudienceGroupMemberEntity.TABLE;
     static final String AUDIENCE_GROUP_MEMBER_PERMISSION_LIST = "comms.audience_group_member.read";
@@ -73,8 +71,6 @@ public class AudienceGroupService extends AppTransactionManager {
     static final String AUDIENCE_GROUP_MEMBER_PERMISSION_CREATE = "comms.audience_group_member.create";
     static final String AUDIENCE_GROUP_MEMBER_PERMISSION_UPDATE = "comms.audience_group_member.update";
     static final String AUDIENCE_GROUP_MEMBER_PERMISSION_DELETE = "comms.audience_group_member.delete";
-    /** The contract's AudienceGroupMemberUpdate fields, in apply order. */
-    static final List<String> AUDIENCE_GROUP_MEMBER_WRITABLE = List.of("userId", "memberType");
 
     private final AudienceGroupRepository repository;
     private final AudienceGroupMapper mapper;
@@ -149,13 +145,11 @@ public class AudienceGroupService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
-    public AudienceGroup updateAudienceGroup(UUID id, String ifMatch, AudienceGroupUpdate changes, String updateMask,
-            boolean validateOnly) {
+    public AudienceGroup updateAudienceGroup(UUID id, String ifMatch, AudienceGroupUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(PERMISSION_UPDATE);
             AudienceGroupEntity entity = loadVisible(scope, id);
@@ -163,7 +157,7 @@ public class AudienceGroupService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields);
+            List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
@@ -260,19 +254,15 @@ public class AudienceGroupService extends AppTransactionManager {
         return Optional.ofNullable(entity.getInstitutionId());
     }
 
-    /** Applies the selected AudienceGroupUpdate fields; explicit per field so a mask can clear values. */
-    private static void apply(AudienceGroupEntity entity, AudienceGroupUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "institutionId" -> entity.setInstitutionId(changes.getInstitutionId());
-                case "classSectionId" -> entity.setClassSectionId(changes.getClassSectionId());
-                case "name" -> entity.setName(changes.getName());
-                case "groupScope" -> entity.setGroupScope(Optional.ofNullable(changes.getGroupScope())
-                        .map(v -> v.getValue()).orElse(null));
-                case "isActive" -> entity.setIsActive(changes.getIsActive());
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> apply(AudienceGroupEntity entity, AudienceGroupUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("institutionId", changes.getInstitutionId(), entity::setInstitutionId);
+        patch.apply("classSectionId", changes.getClassSectionId(), entity::setClassSectionId);
+        patch.apply("name", changes.getName(), entity::setName);
+        patch.apply("groupScope", changes.getGroupScope(), v -> entity.setGroupScope(v == null ? null : v.getValue()));
+        patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
@@ -352,13 +342,12 @@ public class AudienceGroupService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match: an updateMask sets the listed fields (clearing absent ones), otherwise the
-     * non-null fields apply; the merged row must validate and stay in the caller's scope.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; the merged row must validate and stay in the caller's scope.
      */
     public AudienceGroupMember updateAudienceGroupMember(UUID groupId, UUID id, String ifMatch,
-            AudienceGroupMemberUpdate changes, String updateMask, boolean validateOnly) {
+            AudienceGroupMemberUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, AUDIENCE_GROUP_MEMBER_WRITABLE);
         return doInWriteTransaction(() -> {
             DataScope scope = DataScope.current(AUDIENCE_GROUP_MEMBER_PERMISSION_UPDATE);
             AudienceGroupMemberEntity entity = loadVisibleAudienceGroupMember(scope, groupId, id);
@@ -366,7 +355,7 @@ public class AudienceGroupService extends AppTransactionManager {
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            applyAudienceGroupMember(entity, changes, fields);
+            List<String> fields = applyAudienceGroupMember(entity, changes);
             validator.validate(audienceGroupMemberMapper.toDto(entity));
             assertValidAudienceGroupMember(entity, false);
             scope.requireWritable(institutionOfAudienceGroupMember(entity));
@@ -421,17 +410,12 @@ public class AudienceGroupService extends AppTransactionManager {
         return audienceGroupMemberRepository.institutionOf(entity.getGroupId());
     }
 
-    /** Applies the selected AudienceGroupMemberUpdate fields; explicit per field so a mask can clear values. */
-    private static void applyAudienceGroupMember(AudienceGroupMemberEntity entity, AudienceGroupMemberUpdate changes,
-            List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "userId" -> entity.setUserId(changes.getUserId());
-                case "memberType" -> entity.setMemberType(Optional.ofNullable(changes.getMemberType())
-                        .map(v -> v.getValue()).orElse(null));
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
+    private static List<String> applyAudienceGroupMember(AudienceGroupMemberEntity entity, AudienceGroupMemberUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("userId", changes.getUserId(), entity::setUserId);
+        patch.apply("memberType", changes.getMemberType(), v -> entity.setMemberType(v == null ? null : v.getValue()));
+        return patch.applied();
     }
 
     /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */

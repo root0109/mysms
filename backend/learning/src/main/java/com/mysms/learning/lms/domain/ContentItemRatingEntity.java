@@ -1,0 +1,27 @@
+package com.mysms.learning.lms.domain;
+
+import com.mysms.core.entity.BaseEntity;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+/** A row of lms.content_item_rating. */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public class ContentItemRatingEntity extends BaseEntity {
+
+    public static final String TABLE = "lms.content_item_rating";
+
+    private UUID tenantId;
+    private UUID contentItemId;
+    private UUID cohortId;
+    private UUID userId;
+    private Boolean isLike;
+    private Integer rating;
+}

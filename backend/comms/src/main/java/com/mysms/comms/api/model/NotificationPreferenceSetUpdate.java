@@ -16,18 +16,18 @@ import jakarta.validation.constraints.*;
 import java.util.*;
 
 /**
- * Fields of NotificationPreferenceSet that can be updated (partial update; see updateMask).
+ * Fields of NotificationPreferenceSet that can be updated (PATCH: a property left out keeps its value, null clears it, a value sets it).
  */
 
 public class NotificationPreferenceSetUpdate {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID userId;
+  private @Nullable Optional<@NotNull UUID> userId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable UUID roleId;
+  private @Nullable Optional<UUID> roleId;
 
-  public NotificationPreferenceSetUpdate userId(@Nullable UUID userId) {
+  public NotificationPreferenceSetUpdate userId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
     return this;
   }
@@ -36,18 +36,18 @@ public class NotificationPreferenceSetUpdate {
    * User.
    * @return userId
    */
-  @Valid 
+  
   @JsonProperty("userId")
-  public @Nullable UUID getUserId() {
+  public @Nullable Optional<UUID> getUserId() {
     return userId;
   }
 
   @JsonProperty("userId")
-  public void setUserId(@Nullable UUID userId) {
+  public void setUserId(@Nullable Optional<UUID> userId) {
     this.userId = userId;
   }
 
-  public NotificationPreferenceSetUpdate roleId(@Nullable UUID roleId) {
+  public NotificationPreferenceSetUpdate roleId(@Nullable Optional<UUID> roleId) {
     this.roleId = roleId;
     return this;
   }
@@ -56,14 +56,14 @@ public class NotificationPreferenceSetUpdate {
    * Role the preferences apply to (NULL = all roles).
    * @return roleId
    */
-  @Valid 
+  
   @JsonProperty("roleId")
-  public @Nullable UUID getRoleId() {
+  public @Nullable Optional<UUID> getRoleId() {
     return roleId;
   }
 
   @JsonProperty("roleId")
-  public void setRoleId(@Nullable UUID roleId) {
+  public void setRoleId(@Nullable Optional<UUID> roleId) {
     this.roleId = roleId;
   }
 

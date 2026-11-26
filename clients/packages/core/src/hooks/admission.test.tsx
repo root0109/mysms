@@ -6,6 +6,7 @@ import { ApiError, isApiError } from '../api/problem';
 import { MySmsProvider } from '../react/context';
 import { createRuntime } from '../runtime';
 import {
+  applicationChanges,
   cycleStage,
   newApplicationNumber,
   retriesSameAttempt,
@@ -40,6 +41,20 @@ async function setup(options: Parameters<typeof fakeAdmission>[0] = {}) {
   );
   return { api, wrapper };
 }
+
+describe('saving an application form', () => {
+  it('sends only the changed fields, a blanked or removed one as null', () => {
+    const saved = {
+      fullName: 'Asha',
+      dateOfBirth: '2018-01-02',
+      gender: 'female' as const,
+      email: 'a@x.in',
+      mobile: '9',
+    };
+    const form = { fullName: 'Asha K', dateOfBirth: '2018-01-02', gender: 'female' as const, mobile: '9' };
+    expect(JSON.stringify(applicationChanges(saved, form))).toBe('{"fullName":"Asha K","email":null}');
+  });
+});
 
 describe('the admission state tables', () => {
   it('offers the steps the server allows from each state', () => {

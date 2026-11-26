@@ -60,8 +60,8 @@ public class MagazineController implements MagazineApi {
 
     @Override
     public ResponseEntity<Magazine> updateMagazine(UUID magazineId, String ifMatch,
-            MagazineUpdate magazineUpdate, String updateMask, Boolean validateOnly) {
-        Magazine updated = magazineService.updateMagazine(magazineId, ifMatch, magazineUpdate, updateMask,
+            MagazineUpdate magazineUpdate, Boolean validateOnly) {
+        Magazine updated = magazineService.updateMagazine(magazineId, ifMatch, magazineUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

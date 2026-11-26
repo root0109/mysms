@@ -38,7 +38,7 @@ public class GooglePubSubEventsAutoConfiguration {
                     + "required with the Google Cloud Pub/Sub bus");
         }
         Set<String> modules = Arrays.stream(environment.getProperty("mysms.events.google-pubsub.source-modules",
-                        String.join(",", MessagingModules.ALL)).split(","))
+                        String.join(",", MessagingModules.AREAS)).split(","))
                 .map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toUnmodifiableSet());
         boolean createResources = environment.getProperty("mysms.events.google-pubsub.create-resources",
                 Boolean.class, environment.getProperty("MYSMS_EVENTS_GCP_CREATE_RESOURCES", Boolean.class,

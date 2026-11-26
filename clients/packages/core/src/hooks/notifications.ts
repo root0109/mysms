@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { comms } from '@mysms/sdk';
 import { NotificationPreferenceSetApi } from '@mysms/sdk/comms/apis/NotificationPreferenceSetApi';
 import { allPages, pageQuery } from '../api/pages';
+import { patchOf } from '../api/patch';
 import { call, callWithEtag, type WithEtag } from '../api/unwrap';
 import { queryKey } from '../query/keys';
 import { STALE_TIME } from '../query/queryClient';
@@ -74,8 +75,7 @@ export function useUpdateNotificationPreference() {
           notificationPreferenceSetId: preferenceSetId,
           notificationPreferenceId: preferenceId,
           ifMatch: etag,
-          updateMask: Object.keys(changes).join(','),
-          notificationPreferenceUpdate: changes,
+          notificationPreferenceUpdate: patchOf(changes),
         }),
       ),
     onSuccess: (_result, variables) => {

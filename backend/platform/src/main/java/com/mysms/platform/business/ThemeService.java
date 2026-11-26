@@ -20,7 +20,7 @@ import com.mysms.core.paging.SortSpec;
 import com.mysms.core.paging.SqlFragment;
 import com.mysms.core.validation.DtoValidator;
 import com.mysms.core.web.Etags;
-import com.mysms.core.web.UpdateMask;
+import com.mysms.core.web.Patches;
 import com.mysms.platform.api.model.Theme;
 import com.mysms.platform.api.model.ThemeUpdate;
 import com.mysms.platform.config.PlatformDatabaseConfig;
@@ -60,9 +60,6 @@ public class ThemeService extends AppTransactionManager {
     static final String PERMISSION_CREATE = "platform.theme.create";
     static final String PERMISSION_UPDATE = "platform.theme.update";
     static final String PERMISSION_DELETE = "platform.theme.delete";
-    /** The contract's ThemeUpdate fields, in apply order. */
-    static final List<String> WRITABLE = List.of("name", "description", "thumbnailFileId", "thumbnailAltFileId",
-            "logoFileId", "isDefault", "tokens");
 
     private final ThemeRepository repository;
     private final ThemeMapper mapper;
@@ -146,22 +143,22 @@ public class ThemeService extends AppTransactionManager {
     }
 
     /**
-     * Partial update under If-Match. With an updateMask the listed fields are set (absent ones cleared, an absent
-     * {@code tokens} removes every override); without one, the non-null body fields apply.
+     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
+     * is set; {@code tokens} sent as null removes every override.
      */
-    public Theme updateTheme(UUID id, String ifMatch, ThemeUpdate changes, String updateMask, boolean validateOnly) {
+    public Theme updateTheme(UUID id, String ifMatch, ThemeUpdate changes, boolean validateOnly) {
         int expected = Etags.expectedVersion(ifMatch);
-        List<String> fields = UpdateMask.fields(updateMask, changes, WRITABLE);
-        Optional<Map<String, String>> tokens = fields.contains("tokens")
-                ? Optional.of(changes.getTokens() == null ? Map.of() : ThemeTokens.parse(changes.getTokens()))
-                : Optional.empty();
+        Optional<Object> sentTokens = changes.getTokens();
+        Optional<Map<String, String>> tokens = sentTokens == null ? Optional.empty()
+                : Optional.of(sentTokens.map(ThemeTokens::parse).orElse(Map.of()));
         return doInWriteTransaction(() -> {
             DataScope.current(PERMISSION_UPDATE).requireWritable(Optional.empty());
             ThemeEntity entity = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
             if (entity.getRowVersion() != expected) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
-            apply(entity, changes, fields.stream().filter(field -> !"tokens".equals(field)).toList());
+            List<String> fields = new ArrayList<>(apply(entity, changes));
+            tokens.ifPresent(set -> fields.add("tokens"));
             Theme merged = withTokens(List.of(entity)).get(0);
             tokens.ifPresent(merged::setTokens);
             validator.validate(merged);
@@ -235,19 +232,19 @@ public class ThemeService extends AppTransactionManager {
         return ids;
     }
 
-    /** Applies the selected ThemeUpdate column fields (the tokens are rows, replaced separately). */
-    private static void apply(ThemeEntity entity, ThemeUpdate changes, List<String> fields) {
-        for (String field : fields) {
-            switch (field) {
-                case "name" -> entity.setName(changes.getName());
-                case "description" -> entity.setDescription(changes.getDescription());
-                case "thumbnailFileId" -> entity.setThumbnailFileId(changes.getThumbnailFileId());
-                case "thumbnailAltFileId" -> entity.setThumbnailAltFileId(changes.getThumbnailAltFileId());
-                case "logoFileId" -> entity.setLogoFileId(changes.getLogoFileId());
-                case "isDefault" -> entity.setIsDefault(Boolean.TRUE.equals(changes.getIsDefault()));
-                default -> throw new IllegalStateException("unhandled writable field " + field);
-            }
-        }
+    /**
+     * Applies the column fields the request carries (§7.2; the tokens are rows, replaced separately); answers their
+     * names for the audit record.
+     */
+    private static List<String> apply(ThemeEntity entity, ThemeUpdate changes) {
+        Patches patch = new Patches();
+        patch.apply("name", changes.getName(), entity::setName);
+        patch.apply("description", changes.getDescription(), entity::setDescription);
+        patch.apply("thumbnailFileId", changes.getThumbnailFileId(), entity::setThumbnailFileId);
+        patch.apply("thumbnailAltFileId", changes.getThumbnailAltFileId(), entity::setThumbnailAltFileId);
+        patch.apply("logoFileId", changes.getLogoFileId(), entity::setLogoFileId);
+        patch.apply("isDefault", changes.getIsDefault(), v -> entity.setIsDefault(Boolean.TRUE.equals(v)));
+        return patch.applied();
     }
 
     /** Every file the theme shows is a live, uploaded file of the tenant (422 naming each one that is not). */

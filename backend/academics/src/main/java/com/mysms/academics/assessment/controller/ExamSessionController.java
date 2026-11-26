@@ -1,0 +1,110 @@
+package com.mysms.academics.assessment.controller;
+
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.academics.assessment.business.ExamSessionService;
+import com.mysms.academics.assessment.api.ExamSessionApi;
+import com.mysms.academics.assessment.api.model.CancelExamSessionRequest;
+import com.mysms.academics.assessment.api.model.CompleteExamSessionRequest;
+import com.mysms.academics.assessment.api.model.ExamSession;
+import com.mysms.academics.assessment.api.model.ExamSessionUpdate;
+import com.mysms.academics.assessment.api.model.MarkExamSessionHeldRequest;
+import com.mysms.academics.assessment.api.model.ResetExamSessionRequest;
+import com.mysms.academics.assessment.api.model.ScheduleExamSessionRequest;
+import com.mysms.core.web.ReadMask;
+import java.net.URI;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * REST edge of the ExamSession operations; authentication and the permission check already ran in the auth-client
+ * filter.
+ */
+@RestController
+public class ExamSessionController implements ExamSessionApi {
+
+    private final ExamSessionService examSessionService;
+
+    public ExamSessionController(ExamSessionService examSessionService) {
+        this.examSessionService = examSessionService;
+    }
+
+    @Override
+    public ResponseEntity<ExamSession> cancelExamSession(UUID examSessionId,
+            CancelExamSessionRequest cancelExamSessionRequest, UUID idempotencyKey) {
+        ExamSession changed = examSessionService.cancelExamSession(examSessionId, cancelExamSessionRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
+    }
+
+    @Override
+    public ResponseEntity<ExamSession> completeExamSession(UUID examSessionId,
+            CompleteExamSessionRequest completeExamSessionRequest, UUID idempotencyKey) {
+        ExamSession changed = examSessionService.completeExamSession(examSessionId, completeExamSessionRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
+    }
+
+    @Override
+    public ResponseEntity<ExamSession> createExamSession(ExamSession examSession, UUID idempotencyKey,
+            Boolean validateOnly) {
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        ExamSession created = examSessionService.createExamSession(examSession, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(URI.create("/v1/assessment/exam-sessions/" + created.getId()))
+                .eTag(created.getEtag()).body(created);
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteExamSession(UUID examSessionId, String ifMatch) {
+        examSessionService.deleteExamSession(examSessionId, ifMatch);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<ExamSession> getExamSession(UUID examSessionId, String fields) {
+        ExamSession found = examSessionService.getExamSession(examSessionId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<ExamSession>> listExamSessions(Integer page, Integer size, String cursor,
+            String filter, List<String> sort, String fields) {
+        PagingInfo<ExamSession> list =
+                PagingUtil.pagingInfo(examSessionService.listExamSessions(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
+    }
+
+    @Override
+    public ResponseEntity<ExamSession> markExamSessionHeld(UUID examSessionId,
+            MarkExamSessionHeldRequest markExamSessionHeldRequest, UUID idempotencyKey) {
+        ExamSession changed = examSessionService.markExamSessionHeld(examSessionId, markExamSessionHeldRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
+    }
+
+    @Override
+    public ResponseEntity<ExamSession> resetExamSession(UUID examSessionId,
+            ResetExamSessionRequest resetExamSessionRequest, UUID idempotencyKey) {
+        ExamSession changed = examSessionService.resetExamSession(examSessionId, resetExamSessionRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
+    }
+
+    @Override
+    public ResponseEntity<ExamSession> scheduleExamSession(UUID examSessionId,
+            ScheduleExamSessionRequest scheduleExamSessionRequest, UUID idempotencyKey) {
+        ExamSession changed = examSessionService.scheduleExamSession(examSessionId, scheduleExamSessionRequest);
+        return ResponseEntity.ok().eTag(changed.getEtag()).body(changed);
+    }
+
+    @Override
+    public ResponseEntity<ExamSession> updateExamSession(UUID examSessionId, String ifMatch,
+            ExamSessionUpdate examSessionUpdate, Boolean validateOnly) {
+        ExamSession updated =
+                examSessionService.updateExamSession(examSessionId, ifMatch, examSessionUpdate,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
+    }
+}

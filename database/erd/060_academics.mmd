@@ -94,6 +94,11 @@ erDiagram
         varchar(30) offering_type "NN"
         boolean is_active "NN"
     }
+    academics__teacher_subject["academics.teacher_subject"] {
+        uuid id PK
+        uuid staff_id FK "NN · → hr.staff (logical)"
+        uuid subject_id FK "NN"
+    }
     academics__teaching_assignment["academics.teaching_assignment"] {
         uuid id PK
         uuid class_subject_id FK "NN"
@@ -195,6 +200,7 @@ erDiagram
     academics__subject ||--o{ academics__course_subject : "subject_id"
     academics__class_section ||--o{ academics__class_subject : "class_section_id"
     academics__subject ||--o{ academics__class_subject : "subject_id"
+    academics__subject ||--o{ academics__teacher_subject : "subject_id"
     academics__class_subject ||--o{ academics__teaching_assignment : "class_subject_id"
     academics__class_subject ||--o{ academics__curriculum_unit : "class_subject_id"
     academics__teaching_assignment ||--o{ academics__lesson_plan : "teaching_assignment_id"

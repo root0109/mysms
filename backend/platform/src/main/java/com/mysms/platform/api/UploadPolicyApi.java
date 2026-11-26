@@ -136,7 +136,7 @@ public interface UploadPolicyApi {
         @Min(value = 1) @Max(value = 500)  @Valid @RequestParam(value = "size", required = false, defaultValue = "50") Integer size,
          @Valid @RequestParam(value = "cursor", required = false) @Nullable String cursor,
         @Size(max = 2000)  @Valid @RequestParam(value = "filter", required = false) @Nullable String filter,
-         @Valid @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
+         @RequestParam(value = "sort", required = false) @Nullable List<String> sort,
          @Valid @RequestParam(value = "fields", required = false) @Nullable String fields
     );
 
@@ -144,12 +144,11 @@ public interface UploadPolicyApi {
     String PATH_UPDATE_UPLOAD_POLICY = "/v1/platform/upload-policies/{uploadPolicyId}";
     /**
      * PATCH /v1/platform/upload-policies/{uploadPolicyId} : Update UploadPolicy
-     * Partially update a UploadPolicy (updateMask). Requires If-Match with the current ETag.
+     * Partially update a UploadPolicy (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
      *
      * @param uploadPolicyId UploadPolicy id. (required)
      * @param ifMatch ETag from the last read; required for updates and deletes. (required)
      * @param uploadPolicyUpdate  (required)
-     * @param updateMask Comma-separated fields to update. If omitted, every field present in the body is updated. (optional)
      * @param validateOnly Validate the request without persisting. (optional, default to false)
      * @return OK (status code 200)
      *         or Malformed request. (status code 400)
@@ -173,7 +172,6 @@ public interface UploadPolicyApi {
          @PathVariable("uploadPolicyId") UUID uploadPolicyId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody UploadPolicyUpdate uploadPolicyUpdate,
-         @Valid @RequestParam(value = "updateMask", required = false) @Nullable String updateMask,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 

@@ -1,0 +1,259 @@
+package com.mysms.identity.people.repository;
+import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.paging.FieldSpec;
+import com.mysms.core.paging.Page;
+import com.mysms.core.paging.PageRequest;
+import com.mysms.core.paging.SortSpec;
+import com.mysms.core.paging.SqlFragment;
+import com.mysms.core.paging.ValueType;
+import com.mysms.identity.people.config.PeopleDatabaseConfig;
+import com.mysms.identity.people.domain.PublicProfileEntity;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Repository;
+/**
+ * Plain-JDBC access to people.public_profile: live rows only, keyset paging over an allowlisted order and the
+ * row_version guard on every update and delete. Every statement filters the caller's tenant itself; row-level security
+ * is the backstop.
+ */
+@Repository
+public class PublicProfileRepository {
+
+    /** Fields clients may filter on (contract names → columns). */
+    public static final Map<String, FieldSpec> FILTER_FIELDS = fields(
+            field("id", "r.id", ValueType.UUID),
+            field("personId", "r.person_id", ValueType.UUID),
+            field("headline", "r.headline", ValueType.STRING),
+            field("profession", "r.profession", ValueType.STRING),
+            field("personaCategory", "r.persona_category", ValueType.STRING),
+            field("coverImageFileId", "r.cover_image_file_id", ValueType.UUID),
+            field("city", "r.city", ValueType.STRING),
+            field("countryId", "r.country_id", ValueType.UUID),
+            field("college", "r.college", ValueType.STRING),
+            field("branch", "r.branch", ValueType.STRING),
+            field("linkedinUrl", "r.linkedin_url", ValueType.STRING),
+            field("githubUrl", "r.github_url", ValueType.STRING),
+            field("twitterUrl", "r.twitter_url", ValueType.STRING),
+            field("mediumUrl", "r.medium_url", ValueType.STRING),
+            field("hidePrivateInfo", "r.hide_private_info", ValueType.BOOLEAN),
+            field("createTime", "r.created_at", ValueType.TIMESTAMP),
+            field("updateTime", "r.updated_at", ValueType.TIMESTAMP));
+
+    /** Fields clients may order by; NOT NULL expressions, so keyset paging can compare them. */
+    public static final Map<String, FieldSpec> SORT_FIELDS = fields(
+            field("createTime", "r.created_at", ValueType.TIMESTAMP),
+            field("updateTime", "r.updated_at", ValueType.TIMESTAMP));
+
+    public static final String DEFAULT_ORDER = "createTime";
+    public static final String ID_COLUMN = "r.id";
+
+    private static final Map<String, Function<PublicProfileEntity, Object>> SORT_VALUES = Map.ofEntries(
+            Map.entry("createTime", PublicProfileEntity::getCreatedAt),
+            Map.entry("updateTime", PublicProfileEntity::getUpdatedAt));
+
+    private static final String SELECT_LIVE = """
+            SELECT r.id, r.tenant_id, r.person_id, r.headline, r.profession, r.persona_category,
+                   r.cover_image_file_id, r.city, r.country_id, r.college, r.branch, r.linkedin_url, r.github_url,
+                   r.twitter_url, r.medium_url, r.hide_private_info, r.created_at, r.created_by, r.updated_at,
+                   r.updated_by, r.deleted_at, r.row_version
+              FROM people.public_profile r
+             WHERE r.tenant_id = :tenantId
+               AND r.deleted_at IS NULL
+            """;
+    private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    private static final String INSERT = """
+            INSERT INTO people.public_profile
+            (id, tenant_id, person_id, headline, profession, persona_category, cover_image_file_id, city, country_id,
+             college, branch, linkedin_url, github_url, twitter_url, medium_url, hide_private_info, created_at,
+             created_by, updated_at, updated_by, row_version)
+            VALUES (:id, :tenantId, :personId, :headline, :profession, :personaCategory, :coverImageFileId, :city,
+                    :countryId, :college, :branch, :linkedinUrl, :githubUrl, :twitterUrl, :mediumUrl,
+                    COALESCE(:hidePrivateInfo, false), :createdAt, :createdBy, :updatedAt, :updatedBy, :rowVersion)
+            RETURNING id, tenant_id, person_id, headline, profession, persona_category, cover_image_file_id, city,
+                      country_id, college, branch, linkedin_url, github_url, twitter_url, medium_url, hide_private_info,
+                      created_at, created_by, updated_at, updated_by, deleted_at, row_version
+            """;
+    private static final String SOFT_DELETE = """
+            UPDATE people.public_profile
+               SET deleted_at = :deletedAt,
+                   updated_at = :updatedAt,
+                   updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String UPDATE = """
+            UPDATE people.public_profile
+               SET headline = :headline,
+                   profession = :profession,
+                   persona_category = :personaCategory,
+                   cover_image_file_id = :coverImageFileId,
+                   city = :city,
+                   country_id = :countryId,
+                   college = :college,
+                   branch = :branch,
+                   linkedin_url = :linkedinUrl,
+                   github_url = :githubUrl,
+                   twitter_url = :twitterUrl,
+                   medium_url = :mediumUrl,
+                   hide_private_info = :hidePrivateInfo,
+                   updated_at = :updatedAt,
+                   updated_by = :updatedBy,
+                   row_version = row_version + 1
+             WHERE tenant_id = :tenantId
+               AND id = :id AND row_version = :expected AND deleted_at IS NULL
+            """;
+    private static final String UQ_PUBLIC_PROFILE_PERSON_ID_TAKEN = """
+            SELECT EXISTS (SELECT 1 FROM people.public_profile
+                            WHERE tenant_id = :tenantId
+                              AND person_id = :personId AND id <> :id AND ((deleted_at IS NULL)))
+            """;
+    private static final String EXISTS_PERSON_ID = """
+            SELECT EXISTS (SELECT 1 FROM people.person WHERE tenant_id = :tenantId
+                AND id = :id AND deleted_at IS NULL)
+            """;
+
+    private final JdbcClient jdbc;
+
+    public PublicProfileRepository(@Qualifier(PeopleDatabaseConfig.DATABASE) ModuleDatabase database) {
+        this.jdbc = database.jdbc();
+    }
+
+    public Optional<PublicProfileEntity> findById(UUID id) {
+        return jdbc.sql(FIND_BY_ID).param("id", id).query(PublicProfileRepository::map).optional();
+    }
+
+    public Page<PublicProfileEntity> list(PageRequest page, SqlFragment filter) {
+        SqlFragment where = filter.and(page.keysetPredicate());
+        String sql = SELECT_LIVE + " AND (" + where.sql() + ") ORDER BY " + page.orderByClause() + page.limitClause();
+        List<PublicProfileEntity> rows = jdbc.sql(sql).params(where.params()).params(page.limitParams())
+                .query(PublicProfileRepository::map).list();
+        return page.toPage(rows, e -> sortValues(page.sort(), e), PublicProfileEntity::getId);
+    }
+
+    /** Inserts the row and returns it as stored (database defaults of read-only columns included). */
+    public PublicProfileEntity insert(PublicProfileEntity e) {
+        return jdbc.sql(INSERT)
+                .param("id", e.getId())
+                .param("tenantId", e.getTenantId())
+                .param("personId", e.getPersonId())
+                .param("headline", e.getHeadline())
+                .param("profession", e.getProfession())
+                .param("personaCategory", e.getPersonaCategory())
+                .param("coverImageFileId", e.getCoverImageFileId())
+                .param("city", e.getCity())
+                .param("countryId", e.getCountryId())
+                .param("college", e.getCollege())
+                .param("branch", e.getBranch())
+                .param("linkedinUrl", e.getLinkedinUrl())
+                .param("githubUrl", e.getGithubUrl())
+                .param("twitterUrl", e.getTwitterUrl())
+                .param("mediumUrl", e.getMediumUrl())
+                .param("hidePrivateInfo", e.getHidePrivateInfo())
+                .param("createdAt", e.getCreatedAt())
+                .param("createdBy", e.getCreatedBy())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("rowVersion", e.getRowVersion())
+                .query(PublicProfileRepository::map).single();
+    }
+
+    /** Updates under the ETag guard; 0 rows means the row changed (or vanished) since it was read. */
+    public int update(PublicProfileEntity e, int expectedVersion) {
+        return jdbc.sql(UPDATE)
+                .param("id", e.getId())
+                .param("headline", e.getHeadline())
+                .param("profession", e.getProfession())
+                .param("personaCategory", e.getPersonaCategory())
+                .param("coverImageFileId", e.getCoverImageFileId())
+                .param("city", e.getCity())
+                .param("countryId", e.getCountryId())
+                .param("college", e.getCollege())
+                .param("branch", e.getBranch())
+                .param("linkedinUrl", e.getLinkedinUrl())
+                .param("githubUrl", e.getGithubUrl())
+                .param("twitterUrl", e.getTwitterUrl())
+                .param("mediumUrl", e.getMediumUrl())
+                .param("hidePrivateInfo", e.getHidePrivateInfo())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("expected", expectedVersion)
+                .update();
+    }
+
+    public int softDelete(PublicProfileEntity e, int expectedVersion) {
+        return jdbc.sql(SOFT_DELETE)
+                .param("id", e.getId())
+                .param("deletedAt", e.getDeletedAt())
+                .param("updatedAt", e.getUpdatedAt())
+                .param("updatedBy", e.getUpdatedBy())
+                .param("expected", expectedVersion)
+                .update();
+    }
+
+    /** uq_public_profile_person_id: person_id where (deleted_at IS NULL). */
+    public boolean takenPersonIdId(PublicProfileEntity e) {
+        return Boolean.TRUE.equals(jdbc.sql(UQ_PUBLIC_PROFILE_PERSON_ID_TAKEN).param("personId", e.getPersonId())
+                .param("id", e.getId())
+                .query(Boolean.class).single());
+    }
+
+    /** Whether the referenced people.person row exists (live). */
+    public boolean existsPersonId(UUID id) {
+        return Boolean.TRUE.equals(jdbc.sql(EXISTS_PERSON_ID).param("id", id).query(Boolean.class).single());
+    }
+
+    /** Children of one parent row (the parent id of the path). */
+    public static SqlFragment ofParent(UUID parentId) {
+        return new SqlFragment("r.person_id = :parentId", Map.of("parentId", parentId));
+    }
+
+    private static List<Object> sortValues(SortSpec sort, PublicProfileEntity e) {
+        return sort.orders().stream().map(o -> SORT_VALUES.get(o.field().name()).apply(e)).toList();
+    }
+
+    private static PublicProfileEntity map(ResultSet rs, int row) throws SQLException {
+        return PublicProfileEntity.builder()
+                .id(rs.getObject("id", UUID.class))
+                .tenantId(rs.getObject("tenant_id", UUID.class))
+                .personId(rs.getObject("person_id", UUID.class))
+                .headline(rs.getString("headline"))
+                .profession(rs.getString("profession"))
+                .personaCategory(rs.getString("persona_category"))
+                .coverImageFileId(rs.getObject("cover_image_file_id", UUID.class))
+                .city(rs.getString("city"))
+                .countryId(rs.getObject("country_id", UUID.class))
+                .college(rs.getString("college"))
+                .branch(rs.getString("branch"))
+                .linkedinUrl(rs.getString("linkedin_url"))
+                .githubUrl(rs.getString("github_url"))
+                .twitterUrl(rs.getString("twitter_url"))
+                .mediumUrl(rs.getString("medium_url"))
+                .hidePrivateInfo(rs.getObject("hide_private_info", Boolean.class))
+                .createdAt(rs.getObject("created_at", OffsetDateTime.class))
+                .createdBy(rs.getObject("created_by", UUID.class))
+                .updatedAt(rs.getObject("updated_at", OffsetDateTime.class))
+                .updatedBy(rs.getObject("updated_by", UUID.class))
+                .deletedAt(rs.getObject("deleted_at", OffsetDateTime.class))
+                .rowVersion(rs.getInt("row_version"))
+                .build();
+    }
+
+    private static FieldSpec field(String name, String column, ValueType type) {
+        return new FieldSpec(name, column, type);
+    }
+
+    private static Map<String, FieldSpec> fields(FieldSpec... specs) {
+        return Arrays.stream(specs).collect(Collectors.toUnmodifiableMap(FieldSpec::name, s -> s));
+    }
+}

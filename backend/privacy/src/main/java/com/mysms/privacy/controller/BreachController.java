@@ -82,9 +82,8 @@ public class BreachController implements BreachApi {
     }
 
     @Override
-    public ResponseEntity<Breach> updateBreach(UUID breachId, String ifMatch, BreachUpdate breachUpdate,
-            String updateMask) {
-        return stepped(breachService.updateBreach(breachId, ifMatch, breachUpdate, updateMask));
+    public ResponseEntity<Breach> updateBreach(UUID breachId, String ifMatch, BreachUpdate breachUpdate) {
+        return stepped(breachService.updateBreach(breachId, ifMatch, breachUpdate));
     }
 
     private static ResponseEntity<Breach> stepped(Breach changed) {

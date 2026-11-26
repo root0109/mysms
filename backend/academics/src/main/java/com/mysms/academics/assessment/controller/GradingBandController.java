@@ -1,0 +1,70 @@
+package com.mysms.academics.assessment.controller;
+
+import java.util.List;
+import com.mysms.core.paging.PagingUtil;
+import com.mysms.core.paging.PagingInfo;
+import com.mysms.academics.assessment.business.GradingBandService;
+import com.mysms.academics.assessment.api.GradingBandApi;
+import com.mysms.academics.assessment.api.model.GradingBand;
+import com.mysms.academics.assessment.api.model.GradingBandUpdate;
+import com.mysms.core.web.ReadMask;
+import java.net.URI;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * REST edge of the GradingBand operations; authentication and the permission check already ran in the auth-client
+ * filter.
+ */
+@RestController
+public class GradingBandController implements GradingBandApi {
+
+    private final GradingBandService gradingBandService;
+
+    public GradingBandController(GradingBandService gradingBandService) {
+        this.gradingBandService = gradingBandService;
+    }
+
+    @Override
+    public ResponseEntity<GradingBand> createGradingBand(GradingBand gradingBand, UUID idempotencyKey,
+            Boolean validateOnly) {
+        boolean dryRun = Boolean.TRUE.equals(validateOnly);
+        GradingBand created = gradingBandService.createGradingBand(gradingBand, dryRun);
+        if (dryRun) {
+            return ResponseEntity.ok(created);
+        }
+        return ResponseEntity.created(URI.create("/v1/assessment/grading-bands/" + created.getId()))
+                .eTag(created.getEtag()).body(created);
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteGradingBand(UUID gradingBandId, String ifMatch) {
+        gradingBandService.deleteGradingBand(gradingBandId, ifMatch);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<GradingBand> getGradingBand(UUID gradingBandId, String fields) {
+        GradingBand found = gradingBandService.getGradingBand(gradingBandId);
+        return ResponseEntity.ok().eTag(found.getEtag()).body(ReadMask.apply(found, fields));
+    }
+
+    @Override
+    public ResponseEntity<PagingInfo<GradingBand>> listGradingBands(Integer page, Integer size, String cursor,
+            String filter, List<String> sort, String fields) {
+        PagingInfo<GradingBand> list =
+                PagingUtil.pagingInfo(gradingBandService.listGradingBands(page, size, cursor, filter, sort));
+        list.data().forEach(item -> ReadMask.apply(item, fields));
+        return ResponseEntity.ok(list);
+    }
+
+    @Override
+    public ResponseEntity<GradingBand> updateGradingBand(UUID gradingBandId, String ifMatch,
+            GradingBandUpdate gradingBandUpdate, Boolean validateOnly) {
+        GradingBand updated =
+                gradingBandService.updateGradingBand(gradingBandId, ifMatch, gradingBandUpdate,
+                Boolean.TRUE.equals(validateOnly));
+        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
+    }
+}

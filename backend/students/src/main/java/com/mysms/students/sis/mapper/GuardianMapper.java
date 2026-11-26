@@ -1,0 +1,38 @@
+package com.mysms.students.sis.mapper;
+
+import com.mysms.students.sis.api.model.Guardian;
+import com.mysms.core.mapping.WireValues;
+import com.mysms.core.web.Etags;
+import com.mysms.students.sis.domain.GuardianEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+/**
+ * Entity ⇄ contract DTO for sis.guardian. The way in ignores the id, tenant, audit set and read-only fields, so a
+ * request can never choose an id, re-tenant a row or set a workflow-only value.
+ */
+@Mapper(config = SisMapperConfig.class, imports = {Etags.class, WireValues.class})
+public interface GuardianMapper {
+
+    @Mapping(target = "profession", expression =
+            "java(entity.getProfession() == null ? null : Guardian.ProfessionEnum.fromValue(entity.getProfession()))")
+    @Mapping(target = "annualIncome", expression = "java(WireValues.decimal(entity.getAnnualIncome()))")
+
+    @Mapping(target = "createTime", source = "createdAt")
+    @Mapping(target = "updateTime", source = "updatedAt")
+    @Mapping(target = "etag", expression = "java(Etags.of(entity.getRowVersion()))")
+    Guardian toDto(GuardianEntity entity);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "rowVersion", ignore = true)
+    @Mapping(target = "profession", expression =
+            "java(dto.getProfession() == null ? null : dto.getProfession().getValue())")
+    @Mapping(target = "annualIncome", expression = "java(WireValues.decimal(dto.getAnnualIncome()))")
+    GuardianEntity toEntity(Guardian dto);
+}
